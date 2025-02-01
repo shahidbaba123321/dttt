@@ -1,85 +1,90 @@
-// main.js - Complete Modified Version
-
+// Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize all components
     initializePreloader();
-    initializeNavigation();
+    initializeHeader();
+    initializeMobileMenu();
     initializeSliders();
     initializeAnimations();
+    initializeSearchForm();
+    initializeGallery();
+    initializeCountdown();
     initializeScrollEffects();
     initializeBookingSystem();
-    initializeGallery();
     initializeWeatherWidget();
-    initializeInteractiveMap();
-    initializeLiveChat();
     initializeReviewSystem();
-    initializeCustomCursor();
+    initializeNewsletterForm();
 });
 
-// 1. Preloader
+// Preloader
 function initializePreloader() {
     const preloader = document.querySelector('.preloader');
+    if (!preloader) return;
+
     window.addEventListener('load', () => {
         preloader.classList.add('fade-out');
         setTimeout(() => {
             preloader.style.display = 'none';
-            // Trigger entrance animations
             document.body.classList.add('loaded');
         }, 1000);
     });
 }
 
-// 2. Navigation System
-function initializeNavigation() {
+// Header & Navigation
+function initializeHeader() {
     const header = document.querySelector('.header');
-    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-    const navLinks = document.querySelector('.nav-links');
-    const dropdowns = document.querySelectorAll('.dropdown');
-
-    // Sticky Header
+    const headerHeight = header?.offsetHeight || 0;
+    
+    // Update header on scroll
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 100) {
-            header.classList.add('sticky');
+        if (window.scrollY > headerHeight) {
+            header?.classList.add('sticky');
         } else {
-            header.classList.remove('sticky');
+            header?.classList.remove('sticky');
         }
     });
 
-    // Mobile Menu Toggle
-    mobileMenuBtn?.addEventListener('click', () => {
-        mobileMenuBtn.classList.toggle('active');
-        navLinks.classList.toggle('active');
-    });
-
-    // Dropdown Menus
+    // Dropdown menus
+    const dropdowns = document.querySelectorAll('.menu-item-has-children');
     dropdowns.forEach(dropdown => {
-        const trigger = dropdown.querySelector('.dropdown-trigger');
-        const content = dropdown.querySelector('.dropdown-content');
+        const link = dropdown.querySelector('a');
+        const submenu = dropdown.querySelector('.sub-menu');
 
-        trigger?.addEventListener('click', (e) => {
-            e.preventDefault();
-            dropdown.classList.toggle('active');
-            
-            // Close other dropdowns
-            dropdowns.forEach(other => {
-                if (other !== dropdown) {
-                    other.classList.remove('active');
-                }
-            });
+        link?.addEventListener('click', (e) => {
+            if (window.innerWidth < 1024) {
+                e.preventDefault();
+                submenu.style.height = submenu.style.height ? null : `${submenu.scrollHeight}px`;
+                dropdown.classList.toggle('active');
+            }
         });
     });
+}
 
-    // Close dropdowns when clicking outside
+// Mobile Menu
+function initializeMobileMenu() {
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    const mainNav = document.querySelector('.main-nav');
+    const header = document.querySelector('.header');
+
+    mobileMenuBtn?.addEventListener('click', () => {
+        mobileMenuBtn.classList.toggle('active');
+        mainNav?.classList.toggle('active');
+        document.body.classList.toggle('menu-open');
+    });
+
+    // Close menu when clicking outside
     document.addEventListener('click', (e) => {
-        if (!e.target.closest('.dropdown')) {
-            dropdowns.forEach(dropdown => dropdown.classList.remove('active'));
+        if (!e.target.closest('.main-nav') && !e.target.closest('.mobile-menu-btn')) {
+            mobileMenuBtn?.classList.remove('active');
+            mainNav?.classList.remove('active');
+            document.body.classList.remove('menu-open');
         }
     });
 }
 
-// 3. Slider Initialization
-// Update in main.js
+// Sliders
 function initializeSliders() {
+    // Hero Slider
     const heroSlider = new Swiper('.hero-slider', {
         slidesPerView: 1,
         effect: 'fade',
@@ -92,12 +97,18 @@ function initializeSliders() {
         pagination: {
             el: '.swiper-pagination',
             clickable: true,
+            renderBullet: (index, className) => {
+                return `<span class="${className}"><span class="bullet-text">0${index + 1}</span></span>`;
+            },
+        },
+        navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
         },
     });
-}
 
     // Testimonials Slider
-    const testimonialSlider = new Swiper('.testimonial-slider', {
+    const testimonialSlider = new Swiper('.testimonials-slider', {
         slidesPerView: 1,
         spaceBetween: 30,
         loop: true,
@@ -118,28 +129,9 @@ function initializeSliders() {
             },
         },
     });
-
-    // Package Slider
-    const packageSlider = new Swiper('.package-slider', {
-        slidesPerView: 1,
-        spaceBetween: 20,
-        loop: true,
-        navigation: {
-            nextEl: '.package-next',
-            prevEl: '.package-prev',
-        },
-        breakpoints: {
-            640: {
-                slidesPerView: 2,
-            },
-            1024: {
-                slidesPerView: 3,
-            },
-        },
-    });
 }
 
-// 4. Animation System
+// Animations
 function initializeAnimations() {
     // Initialize AOS
     AOS.init({
@@ -148,46 +140,144 @@ function initializeAnimations() {
         offset: 100,
     });
 
-    // Custom animations for specific elements
-    const animatedElements = document.querySelectorAll('.custom-animate');
+    // Custom animations for elements
+    const animatedElements = document.querySelectorAll('[data-animate]');
     
-    const observerOptions = {
-        threshold: 0.2,
-        rootMargin: '0px',
-    };
-
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                entry.target.classList.add('animate');
-                if (entry.target.dataset.delay) {
-                    entry.target.style.animationDelay = `${entry.target.dataset.delay}s`;
+                entry.target.classList.add('animated');
+                
+                // Add delay if specified
+                const delay = entry.target.dataset.delay;
+                if (delay) {
+                    entry.target.style.animationDelay = `${delay}s`;
                 }
             }
         });
-    }, observerOptions);
+    }, {
+        threshold: 0.2,
+    });
 
     animatedElements.forEach(element => observer.observe(element));
 }
 
-// 5. Scroll Effects
-function initializeScrollEffects() {
-    // Parallax Effect
-    const parallaxElements = document.querySelectorAll('.parallax');
+// Search Form
+function initializeSearchForm() {
+    const searchForm = document.querySelector('.search-form');
     
-    window.addEventListener('scroll', () => {
-        parallaxElements.forEach(element => {
-            const speed = element.dataset.speed || 0.5;
-            const yPos = -(window.scrollY * speed);
-            element.style.transform = `translateY(${yPos}px)`;
+    searchForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        // Get form data
+        const formData = new FormData(searchForm);
+        const searchData = Object.fromEntries(formData);
+
+        // Validate form
+        if (validateSearchForm(searchData)) {
+            // Process search
+            processSearch(searchData);
+        }
+    });
+
+    function validateSearchForm(data) {
+        let isValid = true;
+        // Add your validation logic here
+        return isValid;
+    }
+
+    function processSearch(data) {
+        // Add your search processing logic here
+        console.log('Search data:', data);
+    }
+}
+
+// Gallery
+function initializeGallery() {
+    const galleryItems = document.querySelectorAll('.gallery-item');
+    
+    galleryItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const imgSrc = item.querySelector('img').src;
+            openLightbox(imgSrc);
         });
     });
 
-    // Smooth Scroll for Anchor Links
+    function openLightbox(imgSrc) {
+        const lightbox = createLightbox(imgSrc);
+        document.body.appendChild(lightbox);
+        
+        setTimeout(() => {
+            lightbox.classList.add('active');
+        }, 10);
+
+        // Close lightbox
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) {
+                closeLightbox(lightbox);
+            }
+        });
+    }
+
+    function createLightbox(imgSrc) {
+        const lightbox = document.createElement('div');
+        lightbox.className = 'lightbox';
+        lightbox.innerHTML = `
+            <div class="lightbox-content">
+                <img src="${imgSrc}" alt="Gallery Image">
+                <button class="lightbox-close">&times;</button>
+            </div>
+        `;
+        return lightbox;
+    }
+
+    function closeLightbox(lightbox) {
+        lightbox.classList.remove('active');
+        setTimeout(() => {
+            lightbox.remove();
+        }, 300);
+    }
+}
+
+// Countdown Timer
+function initializeCountdown() {
+    const countdowns = document.querySelectorAll('[data-countdown]');
+    
+    countdowns.forEach(countdown => {
+        const targetDate = new Date(countdown.dataset.countdown).getTime();
+        
+        const timer = setInterval(() => {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            if (distance < 0) {
+                clearInterval(timer);
+                countdown.innerHTML = 'EXPIRED';
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            countdown.innerHTML = `
+                <div class="countdown-item"><span>${days}</span> Days</div>
+                <div class="countdown-item"><span>${hours}</span> Hours</div>
+                <div class="countdown-item"><span>${minutes}</span> Minutes</div>
+                <div class="countdown-item"><span>${seconds}</span> Seconds</div>
+            `;
+        }, 1000);
+    });
+}
+
+// Scroll Effects
+function initializeScrollEffects() {
+    // Smooth scroll for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
+        anchor.addEventListener('click', (e) => {
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
+            const target = document.querySelector(anchor.getAttribute('href'));
             if (target) {
                 target.scrollIntoView({
                     behavior: 'smooth',
@@ -197,7 +287,7 @@ function initializeScrollEffects() {
         });
     });
 
-    // Back to Top Button
+    // Back to top button
     const backToTop = document.querySelector('.back-to-top');
     if (backToTop) {
         window.addEventListener('scroll', () => {
@@ -218,97 +308,45 @@ function initializeScrollEffects() {
     }
 }
 
-// 6. Booking System
+// Booking System
 function initializeBookingSystem() {
-    const bookingForm = document.querySelector('.booking-form');
-    if (!bookingForm) return;
-
-    const dateInputs = bookingForm.querySelectorAll('input[type="date"]');
-    const today = new Date().toISOString().split('T')[0];
-
-    // Set minimum date as today
-    dateInputs.forEach(input => {
-        input.setAttribute('min', today);
-    });
-
-    // Calculate price
-    bookingForm.addEventListener('change', calculatePrice);
+    const bookingForms = document.querySelectorAll('.booking-form');
     
-    function calculatePrice() {
-        const basePrice = parseFloat(bookingForm.dataset.basePrice) || 0;
-        const guests = parseInt(bookingForm.querySelector('[name="guests"]').value) || 1;
-        const checkIn = new Date(bookingForm.querySelector('[name="checkIn"]').value);
-        const checkOut = new Date(bookingForm.querySelector('[name="checkOut"]').value);
+    bookingForms.forEach(form => {
+        // Set minimum date as today for date inputs
+        const dateInputs = form.querySelectorAll('input[type="date"]');
+        const today = new Date().toISOString().split('T')[0];
         
-        if (checkIn && checkOut && checkOut > checkIn) {
-            const days = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-            const total = basePrice * guests * days;
+        dateInputs.forEach(input => {
+            input.setAttribute('min', today);
+        });
+
+        // Handle form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            bookingForm.querySelector('.total-price').textContent = `₹${total.toLocaleString()}`;
-        }
-    }
-
-    // Form Submission
-    bookingForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        if (validateForm(bookingForm)) {
-            try {
-                const response = await submitBooking(bookingForm);
-                if (response.success) {
-                    showNotification('Booking successful!', 'success');
-                    bookingForm.reset();
+            if (validateBookingForm(form)) {
+                try {
+                    const response = await submitBooking(form);
+                    if (response.success) {
+                        showNotification('Booking successful!', 'success');
+                        form.reset();
+                    }
+                } catch (error) {
+                    showNotification('Booking failed. Please try again.', 'error');
                 }
-            } catch (error) {
-                showNotification('Booking failed. Please try again.', 'error');
             }
-        }
-    });
-}
-
-// 7. Gallery System
-function initializeGallery() {
-    const gallery = document.querySelector('.gallery');
-    if (!gallery) return;
-
-    const images = gallery.querySelectorAll('.gallery-item');
-    const lightbox = createLightbox();
-
-    images.forEach(image => {
-        image.addEventListener('click', () => {
-            openLightbox(image.querySelector('img').src);
         });
     });
-
-    function createLightbox() {
-        const lightbox = document.createElement('div');
-        lightbox.className = 'lightbox';
-        lightbox.innerHTML = `
-            <div class="lightbox-content">
-                <button class="lightbox-close">&times;</button>
-                <img src="" alt="Gallery Image">
-                <button class="lightbox-prev">&lt;</button>
-                <button class="lightbox-next">&gt;</button>
-            </div>
-        `;
-        document.body.appendChild(lightbox);
-        return lightbox;
-    }
-
-    function openLightbox(imageSrc) {
-        lightbox.classList.add('active');
-        lightbox.querySelector('img').src = imageSrc;
-        document.body.style.overflow = 'hidden';
-    }
 }
 
-// 8. Weather Widget
+// Weather Widget
 async function initializeWeatherWidget() {
     const weatherWidget = document.querySelector('.weather-widget');
     if (!weatherWidget) return;
 
     try {
-        const response = await fetch(`your-weather-api-endpoint`);
+        const response = await fetch('your-weather-api-endpoint');
         const data = await response.json();
         updateWeatherUI(data);
     } catch (error) {
@@ -316,49 +354,7 @@ async function initializeWeatherWidget() {
     }
 }
 
-// 9. Interactive Map
-function initializeInteractiveMap() {
-    const mapElement = document.getElementById('tourMap');
-    if (!mapElement) return;
-
-    const map = L.map('tourMap').setView([34.0837, 74.7973], 8);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-    // Add markers for tour locations
-    const locations = [
-        { lat: 34.0837, lng: 74.7973, name: 'Srinagar', description: 'Capital city' },
-        // Add more locations
-    ];
-
-    locations.forEach(location => {
-        L.marker([location.lat, location.lng])
-            .bindPopup(`<h3>${location.name}</h3><p>${location.description}</p>`)
-            .addTo(map);
-    });
-}
-
-// 10. Live Chat
-function initializeLiveChat() {
-    const chatWidget = document.querySelector('.chat-widget');
-    if (!chatWidget) return;
-
-    const chatToggle = chatWidget.querySelector('.chat-toggle');
-    const chatMessages = chatWidget.querySelector('.chat-messages');
-    const chatInput = chatWidget.querySelector('.chat-input');
-
-    chatToggle?.addEventListener('click', () => {
-        chatWidget.classList.toggle('active');
-    });
-
-    chatInput?.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && chatInput.value.trim()) {
-            sendMessage(chatInput.value);
-            chatInput.value = '';
-        }
-    });
-}
-
-// 11. Review System
+// Review System
 function initializeReviewSystem() {
     const reviewForm = document.querySelector('.review-form');
     if (!reviewForm) return;
@@ -380,22 +376,42 @@ function initializeReviewSystem() {
             highlightStars(currentRating);
         });
     });
+
+    function updateStars() {
+        ratingStars.forEach((star, index) => {
+            star.classList.toggle('active', index < currentRating);
+        });
+    }
+
+    function highlightStars(count) {
+        ratingStars.forEach((star, index) => {
+            star.classList.toggle('hover', index < count);
+        });
+    }
 }
 
-// 12. Custom Cursor
-function initializeCustomCursor() {
-    const cursor = document.querySelector('.custom-cursor');
-    if (!cursor) return;
-
-    document.addEventListener('mousemove', (e) => {
-        cursor.style.left = e.clientX + 'px';
-        cursor.style.top = e.clientY + 'px';
-    });
-
-    // Add hover effect for interactive elements
-    document.querySelectorAll('a, button, .interactive').forEach(element => {
-        element.addEventListener('mouseenter', () => cursor.classList.add('hover'));
-        element.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+// Newsletter Form
+function initializeNewsletterForm() {
+    const newsletterForm = document.querySelector('.newsletter-form');
+    
+    newsletterForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = newsletterForm.querySelector('input[type="email"]').value;
+        
+        if (validateEmail(email)) {
+            try {
+                const response = await subscribeToNewsletter(email);
+                if (response.success) {
+                    showNotification('Successfully subscribed!', 'success');
+                    newsletterForm.reset();
+                }
+            } catch (error) {
+                showNotification('Subscription failed. Please try again.', 'error');
+            }
+        } else {
+            showNotification('Please enter a valid email address.', 'error');
+        }
     });
 }
 
@@ -421,7 +437,21 @@ function showNotification(message, type = 'info') {
     });
 }
 
-function validateForm(form) {
+function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+async function subscribeToNewsletter(email) {
+    // Add your newsletter subscription logic here
+    return { success: true };
+}
+
+async function submitBooking(form) {
+    // Add your booking submission logic here
+    return { success: true };
+}
+
+function validateBookingForm(form) {
     let isValid = true;
     const requiredFields = form.querySelectorAll('[required]');
 
@@ -436,43 +466,3 @@ function validateForm(form) {
 
     return isValid;
 }
-
-async function submitBooking(form) {
-    const formData = new FormData(form);
-    try {
-        const response = await fetch('your-booking-endpoint', {
-            method: 'POST',
-            body: formData
-        });
-        return await response.json();
-    } catch (error) {
-        throw new Error('Booking submission failed');
-    }
-}
-
-function initializeMobileMenu() {
-    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-    const mainNav = document.querySelector('.main-nav');
-
-    mobileMenuBtn?.addEventListener('click', () => {
-        mainNav.classList.toggle('active');
-        mobileMenuBtn.classList.toggle('active');
-    });
-}
-
-// Initialize everything when the DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    initializePreloader();
-    initializeNavigation();
-    initializeSliders();
-    initializeMobileMenu();
-    initializeAnimations();
-    initializeScrollEffects();
-    initializeBookingSystem();
-    initializeGallery();
-    initializeWeatherWidget();
-    initializeInteractiveMap();
-    initializeLiveChat();
-    initializeReviewSystem();
-    initializeCustomCursor();
-});
