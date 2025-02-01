@@ -3,15 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sizzling Kashmir - Luxury Travel Experiences</title>
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="images/favicon.png">
+    <title>Sizzling Kashmir - Premium Travel Experiences</title>
     
     <!-- CSS Links -->
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -20,221 +16,117 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <!-- Preloader -->
-    <div class="preloader">
-        <div class="loader"></div>
-    </div>
-
-    <!-- Top Bar -->
-    <div class="top-bar">
+    <!-- Header -->
+    <header class="header">
         <div class="container">
-            <div class="top-bar-left">
-                <a href="tel:+911234567890">
-                    <i class="fas fa-phone"></i>
-                    <span>+91 123 456 7890</span>
-                </a>
-                <a href="mailto:info@sizzlingkashmir.com">
-                    <i class="fas fa-envelope"></i>
-                    <span>info@sizzlingkashmir.com</span>
-                </a>
-            </div>
-            <div class="top-bar-right">
-                <div class="social-links">
-                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="top-bar-left">
+                    <a href="tel:+911234567890"><i class="fas fa-phone"></i> +91 123 456 7890</a>
+                    <a href="mailto:info@sizzlingkashmir.com"><i class="fas fa-envelope"></i> info@sizzlingkashmir.com</a>
                 </div>
-                <div class="top-bar-buttons">
-                    <select class="currency-selector">
-                        <option value="INR">INR</option>
-                        <option value="USD">USD</option>
-                        <option value="EUR">EUR</option>
-                    </select>
-                    <a href="#" class="top-bar-link">Sign In</a>
-                    <a href="#" class="top-bar-link">Register</a>
+                <div class="top-bar-right">
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Main Header -->
-    <header class="main-header">
-        <div class="container">
-            <div class="header-main">
+            <!-- Main Navigation -->
+            <nav class="nav">
                 <div class="logo">
                     <a href="index.html">
-                        <img src="images/logo.png" alt="Sizzling Kashmir Logo">
+                        <h1>Sizzling Kashmir</h1>
                     </a>
                 </div>
-                
-                <nav class="main-nav">
-                    <ul class="nav-list">
-                        <li class="nav-item">
-                            <a href="#" class="nav-link active">Home</a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a href="#" class="nav-link">Destinations <i class="fas fa-chevron-down"></i></a>
-                            <ul class="dropdown-menu">
-                                <li><a href="#">Gulmarg</a></li>
-                                <li><a href="#">Pahalgam</a></li>
-                                <li><a href="#">Sonamarg</a></li>
-                                <li><a href="#">Dal Lake</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a href="#" class="nav-link">Tours <i class="fas fa-chevron-down"></i></a>
-                            <ul class="dropdown-menu">
-                                <li><a href="#">Adventure Tours</a></li>
-                                <li><a href="#">Cultural Tours</a></li>
-                                <li><a href="#">Family Packages</a></li>
-                                <li><a href="#">Honeymoon Packages</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">Hotels</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">Activities</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">Contact</a>
-                        </li>
-                    </ul>
-                </nav>
 
-                <div class="header-buttons">
-                    <button class="search-toggle" aria-label="Search">
-                        <i class="fas fa-search"></i>
-                    </button>
+                <div class="nav-menu">
+                    <ul class="nav-list">
+                        <li><a href="#" class="active">Home</a></li>
+                        <li><a href="#">Destinations</a></li>
+                        <li><a href="#">Tours</a></li>
+                        <li><a href="#">Hotels</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+
+                <div class="nav-buttons">
+                    <a href="#" class="btn btn-outline">Sign In</a>
                     <a href="#" class="btn btn-primary">Book Now</a>
-                    <button class="mobile-menu-toggle" aria-label="Menu">
+                    <button class="menu-toggle">
                         <span></span>
                         <span></span>
                         <span></span>
                     </button>
                 </div>
-            </div>
+            </nav>
         </div>
     </header>
 
-    <!-- Search Overlay -->
-    <div class="search-overlay">
-        <div class="container">
-            <form class="search-form">
-                <input type="text" placeholder="Search for destinations, tours...">
-                <button type="submit"><i class="fas fa-search"></i></button>
-            </form>
-            <button class="search-close"><i class="fas fa-times"></i></button>
-        </div>
-    </div>
-
     <!-- Hero Section -->
-    <section class="hero-section">
+    <section class="hero">
         <div class="swiper hero-slider">
             <div class="swiper-wrapper">
-                <!-- Slide 1 -->
-                <div class="swiper-slide" style="background-image: url('https://github.com/shahidbaba123321/dttt/issues/2#issue-2825221705')">
-                    <div class="slide-content">
-                        <h1 data-aos="fade-up">Discover Paradise on Earth</h1>
-                        <p data-aos="fade-up" data-aos-delay="200">Experience the magical beauty of Kashmir with our exclusive tours</p>
-                        <div class="hero-buttons" data-aos="fade-up" data-aos-delay="400">
-                            <a href="#" class="btn btn-primary">Explore Tours</a>
-                            <a href="#" class="btn btn-outline-light">Learn More</a>
-                        </div>
+                <div class="swiper-slide" style="background-image: url('https://images.unsplash.com/photo-1566837945700-30057527ade0')">
+                    <div class="hero-content">
+                        <h2>Welcome to Kashmir</h2>
+                        <p>Experience the paradise on earth</p>
+                        <a href="#" class="btn btn-primary">Explore Now</a>
                     </div>
                 </div>
-                <!-- Add more slides as needed -->
             </div>
             <div class="swiper-pagination"></div>
-            <div class="swiper-button-prev"></div>
-            <div class="swiper-button-next"></div>
         </div>
 
-        <!-- Booking Form -->
-        <div class="booking-form-wrapper">
-            <div class="container">
-                <form class="booking-form">
-                    <div class="form-group">
-                        <label><i class="fas fa-map-marker-alt"></i> Destination</label>
-                        <select required>
-                            <option value="">Select Destination</option>
-                            <option value="gulmarg">Gulmarg</option>
-                            <option value="pahalgam">Pahalgam</option>
-                            <option value="sonamarg">Sonamarg</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-calendar"></i> Check In</label>
-                        <input type="date" required>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-calendar"></i> Check Out</label>
-                        <input type="date" required>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-user"></i> Guests</label>
-                        <select required>
-                            <option value="2">2 Adults</option>
-                            <option value="3">3 Adults</option>
-                            <option value="4">4 Adults</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Search</button>
-                </form>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="features-section">
-        <div class="container">
-            <div class="features-grid">
-                <div class="feature-card" data-aos="fade-up">
-                    <div class="feature-icon">
-                        <i class="fas fa-map-marked-alt"></i>
-                    </div>
-                    <h3>Handpicked Tours</h3>
-                    <p>Carefully selected tours to ensure the best experience</p>
+        <!-- Search Form -->
+        <div class="search-form-container">
+            <form class="search-form">
+                <div class="form-group">
+                    <label>Destination</label>
+                    <select>
+                        <option value="">Select Destination</option>
+                        <option value="gulmarg">Gulmarg</option>
+                        <option value="pahalgam">Pahalgam</option>
+                        <option value="srinagar">Srinagar</option>
+                    </select>
                 </div>
-                <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
-                    <div class="feature-icon">
-                        <i class="fas fa-tag"></i>
-                    </div>
-                    <h3>Best Price Guarantee</h3>
-                    <p>We offer the most competitive prices for our tours</p>
+                <div class="form-group">
+                    <label>Check In</label>
+                    <input type="date">
                 </div>
-                <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
-                    <div class="feature-icon">
-                        <i class="fas fa-headset"></i>
-                    </div>
-                    <h3>24/7 Support</h3>
-                    <p>Round the clock assistance for a worry-free journey</p>
+                <div class="form-group">
+                    <label>Check Out</label>
+                    <input type="date">
                 </div>
-            </div>
+                <div class="form-group">
+                    <label>Guests</label>
+                    <select>
+                        <option>2 Adults</option>
+                        <option>3 Adults</option>
+                        <option>4 Adults</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
         </div>
     </section>
 
     <!-- Popular Destinations -->
-    <section class="destinations-section">
+    <section class="destinations">
         <div class="container">
-            <div class="section-header" data-aos="fade-up">
-                <span class="section-subtitle">Popular Destinations</span>
-                <h2>Explore Top Destinations</h2>
-                <p>Discover the most beautiful and popular tourist destinations in Kashmir</p>
+            <div class="section-header">
+                <h2>Popular Destinations</h2>
+                <p>Explore the most beautiful places in Kashmir</p>
             </div>
 
-            <div class="destinations-grid">
-                <!-- Destination Card 1 -->
-                <div class="destination-card" data-aos="fade-up">
-                    <div class="destination-thumb">
-                        <img src="path-to-gulmarg-image.jpg" alt="Gulmarg">
+            <div class="destination-grid">
+                <!-- Destination Card -->
+                <div class="destination-card">
+                    <div class="destination-image">
+                        <img src="https://images.unsplash.com/photo-gulmarg" alt="Gulmarg">
                         <div class="destination-price">From ₹15,999</div>
-                        <div class="destination-overlay">
-                            <div class="destination-meta">
-                                <span><i class="fas fa-map-marker-alt"></i> Gulmarg, Kashmir</span>
-                                <span><i class="fas fa-clock"></i> 3 Days</span>
-                            </div>
-                        </div>
                     </div>
                     <div class="destination-content">
                         <h3>Gulmarg</h3>
@@ -246,7 +138,7 @@
                             <i class="fas fa-star"></i>
                             <span>(48 reviews)</span>
                         </div>
-                        <p>Experience the beauty of snow-capped mountains and skiing adventures</p>
+                        <p>3 Days Tour</p>
                         <a href="#" class="btn btn-outline">View Details</a>
                     </div>
                 </div>
@@ -255,65 +147,8 @@
         </div>
     </section>
 
-    <!-- Add more sections as needed -->
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-top">
-            <div class="container">
-                <div class="footer-widgets">
-                    <div class="footer-widget">
-                        <img src="images/logo-light.png" alt="Sizzling Kashmir" class="footer-logo">
-                        <p>Your trusted partner for unforgettable Kashmir experiences.</p>
-                        <div class="social-links">
-                            <a href="#"><i class="fab fa-facebook-f"></i></a>
-                            <a href="#"><i class="fab fa-twitter"></i></a>
-                            <a href="#"><i class="fab fa-instagram"></i></a>
-                        </div>
-                    </div>
-                    <div class="footer-widget">
-                        <h3>Quick Links</h3>
-                        <ul>
-                            <li><a href="#">About Us</a></li>
-                            <li><a href="#">Tours</a></li>
-                            <li><a href="#">Destinations</a></li>
-                            <li><a href="#">Contact</a></li>
-                        </ul>
-                    </div>
-                    <div class="footer-widget">
-                        <h3>Contact Info</h3>
-                        <ul class="contact-info">
-                            <li><i class="fas fa-map-marker-alt"></i> 123 Tourism Road, Srinagar</li>
-                            <li><i class="fas fa-phone"></i> +91 123 456 7890</li>
-                            <li><i class="fas fa-envelope"></i> info@sizzlingkashmir.com</li>
-                        </ul>
-                    </div>
-                    <div class="footer-widget">
-                        <h3>Newsletter</h3>
-                        <p>Subscribe to our newsletter for updates and offers.</p>
-                        <form class="newsletter-form">
-                            <input type="email" placeholder="Your email address">
-                            <button type="submit" class="btn btn-primary">Subscribe</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <div class="container">
-                <p>&copy; 2024 Sizzling Kashmir. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Back to Top -->
-    <button class="back-to-top">
-        <i class="fas fa-arrow-up"></i>
-    </button>
-
     <!-- Scripts -->
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"></script>
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
     <script src="main.js"></script>
 </body>
 </html>
