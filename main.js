@@ -14,6 +14,37 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeCountdown();
     initializeNewsletterForm();
     initializeLazyLoading();
+
+    // Initialize Swiper
+    const heroSlider = new Swiper('.hero-slider', {
+        slidesPerView: 1,
+        loop: true,
+        autoplay: {
+            delay: 5000,
+        },
+        pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+        },
+    });
+
+    // Mobile Menu Toggle
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+
+    menuToggle?.addEventListener('click', () => {
+        navMenu?.classList.toggle('active');
+    });
+
+    // Sticky Header
+    const header = document.querySelector('.header');
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 100) {
+            header?.classList.add('sticky');
+        } else {
+            header?.classList.remove('sticky');
+        }
+    });
 });
 
 // Preloader
@@ -36,7 +67,7 @@ function initializeHeader() {
     const headerHeight = header?.offsetHeight || 0;
 
     // Sticky Header
-    window.addEventListener('scroll', () => {
+    window.addListener('scroll', () => {
         if (window.scrollY > headerHeight) {
             header?.classList.add('sticky');
         } else {
@@ -49,16 +80,16 @@ function initializeHeader() {
     dropdowns.forEach(dropdown => {
         const link = dropdown.querySelector('.nav-link');
         
-        link?.addEventListener('click', (e) => {
+        link?.addListener('click', (e) => {
             if (window.innerWidth < 1024) {
-                e.preventDefault();
+                e.prDefault();
                 dropdown.classList.toggle('active');
             }
         });
     });
 
     // Close dropdowns when clicking outside
-    document.addEventListener('click', (e) => {
+    document.addListener('click', (e) => {
         if (!e.target.closest('.dropdown')) {
             dropdowns.forEach(dropdown => dropdown.classList.remove('active'));
         }
@@ -71,7 +102,7 @@ function initializeMobileMenu() {
     const mainNav = document.querySelector('.main-nav');
     const body = document.body;
 
-    mobileMenuToggle?.addEventListener('click', () => {
+    mobileMenuToggle?.addListener('click', () => {
         mobileMenuToggle.classList.toggle('active');
         mainNav?.classList.toggle('active');
         body.classList.toggle('menu-open');
