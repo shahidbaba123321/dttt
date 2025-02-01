@@ -1,307 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sizzling Kashmir - Luxury Travel Experiences</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #2563eb;
-            --secondary: #7c3aed;
-            --accent: #f59e0b;
-            --dark: #1e293b;
-            --light: #f8fafc;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: var(--light);
-        }
-
-        .navbar {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        .hero-section {
-            height: 100vh;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero-video {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            min-width: 100%;
-            min-height: 100%;
-            z-index: -1;
-        }
-
-        .gradient-overlay {
-            background: linear-gradient(45deg, rgba(37, 99, 235, 0.9), rgba(124, 58, 237, 0.7));
-        }
-
-        .package-card {
-            background: white;
-            border-radius: 20px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-
-        .package-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        }
-
-        .feature-icon {
-            width: 60px;
-            height: 60px;
-            background: var(--primary);
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn-gradient {
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .btn-gradient:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
-        }
-
-        .testimonial-card {
-            background: white;
-            border-radius: 20px;
-            padding: 2rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1rem;
-            padding: 1rem;
-        }
-
-        .gallery-item {
-            position: relative;
-            overflow: hidden;
-            border-radius: 15px;
-            transition: transform 0.3s ease;
-        }
-
-        .gallery-item:hover {
-            transform: scale(1.03);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .animate-fade-in {
-            animation: fadeIn 1s ease-out forwards;
-        }
-    </style>
+    <!-- Previous head content remains same -->
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
 </head>
 <body>
-
-<!-- Modern Navbar -->
-<nav class="navbar navbar-expand-lg fixed-top">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="#" style="color: var(--primary);">Sizzling Kashmir</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link active" href="#home">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
-                <li class="nav-item"><a class="nav-link" href="#packages">Packages</a></li>
-                <li class="nav-item"><a class="nav-link" href="#gallery">Gallery</a></li>
-                <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
-            </ul>
+    <!-- Enhanced Navigation with Glassmorphism -->
+    <nav class="navbar glass-morphism">
+        <div class="nav-brand">
+            <img src="assets/images/logo.png" alt="Sizzling Kashmir">
+            <span class="brand-text">Sizzling Kashmir</span>
         </div>
-    </div>
-</nav>
-
-<!-- Hero Section with Video Background -->
-<section class="hero-section">
-    <div class="gradient-overlay"></div>
-    <video autoplay muted loop class="hero-video">
-        <source src="https://github.com/user-attachments/assets/d86bca6a-623c-4ba2-9cb4-f6f67fd4345f" type="video/mp4">
-    </video>
-    <div class="container h-100 d-flex align-items-center">
-        <div class="text-white animate-fade-in">
-            <h1 class="display-3 fw-bold mb-4">Discover the<br>Magic of Kashmir</h1>
-            <p class="lead mb-5">Experience Luxury in the Heart of the Himalayas</p>
-            <button class="btn-gradient">Explore Packages</button>
+        <div class="nav-links">
+            <!-- Previous nav links -->
+            <div class="theme-toggle">
+                <i class="fas fa-moon"></i>
+            </div>
         </div>
-    </div>
-</section>
+    </nav>
 
-<!-- Featured Packages -->
-<section class="py-5" id="packages">
-    <div class="container">
-        <h2 class="text-center mb-5 fw-bold">Premium Packages</h2>
-        <div class="row g-4">
-            <div class="col-lg-4 col-md-6">
-                <div class="package-card p-4">
-                    <div class="feature-icon mb-4">
-                        <i class="fas fa-skiing text-white fs-4"></i>
-                    </div>
-                    <h4 class="fw-bold mb-3">Winter Wonderland</h4>
-                    <p class="text-muted mb-4">5 Days Luxury Ski Package in Gulmarg</p>
-                    <ul class="list-unstyled mb-4">
-                        <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i>Private Ski Instructor</li>
-                        <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i>5-Star Accommodation</li>
-                        <li class="mb-2"><i class="fas fa-check-circle text-primary me-2"></i>Helicopter Tour</li>
-                    </ul>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h3 class="text-primary fw-bold">₹49,999</h3>
-                        <button class="btn-gradient">Book Now</button>
-                    </div>
+    <!-- Enhanced Hero Section with Parallax -->
+    <section class="hero parallax-section">
+        <div class="hero-slider">
+            <div class="slide active" style="background-image: url('https://images.unsplash.com/photo-1566837945700-30057527ade0')">
+                <div class="slide-content">
+                    <h1 data-aos="fade-up">Experience Paradise on Earth</h1>
+                    <p data-aos="fade-up" data-aos-delay="200">Discover the magical beauty of Kashmir</p>
                 </div>
             </div>
-            <!-- Add more package cards -->
+            <!-- More slides -->
         </div>
-    </div>
-</section>
+        
+        <!-- Enhanced Search Bar -->
+        <div class="search-container" data-aos="fade-up" data-aos-delay="400">
+            <div class="search-box glass-morphism">
+                <div class="search-input">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <input type="text" placeholder="Where to?">
+                </div>
+                <div class="search-input">
+                    <i class="fas fa-calendar"></i>
+                    <input type="date" placeholder="When?">
+                </div>
+                <div class="search-input">
+                    <i class="fas fa-users"></i>
+                    <input type="number" placeholder="Guests">
+                </div>
+                <button class="search-btn">Search</button>
+            </div>
+        </div>
+    </section>
 
-<!-- Image Gallery -->
-<section class="py-5 bg-light" id="gallery">
-    <div class="container">
-        <h2 class="text-center mb-5 fw-bold">Explore Kashmir</h2>
-        <div class="gallery-grid">
-            <div class="gallery-item">
-                <img src="dal-lake.jpg" class="img-fluid" alt="Dal Lake">
-                <div class="overlay bg-dark bg-opacity-50 text-white p-4">
-                    <h5>Dal Lake Shikara Ride</h5>
-                    <p>Experience traditional houseboat stay</p>
+    <!-- Featured Destinations with Modern Cards -->
+    <section class="featured-destinations">
+        <div class="section-header" data-aos="fade-up">
+            <h2>Popular Destinations</h2>
+            <div class="section-line"></div>
+        </div>
+        <div class="destination-grid">
+            <div class="destination-card glass-morphism" data-aos="fade-up">
+                <div class="card-image">
+                    <img src="https://images.unsplash.com/photo-dal-lake" alt="Dal Lake">
+                    <div class="card-badge">Most Popular</div>
+                </div>
+                <div class="card-content">
+                    <h3>Dal Lake</h3>
+                    <div class="card-meta">
+                        <span><i class="fas fa-star"></i> 4.8</span>
+                        <span><i class="fas fa-map-pin"></i> Srinagar</span>
+                    </div>
+                    <p>Experience the serenity of Dal Lake with traditional Shikara rides</p>
+                    <div class="card-price">
+                        <span>From</span>
+                        <h4>₹2,499</h4>
+                    </div>
+                    <button class="card-btn">Explore Now</button>
                 </div>
             </div>
-            <!-- Add more gallery items -->
+            <!-- More destination cards -->
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- Contact Section -->
-<section class="py-5" id="contact">
-    <div class="container">
-        <div class="row g-5">
-            <div class="col-lg-6">
-                <h2 class="fw-bold mb-4">Plan Your Dream Vacation</h2>
-                <form class="row g-3">
-                    <div class="col-md-6">
-                        <input type="text" class="form-control" placeholder="Name">
+    <!-- Experience Section -->
+    <section class="experience-section">
+        <div class="experience-content">
+            <div class="experience-text" data-aos="fade-right">
+                <h2>Why Choose Us?</h2>
+                <div class="experience-grid">
+                    <div class="experience-item">
+                        <i class="fas fa-check-circle"></i>
+                        <h3>Expert Local Guides</h3>
+                        <p>Knowledgeable guides with years of experience</p>
                     </div>
-                    <div class="col-md-6">
-                        <input type="email" class="form-control" placeholder="Email">
-                    </div>
-                    <div class="col-12">
-                        <input type="text" class="form-control" placeholder="Travel Dates">
-                    </div>
-                    <div class="col-12">
-                        <textarea class="form-control" rows="4" placeholder="Your Message"></textarea>
-                    </div>
-                    <div class="col-12">
-                        <button class="btn-gradient w-100">Send Inquiry</button>
-                    </div>
-                </form>
-            </div>
-            <div class="col-lg-6">
-                <div class="testimonial-card">
-                    <h4 class="fw-bold mb-4">Why Choose Us?</h4>
-                    <div class="d-flex align-items-center mb-4">
-                        <div class="feature-icon me-3">
-                            <i class="fas fa-award text-white"></i>
-                        </div>
-                        <div>
-                            <h5 class="mb-0">Award Winning Service</h5>
-                            <p class="text-muted mb-0">Best Tour Operator 2023</p>
-                        </div>
-                    </div>
-                    <p class="text-muted">"Our experience with Sizzling Kashmir was exceptional. Every detail was perfectly arranged."</p>
-                    <div class="d-flex align-items-center">
-                        <img src="user.jpg" class="rounded-circle me-3" width="50" alt="User">
-                        <div>
-                            <h6 class="mb-0">Sarah Johnson</h6>
-                            <p class="text-muted mb-0">New York, USA</p>
-                        </div>
-                    </div>
+                    <!-- More experience items -->
                 </div>
             </div>
-        </div>
-    </div>
-</section>
-
-<!-- Footer -->
-<footer class="bg-dark text-white py-5">
-    <div class="container">
-        <div class="row g-5">
-            <div class="col-md-4">
-                <h4 class="fw-bold mb-4">Sizzling Kashmir</h4>
-                <p>Creating unforgettable travel experiences since 2010</p>
-                <div class="social-icons">
-                    <a href="#" class="text-white me-3"><i class="fab fa-instagram"></i></a>
-                    <a href="#" class="text-white me-3"><i class="fab fa-facebook"></i></a>
-                    <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <h5 class="fw-bold mb-4">Quick Links</h5>
-                <ul class="list-unstyled">
-                    <li class="mb-2"><a href="#" class="text-white">About Us</a></li>
-                    <li class="mb-2"><a href="#" class="text-white">Privacy Policy</a></li>
-                    <li class="mb-2"><a href="#" class="text-white">Terms of Service</a></li>
-                </ul>
-            </div>
-            <div class="col-md-4">
-                <h5 class="fw-bold mb-4">Contact</h5>
-                <ul class="list-unstyled">
-                    <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i>Srinagar, Jammu & Kashmir</li>
-                    <li class="mb-2"><i class="fas fa-phone me-2"></i>+91 98765 43210</li>
-                    <li><i class="fas fa-envelope me-2"></i>contact@sizzlingkashmir.com</li>
-                </ul>
+            <div class="experience-image" data-aos="fade-left">
+                <img src="path-to-image.jpg" alt="Experience Kashmir">
             </div>
         </div>
+    </section>
+
+    <!-- Package Deals Section -->
+    <section class="packages-section">
+        <div class="section-header" data-aos="fade-up">
+            <h2>Popular Packages</h2>
+            <div class="section-line"></div>
+        </div>
+        <div class="package-slider">
+            <!-- Package cards with smooth sliding -->
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials-section glass-morphism">
+        <div class="testimonials-slider">
+            <!-- Testimonial cards -->
+        </div>
+    </section>
+
+    <!-- Enhanced Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <!-- Footer content -->
+        </div>
+    </footer>
+
+    <!-- Booking Modal -->
+    <div class="booking-modal">
+        <!-- Booking form -->
     </div>
-</footer>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    // Add smooth scrolling
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            document.querySelector(this.getAttribute('href')).scrollIntoView({
-                behavior: 'smooth'
-            });
-        });
-    });
-
-    // Add navbar scroll effect
-    window.addEventListener('scroll', function() {
-        if (window.scrollY > 50) {
-            document.querySelector('.navbar').style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-        } else {
-            document.querySelector('.navbar').style.backgroundColor = 'rgba(255, 255, 255, 0.85)';
-        }
-    });
-</script>
+    <!-- Scripts -->
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>
+        AOS.init();
+    </script>
 </body>
 </html>
