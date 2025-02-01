@@ -275,21 +275,30 @@ a:hover {
 /* Mobile Menu */
 .mobile-menu-btn {
     display: none;
+    flex-direction: column;
+    gap: 6px;
     cursor: pointer;
+    padding: var(--spacing-sm);
+}
+.mobile-menu-btn span {
+    display: block;
+    width: 25px;
+    height: 2px;
+    background: var(--text-primary);
+    transition: var(--transition-normal);
 }
 
 @media (max-width: 1024px) {
     .mobile-menu-btn {
-        display: block;
+        display: flex;
     }
 
-    .nav-links {
+    .main-nav {
         position: fixed;
         top: 80px;
         left: 0;
         width: 100%;
         background: var(--white);
-        flex-direction: column;
         padding: var(--spacing-md);
         transform: translateY(-100%);
         opacity: 0;
@@ -297,10 +306,14 @@ a:hover {
         transition: var(--transition-normal);
     }
 
-    .nav-links.active {
+    .main-nav.active {
         transform: translateY(0);
         opacity: 1;
         visibility: visible;
+    }
+
+    .main-nav ul {
+        flex-direction: column;
     }
 }
 
