@@ -709,3 +709,44 @@ a:hover {
     clip: rect(0, 0, 0, 0);
     border: 0;
 }
+/* Add to your style.css */
+.main-nav ul {
+    list-style: none;
+    display: flex;
+    gap: var(--spacing-xl);
+    margin: 0;
+    padding: 0;
+}
+
+.main-nav ul li {
+    position: relative;
+}
+
+.main-nav ul li a {
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: 500;
+    padding: var(--spacing-sm) 0;
+    display: block;
+}
+
+.sub-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--white);
+    min-width: 200px;
+    box-shadow: var(--shadow-lg);
+    border-radius: var(--radius-md);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: var(--transition-normal);
+    padding: var(--spacing-sm) 0;
+}
+
+.menu-item-has-children:hover .sub-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
