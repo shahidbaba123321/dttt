@@ -7,7 +7,6 @@
     
     <!-- CSS Links -->
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css">
     
@@ -27,7 +26,7 @@
     <header class="header glass-effect">
         <nav class="nav-container">
             <div class="logo">
-                <img src="assets/images/logo.png" alt="Sizzling Kashmir Logo">
+                <img src="assets/images/logo.png" alt="Sizzling Kashmir">
                 <span>Sizzling Kashmir</span>
             </div>
             
@@ -76,7 +75,7 @@
                         </button>
                     </div>
                 </div>
-                <!-- Add more slides -->
+                <!-- Additional slides -->
             </div>
             <div class="swiper-pagination"></div>
         </div>
@@ -105,91 +104,119 @@
 
     <!-- Featured Destinations -->
     <section class="destinations">
-        <div class="section-header">
-            <h2 data-aos="fade-up">Popular Destinations</h2>
-            <p data-aos="fade-up" data-aos-delay="200">Explore the most beautiful places in Kashmir</p>
-        </div>
-
-        <div class="destination-grid">
-            <!-- Destination Card -->
-            <div class="destination-card glass-effect" data-aos="fade-up">
-                <div class="card-image">
-                    <img src="path-to-dal-lake-image.jpg" alt="Dal Lake">
-                    <div class="card-tag">Most Popular</div>
-                </div>
-                <div class="card-content">
-                    <h3>Dal Lake</h3>
-                    <div class="rating">
-                        <i class="fas fa-star"></i>
-                        <span>4.8 (2.5k+ reviews)</span>
-                    </div>
-                    <p>Experience the magical sunset on Shikara</p>
-                    <div class="card-footer">
-                        <div class="price">
-                            <span>From</span>
-                            <h4>₹2,499</h4>
-                        </div>
-                        <button class="explore-btn">View Details</button>
-                    </div>
-                </div>
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2>Popular Destinations</h2>
+                <p>Explore the most beautiful places in Kashmir</p>
             </div>
-            <!-- Add more destination cards -->
+
+            <div class="destination-grid">
+                <!-- Destination Card 1 -->
+                <div class="destination-card glass-effect" data-aos="fade-up">
+                    <div class="card-image">
+                        <img src="path-to-dal-lake-image.jpg" alt="Dal Lake">
+                        <div class="card-tag">Most Popular</div>
+                    </div>
+                    <div class="card-content">
+                        <h3>Dal Lake</h3>
+                        <div class="rating">
+                            <i class="fas fa-star"></i>
+                            <span>4.8 (2.5k+ reviews)</span>
+                        </div>
+                        <p>Experience the magical sunset on Shikara</p>
+                        <div class="card-footer">
+                            <div class="price">
+                                <span>From</span>
+                                <h4>₹2,499</h4>
+                            </div>
+                            <button class="explore-btn">View Details</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Additional destination cards -->
+            </div>
         </div>
     </section>
 
-    <!-- Experience Section -->
-    <section class="experience">
-        <div class="experience-content">
-            <div class="text-content" data-aos="fade-right">
-                <h2>Why Choose Us?</h2>
-                <div class="features-grid">
-                    <div class="feature">
-                        <i class="fas fa-check-circle"></i>
-                        <h3>Expert Local Guides</h3>
-                        <p>Knowledgeable and friendly local experts</p>
-                    </div>
-                    <!-- Add more features -->
-                </div>
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2>Why Choose Us</h2>
+                <p>Experience the difference with our premium services</p>
             </div>
-            <div class="image-content" data-aos="fade-left">
-                <img src="path-to-experience-image.jpg" alt="Kashmir Experience">
+
+            <div class="features-grid">
+                <!-- Feature Card 1 -->
+                <div class="feature-card" data-aos="fade-up">
+                    <div class="feature-icon">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <h3>Expert Local Guides</h3>
+                    <p>Our guides know every corner of Kashmir</p>
+                </div>
+                <!-- Additional feature cards -->
             </div>
         </div>
     </section>
 
     <!-- Packages Section -->
     <section class="packages">
-        <!-- Similar structure to destinations -->
-    </section>
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2>Popular Packages</h2>
+                <p>Choose from our carefully curated travel packages</p>
+            </div>
 
-    <!-- Testimonials -->
-    <section class="testimonials glass-effect">
-        <div class="swiper testimonial-slider">
-            <!-- Add testimonial slides -->
+            <div class="swiper package-slider">
+                <div class="swiper-wrapper">
+                    <!-- Package Card 1 -->
+                    <div class="swiper-slide">
+                        <div class="package-card glass-effect">
+                            <!-- Package content -->
+                        </div>
+                    </div>
+                    <!-- Additional package cards -->
+                </div>
+                <div class="swiper-pagination"></div>
+            </div>
         </div>
     </section>
 
-    <!-- Newsletter -->
+    <!-- Testimonials Section -->
+    <section class="testimonials">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <h2>What Our Guests Say</h2>
+                <p>Real experiences from real travelers</p>
+            </div>
+
+            <div class="swiper testimonial-slider">
+                <!-- Testimonial slides -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter Section -->
     <section class="newsletter glass-effect">
-        <div class="newsletter-content">
-            <h2>Subscribe to Our Newsletter</h2>
-            <p>Get special offers and latest updates</p>
-            <form class="newsletter-form">
-                <input type="email" placeholder="Enter your email">
-                <button type="submit">Subscribe</button>
-            </form>
+        <div class="container">
+            <div class="newsletter-content">
+                <h2>Subscribe to Our Newsletter</h2>
+                <p>Get special offers and latest updates</p>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="Enter your email">
+                    <button type="submit">Subscribe</button>
+                </form>
+            </div>
         </div>
     </section>
 
     <!-- Footer -->
     <footer class="footer">
-        <!-- Footer content -->
+        <div class="container">
+            <!-- Footer content -->
+        </div>
     </footer>
-
-    <!-- Booking Modal -->
-    <div class="booking-modal">
-        <!-- Booking form -->
-    </div>
 
     <!-- Scripts -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
