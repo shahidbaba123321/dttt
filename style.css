@@ -1,0 +1,44 @@
+:root {
+    --primary-color: #2a6f97;
+    --secondary-color: #468faf;
+}
+
+.hero-section {
+    height: 70vh;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+}
+
+.package-card, .destination-card {
+    transition: transform 0.3s;
+    border: none;
+}
+
+.package-card:hover, .destination-card:hover {
+    transform: translateY(-10px);
+}
+
+.section-heading {
+    position: relative;
+    padding-bottom: 1rem;
+    margin-bottom: 3rem;
+}
+
+.section-heading:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 3px;
+    background: var(--primary-color);
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        height: 50vh;
+    }
+}
