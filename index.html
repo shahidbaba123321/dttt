@@ -1,129 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Previous head content remains same -->
-    <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sizzling Kashmir | Luxury Travel Experiences</title>
+    
+    <!-- CSS Links -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <!-- Enhanced Navigation with Glassmorphism -->
-    <nav class="navbar glass-morphism">
-        <div class="nav-brand">
-            <img src="assets/images/logo.png" alt="Sizzling Kashmir">
-            <span class="brand-text">Sizzling Kashmir</span>
-        </div>
-        <div class="nav-links">
-            <!-- Previous nav links -->
-            <div class="theme-toggle">
-                <i class="fas fa-moon"></i>
-            </div>
-        </div>
-    </nav>
+    <!-- Preloader -->
+    <div class="preloader">
+        <div class="loader"></div>
+    </div>
 
-    <!-- Enhanced Hero Section with Parallax -->
-    <section class="hero parallax-section">
-        <div class="hero-slider">
-            <div class="slide active" style="background-image: url('https://images.unsplash.com/photo-1566837945700-30057527ade0')">
-                <div class="slide-content">
-                    <h1 data-aos="fade-up">Experience Paradise on Earth</h1>
-                    <p data-aos="fade-up" data-aos-delay="200">Discover the magical beauty of Kashmir</p>
+    <!-- Header -->
+    <header class="header glass-effect">
+        <nav class="nav-container">
+            <div class="logo">
+                <img src="assets/images/logo.png" alt="Sizzling Kashmir Logo">
+                <span>Sizzling Kashmir</span>
+            </div>
+            
+            <div class="nav-links">
+                <a href="#" class="active">Home</a>
+                <a href="about.html">About</a>
+                <a href="packages.html">Packages</a>
+                <a href="destinations.html">Destinations</a>
+                <a href="hotels.html">Hotels</a>
+                <a href="cabs.html">Transport</a>
+                <div class="dropdown">
+                    <a href="#">More <i class="fas fa-chevron-down"></i></a>
+                    <div class="dropdown-content glass-effect">
+                        <a href="gallery.html">Gallery</a>
+                        <a href="videos.html">Videos</a>
+                        <a href="contact.html">Contact</a>
+                    </div>
                 </div>
             </div>
-            <!-- More slides -->
+
+            <div class="nav-actions">
+                <button class="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="book-now-btn">Book Now</button>
+                <div class="mobile-menu-btn">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="swiper hero-slider">
+            <div class="swiper-wrapper">
+                <div class="swiper-slide" style="background-image: url('https://images.unsplash.com/photo-1566837945700-30057527ade0')">
+                    <div class="slide-content">
+                        <h1 data-aos="fade-up">Experience Paradise on Earth</h1>
+                        <p data-aos="fade-up" data-aos-delay="200">Discover the untold beauty of Kashmir</p>
+                        <button class="cta-btn" data-aos="fade-up" data-aos-delay="400">
+                            Start Your Journey
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- Add more slides -->
+            </div>
+            <div class="swiper-pagination"></div>
         </div>
-        
-        <!-- Enhanced Search Bar -->
-        <div class="search-container" data-aos="fade-up" data-aos-delay="400">
-            <div class="search-box glass-morphism">
-                <div class="search-input">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <input type="text" placeholder="Where to?">
-                </div>
-                <div class="search-input">
-                    <i class="fas fa-calendar"></i>
-                    <input type="date" placeholder="When?">
-                </div>
-                <div class="search-input">
-                    <i class="fas fa-users"></i>
-                    <input type="number" placeholder="Guests">
-                </div>
-                <button class="search-btn">Search</button>
+
+        <!-- Search Box -->
+        <div class="search-box glass-effect" data-aos="fade-up">
+            <div class="search-group">
+                <i class="fas fa-map-marker-alt"></i>
+                <input type="text" placeholder="Where to go?">
             </div>
+            <div class="search-group">
+                <i class="fas fa-calendar"></i>
+                <input type="date" placeholder="Check In">
+            </div>
+            <div class="search-group">
+                <i class="fas fa-users"></i>
+                <select>
+                    <option>2 Adults</option>
+                    <option>3 Adults</option>
+                    <option>4 Adults</option>
+                </select>
+            </div>
+            <button class="search-btn">Search</button>
         </div>
     </section>
 
-    <!-- Featured Destinations with Modern Cards -->
-    <section class="featured-destinations">
-        <div class="section-header" data-aos="fade-up">
-            <h2>Popular Destinations</h2>
-            <div class="section-line"></div>
+    <!-- Featured Destinations -->
+    <section class="destinations">
+        <div class="section-header">
+            <h2 data-aos="fade-up">Popular Destinations</h2>
+            <p data-aos="fade-up" data-aos-delay="200">Explore the most beautiful places in Kashmir</p>
         </div>
+
         <div class="destination-grid">
-            <div class="destination-card glass-morphism" data-aos="fade-up">
+            <!-- Destination Card -->
+            <div class="destination-card glass-effect" data-aos="fade-up">
                 <div class="card-image">
-                    <img src="https://images.unsplash.com/photo-dal-lake" alt="Dal Lake">
-                    <div class="card-badge">Most Popular</div>
+                    <img src="path-to-dal-lake-image.jpg" alt="Dal Lake">
+                    <div class="card-tag">Most Popular</div>
                 </div>
                 <div class="card-content">
                     <h3>Dal Lake</h3>
-                    <div class="card-meta">
-                        <span><i class="fas fa-star"></i> 4.8</span>
-                        <span><i class="fas fa-map-pin"></i> Srinagar</span>
+                    <div class="rating">
+                        <i class="fas fa-star"></i>
+                        <span>4.8 (2.5k+ reviews)</span>
                     </div>
-                    <p>Experience the serenity of Dal Lake with traditional Shikara rides</p>
-                    <div class="card-price">
-                        <span>From</span>
-                        <h4>₹2,499</h4>
+                    <p>Experience the magical sunset on Shikara</p>
+                    <div class="card-footer">
+                        <div class="price">
+                            <span>From</span>
+                            <h4>₹2,499</h4>
+                        </div>
+                        <button class="explore-btn">View Details</button>
                     </div>
-                    <button class="card-btn">Explore Now</button>
                 </div>
             </div>
-            <!-- More destination cards -->
+            <!-- Add more destination cards -->
         </div>
     </section>
 
     <!-- Experience Section -->
-    <section class="experience-section">
+    <section class="experience">
         <div class="experience-content">
-            <div class="experience-text" data-aos="fade-right">
+            <div class="text-content" data-aos="fade-right">
                 <h2>Why Choose Us?</h2>
-                <div class="experience-grid">
-                    <div class="experience-item">
+                <div class="features-grid">
+                    <div class="feature">
                         <i class="fas fa-check-circle"></i>
                         <h3>Expert Local Guides</h3>
-                        <p>Knowledgeable guides with years of experience</p>
+                        <p>Knowledgeable and friendly local experts</p>
                     </div>
-                    <!-- More experience items -->
+                    <!-- Add more features -->
                 </div>
             </div>
-            <div class="experience-image" data-aos="fade-left">
-                <img src="path-to-image.jpg" alt="Experience Kashmir">
+            <div class="image-content" data-aos="fade-left">
+                <img src="path-to-experience-image.jpg" alt="Kashmir Experience">
             </div>
         </div>
     </section>
 
-    <!-- Package Deals Section -->
-    <section class="packages-section">
-        <div class="section-header" data-aos="fade-up">
-            <h2>Popular Packages</h2>
-            <div class="section-line"></div>
-        </div>
-        <div class="package-slider">
-            <!-- Package cards with smooth sliding -->
+    <!-- Packages Section -->
+    <section class="packages">
+        <!-- Similar structure to destinations -->
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials glass-effect">
+        <div class="swiper testimonial-slider">
+            <!-- Add testimonial slides -->
         </div>
     </section>
 
-    <!-- Testimonials Section -->
-    <section class="testimonials-section glass-morphism">
-        <div class="testimonials-slider">
-            <!-- Testimonial cards -->
+    <!-- Newsletter -->
+    <section class="newsletter glass-effect">
+        <div class="newsletter-content">
+            <h2>Subscribe to Our Newsletter</h2>
+            <p>Get special offers and latest updates</p>
+            <form class="newsletter-form">
+                <input type="email" placeholder="Enter your email">
+                <button type="submit">Subscribe</button>
+            </form>
         </div>
     </section>
 
-    <!-- Enhanced Footer -->
+    <!-- Footer -->
     <footer class="footer">
-        <div class="footer-content">
-            <!-- Footer content -->
-        </div>
+        <!-- Footer content -->
     </footer>
 
     <!-- Booking Modal -->
@@ -132,9 +192,8 @@
     </div>
 
     <!-- Scripts -->
-    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
-    <script>
-        AOS.init();
-    </script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>
