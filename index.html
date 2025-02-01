@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sizzling Kashmir - Explore Paradise on Earth</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .hero-section {
+            height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
+                        url('https://lh5.googleusercontent.com/p/AF1QipN2RqXITO1ZfkB_7DWSXxPw9qZv6E3y7YJ8nWZR=w408-h306-k-no');
+            background-size: cover;
+            background-position: center;
+        }
+        .package-card {
+            transition: transform 0.3s;
+        }
+        .package-card:hover {
+            transform: translateY(-10px);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container">
+        <a class="navbar-brand" href="#">Sizzling Kashmir</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link active" href="index.html">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="about.html">About Us</a></li>
+                <li class="nav-item"><a class="nav-link" href="packages.html">Packages</a></li>
+                <li class="nav-item"><a class="nav-link" href="destinations.html">Destinations</a></li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        More
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="gallery.html">Gallery</a></li>
+                        <li><a class="dropdown-item" href="contact.html">Contact</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero-section text-white d-flex align-items-center">
+    <div class="container text-center">
+        <h1 class="display-4 mb-4">Experience Kashmir Like Never Before</h1>
+        <p class="lead mb-4">Discover the timeless beauty of the Himalayas</p>
+        <div class="search-bar bg-white p-4 rounded">
+            <form class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" placeholder="Destination">
+                </div>
+                <div class="col-md-2">
+                    <input type="date" class="form-control">
+                </div>
+                <div class="col-md-2">
+                    <input type="date" class="form-control">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select">
+                        <option>Guests</option>
+                        <option>1</option>
+                        <option>2</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary w-100">Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Packages -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Featured Packages</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card package-card">
+                    <img src="https://lh5.googleusercontent.com/p/AF1QipO3tV2D3nF1vV6u8m3JXf0R2j6xH4L8yY7Z7y3H=w408-h272-k-no" class="card-img-top" alt="Gulmarg">
+                    <div class="card-body">
+                        <h5 class="card-title">Gulmarg Adventure</h5>
+                        <p class="card-text">5 Days/4 Nights | Skiing & Gondola Ride</p>
+                        <p class="h4 text-primary">₹25,999/-</p>
+                        <a href="#" class="btn btn-primary">Book Now</a>
+                    </div>
+                </div>
+            </div>
+            <!-- Add more package cards -->
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-dark text-white py-5">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <h5>Contact Us</h5>
+                <p>✉️ info@sizzlingkashmir.com</p>
+                <p>📞 +91 98765 43210</p>
+            </div>
+            <div class="col-md-4">
+                <h5>Quick Links</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#" class="text-white">Terms of Service</a></li>
+                    <li><a href="#" class="text-white">Privacy Policy</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h5>Follow Us</h5>
+                <div class="social-icons">
+                    <a href="#" class="text-white me-3"><i class="fab fa-facebook"></i></a>
+                    <a href="#" class="text-white me-3"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
