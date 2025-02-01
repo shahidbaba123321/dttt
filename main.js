@@ -78,8 +78,8 @@ function initializeNavigation() {
 }
 
 // 3. Slider Initialization
+// Update in main.js
 function initializeSliders() {
-    // Hero Slider
     const heroSlider = new Swiper('.hero-slider', {
         slidesPerView: 1,
         effect: 'fade',
@@ -92,15 +92,9 @@ function initializeSliders() {
         pagination: {
             el: '.swiper-pagination',
             clickable: true,
-            renderBullet: function (index, className) {
-                return `<span class="${className}"><span class="bullet-text">0${index + 1}</span></span>`;
-            },
-        },
-        navigation: {
-            nextEl: '.swiper-button-next',
-            prevEl: '.swiper-button-prev',
         },
     });
+}
 
     // Testimonials Slider
     const testimonialSlider = new Swiper('.testimonial-slider', {
@@ -456,11 +450,22 @@ async function submitBooking(form) {
     }
 }
 
+function initializeMobileMenu() {
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    const mainNav = document.querySelector('.main-nav');
+
+    mobileMenuBtn?.addEventListener('click', () => {
+        mainNav.classList.toggle('active');
+        mobileMenuBtn.classList.toggle('active');
+    });
+}
+
 // Initialize everything when the DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     initializePreloader();
     initializeNavigation();
     initializeSliders();
+    initializeMobileMenu();
     initializeAnimations();
     initializeScrollEffects();
     initializeBookingSystem();
