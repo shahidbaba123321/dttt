@@ -7,53 +7,454 @@
     <link rel="stylesheet" href="featurestyles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+      <script src="https://cdn.jsdelivr.net/npm/sentiment@5.0.2/build/sentiment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
+
+    <style>
+        /* Root Variables */
+:root {
+    --primary-color: #4285f4;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --background-color: #f8f9fa;
+    --text-color: #333;
+    --light-text: #6c757d;
+    --border-radius: 8px;
+    --transition: all 0.3s ease;
+    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    --card-bg: #ffffff;
+}
+
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    overflow-x: hidden;
+}
+
+body.menu-open {
+    overflow: hidden;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+/* Button Styles */
+.btn {
+    display: inline-block;
+    padding: 0.8rem 1.5rem;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    transition: var(--transition);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn.primary {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+}
+
+.btn.primary:hover {
+    background-color: #3367d6;
+    transform: translateY(-2px);
+}
+         /* Header Container Styles */
+        #header-container {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--card-bg);
+            box-shadow: var(--box-shadow);
+        }
+
+        /* Section Headers */
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            color: var(--light-text);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        /* Features Hero Section */
+.features-hero {
+    background-color: #f0f7ff;
+    padding: 6rem 0;
+    overflow: hidden;
+}
+
+.features-hero .container {
+    display: flex;
+    align-items: center;
+    gap: 4rem;
+}
+
+.features-hero-content {
+    flex: 1;
+    max-width: 600px;
+}
+
+.features-hero-content h1 {
+    font-size: 3.5rem;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+}
+
+.features-hero-content p {
+    font-size: 1.2rem;
+    color: var(--light-text);
+    margin-bottom: 2rem;
+}
+
+.features-illustration {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.features-illustration img {
+    max-width: 100%;
+    height: auto;
+}
+/* HR Management Section */
+.hr-management {
+    padding: 6rem 0;
+    background: var(--card-bg);
+}
+
+.features-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 4rem;
+}
+
+.feature-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: var(--box-shadow);
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+}
+
+.feature-icon {
+    width: 60px;
+    height: 60px;
+    background: #f0f7ff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.feature-icon i {
+    font-size: 24px;
+    color: var(--primary-color);
+}
+
+.feature-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+.feature-card p {
+    color: var(--light-text);
+    margin-bottom: 1.5rem;
+}
+
+/* New Sections Common Styles */
+.analytics-section,
+.integrations-section,
+.customize-section,
+.document-section,
+.engagement-section,
+.case-management,
+.learning-management,
+.performance-evaluation {
+    padding: 6rem 0;
+    background-color: var(--card-bg);
+}
+
+.content-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4rem;
+}
+
+.content-wrapper.reverse {
+    flex-direction: row-reverse;
+}
+
+.text-content {
+    flex: 1;
+}
+
+.text-content h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+}
+
+.text-content p {
+    font-size: 1.1rem;
+    color: var(--light-text);
+    margin-bottom: 2rem;
+}
+
+.image-content {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.image-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Feature Split Layout */
+.feature-split {
+    display: flex;
+    align-items: center;
+    gap: 4rem;
+    margin-top: 3rem;
+}
+
+.feature-info {
+    flex: 1;
+}
+
+.feature-item {
+    padding: 2rem;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: var(--box-shadow);
+}
+
+.feature-item i {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.feature-item h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+/* Dashboard Preview */
+.dashboard-preview {
+    position: relative;
+    padding: 20px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: var(--box-shadow);
+    margin-top: 3rem;
+}
+
+.dashboard-preview::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 20px;
+    width: 12px;
+    height: 12px;
+    background: #ff6b6b;
+    border-radius: 50%;
+    box-shadow: 20px 0 0 #ffd93d, 40px 0 0 #6bff6b;
+}
+
+.dashboard-preview img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    display: block;
+    margin-top: 1.5rem;
+}
+
+/* Learn More Link */
+.learn-more {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+}
+
+.learn-more:hover {
+    color: #3367d6;
+}
+
+.learn-more i {
+    transition: transform 0.3s ease;
+}
+
+.learn-more:hover i {
+    transform: translateX(5px);
+}
+
+/* Footer */
+footer {
+    background: #2d3436;
+    color: #fff;
+    padding: 6rem 0 2rem;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 4rem;
+    margin-bottom: 4rem;
+}
+
+.footer-section h4 {
+    margin-bottom: 1.5rem;
+    font-size: 1.2rem;
+}
+
+.footer-section ul {
+    list-style: none;
+}
+
+.footer-section ul li {
+    margin-bottom: 0.8rem;
+}
+
+.footer-section ul li a {
+    color: #a0a0a0;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.footer-section ul li a:hover {
+    color: #fff;
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 2rem;
+    text-align: center;
+}
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+    .content-wrapper,
+    .content-wrapper.reverse,
+    .feature-split {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .text-content,
+    .feature-info {
+        max-width: 100%;
+    }
+
+    .features-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+ /* Other Mobile Styles */
+    .features-hero .container {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .features-hero-content h1 {
+        font-size: 2.5rem;
+    }
+
+    .features-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .text-content h2 {
+        font-size: 2rem;
+    }
+
+    section {
+        padding: 4rem 0;
+    }
+
+    .dashboard-preview {
+        margin-top: 2rem;
+        padding: 15px;
+    }
+
+    .btn.primary {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate {
+    animation: fadeIn 0.6s ease forwards;
+}
+
+/* Alternating Backgrounds */
+section:nth-child(even) {
+    background-color: var(--background-color);
+}
+
+/* Image Optimization */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+    </style>
 </head>
 <body>
-    <!-- Mobile Menu Overlay -->
-    <div class="menu-overlay"></div>
-
-    <!-- Header Section -->
-    <header>
-        <div class="container">
-            <div class="logo">
-                <h1><a href="https://workpro.onrender.com">Workwise Pro</a></h1>
-            </div>
-            <div class="menu-toggle" id="mobile-menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-            <nav id="nav-menu">
-                <ul id="nav-list">
-                    <li><a href="features.html">Features</a></li>
-                    <li class="dropdown">
-                        <a href="#">HR/Accounts Modules <i class="fas fa-caret-down"></i></a>
-                        <ul class="dropdown-content">
-                            <li><a href="peoplemanagement.html">People Management</a></li>
-                            <li><a href="pms.html">Performance Management</a></li>
-                            <li><a href="payroll.html">Payroll Management</a></li>
-                            <li><a href="bookkeeping.html">Book-keeping</a></li>
-                            <li><a href="payint.html">Payroll Integration</a></li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#">Business Operations <i class="fas fa-caret-down"></i></a>
-                        <ul class="dropdown-content">
-                            <li><a href="smartexpenses.html">SmartExpenses</a></li>
-                            <li><a href="shiftmaster.html">ShiftMaster</a></li>
-                            <li><a href="cs.html">FlexHire - Coming Soon</a></li>
-                            <li><a href="stockflow.html">StockFlow</a></li>
-                            <li><a href="globalinvoice.html">GlobalInvoice</a></li>
-                        </ul>
-                    </li>
-                    <li><a href="#pricing">Pricing</a></li>
-                    <li><a href="login.html">Sign In</a></li>
-                    <li><a href="signup.html" class="btn primary">Sign Up</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
-
+     <!-- Header Container -->
+    <div id="header-container"></div>
     <!-- Main Content -->
     <main>
         <!-- Hero Section -->
@@ -288,7 +689,100 @@
             </div>
         </div>
     </footer>
+<script>
+    // Intersection Observer for Animations
+function observeAnimatedElements() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate');
+            }
+        });
+    }, {
+        threshold: 0.1
+    });
 
-    <script src="featurescript.js"></script>
+    document.querySelectorAll('.feature-card, .hero-content, .dashboard-preview').forEach(el => {
+        observer.observe(el);
+    });
+}
+
+// Window Resize Handler
+window.addEventListener('resize', debounce(() => {
+    if (window.innerWidth > 768) {
+        const mobileMenu = document.getElementById('mobile-menu');
+        const navMenu = document.getElementById('nav-menu');
+        const menuOverlay = document.querySelector('.menu-overlay');
+        
+        mobileMenu?.classList.remove('active');
+        navMenu?.classList.remove('active');
+        menuOverlay?.classList.remove('active');
+        document.body.classList.remove('menu-open');
+    }
+}, 250));
+
+// Debounce Helper Function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+      // Component Loading Function
+        async function loadComponent(url, targetElementId) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const html = await response.text();
+                
+                const targetElement = document.getElementById(targetElementId);
+                if (!targetElement) throw new Error(`Target element ${targetElementId} not found`);
+                
+                const temp = document.createElement('div');
+                temp.innerHTML = html;
+                
+                // Extract and apply styles
+                const styles = temp.getElementsByTagName('style');
+                Array.from(styles).forEach(style => {
+                    document.head.appendChild(style.cloneNode(true));
+                });
+                
+                // Extract content
+                const content = temp.querySelector('header') || temp.firstElementChild;
+                if (!content) throw new Error('No content found in component');
+                
+                targetElement.innerHTML = '';
+                targetElement.appendChild(content.cloneNode(true));
+                
+                // Handle scripts
+                const scripts = temp.getElementsByTagName('script');
+                Array.from(scripts).forEach(script => {
+                    const newScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => {
+                        newScript.setAttribute(attr.name, attr.value);
+                    });
+                    newScript.textContent = script.textContent;
+                    document.body.appendChild(newScript);
+                });
+                
+                return true;
+            } catch (error) {
+                console.error(`Error loading component from ${url}:`, error);
+                return false;
+            }
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load header
+            loadComponent('mainheader.html', 'header-container');
+
+</script>
+    
 </body>
 </html>
