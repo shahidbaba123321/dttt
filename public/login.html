@@ -8,7 +8,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-
+<script>
+    // Debug information
+    console.log('Current URL:', window.location.href);
+    console.log('API Endpoint:', '/api/login');
+</script>
     <!-- Mobile Menu Overlay -->
     <div class="menu-overlay"></div>
 
@@ -169,89 +173,82 @@
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const role = document.getElementById('role').value;
-
-    // Show loading state
     const submitButton = this.querySelector('button[type="submit"]');
     const originalButtonText = submitButton.innerHTML;
     submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
     submitButton.disabled = true;
 
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const role = document.getElementById('role').value;
+
     try {
-        // Get the base URL from window.location
-        const baseUrl = window.location.origin;
-        const response = await fetch(`${baseUrl}/api/login`, {
+        const response = await fetch('/api/login', {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
+            headers: {
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ email, password, role }),
-            credentials: 'include' // Include cookies if any
+            body: JSON.stringify({
+                email: email,
+                password: password,
+                role: role
+            })
         });
 
-        const data = await response.json();
-
-        if (response.ok) {
-            // Store user data
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('userRole', data.user.role);
-            localStorage.setItem('userEmail', data.user.email);
-
-            // Show success message
-            alert('Login successful! Redirecting...');
-
-            // Redirect based on role
-            switch(data.user.role) {
-                case 'admin':
-                    window.location.href = '/admin-dashboard.html';
-                    break;
-                case 'superadmin':
-                    window.location.href = '/super-admin-dashboard.html';
-                    break;
-                case 'user':
-                default:
-                    window.location.href = '/dashboard.html';
-                    break;
-            }
-        } else {
-            // Show error message
-            throw new Error(data.message || 'Login failed');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Login failed');
         }
+
+        const data = await response.json();
+        
+        // Store token and user data
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('userRole', data.user.role);
+        localStorage.setItem('userEmail', data.user.email);
+
+        // Redirect based on role
+        switch(data.user.role) {
+            case 'admin':
+                window.location.href = 'admin-dashboard.html';
+                break;
+            case 'superadmin':
+                window.location.href = 'super-admin-dashboard.html';
+                break;
+            case 'user':
+            default:
+                window.location.href = 'dashboard.html';
+                break;
+        }
+
     } catch (error) {
         console.error('Login error:', error);
-        
-        // Show error message to user
-        const errorMessage = error.message === 'Failed to fetch' 
-            ? 'Unable to connect to server. Please check your internet connection.'
-            : error.message || 'Login failed. Please try again.';
-        
-        alert(errorMessage);
+        alert(error.message || 'Login failed. Please try again.');
     } finally {
-        // Reset button state
         submitButton.innerHTML = originalButtonText;
         submitButton.disabled = false;
     }
 });
 
-// Add this function to check if user is already logged in
+// Add this to prevent form resubmission
+if (window.history.replaceState) {
+    window.history.replaceState(null, null, window.location.href);
+}
+
+// Check if user is already logged in
 function checkAuthStatus() {
     const token = localStorage.getItem('token');
-    const role = localStorage.getItem('userRole');
-    
-    if (token && role) {
-        // Redirect to appropriate dashboard if already logged in
+    if (token) {
+        const role = localStorage.getItem('userRole');
         switch(role) {
             case 'admin':
-                window.location.href = '/admin-dashboard.html';
+                window.location.href = 'admin-dashboard.html';
                 break;
             case 'superadmin':
-                window.location.href = '/super-admin-dashboard.html';
+                window.location.href = 'super-admin-dashboard.html';
                 break;
             case 'user':
-                window.location.href = '/dashboard.html';
+                window.location.href = 'dashboard.html';
                 break;
         }
     }
@@ -259,16 +256,6 @@ function checkAuthStatus() {
 
 // Check auth status when page loads
 document.addEventListener('DOMContentLoaded', checkAuthStatus);
-
-// Add this to help debug API calls
-function debugApiCall(url, options) {
-    console.log('API Call:', {
-        url,
-        method: options.method,
-        headers: options.headers,
-        body: options.body
-    });
-}
     </script>
     
      <script src="script.js"></script>
