@@ -4,75 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Features - Workwise Pro</title>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-      <script src="https://cdn.jsdelivr.net/npm/sentiment@5.0.2/build/sentiment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sentiment@5.0.2/build/sentiment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
 
     <style>
         /* Root Variables */
-:root {
-    --primary-color: #4285f4;
-    --secondary-color: #6c757d;
-    --success-color: #28a745;
-    --background-color: #f8f9fa;
-    --text-color: #333;
-    --light-text: #6c757d;
-    --border-radius: 8px;
-    --transition: all 0.3s ease;
-    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    --gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    --card-bg: #ffffff;
-}
+        :root {
+            --primary-color: #4285f4;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --background-color: #f8f9fa;
+            --text-color: #333;
+            --light-text: #6c757d;
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            --card-bg: #ffffff;
+        }
 
-/* General Reset */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-body {
-    font-family: 'Poppins', sans-serif;
-    line-height: 1.6;
-    color: var(--text-color);
-    background-color: var(--background-color);
-    overflow-x: hidden;
-}
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            overflow-x: hidden;
+        }
 
-body.menu-open {
-    overflow: hidden;
-}
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 2rem;
-}
-
-/* Button Styles */
-.btn {
-    display: inline-block;
-    padding: 0.8rem 1.5rem;
-    border-radius: var(--border-radius);
-    text-decoration: none;
-    transition: var(--transition);
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.btn.primary {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-}
-
-.btn.primary:hover {
-    background-color: #3367d6;
-    transform: translateY(-2px);
-}
-         /* Header Container Styles */
+        /* Header Container */
         #header-container {
             position: sticky;
             top: 0;
@@ -81,7 +55,78 @@ body.menu-open {
             box-shadow: var(--box-shadow);
         }
 
-        /* Section Headers */
+        /* Button Styles */
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            transition: var(--transition);
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn.primary {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+        }
+
+        .btn.primary:hover {
+            background-color: #3367d6;
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow);
+        }
+
+        /* Features Hero Section */
+        .features-hero {
+            background-color: #f0f7ff;
+            padding: 6rem 0;
+            overflow: hidden;
+        }
+
+        .features-hero .container {
+            display: flex;
+            align-items: center;
+            gap: 4rem;
+        }
+
+        .features-hero-content {
+            flex: 1;
+            max-width: 600px;
+        }
+
+        .features-hero-content h1 {
+            font-size: 3.5rem;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
+        }
+
+        .features-hero-content p {
+            font-size: 1.2rem;
+            color: var(--light-text);
+            margin-bottom: 2rem;
+        }
+
+        .features-illustration {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .features-illustration img {
+            max-width: 100%;
+            height: auto;
+            animation: float 3s ease-in-out infinite;
+        }
+                /* HR Management Section */
+        .hr-management {
+            padding: 6rem 0;
+            background: var(--card-bg);
+        }
+
         .section-header {
             text-align: center;
             margin-bottom: 3rem;
@@ -99,368 +144,291 @@ body.menu-open {
             max-width: 600px;
             margin: 0 auto;
         }
-        /* Features Hero Section */
-.features-hero {
-    background-color: #f0f7ff;
-    padding: 6rem 0;
-    overflow: hidden;
-}
 
-.features-hero .container {
-    display: flex;
-    align-items: center;
-    gap: 4rem;
-}
+        .features-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 4rem;
+        }
 
-.features-hero-content {
-    flex: 1;
-    max-width: 600px;
-}
+        .feature-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--box-shadow);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
 
-.features-hero-content h1 {
-    font-size: 3.5rem;
-    line-height: 1.2;
-    margin-bottom: 1.5rem;
-    color: var(--text-color);
-}
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
 
-.features-hero-content p {
-    font-size: 1.2rem;
-    color: var(--light-text);
-    margin-bottom: 2rem;
-}
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: #f0f7ff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
 
-.features-illustration {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+        .feature-icon i {
+            font-size: 24px;
+            color: var(--primary-color);
+        }
 
-.features-illustration img {
-    max-width: 100%;
-    height: auto;
-}
-/* HR Management Section */
-.hr-management {
-    padding: 6rem 0;
-    background: var(--card-bg);
-}
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
 
-.features-cards {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-    margin-top: 4rem;
-}
+        .feature-card p {
+            color: var(--light-text);
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
 
-.feature-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: var(--box-shadow);
-    transition: transform 0.3s ease;
-}
+        /* Learn More Link */
+        .learn-more {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+            margin-top: auto;
+        }
 
-.feature-card:hover {
-    transform: translateY(-5px);
-}
+        .learn-more:hover {
+            color: #3367d6;
+        }
 
-.feature-icon {
-    width: 60px;
-    height: 60px;
-    background: #f0f7ff;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-}
+        .learn-more i {
+            transition: transform 0.3s ease;
+        }
 
-.feature-icon i {
-    font-size: 24px;
-    color: var(--primary-color);
-}
+        .learn-more:hover i {
+            transform: translateX(5px);
+        }
 
-.feature-card h3 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: var(--text-color);
-}
+        /* Content Sections */
+        .analytics-section,
+        .integrations-section,
+        .customize-section,
+        .document-section,
+        .engagement-section,
+        .case-management,
+        .learning-management,
+        .performance-evaluation {
+            padding: 6rem 0;
+            background-color: var(--card-bg);
+        }
 
-.feature-card p {
-    color: var(--light-text);
-    margin-bottom: 1.5rem;
-}
+        .content-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 4rem;
+        }
 
-/* New Sections Common Styles */
-.analytics-section,
-.integrations-section,
-.customize-section,
-.document-section,
-.engagement-section,
-.case-management,
-.learning-management,
-.performance-evaluation {
-    padding: 6rem 0;
-    background-color: var(--card-bg);
-}
+        .content-wrapper.reverse {
+            flex-direction: row-reverse;
+        }
 
-.content-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 4rem;
-}
+        .text-content {
+            flex: 1;
+        }
 
-.content-wrapper.reverse {
-    flex-direction: row-reverse;
-}
+        .text-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
+        }
 
-.text-content {
-    flex: 1;
-}
+        .text-content p {
+            font-size: 1.1rem;
+            color: var(--light-text);
+            margin-bottom: 2rem;
+        }
 
-.text-content h2 {
-    font-size: 2.5rem;
-    margin-bottom: 1.5rem;
-    color: var(--text-color);
-}
+        .image-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-.text-content p {
-    font-size: 1.1rem;
-    color: var(--light-text);
-    margin-bottom: 2rem;
-}
+        .image-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
 
-.image-content {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+        /* Dashboard Preview */
+        .dashboard-preview {
+            position: relative;
+            padding: 20px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: var(--box-shadow);
+            margin-top: 3rem;
+        }
 
-.image-content img {
-    max-width: 100%;
-    height: auto;
-}
+        .dashboard-preview::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            width: 12px;
+            height: 12px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            box-shadow: 20px 0 0 #ffd93d, 40px 0 0 #6bff6b;
+        }
 
-/* Feature Split Layout */
-.feature-split {
-    display: flex;
-    align-items: center;
-    gap: 4rem;
-    margin-top: 3rem;
-}
+        .dashboard-preview img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            display: block;
+            margin-top: 1.5rem;
+        }
 
-.feature-info {
-    flex: 1;
-}
+        /* Feature Split Layout */
+        .feature-split {
+            display: flex;
+            align-items: center;
+            gap: 4rem;
+            margin-top: 3rem;
+        }
 
-.feature-item {
-    padding: 2rem;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: var(--box-shadow);
-}
+        .feature-info {
+            flex: 1;
+        }
 
-.feature-item i {
-    font-size: 2rem;
-    color: var(--primary-color);
-    margin-bottom: 1rem;
-}
+        .feature-item {
+            padding: 2rem;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: var(--box-shadow);
+        }
 
-.feature-item h3 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: var(--text-color);
-}
+        .feature-item i {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
 
-/* Dashboard Preview */
-.dashboard-preview {
-    position: relative;
-    padding: 20px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: var(--box-shadow);
-    margin-top: 3rem;
-}
+        .feature-item h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+                /* Responsive Styles */
+        @media (max-width: 1024px) {
+            .content-wrapper,
+            .content-wrapper.reverse,
+            .feature-split {
+                flex-direction: column;
+                text-align: center;
+            }
 
-.dashboard-preview::before {
-    content: '';
-    position: absolute;
-    top: 10px;
-    left: 20px;
-    width: 12px;
-    height: 12px;
-    background: #ff6b6b;
-    border-radius: 50%;
-    box-shadow: 20px 0 0 #ffd93d, 40px 0 0 #6bff6b;
-}
+            .text-content,
+            .feature-info {
+                max-width: 100%;
+            }
 
-.dashboard-preview img {
-    width: 100%;
-    height: auto;
-    border-radius: 8px;
-    display: block;
-    margin-top: 1.5rem;
-}
+            .features-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
 
-/* Learn More Link */
-.learn-more {
-    color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: var(--transition);
-}
+            .feature-item {
+                margin-bottom: 2rem;
+            }
+        }
 
-.learn-more:hover {
-    color: #3367d6;
-}
+        @media (max-width: 768px) {
+            .features-hero .container {
+                flex-direction: column;
+                text-align: center;
+            }
 
-.learn-more i {
-    transition: transform 0.3s ease;
-}
+            .features-hero-content h1 {
+                font-size: 2.5rem;
+            }
 
-.learn-more:hover i {
-    transform: translateX(5px);
-}
+            .features-cards {
+                grid-template-columns: 1fr;
+            }
 
-/* Footer */
-footer {
-    background: #2d3436;
-    color: #fff;
-    padding: 6rem 0 2rem;
-}
+            .text-content h2 {
+                font-size: 2rem;
+            }
 
-.footer-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 4rem;
-    margin-bottom: 4rem;
-}
+            section {
+                padding: 4rem 0;
+            }
 
-.footer-section h4 {
-    margin-bottom: 1.5rem;
-    font-size: 1.2rem;
-}
+            .dashboard-preview {
+                margin-top: 2rem;
+                padding: 15px;
+            }
 
-.footer-section ul {
-    list-style: none;
-}
+            .btn.primary {
+                width: 100%;
+                text-align: center;
+            }
 
-.footer-section ul li {
-    margin-bottom: 0.8rem;
-}
+            .feature-split {
+                flex-direction: column;
+            }
+        }
 
-.footer-section ul li a {
-    color: #a0a0a0;
-    text-decoration: none;
-    transition: var(--transition);
-}
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-.footer-section ul li a:hover {
-    color: #fff;
-}
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
 
-.footer-bottom {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 2rem;
-    text-align: center;
-}
+        .animate {
+            animation: fadeIn 0.6s ease forwards;
+        }
 
-/* Responsive Styles */
-@media (max-width: 1024px) {
-    .content-wrapper,
-    .content-wrapper.reverse,
-    .feature-split {
-        flex-direction: column;
-        text-align: center;
-    }
-
-    .text-content,
-    .feature-info {
-        max-width: 100%;
-    }
-
-    .features-cards {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
- /* Other Mobile Styles */
-    .features-hero .container {
-        flex-direction: column;
-        text-align: center;
-    }
-
-    .features-hero-content h1 {
-        font-size: 2.5rem;
-    }
-
-    .features-cards {
-        grid-template-columns: 1fr;
-    }
-
-    .text-content h2 {
-        font-size: 2rem;
-    }
-
-    section {
-        padding: 4rem 0;
-    }
-
-    .dashboard-preview {
-        margin-top: 2rem;
-        padding: 15px;
-    }
-
-    .btn.primary {
-        width: 100%;
-        text-align: center;
-    }
-}
-
-/* Animations */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate {
-    animation: fadeIn 0.6s ease forwards;
-}
-
-/* Alternating Backgrounds */
-section:nth-child(even) {
-    background-color: var(--background-color);
-}
-
-/* Image Optimization */
-img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-}
-
+        /* Alternating Backgrounds */
+        section:nth-child(even) {
+            background-color: var(--background-color);
+        }
     </style>
 </head>
 <body>
-     <!-- Header Container -->
+    <!-- Header Container -->
     <div id="header-container"></div>
+
     <!-- Main Content -->
     <main>
         <!-- Hero Section -->
         <section class="features-hero">
             <div class="container">
-                <div class="features-hero-content">
+                <div class="features-hero-content animate">
                     <h1>Features, tailor-made for your people</h1>
                     <p>HR involves numerous complex functions and processing. With Workwise Pro, you get a simple yet comprehensive and flexible system to manage all your HR processes so you can focus more on your people.</p>
                     <div class="hero-cta">
@@ -468,7 +436,7 @@ img {
                     </div>
                 </div>
                 <div class="features-illustration">
-                    <img src="image/features-hero.jpg" alt="Features Illustration">
+                    <img src="image/features-hero.jpg" alt="Features Illustration" class="animate">
                 </div>
             </div>
         </section>
@@ -476,12 +444,12 @@ img {
         <!-- HR Management Section -->
         <section class="hr-management">
             <div class="container">
-                <div class="section-header">
+                <div class="section-header animate">
                     <h2>Effortless HR management</h2>
                     <p>Workwise Pro provides all the tools you need to help your HR staff and employees stay efficient, up-to-date, and productive, even on the go.</p>
                 </div>
                 <div class="features-cards">
-                    <div class="feature-card">
+                    <div class="feature-card animate">
                         <div class="feature-icon">
                             <i class="fas fa-users"></i>
                         </div>
@@ -489,172 +457,86 @@ img {
                         <p>Start a structured onboarding process for new recruits. Initiate onboarding procedures with a new hire portal, customizable workflows, checklists and status-view reports.</p>
                         <a href="#" class="learn-more">Learn more <i class="fas fa-arrow-right"></i></a>
                     </div>
-                    <div class="feature-card">
+                    <div class="feature-card animate">
                         <div class="feature-icon">
                             <i class="fas fa-clock"></i>
                         </div>
                         <h3>Attendance Tracker</h3>
-                        <p>Track employee attendance efficiently with our automated system.</p>
+                        <p>Track employee attendance efficiently with our automated system. Monitor time-ins, time-outs, and work hours with ease.</p>
                         <a href="#" class="learn-more">Learn more <i class="fas fa-arrow-right"></i></a>
                     </div>
-                    <div class="feature-card">
+                    <div class="feature-card animate">
                         <div class="feature-icon">
                             <i class="fas fa-calendar-alt"></i>
                         </div>
                         <h3>Leave Tracker</h3>
-                        <p>Manage employee leave requests and tracking in one place.</p>
+                        <p>Manage employee leave requests and tracking in one place. Streamline approval processes and maintain accurate records.</p>
                         <a href="#" class="learn-more">Learn more <i class="fas fa-arrow-right"></i></a>
                     </div>
                 </div>
             </div>
         </section>
-
-        <!-- Data Management Section -->
+                <!-- Data Management Section -->
         <section class="data-management">
             <div class="container">
-                <div class="section-header">
+                <div class="section-header animate">
                     <h2>Manage data efficiently</h2>
                     <p>Streamline both your data collection and secure storage with our employee database management system. Set up your organization and maintain all your employee records in one central location.</p>
                     <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
                 </div>
-                <div class="dashboard-preview">
+                <div class="dashboard-preview animate">
                     <img src="image/dashboard-preview.jpg" alt="Dashboard Preview">
                 </div>
             </div>
         </section>
+
         <!-- Case Management Section -->
-<section class="case-management">
-    <div class="container">
-        <div class="section-header">
-            <h2>Case Management</h2>
-            <p>Most HRs need a smoother mechanism through which all employees can contact HR. With Workwise Pro, employees can initiate queries, and HR can sort, track and resolve issues on time, all the time.</p>
-            <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
-        </div>
-        <div class="dashboard-preview">
-            <img src="image/case-management.jpg" alt="Case Management Interface" class="feature-screenshot">
-        </div>
-    </div>
-</section>
+        <section class="case-management">
+            <div class="container">
+                <div class="section-header animate">
+                    <h2>Case Management</h2>
+                    <p>Most HRs need a smoother mechanism through which all employees can contact HR. With Workwise Pro, employees can initiate queries, and HR can sort, track and resolve issues on time, all the time.</p>
+                    <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+                </div>
+                <div class="dashboard-preview animate">
+                    <img src="image/case-management.jpg" alt="Case Management Interface" class="feature-screenshot">
+                </div>
+            </div>
+        </section>
 
-<!-- Learning Management Section -->
-<section class="learning-management">
-    <div class="container">
-        <div class="section-header">
-            <h2>Corporate Learning Management System</h2>
-            <p>Workwise Pro's LMS is an intuitive platform to easily create and manage your organization's training programs. Create courses, track employee progress, and help your team master new skills.</p>
-            <a href="#" class="learn-more">Learn more <i class="fas fa-arrow-right"></i></a>
-        </div>
-        <div class="dashboard-preview">
-            <img src="image/learning-management.webp" alt="Learning Management System Interface" class="feature-screenshot">
-        </div>
-    </div>
-</section>
+        <!-- Additional Sections -->
+        <section class="analytics-section">
+            <div class="container">
+                <div class="content-wrapper">
+                    <div class="text-content animate">
+                        <h2>Advanced Analytics</h2>
+                        <p>You can't improve what you don't measure. Gather meaningful insights about your workforce so you can identify bottlenecks and make informed decisions.</p>
+                        <a href="#" class="learn-more">Learn more <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <div class="image-content">
+                        <img src="image/analytics-chart.webp" alt="Analytics Dashboard" class="animate">
+                    </div>
+                </div>
+            </div>
+        </section>
 
-<!-- Performance Evaluation Section -->
-<section class="performance-evaluation">
-    <div class="container">
-        <div class="section-header">
-            <h2>Boost your performance evaluations</h2>
-            <p>Change the way you do reviews, and see positive developments reflected in employee performance. Give and receive feedback throughout the year, use evaluation modules like KRA and Goals and customize your appraisal cycle.</p>
-            <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
-        </div>
-        <div class="dashboard-preview">
-            <img src="image/performance-evaluation.webp" alt="Performance Evaluation Interface" class="feature-screenshot">
-        </div>
-    </div>
-</section>
+        <!-- Integration Section -->
+        <section class="integrations-section">
+            <div class="container">
+                <div class="content-wrapper reverse">
+                    <div class="text-content animate">
+                        <h2>Seamless Integrations</h2>
+                        <p>Workwise Pro integrates cleanly with several Zoho and third-party applications. So why shift between multiple apps when your systems can do the talking?</p>
+                        <a href="#" class="learn-more">Learn more <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <div class="image-content">
+                        <img src="image/integrations.webp" alt="Seamless Integrations" class="animate">
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
-<!-- Advanced Analytics Section -->
-<section class="analytics-section">
-    <div class="container">
-        <div class="content-wrapper">
-            <div class="text-content">
-                <h2>Advanced Analytics</h2>
-                <p>You can't improve what you don't measure. Gather meaningful insights about your workforce so you can identify bottlenecks and make informed decisions.</p>
-                <a href="#" class="learn-more">Learn more <i class="fas fa-arrow-right"></i></a>
-            </div>
-            <div class="image-content">
-                <img src="image/analytics-chart.webp" alt="Analytics Dashboard">
-            </div>
-        </div>
-    </div>
-</section>
 
-<!-- Seamless Integrations Section -->
-<section class="integrations-section">
-    <div class="container">
-        <div class="content-wrapper reverse">
-            <div class="image-content">
-                <img src="image/integrations.webp" alt="Seamless Integrations">
-            </div>
-            <div class="text-content">
-                <h2>Seamless Integrations</h2>
-                <p>Workwise Pro integrates cleanly with several Zoho and third-party applications. So why shift between multiple apps when your systems can do the talking?</p>
-                <a href="#" class="learn-more">Learn more <i class="fas fa-arrow-right"></i></a>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Customize Work Section -->
-<section class="customize-section">
-    <div class="container">
-        <div class="section-header">
-            <h2>Customize the way you work</h2>
-            <p>Make Workwise Pro work the way you do with our extensive customization of forms and workflows. Craft the system you need with fields and tabs that fit your industry and organizational parameters.</p>
-        </div>
-        <div class="feature-split">
-            <div class="dashboard-preview">
-                <img src="image/workflow-customization.webp" alt="Workflow Customization Interface">
-            </div>
-            <div class="feature-info">
-                <div class="feature-item">
-                    <i class="fas fa-robot"></i>
-                    <h3>Intelligent Automation</h3>
-                    <p>Automate your daily work tasks so that you can focus on what needs your attention the most. From having automatic field updates to creating custom applications for your business, we've got it all covered.</p>
-                    <a href="#" class="learn-more">Learn more <i class="fas fa-arrow-right"></i></a>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Document Management Section -->
-<section class="document-section">
-    <div class="container">
-        <div class="section-header">
-            <h2>Document Management</h2>
-            <p>Whether sending offer letters, contracts, or updating your policies, there's never been a better way to manage and share all your HR documents.</p>
-        </div>
-        <div class="dashboard-preview">
-            <img src="image/document-management.webp" alt="Document Management Interface">
-        </div>
-    </div>
-</section>
-
-<!-- Employee Engagement Section -->
-<section class="engagement-section">
-    <div class="container">
-        <div class="section-header">
-            <h2>Engage your employees</h2>
-            <p>As HR staff, you know that building a collaborative workplace is vital for your employees to thrive. Workwise Pro allows employees to track not only their activities but also their teamwork.</p>
-        </div>
-        <div class="feature-split">
-            <div class="feature-info">
-                <div class="feature-item">
-                    <i class="fas fa-user-cog"></i>
-                    <h3>Employee Self-service</h3>
-                    <p>Eliminate the middle-man and give your people the autonomy to view and maintain their own records. With Workwise Pro, employees can fill in their details, apply for leave, submit approvals, among other things.</p>
-                    <a href="#" class="learn-more">Learn more <i class="fas fa-arrow-right"></i></a>
-                </div>
-            </div>
-            <div class="dashboard-preview">
-                <img src="image/employee-portal.webp" alt="Employee Self-service Portal">
-            </div>
-        </div>
-    </div>
-</section>
-</main>
     <!-- Footer -->
     <footer>
         <div class="container">
@@ -672,7 +554,6 @@ img {
                     <ul>
                         <li><a href="#api-docs">API Documentation</a></li>
                         <li><a href="#sdk">SDKs & Tools</a></li>
-                        <li><a href="#status">System Status</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
@@ -689,79 +570,22 @@ img {
             </div>
         </div>
     </footer>
-<script>
-    // Intersection Observer for Animations
-function observeAnimatedElements() {
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('animate');
-            }
-        });
-    }, {
-        threshold: 0.1
-    });
 
-    document.querySelectorAll('.feature-card, .hero-content, .dashboard-preview').forEach(el => {
-        observer.observe(el);
-    });
-}
-
-// Window Resize Handler
-window.addEventListener('resize', debounce(() => {
-    if (window.innerWidth > 768) {
-        const mobileMenu = document.getElementById('mobile-menu');
-        const navMenu = document.getElementById('nav-menu');
-        const menuOverlay = document.querySelector('.menu-overlay');
-        
-        mobileMenu?.classList.remove('active');
-        navMenu?.classList.remove('active');
-        menuOverlay?.classList.remove('active');
-        document.body.classList.remove('menu-open');
-    }
-}, 250));
-
-// Debounce Helper Function
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-      // Component Loading Function
-        async function loadComponent(url, targetElementId) {
+    <script>
+        // Component Loading Function
+        async function loadHeader() {
             try {
-                const response = await fetch(url);
+                const response = await fetch('mainheader.html');
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const html = await response.text();
                 
-                const targetElement = document.getElementById(targetElementId);
-                if (!targetElement) throw new Error(`Target element ${targetElementId} not found`);
+                document.getElementById('header-container').innerHTML = html;
                 
-                const temp = document.createElement('div');
-                temp.innerHTML = html;
+                // Initialize any header-specific functionality after loading
+                const headerScripts = document.getElementById('header-container')
+                    .getElementsByTagName('script');
                 
-                // Extract and apply styles
-                const styles = temp.getElementsByTagName('style');
-                Array.from(styles).forEach(style => {
-                    document.head.appendChild(style.cloneNode(true));
-                });
-                
-                // Extract content
-                const content = temp.querySelector('header') || temp.firstElementChild;
-                if (!content) throw new Error('No content found in component');
-                
-                targetElement.innerHTML = '';
-                targetElement.appendChild(content.cloneNode(true));
-                
-                // Handle scripts
-                const scripts = temp.getElementsByTagName('script');
-                Array.from(scripts).forEach(script => {
+                Array.from(headerScripts).forEach(script => {
                     const newScript = document.createElement('script');
                     Array.from(script.attributes).forEach(attr => {
                         newScript.setAttribute(attr.name, attr.value);
@@ -769,20 +593,51 @@ function debounce(func, wait) {
                     newScript.textContent = script.textContent;
                     document.body.appendChild(newScript);
                 });
-                
-                return true;
             } catch (error) {
-                console.error(`Error loading component from ${url}:`, error);
-                return false;
+                console.error('Error loading header:', error);
+                document.getElementById('header-container').innerHTML = `
+                    <div style="text-align: center; padding: 1rem; background: #f8d7da; color: #721c24;">
+                        Error loading header. Please refresh the page.
+                    </div>
+                `;
             }
         }
 
-        // Initialize when DOM is ready
-        document.addEventListener('DOMContentLoaded', function() {
-            // Load header
-            loadComponent('mainheader.html', 'header-container');
+        // Intersection Observer for Animations
+        function initializeAnimations() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            });
 
-</script>
-    
+            document.querySelectorAll('.animate').forEach(element => {
+                observer.observe(element);
+            });
+        }
+
+        // Initialize everything when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            loadHeader();
+            initializeAnimations();
+        });
+
+        // Handle loading states
+        window.addEventListener('load', function() {
+            document.body.classList.add('loaded');
+        });
+
+        // Error handling
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error('Error: ', msg, url, lineNo, columnNo, error);
+            return false;
+        };
+    </script>
 </body>
 </html>
