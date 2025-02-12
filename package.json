@@ -1,21 +1,23 @@
 {
   "name": "workwise-pro",
   "version": "1.0.0",
-  "description": "Workwise Pro - AI-Powered HR Management",
+  "description": "Workwise Pro - HR Management System",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "echo 'Build completed'"
   },
   "dependencies": {
     "express": "^4.17.1",
-    "pg": "^8.7.1",
+    "mongodb": "^4.0.0",
+    "mongoose": "^6.0.0",
     "bcrypt": "^5.0.1",
     "jsonwebtoken": "^8.5.1",
-    "mongodb": "^4.0.0"
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0"
   },
   "engines": {
-    "node": ">=14.0.0"
-  },
-  "author": "Your Name",
-  "license": "MIT"
+    "node": "16.x",
+    "npm": "8.x"
+  }
 }
