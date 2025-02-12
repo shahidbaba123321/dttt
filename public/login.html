@@ -166,25 +166,35 @@
         }, 5000);
 // Dummy credentials and login functionality
   
-      document.getElementById('loginForm').addEventListener('submit', async function(e) {
+     document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
-    const email = document.getElementById('email').value; // Change username to email
+    const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     const role = document.getElementById('role').value;
 
-    const response = await fetch('/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, role }) // Use email in the request
-    });
+    try {
+        const response = await fetch('/api/login', {  // Update the endpoint
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ email, password, role })
+        });
 
-    if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.token);
-        window.location.href = role === 'user' ? 'dashboard.html' : 'user-dashboard.html';
-    } else {
-        alert('Invalid credentials. Please try again.');
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('token', data.token);
+            // Redirect based on role
+            window.location.href = role === 'user' ? '/dashboard.html' : '/admin-dashboard.html';
+        } else {
+            const errorData = await response.json();
+            alert(errorData.message || 'Login failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        alert('Login failed. Please try again.');
     }
 });
     </script>
