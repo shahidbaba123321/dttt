@@ -1,117 +1,234 @@
+require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const path = require('path');
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
+const { MongoClient } = require('mongodb');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { MongoClient } = require('mongodb');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 
-// MongoDB connection
-const uri = process.env.MONGODB_URI; // Ensure this environment variable is set
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-
-async function connectDB() {
-  try {
-    await client.connect();
-    console.log("Connected to MongoDB Atlas");
-  } catch (err) {
-    console.error("Error connecting to MongoDB Atlas:", err);
-  }
-}
-
-connectDB();
-
+// Middleware
+app.use(helmet());
+app.use(compression());
+app.use(cors());
 app.use(express.json());
+app.use(express.static('public'));
+app.use(morgan('dev'));
 
-// Serve static files from the "public" directory
-app.use(express.static(path.join(__dirname, 'public')));
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use('/api/', limiter);
 
-// Serve index.html for the root route
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// MongoDB connection
+const uri = process.env.MONGODB_URI;
+const client = new MongoClient(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    maxPoolSize: 10
 });
 
-// Serve login.html for the login route
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+// Database connection function
+async function connectDB() {
+    try {
+        await client.connect();
+        console.log("Connected to MongoDB Atlas");
+        
+        // Create indexes
+        const db = client.db('infocraftorbis');
+        await db.collection('users').createIndex({ email: 1 }, { unique: true });
+        
+        console.log("Database indexes created");
+    } catch (err) {
+        console.error("MongoDB connection error:", err);
+        process.exit(1);
+    }
+}
+
+// Connect to database
+connectDB();
+
+// Authentication middleware
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ message: 'No token provided' });
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        if (err) {
+            return res.status(403).json({ message: 'Invalid token' });
+        }
+        req.user = user;
+        next();
+    });
+};
+
+// Routes
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ 
+        status: 'healthy',
+        timestamp: new Date(),
+        uptime: process.uptime()
+    });
 });
 
 // Login endpoint
-app.post('/login', async (req, res) => {
-  const { email, password, role } = req.body; // Change username to email
-  try {
-    const database = client.db('infocraftorbis');
-    const users = database.collection('users');
-    const user = await users.findOne({ email, role }); // Use email in the query
+app.post('/api/login', async (req, res) => {
+    const { email, password, role } = req.body;
 
-    console.log('User found:', user);
+    try {
+        // Input validation
+        if (!email || !password || !role) {
+            return res.status(400).json({ message: 'All fields are required' });
+        }
 
-    if (user) {
-      const isPasswordMatch = await bcrypt.compare(password, user.password);
-      console.log('Password match:', isPasswordMatch);
+        const database = client.db('infocraftorbis');
+        const users = database.collection('users');
+        const user = await users.findOne({ email, role });
 
-      if (isPasswordMatch) {
-        const token = jwt.sign({ email: user.email, role: user.role }, process.env.JWT_SECRET);
-        res.json({ token });
-      } else {
-        res.status(401).send('Invalid credentials');
-      }
-    } else {
-      res.status(401).send('Invalid credentials');
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        const isPasswordMatch = await bcrypt.compare(password, user.password);
+        if (!isPasswordMatch) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // Create token
+        const token = jwt.sign(
+            { 
+                userId: user._id,
+                email: user.email, 
+                role: user.role 
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        // Update last login
+        await users.updateOne(
+            { _id: user._id },
+            { $set: { lastLogin: new Date() } }
+        );
+
+        res.json({ 
+            token,
+            user: {
+                email: user.email,
+                role: user.role,
+                firstName: user.firstName,
+                lastName: user.lastName
+            }
+        });
+
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ message: 'Internal server error' });
     }
-  } catch (error) {
-    console.error('Error during login:', error);
-    res.status(500).send('Server error');
-  }
 });
+
 // Register endpoint
-app.post('/register', async (req, res) => {
-  const { email, password, role } = req.body;
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const database = client.db('infocraftorbis');
-    const users = database.collection('users');
-    await users.insertOne({ email, password: hashedPassword, role });
-    res.status(201).send('User registered');
-  } catch (error) {
-    console.error('Error during registration:', error);
-    res.status(500).send('Server error');
-  }
+app.post('/api/register', async (req, res) => {
+    const { email, password, role, firstName, lastName } = req.body;
+
+    try {
+        // Input validation
+        if (!email || !password || !role) {
+            return res.status(400).json({ message: 'All fields are required' });
+        }
+
+        // Password strength validation
+        if (password.length < 8) {
+            return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+        }
+
+        const database = client.db('infocraftorbis');
+        const users = database.collection('users');
+
+        // Check if user exists
+        const existingUser = await users.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email already registered' });
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create user
+        const result = await users.insertOne({
+            email,
+            password: hashedPassword,
+            role,
+            firstName,
+            lastName,
+            createdAt: new Date(),
+            lastLogin: null,
+            status: 'active'
+        });
+
+        res.status(201).json({ 
+            message: 'User registered successfully',
+            userId: result.insertedId
+        });
+
+    } catch (error) {
+        console.error('Registration error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
 });
 
+// Protected route example
+app.get('/api/profile', authenticateToken, async (req, res) => {
+    try {
+        const database = client.db('infocraftorbis');
+        const users = database.collection('users');
+        const user = await users.findOne(
+            { email: req.user.email },
+            { projection: { password: 0 } }
+        );
 
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
 
-// API Endpoint for Payroll Metrics
-app.get('/api/payroll-metrics', async (req, res) => {
-  try {
-    const database = client.db('infocraftorbis');
-    const payroll = database.collection('payroll');
-    const metrics = await payroll.aggregate([
-      { $group: { _id: "$region", totalAmount: { $sum: "$amount" }, avgTaxRate: { $avg: "$taxRate" } } }
-    ]).toArray();
-    res.json(metrics);
-  } catch (error) {
-    console.error('Error fetching payroll metrics:', error);
-    res.status(500).send('Server error');
-  }
+        res.json(user);
+    } catch (error) {
+        console.error('Profile fetch error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
 });
 
-// API Endpoint for Performance Analytics
-app.get('/api/performance-analytics', async (req, res) => {
-  try {
-    const database = client.db('infocraftorbis');
-    const performance = database.collection('performance');
-    const analytics = await performance.aggregate([
-      { $group: { _id: "$metric", avgScore: { $avg: "$score" } } }
-    ]).toArray();
-    res.json(analytics);
-  } catch (error) {
-    console.error('Error fetching performance analytics:', error);
-    res.status(500).send('Server error');
-  }
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ 
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
 });
 
-const PORT = process.env.PORT || 3000;
+// Start server
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received. Shutting down gracefully...');
+    client.close().then(() => {
+        console.log('MongoDB connection closed.');
+        process.exit(0);
+    });
 });
