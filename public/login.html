@@ -170,92 +170,142 @@
         }, 5000);
 // Dummy credentials and login functionality
   
-    document.getElementById('loginForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
+   <script>
+    // Slider functionality
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.dot');
 
-    const submitButton = this.querySelector('button[type="submit"]');
-    const originalButtonText = submitButton.innerHTML;
-    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
-    submitButton.disabled = true;
-
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const role = document.getElementById('role').value;
-
-    try {
-        const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                email: email,
-                password: password,
-                role: role
-            })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Login failed');
-        }
-
-        const data = await response.json();
+    function showSlide(n) {
+        slides.forEach(slide => slide.classList.remove('active'));
+        dots.forEach(dot => dot.classList.remove('active'));
         
-        // Store token and user data
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userRole', data.user.role);
-        localStorage.setItem('userEmail', data.user.email);
-
-        // Redirect based on role
-        switch(data.user.role) {
-            case 'admin':
-                window.location.href = 'admin-dashboard.html';
-                break;
-            case 'superadmin':
-                window.location.href = 'super-admin-dashboard.html';
-                break;
-            case 'user':
-            default:
-                window.location.href = 'dashboard.html';
-                break;
-        }
-
-    } catch (error) {
-        console.error('Login error:', error);
-        alert(error.message || 'Login failed. Please try again.');
-    } finally {
-        submitButton.innerHTML = originalButtonText;
-        submitButton.disabled = false;
+        slides[n].classList.add('active');
+        dots[n].classList.add('active');
     }
-});
 
-// Add this to prevent form resubmission
-if (window.history.replaceState) {
-    window.history.replaceState(null, null, window.location.href);
-}
+    dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+            currentSlide = index;
+            showSlide(currentSlide);
+        });
+    });
 
-// Check if user is already logged in
-function checkAuthStatus() {
-    const token = localStorage.getItem('token');
-    if (token) {
-        const role = localStorage.getItem('userRole');
-        switch(role) {
-            case 'admin':
-                window.location.href = 'admin-dashboard.html';
-                break;
-            case 'superadmin':
-                window.location.href = 'super-admin-dashboard.html';
-                break;
-            case 'user':
-                window.location.href = 'dashboard.html';
-                break;
+    // Auto-advance slider every 5 seconds
+    setInterval(() => {
+        currentSlide = (currentSlide + 1) % slides.length;
+        showSlide(currentSlide);
+    }, 5000);
+
+    // Login functionality with correct API endpoint
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const submitButton = this.querySelector('button[type="submit"]');
+        const originalButtonText = submitButton.innerHTML;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+        submitButton.disabled = true;
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const role = document.getElementById('role').value;
+
+        try {
+            // Use the complete URL of your server
+            const apiUrl = 'http://localhost:8080/api/login';  // Update this URL to match your server
+            console.log('Attempting login to:', apiUrl);
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password,
+                    role: role
+                })
+            });
+
+            console.log('Response status:', response.status);
+            
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server response was not JSON');
+            }
+
+            const data = await response.json();
+            console.log('Response data:', data);
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Login failed');
+            }
+
+            // Store auth data
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('userRole', data.user.role);
+            localStorage.setItem('userEmail', data.user.email);
+
+            // Show success message
+            alert('Login successful! Redirecting...');
+
+            // Redirect based on role
+            switch(data.user.role) {
+                case 'admin':
+                    window.location.href = '/admin-dashboard.html';
+                    break;
+                case 'superadmin':
+                    window.location.href = '/super-admin-dashboard.html';
+                    break;
+                case 'user':
+                default:
+                    window.location.href = '/dashboard.html';
+                    break;
+            }
+
+        } catch (error) {
+            console.error('Login error:', error);
+            alert(error.message || 'Login failed. Please try again.');
+        } finally {
+            submitButton.innerHTML = originalButtonText;
+            submitButton.disabled = false;
+        }
+    });
+
+    // Prevent form resubmission
+    if (window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.href);
+    }
+
+    // Check if user is already logged in
+    function checkAuthStatus() {
+        const token = localStorage.getItem('token');
+        if (token) {
+            const role = localStorage.getItem('userRole');
+            switch(role) {
+                case 'admin':
+                    window.location.href = '/admin-dashboard.html';
+                    break;
+                case 'superadmin':
+                    window.location.href = '/super-admin-dashboard.html';
+                    break;
+                case 'user':
+                    window.location.href = '/dashboard.html';
+                    break;
+            }
         }
     }
-}
 
-// Check auth status when page loads
-document.addEventListener('DOMContentLoaded', checkAuthStatus);
+    // Add debugging information
+    console.log('Page loaded');
+    console.log('Current URL:', window.location.href);
+    console.log('API endpoint:', 'http://localhost:8080/api/login');
+
+    // Check auth status when page loads
+    document.addEventListener('DOMContentLoaded', checkAuthStatus);
+</script>
     </script>
     
      <script src="script.js"></script>
