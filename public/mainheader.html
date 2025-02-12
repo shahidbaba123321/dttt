@@ -531,37 +531,9 @@
     <div class="menu-overlay" id="menu-overlay"></div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+         document.addEventListener('DOMContentLoaded', function() {
             initializeMobileMenu();
-            initializeAnimations();
         });
-
-        function initializeAnimations() {
-            // Add smooth reveal animation for mega menu
-            document.querySelectorAll('.mega-menu').forEach(menu => {
-                menu.addEventListener('mouseenter', function() {
-                    if (window.innerWidth > 768) {
-                        const content = this.querySelector('.dropdown-content');
-                        content.style.opacity = '0';
-                        content.style.transform = 'translateX(-50%) translateY(10px)';
-                        requestAnimationFrame(() => {
-                            content.style.opacity = '1';
-                            content.style.transform = 'translateX(-50%) translateY(0)';
-                        });
-                    }
-                });
-            });
-
-            // Add hover effect for nav items
-            document.querySelectorAll('.nav-list > li > a').forEach(link => {
-                link.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-2px)';
-                });
-                link.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                });
-            });
-        }
 
         function initializeMobileMenu() {
             const mobileMenu = document.getElementById('mobile-menu');
@@ -634,6 +606,19 @@
                         toggleMenu(false);
                     }
                 }, 250);
+            });
+
+            // Add smooth hover effect for mega menu
+            megaMenus.forEach(menu => {
+                menu.addEventListener('mouseenter', function() {
+                    if (window.innerWidth > 768) {
+                        const content = this.querySelector('.dropdown-content');
+                        content.style.opacity = '0';
+                        requestAnimationFrame(() => {
+                            content.style.opacity = '1';
+                        });
+                    }
+                });
             });
         }
     </script>
