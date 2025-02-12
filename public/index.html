@@ -46,6 +46,44 @@
             padding: 0 2rem;
         }
 
+        /* Button Styles */
+        .btn {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            transition: var(--transition);
+            cursor: pointer;
+            font-weight: 500;
+            border: none;
+            margin: 0.5rem;
+        }
+
+        .btn.primary {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+
+        .btn.secondary {
+            background-color: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow);
+        }
+
+        /* Header Container Styles */
+        #header-container {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--card-bg);
+            box-shadow: var(--box-shadow);
+        }
+
         /* Section Headers */
         .section-header {
             text-align: center;
@@ -99,6 +137,8 @@
             border-radius: var(--border-radius);
             transition: var(--transition);
             box-shadow: var(--box-shadow);
+            text-decoration: none;
+            display: inline-block;
         }
 
         .hero-btn-primary {
@@ -168,6 +208,31 @@
             margin-bottom: 1.5rem;
         }
 
+        /* Learn More Link Styles */
+        .learn-more {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+        }
+
+        .learn-more:hover {
+            background: rgba(66, 133, 244, 0.1);
+        }
+
+        .learn-more i {
+            transition: transform 0.3s ease;
+        }
+
+        .learn-more:hover i {
+            transform: translateX(5px);
+        }
+
         /* Performance, Time-Attendance, Core-HR Sections */
         .performance-management, .time-attendance, .core-hr {
             padding: 6rem 0;
@@ -214,6 +279,21 @@
             content: '✔';
             color: var(--success-color);
             margin-right: 0.5rem;
+        }
+
+        .performance-content a, .attendance-content a, .core-content a {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .performance-content a:hover, .attendance-content a:hover, .core-content a:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow);
         }
 
         /* AI Sense Demo Section */
@@ -319,7 +399,7 @@
     </style>
 </head>
 <body>
- <!-- Header Container -->
+    <!-- Header Container -->
     <div id="header-container"></div>
 
     <!-- Hero Section -->
@@ -339,7 +419,6 @@
         </div>
     </section>
 
-    
     <!-- Feature Showcase -->
     <section id="features" class="feature-showcase">
         <div class="container">
@@ -348,7 +427,6 @@
                 <p>Experience the future of HR management with our cutting-edge tools</p>
             </div>
             <div class="feature-grid">
-                
                 <div class="feature-card">
                     <i class="fas fa-chart-line"></i>
                     <h3>Performance Analytics</h3>
@@ -407,20 +485,19 @@
         </div>
     </section>
 
-<!-- Demo for AI Sense Section -->
-<!-- Demo for AI Sense Section -->
-<section class="ai-sense-demo">
-    <div class="container">
-        <h2>Demo for AI Sense</h2>
-        <p>Experience how our AI system calculates sentiments and integrates with performance feedback.</p>
-        <div class="demo-widget">
-            <textarea id="feedback-input" placeholder="Enter your feedback here..." aria-label="Feedback input"></textarea>
-            <button id="analyze-button" class="btn primary">Analyze</button>
-            <div id="sentiment-result"></div>
+    <!-- AI Sense Demo Section -->
+    <section class="ai-sense-demo">
+        <div class="container">
+            <h2>Demo for AI Sense</h2>
+            <p>Experience how our AI system calculates sentiments and integrates with performance feedback.</p>
+            <div class="demo-widget">
+                <textarea id="feedback-input" placeholder="Enter your feedback here..." aria-label="Feedback input"></textarea>
+                <button id="analyze-button" class="btn primary">Analyze</button>
+                <div id="sentiment-result"></div>
+            </div>
         </div>
-    </div>
-</section>
-    
+    </section>
+
     <!-- Performance Management Section -->
     <section class="performance-management">
         <div class="container">
@@ -440,8 +517,7 @@
             </div>
         </div>
     </section>
-
-    <!-- Time and Attendance Section -->
+        <!-- Time and Attendance Section -->
     <section class="time-attendance">
         <div class="container">
             <div class="attendance-content">
@@ -497,7 +573,6 @@
                     <h4>Developers</h4>
                     <ul>
                         <li><a href="#api-docs">API Documentation</a></li>
-                        
                     </ul>
                 </div>
                 <div class="footer-section">
@@ -510,13 +585,61 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                
                 <p>&copy; 2023 Workwise Pro. All rights reserved.</p>
             </div>
         </div>
     </footer>
-<script>
+
+    <script>
+        // Component Loading Function
+        async function loadComponent(url, targetElementId) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const html = await response.text();
+                
+                const targetElement = document.getElementById(targetElementId);
+                if (!targetElement) throw new Error(`Target element ${targetElementId} not found`);
+                
+                const temp = document.createElement('div');
+                temp.innerHTML = html;
+                
+                // Extract and apply styles
+                const styles = temp.getElementsByTagName('style');
+                Array.from(styles).forEach(style => {
+                    document.head.appendChild(style.cloneNode(true));
+                });
+                
+                // Extract content
+                const content = temp.querySelector('header') || temp.firstElementChild;
+                if (!content) throw new Error('No content found in component');
+                
+                targetElement.innerHTML = '';
+                targetElement.appendChild(content.cloneNode(true));
+                
+                // Handle scripts
+                const scripts = temp.getElementsByTagName('script');
+                Array.from(scripts).forEach(script => {
+                    const newScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => {
+                        newScript.setAttribute(attr.name, attr.value);
+                    });
+                    newScript.textContent = script.textContent;
+                    document.body.appendChild(newScript);
+                });
+                
+                return true;
+            } catch (error) {
+                console.error(`Error loading component from ${url}:`, error);
+                return false;
+            }
+        }
+
+        // Initialize when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
+            // Load header
+            loadComponent('mainheader.html', 'header-container');
+
             // AI Sense Demo Functionality
             document.getElementById('analyze-button')?.addEventListener('click', async function() {
                 const input = document.getElementById('feedback-input').value.trim();
@@ -580,118 +703,6 @@
                 observer.observe(element);
             });
         });
-    // Component Loading Function
-    async function loadComponent(url, targetElementId) {
-        console.log(`Attempting to load component from ${url} into ${targetElementId}`);
-        try {
-            // Check if target element exists
-            const targetElement = document.getElementById(targetElementId);
-            if (!targetElement) {
-                throw new Error(`Target element ${targetElementId} not found`);
-            }
-
-            // Fetch the component
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
-            }
-
-            const html = await response.text();
-            console.log(`Content fetched from ${url}, length: ${html.length}`);
-
-            // Parse the HTML
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-
-            // Handle styles
-            const styles = doc.getElementsByTagName('style');
-            Array.from(styles).forEach(style => {
-                const styleId = `style-${targetElementId}`;
-                if (!document.getElementById(styleId)) {
-                    style.id = styleId;
-                    document.head.appendChild(style.cloneNode(true));
-                }
-            });
-
-            // Handle content
-            const content = doc.body.firstElementChild;
-            if (!content) {
-                throw new Error(`No content found in ${url}`);
-            }
-
-            // Clear and append content
-            targetElement.innerHTML = '';
-            targetElement.appendChild(content.cloneNode(true));
-
-            // Handle scripts
-            const scripts = doc.getElementsByTagName('script');
-            for (const script of scripts) {
-                const newScript = document.createElement('script');
-                Array.from(script.attributes).forEach(attr => {
-                    newScript.setAttribute(attr.name, attr.value);
-                });
-                newScript.textContent = script.textContent;
-                document.body.appendChild(newScript);
-            }
-
-            console.log(`Successfully loaded ${url} into ${targetElementId}`);
-            return true;
-
-        } catch (error) {
-            console.error(`Error loading ${url}:`, error);
-            const targetElement = document.getElementById(targetElementId);
-            if (targetElement) {
-                targetElement.innerHTML = `
-                    <div style="color: red; padding: 20px; text-align: center; background: #fff1f1; border: 1px solid #ffcdd2;">
-                        Failed to load ${url.split('/').pop()}
-                        <br>
-                        ${error.message}
-                    </div>`;
-            }
-            return false;
-        }
-    }
-
-    // Load components sequentially
-    async function loadComponents() {
-        try {
-            console.log('Starting component loading sequence');
-
-            // Load header first
-            const headerLoaded = await loadComponent('mainheader.html', 'header-container');
-            if (headerLoaded) {
-                console.log('Header loaded successfully');
-                if (typeof initializeMobileMenu === 'function') {
-                    initializeMobileMenu();
-                }
-            }
-
-            // Load footer immediately after header
-            const footerLoaded = await loadComponent('footer.html', 'footer-container');
-            if (footerLoaded) {
-                console.log('Footer loaded successfully');
-            }
-
-        } catch (error) {
-            console.error('Error in loading sequence:', error);
-        }
-    }
-
-    // Initialize when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', loadComponents);
-    } else {
-        loadComponents();
-    }
-
-    // Error handling
-    window.onerror = function(msg, url, lineNo, columnNo, error) {
-        console.error('Global error:', { message: msg, url, lineNo, columnNo, error });
-        return false;
-    };
-
-    window.addEventListener('unhandledrejection', event => {
-        console.error('Unhandled promise rejection:', event.reason);
     </script>
 
     <!-- Watson Assistant Chat Integration -->
