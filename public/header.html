@@ -40,7 +40,8 @@
 
         /* Header & Navigation */
         header {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             position: fixed;
             top: 0;
             left: 0;
@@ -67,8 +68,10 @@
         }
 
         .logo h1 {
-            color: var(--primary-color);
-            font-size: 24px;
+            background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 28px;
             font-weight: 600;
         }
 
@@ -99,7 +102,8 @@
             color: var(--text-dark);
             text-decoration: none;
             font-weight: 500;
-            font-size: 15px;
+            font-size: 14px;
+            letter-spacing: 0.3px;
             padding: 0 12px;
             height: 100%;
             display: flex;
@@ -111,67 +115,72 @@
             color: var(--primary-color);
         }
 
-        /* Dropdown Styling */
-        .dropdown {
-            height: 100%;
-        }
-
-        .dropdown > a {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .dropdown > a::after {
-            content: '';
-            width: 8px;
-            height: 8px;
-            border-right: 2px solid currentColor;
-            border-bottom: 2px solid currentColor;
-            transform: rotate(45deg) translateY(-2px);
-            transition: transform 0.3s ease;
-        }
-
-        .dropdown-content {
-            position: absolute;
-            top: 100%;
-            left: 0;
+        /* Mega Menu Styles */
+        .mega-menu .dropdown-content {
+            width: 750px;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 20px;
             background: white;
-            min-width: 220px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-radius: 4px;
+            border-radius: 8px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
             opacity: 0;
             visibility: hidden;
-            transform: translateY(10px);
+            position: absolute;
+            top: 100%;
             transition: all 0.3s ease;
-            padding: 8px 0;
         }
 
-        .dropdown:hover .dropdown-content {
+        .mega-menu:hover .dropdown-content {
             opacity: 1;
             visibility: visible;
-            transform: translateY(0);
+            transform: translateX(-50%) translateY(0);
         }
 
-        .dropdown-content li {
-            display: block;
-        }
-
-        .dropdown-content a {
-            color: var(--text-dark);
-            text-decoration: none;
-            padding: 8px 16px;
-            display: block;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .dropdown-content a:hover {
-            background: var(--background-light);
+        .mega-column h3 {
             color: var(--primary-color);
+            font-size: 16px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--background-light);
         }
 
-        /* Auth Buttons */
+        .mega-column ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .mega-column ul li {
+            margin-bottom: 8px;
+        }
+
+        .mega-column ul li a {
+            color: var(--text-body);
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            padding: 6px 0;
+            transition: all 0.2s ease;
+        }
+
+        .mega-column ul li a:hover {
+            color: var(--primary-color);
+            transform: translateX(5px);
+        }
+
+        .badge {
+            background: var(--primary-color);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 8px;
+        }
+                /* Auth Buttons */
         .auth-buttons {
             display: flex;
             align-items: center;
@@ -184,21 +193,27 @@
             text-decoration: none;
             font-weight: 500;
             font-size: 15px;
+            transition: color 0.3s ease;
+        }
+
+        .sign-in:hover {
+            color: var(--primary-color);
         }
 
         .sign-up {
-            background: var(--primary-color);
+            background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
             color: white;
             padding: 8px 16px;
             border-radius: 4px;
             text-decoration: none;
             font-weight: 500;
             font-size: 15px;
-            transition: background 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .sign-up:hover {
-            background: #d42f2f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(227, 51, 51, 0.2);
         }
 
         /* Mobile Menu Toggle */
@@ -275,18 +290,31 @@
                 justify-content: space-between;
             }
 
-            .dropdown-content {
+            .mega-menu .dropdown-content {
+                width: 100%;
+                grid-template-columns: 1fr;
                 position: static;
+                transform: none;
                 box-shadow: none;
+                padding: 10px;
                 opacity: 1;
                 visibility: visible;
-                transform: none;
                 display: none;
-                background: var(--background-light);
             }
 
-            .dropdown.active .dropdown-content {
-                display: block;
+            .mega-menu.active .dropdown-content {
+                display: grid;
+            }
+
+            .mega-column {
+                padding: 10px;
+                background: var(--background-light);
+                border-radius: 8px;
+                margin-bottom: 10px;
+            }
+
+            .mega-column h3 {
+                font-size: 14px;
             }
 
             .auth-buttons {
@@ -312,11 +340,15 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
             z-index: 999;
+            transition: opacity 0.3s ease;
+            opacity: 0;
         }
 
         .menu-overlay.active {
             display: block;
+            opacity: 1;
         }
     </style>
 </head>
@@ -336,27 +368,46 @@
             <nav class="main-nav" id="main-nav">
                 <ul class="nav-list">
                     <li><a href="features.html">Features</a></li>
-                    <li class="dropdown">
-                        <a href="#">HR/Accounts Modules <i class="fas fa-caret-down"></i></a>
-                        <ul class="dropdown-content">
-                            <li><a href="peoplemanagement.html">People Management</a></li>
-                            <li><a href="pms.html">Performance Management</a></li>
-                            <li><a href="payroll.html">Payroll Management</a></li>
-                            <li><a href="bookkeeping.html">Book-keeping</a></li>
-                            <li><a href="payint.html">Payroll Integration</a></li>
-                        </ul>
+                    
+                    <li class="dropdown mega-menu">
+                        <a href="#">Products <i class="fas fa-caret-down"></i></a>
+                        <div class="dropdown-content mega-content">
+                            <div class="mega-column">
+                                <h3>HR/Accounts</h3>
+                                <ul>
+                                    <li><a href="peoplemanagement.html">People Management</a></li>
+                                    <li><a href="pms.html">Performance Management</a></li>
+                                    <li><a href="payroll.html">Payroll Management</a></li>
+                                    <li><a href="bookkeeping.html">Book-keeping</a></li>
+                                    <li><a href="payint.html">Payroll Integration</a></li>
+                                </ul>
+                            </div>
+                            <div class="mega-column">
+                                <h3>Operations</h3>
+                                <ul>
+                                    <li><a href="smartexpenses.html">SmartExpenses</a></li>
+                                    <li><a href="shiftmaster.html">ShiftMaster</a></li>
+                                    <li><a href="stockflow.html">StockFlow</a></li>
+                                    <li><a href="globalinvoice.html">GlobalInvoice</a></li>
+                                    <li><a href="cs.html">FlexHire <span class="badge">Coming Soon</span></a></li>
+                                </ul>
+                            </div>
+                            <div class="mega-column">
+                                <h3>Integrations</h3>
+                                <ul>
+                                    <li><a href="sn.html">ServiceNow & ITSM</a></li>
+                                    <li><a href="payint.html">Payroll & Finance</a></li>
+                                    <li><a href="ebc.html">Employee Benefits</a></li>
+                                    <li><a href="ptm.html">Talent Management</a></li>
+                                    <li><a href="aia.html">AI & Analytics</a></li>
+                                </ul>
+                            </div>
+                        </div>
                     </li>
-                    <li class="dropdown">
-                        <a href="#">Business Operations <i class="fas fa-caret-down"></i></a>
-                        <ul class="dropdown-content">
-                            <li><a href="smartexpenses.html">SmartExpenses</a></li>
-                            <li><a href="shiftmaster.html">ShiftMaster</a></li>
-                            <li><a href="cs.html">FlexHire - Coming Soon</a></li>
-                            <li><a href="stockflow.html">StockFlow</a></li>
-                            <li><a href="globalinvoice.html">GlobalInvoice</a></li>
-                        </ul>
-                    </li>
+
+                    <li><a href="mail.html">Wise Mail</a></li>
                     <li><a href="#pricing">Pricing</a></li>
+                    
                     <div class="auth-buttons">
                         <a href="/login" class="sign-in">Sign In</a>
                         <a href="/signup" class="sign-up">Sign Up</a>
@@ -377,10 +428,9 @@
             const mobileMenu = document.getElementById('mobile-menu');
             const mainNav = document.getElementById('main-nav');
             const menuOverlay = document.getElementById('menu-overlay');
-            const dropdowns = document.querySelectorAll('.dropdown');
+            const megaMenus = document.querySelectorAll('.mega-menu');
             let isMenuOpen = false;
 
-            // Toggle menu function
             function toggleMenu(show) {
                 isMenuOpen = show;
                 mobileMenu.classList.toggle('active', show);
@@ -388,47 +438,41 @@
                 menuOverlay.classList.toggle('active', show);
                 document.body.style.overflow = show ? 'hidden' : '';
 
-                // Reset dropdowns when closing menu
                 if (!show) {
-                    dropdowns.forEach(dropdown => {
-                        dropdown.classList.remove('active');
+                    megaMenus.forEach(menu => {
+                        menu.classList.remove('active');
                     });
                 }
             }
 
-            // Mobile menu button click handler
             mobileMenu.addEventListener('click', (e) => {
                 e.stopPropagation();
                 toggleMenu(!isMenuOpen);
             });
 
-            // Enhanced dropdown handling for mobile
-            dropdowns.forEach(dropdown => {
-                const link = dropdown.querySelector('a');
+            megaMenus.forEach(menu => {
+                const link = menu.querySelector('a');
                 
                 link.addEventListener('click', (e) => {
                     if (window.innerWidth <= 768) {
                         e.preventDefault();
                         e.stopPropagation();
-
-                        // Close other dropdowns
-                        dropdowns.forEach(d => {
-                            if (d !== dropdown) {
-                                d.classList.remove('active');
+                        
+                        megaMenus.forEach(m => {
+                            if (m !== menu) {
+                                m.classList.remove('active');
                             }
                         });
 
-                        dropdown.classList.toggle('active');
+                        menu.classList.toggle('active');
                     }
                 });
             });
 
-            // Close menu when clicking overlay
             menuOverlay.addEventListener('click', () => {
                 toggleMenu(false);
             });
 
-            // Close menu when clicking outside
             document.addEventListener('click', (e) => {
                 if (isMenuOpen && 
                     !mainNav.contains(e.target) && 
@@ -437,14 +481,12 @@
                 }
             });
 
-            // Handle escape key
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape' && isMenuOpen) {
                     toggleMenu(false);
                 }
             });
 
-            // Handle window resize
             let resizeTimer;
             window.addEventListener('resize', () => {
                 clearTimeout(resizeTimer);
@@ -455,50 +497,19 @@
                 }, 250);
             });
 
-            // Touch event handling
-            let touchStartX = 0;
-            let touchEndX = 0;
-
-            document.addEventListener('touchstart', (e) => {
-                touchStartX = e.changedTouches[0].screenX;
-            }, false);
-
-            document.addEventListener('touchend', (e) => {
-                touchEndX = e.changedTouches[0].screenX;
-                handleSwipe();
-            }, false);
-
-            function handleSwipe() {
-                const swipeThreshold = 50;
-                const swipeDistance = touchEndX - touchStartX;
-
-                if (isMenuOpen && swipeDistance > swipeThreshold) {
-                    // Swipe right - close menu
-                    toggleMenu(false);
-                } else if (!isMenuOpen && swipeDistance < -swipeThreshold) {
-                    // Swipe left - open menu
-                    toggleMenu(true);
-                }
-            }
+            // Add smooth hover effect for mega menu
+            megaMenus.forEach(menu => {
+                menu.addEventListener('mouseenter', function() {
+                    if (window.innerWidth > 768) {
+                        const content = this.querySelector('.dropdown-content');
+                        content.style.opacity = '0';
+                        requestAnimationFrame(() => {
+                            content.style.opacity = '1';
+                        });
+                    }
+                });
+            });
         }
-
-        // Prevent dropdown hover on touch devices
-        window.addEventListener('touchstart', function() {
-            const style = document.createElement('style');
-            style.innerHTML = `
-                @media (hover: none) {
-                    .dropdown:hover .dropdown-content {
-                        opacity: 0;
-                        visibility: hidden;
-                    }
-                    .dropdown.active .dropdown-content {
-                        opacity: 1;
-                        visibility: visible;
-                    }
-                }
-            `;
-            document.head.appendChild(style);
-        }, { once: true });
     </script>
 </body>
 </html>
