@@ -166,37 +166,109 @@
         }, 5000);
 // Dummy credentials and login functionality
   
-     document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     const role = document.getElementById('role').value;
 
+    // Show loading state
+    const submitButton = this.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.innerHTML;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+    submitButton.disabled = true;
+
     try {
-        const response = await fetch('/api/login', {  // Update the endpoint
+        // Get the base URL from window.location
+        const baseUrl = window.location.origin;
+        const response = await fetch(`${baseUrl}/api/login`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ email, password, role })
+            body: JSON.stringify({ email, password, role }),
+            credentials: 'include' // Include cookies if any
         });
 
+        const data = await response.json();
+
         if (response.ok) {
-            const data = await response.json();
+            // Store user data
             localStorage.setItem('token', data.token);
+            localStorage.setItem('userRole', data.user.role);
+            localStorage.setItem('userEmail', data.user.email);
+
+            // Show success message
+            alert('Login successful! Redirecting...');
+
             // Redirect based on role
-            window.location.href = role === 'user' ? '/dashboard.html' : '/admin-dashboard.html';
+            switch(data.user.role) {
+                case 'admin':
+                    window.location.href = '/admin-dashboard.html';
+                    break;
+                case 'superadmin':
+                    window.location.href = '/super-admin-dashboard.html';
+                    break;
+                case 'user':
+                default:
+                    window.location.href = '/dashboard.html';
+                    break;
+            }
         } else {
-            const errorData = await response.json();
-            alert(errorData.message || 'Login failed. Please try again.');
+            // Show error message
+            throw new Error(data.message || 'Login failed');
         }
     } catch (error) {
         console.error('Login error:', error);
-        alert('Login failed. Please try again.');
+        
+        // Show error message to user
+        const errorMessage = error.message === 'Failed to fetch' 
+            ? 'Unable to connect to server. Please check your internet connection.'
+            : error.message || 'Login failed. Please try again.';
+        
+        alert(errorMessage);
+    } finally {
+        // Reset button state
+        submitButton.innerHTML = originalButtonText;
+        submitButton.disabled = false;
     }
 });
+
+// Add this function to check if user is already logged in
+function checkAuthStatus() {
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('userRole');
+    
+    if (token && role) {
+        // Redirect to appropriate dashboard if already logged in
+        switch(role) {
+            case 'admin':
+                window.location.href = '/admin-dashboard.html';
+                break;
+            case 'superadmin':
+                window.location.href = '/super-admin-dashboard.html';
+                break;
+            case 'user':
+                window.location.href = '/dashboard.html';
+                break;
+        }
+    }
+}
+
+// Check auth status when page loads
+document.addEventListener('DOMContentLoaded', checkAuthStatus);
+
+// Add this to help debug API calls
+function debugApiCall(url, options) {
+    console.log('API Call:', {
+        url,
+        method: options.method,
+        headers: options.headers,
+        body: options.body
+    });
+}
     </script>
     
      <script src="script.js"></script>
