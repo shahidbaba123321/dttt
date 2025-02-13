@@ -25,259 +25,159 @@
     <!-- Preload Critical Images -->
     <link rel="preload" as="image" href="image/performance-dashboard.webp">
 
-<style>
-/* Root Variables - Enhanced for PMS */
-:root {
-    --primary-color: #2962ff;
-    --primary-dark: #1e4bd8;
-    --primary-light: #5c89ff;
-    --secondary-color: #6c757d;
-    --success-color: #28a745;
-    --warning-color: #ffc107;
-    --danger-color: #dc3545;
-    --background-color: #f8f9fa;
-    --background-light: #f0faff;
-    --text-color: #333;
-    --text-light: #6c757d;
-    --text-dark: #0f1964;
-    --border-color: #dee2e6;
-    --border-radius: 8px;
-    --border-radius-lg: 12px;
-    --transition: all 0.3s ease;
-    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    --box-shadow-hover: 0 8px 15px rgba(0, 0, 0, 0.15);
-    --gradient: linear-gradient(135deg, #f0f7ff 0%, #e9ecef 100%);
-    --gradient-primary: linear-gradient(45deg, var(--primary-color), var(--primary-light));
-    --card-bg: #ffffff;
-    --mobile-padding: 1rem;
-    --section-spacing: 4rem;
-    --header-height: 70px;
-    --container-max-width: 1200px;
-}
+    <!-- Critical CSS -->
+    <style>
+        /* Debug Mode */
+        .debug * {
+            outline: 1px solid rgba(255, 0, 0, 0.1);
+        }
 
-/* Reset & Base Styles - Enhanced */
-*, *::before, *::after {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-}
+        /* Root Variables - Enhanced for PMS */
+        :root {
+            --primary-color: #2962ff;
+            --primary-dark: #1e4bd8;
+            --primary-light: #5c89ff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --background-color: #f8f9fa;
+            --background-light: #f0faff;
+            --text-color: #333;
+            --text-light: #6c757d;
+            --text-dark: #0f1964;
+            --border-color: #dee2e6;
+            --border-radius: 8px;
+            --border-radius-lg: 12px;
+            --transition: all 0.3s ease;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --box-shadow-hover: 0 8px 15px rgba(0, 0, 0, 0.15);
+            --gradient: linear-gradient(135deg, #f0f7ff 0%, #e9ecef 100%);
+            --gradient-primary: linear-gradient(45deg, var(--primary-color), var(--primary-light));
+            --card-bg: #ffffff;
+            --mobile-padding: 1rem;
+            --section-spacing: 4rem;
+            --header-height: 70px;
+            --container-max-width: 1200px;
+            --z-index-header: 1000;
+            --z-index-modal: 1050;
+            --z-index-dropdown: 1025;
+        }
 
-html {
-    scroll-behavior: smooth;
-    font-size: 16px;
-    line-height: 1.5;
-    -webkit-text-size-adjust: 100%;
-}
+        /* Reset & Base Styles - Enhanced */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-body {
-    font-family: 'Poppins', sans-serif;
-    line-height: 1.6;
-    color: var(--text-color);
-    background-color: var(--background-color);
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    padding-top: var(--header-height);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+            line-height: 1.5;
+            -webkit-text-size-adjust: 100%;
+            height: 100%;
+        }
 
-/* Container Styles */
-.container {
-    max-width: var(--container-max-width);
-    margin: 0 auto;
-    padding: 0 var(--mobile-padding);
-    width: 100%;
-}
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
 
-/* Header Container - Fixed Position */
-#header-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 1000;
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(10px);
-    box-shadow: var(--box-shadow);
-}
+        body.loaded {
+            opacity: 1;
+        }
 
-/* Typography Enhancement */
-h1, h2, h3, h4, h5, h6 {
-    color: var(--text-dark);
-    line-height: 1.2;
-    font-weight: 600;
-    margin-bottom: 1rem;
-}
+        /* Loading Indicator */
+        .loading-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--background-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: var(--z-index-modal);
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
 
-p {
-    margin-bottom: 1rem;
-    color: var(--text-color);
-}
+        .loading-indicator.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
 
-/* Enhanced Link Styles */
-a {
-    color: var(--primary-color);
-    text-decoration: none;
-    transition: var(--transition);
-}
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--background-light);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
 
-a:hover {
-    color: var(--primary-dark);
-}
+        /* Container Styles */
+        .container {
+            width: 100%;
+            max-width: var(--container-max-width);
+            margin: 0 auto;
+            padding: 0 var(--mobile-padding);
+            position: relative;
+        }
 
-/* Button Styles - Enhanced */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.8rem 1.5rem;
-    border-radius: var(--border-radius);
-    text-decoration: none;
-    transition: var(--transition);
-    font-weight: 500;
-    cursor: pointer;
-    min-width: 150px;
-    text-align: center;
-    border: none;
-    outline: none;
-    font-size: 1rem;
-    line-height: 1.5;
-    letter-spacing: 0.3px;
-    gap: 0.5rem;
-}
+        /* Main Content Wrapper */
+        .main-content {
+            flex: 1;
+            width: 100%;
+            position: relative;
+            padding-top: var(--header-height);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
 
-.btn.primary {
-    background: var(--gradient-primary);
-    color: white;
-    box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
-}
+        .main-content.loaded {
+            opacity: 1;
+        }
 
-.btn.secondary {
-    background: transparent;
-    color: var(--primary-color);
-    border: 2px solid var(--primary-color);
-}
+        /* Error Boundary */
+        .error-boundary {
+            padding: 2rem;
+            text-align: center;
+            background: var(--background-light);
+            margin: 2rem auto;
+            max-width: 600px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
 
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--box-shadow-hover);
-}
-
-/* Section Base Styles */
-section {
-    padding: 6rem 0;
-    position: relative;
-    overflow: hidden;
-}
-
-.section-header {
-    text-align: center;
-    margin-bottom: 4rem;
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 0 var(--mobile-padding);
-}
-
-.section-header h2 {
-    font-size: clamp(2rem, 5vw, 2.5rem);
-    margin-bottom: 1rem;
-}
-
-.section-header p {
-    font-size: clamp(1rem, 2vw, 1.1rem);
-    color: var(--text-light);
-}
-
-/* Enhanced Focus States for Accessibility */
-.btn:focus,
-a:focus,
-input:focus,
-textarea:focus,
-select:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(41, 98, 255, 0.3);
-}
-
-/* Utility Classes */
-.visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-}
-
-/* Animation Keyframes */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
-    100% { transform: translateY(0px); }
-}
-
-/* Base Mobile Responsive Styles */
-@media (max-width: 768px) {
-    :root {
-        --mobile-padding: 1rem;
-        --section-spacing: 3rem;
-    }
-
-    section {
-        padding: 4rem 0;
-    }
-
-    .container {
-        padding: 0 var(--mobile-padding);
-    }
-
-    .btn {
-        width: 100%;
-        max-width: 300px;
-    }
-}
-
-/* Print Styles */
-@media print {
-    body {
-        padding-top: 0;
-    }
-
-    #header-container {
-        position: static;
-    }
-
-    .btn,
-    .animate,
-    .footer {
-        display: none;
-    }
-}
-</style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
+    <!-- Loading Indicator -->
+    <div class="loading-indicator" id="loadingIndicator">
+        <div class="loading-spinner"></div>
+    </div>
+
     <!-- Header Container -->
-    <div id="header-container"></div>
+    <div id="header-container" class="header-fixed"></div>
 
     <!-- Main Content -->
-    <main>
+    <main class="main-content">
         <!-- Performance Hero Section -->
         <section class="performance-hero">
             <div class="container">
@@ -335,70 +235,14 @@ select:focus {
             </div>
         </section>
 
-        <!-- Key Features Section -->
-        <section class="key-features" id="features">
-            <div class="container">
-                <div class="section-header animate" data-animation="fade-up">
-                    <h2>Comprehensive Performance Management</h2>
-                    <p>Everything you need to track, measure, and improve employee performance effectively.</p>
-                </div>
-                <div class="features-grid">
-                    <!-- Performance Tracking -->
-                    <div class="feature-card animate" data-animation="fade-up" data-delay="200">
-                        <div class="card-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <h3>Performance Tracking</h3>
-                        <p>Real-time monitoring and analytics for comprehensive performance insights.</p>
-                        <ul class="feature-list">
-                            <li>Real-time KPI tracking</li>
-                            <li>Performance metrics</li>
-                            <li>Custom dashboards</li>
-                        </ul>
-                        <a href="#" class="card-link">Learn More <i class="fas fa-arrow-right"></i></a>
-                    </div>
-
-                    <!-- Goal Management -->
-                    <div class="feature-card animate" data-animation="fade-up" data-delay="400">
-                        <div class="card-icon">
-                            <i class="fas fa-bullseye"></i>
-                        </div>
-                        <h3>Goal Management</h3>
-                        <p>Set and track goals aligned with organizational objectives.</p>
-                        <ul class="feature-list">
-                            <li>OKR framework</li>
-                            <li>Goal alignment</li>
-                            <li>Progress tracking</li>
-                        </ul>
-                        <a href="#" class="card-link">Learn More <i class="fas fa-arrow-right"></i></a>
-                    </div>
-
-                    <!-- 360° Feedback -->
-                    <div class="feature-card animate" data-animation="fade-up" data-delay="600">
-                        <div class="card-icon">
-                            <i class="fas fa-sync"></i>
-                        </div>
-                        <h3>360° Feedback</h3>
-                        <p>Comprehensive feedback system for holistic performance evaluation.</p>
-                        <ul class="feature-list">
-                            <li>Multi-source feedback</li>
-                            <li>Peer reviews</li>
-                            <li>Continuous feedback</li>
-                        </ul>
-                        <a href="#" class="card-link">Learn More <i class="fas fa-arrow-right"></i></a>
-                    </div>
-                </div>
-            </div>
-        </section>
-
 <style>
-/* Performance Hero Section Styles */
+/* Hero Section Styles */
 .performance-hero {
-    padding: calc(var(--header-height) + 4rem) 0 6rem;
-    background: var(--gradient);
     position: relative;
+    padding: 6rem 0;
+    background: var(--gradient);
     overflow: hidden;
-    margin-top: calc(var(--header-height) * -1);
+    z-index: 1;
 }
 
 .performance-hero::before {
@@ -410,6 +254,7 @@ select:focus {
     height: 100%;
     background: linear-gradient(45deg, rgba(41, 98, 255, 0.05), transparent);
     pointer-events: none;
+    z-index: -1;
 }
 
 .performance-hero .container {
@@ -417,10 +262,20 @@ select:focus {
     grid-template-columns: 1fr 1fr;
     gap: clamp(2rem, 5vw, 4rem);
     align-items: center;
+    position: relative;
+    z-index: 2;
 }
 
 .hero-content {
     max-width: 600px;
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.hero-content.in-view {
+    opacity: 1;
+    transform: translateX(0);
 }
 
 .hero-content h1 {
@@ -444,10 +299,41 @@ select:focus {
     margin-bottom: 2rem;
 }
 
+.hero-cta .btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-cta .btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s ease, height 0.6s ease;
+}
+
+.hero-cta .btn:hover::after {
+    width: 300px;
+    height: 300px;
+}
+
 .trust-indicators {
     display: flex;
     gap: 2rem;
     flex-wrap: wrap;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease 0.3s, transform 0.6s ease 0.3s;
+}
+
+.trust-indicators.in-view {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .trust-item {
@@ -475,6 +361,14 @@ select:focus {
 
 .hero-image {
     position: relative;
+    opacity: 0;
+    transform: translateX(20px);
+    transition: opacity 0.6s ease 0.3s, transform 0.6s ease 0.3s;
+}
+
+.hero-image.in-view {
+    opacity: 1;
+    transform: translateX(0);
 }
 
 .hero-image img {
@@ -483,6 +377,12 @@ select:focus {
     max-width: 600px;
     border-radius: var(--border-radius-lg);
     box-shadow: var(--box-shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hero-image:hover img {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-hover);
 }
 
 .feature-highlights {
@@ -491,12 +391,14 @@ select:focus {
     left: 0;
     width: 100%;
     height: 100%;
+    pointer-events: none;
 }
 
 .highlight-point {
     position: absolute;
     width: 24px;
     height: 24px;
+    pointer-events: auto;
 }
 
 .pulse {
@@ -517,7 +419,8 @@ select:focus {
     font-size: 0.9rem;
     white-space: nowrap;
     opacity: 0;
-    transition: var(--transition);
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
     pointer-events: none;
 }
 
@@ -526,107 +429,27 @@ select:focus {
     transform: translateY(-10px);
 }
 
-/* Key Features Section Styles */
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 3rem;
-}
-
-.feature-card {
-    background: var(--card-bg);
-    padding: 2rem;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-    position: relative;
-    overflow: hidden;
-}
-
-.feature-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: var(--gradient-primary);
-    transform: scaleX(0);
-    transition: transform 0.3s ease;
-    transform-origin: left;
-}
-
-.feature-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--box-shadow-hover);
-}
-
-.feature-card:hover::before {
-    transform: scaleX(1);
-}
-
-.card-icon {
-    width: 60px;
-    height: 60px;
-    background: var(--background-light);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-    transition: var(--transition);
-}
-
-.card-icon i {
-    font-size: 1.5rem;
-    color: var(--primary-color);
-    transition: var(--transition);
-}
-
-.feature-card:hover .card-icon {
-    background: var(--primary-color);
-}
-
-.feature-card:hover .card-icon i {
-    color: white;
-}
-
-.feature-list {
-    list-style: none;
-    margin: 1.5rem 0;
-}
-
-.feature-list li {
-    margin-bottom: 0.75rem;
-    padding-left: 1.5rem;
-    position: relative;
-    font-size: 0.95rem;
-    color: var(--text-light);
-}
-
-.feature-list li::before {
-    content: '✓';
-    position: absolute;
-    left: 0;
-    color: var(--primary-color);
-}
-
-.card-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--primary-color);
-    font-weight: 500;
-    transition: var(--transition);
-}
-
-.card-link:hover {
-    gap: 0.75rem;
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.5);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 /* Responsive Styles */
 @media (max-width: 768px) {
+    .performance-hero {
+        padding: 4rem 0;
+    }
+
     .performance-hero .container {
         grid-template-columns: 1fr;
         text-align: center;
@@ -634,11 +457,7 @@ select:focus {
 
     .hero-content {
         order: 1;
-    }
-
-    .hero-image {
-        order: 2;
-        margin-top: 2rem;
+        margin: 0 auto;
     }
 
     .hero-cta {
@@ -654,35 +473,73 @@ select:focus {
         align-items: center;
     }
 
-    .features-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
+    .hero-image {
+        order: 2;
+        margin-top: 2rem;
     }
 
     .feature-highlights {
         display: none;
     }
 }
-
-/* Animation Classes */
-.animate {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-}
-
-.animate.in-view {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.5); opacity: 0.5; }
-    100% { transform: scale(1); opacity: 1; }
-}
 </style>
-<!-- Analytics & Development Section -->
+<!-- Key Features Section -->
+<section class="key-features" id="features">
+    <div class="container">
+        <div class="section-header animate" data-animation="fade-up">
+            <h2>Comprehensive Performance Management</h2>
+            <p>Everything you need to track, measure, and improve employee performance effectively.</p>
+        </div>
+        <div class="features-grid">
+            <!-- Performance Tracking -->
+            <div class="feature-card animate" data-animation="fade-up" data-delay="200">
+                <div class="card-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Performance Tracking</h3>
+                <p>Real-time monitoring and analytics for comprehensive performance insights.</p>
+                <ul class="feature-list">
+                    <li>Real-time KPI tracking</li>
+                    <li>Performance metrics</li>
+                    <li>Custom dashboards</li>
+                </ul>
+                <a href="#" class="card-link">Learn More <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            <!-- Goal Management -->
+            <div class="feature-card animate" data-animation="fade-up" data-delay="400">
+                <div class="card-icon">
+                    <i class="fas fa-bullseye"></i>
+                </div>
+                <h3>Goal Management</h3>
+                <p>Set and track goals aligned with organizational objectives.</p>
+                <ul class="feature-list">
+                    <li>OKR framework</li>
+                    <li>Goal alignment</li>
+                    <li>Progress tracking</li>
+                </ul>
+                <a href="#" class="card-link">Learn More <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            <!-- 360° Feedback -->
+            <div class="feature-card animate" data-animation="fade-up" data-delay="600">
+                <div class="card-icon">
+                    <i class="fas fa-sync"></i>
+                </div>
+                <h3>360° Feedback</h3>
+                <p>Comprehensive feedback system for holistic performance evaluation.</p>
+                <ul class="feature-list">
+                    <li>Multi-source feedback</li>
+                    <li>Peer reviews</li>
+                    <li>Continuous feedback</li>
+                </ul>
+                <a href="#" class="card-link">Learn More <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Analytics Section -->
 <section class="analytics-section">
     <div class="container">
         <div class="section-header animate" data-animation="fade-up">
@@ -782,65 +639,93 @@ select:focus {
     </div>
 </section>
 
-<!-- Development & Learning Section -->
-<section class="development-section">
-    <div class="container">
-        <div class="section-header animate" data-animation="fade-up">
-            <h2>Continuous Development & Learning</h2>
-            <p>Foster growth with personalized learning paths and development tracking</p>
-        </div>
-        <div class="development-grid">
-            <div class="development-card animate" data-animation="fade-up" data-delay="200">
-                <div class="dev-icon">
-                    <i class="fas fa-graduation-cap"></i>
-                </div>
-                <h3>Learning Paths</h3>
-                <p>Customized learning journeys based on role and goals</p>
-                <ul class="dev-features">
-                    <li>Skill gap analysis</li>
-                    <li>Personalized recommendations</li>
-                    <li>Progress tracking</li>
-                </ul>
-                <a href="#" class="learn-more">Explore Learning Paths <i class="fas fa-arrow-right"></i></a>
-            </div>
-
-            <div class="development-card animate" data-animation="fade-up" data-delay="400">
-                <div class="dev-icon">
-                    <i class="fas fa-tasks"></i>
-                </div>
-                <h3>Goal Tracking</h3>
-                <p>Set and monitor personal development goals</p>
-                <ul class="dev-features">
-                    <li>SMART goal setting</li>
-                    <li>Milestone tracking</li>
-                    <li>Achievement recognition</li>
-                </ul>
-                <a href="#" class="learn-more">Learn About Goals <i class="fas fa-arrow-right"></i></a>
-            </div>
-
-            <div class="development-card animate" data-animation="fade-up" data-delay="600">
-                <div class="dev-icon">
-                    <i class="fas fa-chart-bar"></i>
-                </div>
-                <h3>Progress Analytics</h3>
-                <p>Track and visualize development progress</p>
-                <ul class="dev-features">
-                    <li>Progress dashboards</li>
-                    <li>Skill assessments</li>
-                    <li>Performance reports</li>
-                </ul>
-                <a href="#" class="learn-more">View Analytics <i class="fas fa-arrow-right"></i></a>
-            </div>
-        </div>
-    </div>
-</section>
-
 <style>
+/* Features Section Styles */
+.key-features {
+    padding: 6rem 0;
+    background: var(--card-bg);
+    position: relative;
+    z-index: 2;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.feature-card {
+    background: var(--background-light);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.feature-card.in-view {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--gradient-primary);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: left;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-hover);
+}
+
+.feature-card:hover::before {
+    transform: scaleX(1);
+}
+
+.card-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--background-light);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    transition: var(--transition);
+}
+
+.card-icon i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    transition: var(--transition);
+}
+
+.feature-card:hover .card-icon {
+    background: var(--primary-color);
+}
+
+.feature-card:hover .card-icon i {
+    color: white;
+}
+
 /* Analytics Section Styles */
 .analytics-section {
-    background: var(--gradient);
     padding: 6rem 0;
+    background: var(--gradient);
     position: relative;
+    z-index: 2;
 }
 
 .analytics-showcase {
@@ -855,6 +740,13 @@ select:focus {
     display: flex;
     flex-direction: column;
     gap: 2rem;
+    opacity: 0;
+    transform: translateX(-20px);
+}
+
+.analytics-features.in-view {
+    opacity: 1;
+    transform: translateX(0);
 }
 
 .analytics-card {
@@ -865,52 +757,9 @@ select:focus {
     transition: var(--transition);
 }
 
-.card-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.card-header i {
-    font-size: 1.8rem;
-    color: var(--primary-color);
-}
-
-.analytics-list {
-    list-style: none;
-}
-
-.analytics-list li {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.analytics-list li i {
-    color: var(--primary-color);
-    margin-top: 0.25rem;
-}
-
-.analytics-list li h4 {
-    font-size: 1.1rem;
-    margin-bottom: 0.25rem;
-}
-
-.analytics-list li p {
-    font-size: 0.9rem;
-    color: var(--text-light);
-}
-
-.analytics-preview {
-    flex: 1;
-    position: relative;
-}
-
-.analytics-preview img {
-    width: 100%;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
+.analytics-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-hover);
 }
 
 .live-metrics {
@@ -923,6 +772,7 @@ select:focus {
     flex-direction: column;
     justify-content: space-around;
     padding: 2rem;
+    pointer-events: none;
 }
 
 .metric-card {
@@ -931,37 +781,208 @@ select:focus {
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     max-width: 200px;
+    transform: translateX(-20px);
+    opacity: 0;
+    transition: opacity 0.6s ease, transform 0.6s ease;
 }
 
-.metric-label {
-    font-size: 0.9rem;
-    color: var(--text-light);
-    display: block;
-    margin-bottom: 0.5rem;
+.metric-card.in-view {
+    opacity: 1;
+    transform: translateX(0);
 }
 
-.metric-value {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--primary-color);
-}
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
 
-.metric-trend {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.8rem;
-    margin-top: 0.5rem;
-}
+    .analytics-showcase {
+        flex-direction: column;
+    }
 
-.metric-trend.positive {
-    color: var(--success-color);
-}
+    .analytics-features {
+        order: 2;
+    }
 
+    .analytics-preview {
+        order: 1;
+    }
+
+    .live-metrics {
+        position: static;
+        padding: 1rem;
+    }
+
+    .metric-card {
+        max-width: 100%;
+        margin-bottom: 1rem;
+    }
+}
+</style>
+<!-- Development & Learning Section -->
+<section class="development-section">
+    <div class="container">
+        <div class="section-header animate" data-animation="fade-up">
+            <h2>Continuous Development & Learning</h2>
+            <p>Foster growth with personalized learning paths and development tracking</p>
+        </div>
+        <div class="development-grid">
+            <!-- Learning Paths Card -->
+            <div class="development-card animate" data-animation="fade-up" data-delay="200">
+                <div class="dev-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h3>Learning Paths</h3>
+                <p>Customized learning journeys based on role and goals</p>
+                <ul class="dev-features">
+                    <li>Skill gap analysis</li>
+                    <li>Personalized recommendations</li>
+                    <li>Progress tracking</li>
+                </ul>
+                <a href="#" class="learn-more">
+                    Explore Learning Paths 
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Goal Tracking Card -->
+            <div class="development-card animate" data-animation="fade-up" data-delay="400">
+                <div class="dev-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <h3>Goal Tracking</h3>
+                <p>Set and monitor personal development goals</p>
+                <ul class="dev-features">
+                    <li>SMART goal setting</li>
+                    <li>Milestone tracking</li>
+                    <li>Achievement recognition</li>
+                </ul>
+                <a href="#" class="learn-more">
+                    Learn About Goals 
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Progress Analytics Card -->
+            <div class="development-card animate" data-animation="fade-up" data-delay="600">
+                <div class="dev-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <h3>Progress Analytics</h3>
+                <p>Track and visualize development progress</p>
+                <ul class="dev-features">
+                    <li>Progress dashboards</li>
+                    <li>Skill assessments</li>
+                    <li>Performance reports</li>
+                </ul>
+                <a href="#" class="learn-more">
+                    View Analytics 
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Integration & Customization Section -->
+<section class="integration-section">
+    <div class="container">
+        <div class="section-header animate" data-animation="fade-up">
+            <h2>Seamless Integration & Customization</h2>
+            <p>Connect with your existing tools and customize workflows to match your needs</p>
+        </div>
+        
+        <!-- Integration Grid -->
+        <div class="integration-grid animate" data-animation="fade-up">
+            <!-- Slack Integration -->
+            <div class="integration-card">
+                <img src="image/slack.webp" alt="Slack Integration" loading="lazy">
+                <h4>Slack</h4>
+                <span class="status-badge">Connected</span>
+                <p>Real-time notifications and updates</p>
+                <div class="integration-hover">
+                    <a href="#" class="btn secondary">Configure</a>
+                </div>
+            </div>
+
+            <!-- MS Teams Integration -->
+            <div class="integration-card">
+                <img src="image/teams.webp" alt="Microsoft Teams Integration" loading="lazy">
+                <h4>MS Teams</h4>
+                <span class="status-badge popular">Popular</span>
+                <p>Seamless collaboration and feedback</p>
+                <div class="integration-hover">
+                    <a href="#" class="btn secondary">Configure</a>
+                </div>
+            </div>
+
+            <!-- Zoom Integration -->
+            <div class="integration-card">
+                <img src="image/zoom.webp" alt="Zoom Integration" loading="lazy">
+                <h4>Zoom</h4>
+                <span class="status-badge new">New</span>
+                <p>Virtual performance reviews</p>
+                <div class="integration-hover">
+                    <a href="#" class="btn secondary">Configure</a>
+                </div>
+            </div>
+
+            <!-- Jira Integration -->
+            <div class="integration-card">
+                <img src="image/jira.webp" alt="Jira Integration" loading="lazy">
+                <h4>Jira</h4>
+                <span class="status-badge">Connected</span>
+                <p>Project performance tracking</p>
+                <div class="integration-hover">
+                    <a href="#" class="btn secondary">Configure</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customization Features -->
+        <div class="customization-features">
+            <div class="custom-block animate" data-animation="fade-right">
+                <i class="fas fa-cogs"></i>
+                <h3>Flexible Workflows</h3>
+                <p>Design custom workflows that match your organization's processes with our drag-and-drop builder.</p>
+                <ul class="custom-features">
+                    <li>Custom review cycles</li>
+                    <li>Automated workflows</li>
+                    <li>Process templates</li>
+                </ul>
+                <a href="#" class="learn-more">
+                    Explore Workflows 
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            
+            <div class="custom-block animate" data-animation="fade-left">
+                <i class="fas fa-code"></i>
+                <h3>API Access</h3>
+                <p>Integrate with your existing systems using our comprehensive API documentation.</p>
+                <ul class="custom-features">
+                    <li>RESTful API</li>
+                    <li>Webhook support</li>
+                    <li>SDK availability</li>
+                </ul>
+                <a href="#" class="learn-more">
+                    View API Docs 
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
 /* Development Section Styles */
 .development-section {
     background: var(--card-bg);
     padding: 6rem 0;
+    position: relative;
+    z-index: 2;
 }
 
 .development-grid {
@@ -975,8 +996,15 @@ select:focus {
     background: var(--background-light);
     padding: 2rem;
     border-radius: var(--border-radius);
-    transition: var(--transition);
     box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.development-card.in-view {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .dev-icon {
@@ -988,6 +1016,7 @@ select:focus {
     align-items: center;
     justify-content: center;
     margin-bottom: 1.5rem;
+    transition: var(--transition);
 }
 
 .dev-icon i {
@@ -1013,110 +1042,128 @@ select:focus {
     color: var(--primary-color);
 }
 
-/* Responsive Styles */
-@media (max-width: 768px) {
-    .analytics-showcase {
-        flex-direction: column;
-    }
-
-    .analytics-features {
-        order: 2;
-    }
-
-    .analytics-preview {
-        order: 1;
-    }
-
-    .live-metrics {
-        position: static;
-        padding: 1rem;
-    }
-
-    .metric-card {
-        max-width: 100%;
-        margin-bottom: 1rem;
-    }
-
-    .development-grid {
-        grid-template-columns: 1fr;
-    }
+/* Integration Section Styles */
+.integration-section {
+    background: var(--gradient);
+    padding: 6rem 0;
+    position: relative;
+    z-index: 2;
 }
 
-/* Animation Classes */
-.animate[data-animation="fade-right"] {
+.integration-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.integration-card {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+    box-shadow: var(--box-shadow);
+}
+
+.integration-card img {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 1rem;
+    transition: var(--transition);
+}
+
+.integration-hover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.integration-card:hover .integration-hover {
+    opacity: 1;
+}
+
+.integration-card:hover img {
+    transform: scale(1.1);
+}
+
+.status-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+}
+
+.status-badge.popular {
+    background: var(--success-color);
+}
+
+.status-badge.new {
+    background: var(--warning-color);
+}
+
+.customization-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 4rem;
+}
+
+.custom-block {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    opacity: 0;
     transform: translateX(-20px);
 }
 
-.animate[data-animation="fade-left"] {
-    transform: translateX(20px);
+.custom-block.in-view {
+    opacity: 1;
+    transform: translateX(0);
 }
 
-.animate[data-delay="200"] { animation-delay: 0.2s; }
-.animate[data-delay="400"] { animation-delay: 0.4s; }
-.animate[data-delay="600"] { animation-delay: 0.6s; }
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .development-grid,
+    .integration-grid,
+    .customization-features {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .integration-card {
+        padding: 1.5rem;
+    }
+
+    .integration-hover {
+        position: static;
+        opacity: 1;
+        background: none;
+        margin-top: 1rem;
+    }
+}
+
+/* Animation Delays */
+[data-delay="200"] { transition-delay: 0.2s; }
+[data-delay="400"] { transition-delay: 0.4s; }
+[data-delay="600"] { transition-delay: 0.6s; }
 </style>
-<!-- Integration & Customization Section -->
-<section class="integration-section">
-    <div class="container">
-        <div class="section-header animate" data-animation="fade-up">
-            <h2>Seamless Integration & Customization</h2>
-            <p>Connect with your existing tools and customize workflows to match your needs</p>
-        </div>
-        <div class="integration-grid animate" data-animation="fade-up">
-            <!-- Integration Cards -->
-            <div class="integration-card">
-                <img src="image/slack.webp" alt="Slack Integration" loading="lazy">
-                <h4>Slack</h4>
-                <span class="status-badge">Connected</span>
-                <p>Real-time notifications and updates</p>
-            </div>
-            <div class="integration-card">
-                <img src="image/teams.webp" alt="Microsoft Teams Integration" loading="lazy">
-                <h4>MS Teams</h4>
-                <span class="status-badge popular">Popular</span>
-                <p>Seamless collaboration and feedback</p>
-            </div>
-            <div class="integration-card">
-                <img src="image/zoom.webp" alt="Zoom Integration" loading="lazy">
-                <h4>Zoom</h4>
-                <span class="status-badge new">New</span>
-                <p>Virtual performance reviews</p>
-            </div>
-            <div class="integration-card">
-                <img src="image/jira.webp" alt="Jira Integration" loading="lazy">
-                <h4>Jira</h4>
-                <span class="status-badge">Connected</span>
-                <p>Project performance tracking</p>
-            </div>
-        </div>
-
-        <div class="customization-features">
-            <div class="custom-block animate" data-animation="fade-right">
-                <i class="fas fa-cogs"></i>
-                <h3>Flexible Workflows</h3>
-                <p>Design custom workflows that match your organization's processes with our drag-and-drop builder.</p>
-                <ul class="custom-features">
-                    <li>Custom review cycles</li>
-                    <li>Automated workflows</li>
-                    <li>Process templates</li>
-                </ul>
-                <a href="#" class="learn-more">Explore Workflows <i class="fas fa-arrow-right"></i></a>
-            </div>
-            <div class="custom-block animate" data-animation="fade-left">
-                <i class="fas fa-code"></i>
-                <h3>API Access</h3>
-                <p>Integrate with your existing systems using our comprehensive API documentation.</p>
-                <ul class="custom-features">
-                    <li>RESTful API</li>
-                    <li>Webhook support</li>
-                    <li>SDK availability</li>
-                </ul>
-                <a href="#" class="learn-more">View API Docs <i class="fas fa-arrow-right"></i></a>
-            </div>
-        </div>
-    </div>
-</section>
-
 <!-- Security & Compliance Section -->
 <section class="security-section">
     <div class="container">
@@ -1125,6 +1172,7 @@ select:focus {
             <p>Your data security and compliance is our top priority</p>
         </div>
         <div class="security-features">
+            <!-- Data Protection Card -->
             <div class="security-card animate" data-animation="fade-up" data-delay="200">
                 <div class="security-icon">
                     <i class="fas fa-shield-alt"></i>
@@ -1149,6 +1197,7 @@ select:focus {
                 </div>
             </div>
 
+            <!-- Compliance Card -->
             <div class="security-card animate" data-animation="fade-up" data-delay="400">
                 <div class="security-icon">
                     <i class="fas fa-lock"></i>
@@ -1174,6 +1223,7 @@ select:focus {
                 </div>
             </div>
 
+            <!-- Access Control Card -->
             <div class="security-card animate" data-animation="fade-up" data-delay="600">
                 <div class="security-icon">
                     <i class="fas fa-user-shield"></i>
@@ -1288,72 +1338,12 @@ select:focus {
 </section>
 
 <style>
-/* Integration Section Styles */
-.integration-section {
-    background: var(--gradient);
-    padding: 6rem 0;
-}
-
-.integration-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
-    margin-top: 3rem;
-}
-
-.integration-card {
-    background: var(--card-bg);
-    padding: 2rem;
-    border-radius: var(--border-radius);
-    text-align: center;
-    transition: var(--transition);
-    box-shadow: var(--box-shadow);
-    position: relative;
-}
-
-.integration-card img {
-    width: 60px;
-    height: 60px;
-    margin-bottom: 1rem;
-}
-
-.status-badge {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: var(--primary-color);
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-}
-
-.status-badge.popular {
-    background: var(--success-color);
-}
-
-.status-badge.new {
-    background: var(--warning-color);
-}
-
-.customization-features {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 4rem;
-}
-
-.custom-block {
-    background: var(--card-bg);
-    padding: 2rem;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-}
-
 /* Security Section Styles */
 .security-section {
     background: var(--card-bg);
     padding: 6rem 0;
+    position: relative;
+    z-index: 2;
 }
 
 .security-features {
@@ -1368,12 +1358,54 @@ select:focus {
     padding: 2rem;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.security-card.in-view {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.security-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--primary-color);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.security-icon i {
+    font-size: 1.8rem;
+    color: white;
+}
+
+.security-list {
+    list-style: none;
+    margin: 1.5rem 0;
+}
+
+.security-list li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.security-list li i {
+    color: var(--primary-color);
+    margin-right: 1rem;
 }
 
 /* Pricing Section Styles */
 .pricing-section {
     background: var(--gradient);
     padding: 6rem 0;
+    position: relative;
+    z-index: 2;
 }
 
 .pricing-toggle {
@@ -1391,6 +1423,48 @@ select:focus {
     height: 34px;
 }
 
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--primary-color);
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.save-badge {
+    background: var(--success-color);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+
 .pricing-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1404,6 +1478,14 @@ select:focus {
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     position: relative;
+    transition: var(--transition);
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.pricing-card.in-view {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .pricing-card.popular {
@@ -1424,11 +1506,6 @@ select:focus {
 
 /* Responsive Styles */
 @media (max-width: 768px) {
-    .integration-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .customization-features,
     .security-features {
         grid-template-columns: 1fr;
     }
@@ -1440,19 +1517,6 @@ select:focus {
     .pricing-grid {
         grid-template-columns: 1fr;
     }
-}
-
-/* Animation Classes */
-.animate[data-animation="fade-up"] {
-    transform: translateY(20px);
-}
-
-.animate[data-animation="fade-right"] {
-    transform: translateX(-20px);
-}
-
-.animate[data-animation="fade-left"] {
-    transform: translateX(20px);
 }
 </style>
 <!-- Footer -->
@@ -1530,6 +1594,8 @@ select:focus {
     background: #1a1a1a;
     color: white;
     padding: 6rem 0 2rem;
+    position: relative;
+    z-index: 1;
     margin-top: auto;
 }
 
@@ -1589,6 +1655,17 @@ select:focus {
     color: white;
     margin-bottom: 1.5rem;
     font-size: 1.2rem;
+    position: relative;
+}
+
+.footer-section h4::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -0.5rem;
+    width: 30px;
+    height: 2px;
+    background: var(--primary-color);
 }
 
 .footer-section ul {
@@ -1603,6 +1680,7 @@ select:focus {
     color: rgba(255, 255, 255, 0.7);
     transition: var(--transition);
     font-size: 0.9rem;
+    display: inline-block;
 }
 
 .footer-section ul li a:hover {
@@ -1658,18 +1736,49 @@ select:focus {
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize all components
-    loadHeader().then(() => {
+// Debug Mode
+const DEBUG = true;
+
+function debugLog(message, data) {
+    if (DEBUG) {
+        console.log(`[Debug] ${message}:`, data);
+    }
+}
+
+// Initialize everything when DOM is ready
+document.addEventListener('DOMContentLoaded', async function() {
+    debugLog('DOM Content Loaded', 'Initializing components...');
+    
+    // Show loading indicator
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    
+    try {
+        // First load the header
+        await loadHeader();
+        debugLog('Header loaded', 'Success');
+        
+        // Initialize all components
         initializeMobileMenu();
         initializeAnimations();
         initializePricingToggle();
         initializeSmoothScroll();
         initializeIntersectionObserver();
-    });
+        
+        // Show main content
+        document.body.classList.add('loaded');
+        document.querySelector('.main-content').classList.add('loaded');
+        
+        // Hide loading indicator
+        loadingIndicator.classList.add('hidden');
+        
+        debugLog('All components initialized', 'Success');
+    } catch (error) {
+        console.error('Initialization error:', error);
+        handleError(error);
+    }
 });
 
-// Enhanced Component Loading Function
+// Enhanced Header Loading
 async function loadHeader() {
     const headerContainer = document.getElementById('header-container');
     
@@ -1679,12 +1788,13 @@ async function loadHeader() {
         
         const html = await response.text();
         headerContainer.innerHTML = html;
-
+        
         // Initialize header functionality
         initializeHeaderScroll();
-        
+        debugLog('Header loaded and initialized', 'Success');
     } catch (error) {
         console.error('Error loading header:', error);
+        // Provide fallback header
         headerContainer.innerHTML = `
             <header class="main-header">
                 <div class="container">
@@ -1694,100 +1804,18 @@ async function loadHeader() {
                 </div>
             </header>
         `;
+        throw error;
     }
 }
 
-// Mobile Menu Initialization
-function initializeMobileMenu() {
-    const menuToggle = document.querySelector('.menu-toggle');
-    const mainNav = document.querySelector('.main-nav');
-    const menuOverlay = document.querySelector('.menu-overlay');
-    
-    if (!menuToggle || !mainNav) return;
-
-    let isMenuOpen = false;
-
-    function toggleMenu(show = !isMenuOpen) {
-        isMenuOpen = show;
-        menuToggle.classList.toggle('active', show);
-        mainNav.classList.toggle('active', show);
-        menuOverlay.classList.toggle('active', show);
-        document.body.style.overflow = show ? 'hidden' : '';
-    }
-
-    menuToggle.addEventListener('click', () => toggleMenu());
-    menuOverlay.addEventListener('click', () => toggleMenu(false));
-
-    // Close menu on ESC key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && isMenuOpen) toggleMenu(false);
-    });
-}
-
-// Scroll Animation
-function initializeHeaderScroll() {
-    const header = document.querySelector('header');
-    let lastScroll = 0;
-    
-    window.addEventListener('scroll', () => {
-        const currentScroll = window.pageYOffset;
-        
-        if (currentScroll <= 0) {
-            header.classList.remove('scroll-up');
-            return;
-        }
-        
-        if (currentScroll > lastScroll && !header.classList.contains('scroll-down')) {
-            header.classList.remove('scroll-up');
-            header.classList.add('scroll-down');
-        } else if (currentScroll < lastScroll && header.classList.contains('scroll-down')) {
-            header.classList.remove('scroll-down');
-            header.classList.add('scroll-up');
-        }
-        
-        lastScroll = currentScroll;
-    });
-}
-
-// Pricing Toggle
-function initializePricingToggle() {
-    const toggle = document.getElementById('billing-toggle');
-    const prices = document.querySelectorAll('.amount');
-    
-    if (!toggle) return;
-
-    toggle.addEventListener('change', function() {
-        prices.forEach(price => {
-            const monthly = price.getAttribute('data-monthly');
-            const annual = price.getAttribute('data-annual');
-            price.textContent = this.checked ? annual : monthly;
-        });
-    });
-}
-
-// Smooth Scroll
-function initializeSmoothScroll() {
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
-}
-
-// Intersection Observer for Animations
-function initializeIntersectionObserver() {
+// Enhanced Animation Observer
+function initializeAnimations() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('in-view');
                 observer.unobserve(entry.target);
+                debugLog('Element animated', entry.target);
             }
         });
     }, {
@@ -1800,14 +1828,71 @@ function initializeIntersectionObserver() {
     });
 }
 
+// Pricing Toggle Enhancement
+function initializePricingToggle() {
+    const toggle = document.getElementById('billing-toggle');
+    const prices = document.querySelectorAll('.amount');
+    
+    if (!toggle) return;
+
+    toggle.addEventListener('change', function() {
+        const isAnnual = this.checked;
+        prices.forEach(price => {
+            const monthly = price.getAttribute('data-monthly');
+            const annual = price.getAttribute('data-annual');
+            price.textContent = isAnnual ? annual : monthly;
+        });
+        debugLog('Pricing toggle changed', isAnnual ? 'annual' : 'monthly');
+    });
+}
+
+// Enhanced Smooth Scroll
+function initializeSmoothScroll() {
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                const headerOffset = 80;
+                const elementPosition = target.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+                debugLog('Smooth scroll to', this.getAttribute('href'));
+            }
+        });
+    });
+}
+
 // Error Handling
+function handleError(error) {
+    console.error('Application error:', error);
+    
+    // Show error message to user
+    const errorMessage = document.createElement('div');
+    errorMessage.className = 'error-boundary';
+    errorMessage.innerHTML = `
+        <h2>Something went wrong</h2>
+        <p>We're sorry, but there was an error loading the page. Please try refreshing.</p>
+        <button onclick="location.reload()" class="btn primary">Refresh Page</button>
+    `;
+    
+    document.body.appendChild(errorMessage);
+}
+
+// Global error handling
 window.onerror = function(msg, url, lineNo, columnNo, error) {
     console.error('Global error:', { message: msg, url, lineNo, columnNo, error });
+    handleError(error);
     return false;
 };
 
 window.addEventListener('unhandledrejection', event => {
     console.error('Unhandled promise rejection:', event.reason);
+    handleError(event.reason);
 });
 
 // Watson Assistant Chat Integration
