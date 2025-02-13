@@ -909,6 +909,383 @@
                 margin: 2cm;
             }
         }
+        /* Footer Styles */
+footer {
+    background: #2d3436;
+    color: white;
+    padding: 6rem 0 2rem;
+    position: relative;
+    margin-top: 4rem;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: clamp(2rem, 5vw, 4rem);
+    margin-bottom: 4rem;
+}
+
+.footer-section {
+    padding: 0 1rem;
+}
+
+.footer-section h4 {
+    color: white;
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    position: relative;
+}
+
+.footer-section h4::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -8px;
+    width: 40px;
+    height: 2px;
+    background: var(--primary-color);
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section ul li {
+    margin-bottom: 1rem;
+}
+
+.footer-section ul li a {
+    color: #a0a0a0;
+    text-decoration: none;
+    transition: var(--transition);
+    font-size: 0.9rem;
+    display: inline-block;
+    padding: 0.3rem 0;
+}
+
+.footer-section ul li a:hover {
+    color: white;
+    transform: translateX(5px);
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 2rem;
+    text-align: center;
+    color: #a0a0a0;
+    font-size: 0.9rem;
+}
+
+/* Enhanced Mobile Responsive Design */
+@media (max-width: 768px) {
+    /* General Mobile Adjustments */
+    .container {
+        padding: 0 1.5rem;
+    }
+
+    section {
+        padding: 4rem 0;
+    }
+
+    /* Hero Section Mobile */
+    .performance-hero {
+        padding-top: calc(var(--header-height) + 2rem);
+    }
+
+    .performance-hero .container {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .hero-content {
+        order: 1;
+    }
+
+    .hero-image {
+        order: 2;
+        margin-top: 2rem;
+    }
+
+    .hero-cta {
+        justify-content: center;
+    }
+
+    .hero-cta .btn {
+        width: 100%;
+        max-width: 250px;
+    }
+
+    /* Benefits Grid Mobile */
+    .benefits-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    /* Feature Blocks Mobile */
+    .feature-block,
+    .feature-block.reverse {
+        flex-direction: column;
+        padding: 1.5rem;
+        gap: 2rem;
+        text-align: center;
+    }
+
+    .feature-content ul {
+        text-align: left;
+        display: inline-block;
+        margin: 0 auto;
+    }
+
+    /* Feedback Section Mobile */
+    .feedback-features {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    /* Development Section Mobile */
+    .development-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 2rem;
+    }
+
+    .development-info ul {
+        text-align: left;
+        display: inline-block;
+        margin: 0 auto;
+    }
+
+    /* UI Section Mobile */
+    .ui-tabs {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .tab-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Integration Section Mobile */
+    .integration-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .customization-features {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    /* Security Section Mobile */
+    .security-features {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    /* Analytics Section Mobile */
+    .analytics-showcase {
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .analytics-features {
+        order: 2;
+    }
+
+    .analytics-preview {
+        order: 1;
+    }
+
+    /* Case Studies Mobile */
+    .testimonial-card {
+        padding: 1.5rem;
+    }
+
+    /* Pricing Section Mobile */
+    .pricing-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    /* Resources Section Mobile */
+    .resources-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    /* Footer Mobile */
+    footer {
+        padding: 4rem 0 2rem;
+    }
+
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        text-align: center;
+    }
+
+    .footer-section h4::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .footer-section ul li a {
+        padding: 0.5rem 0;
+    }
+}
+
+/* Tablet Responsive Design */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .container {
+        padding: 0 2rem;
+    }
+
+    .benefits-grid,
+    .feedback-features {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .feature-block,
+    .feature-block.reverse {
+        padding: 2rem;
+        gap: 3rem;
+    }
+
+    .integration-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .footer-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+    }
+}
+
+/* Print Styles */
+@media print {
+    footer {
+        display: none;
+    }
+}
+
+/* Additional Mobile Optimizations */
+@media (max-width: 480px) {
+    .footer-section {
+        padding: 0;
+    }
+
+    .footer-bottom {
+        padding: 1.5rem 1rem;
+    }
+
+    .footer-section ul li {
+        margin-bottom: 0.8rem;
+    }
+}
+        /* Mobile Menu Styles */
+.menu-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 998;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.menu-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .menu-toggle {
+        display: flex !important;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 30px;
+        height: 22px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        z-index: 1002;
+    }
+
+    .menu-toggle span {
+        display: block;
+        width: 100%;
+        height: 2px;
+        background-color: var(--text-dark);
+        transition: all 0.3s ease;
+    }
+
+    .menu-toggle.active span:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    .menu-toggle.active span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .menu-toggle.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(7px, -6px);
+    }
+
+    nav {
+        position: fixed;
+        top: var(--header-height);
+        right: -100%;
+        width: 80%;
+        height: calc(100vh - var(--header-height));
+        background: var(--card-bg);
+        transition: right 0.3s ease;
+        overflow-y: auto;
+        z-index: 999;
+        padding: 2rem;
+    }
+
+    nav.active {
+        right: 0;
+    }
+
+    nav ul {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    nav ul li {
+        width: 100%;
+    }
+
+    nav ul li a {
+        padding: 1rem 0;
+        display: block;
+        width: 100%;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .dropdown-content {
+        position: static !important;
+        width: 100% !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        box-shadow: none !important;
+        padding: 0 1rem !important;
+        display: none;
+    }
+
+    .dropdown.active .dropdown-content {
+        display: block;
+    }
+}
     </style>
 </head>
     <body>
@@ -1320,209 +1697,231 @@
     </footer>
 
        <script>
-        // Enhanced Component Loading Function
-        async function loadHeader() {
-            const headerContainer = document.getElementById('header-container');
-            
-            try {
-                const response = await fetch('mainheader.html');
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                
-                const html = await response.text();
-                headerContainer.innerHTML = html;
-
-                // Initialize mobile menu after header loads
-                initializeMobileMenu();
-                initializeTabSystem();
-                initializeAnimations();
-
-            } catch (error) {
-                console.error('Error loading header:', error);
-                headerContainer.innerHTML = `
-                    <header class="main-header">
-                        <div class="container">
-                            <a href="/" class="logo">
-                                <h1>Workwise Pro</h1>
-                            </a>
-                        </div>
-                    </header>
-                `;
-            }
-        }
-
-        // Mobile Menu Initialization
-        function initializeMobileMenu() {
-            const menuToggle = document.querySelector('.mobile-menu-toggle');
-            const mainNav = document.querySelector('.main-nav');
-            const menuOverlay = document.querySelector('.menu-overlay');
-            const megaMenus = document.querySelectorAll('.mega-menu');
-
-            if (menuToggle && mainNav) {
-                let isMenuOpen = false;
-
-                function toggleMenu(show) {
-                    isMenuOpen = show;
-                    menuToggle.classList.toggle('active', show);
-                    mainNav.classList.toggle('active', show);
-                    document.body.style.overflow = show ? 'hidden' : '';
-                    
-                    if (menuOverlay) {
-                        menuOverlay.classList.toggle('active', show);
-                    }
-
-                    if (!show) {
-                        megaMenus.forEach(menu => menu.classList.remove('active'));
-                    }
-                }
-
-                menuToggle.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    toggleMenu(!isMenuOpen);
-                });
-
-                // Handle mega menus on mobile
-                megaMenus.forEach(menu => {
-                    const link = menu.querySelector('a');
-                    link?.addEventListener('click', (e) => {
-                        if (window.innerWidth <= 768) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            megaMenus.forEach(m => {
-                                if (m !== menu) m.classList.remove('active');
-                            });
-                            menu.classList.toggle('active');
-                        }
-                    });
-                });
-
-                // Close menu when clicking outside
-                document.addEventListener('click', (e) => {
-                    if (isMenuOpen && !mainNav.contains(e.target) && !menuToggle.contains(e.target)) {
-                        toggleMenu(false);
-                    }
-                });
-
-                // Close menu on ESC key
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape' && isMenuOpen) {
-                        toggleMenu(false);
-                    }
-                });
-            }
-        }
-
-        // Tab System
-        function initializeTabSystem() {
-            const tabButtons = document.querySelectorAll('.tab-btn');
-            const tabContents = document.querySelectorAll('.tab-content');
-
-            tabButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    tabContents.forEach(content => content.classList.remove('active'));
-
-                    button.classList.add('active');
-                    const tabId = button.getAttribute('data-tab');
-                    document.getElementById(tabId).classList.add('active');
-                });
-            });
-        }
-
-        // Animation Observer
-        function initializeAnimations() {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        requestAnimationFrame(() => {
-                            entry.target.classList.add('animate');
-                        });
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            });
-
-            document.querySelectorAll('.animate, .feature-block, .benefit-card, .feedback-card, .security-card, .analytics-card, .resource-card').forEach(element => {
-                observer.observe(element);
-            });
-        }
-
-        // Smooth Scroll
-        function initializeSmoothScroll() {
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        const headerOffset = 80;
-                        const elementPosition = target.getBoundingClientRect().top;
-                        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-                        window.scrollTo({
-                            top: offsetPosition,
-                            behavior: 'smooth'
-                        });
-                    }
-                });
-            });
-        }
-
-        // Handle window resize
-        let resizeTimer;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                if (window.innerWidth > 768) {
-                    const mainNav = document.querySelector('.main-nav');
-                    const menuToggle = document.querySelector('.mobile-menu-toggle');
-                    const menuOverlay = document.querySelector('.menu-overlay');
-                    
-                    mainNav?.classList.remove('active');
-                    menuToggle?.classList.remove('active');
-                    menuOverlay?.classList.remove('active');
-                    document.body.style.overflow = '';
-                }
-            }, 250);
-        });
-
-        // Initialize everything when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
-            loadHeader().then(() => {
-                initializeSmoothScroll();
-                initializeTabSystem();
-                initializeAnimations();
-            });
-        });
+    loadHeader().then(() => {
+        initializeMobileMenu();
+        initializeTabSystem();
+        initializeAnimations();
+        initializeSmoothScroll();
+    });
+});
 
-        // Error handling
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            console.error('Global error:', { message: msg, url, lineNo, columnNo, error });
-            return false;
-        };
-
-        // Handle unhandled promise rejections
-        window.addEventListener('unhandledrejection', event => {
-            console.error('Unhandled promise rejection:', event.reason);
-        });
-
-        // Watson Assistant Chat Integration
-        window.watsonAssistantChatOptions = {
-            integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
-            region: "au-syd",
-            serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
-            onLoad: async (instance) => { await instance.render(); }
-        };
+// Enhanced Component Loading Function
+async function loadHeader() {
+    const headerContainer = document.getElementById('header-container');
+    
+    try {
+        const response = await fetch('mainheader.html');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
-        setTimeout(function(){
-            const t = document.createElement('script');
-            t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
-                (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
-                "/WatsonAssistantChatEntry.js";
-            document.head.appendChild(t);
+        const html = await response.text();
+        headerContainer.innerHTML = html;
+
+        // Extract and apply styles
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const styles = doc.getElementsByTagName('style');
+        Array.from(styles).forEach(style => {
+            style.setAttribute('data-source', 'mainheader');
+            document.head.appendChild(style.cloneNode(true));
         });
-    </script>
+
+    } catch (error) {
+        console.error('Error loading header:', error);
+        headerContainer.innerHTML = `
+            <header class="main-header">
+                <div class="container">
+                    <a href="/" class="logo">
+                        <h1>Workwise Pro</h1>
+                    </a>
+                </div>
+            </header>
+        `;
+    }
+}
+
+// Enhanced Mobile Menu Initialization
+function initializeMobileMenu() {
+    const menuToggle = document.querySelector('.menu-toggle');
+    const nav = document.querySelector('nav');
+    const menuOverlay = document.querySelector('.menu-overlay');
+    const dropdowns = document.querySelectorAll('.dropdown');
+    
+    if (!menuToggle || !nav) return;
+
+    let isMenuOpen = false;
+
+    function toggleMenu(show = !isMenuOpen) {
+        isMenuOpen = show;
+        menuToggle.classList.toggle('active', show);
+        nav.classList.toggle('active', show);
+        document.body.style.overflow = show ? 'hidden' : '';
+        
+        if (menuOverlay) {
+            menuOverlay.classList.toggle('active', show);
+        }
+
+        // Close all dropdowns when closing menu
+        if (!show) {
+            dropdowns.forEach(dropdown => dropdown.classList.remove('active'));
+        }
+    }
+
+    // Menu Toggle Click
+    menuToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMenu();
+    });
+
+    // Dropdown Handling
+    dropdowns.forEach(dropdown => {
+        const link = dropdown.querySelector('a');
+        
+        link?.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Close other dropdowns
+                dropdowns.forEach(other => {
+                    if (other !== dropdown) {
+                        other.classList.remove('active');
+                    }
+                });
+                
+                dropdown.classList.toggle('active');
+            }
+        });
+    });
+
+    // Close menu when clicking overlay
+    menuOverlay?.addEventListener('click', () => {
+        toggleMenu(false);
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (isMenuOpen && !nav.contains(e.target) && !menuToggle.contains(e.target)) {
+            toggleMenu(false);
+        }
+    });
+
+    // Close menu on ESC key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isMenuOpen) {
+            toggleMenu(false);
+        }
+    });
+
+    // Handle window resize
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            if (window.innerWidth > 768 && isMenuOpen) {
+                toggleMenu(false);
+            }
+        }, 250);
+    });
+}
+
+// Tab System
+function initializeTabSystem() {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Remove active class from all buttons and contents
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+
+            // Add active class to clicked button and corresponding content
+            button.classList.add('active');
+            const tabId = button.getAttribute('data-tab');
+            document.getElementById(tabId)?.classList.add('active');
+        });
+    });
+}
+
+// Enhanced Animation Observer
+function initializeAnimations() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                requestAnimationFrame(() => {
+                    entry.target.classList.add('animate');
+                });
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
+
+    document.querySelectorAll(`
+        .animate,
+        .feature-block,
+        .benefit-card,
+        .feedback-card,
+        .security-card,
+        .analytics-card,
+        .resource-card,
+        .hero-content,
+        .hero-image,
+        .integration-card
+    `).forEach(element => {
+        observer.observe(element);
+    });
+}
+
+// Smooth Scroll Implementation
+function initializeSmoothScroll() {
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                const headerOffset = 80;
+                const elementPosition = target.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+}
+
+// Error Handling
+window.onerror = function(msg, url, lineNo, columnNo, error) {
+    console.error('Global error:', { message: msg, url, lineNo, columnNo, error });
+    return false;
+};
+
+window.addEventListener('unhandledrejection', event => {
+    console.error('Unhandled promise rejection:', event.reason);
+});
+
+// Watson Assistant Chat Integration
+window.watsonAssistantChatOptions = {
+    integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
+    region: "au-syd",
+    serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
+    onLoad: async (instance) => { await instance.render(); }
+};
+
+setTimeout(function(){
+    const t = document.createElement('script');
+    t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
+        (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
+        "/WatsonAssistantChatEntry.js";
+    document.head.appendChild(t);
+});
+       </script>
 </body>
 </html>
     
