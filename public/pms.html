@@ -14,25 +14,13 @@
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
     
-    <!-- Preconnect to External Resources -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
     <!-- External Resources -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
-    <!-- Preload Critical Images -->
-    <link rel="preload" as="image" href="image/performance-dashboard.webp">
 
     <!-- Critical CSS -->
     <style>
-        /* Debug Mode */
-        .debug * {
-            outline: 1px solid rgba(255, 0, 0, 0.1);
-        }
-
-        /* Root Variables - Enhanced for PMS */
+        /* Root Variables */
         :root {
             --primary-color: #2962ff;
             --primary-dark: #1e4bd8;
@@ -59,12 +47,9 @@
             --section-spacing: 4rem;
             --header-height: 70px;
             --container-max-width: 1200px;
-            --z-index-header: 1000;
-            --z-index-modal: 1050;
-            --z-index-dropdown: 1025;
         }
 
-        /* Reset & Base Styles - Enhanced */
+        /* Reset & Base Styles */
         *, *::before, *::after {
             margin: 0;
             padding: 0;
@@ -77,7 +62,6 @@
             font-size: 16px;
             line-height: 1.5;
             -webkit-text-size-adjust: 100%;
-            height: 100%;
         }
 
         body {
@@ -88,97 +72,150 @@
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            min-height: 100%;
-            display: flex;
-            flex-direction: column;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        body.loaded {
-            opacity: 1;
-        }
-
-        /* Loading Indicator */
-        .loading-indicator {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--background-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: var(--z-index-modal);
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-
-        .loading-indicator.hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid var(--background-light);
-            border-top-color: var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+            padding-top: var(--header-height); /* Critical for fixed header */
+            opacity: 1; /* Ensure content is visible */
+            visibility: visible; /* Ensure content is visible */
         }
 
         /* Container Styles */
         .container {
-            width: 100%;
             max-width: var(--container-max-width);
             margin: 0 auto;
             padding: 0 var(--mobile-padding);
-            position: relative;
+            width: 100%;
+        }
+
+        /* Header Container - Fixed Position */
+        #header-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--box-shadow);
         }
 
         /* Main Content Wrapper */
         .main-content {
-            flex: 1;
-            width: 100%;
-            position: relative;
-            padding-top: var(--header-height);
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            display: block;
+            visibility: visible;
+            opacity: 1;
+            min-height: calc(100vh - var(--header-height));
         }
 
-        .main-content.loaded {
+        /* Section Base Styles */
+        section {
+            padding: 6rem 0;
+            position: relative;
+            overflow: hidden;
+            display: block;
+            visibility: visible;
             opacity: 1;
         }
 
-        /* Error Boundary */
-        .error-boundary {
-            padding: 2rem;
+        .section-header {
             text-align: center;
-            background: var(--background-light);
-            margin: 2rem auto;
-            max-width: 600px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
+            margin-bottom: 4rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 0 var(--mobile-padding);
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .section-header h2 {
+            font-size: clamp(2rem, 5vw, 2.5rem);
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .section-header p {
+            font-size: clamp(1rem, 2vw, 1.1rem);
+            color: var(--text-light);
+        }
+
+        /* Loading Indicator */
+        #loading-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            background: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            display: none;
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.8rem 1.5rem;
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            transition: var(--transition);
+            font-weight: 500;
+            cursor: pointer;
+            min-width: 150px;
+            text-align: center;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            line-height: 1.5;
+            letter-spacing: 0.3px;
+        }
+
+        .btn.primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
+        }
+
+        .btn.secondary {
+            background: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--box-shadow-hover);
+        }
+
+        /* Responsive Base Styles */
+        @media (max-width: 768px) {
+            :root {
+                --mobile-padding: 1rem;
+                --section-spacing: 3rem;
+            }
+
+            section {
+                padding: 4rem 0;
+            }
+
+            .container {
+                padding: 0 var(--mobile-padding);
+            }
         }
     </style>
 </head>
 <body>
     <!-- Loading Indicator -->
-    <div class="loading-indicator" id="loadingIndicator">
-        <div class="loading-spinner"></div>
+    <div id="loading-indicator">
+        <div class="spinner">Loading...</div>
     </div>
 
     <!-- Header Container -->
-    <div id="header-container" class="header-fixed"></div>
+    <div id="header-container"></div>
 
-    <!-- Main Content -->
+    <!-- Main Content Wrapper -->
     <main class="main-content">
-        <!-- Performance Hero Section -->
+                <!-- Hero Section -->
         <section class="performance-hero">
             <div class="container">
                 <div class="hero-content animate" data-animation="fade-right">
@@ -219,17 +256,62 @@
                         class="animate-float"
                         width="600"
                         height="400"
-                        loading="lazy"
                     >
-                    <div class="feature-highlights">
-                        <div class="highlight-point" style="top: 20%; left: 15%;">
-                            <span class="pulse"></span>
-                            <div class="tooltip">Real-time Analytics</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features-section" id="features">
+            <div class="container">
+                <div class="section-header animate" data-animation="fade-up">
+                    <h2>Comprehensive Performance Management</h2>
+                    <p>Everything you need to track, measure, and improve employee performance effectively.</p>
+                </div>
+                <div class="features-grid">
+                    <!-- Performance Tracking -->
+                    <div class="feature-card animate" data-animation="fade-up" data-delay="200">
+                        <div class="card-icon">
+                            <i class="fas fa-chart-line"></i>
                         </div>
-                        <div class="highlight-point" style="top: 60%; right: 20%;">
-                            <span class="pulse"></span>
-                            <div class="tooltip">Smart Insights</div>
+                        <h3>Performance Tracking</h3>
+                        <p>Real-time monitoring and analytics for comprehensive performance insights.</p>
+                        <ul class="feature-list">
+                            <li>Real-time KPI tracking</li>
+                            <li>Performance metrics</li>
+                            <li>Custom dashboards</li>
+                        </ul>
+                        <a href="#" class="card-link">Learn More <i class="fas fa-arrow-right"></i></a>
+                    </div>
+
+                    <!-- Goal Management -->
+                    <div class="feature-card animate" data-animation="fade-up" data-delay="400">
+                        <div class="card-icon">
+                            <i class="fas fa-bullseye"></i>
                         </div>
+                        <h3>Goal Management</h3>
+                        <p>Set and track goals aligned with organizational objectives.</p>
+                        <ul class="feature-list">
+                            <li>OKR framework</li>
+                            <li>Goal alignment</li>
+                            <li>Progress tracking</li>
+                        </ul>
+                        <a href="#" class="card-link">Learn More <i class="fas fa-arrow-right"></i></a>
+                    </div>
+
+                    <!-- 360° Feedback -->
+                    <div class="feature-card animate" data-animation="fade-up" data-delay="600">
+                        <div class="card-icon">
+                            <i class="fas fa-sync"></i>
+                        </div>
+                        <h3>360° Feedback</h3>
+                        <p>Comprehensive feedback system for holistic performance evaluation.</p>
+                        <ul class="feature-list">
+                            <li>Multi-source feedback</li>
+                            <li>Peer reviews</li>
+                            <li>Continuous feedback</li>
+                        </ul>
+                        <a href="#" class="card-link">Learn More <i class="fas fa-arrow-right"></i></a>
                     </div>
                 </div>
             </div>
@@ -238,23 +320,11 @@
 <style>
 /* Hero Section Styles */
 .performance-hero {
-    position: relative;
-    padding: 6rem 0;
+    padding: calc(var(--header-height) + 4rem) 0 6rem;
     background: var(--gradient);
+    position: relative;
     overflow: hidden;
-    z-index: 1;
-}
-
-.performance-hero::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(45deg, rgba(41, 98, 255, 0.05), transparent);
-    pointer-events: none;
-    z-index: -1;
+    margin-top: calc(var(--header-height) * -1);
 }
 
 .performance-hero .container {
@@ -262,20 +332,10 @@
     grid-template-columns: 1fr 1fr;
     gap: clamp(2rem, 5vw, 4rem);
     align-items: center;
-    position: relative;
-    z-index: 2;
 }
 
 .hero-content {
     max-width: 600px;
-    opacity: 0;
-    transform: translateX(-20px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-}
-
-.hero-content.in-view {
-    opacity: 1;
-    transform: translateX(0);
 }
 
 .hero-content h1 {
@@ -299,41 +359,10 @@
     margin-bottom: 2rem;
 }
 
-.hero-cta .btn {
-    position: relative;
-    overflow: hidden;
-}
-
-.hero-cta .btn::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    transition: width 0.6s ease, height 0.6s ease;
-}
-
-.hero-cta .btn:hover::after {
-    width: 300px;
-    height: 300px;
-}
-
 .trust-indicators {
     display: flex;
     gap: 2rem;
     flex-wrap: wrap;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.6s ease 0.3s, transform 0.6s ease 0.3s;
-}
-
-.trust-indicators.in-view {
-    opacity: 1;
-    transform: translateY(0);
 }
 
 .trust-item {
@@ -361,14 +390,6 @@
 
 .hero-image {
     position: relative;
-    opacity: 0;
-    transform: translateX(20px);
-    transition: opacity 0.6s ease 0.3s, transform 0.6s ease 0.3s;
-}
-
-.hero-image.in-view {
-    opacity: 1;
-    transform: translateX(0);
 }
 
 .hero-image img {
@@ -377,275 +398,12 @@
     max-width: 600px;
     border-radius: var(--border-radius-lg);
     box-shadow: var(--box-shadow);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.hero-image:hover img {
-    transform: translateY(-5px);
-    box-shadow: var(--box-shadow-hover);
-}
-
-.feature-highlights {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-}
-
-.highlight-point {
-    position: absolute;
-    width: 24px;
-    height: 24px;
-    pointer-events: auto;
-}
-
-.pulse {
-    display: block;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background: var(--primary-color);
-    animation: pulse 2s infinite;
-}
-
-.tooltip {
-    position: absolute;
-    background: white;
-    padding: 0.5rem 1rem;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    font-size: 0.9rem;
-    white-space: nowrap;
-    opacity: 0;
-    transform: translateY(10px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    pointer-events: none;
-}
-
-.highlight-point:hover .tooltip {
-    opacity: 1;
-    transform: translateY(-10px);
-}
-
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-        opacity: 1;
-    }
-    50% {
-        transform: scale(1.5);
-        opacity: 0.5;
-    }
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-/* Responsive Styles */
-@media (max-width: 768px) {
-    .performance-hero {
-        padding: 4rem 0;
-    }
-
-    .performance-hero .container {
-        grid-template-columns: 1fr;
-        text-align: center;
-    }
-
-    .hero-content {
-        order: 1;
-        margin: 0 auto;
-    }
-
-    .hero-cta {
-        justify-content: center;
-        flex-direction: column;
-    }
-
-    .trust-indicators {
-        justify-content: center;
-    }
-
-    .trust-item {
-        align-items: center;
-    }
-
-    .hero-image {
-        order: 2;
-        margin-top: 2rem;
-    }
-
-    .feature-highlights {
-        display: none;
-    }
-}
-</style>
-<!-- Key Features Section -->
-<section class="key-features" id="features">
-    <div class="container">
-        <div class="section-header animate" data-animation="fade-up">
-            <h2>Comprehensive Performance Management</h2>
-            <p>Everything you need to track, measure, and improve employee performance effectively.</p>
-        </div>
-        <div class="features-grid">
-            <!-- Performance Tracking -->
-            <div class="feature-card animate" data-animation="fade-up" data-delay="200">
-                <div class="card-icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <h3>Performance Tracking</h3>
-                <p>Real-time monitoring and analytics for comprehensive performance insights.</p>
-                <ul class="feature-list">
-                    <li>Real-time KPI tracking</li>
-                    <li>Performance metrics</li>
-                    <li>Custom dashboards</li>
-                </ul>
-                <a href="#" class="card-link">Learn More <i class="fas fa-arrow-right"></i></a>
-            </div>
-
-            <!-- Goal Management -->
-            <div class="feature-card animate" data-animation="fade-up" data-delay="400">
-                <div class="card-icon">
-                    <i class="fas fa-bullseye"></i>
-                </div>
-                <h3>Goal Management</h3>
-                <p>Set and track goals aligned with organizational objectives.</p>
-                <ul class="feature-list">
-                    <li>OKR framework</li>
-                    <li>Goal alignment</li>
-                    <li>Progress tracking</li>
-                </ul>
-                <a href="#" class="card-link">Learn More <i class="fas fa-arrow-right"></i></a>
-            </div>
-
-            <!-- 360° Feedback -->
-            <div class="feature-card animate" data-animation="fade-up" data-delay="600">
-                <div class="card-icon">
-                    <i class="fas fa-sync"></i>
-                </div>
-                <h3>360° Feedback</h3>
-                <p>Comprehensive feedback system for holistic performance evaluation.</p>
-                <ul class="feature-list">
-                    <li>Multi-source feedback</li>
-                    <li>Peer reviews</li>
-                    <li>Continuous feedback</li>
-                </ul>
-                <a href="#" class="card-link">Learn More <i class="fas fa-arrow-right"></i></a>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Analytics Section -->
-<section class="analytics-section">
-    <div class="container">
-        <div class="section-header animate" data-animation="fade-up">
-            <h2>AI-Powered Performance Analytics</h2>
-            <p>Make data-driven decisions with real-time insights and predictive analytics</p>
-        </div>
-        <div class="analytics-showcase">
-            <div class="analytics-features animate" data-animation="fade-right">
-                <div class="analytics-card">
-                    <div class="card-header">
-                        <i class="fas fa-chart-line"></i>
-                        <h3>Performance Metrics</h3>
-                    </div>
-                    <ul class="analytics-list">
-                        <li>
-                            <i class="fas fa-check-circle"></i>
-                            <div>
-                                <h4>Real-time Tracking</h4>
-                                <p>Monitor performance metrics in real-time with AI insights</p>
-                            </div>
-                        </li>
-                        <li>
-                            <i class="fas fa-check-circle"></i>
-                            <div>
-                                <h4>Predictive Analysis</h4>
-                                <p>AI-powered predictions for performance trends</p>
-                            </div>
-                        </li>
-                        <li>
-                            <i class="fas fa-check-circle"></i>
-                            <div>
-                                <h4>Custom Reports</h4>
-                                <p>Generate detailed performance reports instantly</p>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="analytics-card">
-                    <div class="card-header">
-                        <i class="fas fa-brain"></i>
-                        <h3>Smart Insights</h3>
-                    </div>
-                    <ul class="analytics-list">
-                        <li>
-                            <i class="fas fa-check-circle"></i>
-                            <div>
-                                <h4>Performance Patterns</h4>
-                                <p>Identify trends and patterns in employee performance</p>
-                            </div>
-                        </li>
-                        <li>
-                            <i class="fas fa-check-circle"></i>
-                            <div>
-                                <h4>Gap Analysis</h4>
-                                <p>Automatically identify skill and performance gaps</p>
-                            </div>
-                        </li>
-                        <li>
-                            <i class="fas fa-check-circle"></i>
-                            <div>
-                                <h4>Action Recommendations</h4>
-                                <p>Get AI-powered suggestions for improvement</p>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div class="analytics-preview animate" data-animation="fade-left">
-                <img 
-                    src="image/analytics-dashboard.webp" 
-                    alt="Analytics Dashboard"
-                    loading="lazy"
-                    width="600"
-                    height="400"
-                >
-                <div class="live-metrics">
-                    <div class="metric-card">
-                        <span class="metric-label">Performance Score</span>
-                        <div class="metric-value">92%</div>
-                        <div class="metric-trend positive">
-                            <i class="fas fa-arrow-up"></i>
-                            <span>12% vs last month</span>
-                        </div>
-                    </div>
-                    <div class="metric-card">
-                        <span class="metric-label">Team Engagement</span>
-                        <div class="metric-value">87%</div>
-                        <div class="metric-trend positive">
-                            <i class="fas fa-arrow-up"></i>
-                            <span>8% increase</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<style>
 /* Features Section Styles */
-.key-features {
-    padding: 6rem 0;
+.features-section {
     background: var(--card-bg);
-    position: relative;
-    z-index: 2;
+    padding: 6rem 0;
 }
 
 .features-grid {
@@ -661,37 +419,11 @@
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     transition: var(--transition);
-    position: relative;
-    overflow: hidden;
-    opacity: 0;
-    transform: translateY(20px);
-}
-
-.feature-card.in-view {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.feature-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: var(--gradient-primary);
-    transform: scaleX(0);
-    transition: transform 0.3s ease;
-    transform-origin: left;
 }
 
 .feature-card:hover {
     transform: translateY(-5px);
     box-shadow: var(--box-shadow-hover);
-}
-
-.feature-card:hover::before {
-    transform: scaleX(1);
 }
 
 .card-icon {
@@ -720,12 +452,246 @@
     color: white;
 }
 
+.feature-list {
+    list-style: none;
+    margin: 1.5rem 0;
+}
+
+.feature-list li {
+    margin-bottom: 0.75rem;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.feature-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--primary-color);
+}
+
+.card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.card-link:hover {
+    gap: 0.75rem;
+}
+
+/* Animation Classes */
+.animate {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.animate.in-view {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .performance-hero .container {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .hero-content {
+        order: 1;
+    }
+
+    .hero-image {
+        order: 2;
+        margin-top: 2rem;
+    }
+
+    .hero-cta {
+        justify-content: center;
+        flex-direction: column;
+    }
+
+    .trust-indicators {
+        justify-content: center;
+    }
+
+    .trust-item {
+        align-items: center;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+</style>
+        <!-- Analytics Section -->
+        <section class="analytics-section">
+            <div class="container">
+                <div class="section-header animate" data-animation="fade-up">
+                    <h2>AI-Powered Performance Analytics</h2>
+                    <p>Make data-driven decisions with real-time insights and predictive analytics</p>
+                </div>
+                <div class="analytics-showcase">
+                    <div class="analytics-features animate" data-animation="fade-right">
+                        <div class="analytics-card">
+                            <div class="card-header">
+                                <i class="fas fa-chart-line"></i>
+                                <h3>Performance Metrics</h3>
+                            </div>
+                            <ul class="analytics-list">
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <div>
+                                        <h4>Real-time Tracking</h4>
+                                        <p>Monitor performance metrics in real-time with AI insights</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <div>
+                                        <h4>Predictive Analysis</h4>
+                                        <p>AI-powered predictions for performance trends</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <div>
+                                        <h4>Custom Reports</h4>
+                                        <p>Generate detailed performance reports instantly</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="analytics-card">
+                            <div class="card-header">
+                                <i class="fas fa-brain"></i>
+                                <h3>Smart Insights</h3>
+                            </div>
+                            <ul class="analytics-list">
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <div>
+                                        <h4>Performance Patterns</h4>
+                                        <p>Identify trends and patterns in employee performance</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <div>
+                                        <h4>Gap Analysis</h4>
+                                        <p>Automatically identify skill and performance gaps</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <div>
+                                        <h4>Action Recommendations</h4>
+                                        <p>Get AI-powered suggestions for improvement</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="analytics-preview animate" data-animation="fade-left">
+                        <img 
+                            src="image/analytics-dashboard.webp" 
+                            alt="Analytics Dashboard"
+                            loading="lazy"
+                            width="600"
+                            height="400"
+                        >
+                        <div class="live-metrics">
+                            <div class="metric-card">
+                                <span class="metric-label">Performance Score</span>
+                                <div class="metric-value">92%</div>
+                                <div class="metric-trend positive">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>12% vs last month</span>
+                                </div>
+                            </div>
+                            <div class="metric-card">
+                                <span class="metric-label">Team Engagement</span>
+                                <div class="metric-value">87%</div>
+                                <div class="metric-trend positive">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>8% increase</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Development Section -->
+        <section class="development-section">
+            <div class="container">
+                <div class="section-header animate" data-animation="fade-up">
+                    <h2>Continuous Development & Learning</h2>
+                    <p>Foster growth with personalized learning paths and development tracking</p>
+                </div>
+                <div class="development-grid">
+                    <!-- Learning Paths Card -->
+                    <div class="development-card animate" data-animation="fade-up" data-delay="200">
+                        <div class="dev-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <h3>Learning Paths</h3>
+                        <p>Customized learning journeys based on role and goals</p>
+                        <ul class="dev-features">
+                            <li>Skill gap analysis</li>
+                            <li>Personalized recommendations</li>
+                            <li>Progress tracking</li>
+                        </ul>
+                        <a href="#" class="learn-more">Explore Learning Paths <i class="fas fa-arrow-right"></i></a>
+                    </div>
+
+                    <!-- Goal Tracking Card -->
+                    <div class="development-card animate" data-animation="fade-up" data-delay="400">
+                        <div class="dev-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <h3>Goal Tracking</h3>
+                        <p>Set and monitor personal development goals</p>
+                        <ul class="dev-features">
+                            <li>SMART goal setting</li>
+                            <li>Milestone tracking</li>
+                            <li>Achievement recognition</li>
+                        </ul>
+                        <a href="#" class="learn-more">Learn About Goals <i class="fas fa-arrow-right"></i></a>
+                    </div>
+
+                    <!-- Progress Analytics Card -->
+                    <div class="development-card animate" data-animation="fade-up" data-delay="600">
+                        <div class="dev-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <h3>Progress Analytics</h3>
+                        <p>Track and visualize development progress</p>
+                        <ul class="dev-features">
+                            <li>Progress dashboards</li>
+                            <li>Skill assessments</li>
+                            <li>Performance reports</li>
+                        </ul>
+                        <a href="#" class="learn-more">View Analytics <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+<style>
 /* Analytics Section Styles */
 .analytics-section {
-    padding: 6rem 0;
     background: var(--gradient);
-    position: relative;
-    z-index: 2;
+    padding: 6rem 0;
 }
 
 .analytics-showcase {
@@ -740,13 +706,6 @@
     display: flex;
     flex-direction: column;
     gap: 2rem;
-    opacity: 0;
-    transform: translateX(-20px);
-}
-
-.analytics-features.in-view {
-    opacity: 1;
-    transform: translateX(0);
 }
 
 .analytics-card {
@@ -762,6 +721,38 @@
     box-shadow: var(--box-shadow-hover);
 }
 
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.card-header i {
+    font-size: 1.8rem;
+    color: var(--primary-color);
+}
+
+.analytics-list {
+    list-style: none;
+}
+
+.analytics-list li {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.analytics-list li i {
+    color: var(--primary-color);
+    margin-top: 0.25rem;
+}
+
+.analytics-preview {
+    flex: 1;
+    position: relative;
+}
+
 .live-metrics {
     position: absolute;
     top: 0;
@@ -772,7 +763,6 @@
     flex-direction: column;
     justify-content: space-around;
     padding: 2rem;
-    pointer-events: none;
 }
 
 .metric-card {
@@ -781,208 +771,16 @@
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     max-width: 200px;
-    transform: translateX(-20px);
-    opacity: 0;
-    transition: opacity 0.6s ease, transform 0.6s ease;
 }
 
-.metric-card.in-view {
-    opacity: 1;
-    transform: translateX(0);
+.metric-trend.positive {
+    color: var(--success-color);
 }
 
-/* Responsive Styles */
-@media (max-width: 768px) {
-    .features-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-
-    .analytics-showcase {
-        flex-direction: column;
-    }
-
-    .analytics-features {
-        order: 2;
-    }
-
-    .analytics-preview {
-        order: 1;
-    }
-
-    .live-metrics {
-        position: static;
-        padding: 1rem;
-    }
-
-    .metric-card {
-        max-width: 100%;
-        margin-bottom: 1rem;
-    }
-}
-</style>
-<!-- Development & Learning Section -->
-<section class="development-section">
-    <div class="container">
-        <div class="section-header animate" data-animation="fade-up">
-            <h2>Continuous Development & Learning</h2>
-            <p>Foster growth with personalized learning paths and development tracking</p>
-        </div>
-        <div class="development-grid">
-            <!-- Learning Paths Card -->
-            <div class="development-card animate" data-animation="fade-up" data-delay="200">
-                <div class="dev-icon">
-                    <i class="fas fa-graduation-cap"></i>
-                </div>
-                <h3>Learning Paths</h3>
-                <p>Customized learning journeys based on role and goals</p>
-                <ul class="dev-features">
-                    <li>Skill gap analysis</li>
-                    <li>Personalized recommendations</li>
-                    <li>Progress tracking</li>
-                </ul>
-                <a href="#" class="learn-more">
-                    Explore Learning Paths 
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-
-            <!-- Goal Tracking Card -->
-            <div class="development-card animate" data-animation="fade-up" data-delay="400">
-                <div class="dev-icon">
-                    <i class="fas fa-tasks"></i>
-                </div>
-                <h3>Goal Tracking</h3>
-                <p>Set and monitor personal development goals</p>
-                <ul class="dev-features">
-                    <li>SMART goal setting</li>
-                    <li>Milestone tracking</li>
-                    <li>Achievement recognition</li>
-                </ul>
-                <a href="#" class="learn-more">
-                    Learn About Goals 
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-
-            <!-- Progress Analytics Card -->
-            <div class="development-card animate" data-animation="fade-up" data-delay="600">
-                <div class="dev-icon">
-                    <i class="fas fa-chart-bar"></i>
-                </div>
-                <h3>Progress Analytics</h3>
-                <p>Track and visualize development progress</p>
-                <ul class="dev-features">
-                    <li>Progress dashboards</li>
-                    <li>Skill assessments</li>
-                    <li>Performance reports</li>
-                </ul>
-                <a href="#" class="learn-more">
-                    View Analytics 
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Integration & Customization Section -->
-<section class="integration-section">
-    <div class="container">
-        <div class="section-header animate" data-animation="fade-up">
-            <h2>Seamless Integration & Customization</h2>
-            <p>Connect with your existing tools and customize workflows to match your needs</p>
-        </div>
-        
-        <!-- Integration Grid -->
-        <div class="integration-grid animate" data-animation="fade-up">
-            <!-- Slack Integration -->
-            <div class="integration-card">
-                <img src="image/slack.webp" alt="Slack Integration" loading="lazy">
-                <h4>Slack</h4>
-                <span class="status-badge">Connected</span>
-                <p>Real-time notifications and updates</p>
-                <div class="integration-hover">
-                    <a href="#" class="btn secondary">Configure</a>
-                </div>
-            </div>
-
-            <!-- MS Teams Integration -->
-            <div class="integration-card">
-                <img src="image/teams.webp" alt="Microsoft Teams Integration" loading="lazy">
-                <h4>MS Teams</h4>
-                <span class="status-badge popular">Popular</span>
-                <p>Seamless collaboration and feedback</p>
-                <div class="integration-hover">
-                    <a href="#" class="btn secondary">Configure</a>
-                </div>
-            </div>
-
-            <!-- Zoom Integration -->
-            <div class="integration-card">
-                <img src="image/zoom.webp" alt="Zoom Integration" loading="lazy">
-                <h4>Zoom</h4>
-                <span class="status-badge new">New</span>
-                <p>Virtual performance reviews</p>
-                <div class="integration-hover">
-                    <a href="#" class="btn secondary">Configure</a>
-                </div>
-            </div>
-
-            <!-- Jira Integration -->
-            <div class="integration-card">
-                <img src="image/jira.webp" alt="Jira Integration" loading="lazy">
-                <h4>Jira</h4>
-                <span class="status-badge">Connected</span>
-                <p>Project performance tracking</p>
-                <div class="integration-hover">
-                    <a href="#" class="btn secondary">Configure</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Customization Features -->
-        <div class="customization-features">
-            <div class="custom-block animate" data-animation="fade-right">
-                <i class="fas fa-cogs"></i>
-                <h3>Flexible Workflows</h3>
-                <p>Design custom workflows that match your organization's processes with our drag-and-drop builder.</p>
-                <ul class="custom-features">
-                    <li>Custom review cycles</li>
-                    <li>Automated workflows</li>
-                    <li>Process templates</li>
-                </ul>
-                <a href="#" class="learn-more">
-                    Explore Workflows 
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-            
-            <div class="custom-block animate" data-animation="fade-left">
-                <i class="fas fa-code"></i>
-                <h3>API Access</h3>
-                <p>Integrate with your existing systems using our comprehensive API documentation.</p>
-                <ul class="custom-features">
-                    <li>RESTful API</li>
-                    <li>Webhook support</li>
-                    <li>SDK availability</li>
-                </ul>
-                <a href="#" class="learn-more">
-                    View API Docs 
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-</section>
-
-<style>
 /* Development Section Styles */
 .development-section {
     background: var(--card-bg);
     padding: 6rem 0;
-    position: relative;
-    z-index: 2;
 }
 
 .development-grid {
@@ -996,15 +794,13 @@
     background: var(--background-light);
     padding: 2rem;
     border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
     transition: var(--transition);
-    opacity: 0;
-    transform: translateY(20px);
+    box-shadow: var(--box-shadow);
 }
 
-.development-card.in-view {
-    opacity: 1;
-    transform: translateY(0);
+.development-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-hover);
 }
 
 .dev-icon {
@@ -1016,7 +812,6 @@
     align-items: center;
     justify-content: center;
     margin-bottom: 1.5rem;
-    transition: var(--transition);
 }
 
 .dev-icon i {
@@ -1042,12 +837,217 @@
     color: var(--primary-color);
 }
 
+.learn-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.learn-more:hover {
+    gap: 0.75rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .analytics-showcase {
+        flex-direction: column;
+    }
+
+    .analytics-features {
+        order: 2;
+    }
+
+    .analytics-preview {
+        order: 1;
+    }
+
+    .live-metrics {
+        position: static;
+        padding: 1rem;
+    }
+
+    .metric-card {
+        max-width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .development-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+        <!-- Integration Section -->
+        <section class="integration-section">
+            <div class="container">
+                <div class="section-header animate" data-animation="fade-up">
+                    <h2>Seamless Integration & Customization</h2>
+                    <p>Connect with your existing tools and customize workflows to match your needs</p>
+                </div>
+                <div class="integration-grid animate" data-animation="fade-up">
+                    <!-- Integration Cards -->
+                    <div class="integration-card">
+                        <img src="image/slack.webp" alt="Slack Integration" loading="lazy">
+                        <h4>Slack</h4>
+                        <span class="status-badge">Connected</span>
+                        <p>Real-time notifications and updates</p>
+                        <div class="integration-hover">
+                            <a href="#" class="btn secondary">Configure</a>
+                        </div>
+                    </div>
+
+                    <div class="integration-card">
+                        <img src="image/teams.webp" alt="Microsoft Teams Integration" loading="lazy">
+                        <h4>MS Teams</h4>
+                        <span class="status-badge popular">Popular</span>
+                        <p>Seamless collaboration and feedback</p>
+                        <div class="integration-hover">
+                            <a href="#" class="btn secondary">Configure</a>
+                        </div>
+                    </div>
+
+                    <div class="integration-card">
+                        <img src="image/zoom.webp" alt="Zoom Integration" loading="lazy">
+                        <h4>Zoom</h4>
+                        <span class="status-badge new">New</span>
+                        <p>Virtual performance reviews</p>
+                        <div class="integration-hover">
+                            <a href="#" class="btn secondary">Configure</a>
+                        </div>
+                    </div>
+
+                    <div class="integration-card">
+                        <img src="image/jira.webp" alt="Jira Integration" loading="lazy">
+                        <h4>Jira</h4>
+                        <span class="status-badge">Connected</span>
+                        <p>Project performance tracking</p>
+                        <div class="integration-hover">
+                            <a href="#" class="btn secondary">Configure</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customization Features -->
+                <div class="customization-features">
+                    <div class="custom-block animate" data-animation="fade-right">
+                        <i class="fas fa-cogs"></i>
+                        <h3>Flexible Workflows</h3>
+                        <p>Design custom workflows that match your organization's processes with our drag-and-drop builder.</p>
+                        <ul class="custom-features">
+                            <li>Custom review cycles</li>
+                            <li>Automated workflows</li>
+                            <li>Process templates</li>
+                        </ul>
+                        <a href="#" class="learn-more">Explore Workflows <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    
+                    <div class="custom-block animate" data-animation="fade-left">
+                        <i class="fas fa-code"></i>
+                        <h3>API Access</h3>
+                        <p>Integrate with your existing systems using our comprehensive API documentation.</p>
+                        <ul class="custom-features">
+                            <li>RESTful API</li>
+                            <li>Webhook support</li>
+                            <li>SDK availability</li>
+                        </ul>
+                        <a href="#" class="learn-more">View API Docs <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Security Section -->
+        <section class="security-section">
+            <div class="container">
+                <div class="section-header animate" data-animation="fade-up">
+                    <h2>Enterprise-Grade Security</h2>
+                    <p>Your data security and compliance is our top priority</p>
+                </div>
+                <div class="security-features">
+                    <!-- Data Protection Card -->
+                    <div class="security-card animate" data-animation="fade-up" data-delay="200">
+                        <div class="security-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>Data Protection</h3>
+                        <ul class="security-list">
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>End-to-end encryption (AES-256)</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Regular security audits</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Automated backups</span>
+                            </li>
+                        </ul>
+                        <div class="security-badge">
+                            <img src="image/security-badge.webp" alt="Security Certification" loading="lazy">
+                        </div>
+                    </div>
+
+                    <!-- Compliance Card -->
+                    <div class="security-card animate" data-animation="fade-up" data-delay="400">
+                        <div class="security-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <h3>Compliance</h3>
+                        <ul class="security-list">
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>GDPR compliant</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>ISO 27001 certified</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>SOC 2 Type II</span>
+                            </li>
+                        </ul>
+                        <div class="compliance-badges">
+                            <img src="image/gdpr-badge.webp" alt="GDPR Badge" loading="lazy">
+                            <img src="image/iso-badge.webp" alt="ISO Badge" loading="lazy">
+                        </div>
+                    </div>
+
+                    <!-- Access Control Card -->
+                    <div class="security-card animate" data-animation="fade-up" data-delay="600">
+                        <div class="security-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <h3>Access Control</h3>
+                        <ul class="security-list">
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Role-based access</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Multi-factor authentication</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Audit logging</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+<style>
 /* Integration Section Styles */
 .integration-section {
     background: var(--gradient);
     padding: 6rem 0;
-    position: relative;
-    z-index: 2;
 }
 
 .integration-grid {
@@ -1093,10 +1093,6 @@
     opacity: 1;
 }
 
-.integration-card:hover img {
-    transform: scale(1.1);
-}
-
 .status-badge {
     position: absolute;
     top: 1rem;
@@ -1129,221 +1125,17 @@
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     transition: var(--transition);
-    opacity: 0;
-    transform: translateX(-20px);
 }
 
-.custom-block.in-view {
-    opacity: 1;
-    transform: translateX(0);
+.custom-block:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-hover);
 }
 
-/* Responsive Styles */
-@media (max-width: 768px) {
-    .development-grid,
-    .integration-grid,
-    .customization-features {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-
-    .integration-card {
-        padding: 1.5rem;
-    }
-
-    .integration-hover {
-        position: static;
-        opacity: 1;
-        background: none;
-        margin-top: 1rem;
-    }
-}
-
-/* Animation Delays */
-[data-delay="200"] { transition-delay: 0.2s; }
-[data-delay="400"] { transition-delay: 0.4s; }
-[data-delay="600"] { transition-delay: 0.6s; }
-</style>
-<!-- Security & Compliance Section -->
-<section class="security-section">
-    <div class="container">
-        <div class="section-header animate" data-animation="fade-up">
-            <h2>Enterprise-Grade Security</h2>
-            <p>Your data security and compliance is our top priority</p>
-        </div>
-        <div class="security-features">
-            <!-- Data Protection Card -->
-            <div class="security-card animate" data-animation="fade-up" data-delay="200">
-                <div class="security-icon">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-                <h3>Data Protection</h3>
-                <ul class="security-list">
-                    <li>
-                        <i class="fas fa-check-circle"></i>
-                        <span>End-to-end encryption (AES-256)</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-check-circle"></i>
-                        <span>Regular security audits</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-check-circle"></i>
-                        <span>Automated backups</span>
-                    </li>
-                </ul>
-                <div class="security-badge">
-                    <img src="image/security-badge.webp" alt="Security Certification" loading="lazy">
-                </div>
-            </div>
-
-            <!-- Compliance Card -->
-            <div class="security-card animate" data-animation="fade-up" data-delay="400">
-                <div class="security-icon">
-                    <i class="fas fa-lock"></i>
-                </div>
-                <h3>Compliance</h3>
-                <ul class="security-list">
-                    <li>
-                        <i class="fas fa-check-circle"></i>
-                        <span>GDPR compliant</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-check-circle"></i>
-                        <span>ISO 27001 certified</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-check-circle"></i>
-                        <span>SOC 2 Type II</span>
-                    </li>
-                </ul>
-                <div class="compliance-badges">
-                    <img src="image/gdpr-badge.webp" alt="GDPR Badge" loading="lazy">
-                    <img src="image/iso-badge.webp" alt="ISO Badge" loading="lazy">
-                </div>
-            </div>
-
-            <!-- Access Control Card -->
-            <div class="security-card animate" data-animation="fade-up" data-delay="600">
-                <div class="security-icon">
-                    <i class="fas fa-user-shield"></i>
-                </div>
-                <h3>Access Control</h3>
-                <ul class="security-list">
-                    <li>
-                        <i class="fas fa-check-circle"></i>
-                        <span>Role-based access</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-check-circle"></i>
-                        <span>Multi-factor authentication</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-check-circle"></i>
-                        <span>Audit logging</span>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Pricing Section -->
-<section class="pricing-section" id="pricing">
-    <div class="container">
-        <div class="section-header animate" data-animation="fade-up">
-            <h2>Simple, Transparent Pricing</h2>
-            <p>Choose the plan that best fits your organization's needs</p>
-            <div class="pricing-toggle">
-                <span>Monthly</span>
-                <label class="switch">
-                    <input type="checkbox" id="billing-toggle">
-                    <span class="slider"></span>
-                </label>
-                <span>Annual <span class="save-badge">Save 20%</span></span>
-            </div>
-        </div>
-        <div class="pricing-grid">
-            <!-- Starter Plan -->
-            <div class="pricing-card animate" data-animation="fade-up" data-delay="200">
-                <div class="plan-header">
-                    <h3>Starter</h3>
-                    <div class="price">
-                        <span class="currency">$</span>
-                        <span class="amount" data-monthly="10" data-annual="8">10</span>
-                        <span class="period">/user/month</span>
-                    </div>
-                    <p class="plan-description">Perfect for small teams getting started</p>
-                </div>
-                <ul class="plan-features">
-                    <li><i class="fas fa-check"></i> Basic performance tracking</li>
-                    <li><i class="fas fa-check"></i> Goal setting & monitoring</li>
-                    <li><i class="fas fa-check"></i> Basic analytics & reports</li>
-                    <li><i class="fas fa-check"></i> Email support</li>
-                </ul>
-                <div class="plan-cta">
-                    <a href="#" class="btn primary">Start Free Trial</a>
-                    <span class="trial-period">14-day free trial, no credit card required</span>
-                </div>
-            </div>
-
-            <!-- Professional Plan -->
-            <div class="pricing-card popular animate" data-animation="fade-up" data-delay="400">
-                <div class="popular-badge">Most Popular</div>
-                <div class="plan-header">
-                    <h3>Professional</h3>
-                    <div class="price">
-                        <span class="currency">$</span>
-                        <span class="amount" data-monthly="25" data-annual="20">25</span>
-                        <span class="period">/user/month</span>
-                    </div>
-                    <p class="plan-description">Ideal for growing organizations</p>
-                </div>
-                <ul class="plan-features">
-                    <li><i class="fas fa-check"></i> Everything in Starter, plus:</li>
-                    <li><i class="fas fa-check"></i> Advanced performance analytics</li>
-                    <li><i class="fas fa-check"></i> Custom reporting</li>
-                    <li><i class="fas fa-check"></i> Priority support</li>
-                    <li><i class="fas fa-check"></i> API access</li>
-                </ul>
-                <div class="plan-cta">
-                    <a href="#" class="btn primary">Start Free Trial</a>
-                    <span class="trial-period">14-day free trial, no credit card required</span>
-                </div>
-            </div>
-
-            <!-- Enterprise Plan -->
-            <div class="pricing-card animate" data-animation="fade-up" data-delay="600">
-                <div class="plan-header">
-                    <h3>Enterprise</h3>
-                    <div class="price">
-                        <span class="custom-price">Custom</span>
-                    </div>
-                    <p class="plan-description">For large organizations with specific needs</p>
-                </div>
-                <ul class="plan-features">
-                    <li><i class="fas fa-check"></i> Everything in Professional, plus:</li>
-                    <li><i class="fas fa-check"></i> Custom implementation</li>
-                    <li><i class="fas fa-check"></i> Dedicated success manager</li>
-                    <li><i class="fas fa-check"></i> 24/7 premium support</li>
-                    <li><i class="fas fa-check"></i> Custom integrations</li>
-                </ul>
-                <div class="plan-cta">
-                    <a href="#" class="btn secondary">Contact Sales</a>
-                    <span class="enterprise-contact">Get a customized quote for your needs</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<style>
 /* Security Section Styles */
 .security-section {
     background: var(--card-bg);
     padding: 6rem 0;
-    position: relative;
-    z-index: 2;
 }
 
 .security-features {
@@ -1359,13 +1151,11 @@
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     transition: var(--transition);
-    opacity: 0;
-    transform: translateY(20px);
 }
 
-.security-card.in-view {
-    opacity: 1;
-    transform: translateY(0);
+.security-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-hover);
 }
 
 .security-icon {
@@ -1400,12 +1190,120 @@
     margin-right: 1rem;
 }
 
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .integration-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .customization-features,
+    .security-features {
+        grid-template-columns: 1fr;
+    }
+
+    .integration-hover {
+        position: static;
+        opacity: 1;
+        background: none;
+        margin-top: 1rem;
+    }
+}
+</style>
+        <!-- Pricing Section -->
+        <section class="pricing-section" id="pricing">
+            <div class="container">
+                <div class="section-header animate" data-animation="fade-up">
+                    <h2>Simple, Transparent Pricing</h2>
+                    <p>Choose the plan that best fits your organization's needs</p>
+                    <div class="pricing-toggle">
+                        <span>Monthly</span>
+                        <label class="switch">
+                            <input type="checkbox" id="billing-toggle">
+                            <span class="slider"></span>
+                        </label>
+                        <span>Annual <span class="save-badge">Save 20%</span></span>
+                    </div>
+                </div>
+                <div class="pricing-grid">
+                    <!-- Starter Plan -->
+                    <div class="pricing-card animate" data-animation="fade-up" data-delay="200">
+                        <div class="plan-header">
+                            <h3>Starter</h3>
+                            <div class="price">
+                                <span class="currency">$</span>
+                                <span class="amount" data-monthly="10" data-annual="8">10</span>
+                                <span class="period">/user/month</span>
+                            </div>
+                            <p class="plan-description">Perfect for small teams getting started</p>
+                        </div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> Basic performance tracking</li>
+                            <li><i class="fas fa-check"></i> Goal setting & monitoring</li>
+                            <li><i class="fas fa-check"></i> Basic analytics & reports</li>
+                            <li><i class="fas fa-check"></i> Email support</li>
+                        </ul>
+                        <div class="plan-cta">
+                            <a href="#" class="btn primary">Start Free Trial</a>
+                            <span class="trial-period">14-day free trial, no credit card required</span>
+                        </div>
+                    </div>
+
+                    <!-- Professional Plan -->
+                    <div class="pricing-card popular animate" data-animation="fade-up" data-delay="400">
+                        <div class="popular-badge">Most Popular</div>
+                        <div class="plan-header">
+                            <h3>Professional</h3>
+                            <div class="price">
+                                <span class="currency">$</span>
+                                <span class="amount" data-monthly="25" data-annual="20">25</span>
+                                <span class="period">/user/month</span>
+                            </div>
+                            <p class="plan-description">Ideal for growing organizations</p>
+                        </div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> Everything in Starter, plus:</li>
+                            <li><i class="fas fa-check"></i> Advanced performance analytics</li>
+                            <li><i class="fas fa-check"></i> Custom reporting</li>
+                            <li><i class="fas fa-check"></i> Priority support</li>
+                            <li><i class="fas fa-check"></i> API access</li>
+                        </ul>
+                        <div class="plan-cta">
+                            <a href="#" class="btn primary">Start Free Trial</a>
+                            <span class="trial-period">14-day free trial, no credit card required</span>
+                        </div>
+                    </div>
+
+                    <!-- Enterprise Plan -->
+                    <div class="pricing-card animate" data-animation="fade-up" data-delay="600">
+                        <div class="plan-header">
+                            <h3>Enterprise</h3>
+                            <div class="price">
+                                <span class="custom-price">Custom</span>
+                            </div>
+                            <p class="plan-description">For large organizations with specific needs</p>
+                        </div>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> Everything in Professional, plus:</li>
+                            <li><i class="fas fa-check"></i> Custom implementation</li>
+                            <li><i class="fas fa-check"></i> Dedicated success manager</li>
+                            <li><i class="fas fa-check"></i> 24/7 premium support</li>
+                            <li><i class="fas fa-check"></i> Custom integrations</li>
+                        </ul>
+                        <div class="plan-cta">
+                            <a href="#" class="btn secondary">Contact Sales</a>
+                            <span class="enterprise-contact">Get a customized quote for your needs</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+<style>
 /* Pricing Section Styles */
 .pricing-section {
     background: var(--gradient);
     padding: 6rem 0;
     position: relative;
-    z-index: 2;
 }
 
 .pricing-toggle {
@@ -1479,18 +1377,16 @@ input:checked + .slider:before {
     box-shadow: var(--box-shadow);
     position: relative;
     transition: var(--transition);
-    opacity: 0;
-    transform: translateY(20px);
 }
 
-.pricing-card.in-view {
-    opacity: 1;
-    transform: translateY(0);
+.pricing-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-hover);
 }
 
 .pricing-card.popular {
-    transform: scale(1.05);
     border: 2px solid var(--primary-color);
+    transform: scale(1.05);
 }
 
 .popular-badge {
@@ -1504,89 +1400,163 @@ input:checked + .slider:before {
     font-size: 0.9rem;
 }
 
+.plan-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.price {
+    font-size: 2.5rem;
+    color: var(--text-dark);
+    font-weight: 700;
+    margin: 1rem 0;
+}
+
+.currency {
+    font-size: 1.5rem;
+    vertical-align: super;
+}
+
+.period {
+    font-size: 1rem;
+    color: var(--text-light);
+    font-weight: normal;
+}
+
+.plan-description {
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.plan-features {
+    list-style: none;
+    margin: 2rem 0;
+}
+
+.plan-features li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+.plan-features li i {
+    color: var(--primary-color);
+    margin-right: 1rem;
+}
+
+.plan-cta {
+    text-align: center;
+}
+
+.trial-period {
+    display: block;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.custom-price {
+    font-size: 2rem;
+    color: var(--primary-color);
+}
+
 /* Responsive Styles */
 @media (max-width: 768px) {
-    .security-features {
-        grid-template-columns: 1fr;
-    }
-
     .pricing-card.popular {
         transform: none;
     }
 
     .pricing-grid {
         grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .pricing-toggle {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .save-badge {
+        display: block;
+        margin-top: 0.5rem;
     }
 }
+
+/* Animation Delays */
+[data-delay="200"] { transition-delay: 0.2s; }
+[data-delay="400"] { transition-delay: 0.4s; }
+[data-delay="600"] { transition-delay: 0.6s; }
 </style>
-<!-- Footer -->
-<footer class="main-footer">
-    <div class="container">
-        <div class="footer-content">
-            <div class="footer-brand">
-                <h2>Workwise Pro</h2>
-                <p>Transform your HR management with AI-powered performance solutions.</p>
-                <div class="social-links">
-                    <a href="#" aria-label="Follow us on Twitter">
-                        <i class="fab fa-twitter"></i>
-                    </a>
-                    <a href="#" aria-label="Connect on LinkedIn">
-                        <i class="fab fa-linkedin"></i>
-                    </a>
-                    <a href="#" aria-label="Follow us on GitHub">
-                        <i class="fab fa-github"></i>
-                    </a>
+        <!-- Footer -->
+        <footer class="main-footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-brand">
+                        <h2>Workwise Pro</h2>
+                        <p>Transform your HR management with AI-powered performance solutions.</p>
+                        <div class="social-links">
+                            <a href="#" aria-label="Follow us on Twitter">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" aria-label="Connect on LinkedIn">
+                                <i class="fab fa-linkedin"></i>
+                            </a>
+                            <a href="#" aria-label="Follow us on GitHub">
+                                <i class="fab fa-github"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="footer-grid">
+                        <div class="footer-section">
+                            <h4>Product</h4>
+                            <ul>
+                                <li><a href="#features">Features</a></li>
+                                <li><a href="#pricing">Pricing</a></li>
+                                <li><a href="#integrations">Integrations</a></li>
+                                <li><a href="#roadmap">Roadmap</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-section">
+                            <h4>Company</h4>
+                            <ul>
+                                <li><a href="#about">About Us</a></li>
+                                <li><a href="#careers">Careers</a></li>
+                                <li><a href="#blog">Blog</a></li>
+                                <li><a href="#contact">Contact</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-section">
+                            <h4>Resources</h4>
+                            <ul>
+                                <li><a href="#docs">Documentation</a></li>
+                                <li><a href="#tutorials">Tutorials</a></li>
+                                <li><a href="#api">API Reference</a></li>
+                                <li><a href="#support">Support</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-section">
+                            <h4>Legal</h4>
+                            <ul>
+                                <li><a href="#privacy">Privacy Policy</a></li>
+                                <li><a href="#terms">Terms of Service</a></li>
+                                <li><a href="#security">Security</a></li>
+                                <li><a href="#compliance">Compliance</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2023 Workwise Pro. All rights reserved.</p>
+                    <div class="footer-badges">
+                        <img src="image/security-badge.webp" alt="Security Certification" loading="lazy">
+                        <img src="image/gdpr-badge.webp" alt="GDPR Compliant" loading="lazy">
+                        <img src="image/iso-badge.webp" alt="ISO Certified" loading="lazy">
+                    </div>
                 </div>
             </div>
-            <div class="footer-grid">
-                <div class="footer-section">
-                    <h4>Product</h4>
-                    <ul>
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="#pricing">Pricing</a></li>
-                        <li><a href="#integrations">Integrations</a></li>
-                        <li><a href="#roadmap">Roadmap</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Company</h4>
-                    <ul>
-                        <li><a href="#about">About Us</a></li>
-                        <li><a href="#careers">Careers</a></li>
-                        <li><a href="#blog">Blog</a></li>
-                        <li><a href="#contact">Contact</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Resources</h4>
-                    <ul>
-                        <li><a href="#docs">Documentation</a></li>
-                        <li><a href="#tutorials">Tutorials</a></li>
-                        <li><a href="#api">API Reference</a></li>
-                        <li><a href="#support">Support</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Legal</h4>
-                    <ul>
-                        <li><a href="#privacy">Privacy Policy</a></li>
-                        <li><a href="#terms">Terms of Service</a></li>
-                        <li><a href="#security">Security</a></li>
-                        <li><a href="#compliance">Compliance</a></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2023 Workwise Pro. All rights reserved.</p>
-            <div class="footer-badges">
-                <img src="image/security-badge.webp" alt="Security Certification" loading="lazy">
-                <img src="image/gdpr-badge.webp" alt="GDPR Compliant" loading="lazy">
-                <img src="image/iso-badge.webp" alt="ISO Certified" loading="lazy">
-            </div>
-        </div>
-    </div>
-</footer>
+        </footer>
+    </main>
 
 <style>
 /* Footer Styles */
@@ -1594,8 +1564,6 @@ input:checked + .slider:before {
     background: #1a1a1a;
     color: white;
     padding: 6rem 0 2rem;
-    position: relative;
-    z-index: 1;
     margin-top: auto;
 }
 
@@ -1655,17 +1623,6 @@ input:checked + .slider:before {
     color: white;
     margin-bottom: 1.5rem;
     font-size: 1.2rem;
-    position: relative;
-}
-
-.footer-section h4::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: -0.5rem;
-    width: 30px;
-    height: 2px;
-    background: var(--primary-color);
 }
 
 .footer-section ul {
@@ -1680,7 +1637,6 @@ input:checked + .slider:before {
     color: rgba(255, 255, 255, 0.7);
     transition: var(--transition);
     font-size: 0.9rem;
-    display: inline-block;
 }
 
 .footer-section ul li a:hover {
@@ -1736,42 +1692,28 @@ input:checked + .slider:before {
 </style>
 
 <script>
-// Debug Mode
-const DEBUG = true;
-
-function debugLog(message, data) {
-    if (DEBUG) {
-        console.log(`[Debug] ${message}:`, data);
-    }
-}
-
 // Initialize everything when DOM is ready
 document.addEventListener('DOMContentLoaded', async function() {
-    debugLog('DOM Content Loaded', 'Initializing components...');
-    
-    // Show loading indicator
-    const loadingIndicator = document.getElementById('loadingIndicator');
-    
     try {
+        // Show loading indicator
+        document.getElementById('loading-indicator').style.display = 'block';
+        
         // First load the header
         await loadHeader();
-        debugLog('Header loaded', 'Success');
         
         // Initialize all components
-        initializeMobileMenu();
         initializeAnimations();
         initializePricingToggle();
         initializeSmoothScroll();
         initializeIntersectionObserver();
         
-        // Show main content
-        document.body.classList.add('loaded');
-        document.querySelector('.main-content').classList.add('loaded');
-        
         // Hide loading indicator
-        loadingIndicator.classList.add('hidden');
+        document.getElementById('loading-indicator').style.display = 'none';
         
-        debugLog('All components initialized', 'Success');
+        // Show main content
+        document.body.style.visibility = 'visible';
+        document.body.style.opacity = '1';
+        
     } catch (error) {
         console.error('Initialization error:', error);
         handleError(error);
@@ -1789,9 +1731,6 @@ async function loadHeader() {
         const html = await response.text();
         headerContainer.innerHTML = html;
         
-        // Initialize header functionality
-        initializeHeaderScroll();
-        debugLog('Header loaded and initialized', 'Success');
     } catch (error) {
         console.error('Error loading header:', error);
         // Provide fallback header
@@ -1804,18 +1743,16 @@ async function loadHeader() {
                 </div>
             </header>
         `;
-        throw error;
     }
 }
 
-// Enhanced Animation Observer
+// Initialize Animations
 function initializeAnimations() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('in-view');
                 observer.unobserve(entry.target);
-                debugLog('Element animated', entry.target);
             }
         });
     }, {
@@ -1828,7 +1765,7 @@ function initializeAnimations() {
     });
 }
 
-// Pricing Toggle Enhancement
+// Initialize Pricing Toggle
 function initializePricingToggle() {
     const toggle = document.getElementById('billing-toggle');
     const prices = document.querySelectorAll('.amount');
@@ -1836,17 +1773,15 @@ function initializePricingToggle() {
     if (!toggle) return;
 
     toggle.addEventListener('change', function() {
-        const isAnnual = this.checked;
         prices.forEach(price => {
             const monthly = price.getAttribute('data-monthly');
             const annual = price.getAttribute('data-annual');
-            price.textContent = isAnnual ? annual : monthly;
+            price.textContent = this.checked ? annual : monthly;
         });
-        debugLog('Pricing toggle changed', isAnnual ? 'annual' : 'monthly');
     });
 }
 
-// Enhanced Smooth Scroll
+// Initialize Smooth Scroll
 function initializeSmoothScroll() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
@@ -1861,39 +1796,46 @@ function initializeSmoothScroll() {
                     top: offsetPosition,
                     behavior: 'smooth'
                 });
-                debugLog('Smooth scroll to', this.getAttribute('href'));
             }
         });
+    });
+}
+
+// Initialize Intersection Observer
+function initializeIntersectionObserver() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('in-view');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.1
+    });
+
+    document.querySelectorAll('.animate').forEach(element => {
+        observer.observe(element);
     });
 }
 
 // Error Handling
 function handleError(error) {
     console.error('Application error:', error);
+    document.getElementById('loading-indicator').style.display = 'none';
     
-    // Show error message to user
+    // Show error message
     const errorMessage = document.createElement('div');
-    errorMessage.className = 'error-boundary';
+    errorMessage.className = 'error-message';
     errorMessage.innerHTML = `
-        <h2>Something went wrong</h2>
-        <p>We're sorry, but there was an error loading the page. Please try refreshing.</p>
-        <button onclick="location.reload()" class="btn primary">Refresh Page</button>
+        <div class="container">
+            <h2>Something went wrong</h2>
+            <p>We're sorry, but there was an error loading the page. Please try refreshing.</p>
+            <button onclick="location.reload()" class="btn primary">Refresh Page</button>
+        </div>
     `;
-    
     document.body.appendChild(errorMessage);
 }
-
-// Global error handling
-window.onerror = function(msg, url, lineNo, columnNo, error) {
-    console.error('Global error:', { message: msg, url, lineNo, columnNo, error });
-    handleError(error);
-    return false;
-};
-
-window.addEventListener('unhandledrejection', event => {
-    console.error('Unhandled promise rejection:', event.reason);
-    handleError(event.reason);
-});
 
 // Watson Assistant Chat Integration
 window.watsonAssistantChatOptions = {
