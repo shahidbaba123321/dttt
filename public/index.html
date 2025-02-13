@@ -9,7 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sentiment@5.0.2/build/sentiment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
 <style>
-   /* Root Variables */
+  /* Root Variables */
 :root {
     --primary-color: #2962ff;
     --secondary-color: #6c757d;
@@ -255,31 +255,7 @@ section:nth-child(even) {
     flex-grow: 1;
 }
 
-/* Learn More Link Styles */
-.learn-more {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 500;
-    transition: var(--transition);
-    padding: 0.5rem 1rem;
-    border-radius: var(--border-radius);
-}
-
-.learn-more:hover {
-    background: rgba(41, 98, 255, 0.1);
-}
-
-.learn-more i {
-    transition: transform 0.3s ease;
-}
-
-.learn-more:hover i {
-    transform: translateX(5px);
-}
-    /* Content Sections Layout */
+/* Content Sections Layout */
 .performance-management .container,
 .time-attendance .container,
 .core-hr .container {
@@ -294,37 +270,73 @@ section:nth-child(even) {
 .core-content {
     flex: 1;
     max-width: 500px;
-    order: 1; /* Keep content on the left */
-}
-
-.performance-content h2,
-.attendance-content h2,
-.core-content h2 {
-    font-size: clamp(2rem, 4vw, 2.5rem);
-    color: var(--text-dark);
-    margin-bottom: 1rem;
-    line-height: 1.2;
-}
-
-.performance-content p,
-.attendance-content p,
-.core-content p {
-    font-size: clamp(1rem, 2vw, 1.1rem);
-    color: var(--text-body);
-    margin-bottom: 2rem;
-    opacity: 0.9;
+    order: 1;
 }
 
 .performance-image,
 .attendance-image,
 .core-image {
     flex: 1;
-    order: 2; /* Keep image on the right */
+    order: 2;
     display: flex;
     justify-content: flex-end;
     align-items: center;
 }
 
+/* Analytics and Other Sections */
+.analytics-section,
+.integrations-section,
+.document-section,
+.engagement-section {
+    padding: 6rem 0;
+    background: var(--card-bg);
+    position: relative;
+}
+
+.content-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4rem;
+    margin: 2rem 0;
+}
+
+.text-content {
+    flex: 1;
+    max-width: 500px;
+    order: 2;
+}
+
+.image-content {
+    flex: 1;
+    order: 1;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+/* Feature Split Layout */
+.feature-split {
+    display: flex;
+    align-items: center;
+    gap: 4rem;
+    margin: 2rem 0;
+}
+
+.feature-info {
+    flex: 1;
+    order: 2;
+}
+
+.dashboard-preview {
+    flex: 1;
+    order: 1;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+    /* Image Styles */
+.image-content img,
+.dashboard-preview img,
 .performance-image img,
 .attendance-image img,
 .core-image img {
@@ -336,6 +348,15 @@ section:nth-child(even) {
     object-fit: cover;
     aspect-ratio: 16/9;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.image-content img:hover,
+.dashboard-preview img:hover,
+.performance-image img:hover,
+.attendance-image img:hover,
+.core-image img:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 /* Enhanced List Styles */
@@ -422,6 +443,31 @@ section:nth-child(even) {
     border-radius: 50%;
     border-top-color: transparent;
     animation: spin 1s linear infinite;
+}
+
+/* Learn More Link Styles */
+.learn-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+}
+
+.learn-more:hover {
+    background: rgba(41, 98, 255, 0.1);
+}
+
+.learn-more i {
+    transition: transform 0.3s ease;
+}
+
+.learn-more:hover i {
+    transform: translateX(5px);
 }
 
 /* Footer Styles */
@@ -529,25 +575,30 @@ footer {
     /* Content Sections Mobile Layout */
     .performance-management .container,
     .time-attendance .container,
-    .core-hr .container {
+    .core-hr .container,
+    .content-wrapper,
+    .feature-split {
         flex-direction: column;
         gap: 2rem;
-        padding: 0 var(--mobile-padding);
+        text-align: center;
     }
 
     .performance-content,
     .attendance-content,
-    .core-content {
-        order: 1;
-        text-align: center;
+    .core-content,
+    .text-content,
+    .feature-info {
+        order: 2;
         max-width: 100%;
         padding: 0 1rem;
     }
 
     .performance-image,
     .attendance-image,
-    .core-image {
-        order: 2;
+    .core-image,
+    .image-content,
+    .dashboard-preview {
+        order: 1;
         width: 100%;
         justify-content: center;
         margin-top: 2rem;
@@ -555,7 +606,9 @@ footer {
 
     .performance-image img,
     .attendance-image img,
-    .core-image img {
+    .core-image img,
+    .image-content img,
+    .dashboard-preview img {
         max-width: 90%;
         margin: 0 auto;
     }
@@ -605,20 +658,25 @@ footer {
 
     .performance-management .container,
     .time-attendance .container,
-    .core-hr .container {
+    .core-hr .container,
+    .content-wrapper,
+    .feature-split {
         gap: 2rem;
-        padding: 0 2rem;
     }
 
     .performance-content,
     .attendance-content,
-    .core-content {
+    .core-content,
+    .text-content,
+    .feature-info {
         max-width: 450px;
     }
 
     .performance-image img,
     .attendance-image img,
-    .core-image img {
+    .core-image img,
+    .image-content img,
+    .dashboard-preview img {
         max-width: 400px;
     }
 }
@@ -664,6 +722,8 @@ footer {
     box-shadow: 0 8px 16px rgba(41, 98, 255, 0.15);
 }
 
+.image-content img:hover,
+.dashboard-preview img:hover,
 .performance-image img:hover,
 .attendance-image img:hover,
 .core-image img:hover {
@@ -691,29 +751,6 @@ textarea:focus {
     border: 0;
 }
 
-/* Print Styles */
-@media print {
-    .hero-buttons,
-    .learn-more,
-    .demo-widget button,
-    footer {
-        display: none;
-    }
-
-    body {
-        color: #000;
-        background: #fff;
-    }
-
-    img {
-        max-width: 100% !important;
-    }
-
-    @page {
-        margin: 2cm;
-    }
-}
-
 /* Additional Mobile Optimizations */
 @media (max-width: 480px) {
     :root {
@@ -736,6 +773,36 @@ textarea:focus {
     .btn {
         padding: 0.7rem 1.2rem;
         font-size: 0.9rem;
+    }
+
+    .image-content img,
+    .dashboard-preview img {
+        aspect-ratio: auto;
+        max-height: 300px;
+        object-fit: contain;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .hero-buttons,
+    .learn-more,
+    .demo-widget button,
+    footer {
+        display: none;
+    }
+
+    body {
+        color: #000;
+        background: #fff;
+    }
+
+    img {
+        max-width: 100% !important;
+    }
+
+    @page {
+        margin: 2cm;
     }
 }
     </style>
