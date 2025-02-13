@@ -20,7 +20,7 @@
 
     <!-- Critical CSS -->
     <style>
-        /* Root Variables */
+        /* Root Variables - Enhanced */
         :root {
             --primary-color: #2962ff;
             --primary-dark: #1e4bd8;
@@ -47,9 +47,12 @@
             --section-spacing: 4rem;
             --header-height: 70px;
             --container-max-width: 1200px;
+            --z-index-header: 1000;
+            --z-index-menu: 1001;
+            --z-index-overlay: 999;
         }
 
-        /* Reset & Base Styles */
+        /* Reset & Base Styles - Enhanced */
         *, *::before, *::after {
             margin: 0;
             padding: 0;
@@ -72,12 +75,13 @@
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            padding-top: var(--header-height); /* Critical for fixed header */
-            opacity: 1; /* Ensure content is visible */
-            visibility: visible; /* Ensure content is visible */
+            padding-top: var(--header-height);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Container Styles */
+        /* Container & Header Styles */
         .container {
             max-width: var(--container-max-width);
             margin: 0 auto;
@@ -85,343 +89,93 @@
             width: 100%;
         }
 
-        /* Header Container - Fixed Position */
         #header-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            z-index: 1000;
+            z-index: var(--z-index-header);
             background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(10px);
             box-shadow: var(--box-shadow);
         }
 
-        /* Main Content Wrapper */
-        .main-content {
-            display: block;
-            visibility: visible;
-            opacity: 1;
-            min-height: calc(100vh - var(--header-height));
-        }
-
-        /* Section Base Styles */
-        section {
-            padding: 6rem 0;
-            position: relative;
-            overflow: hidden;
-            display: block;
-            visibility: visible;
-            opacity: 1;
-        }
-
-        .section-header {
-            text-align: center;
-            margin-bottom: 4rem;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-            padding: 0 var(--mobile-padding);
-        }
-
-        .section-header h2 {
-            font-size: clamp(2rem, 5vw, 2.5rem);
-            color: var(--text-dark);
-            margin-bottom: 1rem;
-            line-height: 1.2;
-        }
-
-        .section-header p {
-            font-size: clamp(1rem, 2vw, 1.1rem);
-            color: var(--text-light);
-        }
-
-        /* Loading Indicator */
-        #loading-indicator {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 9999;
-            background: white;
-            padding: 20px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            display: none;
-        }
-
-        /* Button Styles */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.8rem 1.5rem;
-            border-radius: var(--border-radius);
-            text-decoration: none;
-            transition: var(--transition);
-            font-weight: 500;
-            cursor: pointer;
-            min-width: 150px;
-            text-align: center;
-            border: none;
-            outline: none;
-            font-size: 1rem;
-            line-height: 1.5;
-            letter-spacing: 0.3px;
-        }
-
-        .btn.primary {
-            background: var(--gradient-primary);
-            color: white;
-            box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
-        }
-
-        .btn.secondary {
-            background: transparent;
-            color: var(--primary-color);
-            border: 2px solid var(--primary-color);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--box-shadow-hover);
-        }
-
-        /* Responsive Base Styles */
+        /* Enhanced Mobile Menu Styles */
         @media (max-width: 768px) {
-            :root {
-                --mobile-padding: 1rem;
-                --section-spacing: 3rem;
+            #mobile-menu,
+            .menu-toggle {
+                display: flex !important;
+                flex-direction: column;
+                justify-content: space-between;
+                width: 25px;
+                height: 20px;
+                position: relative;
+                cursor: pointer;
+                z-index: var(--z-index-menu);
+                margin-left: 15px;
+                padding: 0;
             }
 
-            section {
-                padding: 4rem 0;
+            #mobile-menu span,
+            .menu-toggle span {
+                display: block !important;
+                width: 100% !important;
+                height: 2px !important;
+                background-color: #000 !important;
+                border-radius: 2px;
+                opacity: 1 !important;
+                visibility: visible !important;
+                transition: var(--transition);
             }
 
-            .container {
-                padding: 0 var(--mobile-padding);
+            .menu-toggle.active span:nth-child(1) {
+                transform: rotate(45deg) translate(5px, 5px);
+            }
+
+            .menu-toggle.active span:nth-child(2) {
+                opacity: 0 !important;
+            }
+
+            .menu-toggle.active span:nth-child(3) {
+                transform: rotate(-45deg) translate(5px, -5px);
+            }
+
+            .main-nav {
+                position: fixed;
+                top: var(--header-height);
+                right: -100%;
+                width: 80%;
+                height: calc(100vh - var(--header-height));
+                background: var(--card-bg);
+                transition: right 0.3s ease;
+                overflow-y: auto;
+                z-index: var(--z-index-menu);
+                padding: 1rem;
+            }
+
+            .main-nav.active {
+                right: 0;
+            }
+
+            .menu-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(4px);
+                z-index: var(--z-index-overlay);
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+
+            .menu-overlay.active {
+                display: block;
+                opacity: 1;
             }
         }
-        /* Mobile Menu Styles */
-@media (max-width: 768px) {
-    .menu-toggle {
-        display: flex !important;
-        flex-direction: column;
-        justify-content: space-between;
-        width: 25px;
-        height: 20px;
-        position: relative;
-        cursor: pointer;
-        z-index: 1000;
-        margin-right: 15px;
-        padding: 0;
-    }
-
-    .menu-toggle span {
-        display: block !important;
-        width: 100% !important;
-        height: 2px !important;
-        background-color: #000 !important;
-        border-radius: 2px;
-        opacity: 1 !important;
-        visibility: visible !important;
-        transition: all 0.3s ease;
-        position: relative;
-    }
-    /* Ensure each span is visible */
-    .menu-toggle span:nth-child(1) {
-        transform-origin: top left;
-    }
-
-    .menu-toggle span:nth-child(2) {
-        transform-origin: center;
-    }
-
-    .menu-toggle span:nth-child(3) {
-        transform-origin: bottom left;
-    }
-
-
-    .menu-toggle.active span:nth-child(1) {
-        transform: rotate(45deg) translate(0px, -1px);
-    }
-
-    .menu-toggle.active span:nth-child(2) {
-       opacity: 0 !important;
-        transform: translateX(15px);
-    }
-
-    .menu-toggle.active span:nth-child(3) {
-        transform: rotate(-45deg) translate(0px, 1px);
-    }
-
-    .main-nav {
-        position: fixed;
-        top: var(--header-height);
-        right: -100%;
-        width: 80%;
-        height: calc(100vh - var(--header-height));
-        background: var(--card-bg);
-        transition: right 0.3s ease;
-        overflow-y: auto;
-        z-index: 999;
-        padding: 2rem;
-    }
-
-    .main-nav.active {
-        right: 0;
-    }
-
-    .menu-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
-        z-index: 998;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    .menu-overlay.active {
-        display: block;
-        opacity: 1;
-    }
-
-    .nav-list {
-        flex-direction: column;
-        gap: 0;
-    }
-
-    .nav-list li {
-        width: 100%;
-    }
-
-    .nav-list li a {
-        padding: 1rem 0;
-        display: block;
-        width: 100%;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .mega-menu .dropdown-content {
-        position: static !important;
-        width: 100% !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-        box-shadow: none !important;
-        padding: 0 1rem !important;
-        display: none;
-    }
-
-    .mega-menu.active .dropdown-content {
-        display: block;
-    }
-}
-        /* Add these styles to your existing CSS */
-@media (max-width: 768px) {
-    /* Ensure menu toggle is visible */
-    .menu-toggle {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        position: relative;
-        z-index: 2000;
-    }
-
-    /* Fix main navigation visibility */
-    .main-nav {
-        display: block !important;
-        visibility: visible !important;
-        position: fixed;
-        top: var(--header-height);
-        right: -100%;
-        width: 80%;
-        height: calc(100vh - var(--header-height));
-        background: white;
-        transition: right 0.3s ease;
-        z-index: 1999;
-        padding: 1rem;
-        overflow-y: auto;
-    }
-
-    /* Ensure nav is visible when active */
-    .main-nav.active {
-        right: 0;
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-
-    /* Fix navigation list visibility */
-    .nav-list {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        flex-direction: column;
-        width: 100%;
-    }
-
-    /* Ensure menu items are visible */
-    .nav-list > li {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        width: 100%;
-    }
-
-    .nav-list > li > a {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        padding: 1rem 0;
-        border-bottom: 1px solid rgba(0,0,0,0.1);
-    }
-
-    /* Fix dropdown visibility */
-    .dropdown-content {
-        position: static !important;
-        display: none;
-        visibility: visible !important;
-        opacity: 1 !important;
-        width: 100% !important;
-        transform: none !important;
-        box-shadow: none !important;
-        padding: 0 1rem !important;
-    }
-
-    .dropdown.active .dropdown-content {
-        display: block !important;
-    }
-
-    /* Ensure overlay is properly positioned */
-    .menu-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 1998;
-    }
-
-    .menu-overlay.active {
-        display: block;
-    }
-
-    /* Fix header container */
-    #header-container {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        z-index: 2000;
-        background: white;
-    }
-}
     </style>
 </head>
 <body>
@@ -435,7 +189,7 @@
 
     <!-- Main Content Wrapper -->
     <main class="main-content">
-                <!-- Hero Section -->
+        <!-- Hero Section -->
         <section class="performance-hero">
             <div class="container">
                 <div class="hero-content animate" data-animation="fade-right">
@@ -481,6 +235,237 @@
             </div>
         </section>
 
+<style>
+/* Hero Section Styles - Enhanced */
+.performance-hero {
+    padding: calc(var(--header-height) + 4rem) 0 6rem;
+    background: var(--gradient);
+    position: relative;
+    overflow: hidden;
+    margin-top: calc(var(--header-height) * -1);
+}
+
+.performance-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(41, 98, 255, 0.05), transparent);
+    pointer-events: none;
+}
+
+.performance-hero .container {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: center;
+}
+
+.hero-content {
+    max-width: 600px;
+}
+
+.hero-content h1 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+    color: var(--text-dark);
+    font-weight: 700;
+}
+
+.hero-content p {
+    font-size: clamp(1.1rem, 2vw, 1.2rem);
+    color: var(--text-body);
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.hero-cta {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.hero-cta .btn {
+    min-width: auto;
+    padding: 1rem 2rem;
+}
+
+.trust-indicators {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.trust-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+}
+
+.trust-item i {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.trust-item span {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.trust-item small {
+    color: var(--text-light);
+    font-size: 0.875rem;
+}
+
+.hero-image {
+    position: relative;
+}
+
+.hero-image img {
+    width: 100%;
+    height: auto;
+    max-width: 600px;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--box-shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hero-image img:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-hover);
+}
+
+/* Button Styles - Enhanced */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.8rem 1.5rem;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    transition: var(--transition);
+    font-weight: 500;
+    cursor: pointer;
+    min-width: 150px;
+    text-align: center;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    line-height: 1.5;
+    letter-spacing: 0.3px;
+    gap: 0.5rem;
+}
+
+.btn.primary {
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
+}
+
+.btn.secondary {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--box-shadow-hover);
+}
+
+/* Loading Indicator */
+#loading-indicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    background: white;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    display: none;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--background-light);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .performance-hero .container {
+        grid-template-columns: 1fr;
+        text-align: center;
+        padding: 0 1rem;
+    }
+
+    .hero-content {
+        order: 1;
+    }
+
+    .hero-image {
+        order: 2;
+        margin-top: 2rem;
+    }
+
+    .hero-cta {
+        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .hero-cta .btn {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .trust-indicators {
+        justify-content: center;
+    }
+
+    .trust-item {
+        align-items: center;
+    }
+}
+
+/* Animation Classes */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0px); }
+}
+
+.animate {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.animate.in-view {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+</style>
         <!-- Features Section -->
         <section class="features-section" id="features">
             <div class="container">
@@ -537,301 +522,7 @@
             </div>
         </section>
 
-<style>
-/* Hero Section Styles */
-.performance-hero {
-    padding: calc(var(--header-height) + 4rem) 0 6rem;
-    background: var(--gradient);
-    position: relative;
-    overflow: hidden;
-    margin-top: calc(var(--header-height) * -1);
-}
-
-.performance-hero .container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: clamp(2rem, 5vw, 4rem);
-    align-items: center;
-}
-
-.hero-content {
-    max-width: 600px;
-}
-
-.hero-content h1 {
-    font-size: clamp(2.5rem, 5vw, 3.5rem);
-    line-height: 1.2;
-    margin-bottom: 1.5rem;
-    color: var(--text-dark);
-    font-weight: 700;
-}
-
-.hero-content p {
-    font-size: clamp(1.1rem, 2vw, 1.2rem);
-    color: var(--text-body);
-    margin-bottom: 2rem;
-    opacity: 0.9;
-}
-
-.hero-cta {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.trust-indicators {
-    display: flex;
-    gap: 2rem;
-    flex-wrap: wrap;
-}
-
-.trust-item {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
-}
-
-.trust-item i {
-    color: var(--primary-color);
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.trust-item span {
-    font-weight: 600;
-    color: var(--text-dark);
-}
-
-.trust-item small {
-    color: var(--text-light);
-    font-size: 0.875rem;
-}
-
-.hero-image {
-    position: relative;
-}
-
-.hero-image img {
-    width: 100%;
-    height: auto;
-    max-width: 600px;
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--box-shadow);
-}
-
-/* Features Section Styles */
-.features-section {
-    background: var(--card-bg);
-    padding: 6rem 0;
-}
-
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 3rem;
-}
-
-.feature-card {
-    background: var(--background-light);
-    padding: 2rem;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-}
-
-.feature-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--box-shadow-hover);
-}
-
-.card-icon {
-    width: 60px;
-    height: 60px;
-    background: var(--background-light);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-    transition: var(--transition);
-}
-
-.card-icon i {
-    font-size: 1.5rem;
-    color: var(--primary-color);
-    transition: var(--transition);
-}
-
-.feature-card:hover .card-icon {
-    background: var(--primary-color);
-}
-
-.feature-card:hover .card-icon i {
-    color: white;
-}
-
-.feature-list {
-    list-style: none;
-    margin: 1.5rem 0;
-}
-
-.feature-list li {
-    margin-bottom: 0.75rem;
-    padding-left: 1.5rem;
-    position: relative;
-}
-
-.feature-list li::before {
-    content: '✓';
-    position: absolute;
-    left: 0;
-    color: var(--primary-color);
-}
-
-.card-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 500;
-    transition: var(--transition);
-}
-
-.card-link:hover {
-    gap: 0.75rem;
-}
-
-/* Animation Classes */
-.animate {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-}
-
-.animate.in-view {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-/* Responsive Styles */
-@media (max-width: 768px) {
-    .performance-hero .container {
-        grid-template-columns: 1fr;
-        text-align: center;
-    }
-
-    .hero-content {
-        order: 1;
-    }
-
-    .hero-image {
-        order: 2;
-        margin-top: 2rem;
-    }
-
-    .hero-cta {
-        justify-content: center;
-        flex-direction: column;
-    }
-
-    .trust-indicators {
-        justify-content: center;
-    }
-
-    .trust-item {
-        align-items: center;
-    }
-
-    .features-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-}
-    /* Critical Mobile Menu Styles */
-@media (max-width: 768px) {
-    .menu-toggle {
-        display: flex !important;
-        flex-direction: column;
-        justify-content: space-between;
-        width: 30px;
-        height: 20px;
-        cursor: pointer;
-        z-index: 1000;
-        position: relative;
-    }
-
-    .menu-toggle span {
-        width: 100%;
-        height: 2px;
-        background-color: var(--text-dark);
-        transition: all 0.3s ease;
-    }
-
-    .main-nav {
-        position: fixed;
-        top: var(--header-height);
-        right: -100%;
-        width: 80%;
-        height: calc(100vh - var(--header-height));
-        background: white;
-        transition: all 0.3s ease;
-        z-index: 999;
-        padding: 1rem;
-    }
-
-    .main-nav.active {
-        right: 0;
-    }
-
-    .nav-list {
-        flex-direction: column;
-    }
-
-    .nav-list li {
-        width: 100%;
-    }
-
-    .nav-list li a {
-        padding: 1rem;
-        display: block;
-        color: var(--text-dark);
-        text-decoration: none;
-        border-bottom: 1px solid rgba(0,0,0,0.1);
-    }
-
-    .menu-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        z-index: 998;
-    }
-
-    .menu-overlay.active {
-        display: block;
-    }
-
-    /* Menu Toggle Animation */
-    .menu-toggle.active span:nth-child(1) {
-        transform: rotate(45deg) translate(5px, 5px);
-    }
-
-    .menu-toggle.active span:nth-child(2) {
-        opacity: 0;
-    }
-
-    .menu-toggle.active span:nth-child(3) {
-        transform: rotate(-45deg) translate(5px, -5px);
-    }
-}
-</style>
-        <!-- Analytics Section -->
+        <!-- Analytics Section - Enhanced -->
         <section class="analytics-section">
             <div class="container">
                 <div class="section-header animate" data-animation="fade-up">
@@ -931,6 +622,198 @@
             </div>
         </section>
 
+<style>
+/* Features Section Styles */
+.features-section {
+    background: var(--card-bg);
+    padding: 6rem 0;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.feature-card {
+    background: var(--background-light);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    height: 100%;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-hover);
+}
+
+.card-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--background-light);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    transition: var(--transition);
+}
+
+.card-icon i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    transition: var(--transition);
+}
+
+.feature-card:hover .card-icon {
+    background: var(--primary-color);
+}
+
+.feature-card:hover .card-icon i {
+    color: white;
+}
+
+.feature-list {
+    list-style: none;
+    margin: 1.5rem 0;
+}
+
+.feature-list li {
+    margin-bottom: 0.75rem;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.feature-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--primary-color);
+}
+
+/* Analytics Section Styles - Enhanced */
+.analytics-section {
+    background: var(--gradient);
+    padding: 6rem 0;
+    position: relative;
+}
+
+.analytics-showcase {
+    display: flex;
+    gap: 4rem;
+    align-items: center;
+    margin-top: 3rem;
+}
+
+.analytics-features {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.analytics-card {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+}
+
+.analytics-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-hover);
+}
+
+.analytics-list {
+    list-style: none;
+}
+
+.analytics-list li {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: flex-start;
+}
+
+.analytics-list li i {
+    color: var(--primary-color);
+    margin-top: 0.25rem;
+    flex-shrink: 0;
+}
+
+.live-metrics {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    padding: 2rem;
+    pointer-events: none;
+}
+
+.metric-card {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    max-width: 200px;
+    backdrop-filter: blur(4px);
+}
+
+.metric-trend.positive {
+    color: var(--success-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+/* Enhanced Mobile Responsiveness */
+@media (max-width: 768px) {
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 0 1rem;
+    }
+
+    .analytics-showcase {
+        flex-direction: column;
+        gap: 2rem;
+        padding: 0 1rem;
+    }
+
+    .analytics-features {
+        order: 2;
+        width: 100%;
+    }
+
+    .analytics-preview {
+        order: 1;
+        width: 100%;
+    }
+
+    .live-metrics {
+        position: static;
+        padding: 1rem 0;
+    }
+
+    .metric-card {
+        max-width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .analytics-card {
+        width: 100%;
+    }
+}
+</style>
         <!-- Development Section -->
         <section class="development-section">
             <div class="container">
@@ -987,199 +870,6 @@
             </div>
         </section>
 
-<style>
-/* Analytics Section Styles */
-.analytics-section {
-    background: var(--gradient);
-    padding: 6rem 0;
-}
-
-.analytics-showcase {
-    display: flex;
-    gap: 4rem;
-    align-items: center;
-    margin-top: 3rem;
-}
-
-.analytics-features {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-}
-
-.analytics-card {
-    background: var(--card-bg);
-    padding: 2rem;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-}
-
-.analytics-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--box-shadow-hover);
-}
-
-.card-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.card-header i {
-    font-size: 1.8rem;
-    color: var(--primary-color);
-}
-
-.analytics-list {
-    list-style: none;
-}
-
-.analytics-list li {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.analytics-list li i {
-    color: var(--primary-color);
-    margin-top: 0.25rem;
-}
-
-.analytics-preview {
-    flex: 1;
-    position: relative;
-}
-
-.live-metrics {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    padding: 2rem;
-}
-
-.metric-card {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 1rem;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    max-width: 200px;
-}
-
-.metric-trend.positive {
-    color: var(--success-color);
-}
-
-/* Development Section Styles */
-.development-section {
-    background: var(--card-bg);
-    padding: 6rem 0;
-}
-
-.development-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 3rem;
-}
-
-.development-card {
-    background: var(--background-light);
-    padding: 2rem;
-    border-radius: var(--border-radius);
-    transition: var(--transition);
-    box-shadow: var(--box-shadow);
-}
-
-.development-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--box-shadow-hover);
-}
-
-.dev-icon {
-    width: 60px;
-    height: 60px;
-    background: var(--primary-color);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-}
-
-.dev-icon i {
-    font-size: 1.8rem;
-    color: white;
-}
-
-.dev-features {
-    list-style: none;
-    margin: 1.5rem 0;
-}
-
-.dev-features li {
-    margin-bottom: 0.75rem;
-    padding-left: 1.5rem;
-    position: relative;
-}
-
-.dev-features li::before {
-    content: '✓';
-    position: absolute;
-    left: 0;
-    color: var(--primary-color);
-}
-
-.learn-more {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--primary-color);
-    text-decoration: none;
-    font-weight: 500;
-    transition: var(--transition);
-}
-
-.learn-more:hover {
-    gap: 0.75rem;
-}
-
-/* Responsive Styles */
-@media (max-width: 768px) {
-    .analytics-showcase {
-        flex-direction: column;
-    }
-
-    .analytics-features {
-        order: 2;
-    }
-
-    .analytics-preview {
-        order: 1;
-    }
-
-    .live-metrics {
-        position: static;
-        padding: 1rem;
-    }
-
-    .metric-card {
-        max-width: 100%;
-        margin-bottom: 1rem;
-    }
-
-    .development-grid {
-        grid-template-columns: 1fr;
-    }
-}
-</style>
         <!-- Integration Section -->
         <section class="integration-section">
             <div class="container">
@@ -1259,91 +949,68 @@
             </div>
         </section>
 
-        <!-- Security Section -->
-        <section class="security-section">
-            <div class="container">
-                <div class="section-header animate" data-animation="fade-up">
-                    <h2>Enterprise-Grade Security</h2>
-                    <p>Your data security and compliance is our top priority</p>
-                </div>
-                <div class="security-features">
-                    <!-- Data Protection Card -->
-                    <div class="security-card animate" data-animation="fade-up" data-delay="200">
-                        <div class="security-icon">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                        <h3>Data Protection</h3>
-                        <ul class="security-list">
-                            <li>
-                                <i class="fas fa-check-circle"></i>
-                                <span>End-to-end encryption (AES-256)</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check-circle"></i>
-                                <span>Regular security audits</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check-circle"></i>
-                                <span>Automated backups</span>
-                            </li>
-                        </ul>
-                        <div class="security-badge">
-                            <img src="image/security-badge.webp" alt="Security Certification" loading="lazy">
-                        </div>
-                    </div>
-
-                    <!-- Compliance Card -->
-                    <div class="security-card animate" data-animation="fade-up" data-delay="400">
-                        <div class="security-icon">
-                            <i class="fas fa-lock"></i>
-                        </div>
-                        <h3>Compliance</h3>
-                        <ul class="security-list">
-                            <li>
-                                <i class="fas fa-check-circle"></i>
-                                <span>GDPR compliant</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check-circle"></i>
-                                <span>ISO 27001 certified</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check-circle"></i>
-                                <span>SOC 2 Type II</span>
-                            </li>
-                        </ul>
-                        <div class="compliance-badges">
-                            <img src="image/gdpr-badge.webp" alt="GDPR Badge" loading="lazy">
-                            <img src="image/iso-badge.webp" alt="ISO Badge" loading="lazy">
-                        </div>
-                    </div>
-
-                    <!-- Access Control Card -->
-                    <div class="security-card animate" data-animation="fade-up" data-delay="600">
-                        <div class="security-icon">
-                            <i class="fas fa-user-shield"></i>
-                        </div>
-                        <h3>Access Control</h3>
-                        <ul class="security-list">
-                            <li>
-                                <i class="fas fa-check-circle"></i>
-                                <span>Role-based access</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check-circle"></i>
-                                <span>Multi-factor authentication</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check-circle"></i>
-                                <span>Audit logging</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </section>
-
 <style>
+/* Development Section Styles */
+.development-section {
+    background: var(--card-bg);
+    padding: 6rem 0;
+}
+
+.development-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.development-card {
+    background: var(--background-light);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    box-shadow: var(--box-shadow);
+    height: 100%;
+}
+
+.development-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-hover);
+}
+
+.dev-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--primary-color);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.dev-icon i {
+    font-size: 1.8rem;
+    color: white;
+}
+
+.dev-features {
+    list-style: none;
+    margin: 1.5rem 0;
+}
+
+.dev-features li {
+    margin-bottom: 0.75rem;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.dev-features li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: var(--primary-color);
+}
+
 /* Integration Section Styles */
 .integration-section {
     background: var(--gradient);
@@ -1432,73 +1099,32 @@
     box-shadow: var(--box-shadow-hover);
 }
 
-/* Security Section Styles */
-.security-section {
-    background: var(--card-bg);
-    padding: 6rem 0;
-}
-
-.security-features {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 3rem;
-}
-
-.security-card {
-    background: var(--background-light);
-    padding: 2rem;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-}
-
-.security-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--box-shadow-hover);
-}
-
-.security-icon {
-    width: 60px;
-    height: 60px;
-    background: var(--primary-color);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-}
-
-.security-icon i {
-    font-size: 1.8rem;
-    color: white;
-}
-
-.security-list {
+.custom-features {
     list-style: none;
     margin: 1.5rem 0;
 }
 
-.security-list li {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
+.custom-features li {
+    margin-bottom: 0.75rem;
+    padding-left: 1.5rem;
+    position: relative;
 }
 
-.security-list li i {
+.custom-features li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
     color: var(--primary-color);
-    margin-right: 1rem;
 }
 
-/* Responsive Styles */
+/* Enhanced Mobile Responsiveness */
 @media (max-width: 768px) {
-    .integration-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .customization-features,
-    .security-features {
+    .development-grid,
+    .integration-grid,
+    .customization-features {
         grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 0 1rem;
     }
 
     .integration-hover {
@@ -1507,8 +1133,100 @@
         background: none;
         margin-top: 1rem;
     }
+
+    .integration-card {
+        padding: 1.5rem;
+    }
+
+    .custom-block {
+        padding: 1.5rem;
+    }
 }
 </style>
+        <!-- Security Section -->
+        <section class="security-section">
+            <div class="container">
+                <div class="section-header animate" data-animation="fade-up">
+                    <h2>Enterprise-Grade Security</h2>
+                    <p>Your data security and compliance is our top priority</p>
+                </div>
+                <div class="security-features">
+                    <!-- Data Protection Card -->
+                    <div class="security-card animate" data-animation="fade-up" data-delay="200">
+                        <div class="security-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>Data Protection</h3>
+                        <ul class="security-list">
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>End-to-end encryption (AES-256)</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Regular security audits</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Automated backups</span>
+                            </li>
+                        </ul>
+                        <div class="security-badge">
+                            <img src="image/security-badge.webp" alt="Security Certification" loading="lazy">
+                        </div>
+                    </div>
+
+                    <!-- Compliance Card -->
+                    <div class="security-card animate" data-animation="fade-up" data-delay="400">
+                        <div class="security-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <h3>Compliance</h3>
+                        <ul class="security-list">
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>GDPR compliant</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>ISO 27001 certified</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>SOC 2 Type II</span>
+                            </li>
+                        </ul>
+                        <div class="compliance-badges">
+                            <img src="image/gdpr-badge.webp" alt="GDPR Badge" loading="lazy">
+                            <img src="image/iso-badge.webp" alt="ISO Badge" loading="lazy">
+                        </div>
+                    </div>
+
+                    <!-- Access Control Card -->
+                    <div class="security-card animate" data-animation="fade-up" data-delay="600">
+                        <div class="security-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <h3>Access Control</h3>
+                        <ul class="security-list">
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Role-based access</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Multi-factor authentication</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Audit logging</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Pricing Section -->
         <section class="pricing-section" id="pricing">
             <div class="container">
@@ -1599,6 +1317,66 @@
         </section>
 
 <style>
+/* Security Section Styles */
+.security-section {
+    background: var(--card-bg);
+    padding: 6rem 0;
+}
+
+.security-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.security-card {
+    background: var(--background-light);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    height: 100%;
+}
+
+.security-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow-hover);
+}
+
+.security-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--primary-color);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.security-icon i {
+    font-size: 1.8rem;
+    color: white;
+}
+
+.security-list {
+    list-style: none;
+    margin: 1.5rem 0;
+}
+
+.security-list li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.security-list li i {
+    color: var(--primary-color);
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
 /* Pricing Section Styles */
 .pricing-section {
     background: var(--gradient);
@@ -1655,14 +1433,6 @@ input:checked + .slider:before {
     transform: translateX(26px);
 }
 
-.save-badge {
-    background: var(--success-color);
-    color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 12px;
-    font-size: 0.8rem;
-}
-
 .pricing-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1677,11 +1447,7 @@ input:checked + .slider:before {
     box-shadow: var(--box-shadow);
     position: relative;
     transition: var(--transition);
-}
-
-.pricing-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--box-shadow-hover);
+    height: 100%;
 }
 
 .pricing-card.popular {
@@ -1700,76 +1466,17 @@ input:checked + .slider:before {
     font-size: 0.9rem;
 }
 
-.plan-header {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.price {
-    font-size: 2.5rem;
-    color: var(--text-dark);
-    font-weight: 700;
-    margin: 1rem 0;
-}
-
-.currency {
-    font-size: 1.5rem;
-    vertical-align: super;
-}
-
-.period {
-    font-size: 1rem;
-    color: var(--text-light);
-    font-weight: normal;
-}
-
-.plan-description {
-    color: var(--text-light);
-    font-size: 0.9rem;
-}
-
-.plan-features {
-    list-style: none;
-    margin: 2rem 0;
-}
-
-.plan-features li {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
-    color: var(--text-color);
-}
-
-.plan-features li i {
-    color: var(--primary-color);
-    margin-right: 1rem;
-}
-
-.plan-cta {
-    text-align: center;
-}
-
-.trial-period {
-    display: block;
-    margin-top: 1rem;
-    font-size: 0.9rem;
-    color: var(--text-light);
-}
-
-.custom-price {
-    font-size: 2rem;
-    color: var(--primary-color);
-}
-
-/* Responsive Styles */
+/* Enhanced Mobile Responsiveness */
 @media (max-width: 768px) {
-    .pricing-card.popular {
-        transform: none;
-    }
-
+    .security-features,
     .pricing-grid {
         grid-template-columns: 1fr;
         gap: 1.5rem;
+        padding: 0 1rem;
+    }
+
+    .pricing-card.popular {
+        transform: none;
     }
 
     .pricing-toggle {
@@ -1782,11 +1489,6 @@ input:checked + .slider:before {
         margin-top: 0.5rem;
     }
 }
-
-/* Animation Delays */
-[data-delay="200"] { transition-delay: 0.2s; }
-[data-delay="400"] { transition-delay: 0.4s; }
-[data-delay="600"] { transition-delay: 0.6s; }
 </style>
         <!-- Footer -->
         <footer class="main-footer">
@@ -2030,7 +1732,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 
-// Enhanced Header Loading
+// Enhanced Header Loading with Mobile Menu Support
 async function loadHeader() {
     const headerContainer = document.getElementById('header-container');
     
@@ -2041,9 +1743,11 @@ async function loadHeader() {
         const html = await response.text();
         headerContainer.innerHTML = html;
         
+        // Initialize mobile menu after header loads
+        initializeMobileMenu();
+        
     } catch (error) {
         console.warn('Header loading failed, using fallback header:', error);
-        // Provide fallback header
         headerContainer.innerHTML = `
             <header class="main-header">
                 <div class="container">
@@ -2071,37 +1775,18 @@ async function loadHeader() {
 }
 
 // Mobile Menu Initialization
-// Update the initializeMobileMenu function
 function initializeMobileMenu() {
     const menuToggle = document.querySelector('.menu-toggle');
     const mainNav = document.querySelector('.main-nav');
     const menuOverlay = document.querySelector('.menu-overlay');
     
-    // Create hamburger menu if it doesn't exist
-    if (!menuToggle) {
-        const toggle = document.createElement('div');
-        toggle.className = 'menu-toggle';
-        toggle.innerHTML = `
-            <span></span>
-            <span></span>
-            <span></span>
-        `;
-        document.querySelector('.main-header .container').appendChild(toggle);
-    }
-
-    // Re-query the menu toggle
-    const updatedMenuToggle = document.querySelector('.menu-toggle');
-    
-    if (!updatedMenuToggle || !mainNav) {
-        console.warn('Mobile menu elements not found');
-        return;
-    }
+    if (!menuToggle || !mainNav) return;
 
     let isMenuOpen = false;
 
     function toggleMenu(show = !isMenuOpen) {
         isMenuOpen = show;
-        updatedMenuToggle.classList.toggle('active', show);
+        menuToggle.classList.toggle('active', show);
         mainNav.classList.toggle('active', show);
         if (menuOverlay) {
             menuOverlay.classList.toggle('active', show);
@@ -2109,29 +1794,26 @@ function initializeMobileMenu() {
         document.body.style.overflow = show ? 'hidden' : '';
     }
 
-    // Menu Toggle Click
-    updatedMenuToggle.addEventListener('click', (e) => {
+    menuToggle.addEventListener('click', (e) => {
         e.stopPropagation();
         toggleMenu();
     });
 
-    // Close menu when clicking overlay
     menuOverlay?.addEventListener('click', () => toggleMenu(false));
 
-    // Close menu when clicking outside
     document.addEventListener('click', (e) => {
-        if (isMenuOpen && !mainNav.contains(e.target) && !updatedMenuToggle.contains(e.target)) {
+        if (isMenuOpen && !mainNav.contains(e.target) && !menuToggle.contains(e.target)) {
             toggleMenu(false);
         }
     });
 
-    // Close menu on ESC key
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && isMenuOpen) {
             toggleMenu(false);
         }
     });
 }
+
 // Ensure Mobile Menu Visibility
 function ensureMobileMenuVisibility() {
     if (window.innerWidth <= 768) {
@@ -2152,7 +1834,7 @@ function ensureMobileMenuVisibility() {
     }
 }
 
-// Animation Initialization
+// Initialize Animations
 function initializeAnimations() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -2171,7 +1853,7 @@ function initializeAnimations() {
     });
 }
 
-// Pricing Toggle Initialization
+// Initialize Pricing Toggle
 function initializePricingToggle() {
     const toggle = document.getElementById('billing-toggle');
     const prices = document.querySelectorAll('.amount');
@@ -2187,7 +1869,7 @@ function initializePricingToggle() {
     });
 }
 
-// Smooth Scroll Initialization
+// Initialize Smooth Scroll
 function initializeSmoothScroll() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
@@ -2207,24 +1889,6 @@ function initializeSmoothScroll() {
     });
 }
 
-// Intersection Observer Initialization
-function initializeIntersectionObserver() {
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('in-view');
-                observer.unobserve(entry.target);
-            }
-        });
-    }, {
-        threshold: 0.1
-    });
-
-    document.querySelectorAll('.animate').forEach(element => {
-        observer.observe(element);
-    });
-}
-
 // Error Handling
 function handleError(error) {
     console.error('Application error:', error);
@@ -2232,12 +1896,9 @@ function handleError(error) {
     if (loadingIndicator) {
         loadingIndicator.style.display = 'none';
     }
-    
-    // Show error in console but don't display on page
-    console.error('Error details:', error);
 }
 
-// Helper function to check mobile menu state
+// Check Mobile Menu State
 function checkMobileMenuState() {
     const menuToggle = document.querySelector('.menu-toggle');
     const mainNav = document.querySelector('.main-nav');
@@ -2248,7 +1909,7 @@ function checkMobileMenuState() {
     }
 }
 
-// Check mobile menu state periodically
+// Periodic Check for Mobile Menu
 setInterval(checkMobileMenuState, 2000);
 </script>
 </body>
