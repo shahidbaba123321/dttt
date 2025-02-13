@@ -208,33 +208,51 @@
         display: flex !important;
         flex-direction: column;
         justify-content: space-between;
-        width: 30px;
-        height: 22px;
-        background: transparent;
-        border: none;
+        width: 25px;
+        height: 20px;
+        position: relative;
         cursor: pointer;
+        z-index: 1000;
+        margin-right: 15px;
         padding: 0;
-        z-index: 1002;
     }
 
     .menu-toggle span {
-        display: block;
-        width: 100%;
-        height: 2px;
-        background-color: #000;
+        display: block !important;
+        width: 100% !important;
+        height: 2px !important;
+        background-color: #000 !important;
+        border-radius: 2px;
+        opacity: 1 !important;
+        visibility: visible !important;
         transition: all 0.3s ease;
+        position: relative;
+    }
+    /* Ensure each span is visible */
+    .menu-toggle span:nth-child(1) {
+        transform-origin: top left;
     }
 
+    .menu-toggle span:nth-child(2) {
+        transform-origin: center;
+    }
+
+    .menu-toggle span:nth-child(3) {
+        transform-origin: bottom left;
+    }
+
+
     .menu-toggle.active span:nth-child(1) {
-        transform: rotate(45deg) translate(5px, 5px);
+        transform: rotate(45deg) translate(0px, -1px);
     }
 
     .menu-toggle.active span:nth-child(2) {
-        opacity: 0;
+       opacity: 0 !important;
+        transform: translateX(15px);
     }
 
     .menu-toggle.active span:nth-child(3) {
-        transform: rotate(-45deg) translate(7px, -6px);
+        transform: rotate(-45deg) translate(0px, 1px);
     }
 
     .main-nav {
@@ -2053,12 +2071,28 @@ async function loadHeader() {
 }
 
 // Mobile Menu Initialization
+// Update the initializeMobileMenu function
 function initializeMobileMenu() {
     const menuToggle = document.querySelector('.menu-toggle');
     const mainNav = document.querySelector('.main-nav');
     const menuOverlay = document.querySelector('.menu-overlay');
     
-    if (!menuToggle || !mainNav) {
+    // Create hamburger menu if it doesn't exist
+    if (!menuToggle) {
+        const toggle = document.createElement('div');
+        toggle.className = 'menu-toggle';
+        toggle.innerHTML = `
+            <span></span>
+            <span></span>
+            <span></span>
+        `;
+        document.querySelector('.main-header .container').appendChild(toggle);
+    }
+
+    // Re-query the menu toggle
+    const updatedMenuToggle = document.querySelector('.menu-toggle');
+    
+    if (!updatedMenuToggle || !mainNav) {
         console.warn('Mobile menu elements not found');
         return;
     }
@@ -2067,7 +2101,7 @@ function initializeMobileMenu() {
 
     function toggleMenu(show = !isMenuOpen) {
         isMenuOpen = show;
-        menuToggle.classList.toggle('active', show);
+        updatedMenuToggle.classList.toggle('active', show);
         mainNav.classList.toggle('active', show);
         if (menuOverlay) {
             menuOverlay.classList.toggle('active', show);
@@ -2076,10 +2110,9 @@ function initializeMobileMenu() {
     }
 
     // Menu Toggle Click
-    menuToggle.addEventListener('click', (e) => {
+    updatedMenuToggle.addEventListener('click', (e) => {
         e.stopPropagation();
         toggleMenu();
-        console.log('Menu toggled', isMenuOpen);
     });
 
     // Close menu when clicking overlay
@@ -2087,7 +2120,7 @@ function initializeMobileMenu() {
 
     // Close menu when clicking outside
     document.addEventListener('click', (e) => {
-        if (isMenuOpen && !mainNav.contains(e.target) && !menuToggle.contains(e.target)) {
+        if (isMenuOpen && !mainNav.contains(e.target) && !updatedMenuToggle.contains(e.target)) {
             toggleMenu(false);
         }
     });
@@ -2099,7 +2132,6 @@ function initializeMobileMenu() {
         }
     });
 }
-
 // Ensure Mobile Menu Visibility
 function ensureMobileMenuVisibility() {
     if (window.innerWidth <= 768) {
