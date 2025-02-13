@@ -303,6 +303,107 @@
         display: block;
     }
 }
+        /* Add these styles to your existing CSS */
+@media (max-width: 768px) {
+    /* Ensure menu toggle is visible */
+    .menu-toggle {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative;
+        z-index: 2000;
+    }
+
+    /* Fix main navigation visibility */
+    .main-nav {
+        display: block !important;
+        visibility: visible !important;
+        position: fixed;
+        top: var(--header-height);
+        right: -100%;
+        width: 80%;
+        height: calc(100vh - var(--header-height));
+        background: white;
+        transition: right 0.3s ease;
+        z-index: 1999;
+        padding: 1rem;
+        overflow-y: auto;
+    }
+
+    /* Ensure nav is visible when active */
+    .main-nav.active {
+        right: 0;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    /* Fix navigation list visibility */
+    .nav-list {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    /* Ensure menu items are visible */
+    .nav-list > li {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 100%;
+    }
+
+    .nav-list > li > a {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        padding: 1rem 0;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+
+    /* Fix dropdown visibility */
+    .dropdown-content {
+        position: static !important;
+        display: none;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 100% !important;
+        transform: none !important;
+        box-shadow: none !important;
+        padding: 0 1rem !important;
+    }
+
+    .dropdown.active .dropdown-content {
+        display: block !important;
+    }
+
+    /* Ensure overlay is properly positioned */
+    .menu-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1998;
+    }
+
+    .menu-overlay.active {
+        display: block;
+    }
+
+    /* Fix header container */
+    #header-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 2000;
+        background: white;
+    }
+}
     </style>
 </head>
 <body>
@@ -1807,13 +1908,15 @@ document.addEventListener('DOMContentLoaded', async function() {
         initializePricingToggle();
         initializeSmoothScroll();
         initializeIntersectionObserver();
-        
+         ensureMobileMenuVisibility();
+    window.addEventListener('resize', ensureMobileMenuVisibility);
         // Hide loading indicator
         document.getElementById('loading-indicator').style.display = 'none';
         
         // Show main content
         document.body.style.visibility = 'visible';
         document.body.style.opacity = '1';
+        
         
     } catch (error) {
         console.error('Initialization error:', error);
@@ -2020,6 +2123,26 @@ function initializeMobileMenu() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && isMenuOpen) toggleMenu(false);
     });
+
+    // Add this helper function
+function ensureMobileMenuVisibility() {
+    if (window.innerWidth <= 768) {
+        const menuToggle = document.querySelector('.menu-toggle');
+        const mainNav = document.querySelector('.main-nav');
+        
+        if (menuToggle) {
+            menuToggle.style.display = 'flex';
+            menuToggle.style.visibility = 'visible';
+            menuToggle.style.opacity = '1';
+        }
+        
+        if (mainNav) {
+            mainNav.style.display = 'block';
+            mainNav.style.visibility = 'visible';
+            mainNav.style.opacity = '1';
+        }
+    }
+}
 
     // Handle window resize
     let resizeTimer;
