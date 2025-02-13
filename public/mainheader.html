@@ -16,10 +16,10 @@
   <style>
     /* Root Variables */
     :root {
-      --primary-color: #2962ff; /* Changed from red to blue */
+      --primary-color: #2962ff;
       --text-dark: #0f1964;
       --text-body: #333;
-      --background-light: #f0faff; /* Light blue background */
+      --background-light: #f0faff;
       --link-blue: #2962ff;
       --border-color: #e0e0e0;
       --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -55,6 +55,16 @@
       z-index: 1000;
       height: var(--header-height);
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    header.scroll-down {
+      transform: translateY(-100%);
+    }
+
+    header.scroll-up {
+      transform: translateY(0);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
     }
 
     header .container {
@@ -71,10 +81,11 @@
       display: flex;
       align-items: center;
       text-decoration: none;
+      z-index: 1002;
     }
 
     .logo h1 {
-      background: linear-gradient(45deg, var(--primary-color), #42a5f5); /* Updated gradient */
+      background: linear-gradient(45deg, var(--primary-color), #42a5f5);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       font-size: 28px;
@@ -120,8 +131,7 @@
     .nav-list > li > a:hover {
       color: var(--primary-color);
     }
-
-    /* Mega Menu Styles */
+        /* Mega Menu Styles */
     .mega-menu .dropdown-content {
       width: 750px;
       left: 50%;
@@ -186,6 +196,7 @@
       border-radius: 10px;
       margin-left: 8px;
     }
+
     /* Auth Buttons */
     .auth-buttons {
       display: flex;
@@ -207,7 +218,7 @@
     }
 
     .sign-up {
-      background: linear-gradient(45deg, var(--primary-color), #42a5f5); /* Updated gradient */
+      background: linear-gradient(45deg, var(--primary-color), #42a5f5);
       color: white;
       padding: 8px 16px;
       border-radius: 4px;
@@ -219,7 +230,7 @@
 
     .sign-up:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(41, 98, 255, 0.2); /* Updated box-shadow color */
+      box-shadow: 0 4px 12px rgba(41, 98, 255, 0.2);
     }
 
     /* Mobile Menu Toggle */
@@ -229,6 +240,7 @@
       gap: 5px;
       cursor: pointer;
       padding: 8px;
+      z-index: 1002;
     }
 
     .menu-toggle span {
@@ -246,7 +258,6 @@
 
       .menu-toggle {
         display: flex;
-        z-index: 1002;
       }
 
       .menu-toggle.active span:nth-child(1) {
@@ -271,6 +282,7 @@
         transition: right 0.3s ease;
         overflow-y: auto;
         z-index: 1001;
+        padding: 1rem;
       }
 
       .main-nav.active {
@@ -281,7 +293,6 @@
         flex-direction: column;
         gap: 0;
         height: auto;
-        padding: 1rem 0;
       }
 
       .nav-list > li {
@@ -302,7 +313,7 @@
         position: static;
         transform: none;
         box-shadow: none;
-        padding: 10px;
+        padding: 0.5rem;
         opacity: 1;
         visibility: visible;
         display: none;
@@ -325,9 +336,9 @@
 
       .auth-buttons {
         flex-direction: column;
-        margin: 1rem;
+        width: 100%;
+        margin: 1rem 0;
         gap: 0.5rem;
-        border-bottom: none !important;
       }
 
       .sign-in,
@@ -358,7 +369,7 @@
       opacity: 1;
     }
   </style>
-</head>
+  </head>
 <body>
   <header>
     <div class="container">
@@ -431,6 +442,7 @@
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       initializeMobileMenu();
+      initializeHeaderScroll();
     });
 
     function initializeMobileMenu() {
@@ -497,30 +509,52 @@
           toggleMenu(false);
         }
       });
+    }
 
-      let resizeTimer;
-      window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-          if (window.innerWidth > 768 && isMenuOpen) {
-            toggleMenu(false);
-          }
-        }, 250);
-      });
+    function initializeHeaderScroll() {
+      const header = document.querySelector('header');
+      let lastScroll = 0;
+      const scrollThreshold = 50;
 
-      // Add smooth hover effect for mega menu
-      megaMenus.forEach((menu) => {
-        menu.addEventListener('mouseenter', function () {
-          if (window.innerWidth > 768) {
-            const content = this.querySelector('.dropdown-content');
-            content.style.opacity = '0';
-            requestAnimationFrame(() => {
-              content.style.opacity = '1';
-            });
-          }
-        });
+      window.addEventListener('scroll', () => {
+        const currentScroll = window.pageYOffset;
+        
+        if (currentScroll <= scrollThreshold) {
+          header.classList.remove('scroll-up', 'scroll-down');
+          return;
+        }
+        
+        if (currentScroll > lastScroll && !header.classList.contains('scroll-down')) {
+          // Scrolling down
+          header.classList.remove('scroll-up');
+          header.classList.add('scroll-down');
+        } else if (currentScroll < lastScroll && header.classList.contains('scroll-down')) {
+          // Scrolling up
+          header.classList.remove('scroll-down');
+          header.classList.add('scroll-up');
+        }
+        
+        lastScroll = currentScroll;
       });
     }
+
+    // Handle window resize
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (window.innerWidth > 768) {
+          const mainNav = document.getElementById('main-nav');
+          const mobileMenu = document.getElementById('mobile-menu');
+          const menuOverlay = document.getElementById('menu-overlay');
+          
+          mainNav.classList.remove('active');
+          mobileMenu.classList.remove('active');
+          menuOverlay.classList.remove('active');
+          document.body.style.overflow = '';
+        }
+      }, 250);
+    });
   </script>
 </body>
 </html>
