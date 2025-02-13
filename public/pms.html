@@ -732,6 +732,86 @@
         gap: 1.5rem;
     }
 }
+    /* Critical Mobile Menu Styles */
+@media (max-width: 768px) {
+    .menu-toggle {
+        display: flex !important;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 30px;
+        height: 20px;
+        cursor: pointer;
+        z-index: 1000;
+        position: relative;
+    }
+
+    .menu-toggle span {
+        width: 100%;
+        height: 2px;
+        background-color: var(--text-dark);
+        transition: all 0.3s ease;
+    }
+
+    .main-nav {
+        position: fixed;
+        top: var(--header-height);
+        right: -100%;
+        width: 80%;
+        height: calc(100vh - var(--header-height));
+        background: white;
+        transition: all 0.3s ease;
+        z-index: 999;
+        padding: 1rem;
+    }
+
+    .main-nav.active {
+        right: 0;
+    }
+
+    .nav-list {
+        flex-direction: column;
+    }
+
+    .nav-list li {
+        width: 100%;
+    }
+
+    .nav-list li a {
+        padding: 1rem;
+        display: block;
+        color: var(--text-dark);
+        text-decoration: none;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .menu-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 998;
+    }
+
+    .menu-overlay.active {
+        display: block;
+    }
+
+    /* Menu Toggle Animation */
+    .menu-toggle.active span:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    .menu-toggle.active span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .menu-toggle.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(5px, -5px);
+    }
+}
 </style>
         <!-- Analytics Section -->
         <section class="analytics-section">
@@ -1894,30 +1974,38 @@ input:checked + .slider:before {
 </style>
 
 <script>
-// Initialize everything when DOM is ready
+// Main Initialization
 document.addEventListener('DOMContentLoaded', async function() {
     try {
         // Show loading indicator
-        document.getElementById('loading-indicator').style.display = 'block';
-        
-        // First load the header
+        const loadingIndicator = document.getElementById('loading-indicator');
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'block';
+        }
+
+        // Load header and initialize mobile menu
         await loadHeader();
-        
+        initializeMobileMenu();
+
         // Initialize all components
         initializeAnimations();
         initializePricingToggle();
         initializeSmoothScroll();
         initializeIntersectionObserver();
-         ensureMobileMenuVisibility();
-    window.addEventListener('resize', ensureMobileMenuVisibility);
+        ensureMobileMenuVisibility();
+
+        // Add resize listener
+        window.addEventListener('resize', ensureMobileMenuVisibility);
+
         // Hide loading indicator
-        document.getElementById('loading-indicator').style.display = 'none';
-        
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+        }
+
         // Show main content
         document.body.style.visibility = 'visible';
         document.body.style.opacity = '1';
-        
-        
+
     } catch (error) {
         console.error('Initialization error:', error);
         handleError(error);
@@ -1936,7 +2024,7 @@ async function loadHeader() {
         headerContainer.innerHTML = html;
         
     } catch (error) {
-        console.error('Error loading header:', error);
+        console.warn('Header loading failed, using fallback header:', error);
         // Provide fallback header
         headerContainer.innerHTML = `
             <header class="main-header">
@@ -1944,13 +2032,95 @@ async function loadHeader() {
                     <a href="/" class="logo">
                         <h1>Workwise Pro</h1>
                     </a>
+                    <div class="menu-toggle" id="mobile-menu">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <nav class="main-nav">
+                        <ul class="nav-list">
+                            <li><a href="#features">Features</a></li>
+                            <li><a href="#pricing">Pricing</a></li>
+                            <li><a href="#about">About</a></li>
+                            <li><a href="#contact">Contact</a></li>
+                        </ul>
+                    </nav>
                 </div>
             </header>
+            <div class="menu-overlay"></div>
         `;
     }
 }
 
-// Initialize Animations
+// Mobile Menu Initialization
+function initializeMobileMenu() {
+    const menuToggle = document.querySelector('.menu-toggle');
+    const mainNav = document.querySelector('.main-nav');
+    const menuOverlay = document.querySelector('.menu-overlay');
+    
+    if (!menuToggle || !mainNav) {
+        console.warn('Mobile menu elements not found');
+        return;
+    }
+
+    let isMenuOpen = false;
+
+    function toggleMenu(show = !isMenuOpen) {
+        isMenuOpen = show;
+        menuToggle.classList.toggle('active', show);
+        mainNav.classList.toggle('active', show);
+        if (menuOverlay) {
+            menuOverlay.classList.toggle('active', show);
+        }
+        document.body.style.overflow = show ? 'hidden' : '';
+    }
+
+    // Menu Toggle Click
+    menuToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMenu();
+        console.log('Menu toggled', isMenuOpen);
+    });
+
+    // Close menu when clicking overlay
+    menuOverlay?.addEventListener('click', () => toggleMenu(false));
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (isMenuOpen && !mainNav.contains(e.target) && !menuToggle.contains(e.target)) {
+            toggleMenu(false);
+        }
+    });
+
+    // Close menu on ESC key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isMenuOpen) {
+            toggleMenu(false);
+        }
+    });
+}
+
+// Ensure Mobile Menu Visibility
+function ensureMobileMenuVisibility() {
+    if (window.innerWidth <= 768) {
+        const menuToggle = document.querySelector('.menu-toggle');
+        const mainNav = document.querySelector('.main-nav');
+        
+        if (menuToggle) {
+            menuToggle.style.display = 'flex';
+            menuToggle.style.visibility = 'visible';
+            menuToggle.style.opacity = '1';
+        }
+        
+        if (mainNav) {
+            mainNav.style.display = 'block';
+            mainNav.style.visibility = 'visible';
+            mainNav.style.opacity = '1';
+        }
+    }
+}
+
+// Animation Initialization
 function initializeAnimations() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -1969,7 +2139,7 @@ function initializeAnimations() {
     });
 }
 
-// Initialize Pricing Toggle
+// Pricing Toggle Initialization
 function initializePricingToggle() {
     const toggle = document.getElementById('billing-toggle');
     const prices = document.querySelectorAll('.amount');
@@ -1985,7 +2155,7 @@ function initializePricingToggle() {
     });
 }
 
-// Initialize Smooth Scroll
+// Smooth Scroll Initialization
 function initializeSmoothScroll() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
@@ -2005,7 +2175,7 @@ function initializeSmoothScroll() {
     });
 }
 
-// Initialize Intersection Observer
+// Intersection Observer Initialization
 function initializeIntersectionObserver() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -2026,147 +2196,28 @@ function initializeIntersectionObserver() {
 // Error Handling
 function handleError(error) {
     console.error('Application error:', error);
-    document.getElementById('loading-indicator').style.display = 'none';
+    const loadingIndicator = document.getElementById('loading-indicator');
+    if (loadingIndicator) {
+        loadingIndicator.style.display = 'none';
+    }
     
-    // Show error message
-    const errorMessage = document.createElement('div');
-    errorMessage.className = 'error-message';
-    errorMessage.innerHTML = `
-        <div class="container">
-            <h2>Something went wrong</h2>
-            <p>We're sorry, but there was an error loading the page. Please try refreshing.</p>
-            <button onclick="location.reload()" class="btn primary">Refresh Page</button>
-        </div>
-    `;
-    document.body.appendChild(errorMessage);
+    // Show error in console but don't display on page
+    console.error('Error details:', error);
 }
 
-// Watson Assistant Chat Integration
-window.watsonAssistantChatOptions = {
-    integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
-    region: "au-syd",
-    serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
-    onLoad: async (instance) => { await instance.render(); }
-};
-
-setTimeout(function(){
-    const t = document.createElement('script');
-    t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
-        (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
-        "/WatsonAssistantChatEntry.js";
-    document.head.appendChild(t);
-});
-
-    // Mobile Menu Functionality
-function initializeMobileMenu() {
+// Helper function to check mobile menu state
+function checkMobileMenuState() {
     const menuToggle = document.querySelector('.menu-toggle');
     const mainNav = document.querySelector('.main-nav');
-    const menuOverlay = document.querySelector('.menu-overlay');
-    const megaMenus = document.querySelectorAll('.mega-menu');
     
-    if (!menuToggle || !mainNav) return;
-
-    let isMenuOpen = false;
-
-    function toggleMenu(show = !isMenuOpen) {
-        isMenuOpen = show;
-        menuToggle.classList.toggle('active', show);
-        mainNav.classList.toggle('active', show);
-        document.body.style.overflow = show ? 'hidden' : '';
-        
-        if (menuOverlay) {
-            menuOverlay.classList.toggle('active', show);
-        }
-
-        // Close all dropdowns when closing menu
-        if (!show) {
-            megaMenus.forEach(dropdown => dropdown.classList.remove('active'));
-        }
-    }
-
-    // Menu Toggle Click
-    menuToggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleMenu();
-        console.log('Menu toggled'); // Debug log
-    });
-
-    // Handle Mega Menus
-    megaMenus.forEach(menu => {
-        const link = menu.querySelector('a');
-        
-        link?.addEventListener('click', (e) => {
-            if (window.innerWidth <= 768) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                megaMenus.forEach(other => {
-                    if (other !== menu) other.classList.remove('active');
-                });
-                
-                menu.classList.toggle('active');
-            }
-        });
-    });
-
-    // Close menu when clicking overlay
-    menuOverlay?.addEventListener('click', () => toggleMenu(false));
-
-    // Close menu when clicking outside
-    document.addEventListener('click', (e) => {
-        if (isMenuOpen && !mainNav.contains(e.target) && !menuToggle.contains(e.target)) {
-            toggleMenu(false);
-        }
-    });
-
-    // Close menu on ESC key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && isMenuOpen) toggleMenu(false);
-    });
-
-    // Add this helper function
-function ensureMobileMenuVisibility() {
-    if (window.innerWidth <= 768) {
-        const menuToggle = document.querySelector('.menu-toggle');
-        const mainNav = document.querySelector('.main-nav');
-        
-        if (menuToggle) {
-            menuToggle.style.display = 'flex';
-            menuToggle.style.visibility = 'visible';
-            menuToggle.style.opacity = '1';
-        }
-        
-        if (mainNav) {
-            mainNav.style.display = 'block';
-            mainNav.style.visibility = 'visible';
-            mainNav.style.opacity = '1';
-        }
-    }
-}
-
-    // Handle window resize
-    let resizeTimer;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-            if (window.innerWidth > 768 && isMenuOpen) {
-                toggleMenu(false);
-            }
-        }, 250);
-    });
-}
-
-// Add this to the DOMContentLoaded event listener
-document.addEventListener('DOMContentLoaded', async function() {
-    try {
-        await loadHeader();
-        // Initialize mobile menu after header is loaded
+    if (!menuToggle || !mainNav) {
+        console.warn('Mobile menu elements not found, attempting to reinitialize...');
         initializeMobileMenu();
-        // ... rest of your initialization code
-    } catch (error) {
-        console.error('Error:', error);
     }
-});
+}
+
+// Check mobile menu state periodically
+setInterval(checkMobileMenuState, 2000);
 </script>
 </body>
 </html>
