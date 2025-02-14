@@ -3,684 +3,1088 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Features - Workwise Pro</title>
+    <title>Features - Comprehensive Business Solutions | Workwise Pro</title>
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sentiment@5.0.2/build/sentiment.min.js"></script>
+    
+    <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
-
-    <style>
-        /* Root Variables */
-        :root {
-            --primary-color: #4285f4;
-            --secondary-color: #6c757d;
-            --success-color: #28a745;
-            --background-color: #f8f9fa;
-            --text-color: #333;
-            --light-text: #6c757d;
-            --border-radius: 8px;
-            --transition: all 0.3s ease;
-            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            --card-bg: #ffffff;
-        }
-
-        /* General Reset */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            line-height: 1.6;
-            color: var(--text-color);
-            background-color: var(--background-color);
-            overflow-x: hidden;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-
-        /* Header Container */
-        #header-container {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background: var(--card-bg);
-            box-shadow: var(--box-shadow);
-        }
-
-        /* Button Styles */
-        .btn {
-            display: inline-block;
-            padding: 0.8rem 1.5rem;
-            border-radius: var(--border-radius);
-            text-decoration: none;
-            transition: var(--transition);
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .btn.primary {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-        }
-
-        .btn.primary:hover {
-            background-color: #3367d6;
-            transform: translateY(-2px);
-            box-shadow: var(--box-shadow);
-        }
-
-        /* Features Hero Section */
-        .features-hero {
-            background-color: #f0f7ff;
-            padding: 6rem 0;
-            overflow: hidden;
-        }
-
-        .features-hero .container {
-            display: flex;
-            align-items: center;
-            gap: 4rem;
-        }
-
-        .features-hero-content {
-            flex: 1;
-            max-width: 600px;
-        }
-
-        .features-hero-content h1 {
-            font-size: 3.5rem;
-            line-height: 1.2;
-            margin-bottom: 1.5rem;
-            color: var(--text-color);
-        }
-
-        .features-hero-content p {
-            font-size: 1.2rem;
-            color: var(--light-text);
-            margin-bottom: 2rem;
-        }
-
-        .features-illustration {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .features-illustration img {
-            max-width: 100%;
-            height: auto;
-            animation: float 3s ease-in-out infinite;
-        }
-                /* HR Management Section */
-        .hr-management {
-            padding: 6rem 0;
-            background: var(--card-bg);
-        }
-
-        .section-header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .section-header h2 {
-            font-size: 2.5rem;
-            color: var(--text-color);
-            margin-bottom: 1rem;
-        }
-
-        .section-header p {
-            color: var(--light-text);
-            font-size: 1.1rem;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .features-cards {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2rem;
-            margin-top: 4rem;
-        }
-
-        .feature-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: var(--box-shadow);
-            transition: transform 0.3s ease;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .feature-icon {
-            width: 60px;
-            height: 60px;
-            background: #f0f7ff;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .feature-icon i {
-            font-size: 24px;
-            color: var(--primary-color);
-        }
-
-        .feature-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: var(--text-color);
-        }
-
-        .feature-card p {
-            color: var(--light-text);
-            margin-bottom: 1.5rem;
-            flex-grow: 1;
-        }
-
-        /* Learn More Link */
-        .learn-more {
-            color: var(--primary-color);
-            text-decoration: none;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: var(--transition);
-            margin-top: auto;
-        }
-
-        .learn-more:hover {
-            color: #3367d6;
-        }
-
-        .learn-more i {
-            transition: transform 0.3s ease;
-        }
-
-        .learn-more:hover i {
-            transform: translateX(5px);
-        }
-
-        /* Content Sections */
-        .analytics-section,
-        .integrations-section,
-        .customize-section,
-        .document-section,
-        .engagement-section,
-        .case-management,
-        .learning-management,
-        .performance-evaluation {
-            padding: 6rem 0;
-            background-color: var(--card-bg);
-        }
-
-        .content-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 4rem;
-        }
-
-        .content-wrapper.reverse {
-            flex-direction: row-reverse;
-        }
-
-        .text-content {
-            flex: 1;
-        }
-
-        .text-content h2 {
-            font-size: 2.5rem;
-            margin-bottom: 1.5rem;
-            color: var(--text-color);
-        }
-
-        .text-content p {
-            font-size: 1.1rem;
-            color: var(--light-text);
-            margin-bottom: 2rem;
-        }
-
-        .image-content {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .image-content img {
-            max-width: 100%;
-            height: auto;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-        }
-
-        /* Dashboard Preview */
-        .dashboard-preview {
-            position: relative;
-            padding: 20px;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: var(--box-shadow);
-            margin-top: 3rem;
-        }
-
-        .dashboard-preview::before {
-            content: '';
-            position: absolute;
-            top: 10px;
-            left: 20px;
-            width: 12px;
-            height: 12px;
-            background: #ff6b6b;
-            border-radius: 50%;
-            box-shadow: 20px 0 0 #ffd93d, 40px 0 0 #6bff6b;
-        }
-
-        .dashboard-preview img {
-            width: 100%;
-            height: auto;
-            border-radius: 8px;
-            display: block;
-            margin-top: 1.5rem;
-        }
-
-        /* Feature Split Layout */
-        .feature-split {
-            display: flex;
-            align-items: center;
-            gap: 4rem;
-            margin-top: 3rem;
-        }
-
-        .feature-info {
-            flex: 1;
-        }
-
-        .feature-item {
-            padding: 2rem;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: var(--box-shadow);
-        }
-
-        .feature-item i {
-            font-size: 2rem;
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-        }
-
-        .feature-item h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            color: var(--text-color);
-        }
-                /* Responsive Styles */
-        @media (max-width: 1024px) {
-            .content-wrapper,
-            .content-wrapper.reverse,
-            .feature-split {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .text-content,
-            .feature-info {
-                max-width: 100%;
-            }
-
-            .features-cards {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .feature-item {
-                margin-bottom: 2rem;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .features-hero .container {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .features-hero-content h1 {
-                font-size: 2.5rem;
-            }
-
-            .features-cards {
-                grid-template-columns: 1fr;
-            }
-
-            .text-content h2 {
-                font-size: 2rem;
-            }
-
-            section {
-                padding: 4rem 0;
-            }
-
-            .dashboard-preview {
-                margin-top: 2rem;
-                padding: 15px;
-            }
-
-            .btn.primary {
-                width: 100%;
-                text-align: center;
-            }
-
-            .feature-split {
-                flex-direction: column;
-            }
-        }
-         /* Footer */
-        footer {
-            background: #2d3436;
-            color: #fff;
-            padding: 6rem 0 2rem;
-        }
-
-        .footer-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 4rem;
-            margin-bottom: 4rem;
-        }
-
-        .footer-section h4 {
-            margin-bottom: 1.5rem;
-            font-size: 1.2rem;
-        }
-
-        .footer-section ul {
-            list-style: none;
-        }
-
-        .footer-section ul li {
-            margin-bottom: 0.8rem;
-        }
-
-        .footer-section ul li a {
-            color: #a0a0a0;
-            text-decoration: none;
-            transition: var(--transition);
-        }
-
-        .footer-section ul li a:hover {
-            color: #fff;
-        }
-
-        .footer-bottom {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 2rem;
-            text-align: center;
-        }
-
-
-        /* Animations */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-            100% { transform: translateY(0px); }
-        }
-
-        .animate {
-            animation: fadeIn 0.6s ease forwards;
-        }
-
-        /* Alternating Backgrounds */
-        section:nth-child(even) {
-            background-color: var(--background-color);
-        }
-    </style>
-</head>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+/* Root Variables - Same as stockflow.html */
+:root {
+    --primary-color: #2962ff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --background-color: #f8f9fa;
+    --text-color: #333;
+    --light-text: #6c757d;
+    --border-radius: 8px;
+    --transition: all 0.3s ease;
+    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --gradient: linear-gradient(135deg, #f0f7ff 0%, #e9ecef 100%);
+    --card-bg: #ffffff;
+    --mobile-padding: 1rem;
+    --section-spacing: 4rem;
+    --header-height: 70px;
+}
+
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    padding-top: var(--header-height);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--mobile-padding);
+    width: 100%;
+}
+
+/* Features Hero Section */
+.features-hero {
+    background: var(--gradient);
+    padding: calc(var(--header-height) + 4rem) 0 6rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.features-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(41, 98, 255, 0.05), transparent);
+    pointer-events: none;
+}
+
+.hero-content {
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+}
+
+.hero-text h1 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    background: linear-gradient(45deg, #1a237e, #2962ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+    font-weight: 700;
+}
+
+.hero-text p {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: #455a64;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.features-overview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 4rem;
+}
+
+.overview-card {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.overview-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.overview-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.overview-icon i {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+}
+
+.overview-card h3 {
+    font-size: 1.25rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.overview-card p {
+    color: var(--light-text);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+    .features-overview {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .features-hero {
+        padding: 4rem 0;
+    }
+
+    .features-overview {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .overview-card {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-text h1 {
+        font-size: 2rem;
+    }
+
+    .hero-text p {
+        font-size: 1rem;
+    }
+}
+</style>
 <body>
-    <!-- Header Container -->
+    <!-- Header Container (Same as stockflow.html) -->
     <div id="header-container"></div>
 
     <!-- Main Content -->
-    <main>
+    <main class="features-main">
         <!-- Hero Section -->
         <section class="features-hero">
             <div class="container">
-                <div class="features-hero-content animate">
-                    <h1>Features, tailor-made for your people</h1>
-                    <p>HR involves numerous complex functions and processing. With Workwise Pro, you get a simple yet comprehensive and flexible system to manage all your HR processes so you can focus more on your people.</p>
-                    <div class="hero-cta">
-                        <a href="#" class="btn primary">GET STARTED</a>
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1>Comprehensive Business Solutions</h1>
+                        <p>Workwise Pro offers a comprehensive suite of features designed to streamline both Human Resources (HR) and Finance operations, ensuring seamless integration and efficient management across your organization.</p>
                     </div>
-                </div>
-                <div class="features-illustration">
-                    <img src="image/features-hero.jpg" alt="Features Illustration" class="animate">
-                </div>
-            </div>
-        </section>
-
-        <!-- HR Management Section -->
-        <section class="hr-management">
-            <div class="container">
-                <div class="section-header animate">
-                    <h2>Effortless HR management</h2>
-                    <p>Workwise Pro provides all the tools you need to help your HR staff and employees stay efficient, up-to-date, and productive, even on the go.</p>
-                </div>
-                <div class="features-cards">
-                    <div class="feature-card animate">
-                        <div class="feature-icon">
-                            <i class="fas fa-users"></i>
+                    <div class="features-overview">
+                        <div class="overview-card">
+                            <div class="overview-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h3>HR Management</h3>
+                            <p>Advanced tools for employee data management, performance tracking, and compliance.</p>
                         </div>
-                        <h3>Onboarding</h3>
-                        <p>Start a structured onboarding process for new recruits. Initiate onboarding procedures with a new hire portal, customizable workflows, checklists and status-view reports.</p>
-                        <a href="#" class="learn-more">Learn more <i class="fas fa-arrow-right"></i></a>
-                    </div>
-                    <div class="feature-card animate">
-                        <div class="feature-icon">
-                            <i class="fas fa-clock"></i>
+                        <div class="overview-card">
+                            <div class="overview-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h3>Finance Management</h3>
+                            <p>Comprehensive financial tools for bookkeeping, expenses, and global invoicing.</p>
                         </div>
-                        <h3>Attendance Tracker</h3>
-                        <p>Track employee attendance efficiently with our automated system. Monitor time-ins, time-outs, and work hours with ease.</p>
-                        <a href="#" class="learn-more">Learn more <i class="fas fa-arrow-right"></i></a>
-                    </div>
-                    <div class="feature-card animate">
-                        <div class="feature-icon">
-                            <i class="fas fa-calendar-alt"></i>
+                        <div class="overview-card">
+                            <div class="overview-icon">
+                                <i class="fas fa-cogs"></i>
+                            </div>
+                            <h3>Operations Management</h3>
+                            <p>Optimize day-to-day business activities with stock flow and shift management.</p>
                         </div>
-                        <h3>Leave Tracker</h3>
-                        <p>Manage employee leave requests and tracking in one place. Streamline approval processes and maintain accurate records.</p>
-                        <a href="#" class="learn-more">Learn more <i class="fas fa-arrow-right"></i></a>
-                    </div>
-                </div>
-            </div>
-        </section>
-                <!-- Data Management Section -->
-        <section class="data-management">
-            <div class="container">
-                <div class="section-header animate">
-                    <h2>Manage data efficiently</h2>
-                    <p>Streamline both your data collection and secure storage with our employee database management system. Set up your organization and maintain all your employee records in one central location.</p>
-                    <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
-                </div>
-                <div class="dashboard-preview animate">
-                    <img src="image/dashboard-preview.jpg" alt="Dashboard Preview">
-                </div>
-            </div>
-        </section>
-
-        <!-- Case Management Section -->
-        <section class="case-management">
-            <div class="container">
-                <div class="section-header animate">
-                    <h2>Case Management</h2>
-                    <p>Most HRs need a smoother mechanism through which all employees can contact HR. With Workwise Pro, employees can initiate queries, and HR can sort, track and resolve issues on time, all the time.</p>
-                    <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
-                </div>
-                <div class="dashboard-preview animate">
-                    <img src="image/case-management.jpg" alt="Case Management Interface" class="feature-screenshot">
-                </div>
-            </div>
-        </section>
-
-        <!-- Additional Sections -->
-        <section class="analytics-section">
-            <div class="container">
-                <div class="content-wrapper">
-                    <div class="text-content animate">
-                        <h2>Advanced Analytics</h2>
-                        <p>You can't improve what you don't measure. Gather meaningful insights about your workforce so you can identify bottlenecks and make informed decisions.</p>
-                        <a href="#" class="learn-more">Learn more <i class="fas fa-arrow-right"></i></a>
-                    </div>
-                    <div class="image-content">
-                        <img src="image/analytics-chart.webp" alt="Analytics Dashboard" class="animate">
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Integration Section -->
+        <!-- Detailed Features Section -->
+        <section class="detailed-features">
+            <div class="container">
+                <!-- HR Management -->
+                <div class="feature-block">
+                    <div class="feature-content">
+                        <div class="feature-header">
+                            <div class="feature-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h2>Human Resources Management</h2>
+                        </div>
+                        <p class="feature-description">Building upon our robust HR capabilities, Workwise Pro provides advanced tools for employee data management, performance tracking, and compliance, ensuring a cohesive and efficient HR environment.</p>
+                        <div class="feature-grid">
+                            <div class="feature-item">
+                                <i class="fas fa-user-circle"></i>
+                                <h4>Employee Data Management</h4>
+                                <p>Centralized employee information system with secure data storage and easy access.</p>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-chart-bar"></i>
+                                <h4>Performance Tracking</h4>
+                                <p>Comprehensive tools for monitoring and evaluating employee performance.</p>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-shield-alt"></i>
+                                <h4>Compliance Management</h4>
+                                <p>Ensure adherence to labor laws and regulatory requirements.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-image">
+                        <img src="image/hr-dashboard.png" alt="HR Management Dashboard" loading="lazy">
+                    </div>
+                </div>
+
+                <!-- Finance Management -->
+                <div class="feature-block reverse">
+                    <div class="feature-content">
+                        <div class="feature-header">
+                            <div class="feature-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h2>Finance Management</h2>
+                        </div>
+                        <p class="feature-description">Comprehensive financial management tools to enhance your organization's financial operations and maintain accurate records.</p>
+                        <div class="feature-grid">
+                            <div class="feature-item">
+                                <i class="fas fa-book"></i>
+                                <h4>Bookkeeping</h4>
+                                <p>Maintain accurate financial records with tools that manage general ledgers, track expenses, and oversee accounts.</p>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-receipt"></i>
+                                <h4>Expense Management</h4>
+                                <p>Automate expense reporting and reimbursement processes with digital submission and approval workflows.</p>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-globe"></i>
+                                <h4>Global Invoicing</h4>
+                                <p>Generate and manage invoices across multiple currencies and languages for international operations.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-image">
+                        <img src="image/finance-dashboard.png" alt="Finance Management Dashboard" loading="lazy">
+                    </div>
+                </div>
+
+                <!-- Operations Management -->
+                <div class="feature-block">
+                    <div class="feature-content">
+                        <div class="feature-header">
+                            <div class="feature-icon">
+                                <i class="fas fa-cogs"></i>
+                            </div>
+                            <h2>Operations Management</h2>
+                        </div>
+                        <p class="feature-description">Optimize your day-to-day business activities with comprehensive operations management tools.</p>
+                        <div class="feature-grid">
+                            <div class="feature-item">
+                                <i class="fas fa-boxes"></i>
+                                <h4>Stock Flow Management</h4>
+                                <p>Monitor and control inventory levels in real-time across various locations.</p>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <h4>Shift Management</h4>
+                                <p>Create, assign, and oversee employee shifts with ease and efficiency.</p>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-tasks"></i>
+                                <h4>Task Management</h4>
+                                <p>Streamline task assignment and tracking for improved productivity.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="feature-image">
+                        <img src="image/operations-dashboard.png" alt="Operations Management Dashboard" loading="lazy">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+<style>
+/* Detailed Features Section Styles */
+.detailed-features {
+    padding: 6rem 0;
+    background: white;
+}
+
+.feature-block {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    margin-bottom: 6rem;
+    padding: 2rem;
+    background: var(--gradient);
+    border-radius: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-block.reverse {
+    grid-template-columns: 1fr 1fr;
+    direction: rtl;
+}
+
+.feature-block.reverse .feature-content {
+    direction: ltr;
+}
+
+.feature-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.feature-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.feature-icon i {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+}
+
+.feature-header h2 {
+    font-size: 2rem;
+    color: #1a237e;
+    margin: 0;
+}
+
+.feature-description {
+    font-size: 1.1rem;
+    color: var(--light-text);
+    margin-bottom: 2.5rem;
+    line-height: 1.8;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.feature-item {
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+}
+
+.feature-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.feature-item i {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.feature-item h4 {
+    font-size: 1.25rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.feature-item p {
+    color: var(--light-text);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.feature-image {
+    position: relative;
+}
+
+.feature-image img {
+    width: 100%;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    transition: var(--transition);
+}
+
+.feature-image img:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .feature-block {
+        gap: 3rem;
+        padding: 1.5rem;
+    }
+
+    .feature-header h2 {
+        font-size: 1.75rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .feature-block,
+    .feature-block.reverse {
+        grid-template-columns: 1fr;
+        direction: ltr;
+    }
+
+    .feature-image {
+        order: -1;
+    }
+
+    .feature-image img {
+        max-width: 80%;
+        margin: 0 auto;
+        display: block;
+    }
+}
+
+@media (max-width: 768px) {
+    .detailed-features {
+        padding: 4rem 0;
+    }
+
+    .feature-block {
+        margin-bottom: 4rem;
+        padding: 1rem;
+    }
+
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .feature-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .feature-description {
+        text-align: center;
+    }
+
+    .feature-image img {
+        max-width: 90%;
+    }
+}
+
+@media (max-width: 480px) {
+    .feature-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .feature-description {
+        font-size: 1rem;
+    }
+
+    .feature-item {
+        padding: 1.5rem;
+    }
+}
+</style>
+        <!-- Integrations Section -->
         <section class="integrations-section">
             <div class="container">
-                <div class="content-wrapper reverse">
-                    <div class="text-content animate">
-                        <h2>Seamless Integrations</h2>
-                        <p>Workwise Pro integrates cleanly with several Zoho and third-party applications. So why shift between multiple apps when your systems can do the talking?</p>
-                        <a href="#" class="learn-more">Learn more <i class="fas fa-arrow-right"></i></a>
+                <div class="section-header">
+                    <h2>Powerful Integrations</h2>
+                    <p>Seamlessly connect with your favorite business tools and platforms</p>
+                </div>
+
+                <div class="integrations-grid">
+                    <!-- ServiceNow Integration -->
+                    <div class="integration-card">
+                        <div class="integration-icon">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <h3>ServiceNow Integration</h3>
+                        <p>Streamline IT service management and automate workflows between HR and IT departments.</p>
+                        <ul class="integration-features">
+                            <li>Automated ticket creation</li>
+                            <li>Workflow synchronization</li>
+                            <li>Real-time status updates</li>
+                        </ul>
+                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
                     </div>
-                    <div class="image-content">
-                        <img src="image/integrations.webp" alt="Seamless Integrations" class="animate">
+
+                    <!-- Payroll Integration -->
+                    <div class="integration-card">
+                        <div class="integration-icon">
+                            <i class="fas fa-money-check-alt"></i>
+                        </div>
+                        <h3>Payroll Integration</h3>
+                        <p>Connect with leading payroll systems to ensure accurate and timely compensation.</p>
+                        <ul class="integration-features">
+                            <li>Automated payroll processing</li>
+                            <li>Tax compliance</li>
+                            <li>Benefits management</li>
+                        </ul>
+                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+                    </div>
+
+                    <!-- Accounting Systems -->
+                    <div class="integration-card">
+                        <div class="integration-icon">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <h3>Accounting Systems</h3>
+                        <p>Sync with popular accounting software for comprehensive financial oversight.</p>
+                        <ul class="integration-features">
+                            <li>Real-time data synchronization</li>
+                            <li>Automated reconciliation</li>
+                            <li>Financial reporting</li>
+                        </ul>
+                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+
+                <div class="integration-platforms">
+                    <h3>Works With Your Favorite Platforms</h3>
+                    <div class="platform-logos">
+                        <img src="image/platforms/servicenow.svg" alt="ServiceNow">
+                        <img src="image/platforms/gridlex.svg" alt="Gridlex">
+                        <img src="image/platforms/pockethrms.svg" alt="Pocket HRMS">
+                        <img src="image/platforms/quickbooks.svg" alt="QuickBooks">
+                        <img src="image/platforms/xero.svg" alt="Xero">
                     </div>
                 </div>
             </div>
         </section>
+
+        <!-- Call to Action Section -->
+        <section class="cta-section">
+            <div class="container">
+                <div class="cta-content">
+                    <h2>Ready to Transform Your Business Operations?</h2>
+                    <p>Join thousands of organizations using Workwise Pro to streamline their HR, Finance, and Operations</p>
+                    <div class="cta-buttons">
+                        <button class="btn primary">Start Free Trial</button>
+                        <button class="btn secondary">Schedule Demo</button>
+                    </div>
+                    <div class="cta-features">
+                        <div class="cta-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>30-day free trial</span>
+                        </div>
+                        <div class="cta-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>No credit card required</span>
+                        </div>
+                        <div class="cta-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Free implementation support</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+<style>
+/* Integrations Section Styles */
+.integrations-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+    overflow: hidden;
+}
+
+.integrations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.integration-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    border: 1px solid rgba(41, 98, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.integration-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: left;
+}
+
+.integration-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.integration-card:hover::before {
+    transform: scaleX(1);
+}
+
+.integration-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.integration-icon i {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+}
+
+.integration-card h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.integration-card p {
+    color: var(--light-text);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.integration-features {
+    list-style: none;
+    margin: 1.5rem 0;
+}
+
+.integration-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+.integration-features li::before {
+    content: '✓';
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.learn-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    margin-top: 1rem;
+    transition: gap 0.3s ease;
+}
+
+.learn-more:hover {
+    gap: 0.75rem;
+}
+
+.integration-platforms {
+    margin-top: 4rem;
+    text-align: center;
+}
+
+.integration-platforms h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 2rem;
+}
+
+.platform-logos {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 3rem;
+    flex-wrap: wrap;
+}
+
+.platform-logos img {
+    height: 40px;
+    width: auto;
+    opacity: 0.7;
+    transition: var(--transition);
+    filter: grayscale(100%);
+}
+
+.platform-logos img:hover {
+    opacity: 1;
+    filter: grayscale(0%);
+    transform: translateY(-5px);
+}
+
+/* Enhanced CTA Section Styles */
+.cta-section {
+    padding: 6rem 0;
+    background: white;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-content {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.cta-content h2 {
+    font-size: clamp(2rem, 4vw, 2.5rem);
+    background: linear-gradient(45deg, #1a237e, #2962ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.5rem;
+}
+
+.cta-content p {
+    font-size: 1.25rem;
+    color: var(--light-text);
+    margin-bottom: 2rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+    .integrations-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .platform-logos {
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .integrations-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .integration-card {
+        padding: 2rem;
+    }
+
+    .platform-logos img {
+        height: 30px;
+    }
+}
+
+@media (max-width: 480px) {
+    .integration-card {
+        padding: 1.5rem;
+    }
+
+    .platform-logos {
+        gap: 1.5rem;
+    }
+}
+</style>
+        <!-- Footer -->
+        <footer class="main-footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-grid">
+                        <div class="footer-section brand-section">
+                            <div class="footer-logo">
+                                <img src="path/to/logo-white.png" alt="Workwise Pro Logo">
+                            </div>
+                            <p class="footer-description">
+                                Transform your business operations with our comprehensive HR, Finance, and Operations management solutions.
+                            </p>
+                            <div class="social-links">
+                                <a href="#" aria-label="LinkedIn">
+                                    <i class="fab fa-linkedin"></i>
+                                </a>
+                                <a href="#" aria-label="Twitter">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                                <a href="#" aria-label="Facebook">
+                                    <i class="fab fa-facebook"></i>
+                                </a>
+                                <a href="#" aria-label="Instagram">
+                                    <i class="fab fa-instagram"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="footer-section">
+                            <h4>Solutions</h4>
+                            <ul>
+                                <li><a href="#">HR Management</a></li>
+                                <li><a href="#">Finance Management</a></li>
+                                <li><a href="#">Operations Management</a></li>
+                                <li><a href="#">Integrations</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="footer-section">
+                            <h4>Company</h4>
+                            <ul>
+                                <li><a href="#">About Us</a></li>
+                                <li><a href="#">Careers</a></li>
+                                <li><a href="#">Press</a></li>
+                                <li><a href="#">Contact</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="footer-section">
+                            <h4>Resources</h4>
+                            <ul>
+                                <li><a href="#">Documentation</a></li>
+                                <li><a href="#">API Reference</a></li>
+                                <li><a href="#">Blog</a></li>
+                                <li><a href="#">Help Center</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="footer-section">
+                            <h4>Legal</h4>
+                            <ul>
+                                <li><a href="#">Privacy Policy</a></li>
+                                <li><a href="#">Terms of Service</a></li>
+                                <li><a href="#">Security</a></li>
+                                <li><a href="#">Compliance</a></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="footer-bottom">
+                        <div class="footer-info">
+                            <p>&copy; 2024 Workwise Pro. All rights reserved.</p>
+                        </div>
+                        <div class="footer-badges">
+                            <img src="path/to/security-badge.png" alt="Security Certified">
+                            <img src="path/to/gdpr-badge.png" alt="GDPR Compliant">
+                            <img src="path/to/iso-badge.png" alt="ISO 27001">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
     </main>
 
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-section">
-                    <h4>Product</h4>
-                    <ul>
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="#pricing">Pricing</a></li>
-                        <li><a href="#integrations">Integrations</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Developers</h4>
-                    <ul>
-                        <li><a href="#api-docs">API Documentation</a></li>
-                        <li><a href="#sdk">SDKs & Tools</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Company</h4>
-                    <ul>
-                        <li><a href="#about">About Us</a></li>
-                        <li><a href="#careers">Careers</a></li>
-                        <li><a href="#contact">Contact</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2023 Workwise Pro. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
+<script>
+// Initialize all functionality when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAll();
+    loadHeader();
+});
 
-    <script>
-        // Component Loading Function
-        async function loadHeader() {
-            try {
-                const response = await fetch('mainheader.html');
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const html = await response.text();
-                
-                document.getElementById('header-container').innerHTML = html;
-                
-                // Initialize any header-specific functionality after loading
-                const headerScripts = document.getElementById('header-container')
-                    .getElementsByTagName('script');
-                
-                Array.from(headerScripts).forEach(script => {
-                    const newScript = document.createElement('script');
-                    Array.from(script.attributes).forEach(attr => {
-                        newScript.setAttribute(attr.name, attr.value);
-                    });
-                    newScript.textContent = script.textContent;
-                    document.body.appendChild(newScript);
-                });
-            } catch (error) {
-                console.error('Error loading header:', error);
-                document.getElementById('header-container').innerHTML = `
-                    <div style="text-align: center; padding: 1rem; background: #f8d7da; color: #721c24;">
-                        Error loading header. Please refresh the page.
-                    </div>
-                `;
+// Header Loading Function
+async function loadHeader() {
+    const headerContainer = document.getElementById('header-container');
+    
+    try {
+        const response = await fetch('header.html');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const html = await response.text();
+        headerContainer.innerHTML = html;
+
+        // Initialize mobile menu functionality after header loads
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mainNav = document.getElementById('main-nav');
+        const menuOverlay = document.getElementById('menu-overlay');
+        const megaMenus = document.querySelectorAll('.mega-menu');
+
+        if (mobileMenu && mainNav) {
+            let isMenuOpen = false;
+
+            function toggleMenu(show) {
+                isMenuOpen = show;
+                mobileMenu.classList.toggle('active', show);
+                mainNav.classList.toggle('active', show);
+                menuOverlay.classList.toggle('active', show);
+                document.body.style.overflow = show ? 'hidden' : '';
+
+                if (!show) {
+                    megaMenus.forEach(menu => menu.classList.remove('active'));
+                }
             }
-        }
 
-        // Intersection Observer for Animations
-        function initializeAnimations() {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('animate');
-                        observer.unobserve(entry.target);
+            mobileMenu.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMenu(!isMenuOpen);
+            });
+
+            // Handle mega menus on mobile
+            megaMenus.forEach(menu => {
+                const link = menu.querySelector('a');
+                link.addEventListener('click', (e) => {
+                    if (window.innerWidth <= 768) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        megaMenus.forEach(m => {
+                            if (m !== menu) m.classList.remove('active');
+                        });
+                        menu.classList.toggle('active');
                     }
                 });
-            }, {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
             });
 
-            document.querySelectorAll('.animate').forEach(element => {
-                observer.observe(element);
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
+                    toggleMenu(false);
+                }
             });
         }
+    } catch (error) {
+        console.error('Error loading header:', error);
+        headerContainer.innerHTML = `
+            <header class="main-header">
+                <div class="container">
+                    <a href="/" class="logo">
+                        <h1>Workwise Pro</h1>
+                    </a>
+                </div>
+            </header>
+        `;
+    }
+}
 
-        // Initialize everything when DOM is ready
-        document.addEventListener('DOMContentLoaded', function() {
-            loadHeader();
-            initializeAnimations();
+// Main initialization function
+function initializeAll() {
+    initializeAnimations();
+    handleScrollEffects();
+    setupInteractions();
+}
+
+// Animation Handler
+function initializeAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+            }
         });
+    }, observerOptions);
 
-        // Handle loading states
-        window.addEventListener('load', function() {
-            document.body.classList.add('loaded');
+    // Observe all animatable elements
+    document.querySelectorAll('.feature-block, .integration-card, .overview-card')
+        .forEach(el => observer.observe(el));
+}
+
+// Scroll Effects Handler
+function handleScrollEffects() {
+    let lastScroll = 0;
+    const header = document.querySelector('header');
+
+    window.addEventListener('scroll', () => {
+        const currentScroll = window.pageYOffset;
+        
+        if (currentScroll > lastScroll && currentScroll > 100) {
+            header.classList.add('header-hidden');
+        } else {
+            header.classList.remove('header-hidden');
+        }
+        
+        lastScroll = currentScroll;
+    });
+}
+
+// Interactive Elements Setup
+function setupInteractions() {
+    // Card Hover Effects
+    document.querySelectorAll('.feature-block, .integration-card, .overview-card').forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.classList.add('card-hover');
         });
+        
+        card.addEventListener('mouseleave', () => {
+            card.classList.remove('card-hover');
+        });
+    });
 
-        // Error handling
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            console.error('Error: ', msg, url, lineNo, columnNo, error);
-            return false;
-        };
-    </script>
+    // Smooth Scroll for Anchor Links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+}
+
+// Watson Assistant Chat Integration
+window.watsonAssistantChatOptions = {
+    integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
+    region: "au-syd",
+    serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
+    onLoad: async (instance) => { await instance.render(); }
+};
+
+setTimeout(function(){
+    const t = document.createElement('script');
+    t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
+        (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
+        "/WatsonAssistantChatEntry.js";
+    document.head.appendChild(t);
+});
+</script>
 </body>
 </html>
