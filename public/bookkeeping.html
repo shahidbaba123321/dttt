@@ -1896,19 +1896,243 @@ input:checked + .slider:before {
     }
 }
 </style>
-        <!-- Call to Action Section -->
+         <!-- Call to Action Section -->
         <section class="cta-section">
             <div class="container">
                 <div class="cta-content">
                     <h2>Ready to Streamline Your Bookkeeping?</h2>
-                    <p>Join thousands of businesses managing their books with us</p>
+                    <p>Streamline your financial operations with our comprehensive bookkeeping solution designed for global businesses. with Workwise Pro</p>
                     <div class="cta-buttons">
                         <button class="btn primary">Start Free Trial</button>
                         <button class="btn secondary">Schedule Demo</button>
                     </div>
+                    <div class="cta-features">
+                        <div class="cta-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>14-day free trial</span>
+                        </div>
+                        <div class="cta-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>No credit card required</span>
+                        </div>
+                        <div class="cta-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Free onboarding support</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
+        <style>
+    /* Enhanced CTA Section Styles */
+.cta-section {
+    padding: 8rem 0;
+    background: var(--gradient);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+.cta-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('path/to/pattern.svg');
+    opacity: 0.05;
+    pointer-events: none;
+}
+
+.cta-content {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+    padding: 0 1.5rem;
+}
+
+.cta-content h2 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    background: linear-gradient(45deg, #1a237e, #2962ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+    font-weight: 700;
+}
+
+.cta-content p {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: #455a64;
+    margin-bottom: 2.5rem;
+    opacity: 0.9;
+    line-height: 1.6;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 3rem;
+}
+
+.cta-buttons .btn {
+    min-width: 200px;
+    padding: 1.25rem 2.5rem;
+    font-size: 1.1rem;
+}
+
+.cta-buttons .btn.primary {
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    box-shadow: 0 8px 25px rgba(41, 98, 255, 0.25);
+}
+
+.cta-buttons .btn.secondary {
+    border: 2px solid var(--primary-color);
+}
+
+.cta-buttons .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(41, 98, 255, 0.3);
+}
+
+.cta-features {
+    display: flex;
+    gap: 3rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cta-feature {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-color);
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.cta-feature:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.cta-feature i {
+    color: var(--primary-color);
+    font-size: 1.25rem;
+    background: rgba(41, 98, 255, 0.1);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+
+
+/* Responsive Styles for CTA */
+@media (max-width: 768px) {
+    .cta-section {
+        padding: 6rem 0;
+    }
+
+    .cta-content h2 {
+        font-size: 2rem;
+    }
+
+    .cta-content p {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .cta-buttons {
+        flex-direction: column;
+        gap: 1rem;
+        max-width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 2rem;
+    }
+
+    .cta-buttons .btn {
+        width: 100%;
+        min-width: auto;
+        padding: 1rem 2rem;
+    }
+
+    .cta-features {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .cta-feature {
+        width: 100%;
+        max-width: 300px;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .cta-section {
+        padding: 4rem 0;
+    }
+
+    .cta-content h2 {
+        font-size: 1.75rem;
+    }
+
+    .cta-feature {
+        font-size: 0.95rem;
+    }
+}
+
+/* Animation for CTA Section */
+.cta-content {
+    opacity: 0;
+    transform: translateY(30px);
+    animation: ctaFadeIn 0.8s ease forwards;
+}
+
+.cta-feature {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: ctaFeatureFadeIn 0.6s ease forwards;
+}
+
+.cta-feature:nth-child(1) { animation-delay: 0.3s; }
+.cta-feature:nth-child(2) { animation-delay: 0.5s; }
+.cta-feature:nth-child(3) { animation-delay: 0.7s; }
+
+@keyframes ctaFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes ctaFeatureFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
     </main>
 
     <!-- Footer (Same as pms.html) -->
