@@ -215,6 +215,200 @@ body {
     color: var(--light-text);
     font-size: 0.9rem;
 }
+
+        /* Enhanced Security Section Styles */
+.security-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+.security-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('path/to/security-pattern.svg');
+    opacity: 0.05;
+    pointer-events: none;
+}
+
+.security-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2.5rem;
+    margin-top: 3rem;
+}
+
+.security-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+}
+
+.security-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: left;
+}
+
+.security-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+}
+
+.security-card:hover::before {
+    transform: scaleX(1);
+}
+
+.security-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.security-card:hover .security-icon {
+    transform: scale(1.1);
+    background: var(--primary-color);
+}
+
+.security-icon i {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+    transition: all 0.3s ease;
+}
+
+.security-card:hover .security-icon i {
+    color: white;
+}
+
+.security-content h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.security-features {
+    list-style: none;
+    margin-bottom: 2rem;
+}
+
+.security-features li {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.security-features li:hover {
+    background: rgba(41, 98, 255, 0.05);
+    transform: translateX(5px);
+}
+
+.security-features li i {
+    color: var(--primary-color);
+    font-size: 1.25rem;
+    margin-top: 0.25rem;
+}
+
+.feature-info h4 {
+    font-size: 1.1rem;
+    color: #1a237e;
+    margin-bottom: 0.25rem;
+}
+
+.feature-info p {
+    color: var(--light-text);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.security-badge-container,
+.compliance-badges {
+    margin-top: 2rem;
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.security-badge,
+.compliance-badge {
+    height: 60px;
+    width: auto;
+    transition: all 0.3s ease;
+}
+
+.security-badge:hover,
+.compliance-badge:hover {
+    transform: scale(1.1);
+}
+
+.badge-tooltip {
+    position: absolute;
+    background: #1a237e;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.security-badge:hover + .badge-tooltip {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.security-learn-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    margin-top: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.security-learn-more:hover {
+    gap: 1rem;
+}
+
+.security-learn-more i {
+    transition: transform 0.3s ease;
+}
+
+.security-learn-more:hover i {
+    transform: translateX(5px);
+}
         /* Feature Cards */
 .feature-grid {
     display: grid;
@@ -1013,6 +1207,9 @@ input:checked + .slider:before {
         grid-template-columns: 1fr;
         padding: 2rem;
     }
+    .security-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
 }
 
 @media (max-width: 768px) {
@@ -1036,6 +1233,13 @@ input:checked + .slider:before {
     .workflow-info ul li,
     .api-info ul li {
         font-size: 1rem;
+    }
+    .security-card {
+        padding: 2rem;
+    }
+
+    .security-features li {
+        padding: 0.75rem;
     }
 }
 
@@ -1061,6 +1265,28 @@ input:checked + .slider:before {
 
     .learn-more {
         justify-content: center;
+    }
+    .security-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .security-card {
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .security-icon {
+        margin: 0 auto 1.5rem;
+    }
+
+    .security-features li {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .feature-info {
+        text-align: center;
     }
 } 
 
@@ -1596,54 +1822,128 @@ input:checked + .slider:before {
 </section>
 
         <!-- Security Section -->
-        <section class="security-section">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Enterprise-Grade Security</h2>
-                    <p>Your data security and compliance is our top priority</p>
+        <!-- Enterprise Security Section -->
+<section class="security-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Enterprise-Grade Security</h2>
+            <p>Your data security and compliance is our top priority</p>
+        </div>
+
+        <div class="security-grid">
+            <!-- Data Protection Card -->
+            <div class="security-card">
+                <div class="security-icon">
+                    <i class="fas fa-shield-alt"></i>
                 </div>
-                <div class="security-grid">
-                    <div class="security-card">
-                        <div class="security-icon">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                        <h3>Data Protection</h3>
-                        <ul class="security-features">
-                            <li><i class="fas fa-check"></i>End-to-end encryption (AES-256)</li>
-                            <li><i class="fas fa-check"></i>Regular security audits</li>
-                            <li><i class="fas fa-check"></i>Automated backups</li>
-                        </ul>
+                <div class="security-content">
+                    <h3>Data Protection</h3>
+                    <ul class="security-features">
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div class="feature-info">
+                                <h4>End-to-end Encryption</h4>
+                                <p>AES-256 encryption for all data in transit and at rest</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div class="feature-info">
+                                <h4>Regular Security Audits</h4>
+                                <p>Continuous monitoring and periodic security assessments</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div class="feature-info">
+                                <h4>Automated Backups</h4>
+                                <p>Redundant data storage with point-in-time recovery</p>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="security-badge-container">
                         <img src="path/to/security-cert.png" alt="Security Certification" class="security-badge">
-                    </div>
-                    <div class="security-card">
-                        <div class="security-icon">
-                            <i class="fas fa-lock"></i>
-                        </div>
-                        <h3>Compliance</h3>
-                        <ul class="security-features">
-                            <li><i class="fas fa-check"></i>GDPR compliant</li>
-                            <li><i class="fas fa-check"></i>ISO 27001 certified</li>
-                            <li><i class="fas fa-check"></i>SOC 2 Type II</li>
-                        </ul>
-                        <div class="compliance-badges">
-                            <img src="path/to/gdpr-badge.png" alt="GDPR Badge">
-                            <img src="path/to/iso-badge.png" alt="ISO Badge">
-                        </div>
-                    </div>
-                    <div class="security-card">
-                        <div class="security-icon">
-                            <i class="fas fa-user-shield"></i>
-                        </div>
-                        <h3>Access Control</h3>
-                        <ul class="security-features">
-                            <li><i class="fas fa-check"></i>Role-based access</li>
-                            <li><i class="fas fa-check"></i>Multi-factor authentication</li>
-                            <li><i class="fas fa-check"></i>Audit logging</li>
-                        </ul>
+                        <span class="badge-tooltip">ISO 27001 Certified</span>
                     </div>
                 </div>
             </div>
-        </section>
+
+            <!-- Compliance Card -->
+            <div class="security-card">
+                <div class="security-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="security-content">
+                    <h3>Compliance</h3>
+                    <ul class="security-features">
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div class="feature-info">
+                                <h4>GDPR Compliant</h4>
+                                <p>Full compliance with EU data protection regulations</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div class="feature-info">
+                                <h4>ISO 27001 Certified</h4>
+                                <p>International standard for information security</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div class="feature-info">
+                                <h4>SOC 2 Type II</h4>
+                                <p>Verified security controls and procedures</p>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="compliance-badges">
+                        <img src="path/to/gdpr-badge.png" alt="GDPR Badge" class="compliance-badge">
+                        <img src="path/to/iso-badge.png" alt="ISO Badge" class="compliance-badge">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Access Control Card -->
+            <div class="security-card">
+                <div class="security-icon">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <div class="security-content">
+                    <h3>Access Control</h3>
+                    <ul class="security-features">
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div class="feature-info">
+                                <h4>Role-based Access</h4>
+                                <p>Granular permission controls for user access</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div class="feature-info">
+                                <h4>Multi-factor Authentication</h4>
+                                <p>Additional security layer for account access</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <div class="feature-info">
+                                <h4>Audit Logging</h4>
+                                <p>Detailed activity tracking and monitoring</p>
+                            </div>
+                        </li>
+                    </ul>
+                    <a href="#" class="security-learn-more">
+                        Learn More About Security
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
                 <!-- Pricing Section -->
         <section class="pricing-section">
             <div class="container">
