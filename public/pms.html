@@ -592,6 +592,7 @@
                         </div>
                     </div>
                     <div class="analytics-preview animate" data-animation="fade-left">
+                        <div class="preview-wrapper">
                         <img 
                             src="image/analytics-dashboard.webp" 
                             alt="Analytics Dashboard"
@@ -599,6 +600,7 @@
                             width="600"
                             height="400"
                         >
+                        </div>
                         <div class="live-metrics">
                             <div class="metric-card">
                                 <span class="metric-label">Performance Score</span>
@@ -774,12 +776,51 @@
     gap: 0.5rem;
     font-size: 0.9rem;
 }
+    .analytics-preview {
+    flex: 1;
+    position: relative;
+    width: 100%;
+}
+
+.analytics-preview img {
+    width: 100%;
+    height: auto;
+    max-width: 600px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin: 0 auto;
+    display: block;
+}
 
 /* Enhanced Mobile Responsiveness */
 @media (max-width: 768px) {
     .features-grid {
         grid-template-columns: 1fr;
         gap: 1.5rem;
+        padding: 0 1rem;
+    }
+     .analytics-preview {
+        order: 1;
+        margin: 0 -1rem; /* Compensate for container padding */
+        width: calc(100% + 2rem);
+    }
+
+    .analytics-preview img {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        border-radius: 0; /* Optional: remove border radius on mobile */
+        margin: 0;
+    }
+
+    .analytics-showcase {
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .analytics-features {
+        order: 2;
+        width: 100%;
         padding: 0 1rem;
     }
 
@@ -811,6 +852,26 @@
 
     .analytics-card {
         width: 100%;
+    }
+
+}
+    /* Additional optimization for smaller screens */
+@media (max-width: 480px) {
+    .analytics-preview {
+        margin: 0 -1rem;
+    }
+
+    .analytics-preview img {
+        aspect-ratio: 16/9;
+        object-fit: cover;
+    }
+}
+
+/* Ensure proper scaling on medium-sized devices */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .analytics-preview img {
+        max-width: 100%;
+        height: auto;
     }
 }
 </style>
