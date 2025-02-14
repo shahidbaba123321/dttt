@@ -1157,7 +1157,310 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
         </section>
+<style>
+    /* Enhanced Integration Section Styles */
+.integration-section {
+    padding: 6rem 0;
+    background: white;
+    position: relative;
+}
 
+.integration-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(41, 98, 255, 0.03), transparent);
+    pointer-events: none;
+}
+
+.integration-container {
+    margin-top: 3rem;
+}
+
+.integration-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2.5rem;
+    margin-bottom: 4rem;
+}
+
+.integration-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.integration-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: left;
+}
+
+.integration-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-color);
+}
+
+.integration-card:hover::before {
+    transform: scaleX(1);
+}
+
+.integration-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.integration-card:hover .integration-icon {
+    background: var(--primary-color);
+}
+
+.integration-card:hover .integration-icon i {
+    color: white;
+}
+
+.integration-icon i {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+    transition: all 0.3s ease;
+}
+
+.integration-card h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.integration-partners {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+    padding: 1.5rem 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.integration-partners img {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+    filter: grayscale(100%);
+}
+
+.integration-card:hover .integration-partners img {
+    opacity: 1;
+    filter: grayscale(0%);
+}
+
+.integration-features {
+    list-style: none;
+    margin-top: 1.5rem;
+}
+
+.integration-features li {
+    padding: 0.75rem 0;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.integration-features li::before {
+    content: '✓';
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.integration-features li:hover {
+    transform: translateX(5px);
+    color: var(--primary-color);
+}
+
+/* API Section Styles */
+.api-section {
+    background: var(--gradient);
+    padding: 3.5rem;
+    border-radius: 24px;
+    margin-top: 4rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(41, 98, 255, 0.1);
+}
+
+.api-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('path/to/pattern.svg');
+    opacity: 0.05;
+    pointer-events: none;
+}
+
+.api-content {
+    position: relative;
+    z-index: 1;
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.api-content h3 {
+    font-size: 2rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.api-content p {
+    font-size: 1.1rem;
+    color: var(--light-text);
+    margin-bottom: 2rem;
+}
+
+.api-features {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin: 2.5rem 0;
+}
+
+.api-features li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 16px;
+    min-width: 200px;
+    transition: all 0.3s ease;
+}
+
+.api-features li:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.api-features i {
+    font-size: 2rem;
+    color: var(--primary-color);
+}
+
+.api-features span {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.api-content .btn {
+    margin-top: 2rem;
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .integration-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .api-section {
+        padding: 2.5rem;
+    }
+
+    .api-features {
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .api-features li {
+        min-width: 150px;
+        flex: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .integration-card {
+        padding: 2rem;
+    }
+
+    .integration-partners {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .api-features {
+        flex-direction: column;
+    }
+
+    .api-features li {
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .integration-card {
+        padding: 1.5rem;
+    }
+
+    .integration-icon {
+        margin: 0 auto 1.5rem;
+    }
+
+    .integration-card h3 {
+        text-align: center;
+    }
+
+    .integration-features li {
+        justify-content: center;
+    }
+
+    .api-section {
+        padding: 2rem 1.5rem;
+    }
+
+    .api-content h3 {
+        font-size: 1.5rem;
+    }
+
+    .api-content p {
+        font-size: 1rem;
+    }
+}
+    </style>
         <!-- Pricing Section -->
         <section class="pricing-section">
             <div class="container">
