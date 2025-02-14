@@ -1951,18 +1951,6 @@ function initializeMobileMenu() {
     });
 }
 
-// Add this to your existing DOMContentLoaded event
-document.addEventListener('DOMContentLoaded', async function() {
-    try {
-        await loadHeader();
-        initializeMobileMenu(); // Make sure this is called after header loads
-        // ... rest of your initialization code
-    } catch (error) {
-        console.error('Initialization error:', error);
-        handleError(error);
-    }
-});
-}
 
 // Ensure Mobile Menu Visibility
 function ensureMobileMenuVisibility() {
