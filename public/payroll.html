@@ -1609,24 +1609,61 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 /* Pricing Section Styles */
+/* Enhanced Pricing Section Styles */
 .pricing-section {
     padding: 6rem 0;
     background: var(--gradient);
+    position: relative;
+}
+
+.pricing-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('path/to/pattern.svg');
+    opacity: 0.05;
+    pointer-events: none;
 }
 
 .pricing-toggle {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 1rem;
+    gap: 1.5rem;
     margin: 3rem 0;
+    padding: 1rem;
+    background: white;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
 }
 
+.pricing-toggle span {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.discount {
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Enhanced Switch Styles */
 .switch {
     position: relative;
     display: inline-block;
     width: 60px;
-    height: 34px;
+    height: 32px;
+    margin: 0 0.5rem;
 }
 
 .switch input {
@@ -1642,7 +1679,7 @@ document.addEventListener('DOMContentLoaded', function() {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
+    background-color: #e0e0e0;
     transition: .4s;
     border-radius: 34px;
 }
@@ -1650,56 +1687,146 @@ document.addEventListener('DOMContentLoaded', function() {
 .slider:before {
     position: absolute;
     content: "";
-    height: 26px;
-    width: 26px;
+    height: 24px;
+    width: 24px;
     left: 4px;
     bottom: 4px;
     background-color: white;
     transition: .4s;
     border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 input:checked + .slider {
-    background-color: var(--primary-color);
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
 }
 
 input:checked + .slider:before {
-    transform: translateX(26px);
+    transform: translateX(28px);
 }
 
+/* Enhanced Pricing Grid */
 .pricing-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 2rem;
     margin-top: 3rem;
+    padding: 1rem;
 }
 
 .pricing-card {
     background: white;
-    padding: 2.5rem;
-    border-radius: 20px;
-    box-shadow: var(--box-shadow);
+    padding: 3rem 2.5rem;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.pricing-card:hover:not(.popular) {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
 }
 
 .pricing-card.popular {
     background: linear-gradient(145deg, #ffffff, #f8f9ff);
     border: 2px solid var(--primary-color);
     transform: scale(1.05);
+    z-index: 1;
 }
 
 .popular-badge {
     position: absolute;
     top: 1.5rem;
-    right: -3rem;
-    background: var(--primary-color);
+    right: -3.5rem;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
     color: white;
-    padding: 0.5rem 3rem;
+    padding: 0.5rem 3.5rem;
     transform: rotate(45deg);
     font-size: 0.875rem;
     font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pricing-card h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1.5rem;
+}
+
+.price {
+    margin: 1.5rem 0;
+    text-align: center;
+}
+
+.currency {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    vertical-align: top;
+    margin-right: 0.25rem;
+}
+
+.amount {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1;
+}
+
+.period {
+    font-size: 1rem;
+    color: var(--light-text);
+    margin-left: 0.25rem;
+}
+
+.custom {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.plan-description {
+    text-align: center;
+    color: var(--light-text);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+.plan-features {
+    list-style: none;
+    margin: 2rem 0;
+    flex-grow: 1;
+}
+
+.plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+.plan-features li i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.pricing-card .btn {
+    width: 100%;
+    margin-top: auto;
+}
+
+.trial-note {
+    text-align: center;
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin-top: 1rem;
 }
 
 /* CTA Section Styles */
@@ -1720,6 +1847,18 @@ input:checked + .slider:before {
     justify-content: center;
     margin-top: 2rem;
 }
+    /* Enhanced Responsive Styles */
+@media (max-width: 1200px) {
+    .pricing-grid {
+        gap: 1.5rem;
+        padding: 0.5rem;
+    }
+
+    .pricing-card {
+        padding: 2.5rem 2rem;
+    }
+}
+
 
 /* Responsive Styles */
 @media (max-width: 992px) {
@@ -1732,6 +1871,13 @@ input:checked + .slider:before {
         align-items: center;
     }
 
+    .pricing-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
     .pricing-card.popular {
         transform: scale(1.02);
     }
@@ -1739,6 +1885,13 @@ input:checked + .slider:before {
 
 @media (max-width: 768px) {
     .integration-card,
+    .pricing-toggle {
+        flex-direction: column;
+        background: transparent;
+        box-shadow: none;
+        gap: 1rem;
+    }
+
     .pricing-card {
         padding: 2rem;
     }
@@ -1752,8 +1905,12 @@ input:checked + .slider:before {
         align-items: center;
     }
 
-    .pricing-toggle {
-        flex-direction: column;
+    .amount {
+        font-size: 3rem;
+    }
+
+    .pricing-card.popular {
+        transform: none;
     }
 }
 
@@ -1766,8 +1923,22 @@ input:checked + .slider:before {
         height: 30px;
     }
 
-    .pricing-card.popular {
-        transform: none;
+    .pricing-grid {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+    }
+
+    .pricing-card {
+        padding: 1.5rem;
+    }
+
+    .popular-badge {
+        font-size: 0.75rem;
+        padding: 0.4rem 3rem;
+    }
+
+    .plan-features li {
+        font-size: 0.95rem;
     }
 }
 </style>
