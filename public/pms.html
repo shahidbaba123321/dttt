@@ -2830,23 +2830,24 @@ input:checked + .slider:before {
         }
 
         // Pricing Toggle Handler
-        function initializePricing() {
-            const billingToggle = document.getElementById('billing-toggle');
-            const priceAmounts = document.querySelectorAll('.price-amount .amount');
-            const monthlyPrices = ['10', '25'];
-            const annualPrices = ['8', '20'];
+       // Pricing Toggle Handler
+function initializePricing() {
+    const billingToggle = document.getElementById('billing-toggle');
+    const priceAmounts = document.querySelectorAll('.amount');
+    const monthlyPrices = ['49', '99'];
+    const annualPrices = ['39', '79'];
 
-            if (billingToggle) {
-                billingToggle.addEventListener('change', () => {
-                    priceAmounts.forEach((price, index) => {
-                        if (price.textContent !== 'Custom') {
-                            const newPrice = billingToggle.checked ? annualPrices[index] : monthlyPrices[index];
-                            animateNumberChange(price, newPrice);
-                        }
-                    });
-                });
-            }
-        }
+    if (billingToggle) {
+        billingToggle.addEventListener('change', () => {
+            priceAmounts.forEach((price, index) => {
+                if (price.textContent !== 'Custom') {
+                    animateNumberChange(price, billingToggle.checked ? annualPrices[index] : monthlyPrices[index]);
+                }
+            });
+        });
+    }
+}
+
 
         // Number Animation Helper
         function animateNumberChange(element, newValue) {
