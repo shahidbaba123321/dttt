@@ -3,661 +3,1894 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expense Management - Workwise Pro</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Smart Expense Management - Workwise Pro</title>
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
-    <style>
-        /* Root Variables */
-        :root {
-            --primary-color: #e33333;
-            --text-dark: #0f1964;
-            --text-body: #333;
-            --background-light: #fff6f4;
-            --link-blue: #2962ff;
-            --border-color: #e0e0e0;
-            --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
-            --header-height: 70px;
-        }
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        /* Reset & Base Styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+<style>
+/* Root Variables */
+:root {
+    --primary-color: #2962ff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --background-color: #f8f9fa;
+    --text-color: #333;
+    --light-text: #6c757d;
+    --border-radius: 8px;
+    --transition: all 0.3s ease;
+    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --gradient: linear-gradient(135deg, #f0f7ff 0%, #e9ecef 100%);
+    --card-bg: #ffffff;
+    --mobile-padding: 1rem;
+    --section-spacing: 4rem;
+    --header-height: 70px;
+}
 
-        html {
-            scroll-behavior: smooth;
-            -webkit-text-size-adjust: 100%;
-        }
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            line-height: 1.6;
-            color: var(--text-body);
-            background-color: white;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding-top: var(--header-height);
-            margin: 0;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
+body {
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    padding-top: var(--header-height);
+}
 
-        /* Hero Section */
-        .hero-section {
-            background: linear-gradient(to right, #fff6f4, #fff);
-            padding: calc(var(--header-height) + 2rem) 0 4rem;
-            text-align: center;
-        }
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--mobile-padding);
+    width: 100%;
+}
 
-        .hero-content {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
+/* Hero Section */
+.expenses-hero {
+    background: var(--gradient);
+    padding: calc(var(--header-height) + 4rem) 0 6rem;
+    position: relative;
+    overflow: hidden;
+}
 
-        .hero-content h2 {
-            color: var(--text-dark);
-            font-size: clamp(2rem, 5vw, 3.5rem);
-            line-height: 1.2;
-            margin-bottom: 1.5rem;
-        }
+.expenses-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(41, 98, 255, 0.05), transparent);
+    pointer-events: none;
+}
 
-        .hero-content p {
-            color: var(--text-body);
-            font-size: clamp(1rem, 2vw, 1.2rem);
-            margin-bottom: 2rem;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
+.hero-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
 
-        .hero-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-        }
+.hero-text {
+    max-width: 600px;
+}
 
-        @media screen and (max-width: 768px) {
-            .hero-buttons {
-                flex-direction: column;
-                padding: 0 2rem;
-            }
+.hero-text h1 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    background: linear-gradient(45deg, #1a237e, #2962ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+    font-weight: 700;
+}
 
-            .hero-content h2 {
-                font-size: 2rem;
-                padding: 0 1rem;
-            }
+.hero-text p {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: #455a64;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
 
-            .hero-content p {
-                font-size: 1rem;
-                padding: 0 1rem;
-            }
-        }
+.hero-buttons {
+    display: flex;
+    gap: 1.5rem;
+}
 
-        /* Utility Classes */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 2rem;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    transition: var(--transition);
+    font-weight: 500;
+    cursor: pointer;
+    min-width: 160px;
+    text-align: center;
+}
 
-        @media screen and (max-width: 768px) {
-            .container {
-                padding: 0 1rem;
-            }
-        }
+.btn.primary {
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
+}
 
-        /* Button Styles */
-        .btn {
-            display: inline-block;
-            padding: 12px 24px;
-            border-radius: 4px;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            text-align: center;
-        }
+.btn.secondary {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
 
-        .btn-primary {
-            background: var(--primary-color);
-            color: white;
-        }
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(41, 98, 255, 0.25);
+}
 
-        .btn-primary:hover {
-            background: #d42f2f;
-        }
+.hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 3rem;
+}
 
-        .btn-secondary {
-            background: white;
-            color: var(--text-dark);
-            border: 1px solid var(--text-dark);
-        }
+.stat-item {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    text-align: center;
+    transition: var(--transition);
+    backdrop-filter: blur(10px);
+}
 
-        .btn-secondary:hover {
-            background: var(--background-light);
-        }
+.stat-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
 
-        @media screen and (max-width: 768px) {
-            .btn {
-                width: 100%;
-            }
-        }
+.stat-item i {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
 
-        /* Content Styling */
-        .main-content {
-            padding: 2rem 1rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+.stat-item h4 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 0.5rem;
+}
 
-        .feature-section {
-            padding: 4rem 0;
-            margin-bottom: 2rem;
-        }
+.stat-item p {
+    color: var(--light-text);
+    font-size: 0.9rem;
+}
 
-        .feature-section h2 {
-            color: var(--text-dark);
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
+.hero-image {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
 
-        .feature-section > p {
-            color: var(--text-dark);
-            font-size: 1.1rem;
-            margin-bottom: 2rem;
-            max-width: 800px;
-        }
+.hero-image img {
+    width: 100%;
+    height: auto;
+    max-width: 600px;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    animation: float 3s ease-in-out infinite;
+}
 
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-        }
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0px); }
+}
 
-        .feature-card {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            transition: var(--transition);
-            border: 1px solid var(--border-color);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .hero-content {
+        gap: 3rem;
+    }
 
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-        }
+    .hero-image img {
+        max-width: 500px;
+    }
+}
 
-        .feature-icon {
-            width: 60px;
-            height: 60px;
-            background: var(--background-light);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1.5rem;
-        }
+@media (max-width: 992px) {
+    .hero-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
 
-        .feature-icon i {
-            color: var(--primary-color);
-            font-size: 24px;
-        }
+    .hero-text {
+        max-width: 100%;
+    }
 
-        .feature-card h3 {
-            color: var(--text-dark);
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            font-weight: 600;
-        }
+    .hero-buttons {
+        justify-content: center;
+    }
 
-        .feature-card p {
-            color: var(--text-body);
-            margin-bottom: 1.5rem;
-            line-height: 1.6;
-        }
+    .hero-image {
+        order: -1;
+        margin-bottom: 2rem;
+    }
 
-        .learn-more {
-            color: var(--link-blue);
-            text-decoration: none;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: var(--transition);
-        }
+    .hero-image img {
+        max-width: 80%;
+        margin: 0 auto;
+        display: block;
+    }
+}
 
-        .learn-more i {
-            transition: transform 0.3s ease;
-        }
+@media (max-width: 768px) {
+    .expenses-hero {
+        padding: 3rem 0;
+    }
 
-        .learn-more:hover i {
-            transform: translateX(5px);
-        }
+    .hero-buttons {
+        flex-direction: column;
+        gap: 1rem;
+    }
 
-        @media screen and (max-width: 768px) {
-            .feature-section {
-                padding: 2rem 0;
-            }
+    .btn {
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
+    }
 
-            .feature-section h2 {
-                font-size: 2rem;
-            }
+    .hero-stats {
+        grid-template-columns: 1fr;
+        max-width: 400px;
+        margin: 3rem auto 0;
+    }
+}
 
-            .feature-grid {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-            }
+@media (max-width: 480px) {
+    .hero-text h1 {
+        font-size: 2rem;
+    }
 
-            .feature-card {
-                padding: 1.5rem;
-            }
-        }
-    </style>
-</head>
+    .hero-text p {
+        font-size: 1rem;
+    }
+
+    .hero-image img {
+        max-width: 90%;
+    }
+
+    .stat-item {
+        padding: 1.25rem;
+    }
+}
+</style>
+
 <body>
-    <!-- Header Container -->
+    <!-- Header Container (Same as pms.html) -->
     <div id="header-container"></div>
 
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="hero-content">
-            <h2>Expense software loaded with powerful features</h2>
-            <p>With its comprehensive set of features for all stages of your expense reporting, Workwise Pro is your go-to expense software.</p>
-            <div class="hero-buttons">
-                <a href="#" class="btn btn-primary">TRY NOW</a>
-                <a href="#" class="btn btn-secondary">REQUEST A DEMO</a>
+    <!-- Main Content -->
+    <main class="expenses-main">
+        <!-- Hero Section -->
+        <section class="expenses-hero">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1>Smart Travel & Expense Management</h1>
+                        <p>Simplify travel booking, accelerate expense reporting, and enhance cost control with our comprehensive solution.</p>
+                        <div class="hero-buttons">
+                            <a href="#" class="btn primary">Start Free Trial</a>
+                            <a href="#" class="btn secondary">Request Demo</a>
+                        </div>
+                        <div class="hero-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-globe"></i>
+                                <h4>150+</h4>
+                                <p>Countries Served</p>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-building"></i>
+                                <h4>10K+</h4>
+                                <p>Global Businesses</p>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-chart-line"></i>
+                                <h4>95%</h4>
+                                <p>Cost Efficiency</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-image">
+                        <img 
+                            src="path/to/expense-dashboard.png" 
+                            alt="Expense Management Dashboard"
+                            loading="lazy"
+                        >
+                    </div>
+                </div>
             </div>
-        </div>
-    </section>
-        <!-- Main Content -->
-    <main>
-        <div class="main-content">
-            <!-- Receipts and Expenses Section -->
-            <section id="receipts" class="feature-section scroll-reveal" data-section="receipts">
-                <h2>Receipts and expenses</h2>
-                <p>Automate your receipt and expense management with the help of robust features that free up time for other important tasks.</p>
-                <div class="feature-grid">
-                    <div class="feature-card animate-fade-in">
+        </section>
+                <!-- Key Features Section -->
+        <section class="features-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Comprehensive Expense Management</h2>
+                    <p>Everything you need to manage travel and expenses efficiently</p>
+                </div>
+
+                <div class="features-grid">
+                    <!-- Travel Management -->
+                    <div class="feature-card">
                         <div class="feature-icon">
-                            <i class="fas fa-receipt" aria-hidden="true"></i>
+                            <i class="fas fa-plane"></i>
                         </div>
-                        <h3>Receipt management</h3>
-                        <p>Auto-scan receipts, track and store them digitally, and forward them from your email.</p>
-                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+                        <h3>Travel Management</h3>
+                        <p>Powerful self-booking tool with end-to-end travel desk management</p>
+                        <ul class="feature-list">
+                            <li>Flight & Hotel Booking</li>
+                            <li>Travel Policy Compliance</li>
+                            <li>Itinerary Management</li>
+                            <li>Real-time Travel Updates</li>
+                        </ul>
+                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
                     </div>
 
-                    <div class="feature-card animate-fade-in">
+                    <!-- Expense Reporting -->
+                    <div class="feature-card">
                         <div class="feature-icon">
-                            <i class="fas fa-dollar-sign" aria-hidden="true"></i>
+                            <i class="fas fa-receipt"></i>
                         </div>
-                        <h3>Expense management</h3>
-                        <p>Enable different kinds of expenses—multicurrency, per diem, billable and non-billable—and automate expense creation.</p>
-                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+                        <h3>Expense Reporting</h3>
+                        <p>Automate expense reporting from start to finish</p>
+                        <ul class="feature-list">
+                            <li>Mobile Receipt Capture</li>
+                            <li>Automated Categorization</li>
+                            <li>Policy Compliance Check</li>
+                            <li>Quick Approvals</li>
+                        </ul>
+                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
                     </div>
 
-                    <div class="feature-card animate-fade-in">
+                    <!-- Payments -->
+                    <div class="feature-card">
                         <div class="feature-icon">
-                            <i class="fas fa-route" aria-hidden="true"></i>
+                            <i class="fas fa-money-bill-wave"></i>
                         </div>
-                        <h3>Mileage tracking</h3>
-                        <p>Track mileage using any of four different methods.</p>
-                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+                        <h3>Quick Payments</h3>
+                        <p>Streamlined reimbursement process with direct deposits</p>
+                        <ul class="feature-list">
+                            <li>Direct Bank Transfers</li>
+                            <li>Batch Processing</li>
+                            <li>Payment Tracking</li>
+                            <li>Multi-currency Support</li>
+                        </ul>
+                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+                    </div>
+
+                    <!-- Analytics -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <h3>Advanced Analytics</h3>
+                        <p>25+ analytical reports for comprehensive insights</p>
+                        <ul class="feature-list">
+                            <li>Expense Analytics</li>
+                            <li>Travel Insights</li>
+                            <li>Spending Patterns</li>
+                            <li>Custom Reports</li>
+                        </ul>
+                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- Cards Section -->
-            <section id="cards" class="feature-section scroll-reveal" data-section="cards">
-                <h2>Corporate Cards</h2>
-                <p>Streamline your corporate card expense management with automated reconciliation and real-time tracking.</p>
-                <div class="feature-grid">
-                    <div class="feature-card animate-fade-in">
-                        <div class="feature-icon">
-                            <i class="fas fa-credit-card" aria-hidden="true"></i>
+        <!-- Travel Management Section -->
+        <section class="travel-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Simplified Travel Management</h2>
+                    <p>End-to-end travel management solution for your business</p>
+                </div>
+
+                <div class="travel-showcase">
+                    <div class="travel-content">
+                        <div class="travel-tabs">
+                            <button class="travel-tab active" data-tab="booking">
+                                <i class="fas fa-ticket-alt"></i>
+                                Booking
+                            </button>
+                            <button class="travel-tab" data-tab="policy">
+                                <i class="fas fa-shield-alt"></i>
+                                Policy
+                            </button>
+                            <button class="travel-tab" data-tab="expense">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                                Expense
+                            </button>
                         </div>
-                        <h3>Card Management</h3>
-                        <p>Manage multiple corporate cards and automate expense creation from card transactions.</p>
-                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+
+                        <div class="travel-details">
+                            <!-- Booking Content -->
+                            <div class="travel-content active" id="booking">
+                                <div class="travel-grid">
+                                    <div class="travel-item">
+                                        <div class="travel-icon">
+                                            <i class="fas fa-search"></i>
+                                        </div>
+                                        <div class="travel-info">
+                                            <h4>Smart Search</h4>
+                                            <p>Find the best travel options with AI-powered search</p>
+                                            <ul class="travel-features">
+                                                <li>Global Inventory</li>
+                                                <li>Best Rates</li>
+                                                <li>Quick Booking</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <div class="travel-item">
+                                        <div class="travel-icon">
+                                            <i class="fas fa-calendar-check"></i>
+                                        </div>
+                                        <div class="travel-info">
+                                            <h4>Easy Management</h4>
+                                            <p>Manage all travel bookings in one place</p>
+                                            <ul class="travel-features">
+                                                <li>Itinerary Management</li>
+                                                <li>Travel Updates</li>
+                                                <li>24/7 Support</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Policy Content -->
+                            <div class="travel-content" id="policy">
+                                <div class="travel-grid">
+                                    <div class="travel-item">
+                                        <div class="travel-icon">
+                                            <i class="fas fa-book"></i>
+                                        </div>
+                                        <div class="travel-info">
+                                            <h4>Policy Compliance</h4>
+                                            <p>Ensure all bookings comply with company policy</p>
+                                            <ul class="travel-features">
+                                                <li>Policy Configuration</li>
+                                                <li>Automated Checks</li>
+                                                <li>Exception Handling</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <div class="travel-item">
+                                        <div class="travel-icon">
+                                            <i class="fas fa-tasks"></i>
+                                        </div>
+                                        <div class="travel-info">
+                                            <h4>Approval Workflows</h4>
+                                            <p>Streamlined approval process for travel requests</p>
+                                            <ul class="travel-features">
+                                                <li>Custom Workflows</li>
+                                                <li>Mobile Approvals</li>
+                                                <li>Status Tracking</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Expense Content -->
+                            <div class="travel-content" id="expense">
+                                <div class="travel-grid">
+                                    <div class="travel-item">
+                                        <div class="travel-icon">
+                                            <i class="fas fa-receipt"></i>
+                                        </div>
+                                        <div class="travel-info">
+                                            <h4>Expense Tracking</h4>
+                                            <p>Automated travel expense management</p>
+                                            <ul class="travel-features">
+                                                <li>Receipt Capture</li>
+                                                <li>Auto-categorization</li>
+                                                <li>Quick Reports</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <div class="travel-item">
+                                        <div class="travel-icon">
+                                            <i class="fas fa-chart-pie"></i>
+                                        </div>
+                                        <div class="travel-info">
+                                            <h4>Travel Analytics</h4>
+                                            <p>Comprehensive travel spend analytics</p>
+                                            <ul class="travel-features">
+                                                <li>Spend Analysis</li>
+                                                <li>Savings Reports</li>
+                                                <li>Trend Insights</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="feature-card animate-fade-in">
-                        <div class="feature-icon">
-                            <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                    <div class="travel-visual">
+                        <img src="path/to/travel-dashboard.png" alt="Travel Management Dashboard" class="dashboard-image">
+                        <div class="travel-stats">
+                            <div class="stat-card">
+                                <span class="stat-value">40%</span>
+                                <span class="stat-label">Cost Savings</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-value">85%</span>
+                                <span class="stat-label">Faster Booking</span>
+                            </div>
                         </div>
-                        <h3>Auto Reconciliation</h3>
-                        <p>Automatically match card transactions with expenses and receipts.</p>
-                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- Reports Section -->
-            <section id="reports" class="feature-section scroll-reveal" data-section="reports">
-                <h2>Expense Reports</h2>
-                <p>Generate comprehensive expense reports with detailed analytics and insights.</p>
-                <div class="feature-grid">
-                    <div class="feature-card animate-fade-in">
-                        <div class="feature-icon">
-                            <i class="fas fa-file-alt" aria-hidden="true"></i>
+<style>
+/* Features Section Styles */
+.features-section {
+    padding: 6rem 0;
+    background: white;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2.5rem;
+    margin-top: 3rem;
+}
+
+.feature-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: left;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card:hover::before {
+    transform: scaleX(1);
+}
+
+.feature-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.feature-icon i {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+}
+
+.feature-card h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.feature-list {
+    list-style: none;
+    margin: 1.5rem 0;
+}
+
+.feature-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
+}
+
+.feature-list li::before {
+    content: '✓';
+    color: var(--primary-color);
+}
+
+/* Travel Section Styles */
+.travel-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+}
+
+.travel-showcase {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    margin-top: 3rem;
+    align-items: center;
+}
+
+.travel-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.travel-tab {
+    padding: 1rem 1.5rem;
+    border: none;
+    background: white;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.travel-tab.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.travel-content {
+    display: none;
+    padding: 2rem;
+    background: white;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+}
+
+.travel-content.active {
+    display: block;
+}
+
+.travel-grid {
+    display: grid;
+    gap: 2rem;
+}
+
+.travel-item {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: rgba(41, 98, 255, 0.05);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.travel-item:hover {
+    transform: translateX(5px);
+    background: rgba(41, 98, 255, 0.1);
+}
+
+.travel-icon {
+    width: 48px;
+    height: 48px;
+    background: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.travel-icon i {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+}
+
+.travel-visual {
+    position: relative;
+}
+
+.dashboard-image {
+    width: 100%;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.travel-stats {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 1rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--light-text);
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+    .travel-showcase {
+        grid-template-columns: 1fr;
+    }
+
+    .travel-visual {
+        order: -1;
+    }
+
+    .dashboard-image {
+        max-width: 80%;
+        margin: 0 auto;
+        display: block;
+    }
+}
+
+@media (max-width: 768px) {
+    .travel-tabs {
+        flex-direction: column;
+    }
+
+    .travel-item {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .travel-features {
+        text-align: left;
+    }
+
+    .travel-stats {
+        position: relative;
+        top: -30px;
+        right: 0;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .feature-card,
+    .travel-content {
+        padding: 1.5rem;
+    }
+
+    .stat-card {
+        padding: 0.75rem 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+    }
+}
+</style>
+        <!-- Automation Section -->
+        <section class="automation-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Powerful Automation</h2>
+                    <p>Set your expense management tasks to autopilot</p>
+                </div>
+
+                <div class="automation-grid">
+                    <!-- Workflow Rules -->
+                    <div class="automation-card">
+                        <div class="automation-icon">
+                            <i class="fas fa-cogs"></i>
                         </div>
-                        <h3>Report Generation</h3>
-                        <p>Create detailed expense reports with customizable templates and formats.</p>
-                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+                        <h3>Workflow Rules</h3>
+                        <p>Automate expense processing with custom rules</p>
+                        <div class="automation-features">
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <div class="feature-content">
+                                    <h4>Smart Approvals</h4>
+                                    <p>Automatic routing based on amount and category</p>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <div class="feature-content">
+                                    <h4>Policy Checks</h4>
+                                    <p>Automated compliance verification</p>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <div class="feature-content">
+                                    <h4>Custom Rules</h4>
+                                    <p>Create rules based on your business needs</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="feature-card animate-fade-in">
-                        <div class="feature-icon">
-                            <i class="fas fa-chart-bar" aria-hidden="true"></i>
+                    <!-- Custom Functions -->
+                    <div class="automation-card">
+                        <div class="automation-icon">
+                            <i class="fas fa-code"></i>
                         </div>
-                        <h3>Analytics Dashboard</h3>
-                        <p>View expense trends and patterns with interactive charts and graphs.</p>
-                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+                        <h3>Custom Functions</h3>
+                        <p>Build custom automation with advanced functions</p>
+                        <div class="automation-features">
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <div class="feature-content">
+                                    <h4>Webhooks</h4>
+                                    <p>Integrate with external systems</p>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <div class="feature-content">
+                                    <h4>API Access</h4>
+                                    <p>Build custom integrations</p>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <div class="feature-content">
+                                    <h4>Custom Scripts</h4>
+                                    <p>Automate complex workflows</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Automation -->
+                    <div class="automation-card">
+                        <div class="automation-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3>Smart Analytics</h3>
+                        <p>Automated insights and reporting</p>
+                        <div class="automation-features">
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <div class="feature-content">
+                                    <h4>Scheduled Reports</h4>
+                                    <p>Automated report generation and delivery</p>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <div class="feature-content">
+                                    <h4>Smart Alerts</h4>
+                                    <p>Automated notifications based on triggers</p>
+                                </div>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <div class="feature-content">
+                                    <h4>Trend Analysis</h4>
+                                    <p>AI-powered spending insights</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </section>
-        </div>
+            </div>
+        </section>
+
+        <!-- Support Section -->
+        <section class="support-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>24/5 Expert Support</h2>
+                    <p>We're here to help you maximize Workwise Pro</p>
+                </div>
+
+                <div class="support-grid">
+                    <div class="support-card">
+                        <div class="support-icon">
+                            <i class="fas fa-phone-alt"></i>
+                        </div>
+                        <h3>Call Support</h3>
+                        <p>Get instant help from our expert support team</p>
+                        <a href="#" class="support-action">Call Now</a>
+                    </div>
+
+                    <div class="support-card">
+                        <div class="support-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <h3>Email Assistance</h3>
+                        <p>Detailed support for complex queries</p>
+                        <a href="#" class="support-action">Send Email</a>
+                    </div>
+
+                    <div class="support-card">
+                        <div class="support-icon">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <h3>Knowledge Base</h3>
+                        <p>Comprehensive guides and documentation</p>
+                        <a href="#" class="support-action">Browse Articles</a>
+                    </div>
+
+                    <div class="support-card">
+                        <div class="support-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <h3>Free Training</h3>
+                        <p>Get started with our onboarding program</p>
+                        <a href="#" class="support-action">Start Training</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+<style>
+/* Automation Section Styles */
+.automation-section {
+    padding: 6rem 0;
+    background: white;
+    position: relative;
+}
+
+.automation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2.5rem;
+    margin-top: 3rem;
+}
+
+.automation-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.automation-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: left;
+}
+
+.automation-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.automation-card:hover::before {
+    transform: scaleX(1);
+}
+
+.automation-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.automation-icon i {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+}
+
+.automation-card h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.automation-features {
+    margin-top: 1.5rem;
+}
+
+.feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: rgba(41, 98, 255, 0.05);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+    background: rgba(41, 98, 255, 0.1);
+    transform: translateX(5px);
+}
+
+.feature-item i {
+    color: var(--primary-color);
+    font-size: 1.25rem;
+    margin-top: 0.25rem;
+}
+
+/* Support Section Styles */
+.support-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+}
+
+.support-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.support-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.support-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.support-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+}
+
+.support-icon i {
+    font-size: 2rem;
+    color: var(--primary-color);
+}
+
+.support-card h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.support-card p {
+    color: var(--light-text);
+    margin-bottom: 1.5rem;
+}
+
+.support-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.support-action:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+    .automation-grid,
+    .support-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .automation-card,
+    .support-card {
+        padding: 2rem;
+    }
+
+    .feature-item {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .automation-card,
+    .support-card {
+        padding: 1.5rem;
+    }
+
+    .support-icon {
+        width: 60px;
+        height: 60px;
+    }
+
+    .support-icon i {
+        font-size: 1.5rem;
+    }
+}
+</style>
+        <!-- Pricing Section -->
+        <section class="pricing-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Simple, Transparent Pricing</h2>
+                    <p>Choose the plan that best fits your business needs</p>
+                </div>
+                <div class="pricing-toggle">
+                    <span>Monthly</span>
+                    <label class="switch">
+                        <input type="checkbox" id="billing-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span>Annual <span class="discount">Save 20%</span></span>
+                </div>
+                <div class="pricing-grid">
+                    <!-- Basic Plan -->
+                    <div class="pricing-card">
+                        <h3>Basic</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">29</span>
+                            <span class="period">/month</span>
+                        </div>
+                        <p class="plan-description">Perfect for small businesses</p>
+                        <ul class="plan-features">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Up to 50 Employees</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Basic Expense Tracking</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Standard Reports</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Email Support</span>
+                            </li>
+                        </ul>
+                        <button class="btn primary">Start Free Trial</button>
+                        <p class="trial-note">14-day free trial, no credit card required</p>
+                    </div>
+
+                    <!-- Professional Plan -->
+                    <div class="pricing-card popular">
+                        <div class="popular-badge">Most Popular</div>
+                        <h3>Professional</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">79</span>
+                            <span class="period">/month</span>
+                        </div>
+                        <p class="plan-description">Ideal for growing companies</p>
+                        <ul class="plan-features">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Up to 200 Employees</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Advanced Expense Management</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Custom Reports</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Priority Support</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>API Access</span>
+                            </li>
+                        </ul>
+                        <button class="btn primary">Start Free Trial</button>
+                        <p class="trial-note">14-day free trial, no credit card required</p>
+                    </div>
+
+                    <!-- Enterprise Plan -->
+                    <div class="pricing-card">
+                        <h3>Enterprise</h3>
+                        <div class="price">
+                            <span class="custom">Custom</span>
+                        </div>
+                        <p class="plan-description">For large organizations</p>
+                        <ul class="plan-features">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Unlimited Employees</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Custom Implementation</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Dedicated Account Manager</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>24/7 Premium Support</span>
+                            </li>
+                        </ul>
+                        <button class="btn secondary">Contact Sales</button>
+                        <p class="trial-note">Get a customized quote for your needs</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Call to Action Section -->
+        <section class="cta-section">
+            <div class="container">
+                <div class="cta-content">
+                    <h2>Ready to Transform Your Expense Management?</h2>
+                    <p>Join thousands of businesses managing their expenses with us</p>
+                    <div class="cta-buttons">
+                        <button class="btn primary">Start Free Trial</button>
+                        <button class="btn secondary">Schedule Demo</button>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Footer -->
-    <footer>
-        <div class="footer-content">
-            <div class="footer-grid">
-                <div class="footer-section">
-                    <h4>Product</h4>
-                    <ul>
-                        <li><a href="#">Features</a></li>
-                        <li><a href="#">Pricing</a></li>
-                        <li><a href="#">Integrations</a></li>
-                        <li><a href="#">Mobile Apps</a></li>
-                        <li><a href="#">Security</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Solutions</h4>
-                    <ul>
-                        <li><a href="#">Small Business</a></li>
-                        <li><a href="#">Enterprise</a></li>
-                        <li><a href="#">Accountants</a></li>
-                        <li><a href="#">Nonprofits</a></li>
-                        <li><a href="#">Startups</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Resources</h4>
-                    <ul>
-                        <li><a href="#">Help Center</a></li>
-                        <li><a href="#">API Documentation</a></li>
-                        <li><a href="#">Community</a></li>
-                        <li><a href="#">Partners</a></li>
-                        <li><a href="#">Marketplace</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Company</h4>
-                    <ul>
-                        <li><a href="#">About Us</a></li>
-                        <li><a href="#">Careers</a></li>
-                        <li><a href="#">Press</a></li>
-                        <li><a href="#">Contact</a></li>
-                        <li><a href="#">Blog</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Connect With Us</h4>
-                    <div class="social-links">
-                        <a href="#"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-grid">
+                    <div class="footer-section brand-section">
+                        <div class="footer-logo">
+                            <img src="path/to/logo-white.png" alt="Workwise Pro Logo">
+                        </div>
+                        <p class="footer-description">
+                            Transform your expense management with AI-powered solutions.
+                        </p>
+                        <div class="social-links">
+                            <a href="#" aria-label="LinkedIn">
+                                <i class="fab fa-linkedin"></i>
+                            </a>
+                            <a href="#" aria-label="Twitter">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" aria-label="Facebook">
+                                <i class="fab fa-facebook"></i>
+                            </a>
+                            <a href="#" aria-label="Instagram">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="footer-section">
+                        <h4>Solutions</h4>
+                        <ul>
+                            <li><a href="#">Expense Management</a></li>
+                            <li><a href="#">Travel Booking</a></li>
+                            <li><a href="#">Analytics</a></li>
+                            <li><a href="#">Integrations</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-section">
+                        <h4>Company</h4>
+                        <ul>
+                            <li><a href="#">About Us</a></li>
+                            <li><a href="#">Careers</a></li>
+                            <li><a href="#">Press</a></li>
+                            <li><a href="#">Contact</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-section">
+                        <h4>Resources</h4>
+                        <ul>
+                            <li><a href="#">Blog</a></li>
+                            <li><a href="#">Guides</a></li>
+                            <li><a href="#">API Docs</a></li>
+                            <li><a href="#">Help Center</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="footer-section">
+                        <h4>Legal</h4>
+                        <ul>
+                            <li><a href="#">Privacy Policy</a></li>
+                            <li><a href="#">Terms of Service</a></li>
+                            <li><a href="#">Security</a></li>
+                            <li><a href="#">Compliance</a></li>
+                        </ul>
                     </div>
                 </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2023 Workwise Pro. All rights reserved.</p>
+
+                <div class="footer-bottom">
+                    <div class="footer-info">
+                        <p>&copy; 2024 Workwise Pro. All rights reserved.</p>
+                    </div>
+                    <div class="footer-badges">
+                        <img src="path/to/security-badge.png" alt="Security Certified">
+                        <img src="path/to/gdpr-badge.png" alt="GDPR Compliant">
+                        <img src="path/to/iso-badge.png" alt="ISO 27001">
+                    </div>
+                </div>
             </div>
         </div>
     </footer>
 
-    <style>
-        /* Footer Styles */
-        footer {
-            background: #2d3436;
-            color: white;
-            padding: 4rem 0 2rem;
-            margin-top: auto;
-        }
+<style>
+/* Enhanced Pricing Section Styles */
+.pricing-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+}
 
-        .footer-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
+.pricing-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(41, 98, 255, 0.05), transparent);
+    pointer-events: none;
+}
 
-        .footer-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 4rem;
-            margin-bottom: 4rem;
-        }
+.pricing-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin: 3rem auto;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    width: fit-content;
+}
 
-        .footer-section h4 {
-            color: white;
-            font-size: 1.2rem;
-            margin-bottom: 1.5rem;
-            font-weight: 600;
-        }
+.pricing-toggle span {
+    font-weight: 500;
+    color: var(--text-color);
+    padding: 0.5rem 1rem;
+}
 
-        .footer-section ul {
-            list-style: none;
-        }
+.discount {
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
 
-        .footer-section ul li {
-            margin-bottom: 0.8rem;
-        }
+/* Switch Styles */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 32px;
+    margin: 0 0.5rem;
+}
 
-        .footer-section ul li a {
-            color: #a0a0a0;
-            text-decoration: none;
-            transition: var(--transition);
-            font-size: 0.9rem;
-        }
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
 
-        .footer-section ul li a:hover {
-            color: white;
-        }
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #e0e0e0;
+    transition: .4s;
+    border-radius: 34px;
+}
 
-        .footer-bottom {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 2rem;
-            text-align: center;
-        }
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 24px;
+    width: 24px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 
-        .footer-bottom p {
-            color: #a0a0a0;
-            font-size: 0.9rem;
-        }
+input:checked + .slider {
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+}
 
-        .social-links {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
+input:checked + .slider:before {
+    transform: translateX(28px);
+}
 
-        .social-links a {
-            color: #a0a0a0;
-            text-decoration: none;
-            transition: var(--transition);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
+/* Pricing Grid */
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin: 4rem auto;
+    max-width: 1200px;
+    padding: 0 1rem;
+}
 
-        .social-links a:hover {
-            color: white;
-            border-color: white;
-            transform: translateY(-2px);
-        }
+.pricing-card {
+    background: white;
+    padding: 3rem 2.5rem;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+}
 
-        /* Footer Responsive Styles */
-        @media screen and (max-width: 768px) {
-            footer {
-                padding: 2rem 0 1rem;
-            }
+.pricing-card:hover:not(.popular) {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
 
-            .footer-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 2rem;
-                margin-bottom: 2rem;
-            }
+.pricing-card.popular {
+    background: linear-gradient(145deg, #ffffff, #f8f9ff);
+    border: 2px solid var(--primary-color);
+    transform: scale(1.05);
+    z-index: 1;
+}
 
-            .footer-content {
-                padding: 0 1rem;
-            }
-        }
+.popular-badge {
+    position: absolute;
+    top: 1.5rem;
+    right: -3.5rem;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    color: white;
+    padding: 0.5rem 3.5rem;
+    transform: rotate(45deg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 
-        @media screen and (max-width: 480px) {
-            .footer-grid {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-            }
+/* CTA Section Styles */
+.cta-section {
+    padding: 4rem 0;
+    background: white;
+    text-align: center;
+}
 
-            .footer-section {
-                text-align: center;
-            }
+.cta-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
 
-            .social-links {
-                justify-content: center;
-            }
-        }
-    </style>
-       <script>
-    // Component Loading Function
-    async function loadComponent(url, targetElementId) {
-        console.log(`Attempting to load component from ${url} into ${targetElementId}`);
-        try {
-            // Check if target element exists
-            const targetElement = document.getElementById(targetElementId);
-            if (!targetElement) {
-                throw new Error(`Target element ${targetElementId} not found`);
-            }
+.cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
 
-            // Fetch the component
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
-            }
+/* Footer Styles */
+.main-footer {
+    background: #000000;
+    color: #ffffff;
+    padding: 6rem 0 2rem;
+    position: relative;
+}
 
-            const html = await response.text();
-            console.log(`Content fetched from ${url}, length: ${html.length}`);
+.main-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(41, 98, 255, 0.05), transparent);
+    pointer-events: none;
+}
 
-            // Parse the HTML
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .pricing-grid {
+        gap: 1.5rem;
+        padding: 0 2rem;
+    }
+}
 
-            // Handle styles
-            const styles = doc.getElementsByTagName('style');
-            Array.from(styles).forEach(style => {
-                const styleId = `style-${targetElementId}`;
-                if (!document.getElementById(styleId)) {
-                    style.id = styleId;
-                    document.head.appendChild(style.cloneNode(true));
+@media (max-width: 992px) {
+    .pricing-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .pricing-card.popular {
+        transform: scale(1.02);
+    }
+}
+
+@media (max-width: 768px) {
+    .pricing-toggle {
+        flex-direction: column;
+        background: transparent;
+        box-shadow: none;
+        gap: 1rem;
+    }
+
+    .pricing-toggle span {
+        background: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .pricing-card {
+        padding: 2rem;
+    }
+
+    .pricing-card.popular {
+        transform: none;
+    }
+
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .pricing-grid {
+        grid-template-columns: 1fr;
+        padding: 0 1rem;
+    }
+
+    .pricing-card {
+        padding: 1.5rem;
+    }
+}
+</style>
+<script>
+// Initialize all functionality when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAll();
+    loadHeader();
+});
+
+// Header Loading Function (Same as pms.html)
+async function loadHeader() {
+    const headerContainer = document.getElementById('header-container');
+    
+    try {
+        const response = await fetch('header.html');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const html = await response.text();
+        headerContainer.innerHTML = html;
+
+        // Initialize mobile menu functionality after header loads
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mainNav = document.getElementById('main-nav');
+        const menuOverlay = document.getElementById('menu-overlay');
+        const megaMenus = document.querySelectorAll('.mega-menu');
+
+        if (mobileMenu && mainNav) {
+            let isMenuOpen = false;
+
+            function toggleMenu(show) {
+                isMenuOpen = show;
+                mobileMenu.classList.toggle('active', show);
+                mainNav.classList.toggle('active', show);
+                menuOverlay.classList.toggle('active', show);
+                document.body.style.overflow = show ? 'hidden' : '';
+
+                if (!show) {
+                    megaMenus.forEach(menu => menu.classList.remove('active'));
                 }
+            }
+
+            mobileMenu.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMenu(!isMenuOpen);
             });
 
-            // Handle content
-            const content = doc.body.firstElementChild;
-            if (!content) {
-                throw new Error(`No content found in ${url}`);
-            }
-
-            // Clear and append content
-            targetElement.innerHTML = '';
-            targetElement.appendChild(content.cloneNode(true));
-
-            // Handle scripts
-            const scripts = doc.getElementsByTagName('script');
-            for (const script of scripts) {
-                const newScript = document.createElement('script');
-                Array.from(script.attributes).forEach(attr => {
-                    newScript.setAttribute(attr.name, attr.value);
+            // Handle mega menus on mobile
+            megaMenus.forEach(menu => {
+                const link = menu.querySelector('a');
+                link.addEventListener('click', (e) => {
+                    if (window.innerWidth <= 768) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        megaMenus.forEach(m => {
+                            if (m !== menu) m.classList.remove('active');
+                        });
+                        menu.classList.toggle('active');
+                    }
                 });
-                newScript.textContent = script.textContent;
-                document.body.appendChild(newScript);
-            }
+            });
 
-            console.log(`Successfully loaded ${url} into ${targetElementId}`);
-            return true;
-
-        } catch (error) {
-            console.error(`Error loading ${url}:`, error);
-            const targetElement = document.getElementById(targetElementId);
-            if (targetElement) {
-                targetElement.innerHTML = `
-                    <div style="color: red; padding: 20px; text-align: center; background: #fff1f1; border: 1px solid #ffcdd2;">
-                        Failed to load ${url.split('/').pop()}
-                        <br>
-                        ${error.message}
-                    </div>`;
-            }
-            return false;
-        }
-    }
-
-    // Load components sequentially
-    async function loadComponents() {
-        try {
-            console.log('Starting component loading sequence');
-
-            // Load header first
-            const headerLoaded = await loadComponent('header.html', 'header-container');
-            if (headerLoaded) {
-                console.log('Header loaded successfully');
-                if (typeof initializeMobileMenu === 'function') {
-                    initializeMobileMenu();
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
+                    toggleMenu(false);
                 }
-            }
-
-            // Load footer immediately after header
-            const footerLoaded = await loadComponent('footer.html', 'footer-container');
-            if (footerLoaded) {
-                console.log('Footer loaded successfully');
-            }
-
-        } catch (error) {
-            console.error('Error in loading sequence:', error);
+            });
         }
+    } catch (error) {
+        console.error('Error loading header:', error);
+        headerContainer.innerHTML = `
+            <header class="main-header">
+                <div class="container">
+                    <a href="/" class="logo">
+                        <h1>Workwise Pro</h1>
+                    </a>
+                </div>
+            </header>
+        `;
     }
+}
 
-    // Initialize when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', loadComponents);
-    } else {
-        loadComponents();
-    }
+function initializeAll() {
+    initializeAnimations();
+    initializePricing();
+    initializeTravelTabs();
+    handleScrollEffects();
+    setupInteractions();
+    initializeMetrics();
+}
 
-    // Error handling
-    window.onerror = function(msg, url, lineNo, columnNo, error) {
-        console.error('Global error:', { message: msg, url, lineNo, columnNo, error });
-        return false;
+// Animation Handler
+function initializeAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
     };
 
-    window.addEventListener('unhandledrejection', event => {
-        console.error('Unhandled promise rejection:', event.reason);
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+                if (entry.target.classList.contains('progress-fill')) {
+                    const width = entry.target.dataset.progress;
+                    entry.target.style.width = width;
+                }
+            }
+        });
+    }, observerOptions);
+
+    // Observe all animatable elements
+    document.querySelectorAll('.feature-card, .automation-card, .support-card, .pricing-card, .travel-item')
+        .forEach(el => observer.observe(el));
+}
+
+// Travel Tabs Handler
+function initializeTravelTabs() {
+    const tabs = document.querySelectorAll('.travel-tab');
+    const contents = document.querySelectorAll('.travel-content');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+
+            tab.classList.add('active');
+            const contentId = tab.getAttribute('data-tab');
+            document.getElementById(contentId).classList.add('active');
+        });
     });
+}
+
+// Pricing Toggle Handler
+function initializePricing() {
+    const billingToggle = document.getElementById('billing-toggle');
+    const priceAmounts = document.querySelectorAll('.amount');
+    const monthlyPrices = ['29', '79'];
+    const annualPrices = ['24', '64'];
+
+    if (billingToggle) {
+        billingToggle.addEventListener('change', () => {
+            priceAmounts.forEach((price, index) => {
+                if (price.textContent !== 'Custom') {
+                    animateNumberChange(price, billingToggle.checked ? annualPrices[index] : monthlyPrices[index]);
+                }
+            });
+        });
+    }
+}
+
+// Number Animation Helper
+function animateNumberChange(element, newValue) {
+    const start = parseInt(element.textContent);
+    const end = parseInt(newValue);
+    const duration = 500;
+    const startTime = performance.now();
+
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        const current = Math.round(start + (end - start) * progress);
+        element.textContent = current;
+
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        }
+    }
+
+    requestAnimationFrame(update);
+}
+
+// Metrics Initialization
+function initializeMetrics() {
+    const metrics = document.querySelectorAll('.metric-progress');
+    
+    metrics.forEach(metric => {
+        const fill = metric.querySelector('.metric-fill');
+        const value = metric.querySelector('.metric-value').textContent;
+        fill.style.width = '0%';
+        
+        setTimeout(() => {
+            fill.style.width = value;
+        }, 500);
+    });
+}
+
+// Scroll Effects Handler
+function handleScrollEffects() {
+    let lastScroll = 0;
+    const header = document.querySelector('header');
+
+    window.addEventListener('scroll', () => {
+        const currentScroll = window.pageYOffset;
+        
+        if (currentScroll > lastScroll && currentScroll > 100) {
+            header.classList.add('header-hidden');
+        } else {
+            header.classList.remove('header-hidden');
+        }
+        
+        lastScroll = currentScroll;
+    });
+}
+
+// Interactive Elements Setup
+function setupInteractions() {
+    // Card Hover Effects
+    document.querySelectorAll('.feature-card, .automation-card, .support-card').forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.classList.add('card-hover');
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.classList.remove('card-hover');
+        });
+    });
+
+    // Smooth Scroll for Anchor Links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+}
+
+// Error Handler
+function handleError(error) {
+    console.error('An error occurred:', error);
+    // Implement error notification system here
+}
+
+// Watson Assistant Chat Integration
+window.watsonAssistantChatOptions = {
+    integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
+    region: "au-syd",
+    serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
+    onLoad: async (instance) => { await instance.render(); }
+};
+
+setTimeout(function(){
+    const t = document.createElement('script');
+    t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
+        (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
+        "/WatsonAssistantChatEntry.js";
+    document.head.appendChild(t);
+});
 </script>
 </body>
 </html>
