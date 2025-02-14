@@ -18,7 +18,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-/* Root Variables */
+/* Root Variables - Same as pms.html */
 :root {
     --primary-color: #2962ff;
     --secondary-color: #6c757d;
@@ -36,7 +36,7 @@
     --header-height: 70px;
 }
 
-/* General Reset */
+/* General Reset - Same as pms.html */
 * {
     margin: 0;
     padding: 0;
@@ -62,58 +62,12 @@ body {
     width: 100%;
 }
 
-/* Button Styles */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem 2rem;
-    border-radius: var(--border-radius);
-    text-decoration: none;
-    transition: var(--transition);
-    font-weight: 500;
-    cursor: pointer;
-    min-width: 160px;
-    text-align: center;
-    font-size: 1rem;
-    letter-spacing: 0.5px;
-}
-
-.btn.primary {
-    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
-    color: white;
-    border: none;
-    box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
-}
-
-.btn.secondary {
-    background: transparent;
-    color: var(--primary-color);
-    border: 2px solid var(--primary-color);
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(41, 98, 255, 0.25);
-}
-
-/* Hero Section */
+/* Hero Section Styles */
 .payroll-hero {
     background: var(--gradient);
     padding: calc(var(--header-height) + 4rem) 0 6rem;
     position: relative;
     overflow: hidden;
-}
-
-.payroll-hero::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(41, 98, 255, 0.05), transparent);
-    pointer-events: none;
 }
 
 .hero-content {
@@ -146,40 +100,68 @@ body {
     opacity: 0.9;
 }
 
-.hero-badges {
+.region-badges {
     display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
     margin-bottom: 2rem;
-    flex-wrap: wrap;
 }
 
 .region-badge {
-    padding: 0.75rem 1.25rem;
-    border-radius: 20px;
-    background: white;
-    color: var(--primary-color);
-    font-weight: 500;
-    font-size: 0.95rem;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: white;
+    border-radius: 50px;
     box-shadow: var(--box-shadow);
     transition: var(--transition);
 }
 
 .region-badge:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(41, 98, 255, 0.15);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 .region-badge i {
-    font-size: 1.1rem;
+    color: var(--primary-color);
 }
 
 .hero-buttons {
     display: flex;
     gap: 1.5rem;
-    margin-top: 2rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 2rem;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    transition: var(--transition);
+    font-weight: 500;
+    cursor: pointer;
+    min-width: 160px;
+    text-align: center;
+}
+
+.btn.primary {
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
+}
+
+.btn.secondary {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(41, 98, 255, 0.25);
 }
 
 .hero-image {
@@ -197,7 +179,6 @@ body {
     animation: float 3s ease-in-out infinite;
 }
 
-/* Animation Keyframes */
 @keyframes float {
     0% { transform: translateY(0px); }
     50% { transform: translateY(-20px); }
@@ -205,28 +186,18 @@ body {
 }
 
 /* Responsive Styles */
-@media (max-width: 1200px) {
-    .hero-content {
-        gap: 3rem;
-    }
-
-    .hero-image img {
-        max-width: 500px;
-    }
-}
-
 @media (max-width: 992px) {
     .hero-content {
         grid-template-columns: 1fr;
         text-align: center;
     }
 
-    .hero-badges {
-        justify-content: center;
-    }
-
     .hero-text {
         max-width: 100%;
+    }
+
+    .region-badges {
+        justify-content: center;
     }
 
     .hero-buttons {
@@ -246,19 +217,6 @@ body {
 }
 
 @media (max-width: 768px) {
-    .payroll-hero {
-        padding: 3rem 0;
-    }
-
-    .hero-badges {
-        gap: 0.75rem;
-    }
-
-    .region-badge {
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
-    }
-
     .hero-buttons {
         flex-direction: column;
         gap: 1rem;
@@ -269,30 +227,28 @@ body {
         max-width: 300px;
         margin: 0 auto;
     }
-}
 
-@media (max-width: 480px) {
-    .hero-text h1 {
-        font-size: 2rem;
-    }
-
-    .hero-text p {
-        font-size: 1rem;
-    }
-
-    .hero-image img {
-        max-width: 90%;
+    .region-badges {
+        flex-direction: column;
+        align-items: center;
     }
 
     .region-badge {
         width: 100%;
+        max-width: 300px;
         justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-image img {
+        max-width: 90%;
     }
 }
 </style>
 
 <body>
-    <!-- Header Container -->
+    <!-- Header Container (Same as pms.html) -->
     <div id="header-container"></div>
 
     <!-- Main Content -->
@@ -303,29 +259,33 @@ body {
                 <div class="hero-content">
                     <div class="hero-text">
                         <h1>Global Payroll Management Solution</h1>
-                        <p>Streamline your international payroll with our comprehensive solution that ensures compliance across multiple regions.</p>
-                        <div class="hero-badges">
-                            <span class="region-badge">
-                                <i class="fas fa-flag-usa"></i> USA
-                            </span>
-                            <span class="region-badge">
-                                <i class="fas fa-om"></i> India
-                            </span>
-                            <span class="region-badge">
-                                <i class="fas fa-mosque"></i> UAE
-                            </span>
-                            <span class="region-badge">
-                                <i class="fas fa-moon"></i> Qatar
-                            </span>
+                        <p>Streamline your payroll operations with our comprehensive solution designed for multiple regions. Ensure compliance, accuracy, and efficiency in your payroll processing.</p>
+                        <div class="region-badges">
+                            <div class="region-badge">
+                                <i class="fas fa-om"></i>
+                                <span>India Payroll</span>
+                            </div>
+                            <div class="region-badge">
+                                <i class="fas fa-flag-usa"></i>
+                                <span>USA Payroll</span>
+                            </div>
+                            <div class="region-badge">
+                                <i class="fas fa-mosque"></i>
+                                <span>UAE Payroll</span>
+                            </div>
+                            <div class="region-badge">
+                                <i class="fas fa-moon"></i>
+                                <span>Qatar Payroll</span>
+                            </div>
                         </div>
                         <div class="hero-buttons">
                             <a href="#" class="btn primary">Get Started</a>
-                            <a href="#" class="btn secondary">View Demo</a>
+                            <a href="#" class="btn secondary">Watch Demo</a>
                         </div>
                     </div>
                     <div class="hero-image">
                         <img 
-                            src="path/to/global-payroll-dashboard.png" 
+                            src="path/to/payroll-dashboard.png" 
                             alt="Global Payroll Dashboard"
                             loading="lazy"
                         >
@@ -333,121 +293,162 @@ body {
                 </div>
             </div>
         </section>
-        <!-- Global Coverage Section -->
-        <section class="global-coverage">
+                <!-- Region-Specific Solutions Section -->
+        <section class="region-solutions">
             <div class="container">
                 <div class="section-header">
                     <h2>Region-Specific Payroll Solutions</h2>
-                    <p>Tailored payroll management solutions that meet local compliance requirements</p>
+                    <p>Comprehensive payroll management tailored for each region's unique requirements</p>
                 </div>
-                <div class="regions-grid">
-                    <!-- India -->
-                    <div class="region-card">
-                        <div class="region-icon">
-                            <i class="fas fa-om"></i>
+
+                <div class="solutions-grid">
+                    <!-- India Payroll -->
+                    <div class="solution-card">
+                        <div class="solution-header">
+                            <div class="solution-icon">
+                                <i class="fas fa-om"></i>
+                            </div>
+                            <h3>India Payroll</h3>
+                            <p>Complete payroll solution compliant with Indian labor laws</p>
                         </div>
-                        <h3>India Payroll</h3>
-                        <p>Comprehensive payroll solution compliant with Indian labor laws and tax regulations.</p>
-                        <div class="compliance-list">
-                            <div class="compliance-item">
-                                <i class="fas fa-check-circle"></i>
-                                <span>PF & ESI Compliance</span>
+                        <div class="solution-features">
+                            <div class="feature-item">
+                                <i class="fas fa-calculator"></i>
+                                <div class="feature-content">
+                                    <h4>Statutory Compliance</h4>
+                                    <ul>
+                                        <li>PF & ESI Calculations</li>
+                                        <li>Professional Tax</li>
+                                        <li>TDS Management</li>
+                                        <li>Form 16 Generation</li>
+                                    </ul>
+                                </div>
                             </div>
-                            <div class="compliance-item">
-                                <i class="fas fa-check-circle"></i>
-                                <span>TDS Calculations</span>
-                            </div>
-                            <div class="compliance-item">
-                                <i class="fas fa-check-circle"></i>
-                                <span>Form 16 Generation</span>
-                            </div>
-                            <div class="compliance-item">
-                                <i class="fas fa-check-circle"></i>
-                                <span>Professional Tax</span>
+                            <div class="feature-item">
+                                <i class="fas fa-file-invoice"></i>
+                                <div class="feature-content">
+                                    <h4>Payroll Processing</h4>
+                                    <ul>
+                                        <li>Salary Structure Setup</li>
+                                        <li>Flexible Pay Components</li>
+                                        <li>Investment Declaration</li>
+                                        <li>Arrears Calculation</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                         <a href="#" class="learn-more">Explore India Payroll <i class="fas fa-arrow-right"></i></a>
                     </div>
 
-                    <!-- USA -->
-                    <div class="region-card">
-                        <div class="region-icon">
-                            <i class="fas fa-flag-usa"></i>
+                    <!-- USA Payroll -->
+                    <div class="solution-card">
+                        <div class="solution-header">
+                            <div class="solution-icon">
+                                <i class="fas fa-flag-usa"></i>
+                            </div>
+                            <h3>USA Payroll</h3>
+                            <p>State-specific payroll processing with federal compliance</p>
                         </div>
-                        <h3>USA Payroll</h3>
-                        <p>State-specific payroll processing with federal and state tax compliance.</p>
-                        <div class="compliance-list">
-                            <div class="compliance-item">
-                                <i class="fas fa-check-circle"></i>
-                                <span>Federal & State Taxes</span>
+                        <div class="solution-features">
+                            <div class="feature-item">
+                                <i class="fas fa-landmark"></i>
+                                <div class="feature-content">
+                                    <h4>Tax Management</h4>
+                                    <ul>
+                                        <li>Federal & State Taxes</li>
+                                        <li>W-2 & 1099 Forms</li>
+                                        <li>Tax Filing Services</li>
+                                        <li>Year-end Reporting</li>
+                                    </ul>
+                                </div>
                             </div>
-                            <div class="compliance-item">
-                                <i class="fas fa-check-circle"></i>
-                                <span>W-2 & 1099 Forms</span>
-                            </div>
-                            <div class="compliance-item">
-                                <i class="fas fa-check-circle"></i>
-                                <span>401(k) Integration</span>
-                            </div>
-                            <div class="compliance-item">
-                                <i class="fas fa-check-circle"></i>
-                                <span>ACA Compliance</span>
+                            <div class="feature-item">
+                                <i class="fas fa-shield-alt"></i>
+                                <div class="feature-content">
+                                    <h4>Compliance</h4>
+                                    <ul>
+                                        <li>ACA Compliance</li>
+                                        <li>FLSA Requirements</li>
+                                        <li>State-specific Rules</li>
+                                        <li>Benefits Management</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                         <a href="#" class="learn-more">Explore USA Payroll <i class="fas fa-arrow-right"></i></a>
                     </div>
 
-                    <!-- UAE -->
-                    <div class="region-card">
-                        <div class="region-icon">
-                            <i class="fas fa-mosque"></i>
+                    <!-- UAE Payroll -->
+                    <div class="solution-card">
+                        <div class="solution-header">
+                            <div class="solution-icon">
+                                <i class="fas fa-mosque"></i>
+                            </div>
+                            <h3>UAE Payroll</h3>
+                            <p>WPS-compliant payroll system with local regulations</p>
                         </div>
-                        <h3>UAE Payroll</h3>
-                        <p>UAE labor law compliant payroll system with WPS integration.</p>
-                        <div class="compliance-list">
-                            <div class="compliance-item">
-                                <i class="fas fa-check-circle"></i>
-                                <span>WPS Compliance</span>
+                        <div class="solution-features">
+                            <div class="feature-item">
+                                <i class="fas fa-credit-card"></i>
+                                <div class="feature-content">
+                                    <h4>WPS Compliance</h4>
+                                    <ul>
+                                        <li>SIF File Generation</li>
+                                        <li>Bank File Processing</li>
+                                        <li>Salary Transfer</li>
+                                        <li>Payment Records</li>
+                                    </ul>
+                                </div>
                             </div>
-                            <div class="compliance-item">
-                                <i class="fas fa-check-circle"></i>
-                                <span>Gratuity Calculation</span>
-                            </div>
-                            <div class="compliance-item">
-                                <i class="fas fa-check-circle"></i>
-                                <span>Leave Management</span>
-                            </div>
-                            <div class="compliance-item">
-                                <i class="fas fa-check-circle"></i>
-                                <span>MOHRE Compliance</span>
+                            <div class="feature-item">
+                                <i class="fas fa-file-alt"></i>
+                                <div class="feature-content">
+                                    <h4>Benefits & Allowances</h4>
+                                    <ul>
+                                        <li>Gratuity Calculation</li>
+                                        <li>Leave Salary</li>
+                                        <li>Housing Allowance</li>
+                                        <li>Transport Allowance</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                         <a href="#" class="learn-more">Explore UAE Payroll <i class="fas fa-arrow-right"></i></a>
                     </div>
 
-                    <!-- Qatar -->
-                    <div class="region-card">
-                        <div class="region-icon">
-                            <i class="fas fa-moon"></i>
+                    <!-- Qatar Payroll -->
+                    <div class="solution-card">
+                        <div class="solution-header">
+                            <div class="solution-icon">
+                                <i class="fas fa-moon"></i>
+                            </div>
+                            <h3>Qatar Payroll</h3>
+                            <p>Qatar labor law compliant payroll processing</p>
                         </div>
-                        <h3>Qatar Payroll</h3>
-                        <p>Qatar labor law compliant payroll processing with local regulations.</p>
-                        <div class="compliance-list">
-                            <div class="compliance-item">
-                                <i class="fas fa-check-circle"></i>
-                                <span>QFC Regulations</span>
+                        <div class="solution-features">
+                            <div class="feature-item">
+                                <i class="fas fa-balance-scale"></i>
+                                <div class="feature-content">
+                                    <h4>Labor Law Compliance</h4>
+                                    <ul>
+                                        <li>QFC Regulations</li>
+                                        <li>Labor Contract Rules</li>
+                                        <li>Working Hours</li>
+                                        <li>Overtime Calculation</li>
+                                    </ul>
+                                </div>
                             </div>
-                            <div class="compliance-item">
-                                <i class="fas fa-check-circle"></i>
-                                <span>End of Service Benefits</span>
-                            </div>
-                            <div class="compliance-item">
-                                <i class="fas fa-check-circle"></i>
-                                <span>Salary Certificates</span>
-                            </div>
-                            <div class="compliance-item">
-                                <i class="fas fa-check-circle"></i>
-                                <span>Labor Law Compliance</span>
+                            <div class="feature-item">
+                                <i class="fas fa-calculator"></i>
+                                <div class="feature-content">
+                                    <h4>Compensation Management</h4>
+                                    <ul>
+                                        <li>End of Service Benefits</li>
+                                        <li>Leave Management</li>
+                                        <li>Allowance Setup</li>
+                                        <li>Salary Certificates</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                         <a href="#" class="learn-more">Explore Qatar Payroll <i class="fas fa-arrow-right"></i></a>
@@ -456,13 +457,204 @@ body {
             </div>
         </section>
 
+<style>
+/* Region Solutions Section Styles */
+.region-solutions {
+    padding: 6rem 0;
+    background: white;
+}
+
+.solutions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2.5rem;
+    margin-top: 3rem;
+}
+
+.solution-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    border: 1px solid rgba(41, 98, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.solution-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: left;
+}
+
+.solution-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.solution-card:hover::before {
+    transform: scaleX(1);
+}
+
+.solution-header {
+    margin-bottom: 2rem;
+}
+
+.solution-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.solution-icon i {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+}
+
+.solution-header h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 0.75rem;
+}
+
+.solution-header p {
+    color: var(--light-text);
+}
+
+.solution-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.feature-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: rgba(41, 98, 255, 0.05);
+    border-radius: 12px;
+    transition: var(--transition);
+}
+
+.feature-item:hover {
+    background: rgba(41, 98, 255, 0.1);
+    transform: translateX(5px);
+}
+
+.feature-item i {
+    color: var(--primary-color);
+    font-size: 1.25rem;
+    margin-top: 0.25rem;
+}
+
+.feature-content h4 {
+    color: #1a237e;
+    margin-bottom: 0.75rem;
+}
+
+.feature-content ul {
+    list-style: none;
+}
+
+.feature-content ul li {
+    color: var(--light-text);
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.feature-content ul li::before {
+    content: '•';
+    color: var(--primary-color);
+}
+
+.learn-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: gap 0.3s ease;
+}
+
+.learn-more:hover {
+    gap: 0.75rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .solutions-grid {
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .solutions-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .solution-card {
+        padding: 2rem;
+    }
+
+    .feature-item {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .feature-content ul {
+        text-align: left;
+    }
+
+    .learn-more {
+        display: flex;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .solution-card {
+        padding: 1.5rem;
+    }
+
+    .solution-icon {
+        margin: 0 auto 1.5rem;
+    }
+
+    .solution-header {
+        text-align: center;
+    }
+}
+</style>
         <!-- Key Features Section -->
         <section class="key-features">
             <div class="container">
                 <div class="section-header">
-                    <h2>Comprehensive Payroll Features</h2>
-                    <p>Everything you need to manage global payroll efficiently</p>
+                    <h2>Advanced Payroll Features</h2>
+                    <p>Powerful tools to streamline your payroll processing across all regions</p>
                 </div>
+
                 <div class="features-showcase">
                     <div class="features-content">
                         <div class="feature-tabs">
@@ -479,101 +671,125 @@ body {
                                 Reporting
                             </button>
                         </div>
+
                         <div class="feature-details">
                             <!-- Automation Content -->
                             <div class="feature-content active" id="automation">
-                                <h3>Intelligent Automation</h3>
-                                <p>Streamline your payroll processes with smart automation features.</p>
-                                <ul class="feature-list">
-                                    <li>
-                                        <i class="fas fa-check-circle"></i>
-                                        <div>
+                                <div class="feature-grid">
+                                    <div class="feature-item">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-calculator"></i>
+                                        </div>
+                                        <div class="feature-info">
                                             <h4>Automated Calculations</h4>
-                                            <p>Accurate salary, tax, and deduction calculations</p>
+                                            <p>Automatic computation of salaries, taxes, and deductions</p>
+                                            <ul class="feature-list">
+                                                <li>Salary Processing</li>
+                                                <li>Tax Calculations</li>
+                                                <li>Deduction Management</li>
+                                            </ul>
                                         </div>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check-circle"></i>
-                                        <div>
-                                            <h4>Bulk Processing</h4>
-                                            <p>Process multiple payrolls simultaneously</p>
+                                    </div>
+
+                                    <div class="feature-item">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-clock"></i>
                                         </div>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check-circle"></i>
-                                        <div>
-                                            <h4>Smart Validations</h4>
-                                            <p>Automatic error detection and correction</p>
+                                        <div class="feature-info">
+                                            <h4>Time & Attendance</h4>
+                                            <p>Seamless integration with attendance systems</p>
+                                            <ul class="feature-list">
+                                                <li>Attendance Tracking</li>
+                                                <li>Leave Management</li>
+                                                <li>Overtime Calculations</li>
+                                            </ul>
                                         </div>
-                                    </li>
-                                </ul>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Compliance Content -->
                             <div class="feature-content" id="compliance">
-                                <h3>Global Compliance</h3>
-                                <p>Stay compliant with local and international regulations.</p>
-                                <ul class="feature-list">
-                                    <li>
-                                        <i class="fas fa-check-circle"></i>
-                                        <div>
-                                            <h4>Tax Management</h4>
-                                            <p>Automated tax calculations and filings</p>
+                                <div class="feature-grid">
+                                    <div class="feature-item">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-balance-scale"></i>
                                         </div>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check-circle"></i>
-                                        <div>
-                                            <h4>Statutory Compliance</h4>
-                                            <p>Built-in compliance rules for each region</p>
+                                        <div class="feature-info">
+                                            <h4>Legal Compliance</h4>
+                                            <p>Stay compliant with local labor laws</p>
+                                            <ul class="feature-list">
+                                                <li>Statutory Compliance</li>
+                                                <li>Tax Regulations</li>
+                                                <li>Labor Laws</li>
+                                            </ul>
                                         </div>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check-circle"></i>
-                                        <div>
-                                            <h4>Audit Trail</h4>
-                                            <p>Complete documentation and tracking</p>
+                                    </div>
+
+                                    <div class="feature-item">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-file-alt"></i>
                                         </div>
-                                    </li>
-                                </ul>
+                                        <div class="feature-info">
+                                            <h4>Documentation</h4>
+                                            <p>Automated generation of required documents</p>
+                                            <ul class="feature-list">
+                                                <li>Pay Slips</li>
+                                                <li>Tax Forms</li>
+                                                <li>Compliance Reports</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Reporting Content -->
                             <div class="feature-content" id="reporting">
-                                <h3>Advanced Reporting</h3>
-                                <p>Comprehensive insights and analytics for better decision-making.</p>
-                                <ul class="feature-list">
-                                    <li>
-                                        <i class="fas fa-check-circle"></i>
-                                        <div>
+                                <div class="feature-grid">
+                                    <div class="feature-item">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-chart-pie"></i>
+                                        </div>
+                                        <div class="feature-info">
+                                            <h4>Analytics Dashboard</h4>
+                                            <p>Comprehensive payroll analytics and insights</p>
+                                            <ul class="feature-list">
+                                                <li>Payroll Trends</li>
+                                                <li>Cost Analysis</li>
+                                                <li>Budget Planning</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <div class="feature-item">
+                                        <div class="feature-icon">
+                                            <i class="fas fa-file-export"></i>
+                                        </div>
+                                        <div class="feature-info">
                                             <h4>Custom Reports</h4>
-                                            <p>Generate tailored reports for your needs</p>
+                                            <p>Flexible reporting capabilities</p>
+                                            <ul class="feature-list">
+                                                <li>Custom Templates</li>
+                                                <li>Multiple Formats</li>
+                                                <li>Scheduled Reports</li>
+                                            </ul>
                                         </div>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check-circle"></i>
-                                        <div>
-                                            <h4>Real-time Analytics</h4>
-                                            <p>Live dashboards and insights</p>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check-circle"></i>
-                                        <div>
-                                            <h4>Export Options</h4>
-                                            <p>Multiple format support for reports</p>
-                                        </div>
-                                    </li>
-                                </ul>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+
                     <div class="features-visual">
                         <img src="path/to/features-dashboard.png" alt="Payroll Features Dashboard" class="feature-image">
                         <div class="feature-stats">
                             <div class="stat-card">
                                 <span class="stat-value">99.9%</span>
                                 <span class="stat-label">Accuracy Rate</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-value">85%</span>
+                                <span class="stat-label">Time Saved</span>
                             </div>
                         </div>
                     </div>
@@ -582,97 +798,11 @@ body {
         </section>
 
 <style>
-/* Global Coverage Section Styles */
-.global-coverage {
-    padding: 6rem 0;
-    background: white;
-    position: relative;
-}
-
-.regions-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2.5rem;
-    margin-top: 3rem;
-}
-
-.region-card {
-    background: white;
-    padding: 2.5rem;
-    border-radius: 20px;
-    box-shadow: var(--box-shadow);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    border: 1px solid rgba(41, 98, 255, 0.1);
-}
-
-.region-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
-    transform: scaleX(0);
-    transition: transform 0.3s ease;
-    transform-origin: left;
-}
-
-.region-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-}
-
-.region-card:hover::before {
-    transform: scaleX(1);
-}
-
-.region-icon {
-    width: 64px;
-    height: 64px;
-    background: rgba(41, 98, 255, 0.1);
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-}
-
-.region-icon i {
-    font-size: 1.75rem;
-    color: var(--primary-color);
-}
-
-.compliance-list {
-    margin-top: 1.5rem;
-}
-
-.compliance-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-    padding: 0.75rem;
-    background: rgba(41, 98, 255, 0.05);
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-.compliance-item:hover {
-    transform: translateX(5px);
-    background: rgba(41, 98, 255, 0.1);
-}
-
-.compliance-item i {
-    color: var(--primary-color);
-}
-
 /* Key Features Section Styles */
 .key-features {
     padding: 6rem 0;
     background: var(--gradient);
+    position: relative;
 }
 
 .features-showcase {
@@ -723,23 +853,66 @@ body {
     display: block;
 }
 
-.feature-list {
-    margin-top: 1.5rem;
+.feature-grid {
+    display: grid;
+    gap: 2rem;
 }
 
-.feature-list li {
+.feature-item {
     display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    padding: 1rem;
+    gap: 1.5rem;
+    padding: 1.5rem;
     background: rgba(41, 98, 255, 0.05);
     border-radius: 12px;
     transition: all 0.3s ease;
 }
 
-.feature-list li:hover {
+.feature-item:hover {
     transform: translateX(5px);
     background: rgba(41, 98, 255, 0.1);
+}
+
+.feature-icon {
+    width: 48px;
+    height: 48px;
+    background: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.feature-icon i {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+}
+
+.feature-info h4 {
+    color: #1a237e;
+    margin-bottom: 0.5rem;
+}
+
+.feature-info p {
+    color: var(--light-text);
+    margin-bottom: 1rem;
+}
+
+.feature-list {
+    list-style: none;
+}
+
+.feature-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.feature-list li::before {
+    content: '•';
+    color: var(--primary-color);
 }
 
 .features-visual {
@@ -750,17 +923,34 @@ body {
     width: 100%;
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
 }
 
 .feature-stats {
     position: absolute;
     top: 20px;
     right: 20px;
+    display: flex;
+    gap: 1rem;
+}
+
+.stat-card {
     background: white;
-    padding: 1.25rem;
+    padding: 1rem 1.5rem;
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--light-text);
 }
 
 /* Responsive Styles */
@@ -791,811 +981,587 @@ body {
         flex-direction: column;
     }
 
-    .feature-content {
+    .feature-item {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
         padding: 1.5rem;
     }
 
-    .feature-list li {
-        flex-direction: column;
-        text-align: center;
+    .feature-list {
+        text-align: left;
     }
 
     .feature-stats {
         position: relative;
         top: -30px;
         right: 0;
-        width: fit-content;
-        margin: 0 auto;
+        justify-content: center;
     }
 }
 
 @media (max-width: 480px) {
-    .region-card,
     .feature-content {
-        padding: 1.25rem;
+        padding: 1.5rem;
     }
 
-    .compliance-item,
-    .feature-list li {
-        padding: 0.75rem;
+    .stat-card {
+        padding: 0.75rem 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
     }
 }
 </style>
-        <!-- Compliance & Tax Management Section -->
-        <section class="compliance-section">
+
+<script>
+// Feature Tabs Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.feature-tab');
+    const contents = document.querySelectorAll('.feature-content');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            // Remove active class from all tabs and contents
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+
+            // Add active class to clicked tab and corresponding content
+            tab.classList.add('active');
+            const contentId = tab.getAttribute('data-tab');
+            document.getElementById(contentId).classList.add('active');
+        });
+    });
+});
+</script>
+        <!-- Integration Section -->
+        <section class="integration-section">
             <div class="container">
                 <div class="section-header">
-                    <h2>Global Tax & Compliance Management</h2>
-                    <p>Stay compliant with local tax laws and regulations across all regions</p>
+                    <h2>Seamless Integrations</h2>
+                    <p>Connect with your existing HR and financial systems</p>
                 </div>
-                <div class="compliance-container">
-                    <div class="compliance-grid">
-                        <!-- India Tax Panel -->
-                        <div class="tax-panel">
-                            <div class="tax-header">
-                                <i class="fas fa-om"></i>
-                                <h3>India Tax Management</h3>
+                <div class="integration-container">
+                    <div class="integration-grid">
+                        <!-- HRMS Integration -->
+                        <div class="integration-card">
+                            <div class="integration-icon">
+                                <i class="fas fa-users-cog"></i>
                             </div>
-                            <div class="tax-features">
-                                <div class="tax-feature">
-                                    <i class="fas fa-calculator"></i>
-                                    <div class="feature-details">
-                                        <h4>TDS Calculation</h4>
-                                        <p>Automated tax deduction at source with latest slabs</p>
-                                    </div>
-                                </div>
-                                <div class="tax-feature">
-                                    <i class="fas fa-file-alt"></i>
-                                    <div class="feature-details">
-                                        <h4>Form 16 Generation</h4>
-                                        <p>Automated annual tax statements</p>
-                                    </div>
-                                </div>
-                                <div class="tax-feature">
-                                    <i class="fas fa-building"></i>
-                                    <div class="feature-details">
-                                        <h4>Professional Tax</h4>
-                                        <p>State-wise professional tax calculations</p>
-                                    </div>
-                                </div>
+                            <h3>HRMS Systems</h3>
+                            <div class="integration-partners">
+                                <img src="path/to/workday-logo.png" alt="Workday">
+                                <img src="path/to/sap-logo.png" alt="SAP">
+                                <img src="path/to/oracle-logo.png" alt="Oracle">
                             </div>
-                        </div>
-
-                        <!-- USA Tax Panel -->
-                        <div class="tax-panel">
-                            <div class="tax-header">
-                                <i class="fas fa-flag-usa"></i>
-                                <h3>USA Tax Management</h3>
-                            </div>
-                            <div class="tax-features">
-                                <div class="tax-feature">
-                                    <i class="fas fa-file-invoice-dollar"></i>
-                                    <div class="feature-details">
-                                        <h4>Federal Tax Filing</h4>
-                                        <p>Automated federal tax calculations and filing</p>
-                                    </div>
-                                </div>
-                                <div class="tax-feature">
-                                    <i class="fas fa-map-marked-alt"></i>
-                                    <div class="feature-details">
-                                        <h4>State Tax Management</h4>
-                                        <p>State-specific tax compliance</p>
-                                    </div>
-                                </div>
-                                <div class="tax-feature">
-                                    <i class="fas fa-file-contract"></i>
-                                    <div class="feature-details">
-                                        <h4>W-2 & 1099 Forms</h4>
-                                        <p>Automated year-end tax forms</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- UAE Tax Panel -->
-                        <div class="tax-panel">
-                            <div class="tax-header">
-                                <i class="fas fa-mosque"></i>
-                                <h3>UAE Compliance</h3>
-                            </div>
-                            <div class="tax-features">
-                                <div class="tax-feature">
-                                    <i class="fas fa-credit-card"></i>
-                                    <div class="feature-details">
-                                        <h4>WPS Compliance</h4>
-                                        <p>Wage protection system integration</p>
-                                    </div>
-                                </div>
-                                <div class="tax-feature">
-                                    <i class="fas fa-calculator"></i>
-                                    <div class="feature-details">
-                                        <h4>Gratuity Calculator</h4>
-                                        <p>End of service benefits calculation</p>
-                                    </div>
-                                </div>
-                                <div class="tax-feature">
-                                    <i class="fas fa-file-signature"></i>
-                                    <div class="feature-details">
-                                        <h4>MOHRE Compliance</h4>
-                                        <p>Labor law compliance management</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Qatar Tax Panel -->
-                        <div class="tax-panel">
-                            <div class="tax-header">
-                                <i class="fas fa-moon"></i>
-                                <h3>Qatar Compliance</h3>
-                            </div>
-                            <div class="tax-features">
-                                <div class="tax-feature">
-                                    <i class="fas fa-balance-scale"></i>
-                                    <div class="feature-details">
-                                        <h4>QFC Regulations</h4>
-                                        <p>Qatar Financial Centre compliance</p>
-                                    </div>
-                                </div>
-                                <div class="tax-feature">
-                                    <i class="fas fa-file-invoice"></i>
-                                    <div class="feature-details">
-                                        <h4>Salary Certificates</h4>
-                                        <p>Automated certificate generation</p>
-                                    </div>
-                                </div>
-                                <div class="tax-feature">
-                                    <i class="fas fa-shield-alt"></i>
-                                    <div class="feature-details">
-                                        <h4>Labor Law Compliance</h4>
-                                        <p>Qatar labor law adherence</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Compliance Dashboard Preview -->
-                    <div class="compliance-preview">
-                        <img src="path/to/compliance-dashboard.png" alt="Compliance Dashboard" class="dashboard-image">
-                        <div class="compliance-stats">
-                            <div class="stat-item">
-                                <span class="stat-number">100%</span>
-                                <span class="stat-label">Compliance Rate</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-number">Real-time</span>
-                                <span class="stat-label">Updates</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Payroll Processing Workflow -->
-        <section class="workflow-section">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Streamlined Payroll Processing</h2>
-                    <p>Simple and efficient payroll processing workflow</p>
-                </div>
-                <div class="workflow-steps">
-                    <div class="workflow-step">
-                        <div class="step-number">1</div>
-                        <div class="step-content">
-                            <h3>Data Collection</h3>
-                            <p>Automated attendance and time data collection</p>
-                            <ul class="step-features">
-                                <li>Time & attendance integration</li>
+                            <ul class="integration-features">
+                                <li>Employee data sync</li>
+                                <li>Attendance integration</li>
                                 <li>Leave management</li>
-                                <li>Overtime calculation</li>
                             </ul>
                         </div>
-                    </div>
 
-                    <div class="workflow-step">
-                        <div class="step-number">2</div>
-                        <div class="step-content">
-                            <h3>Processing & Validation</h3>
-                            <p>Automated calculations with built-in validation</p>
-                            <ul class="step-features">
-                                <li>Salary calculation</li>
-                                <li>Tax computation</li>
-                                <li>Deduction management</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="workflow-step">
-                        <div class="step-number">3</div>
-                        <div class="step-content">
-                            <h3>Approval & Disbursement</h3>
-                            <p>Multi-level approval and payment processing</p>
-                            <ul class="step-features">
-                                <li>Approval workflow</li>
+                        <!-- Banking Integration -->
+                        <div class="integration-card">
+                            <div class="integration-icon">
+                                <i class="fas fa-university"></i>
+                            </div>
+                            <h3>Banking Systems</h3>
+                            <div class="integration-partners">
+                                <img src="path/to/bank-logos.png" alt="Banking Partners">
+                            </div>
+                            <ul class="integration-features">
+                                <li>Direct deposits</li>
                                 <li>Bank file generation</li>
                                 <li>Payment processing</li>
                             </ul>
                         </div>
+
+                        <!-- Accounting Integration -->
+                        <div class="integration-card">
+                            <div class="integration-icon">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <h3>Accounting Software</h3>
+                            <div class="integration-partners">
+                                <img src="path/to/quickbooks-logo.png" alt="QuickBooks">
+                                <img src="path/to/xero-logo.png" alt="Xero">
+                            </div>
+                            <ul class="integration-features">
+                                <li>Journal entries</li>
+                                <li>Expense tracking</li>
+                                <li>Financial reporting</li>
+                            </ul>
+                        </div>
                     </div>
 
-                    <div class="workflow-step">
-                        <div class="step-number">4</div>
-                        <div class="step-content">
-                            <h3>Reporting & Compliance</h3>
-                            <p>Comprehensive reports and compliance filing</p>
-                            <ul class="step-features">
-                                <li>Statutory reports</li>
-                                <li>Tax filings</li>
-                                <li>Custom reports</li>
+                    <!-- API Access -->
+                    <div class="api-section">
+                        <div class="api-content">
+                            <h3>Robust API Access</h3>
+                            <p>Build custom integrations with our comprehensive API</p>
+                            <ul class="api-features">
+                                <li>
+                                    <i class="fas fa-code"></i>
+                                    <span>RESTful API</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-book"></i>
+                                    <span>Detailed Documentation</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>Secure Authentication</span>
+                                </li>
                             </ul>
+                            <a href="#" class="btn primary">Access API Docs</a>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
+        <!-- Pricing Section -->
+        <section class="pricing-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Transparent Pricing</h2>
+                    <p>Choose the plan that best fits your business needs</p>
+                </div>
+                <div class="pricing-toggle">
+                    <span>Monthly</span>
+                    <label class="switch">
+                        <input type="checkbox" id="billing-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span>Annual <span class="discount">Save 20%</span></span>
+                </div>
+                <div class="pricing-grid">
+                    <!-- Basic Plan -->
+                    <div class="pricing-card">
+                        <h3>Basic</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">8</span>
+                            <span class="period">/employee/month</span>
+                        </div>
+                        <p class="plan-description">Perfect for small businesses</p>
+                        <ul class="plan-features">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Single Country Payroll</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Basic Tax Calculations</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Standard Reports</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Email Support</span>
+                            </li>
+                        </ul>
+                        <button class="btn primary">Start Free Trial</button>
+                        <p class="trial-note">14-day free trial, no credit card required</p>
+                    </div>
+
+                    <!-- Professional Plan -->
+                    <div class="pricing-card popular">
+                        <div class="popular-badge">Most Popular</div>
+                        <h3>Professional</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">15</span>
+                            <span class="period">/employee/month</span>
+                        </div>
+                        <p class="plan-description">Ideal for growing companies</p>
+                        <ul class="plan-features">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Multi-Country Payroll</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Advanced Tax Management</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Custom Reports</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Priority Support</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>API Access</span>
+                            </li>
+                        </ul>
+                        <button class="btn primary">Start Free Trial</button>
+                        <p class="trial-note">14-day free trial, no credit card required</p>
+                    </div>
+
+                    <!-- Enterprise Plan -->
+                    <div class="pricing-card">
+                        <h3>Enterprise</h3>
+                        <div class="price">
+                            <span class="custom">Custom</span>
+                        </div>
+                        <p class="plan-description">For large organizations</p>
+                        <ul class="plan-features">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Global Payroll Solution</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Dedicated Account Manager</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Custom Integration</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>24/7 Premium Support</span>
+                            </li>
+                        </ul>
+                        <button class="btn secondary">Contact Sales</button>
+                        <p class="trial-note">Get a customized quote for your needs</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Call to Action Section -->
+        <section class="cta-section">
+            <div class="container">
+                <div class="cta-content">
+                    <h2>Ready to Streamline Your Global Payroll?</h2>
+                    <p>Join thousands of companies managing their payroll with us</p>
+                    <div class="cta-buttons">
+                        <button class="btn primary">Get Started</button>
+                        <button class="btn secondary">Schedule Demo</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer (Same as pms.html) -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                        <li><a href="#integrations">Integrations</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Developers</h4>
+                    <ul>
+                        <li><a href="#api-docs">API Documentation</a></li>
+                        <li><a href="#sdk">SDKs & Tools</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="#about">About Us</a></li>
+                        <li><a href="#careers">Careers</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Workwise Pro. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
 <style>
-/* Compliance Section Styles */
-.compliance-section {
+/* Integration Section Styles */
+.integration-section {
     padding: 6rem 0;
     background: white;
 }
 
-.compliance-container {
+.integration-container {
     margin-top: 3rem;
 }
 
-.compliance-grid {
+.integration-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 2rem;
     margin-bottom: 4rem;
 }
 
-.tax-panel {
+.integration-card {
     background: white;
-    padding: 2rem;
+    padding: 2.5rem;
     border-radius: 20px;
     box-shadow: var(--box-shadow);
     transition: all 0.3s ease;
     border: 1px solid rgba(41, 98, 255, 0.1);
 }
 
-.tax-panel:hover {
+.integration-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
 }
 
-.tax-header {
+.integration-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 16px;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    justify-content: center;
     margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.tax-header i {
-    font-size: 1.5rem;
+.integration-icon i {
+    font-size: 1.75rem;
     color: var(--primary-color);
 }
 
-.tax-features {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-}
-
-.tax-feature {
+.integration-partners {
     display: flex;
     gap: 1rem;
-    padding: 1rem;
-    background: rgba(41, 98, 255, 0.05);
-    border-radius: 12px;
-    transition: all 0.3s ease;
+    margin: 1.5rem 0;
+    flex-wrap: wrap;
 }
 
-.tax-feature:hover {
-    transform: translateX(5px);
-    background: rgba(41, 98, 255, 0.1);
+.integration-partners img {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
 }
 
-.tax-feature i {
-    color: var(--primary-color);
-    font-size: 1.25rem;
+.integration-features {
+    list-style: none;
+    margin-top: 1.5rem;
 }
 
-.feature-details h4 {
-    margin-bottom: 0.25rem;
-    color: #1a237e;
+.integration-features li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.feature-details p {
-    font-size: 0.9rem;
-    color: var(--light-text);
-}
-
-.compliance-preview {
-    position: relative;
-    margin-top: 4rem;
-}
-
-.dashboard-image {
-    width: 100%;
-    max-width: 1000px;
-    margin: 0 auto;
-    display: block;
+/* API Section Styles */
+.api-section {
+    background: var(--gradient);
+    padding: 3rem;
     border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    margin-top: 3rem;
 }
 
-.compliance-stats {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    display: flex;
-    gap: 1rem;
-}
-
-.stat-item {
-    background: white;
-    padding: 1rem 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+.api-content {
+    max-width: 600px;
+    margin: 0 auto;
     text-align: center;
 }
 
-.stat-number {
-    display: block;
+.api-features {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.api-features li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.api-features i {
     font-size: 1.5rem;
-    font-weight: 700;
     color: var(--primary-color);
 }
 
-.stat-label {
-    font-size: 0.875rem;
-    color: var(--light-text);
-}
-
-/* Workflow Section Styles */
-.workflow-section {
+/* Pricing Section Styles */
+.pricing-section {
     padding: 6rem 0;
     background: var(--gradient);
 }
 
-.workflow-steps {
+.pricing-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: 3rem 0;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--primary-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.pricing-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 2rem;
     margin-top: 3rem;
 }
 
-.workflow-step {
+.pricing-card {
     background: white;
-    padding: 2rem;
+    padding: 2.5rem;
     border-radius: 20px;
     box-shadow: var(--box-shadow);
-    position: relative;
     transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
-.workflow-step:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+.pricing-card.popular {
+    background: linear-gradient(145deg, #ffffff, #f8f9ff);
+    border: 2px solid var(--primary-color);
+    transform: scale(1.05);
 }
 
-.step-number {
-    width: 40px;
-    height: 40px;
+.popular-badge {
+    position: absolute;
+    top: 1.5rem;
+    right: -3rem;
     background: var(--primary-color);
     color: white;
-    border-radius: 50%;
+    padding: 0.5rem 3rem;
+    transform: rotate(45deg);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* CTA Section Styles */
+.cta-section {
+    padding: 4rem 0;
+    background: white;
+    text-align: center;
+}
+
+.cta-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.cta-buttons {
     display: flex;
-    align-items: center;
+    gap: 1rem;
     justify-content: center;
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-}
-
-.step-content h3 {
-    color: #1a237e;
-    margin-bottom: 1rem;
-}
-
-.step-features {
-    margin-top: 1rem;
-    list-style: none;
-}
-
-.step-features li {
-    padding: 0.5rem 0;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.step-features li::before {
-    content: '✓';
-    color: var(--primary-color);
+    margin-top: 2rem;
 }
 
 /* Responsive Styles */
 @media (max-width: 992px) {
-    .compliance-grid {
+    .integration-grid {
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     }
 
-    .workflow-steps {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 768px) {
-    .tax-feature {
+    .api-features {
         flex-direction: column;
         align-items: center;
-        text-align: center;
     }
 
-    .compliance-stats {
-        position: relative;
-        top: -30px;
-        right: 0;
-        justify-content: center;
-    }
-
-    .workflow-step {
-        text-align: center;
-    }
-
-    .step-number {
-        margin: 0 auto 1.5rem;
-    }
-
-    .step-features li {
-        justify-content: center;
-    }
-}
-
-@media (max-width: 480px) {
-    .tax-panel,
-    .workflow-step {
-        padding: 1.5rem;
-    }
-
-    .stat-item {
-        padding: 0.75rem 1rem;
-    }
-
-    .stat-number {
-        font-size: 1.25rem;
-    }
-}
-</style>
-    <!-- Footer -->
-       <!-- Footer -->
-    <footer class="main-footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-grid">
-                    <div class="footer-section brand-section">
-                        <div class="footer-logo">
-                            <img src="path/to/logo-white.png" alt="Workwise Pro Logo">
-                        </div>
-                        <p class="footer-description">
-                            Transform your HR processes with AI-powered payroll management solutions.
-                        </p>
-                        <div class="social-links">
-                            <a href="#" aria-label="LinkedIn">
-                                <i class="fab fa-linkedin"></i>
-                            </a>
-                            <a href="#" aria-label="Twitter">
-                                <i class="fab fa-twitter"></i>
-                            </a>
-                            <a href="#" aria-label="Facebook">
-                                <i class="fab fa-facebook"></i>
-                            </a>
-                            <a href="#" aria-label="Instagram">
-                                <i class="fab fa-instagram"></i>
-                            </a>
-                        </div>
-                    </div>
-
-                    <div class="footer-section">
-                        <h4>Solutions</h4>
-                        <ul>
-                            <li><a href="#">Global Payroll</a></li>
-                            <li><a href="#">HR Management</a></li>
-                            <li><a href="#">Time Tracking</a></li>
-                            <li><a href="#">Compliance</a></li>
-                            <li><a href="#">Integration</a></li>
-                        </ul>
-                    </div>
-
-                    <div class="footer-section">
-                        <h4>Company</h4>
-                        <ul>
-                            <li><a href="#">About Us</a></li>
-                            <li><a href="#">Careers</a></li>
-                            <li><a href="#">Press</a></li>
-                            <li><a href="#">Contact</a></li>
-                            <li><a href="#">Partners</a></li>
-                        </ul>
-                    </div>
-
-                    <div class="footer-section">
-                        <h4>Resources</h4>
-                        <ul>
-                            <li><a href="#">Blog</a></li>
-                            <li><a href="#">Guides</a></li>
-                            <li><a href="#">API Docs</a></li>
-                            <li><a href="#">Help Center</a></li>
-                            <li><a href="#">Community</a></li>
-                        </ul>
-                    </div>
-
-                    <div class="footer-section">
-                        <h4>Legal</h4>
-                        <ul>
-                            <li><a href="#">Privacy Policy</a></li>
-                            <li><a href="#">Terms of Service</a></li>
-                            <li><a href="#">Security</a></li>
-                            <li><a href="#">Compliance</a></li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="footer-bottom">
-                    <div class="footer-info">
-                        <p>&copy; 2024 Workwise Pro. All rights reserved.</p>
-                    </div>
-                    <div class="footer-badges">
-                        <img src="path/to/security-badge.png" alt="Security Certified">
-                        <img src="path/to/gdpr-badge.png" alt="GDPR Compliant">
-                        <img src="path/to/iso-badge.png" alt="ISO 27001">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-<style>
-/* Footer Styles */
-.main-footer {
-    background: #000000;
-    color: #ffffff;
-    padding: 6rem 0 2rem;
-    position: relative;
-}
-
-.main-footer::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(45deg, rgba(41, 98, 255, 0.05), transparent);
-    pointer-events: none;
-}
-
-.footer-content {
-    position: relative;
-    z-index: 1;
-}
-
-.footer-grid {
-    display: grid;
-    grid-template-columns: 2fr repeat(4, 1fr);
-    gap: clamp(2rem, 5vw, 4rem);
-    margin-bottom: 4rem;
-}
-
-.brand-section {
-    max-width: 300px;
-}
-
-.footer-logo {
-    margin-bottom: 1.5rem;
-}
-
-.footer-logo img {
-    height: 40px;
-    width: auto;
-}
-
-.footer-description {
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 2rem;
-    line-height: 1.6;
-}
-
-.social-links {
-    display: flex;
-    gap: 1.5rem;
-}
-
-.social-links a {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 1.25rem;
-    transition: all 0.3s ease;
-}
-
-.social-links a:hover {
-    color: var(--primary-color);
-    transform: translateY(-3px);
-}
-
-.footer-section h4 {
-    color: #ffffff;
-    font-size: 1.2rem;
-    margin-bottom: 1.5rem;
-    font-weight: 600;
-    position: relative;
-    padding-bottom: 0.75rem;
-}
-
-.footer-section h4::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 30px;
-    height: 2px;
-    background: var(--primary-color);
-    transition: width 0.3s ease;
-}
-
-.footer-section:hover h4::after {
-    width: 50px;
-}
-
-.footer-section ul {
-    list-style: none;
-    padding: 0;
-}
-
-.footer-section ul li {
-    margin-bottom: 0.8rem;
-}
-
-.footer-section ul li a {
-    color: rgba(255, 255, 255, 0.7);
-    text-decoration: none;
-    transition: all 0.3s ease;
-    font-size: 0.95rem;
-    display: inline-block;
-    padding: 0.3rem 0;
-    position: relative;
-}
-
-.footer-section ul li a::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 1px;
-    background: var(--primary-color);
-    transition: width 0.3s ease;
-}
-
-.footer-section ul li a:hover {
-    color: #ffffff;
-    transform: translateX(5px);
-}
-
-.footer-section ul li a:hover::before {
-    width: 100%;
-}
-
-.footer-bottom {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.footer-info p {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.9rem;
-}
-
-.footer-badges {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;
-}
-
-.footer-badges img {
-    height: 40px;
-    width: auto;
-    opacity: 0.7;
-    transition: opacity 0.3s ease;
-}
-
-.footer-badges img:hover {
-    opacity: 1;
-}
-
-/* Footer Responsive Styles */
-@media (max-width: 1200px) {
-    .footer-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    .brand-section {
-        grid-column: 1 / -1;
-        max-width: 100%;
-        text-align: center;
-    }
-
-    .social-links {
-        justify-content: center;
+    .pricing-card.popular {
+        transform: scale(1.02);
     }
 }
 
 @media (max-width: 768px) {
-    .footer-grid {
-        grid-template-columns: repeat(2, 1fr);
+    .integration-card,
+    .pricing-card {
+        padding: 2rem;
     }
 
-    .footer-section h4::after {
-        left: 0;
-        transform: none;
+    .api-section {
+        padding: 2rem;
     }
 
-    .footer-bottom {
+    .cta-buttons {
         flex-direction: column;
-        text-align: center;
-        gap: 1.5rem;
+        align-items: center;
+    }
+
+    .pricing-toggle {
+        flex-direction: column;
     }
 }
 
 @media (max-width: 480px) {
-    .footer-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .footer-section {
-        text-align: center;
-    }
-
-    .footer-section h4::after {
-        left: 50%;
-        transform: translateX(-50%);
-    }
-
-    .footer-section ul li a:hover {
-        transform: translateX(0);
-    }
-
-    .footer-badges {
-        flex-wrap: wrap;
+    .integration-partners {
         justify-content: center;
+    }
+
+    .integration-partners img {
+        height: 30px;
+    }
+
+    .pricing-card.popular {
+        transform: none;
     }
 }
 </style>
-
 <script>
 // Initialize all functionality when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initializeAll();
+    loadHeader();
 });
 
-function initializeAll() {
-    initializeHeader();
-    initializeAnimations();
-    initializePricing();
-    handleScrollEffects();
-    setupInteractions();
-}
-
-// Header Loading Function
-async function initializeHeader() {
+// Header Loading Function (Same as pms.html)
+async function loadHeader() {
     const headerContainer = document.getElementById('header-container');
     
     try {
@@ -1604,7 +1570,55 @@ async function initializeHeader() {
         
         const html = await response.text();
         headerContainer.innerHTML = html;
-        initializeMobileMenu();
+
+        // Initialize mobile menu functionality after header loads
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mainNav = document.getElementById('main-nav');
+        const menuOverlay = document.getElementById('menu-overlay');
+        const megaMenus = document.querySelectorAll('.mega-menu');
+
+        if (mobileMenu && mainNav) {
+            let isMenuOpen = false;
+
+            function toggleMenu(show) {
+                isMenuOpen = show;
+                mobileMenu.classList.toggle('active', show);
+                mainNav.classList.toggle('active', show);
+                menuOverlay.classList.toggle('active', show);
+                document.body.style.overflow = show ? 'hidden' : '';
+
+                if (!show) {
+                    megaMenus.forEach(menu => menu.classList.remove('active'));
+                }
+            }
+
+            mobileMenu.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMenu(!isMenuOpen);
+            });
+
+            // Handle mega menus on mobile
+            megaMenus.forEach(menu => {
+                const link = menu.querySelector('a');
+                link.addEventListener('click', (e) => {
+                    if (window.innerWidth <= 768) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        megaMenus.forEach(m => {
+                            if (m !== menu) m.classList.remove('active');
+                        });
+                        menu.classList.toggle('active');
+                    }
+                });
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
+                    toggleMenu(false);
+                }
+            });
+        }
     } catch (error) {
         console.error('Error loading header:', error);
         headerContainer.innerHTML = `
@@ -1617,6 +1631,14 @@ async function initializeHeader() {
             </header>
         `;
     }
+}
+
+function initializeAll() {
+    initializeAnimations();
+    initializePricing();
+    initializeFeatureTabs();
+    handleScrollEffects();
+    setupInteractions();
 }
 
 // Animation Handler
@@ -1638,8 +1660,25 @@ function initializeAnimations() {
         });
     }, observerOptions);
 
-    document.querySelectorAll('.animate-on-scroll').forEach(el => {
-        observer.observe(el);
+    // Observe all animatable elements
+    document.querySelectorAll('.feature-card, .solution-card, .integration-card, .pricing-card, .progress-fill')
+        .forEach(el => observer.observe(el));
+}
+
+// Feature Tabs Handler
+function initializeFeatureTabs() {
+    const tabs = document.querySelectorAll('.feature-tab');
+    const contents = document.querySelectorAll('.feature-content');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+
+            tab.classList.add('active');
+            const contentId = tab.getAttribute('data-tab');
+            document.getElementById(contentId).classList.add('active');
+        });
     });
 }
 
@@ -1703,8 +1742,8 @@ function handleScrollEffects() {
 
 // Interactive Elements Setup
 function setupInteractions() {
-    // Feature Cards Interaction
-    document.querySelectorAll('.integration-card').forEach(card => {
+    // Card Hover Effects
+    document.querySelectorAll('.solution-card, .integration-card').forEach(card => {
         card.addEventListener('mouseenter', () => {
             card.classList.add('card-hover');
         });
@@ -1735,11 +1774,11 @@ function handleError(error) {
     // Implement error notification system here
 }
 
-// Watson Assistant Chat Integration
+// Watson Assistant Chat Integration (Same as pms.html)
 window.watsonAssistantChatOptions = {
-    integrationID: "YOUR_INTEGRATION_ID",
-    region: "YOUR_REGION",
-    serviceInstanceID: "YOUR_SERVICE_INSTANCE_ID",
+    integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
+    region: "au-syd",
+    serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
     onLoad: async (instance) => { await instance.render(); }
 };
 
