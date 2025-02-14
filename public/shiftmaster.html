@@ -1439,15 +1439,15 @@ input:checked + .slider:before {
                                     <span>USA</span>
                                 </div>
                                 <div class="country-flag">
-                                    <img src="image/flags/india-flag.png" alt="India Flag">
+                                    <img src="image/india-flag.png" alt="India Flag">
                                     <span>India</span>
                                 </div>
                                 <div class="country-flag">
-                                    <img src="image/flags/uae-flag.png" alt="UAE Flag">
+                                    <img src="image/uae-flag.png" alt="UAE Flag">
                                     <span>UAE</span>
                                 </div>
                                 <div class="country-flag">
-                                    <img src="image/flags/qatar-flag.png" alt="Qatar Flag">
+                                    <img src="image/qatar-flag.png" alt="Qatar Flag">
                                     <span>Qatar</span>
                                 </div>
                             </div>
@@ -1463,7 +1463,136 @@ input:checked + .slider:before {
                 </div>
             </div>
         </section>
+<style>
+/* Global Presence Styles */
+.global-presence {
+    margin-top: 2.5rem;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
 
+.global-presence h3 {
+    font-size: 1.2rem;
+    color: #1a237e;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.global-presence h3::before {
+    content: '🌐';
+    font-size: 1.4rem;
+}
+
+.country-flags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.country-flag {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.country-flag:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.country-flag img {
+    width: 28px;
+    height: 20px;
+    object-fit: cover;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.country-flag span {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-color);
+    white-space: nowrap;
+}
+
+/* Responsive styles for flags */
+@media (max-width: 1200px) {
+    .country-flags {
+        gap: 1rem;
+    }
+
+    .country-flag {
+        padding: 0.5rem 0.75rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .global-presence {
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .country-flags {
+        justify-content: center;
+    }
+
+    .country-flag {
+        min-width: 120px;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .global-presence {
+        padding: 1.25rem;
+    }
+
+    .country-flags {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .country-flag {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Animation for flags */
+.country-flag {
+    animation: fadeInUp 0.5s ease forwards;
+    opacity: 0;
+}
+
+.country-flag:nth-child(1) { animation-delay: 0.1s; }
+.country-flag:nth-child(2) { animation-delay: 0.2s; }
+.country-flag:nth-child(3) { animation-delay: 0.3s; }
+.country-flag:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
         <!-- Key Features Section -->
         <section class="features-section">
             <div class="container">
