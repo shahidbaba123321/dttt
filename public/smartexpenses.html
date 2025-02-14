@@ -1403,6 +1403,7 @@ body {
     padding: 6rem 0;
     background: var(--gradient);
     position: relative;
+    overflow: hidden;
 }
 
 .pricing-section::before {
@@ -1412,10 +1413,12 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(45deg, rgba(41, 98, 255, 0.05), transparent);
+    background: url('path/to/pattern.svg');
+    opacity: 0.05;
     pointer-events: none;
 }
 
+/* Enhanced Pricing Toggle */
 .pricing-toggle {
     display: flex;
     align-items: center;
@@ -1427,6 +1430,7 @@ body {
     border-radius: 50px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     width: fit-content;
+    position: relative;
 }
 
 .pricing-toggle span {
@@ -1442,9 +1446,10 @@ body {
     border-radius: 20px;
     font-size: 0.875rem;
     font-weight: 500;
+    margin-left: 0.5rem;
 }
 
-/* Switch Styles */
+/* Enhanced Switch Styles */
 .switch {
     position: relative;
     display: inline-block;
@@ -1492,7 +1497,7 @@ input:checked + .slider:before {
     transform: translateX(28px);
 }
 
-/* Pricing Grid */
+/* Enhanced Pricing Grid */
 .pricing-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1518,6 +1523,7 @@ input:checked + .slider:before {
 .pricing-card:hover:not(.popular) {
     transform: translateY(-10px);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-color);
 }
 
 .pricing-card.popular {
@@ -1540,6 +1546,96 @@ input:checked + .slider:before {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.pricing-card h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.price {
+    text-align: center;
+    margin: 1.5rem 0;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.currency {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    vertical-align: top;
+    margin-right: 0.25rem;
+}
+
+.amount {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1;
+}
+
+.period {
+    font-size: 1rem;
+    color: var(--light-text);
+    margin-left: 0.25rem;
+}
+
+.custom {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.plan-description {
+    text-align: center;
+    color: var(--light-text);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+.plan-features {
+    list-style: none;
+    margin: 2rem 0;
+    flex-grow: 1;
+}
+
+.plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    color: var(--text-color);
+    font-size: 1rem;
+    padding: 0.5rem 0;
+}
+
+.plan-features li i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.pricing-card .btn {
+    width: 100%;
+    margin-top: auto;
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.pricing-card .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(41, 98, 255, 0.2);
+}
+
+.trial-note {
+    text-align: center;
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin-top: 1rem;
+}
 /* CTA Section Styles */
 .cta-section {
     padding: 4rem 0;
@@ -1560,11 +1656,13 @@ input:checked + .slider:before {
 }
 
 /* Footer Styles */
+/* Enhanced Footer Styles */
 .main-footer {
     background: #000000;
     color: #ffffff;
     padding: 6rem 0 2rem;
     position: relative;
+    overflow: hidden;
 }
 
 .main-footer::before {
@@ -1578,11 +1676,187 @@ input:checked + .slider:before {
     pointer-events: none;
 }
 
+.footer-content {
+    position: relative;
+    z-index: 1;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 2fr repeat(4, 1fr);
+    gap: clamp(2rem, 5vw, 4rem);
+    margin-bottom: 4rem;
+}
+
+.brand-section {
+    max-width: 300px;
+}
+
+.footer-logo {
+    margin-bottom: 1.5rem;
+}
+
+.footer-logo img {
+    height: 40px;
+    width: auto;
+}
+
+.footer-description {
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.social-links {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.social-links a {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.25rem;
+    transition: all 0.3s ease;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.social-links a:hover {
+    color: #ffffff;
+    background: var(--primary-color);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(41, 98, 255, 0.2);
+}
+
+.footer-section h4 {
+    color: #ffffff;
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    position: relative;
+    padding-bottom: 0.75rem;
+}
+
+.footer-section h4::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    background: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+.footer-section:hover h4::after {
+    width: 50px;
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section ul li {
+    margin-bottom: 0.8rem;
+}
+
+.footer-section ul li a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0;
+    position: relative;
+}
+
+.footer-section ul li a::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+.footer-section ul li a:hover {
+    color: #ffffff;
+    transform: translateX(5px);
+}
+
+.footer-section ul li a:hover::before {
+    width: 100%;
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-info p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+.footer-badges {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.footer-badges img {
+    height: 40px;
+    width: auto;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    filter: grayscale(100%);
+}
+
+.footer-badges img:hover {
+    opacity: 1;
+    filter: grayscale(0%);
+    transform: translateY(-2px);
+}
+
+
 /* Responsive Styles */
 @media (max-width: 1200px) {
     .pricing-grid {
         gap: 1.5rem;
         padding: 0 2rem;
+    }
+    .pricing-card {
+        padding: 2.5rem 2rem;
+    }
+
+    .amount {
+        font-size: 3rem;
+    }
+    .footer-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .brand-section {
+        grid-column: 1 / -1;
+        max-width: 100%;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .social-links {
+        justify-content: center;
     }
 }
 
@@ -1612,6 +1886,8 @@ input:checked + .slider:before {
         padding: 0.75rem 1.5rem;
         border-radius: 25px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        width: 100%;
+        text-align: center;
     }
 
     .pricing-card {
@@ -1626,6 +1902,38 @@ input:checked + .slider:before {
         flex-direction: column;
         align-items: center;
     }
+    .popular-badge {
+        font-size: 0.75rem;
+        padding: 0.4rem 3rem;
+    }
+
+    .amount {
+        font-size: 2.5rem;
+    }
+     .main-footer {
+        padding: 4rem 0 2rem;
+    }
+
+    .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+    }
+
+    .footer-section h4::after {
+        left: 0;
+        transform: none;
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+        gap: 1.5rem;
+    }
+
+    .footer-badges {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1636,6 +1944,53 @@ input:checked + .slider:before {
 
     .pricing-card {
         padding: 1.5rem;
+    }
+
+    .amount {
+        font-size: 2.25rem;
+    }
+
+    .plan-features li {
+        font-size: 0.95rem;
+    }
+
+    .pricing-card .btn {
+        padding: 0.875rem;
+        font-size: 0.95rem;
+    }
+
+    .trial-note {
+        font-size: 0.8rem;
+    }
+    .footer-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .footer-section {
+        text-align: center;
+    }
+
+    .footer-section h4::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .footer-section ul li a {
+        justify-content: center;
+    }
+
+    .footer-section ul li a:hover {
+        transform: translateX(0);
+    }
+
+    .social-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .footer-badges img {
+        height: 30px;
     }
 }
 </style>
