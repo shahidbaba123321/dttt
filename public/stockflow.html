@@ -3,967 +3,1322 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workwise Pro Inventory - Management Software for Global Businesses</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        /* Root Variables */
-        :root {
-            --primary-color: #e33333;
-            --text-dark: #0f1964;
-            --text-body: #333;
-            --background-light: #fff6f4;
-            --link-blue: #2962ff;
-            --border-color: #e0e0e0;
-            --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
-            --header-height: 80px;
-        }
+    <title>StockFlow - Inventory & Order Management | Workwise Pro</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        /* Reset & Base Styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+<style>
+/* Root Variables - Same as smartexpenses.html */
+:root {
+    --primary-color: #2962ff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --background-color: #f8f9fa;
+    --text-color: #333;
+    --light-text: #6c757d;
+    --border-radius: 8px;
+    --transition: all 0.3s ease;
+    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --gradient: linear-gradient(135deg, #f0f7ff 0%, #e9ecef 100%);
+    --card-bg: #ffffff;
+    --mobile-padding: 1rem;
+    --section-spacing: 4rem;
+    --header-height: 70px;
+}
 
-        html {
-            scroll-behavior: smooth;
-            -webkit-text-size-adjust: 100%;
-        }
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
 
-        body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            padding-top: var(--header-height);
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
+body {
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    padding-top: var(--header-height);
+}
 
-        /* Header & Navigation */
-        header {
-            background: white;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            z-index: 1000;
-            height: var(--header-height);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--mobile-padding);
+    width: 100%;
+}
 
-        header .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
+/* Hero Section Styles */
+.stock-hero {
+    background: var(--gradient);
+    padding: calc(var(--header-height) + 4rem) 0 6rem;
+    position: relative;
+    overflow: hidden;
+}
 
-        .logo {
-            display: flex;
-            align-items: center;
-        }
+.stock-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(41, 98, 255, 0.05), transparent);
+    pointer-events: none;
+}
 
-        .logo h1 {
-            font-size: 24px;
-            font-weight: 600;
-        }
+.hero-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
 
-        .logo h1 a {
-            color: var(--primary-color);
-            text-decoration: none;
-        }
+.hero-text {
+    max-width: 600px;
+}
 
-        nav {
-            margin-left: auto;
-            height: 100%;
-        }
+.hero-text h1 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    background: linear-gradient(45deg, #1a237e, #2962ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+    font-weight: 700;
+}
 
-        #nav-list {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            height: 100%;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
+.hero-text p {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: #455a64;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
 
-        #nav-list > li {
-            height: 100%;
-            display: flex;
-            align-items: center;
-            position: relative;
-        }
+.hero-buttons {
+    display: flex;
+    gap: 1.5rem;
+}
 
-        #nav-list > li > a {
-            color: var(--text-dark);
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 15px;
-            padding: 0 12px;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            transition: var(--transition);
-        }
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 2rem;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    transition: var(--transition);
+    font-weight: 500;
+    cursor: pointer;
+    min-width: 160px;
+    text-align: center;
+}
 
-        #nav-list > li > a:hover {
-            color: var(--primary-color);
-        }
+.btn.primary {
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
+}
 
-        /* Dropdown Styling */
-        .dropdown {
-            height: 100%;
-        }
+.btn.secondary {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
 
-        .dropdown > a {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(41, 98, 255, 0.25);
+}
 
-        .dropdown > a i {
-            font-size: 12px;
-            margin-left: 4px;
-        }
+/* Global Presence Styles */
+.global-presence {
+    margin-top: 2.5rem;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
 
-        .dropdown-content {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: white;
-            min-width: 220px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-radius: 4px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(10px);
-            transition: all 0.3s ease;
-            padding: 8px 0;
-        }
+.global-presence h3 {
+    font-size: 1.2rem;
+    color: #1a237e;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
 
-        .dropdown:hover .dropdown-content {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
+.global-presence h3::before {
+    content: '🌐';
+    font-size: 1.4rem;
+}
 
-        .dropdown-content li {
-            display: block;
-        }
+.country-flags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: center;
+}
 
-        .dropdown-content a {
-            color: var(--text-dark);
-            text-decoration: none;
-            padding: 8px 16px;
-            display: block;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
+.country-flag {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
 
-        .dropdown-content a:hover {
-            background: var(--background-light);
-            color: var(--primary-color);
-        }
+.country-flag:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
 
-        /* Button Styles */
-        .btn {
-            padding: 8px 16px;
-            border-radius: 4px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: var(--transition);
-        }
+.country-flag img {
+    width: 28px;
+    height: 20px;
+    object-fit: cover;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 
-        .btn.primary {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        .btn.primary:hover {
-            background: #d42f2f;
-        }
-
-        /* Mobile Menu Toggle */
-        .menu-toggle {
-            display: none;
-            flex-direction: column;
-            gap: 4px;
-            cursor: pointer;
-            padding: 8px;
-            z-index: 1002;
-        }
-
-        .menu-toggle span {
-            width: 24px;
-            height: 2px;
-            background: var(--text-dark);
-            transition: var(--transition);
-        }
-
-        /* Menu Overlay */
-        .menu-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-        }
-
-        .menu-overlay.active {
-            display: block;
-        }
-
-        /* Mobile Responsive Styles */
-        @media screen and (max-width: 768px) {
-            header .container {
-                padding: 0 1rem;
-            }
-
-            .menu-toggle {
-                display: flex;
-            }
-
-            .menu-toggle.active span:nth-child(1) {
-                transform: rotate(45deg) translate(5px, 5px);
-            }
-
-            .menu-toggle.active span:nth-child(2) {
-                opacity: 0;
-            }
-
-            .menu-toggle.active span:nth-child(3) {
-                transform: rotate(-45deg) translate(5px, -5px);
-            }
-
-            nav {
-                position: fixed;
-                top: var(--header-height);
-                right: -100%;
-                width: 85%;
-                height: calc(100vh - var(--header-height));
-                background: white;
-                transition: right 0.3s ease;
-                overflow-y: auto;
-                z-index: 1001;
-            }
-
-            nav.active {
-                right: 0;
-            }
-
-            #nav-list {
-                flex-direction: column;
-                gap: 0;
-                height: auto;
-                padding: 1rem 0;
-            }
-
-            #nav-list > li {
-                width: 100%;
-                height: auto;
-                border-bottom: 1px solid var(--border-color);
-            }
-
-            #nav-list > li > a {
-                padding: 1rem;
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .dropdown-content {
-                position: static;
-                box-shadow: none;
-                opacity: 1;
-                visibility: visible;
-                transform: none;
-                display: none;
-                background: var(--background-light);
-            }
-
-            .dropdown.active .dropdown-content {
-                display: block;
-            }
-
-            .btn.primary {
-                width: 100%;
-                text-align: center;
-                margin-top: 1rem;
-            }
-        }
-    </style>
-</head>
+.country-flag span {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-color);
+    white-space: nowrap;
+}
+</style>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="container">
-            <div class="logo">
-                <h1><a href="https://workpro.onrender.com">Workwise Pro</a></h1>
-            </div>
-            <div class="menu-toggle" id="mobile-menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-            <nav id="nav-menu">
-                <ul id="nav-list">
-                    <li><a href="features.html">Features</a></li>
-                    <li class="dropdown">
-                        <a href="#">HR/Accounts Modules <i class="fas fa-caret-down"></i></a>
-                        <ul class="dropdown-content">
-                            <li><a href="peoplemanagement.html">People Management</a></li>
-                            <li><a href="pms.html">Performance Management</a></li>
-                            <li><a href="payroll.html">Payroll Management</a></li>
-                            <li><a href="bookkeeping.html">Book-keeping</a></li>
-                            <li><a href="payint.html">Payroll Integration</a></li>
-                        </ul>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#">Business Operations <i class="fas fa-caret-down"></i></a>
-                        <ul class="dropdown-content">
-                            <li><a href="smartexpenses.html">SmartExpenses</a></li>
-                            <li><a href="shiftmaster.html">ShiftMaster</a></li>
-                            <li><a href="cs.html">FlexHire - Coming Soon</a></li>
-                            <li><a href="stockflow.html">StockFlow</a></li>
-                            <li><a href="globalinvoice.html">GlobalInvoice</a></li>
-                        </ul>
-                    </li>
-                    <li><a href="#pricing">Pricing</a></li>
-                    <li><a href="login.html">Sign In</a></li>
-                    <li><a href="signup.html" class="btn primary">Sign Up</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+    <!-- Header Container (Same as smartexpenses.html) -->
+    <div id="header-container"></div>
 
-    <!-- Menu Overlay -->
-    <div class="menu-overlay" id="menu-overlay"></div>
+    <!-- Main Content -->
+    <main class="stock-main">
         <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <h1 class="hero-title">Inventory management software designed for Indian businesses</h1>
-            <p class="hero-description">Manage orders. Track inventory. Handle GST billing. Oversee warehouses. One inventory management software to run all your inventory operations.</p>
-            <div class="hero-buttons">
-                <a href="#" class="btn btn-primary">SIGN UP - IT'S FREE</a>
-                <a href="#" class="btn btn-outline">EXPLORE DEMO ACCOUNT</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Pricing Section -->
-    <section class="pricing" id="pricing">
-        <div class="pricing-header">
-            <h2 class="pricing-title">Simple pricing.</h2>
-            <span class="pricing-subtitle">No surprises.</span>
-        </div>
-        <div class="pricing-grid">
-            <div class="pricing-card">
-                <h3>Free</h3>
-                <div class="price-amount">₹0</div>
-                <div class="price-period">per organization / year</div>
-                <p>₹0 per organization / month</p>
-                <a href="#" class="btn btn-outline">GET STARTED</a>
-            </div>
-            <div class="pricing-card">
-                <h3>Standard</h3>
-                <div class="price-amount">₹12,999</div>
-                <div class="price-period">per organization / year</div>
-                <p>₹2,299 per organization / month</p>
-                <a href="#" class="btn btn-outline">GET STARTED</a>
-            </div>
-            <div class="pricing-card">
-                <h3>Professional</h3>
-                <div class="price-amount">₹26,999</div>
-                <div class="price-period">per organization / year</div>
-                <p>₹5,499 per organization / month</p>
-                <a href="#" class="btn btn-outline">GET STARTED</a>
-            </div>
-            <div class="pricing-card popular">
-                <div class="popular-badge">MOST POPULAR</div>
-                <h3>Premium</h3>
-                <div class="price-amount">₹45,999</div>
-                <div class="price-period">per organization / year</div>
-                <p>₹9,499 per organization / month</p>
-                <a href="#" class="btn btn-primary">GET STARTED</a>
-            </div>
-            <div class="pricing-card">
-                <h3>Enterprise</h3>
-                <div class="price-amount">₹89,999</div>
-                <div class="price-period">per organization / year</div>
-                <p>₹17,499 per organization / month</p>
-                <a href="#" class="btn btn-outline">GET STARTED</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Integrations Section -->
-    <section class="integrations" id="integrations">
-        <div class="section-header">
-            <h2>Zoho Inventory integrates with</h2>
-        </div>
-        <div class="integration-grid">
-            <div class="integration-item">
-                <img src="gsuite.png" alt="GSuite">
-                <span>Gsuite</span>
-            </div>
-            <div class="integration-item">
-                <img src="zoho-books.png" alt="Zoho Books">
-                <span>Zoho Books</span>
-            </div>
-            <div class="integration-item">
-                <img src="aftership.png" alt="AfterShip">
-                <span>AfterShip</span>
-            </div>
-            <div class="integration-item">
-                <img src="zoho-crm.png" alt="Zoho CRM">
-                <span>Zoho CRM</span>
-            </div>
-            <div class="integration-item">
-                <img src="shopify.png" alt="Shopify">
-                <span>Shopify</span>
-            </div>
-            <div class="integration-item">
-                <img src="amazon.png" alt="Amazon">
-                <span>Amazon</span>
-            </div>
-            <div class="integration-item">
-                <img src="razorpay.png" alt="Razorpay">
-                <span>Razorpay</span>
-            </div>
-            <div class="integration-item">
-                <img src="sps.png" alt="SPS">
-                <span>SPS</span>
-            </div>
-        </div>
-        <div class="more-integrations">
-            <a href="#" class="btn btn-outline">MORE INTEGRATIONS</a>
-        </div>
-    </section>
-
-    <style>
-        /* Hero Section Styles */
-        .hero {
-            background: var(--background-light);
-            padding: calc(var(--header-height) + 4rem) 0 4rem;
-            text-align: center;
-        }
-
-        .hero-content {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-
-        .hero-title {
-            font-size: clamp(2rem, 5vw, 3.5rem);
-            line-height: 1.2;
-            margin-bottom: 1.5rem;
-            color: var(--text-dark);
-        }
-
-        .hero-description {
-            font-size: clamp(1rem, 2vw, 1.2rem);
-            color: #666;
-            margin-bottom: 2rem;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .hero-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-        }
-
-        /* Pricing Section Styles */
-        .pricing {
-            padding: 4rem 0;
-            background: white;
-        }
-
-        .pricing-header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .pricing-title {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .pricing-subtitle {
-            color: var(--primary-color);
-            font-size: 1.5rem;
-            font-weight: 500;
-        }
-
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-
-        .pricing-card {
-            background: white;
-            border-radius: 8px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            transition: var(--transition);
-            position: relative;
-        }
-
-        .pricing-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .pricing-card.popular {
-            border: 2px solid var(--primary-color);
-        }
-
-        .popular-badge {
-            position: absolute;
-            top: -12px;
-            right: 20px;
-            background: #FFB800;
-            color: white;
-            padding: 0.25rem 1rem;
-            border-radius: 20px;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        .price-amount {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin: 1rem 0;
-            color: var(--text-dark);
-        }
-
-        .price-period {
-            color: #666;
-            font-size: 0.875rem;
-            margin-bottom: 1rem;
-        }
-
-        /* Integration Section Styles */
-        .integrations {
-            padding: 4rem 0;
-            background: var(--background-light);
-        }
-
-        .section-header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .section-header h2 {
-            font-size: 2.5rem;
-            color: var(--text-dark);
-        }
-
-        .integration-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-
-        .integration-item {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 8px;
-            text-align: center;
-            transition: var(--transition);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .integration-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .integration-item img {
-            width: 48px;
-            height: 48px;
-            margin-bottom: 1rem;
-        }
-
-        .integration-item span {
-            display: block;
-            color: var(--text-dark);
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .more-integrations {
-            text-align: center;
-            margin-top: 3rem;
-        }
-
-        /* Button Styles */
-        .btn-outline {
-            background: white;
-            color: var(--text-dark);
-            border: 1px solid var(--border-color);
-        }
-
-        .btn-outline:hover {
-            background: var(--background-light);
-        }
-
-        /* Responsive Styles */
-        @media screen and (max-width: 768px) {
-            .hero-buttons {
-                flex-direction: column;
-                padding: 0 2rem;
-            }
-
-            .pricing-grid {
-                grid-template-columns: 1fr;
-                padding: 0 1rem;
-            }
-
-            .integration-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1rem;
-                padding: 0 1rem;
-            }
-
-            .section-header h2 {
-                font-size: 2rem;
-                padding: 0 1rem;
-            }
-        }
-
-        @media screen and (max-width: 480px) {
-            .hero-title {
-                font-size: 1.8rem;
-            }
-
-            .hero-description {
-                font-size: 1rem;
-            }
-
-            .integration-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-    </style>
-        <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-section">
-                    <h4>Product</h4>
-                    <ul>
-                        <li><a href="#">Features</a></li>
-                        <li><a href="#">Pricing</a></li>
-                        <li><a href="#">Mobile App</a></li>
-                        <li><a href="#">Integrations</a></li>
-                        <li><a href="#">API Access</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Solutions</h4>
-                    <ul>
-                        <li><a href="#">Small Business</a></li>
-                        <li><a href="#">Enterprise</a></li>
-                        <li><a href="#">Accountants</a></li>
-                        <li><a href="#">Nonprofits</a></li>
-                        <li><a href="#">Startups</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Resources</h4>
-                    <ul>
-                        <li><a href="#">Help Center</a></li>
-                        <li><a href="#">API Documentation</a></li>
-                        <li><a href="#">Community</a></li>
-                        <li><a href="#">Partners</a></li>
-                        <li><a href="#">Marketplace</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Company</h4>
-                    <ul>
-                        <li><a href="#">About Us</a></li>
-                        <li><a href="#">Careers</a></li>
-                        <li><a href="#">Press</a></li>
-                        <li><a href="#">Contact</a></li>
-                        <li><a href="#">Blog</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Connect With Us</h4>
-                    <div class="social-links">
-                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+        <section class="stock-hero">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1>Smart Inventory & Order Management</h1>
+                        <p>Streamline your inventory, orders, and fulfillment across all channels with our comprehensive solution.</p>
+                        <div class="hero-buttons">
+                            <a href="#" class="btn primary">Start Free Trial</a>
+                            <a href="#" class="btn secondary">Download PDF</a>
+                        </div>
+                        <div class="global-presence">
+                            <h3>Trusted Globally</h3>
+                            <div class="country-flags">
+                                <div class="country-flag">
+                                    <img src="image/usa-flag.png" alt="USA Flag" loading="lazy">
+                                    <span>USA</span>
+                                </div>
+                                <div class="country-flag">
+                                    <img src="image/india-flag.png" alt="India Flag" loading="lazy">
+                                    <span>India</span>
+                                </div>
+                                <div class="country-flag">
+                                    <img src="image/uae-flag.png" alt="UAE Flag" loading="lazy">
+                                    <span>UAE</span>
+                                </div>
+                                <div class="country-flag">
+                                    <img src="image/qatar-flag.png" alt="Qatar Flag" loading="lazy">
+                                    <span>Qatar</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-image">
+                        <img 
+                            src="image/inventory-dashboard.png" 
+                            alt="Inventory Management Dashboard"
+                            loading="lazy"
+                        >
                     </div>
                 </div>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; 2023 Workwise Pro. All rights reserved.</p>
-                <div class="footer-links">
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
-                    <a href="#">Security</a>
-                    <a href="#">GDPR</a>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Comprehensive Inventory Management</h2>
+                    <p>Everything you need to manage your stock and orders efficiently</p>
+                </div>
+
+                <div class="features-grid">
+                    <!-- Purchasing -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <h3>Purchasing</h3>
+                        <p>Complete procurement management system</p>
+                        <ul class="feature-list">
+                            <li>Purchase orders</li>
+                            <li>Purchase receives</li>
+                            <li>Vendor payments</li>
+                            <li>Order tracking</li>
+                        </ul>
+                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+                    </div>
+
+                    <!-- Warehousing -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-warehouse"></i>
+                        </div>
+                        <h3>Warehousing</h3>
+                        <p>Efficient warehouse management system</p>
+                        <ul class="feature-list">
+                            <li>Multi-warehouse management</li>
+                            <li>Transfer orders</li>
+                            <li>Picklists</li>
+                            <li>Bin Locations</li>
+                        </ul>
+                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+                    </div>
+
+                    <!-- Order Fulfillment -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <h3>Order Fulfillment</h3>
+                        <p>Streamlined order processing and shipping</p>
+                        <ul class="feature-list">
+                            <li>Backorders and Dropshipments</li>
+                            <li>Packaging and shipping</li>
+                            <li>Post-shipment tracking</li>
+                            <li>Package geometry</li>
+                        </ul>
+                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+                    </div>
+
+                    <!-- Inventory Management -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-boxes"></i>
+                        </div>
+                        <h3>Inventory Control</h3>
+                        <p>Complete inventory tracking and management</p>
+                        <ul class="feature-list">
+                            <li>Item grouping and bundling</li>
+                            <li>Serial and batch tracking</li>
+                            <li>Price Lists</li>
+                            <li>Inventory Adjustments</li>
+                        </ul>
+                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+                    </div>
+
+                    <!-- Order Management -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <h3>Order Management</h3>
+                        <p>Comprehensive order processing system</p>
+                        <ul class="feature-list">
+                            <li>Sales order management</li>
+                            <li>Multichannel selling</li>
+                            <li>Invoicing</li>
+                            <li>Sales returns</li>
+                        </ul>
+                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+                    </div>
+
+                    <!-- Automation and Analytics -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3>Automation & Analytics</h3>
+                        <p>Smart automation and business insights</p>
+                        <ul class="feature-list">
+                            <li>Email and field updates</li>
+                            <li>Webhooks and custom functions</li>
+                            <li>Advanced reporting</li>
+                            <li>Workwise pro Analytics</li>
+                        </ul>
+                        <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+
+                <div class="features-cta">
+                    <a href="#" class="btn primary">View All Features</a>
+                    <a href="#" class="btn secondary">Download Features PDF</a>
                 </div>
             </div>
-        </div>
-    </footer>
+        </section>
 
-    <style>
-        /* Footer Styles */
-        .footer {
-            background: #1A1A1A;
-            color: white;
-            padding: 4rem 0 2rem;
-            margin-top: auto;
-        }
+<style>
+/* Features Section Specific Styles */
+.features-section {
+    padding: 6rem 0;
+    background: white;
+    position: relative;
+}
 
-        .footer-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 3rem;
-            margin-bottom: 3rem;
-        }
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2.5rem;
+    margin-top: 3rem;
+}
 
-        .footer-section h4 {
-            color: white;
-            font-size: 1.1rem;
-            margin-bottom: 1.5rem;
-            font-weight: 600;
-        }
+.feature-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
 
-        .footer-section ul {
-            list-style: none;
-        }
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: left;
+}
 
-        .footer-section ul li {
-            margin-bottom: 0.75rem;
-        }
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
 
-        .footer-section ul li a {
-            color: #999;
-            text-decoration: none;
-            transition: var(--transition);
-            font-size: 0.9rem;
-        }
+.feature-card:hover::before {
+    transform: scaleX(1);
+}
 
-        .footer-section ul li a:hover {
-            color: white;
-        }
+.features-cta {
+    margin-top: 4rem;
+    text-align: center;
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+}
 
-        .social-links {
-            display: flex;
-            gap: 1rem;
-        }
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
 
-        .social-links a {
-            color: #999;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: var(--transition);
-        }
+    .features-cta {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
 
-        .social-links a:hover {
-            color: white;
-            border-color: white;
-            transform: translateY(-2px);
-        }
+    .features-cta .btn {
+        width: 100%;
+        max-width: 300px;
+    }
+}
 
-        .footer-bottom {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 2rem;
-            text-align: center;
-        }
+@media (max-width: 480px) {
+    .feature-card {
+        padding: 1.5rem;
+    }
+}
+</style>
+        <!-- Solutions Section -->
+        <section class="solutions-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Solutions for Every Business</h2>
+                    <p>Tailored solutions for different industries and use cases</p>
+                </div>
 
-        .footer-bottom p {
-            color: #999;
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-        }
+                <div class="solutions-container">
+                    <!-- Industry Solutions -->
+                    <div class="solutions-group">
+                        <h3 class="solutions-group-title">
+                            <i class="fas fa-industry"></i>
+                            Industry Solutions
+                        </h3>
+                        <div class="solutions-grid">
+                            <div class="solution-card">
+                                <div class="solution-icon">
+                                    <i class="fas fa-store"></i>
+                                </div>
+                                <h4>Retail</h4>
+                                <p>Boost retail sales, reduce costs</p>
+                                <ul class="solution-features">
+                                    <li>Multi-store inventory</li>
+                                    <li>POS integration</li>
+                                    <li>Real-time stock updates</li>
+                                </ul>
+                                <a href="#" class="learn-more">Explore Solution <i class="fas fa-arrow-right"></i></a>
+                            </div>
 
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            flex-wrap: wrap;
-        }
+                            <div class="solution-card">
+                                <div class="solution-icon">
+                                    <i class="fas fa-shopping-bag"></i>
+                                </div>
+                                <h4>Ecommerce</h4>
+                                <p>Sell across channels, sell smart</p>
+                                <ul class="solution-features">
+                                    <li>Multi-channel sync</li>
+                                    <li>Automated fulfillment</li>
+                                    <li>Order management</li>
+                                </ul>
+                                <a href="#" class="learn-more">Explore Solution <i class="fas fa-arrow-right"></i></a>
+                            </div>
 
-        .footer-links a {
-            color: #999;
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: var(--transition);
-        }
+                            <div class="solution-card">
+                                <div class="solution-icon">
+                                    <i class="fas fa-industry"></i>
+                                </div>
+                                <h4>Manufacturing</h4>
+                                <p>Multiple stages, made easy</p>
+                                <ul class="solution-features">
+                                    <li>BOM management</li>
+                                    <li>Production planning</li>
+                                    <li>Quality control</li>
+                                </ul>
+                                <a href="#" class="learn-more">Explore Solution <i class="fas fa-arrow-right"></i></a>
+                            </div>
 
-        .footer-links a:hover {
-            color: white;
-        }
+                            <div class="solution-card">
+                                <div class="solution-icon">
+                                    <i class="fas fa-truck-loading"></i>
+                                </div>
+                                <h4>Dropshipping</h4>
+                                <p>Sit back, gain visibility</p>
+                                <ul class="solution-features">
+                                    <li>Supplier integration</li>
+                                    <li>Automated ordering</li>
+                                    <li>Order tracking</li>
+                                </ul>
+                                <a href="#" class="learn-more">Explore Solution <i class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </div>
+                    </div>
 
-        @media screen and (max-width: 768px) {
-            .footer-grid {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-                padding: 0 1rem;
-            }
+                    <!-- Use Cases -->
+                    <div class="solutions-group">
+                        <h3 class="solutions-group-title">
+                            <i class="fas fa-tasks"></i>
+                            Use Cases
+                        </h3>
+                        <div class="solutions-grid">
+                            <div class="solution-card">
+                                <div class="solution-icon">
+                                    <i class="fas fa-boxes"></i>
+                                </div>
+                                <h4>Inventory Control</h4>
+                                <p>Manage and track items, end-to-end</p>
+                                <ul class="solution-features">
+                                    <li>Stock tracking</li>
+                                    <li>Reorder management</li>
+                                    <li>Inventory optimization</li>
+                                </ul>
+                                <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+                            </div>
 
-            .footer-links {
-                flex-direction: column;
-                gap: 1rem;
-            }
+                            <div class="solution-card">
+                                <div class="solution-icon">
+                                    <i class="fas fa-warehouse"></i>
+                                </div>
+                                <h4>Warehouse Management</h4>
+                                <p>Control stock across locations</p>
+                                <ul class="solution-features">
+                                    <li>Location tracking</li>
+                                    <li>Pick/Pack/Ship</li>
+                                    <li>Transfer management</li>
+                                </ul>
+                                <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+                            </div>
 
-            .social-links {
-                justify-content: center;
-            }
-        }
-    </style>
+                            <div class="solution-card">
+                                <div class="solution-icon">
+                                    <i class="fas fa-random"></i>
+                                </div>
+                                <h4>Multi-channel Selling</h4>
+                                <p>Sync stock and streamline sales</p>
+                                <ul class="solution-features">
+                                    <li>Channel integration</li>
+                                    <li>Stock synchronization</li>
+                                    <li>Order routing</li>
+                                </ul>
+                                <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+                            </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const mobileMenu = document.getElementById('mobile-menu');
-            const navMenu = document.getElementById('nav-menu');
-            const menuOverlay = document.getElementById('menu-overlay');
-            const dropdowns = document.querySelectorAll('.dropdown');
+                            <div class="solution-card">
+                                <div class="solution-icon">
+                                    <i class="fas fa-shipping-fast"></i>
+                                </div>
+                                <h4>Order Fulfillment</h4>
+                                <p>Pick, pack, and ship centrally</p>
+                                <ul class="solution-features">
+                                    <li>Automated workflows</li>
+                                    <li>Shipping integration</li>
+                                    <li>Tracking updates</li>
+                                </ul>
+                                <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="solutions-cta">
+                    <a href="#" class="btn primary">Download Features PDF</a>
+                </div>
+            </div>
+        </section>
+
+<style>
+/* Solutions Section Styles */
+.solutions-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+.solutions-container {
+    margin-top: 3rem;
+}
+
+.solutions-group {
+    margin-bottom: 4rem;
+}
+
+.solutions-group-title {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.solutions-group-title i {
+    color: var(--primary-color);
+    font-size: 1.75rem;
+}
+
+.solutions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.solution-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+}
+
+.solution-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.solution-icon {
+    width: 56px;
+    height: 56px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.solution-icon i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.solution-card h4 {
+    font-size: 1.25rem;
+    color: #1a237e;
+    margin-bottom: 0.75rem;
+}
+
+.solution-card p {
+    color: var(--light-text);
+    margin-bottom: 1.25rem;
+}
+
+.solution-features {
+    list-style: none;
+    margin: 1.25rem 0;
+}
+
+.solution-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-color);
+    font-size: 0.95rem;
+}
+
+.solution-features li::before {
+    content: '•';
+    color: var(--primary-color);
+    font-size: 1.5rem;
+}
+
+.solutions-cta {
+    text-align: center;
+    margin-top: 3rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+    .solutions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .solutions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .solution-card {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .solutions-group-title {
+        font-size: 1.25rem;
+    }
+
+    .solution-card h4 {
+        font-size: 1.1rem;
+    }
+}
+</style>
+        <!-- Integrations Section -->
+        <section class="integrations-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Powerful Integrations</h2>
+                    <p>Connect with your favorite platforms and tools</p>
+                </div>
+
+                <div class="integration-categories">
+                    <!-- Marketplace -->
+                    <div class="integration-category">
+                        <h3><i class="fas fa-store"></i> Marketplace</h3>
+                        <div class="integration-grid">
+                            <div class="integration-card">
+                                <img src="image/integrations/amazon.svg" alt="Amazon">
+                                <h4>Amazon</h4>
+                                <p>Sync orders and update stock levels</p>
+                            </div>
+                            <div class="integration-card">
+                                <img src="image/integrations/ebay.svg" alt="eBay">
+                                <h4>eBay</h4>
+                                <p>Simplify selling and order fulfillment</p>
+                            </div>
+                            <div class="integration-card">
+                                <img src="image/integrations/etsy.svg" alt="Etsy">
+                                <h4>Etsy</h4>
+                                <p>Streamline inventory levels and sync orders</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Shopping Cart -->
+                    <div class="integration-category">
+                        <h3><i class="fas fa-shopping-cart"></i> Shopping Cart</h3>
+                        <div class="integration-grid">
+                            <div class="integration-card">
+                                <img src="image/integrations/shopify.svg" alt="Shopify">
+                                <h4>Shopify</h4>
+                                <p>Manage online and offline sales in one place</p>
+                            </div>
+                            <div class="integration-card">
+                                <img src="image/integrations/workwise-commerce.svg" alt="Workwise Commerce">
+                                <h4>Workwise Commerce</h4>
+                                <p>Simplify inventory tracking for your online store</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Shipping -->
+                    <div class="integration-category">
+                        <h3><i class="fas fa-shipping-fast"></i> Shipping</h3>
+                        <div class="integration-grid">
+                            <div class="integration-card">
+                                <img src="image/integrations/ups.svg" alt="UPS">
+                                <h4>UPS</h4>
+                                <p>Ship to over 200 countries globally</p>
+                            </div>
+                            <div class="integration-card">
+                                <img src="image/integrations/fedex.svg" alt="FedEx">
+                                <h4>FedEx</h4>
+                                <p>Uphold delivery promises to customers</p>
+                            </div>
+                            <div class="integration-card">
+                                <img src="image/integrations/usps.svg" alt="USPS">
+                                <h4>USPS</h4>
+                                <p>Provide efficient delivery experiences</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Accounting -->
+                    <div class="integration-category">
+                        <h3><i class="fas fa-calculator"></i> Accounting</h3>
+                        <div class="integration-grid">
+                            <div class="integration-card">
+                                <img src="image/integrations/quickbooks.svg" alt="QuickBooks">
+                                <h4>QuickBooks Online</h4>
+                                <p>Sync financial data across platforms</p>
+                            </div>
+                            <div class="integration-card">
+                                <img src="image/integrations/xero.svg" alt="Xero">
+                                <h4>Xero</h4>
+                                <p>Centralize cash and stock flows</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="integrations-cta">
+                    <a href="#" class="btn primary">View All Integrations</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing Section -->
+        <section class="pricing-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Simple, Transparent Pricing</h2>
+                    <p>Choose the plan that best fits your business needs</p>
+                </div>
+                <div class="pricing-toggle">
+                    <span>Monthly</span>
+                    <label class="switch">
+                        <input type="checkbox" id="billing-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span>Annual <span class="discount">Save 20%</span></span>
+                </div>
+                <div class="pricing-grid">
+                    <!-- Basic Plan -->
+                    <div class="pricing-card">
+                        <h3>Basic</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">49</span>
+                            <span class="period">/month</span>
+                        </div>
+                        <p class="plan-description">Perfect for small businesses</p>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i>Up to 1,000 orders/month</li>
+                            <li><i class="fas fa-check"></i>2 warehouses</li>
+                            <li><i class="fas fa-check"></i>Basic integrations</li>
+                            <li><i class="fas fa-check"></i>Email support</li>
+                        </ul>
+                        <button class="btn primary">Start Free Trial</button>
+                        <p class="trial-note">14-day free trial, no credit card required</p>
+                    </div>
+
+                    <!-- Professional Plan -->
+                    <div class="pricing-card popular">
+                        <div class="popular-badge">Most Popular</div>
+                        <h3>Professional</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">99</span>
+                            <span class="period">/month</span>
+                        </div>
+                        <p class="plan-description">Ideal for growing companies</p>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i>Up to 5,000 orders/month</li>
+                            <li><i class="fas fa-check"></i>5 warehouses</li>
+                            <li><i class="fas fa-check"></i>Advanced integrations</li>
+                            <li><i class="fas fa-check"></i>Priority support</li>
+                            <li><i class="fas fa-check"></i>API access</li>
+                        </ul>
+                        <button class="btn primary">Start Free Trial</button>
+                        <p class="trial-note">14-day free trial, no credit card required</p>
+                    </div>
+
+                    <!-- Enterprise Plan -->
+                    <div class="pricing-card">
+                        <h3>Enterprise</h3>
+                        <div class="price">
+                            <span class="custom">Custom</span>
+                        </div>
+                        <p class="plan-description">For large organizations</p>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i>Unlimited orders</li>
+                            <li><i class="fas fa-check"></i>Unlimited warehouses</li>
+                            <li><i class="fas fa-check"></i>Custom implementation</li>
+                            <li><i class="fas fa-check"></i>24/7 support</li>
+                            <li><i class="fas fa-check"></i>Dedicated manager</li>
+                        </ul>
+                        <button class="btn secondary">Contact Sales</button>
+                        <p class="trial-note">Get a customized quote for your needs</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+<style>
+/* Integrations Section Styles */
+.integrations-section {
+    padding: 6rem 0;
+    background: white;
+}
+
+.integration-categories {
+    margin-top: 3rem;
+}
+
+.integration-category {
+    margin-bottom: 3rem;
+}
+
+.integration-category h3 {
+    font-size: 1.3rem;
+    color: #1a237e;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.integration-category h3 i {
+    color: var(--primary-color);
+}
+
+.integration-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.integration-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.integration-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.integration-card img {
+    height: 48px;
+    width: auto;
+    margin-bottom: 1rem;
+}
+
+.integration-card h4 {
+    font-size: 1.1rem;
+    color: #1a237e;
+    margin-bottom: 0.5rem;
+}
+
+.integration-card p {
+    font-size: 0.9rem;
+    color: var(--light-text);
+}
+
+.integrations-cta {
+    text-align: center;
+    margin-top: 3rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+    .integration-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .integration-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .integration-card {
+        padding: 1.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .integration-category h3 {
+        font-size: 1.1rem;
+    }
+}
+</style>
+        <!-- Call to Action Section -->
+        <section class="cta-section">
+            <div class="container">
+                <div class="cta-content">
+                    <h2>Ready to Transform Your Inventory Management?</h2>
+                    <p>Join thousands of businesses managing their inventory efficiently with Workwise Pro</p>
+                    <div class="cta-buttons">
+                        <button class="btn primary">Start Free Trial</button>
+                        <button class="btn secondary">Schedule Demo</button>
+                    </div>
+                    <div class="cta-features">
+                        <div class="cta-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>14-day free trial</span>
+                        </div>
+                        <div class="cta-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>No credit card required</span>
+                        </div>
+                        <div class="cta-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Free onboarding support</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-grid">
+                        <div class="footer-section brand-section">
+                            <div class="footer-logo">
+                                <img src="path/to/logo-white.png" alt="Workwise Pro Logo">
+                            </div>
+                            <p class="footer-description">
+                                Transform your inventory management with AI-powered solutions for smarter business operations.
+                            </p>
+                            <div class="social-links">
+                                <a href="#" aria-label="LinkedIn">
+                                    <i class="fab fa-linkedin"></i>
+                                </a>
+                                <a href="#" aria-label="Twitter">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                                <a href="#" aria-label="Facebook">
+                                    <i class="fab fa-facebook"></i>
+                                </a>
+                                <a href="#" aria-label="Instagram">
+                                    <i class="fab fa-instagram"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="footer-section">
+                            <h4>Solutions</h4>
+                            <ul>
+                                <li><a href="#">Inventory Management</a></li>
+                                <li><a href="#">Order Management</a></li>
+                                <li><a href="#">Warehouse Management</a></li>
+                                <li><a href="#">Multi-channel Selling</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="footer-section">
+                            <h4>Company</h4>
+                            <ul>
+                                <li><a href="#">About Us</a></li>
+                                <li><a href="#">Careers</a></li>
+                                <li><a href="#">Press</a></li>
+                                <li><a href="#">Contact</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="footer-section">
+                            <h4>Resources</h4>
+                            <ul>
+                                <li><a href="#">Blog</a></li>
+                                <li><a href="#">Guides</a></li>
+                                <li><a href="#">API Docs</a></li>
+                                <li><a href="#">Help Center</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="footer-section">
+                            <h4>Legal</h4>
+                            <ul>
+                                <li><a href="#">Privacy Policy</a></li>
+                                <li><a href="#">Terms of Service</a></li>
+                                <li><a href="#">Security</a></li>
+                                <li><a href="#">Compliance</a></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="footer-bottom">
+                        <div class="footer-info">
+                            <p>&copy; 2024 Workwise Pro. All rights reserved.</p>
+                        </div>
+                        <div class="footer-badges">
+                            <img src="path/to/security-badge.png" alt="Security Certified">
+                            <img src="path/to/gdpr-badge.png" alt="GDPR Compliant">
+                            <img src="path/to/iso-badge.png" alt="ISO 27001">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+<script>
+// Initialize all functionality when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAll();
+    loadHeader();
+});
+
+// Header Loading Function
+async function loadHeader() {
+    const headerContainer = document.getElementById('header-container');
+    
+    try {
+        const response = await fetch('header.html');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const html = await response.text();
+        headerContainer.innerHTML = html;
+
+        // Initialize mobile menu functionality after header loads
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mainNav = document.getElementById('main-nav');
+        const menuOverlay = document.getElementById('menu-overlay');
+        const megaMenus = document.querySelectorAll('.mega-menu');
+
+        if (mobileMenu && mainNav) {
             let isMenuOpen = false;
 
-            // Toggle menu function
             function toggleMenu(show) {
                 isMenuOpen = show;
                 mobileMenu.classList.toggle('active', show);
-                navMenu.classList.toggle('active', show);
+                mainNav.classList.toggle('active', show);
                 menuOverlay.classList.toggle('active', show);
                 document.body.style.overflow = show ? 'hidden' : '';
 
-                // Reset dropdowns when closing menu
                 if (!show) {
-                    dropdowns.forEach(dropdown => {
-                        dropdown.classList.remove('active');
-                    });
+                    megaMenus.forEach(menu => menu.classList.remove('active'));
                 }
             }
 
-            // Mobile menu button click handler
             mobileMenu.addEventListener('click', (e) => {
                 e.stopPropagation();
                 toggleMenu(!isMenuOpen);
             });
 
-            // Enhanced dropdown handling for mobile
-            dropdowns.forEach(dropdown => {
-                const link = dropdown.querySelector('a');
-                
+            // Handle mega menus on mobile
+            megaMenus.forEach(menu => {
+                const link = menu.querySelector('a');
                 link.addEventListener('click', (e) => {
                     if (window.innerWidth <= 768) {
                         e.preventDefault();
                         e.stopPropagation();
-
-                        // Close other dropdowns
-                        dropdowns.forEach(d => {
-                            if (d !== dropdown) {
-                                d.classList.remove('active');
-                            }
+                        megaMenus.forEach(m => {
+                            if (m !== menu) m.classList.remove('active');
                         });
-
-                        dropdown.classList.toggle('active');
+                        menu.classList.toggle('active');
                     }
                 });
-            });
-
-            // Close menu when clicking overlay
-            menuOverlay.addEventListener('click', () => {
-                toggleMenu(false);
             });
 
             // Close menu when clicking outside
             document.addEventListener('click', (e) => {
-                if (isMenuOpen && 
-                    !navMenu.contains(e.target) && 
-                    !mobileMenu.contains(e.target)) {
+                if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
                     toggleMenu(false);
                 }
             });
+        }
+    } catch (error) {
+        console.error('Error loading header:', error);
+        headerContainer.innerHTML = `
+            <header class="main-header">
+                <div class="container">
+                    <a href="/" class="logo">
+                        <h1>Workwise Pro</h1>
+                    </a>
+                </div>
+            </header>
+        `;
+    }
+}
 
-            // Handle escape key
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && isMenuOpen) {
-                    toggleMenu(false);
+// Main initialization function
+function initializeAll() {
+    initializeAnimations();
+    initializePricing();
+    handleScrollEffects();
+    setupInteractions();
+}
+
+// Animation Handler
+function initializeAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+            }
+        });
+    }, observerOptions);
+
+    // Observe all animatable elements
+    document.querySelectorAll('.feature-card, .solution-card, .integration-card')
+        .forEach(el => observer.observe(el));
+}
+
+// Pricing Toggle Handler
+function initializePricing() {
+    const billingToggle = document.getElementById('billing-toggle');
+    const priceAmounts = document.querySelectorAll('.amount');
+    const monthlyPrices = ['49', '99'];
+    const annualPrices = ['39', '79'];
+
+    if (billingToggle) {
+        billingToggle.addEventListener('change', () => {
+            priceAmounts.forEach((price, index) => {
+                if (price.textContent !== 'Custom') {
+                    animateNumberChange(price, billingToggle.checked ? annualPrices[index] : monthlyPrices[index]);
                 }
-            });
-
-            // Handle window resize
-            let resizeTimer;
-            window.addEventListener('resize', () => {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(() => {
-                    if (window.innerWidth > 768 && isMenuOpen) {
-                        toggleMenu(false);
-                    }
-                }, 250);
-            });
-
-            // Smooth scroll for anchor links
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function(e) {
-                    if (this.getAttribute('href') !== '#') {
-                        e.preventDefault();
-                        const target = document.querySelector(this.getAttribute('href'));
-                        if (target) {
-                            const headerOffset = 80;
-                            const elementPosition = target.getBoundingClientRect().top;
-                            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-                            window.scrollTo({
-                                top: offsetPosition,
-                                behavior: 'smooth'
-                            });
-                        }
-                    }
-                });
             });
         });
+    }
+}
 
-        // Prevent dropdown hover on touch devices
-        window.addEventListener('touchstart', function() {
-            const style = document.createElement('style');
-            style.innerHTML = `
-                @media (hover: none) {
-                    .dropdown:hover .dropdown-content {
-                        opacity: 0;
-                        visibility: hidden;
-                    }
-                    .dropdown.active .dropdown-content {
-                        opacity: 1;
-                        visibility: visible;
-                    }
-                }
-            `;
-            document.head.appendChild(style);
-        }, { once: true });
-    </script>
+// Number Animation Helper
+function animateNumberChange(element, newValue) {
+    const start = parseInt(element.textContent);
+    const end = parseInt(newValue);
+    const duration = 500;
+    const startTime = performance.now();
+
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        const current = Math.round(start + (end - start) * progress);
+        element.textContent = current;
+
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        }
+    }
+
+    requestAnimationFrame(update);
+}
+
+// Scroll Effects Handler
+function handleScrollEffects() {
+    let lastScroll = 0;
+    const header = document.querySelector('header');
+
+    window.addEventListener('scroll', () => {
+        const currentScroll = window.pageYOffset;
+        
+        if (currentScroll > lastScroll && currentScroll > 100) {
+            header.classList.add('header-hidden');
+        } else {
+            header.classList.remove('header-hidden');
+        }
+        
+        lastScroll = currentScroll;
+    });
+}
+
+// Interactive Elements Setup
+function setupInteractions() {
+    // Card Hover Effects
+    document.querySelectorAll('.feature-card, .solution-card, .integration-card').forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.classList.add('card-hover');
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.classList.remove('card-hover');
+        });
+    });
+
+    // Smooth Scroll for Anchor Links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+}
+
+// Watson Assistant Chat Integration
+window.watsonAssistantChatOptions = {
+    integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
+    region: "au-syd",
+    serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
+    onLoad: async (instance) => { await instance.render(); }
+};
+
+setTimeout(function(){
+    const t = document.createElement('script');
+    t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
+        (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
+        "/WatsonAssistantChatEntry.js";
+    document.head.appendChild(t);
+});
+</script>
 </body>
 </html>
