@@ -778,6 +778,291 @@ input:checked + .slider:before {
     color: #a0a0a0;
     font-size: 0.9rem;
 }
+       /* Enhanced Integration & Customization Section */
+.integration-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+.integration-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: url('path/to/pattern.svg');
+    opacity: 0.05;
+    pointer-events: none;
+}
+
+/* Integration Grid */
+.integration-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+    margin-bottom: 4rem;
+}
+
+.integration-card {
+    background: white;
+    padding: 2.5rem 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    position: relative;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+}
+
+.integration-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+    border-color: var(--primary-color);
+}
+
+.status-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.connected {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.status-badge.popular {
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+}
+
+.status-badge.new {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.integration-card img {
+    width: 64px;
+    height: 64px;
+    margin: 1rem auto 1.5rem;
+    transition: transform 0.3s ease;
+}
+
+.integration-card:hover img {
+    transform: scale(1.1);
+}
+
+.integration-card h4 {
+    font-size: 1.25rem;
+    color: #1a237e;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.integration-card p {
+    color: var(--light-text);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* Workflow and API Section */
+.workflow-section {
+    margin-top: 2rem;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.workflow-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3rem;
+    padding: 3rem;
+}
+
+.workflow-info,
+.api-info {
+    position: relative;
+    padding: 2.5rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.workflow-info::before,
+.api-info::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: left;
+}
+
+.workflow-info:hover::before,
+.api-info:hover::before {
+    transform: scaleX(1);
+}
+
+.workflow-info:hover,
+.api-info:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.workflow-info h3,
+.api-info h3 {
+    font-size: 1.75rem;
+    color: #1a237e;
+    margin-bottom: 1.25rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.workflow-info h3 i,
+.api-info h3 i {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+}
+
+.workflow-info p,
+.api-info p {
+    color: var(--light-text);
+    margin-bottom: 2rem;
+    line-height: 1.7;
+    font-size: 1.1rem;
+}
+
+.workflow-info ul,
+.api-info ul {
+    list-style: none;
+    margin-bottom: 2rem;
+}
+
+.workflow-info ul li,
+.api-info ul li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+    font-size: 1.1rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.workflow-info ul li:hover,
+.api-info ul li:hover {
+    background: rgba(41, 98, 255, 0.05);
+    transform: translateX(5px);
+}
+
+.workflow-info ul li i,
+.api-info ul li i {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+.learn-more {
+    margin-top: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+.learn-more:hover {
+    gap: 1rem;
+}
+
+.learn-more i {
+    transition: transform 0.3s ease;
+}
+
+.learn-more:hover i {
+    transform: translateX(5px);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+    .workflow-grid {
+        grid-template-columns: 1fr;
+        padding: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .integration-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .workflow-info,
+    .api-info {
+        padding: 2rem;
+    }
+
+    .workflow-info h3,
+    .api-info h3 {
+        font-size: 1.5rem;
+    }
+
+    .workflow-info p,
+    .api-info p,
+    .workflow-info ul li,
+    .api-info ul li {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .integration-card {
+        padding: 2rem 1.5rem;
+    }
+
+    .workflow-grid {
+        padding: 1.5rem;
+    }
+
+    .workflow-info,
+    .api-info {
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .workflow-info ul li,
+    .api-info ul li {
+        justify-content: center;
+    }
+
+    .learn-more {
+        justify-content: center;
+    }
+} 
 
 /* Responsive Design */
 @media (max-width: 1024px) {
@@ -862,6 +1147,28 @@ input:checked + .slider:before {
     .pricing-toggle {
         flex-direction: column;
         gap: 1rem;
+    }
+     .integration-card {
+        padding: 2rem 1.5rem;
+    }
+
+    .workflow-grid {
+        padding: 1.5rem;
+    }
+
+    .workflow-info,
+    .api-info {
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .workflow-info ul li,
+    .api-info ul li {
+        justify-content: center;
+    }
+
+    .learn-more {
+        justify-content: center;
     }
 }
 
@@ -1137,65 +1444,156 @@ input:checked + .slider:before {
         </section>
 
         <!-- Integration Section -->
-        <section class="integration-section">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Seamless Integration & Customization</h2>
-                    <p>Connect with your existing tools and customize workflows to match your needs</p>
-                </div>
-                <div class="integration-grid">
-                    <div class="integration-card">
-                        <span class="status-badge connected">Connected</span>
-                        <img src="path/to/slack-logo.png" alt="Slack">
-                        <h4>Slack</h4>
-                        <p>Real-time notifications and updates</p>
-                    </div>
-                    <div class="integration-card">
-                        <span class="status-badge popular">Popular</span>
-                        <img src="path/to/teams-logo.png" alt="MS Teams">
-                        <h4>MS Teams</h4>
-                        <p>Seamless collaboration and feedback</p>
-                    </div>
-                    <div class="integration-card">
-                        <span class="status-badge new">New</span>
-                        <img src="path/to/zoom-logo.png" alt="Zoom">
-                        <h4>Zoom</h4>
-                        <p>Virtual performance reviews</p>
-                    </div>
-                    <div class="integration-card">
-                        <span class="status-badge connected">Connected</span>
-                        <img src="path/to/jira-logo.png" alt="Jira">
-                        <h4>Jira</h4>
-                        <p>Project performance tracking</p>
-                    </div>
-                </div>
+        <!-- Integration & Customization Section -->
+<section class="integration-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Seamless Integration & Customization</h2>
+            <p>Connect with your existing tools and customize workflows to match your needs</p>
+        </div>
 
-                <div class="workflow-section">
-                    <div class="workflow-grid">
-                        <div class="workflow-info">
-                            <h3>Flexible Workflows</h3>
-                            <p>Design custom workflows that match your organization's processes with our drag-and-drop builder.</p>
-                            <ul>
-                                <li>Custom review cycles</li>
-                                <li>Automated workflows</li>
-                                <li>Process templates</li>
-                            </ul>
-                            <a href="#" class="learn-more">Explore Workflows <i class="fas fa-arrow-right"></i></a>
-                        </div>
-                        <div class="api-info">
-                            <h3>API Access</h3>
-                            <p>Integrate with your existing systems using our comprehensive API documentation.</p>
-                            <ul>
-                                <li>RESTful API</li>
-                                <li>Webhook support</li>
-                                <li>SDK availability</li>
-                            </ul>
-                            <a href="#" class="learn-more">View API Docs <i class="fas fa-arrow-right"></i></a>
-                        </div>
-                    </div>
+        <div class="integration-grid">
+            <!-- Slack Integration -->
+            <div class="integration-card">
+                <span class="status-badge connected">Connected</span>
+                <div class="integration-icon">
+                    <img src="path/to/slack-logo.png" alt="Slack Integration" loading="lazy">
+                </div>
+                <h4>Slack</h4>
+                <p>Real-time notifications and updates for seamless team collaboration</p>
+                <div class="integration-features">
+                    <span>Instant Updates</span>
+                    <span>Team Alerts</span>
                 </div>
             </div>
-        </section>
+
+            <!-- MS Teams Integration -->
+            <div class="integration-card">
+                <span class="status-badge popular">Popular</span>
+                <div class="integration-icon">
+                    <img src="path/to/teams-logo.png" alt="Microsoft Teams Integration" loading="lazy">
+                </div>
+                <h4>MS Teams</h4>
+                <p>Seamless collaboration and feedback through Microsoft Teams</p>
+                <div class="integration-features">
+                    <span>Video Meetings</span>
+                    <span>Chat Integration</span>
+                </div>
+            </div>
+
+            <!-- Zoom Integration -->
+            <div class="integration-card">
+                <span class="status-badge new">New</span>
+                <div class="integration-icon">
+                    <img src="path/to/zoom-logo.png" alt="Zoom Integration" loading="lazy">
+                </div>
+                <h4>Zoom</h4>
+                <p>Conduct virtual performance reviews and team meetings</p>
+                <div class="integration-features">
+                    <span>Video Calls</span>
+                    <span>Screen Sharing</span>
+                </div>
+            </div>
+
+            <!-- Jira Integration -->
+            <div class="integration-card">
+                <span class="status-badge connected">Connected</span>
+                <div class="integration-icon">
+                    <img src="path/to/jira-logo.png" alt="Jira Integration" loading="lazy">
+                </div>
+                <h4>Jira</h4>
+                <p>Track project performance and team productivity</p>
+                <div class="integration-features">
+                    <span>Task Tracking</span>
+                    <span>Progress Reports</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="workflow-section">
+            <div class="workflow-grid">
+                <!-- Workflow Information -->
+                <div class="workflow-info">
+                    <h3>
+                        <i class="fas fa-cogs"></i>
+                        Flexible Workflows
+                    </h3>
+                    <p>Design custom workflows that match your organization's processes with our intuitive drag-and-drop builder.</p>
+                    <ul>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Custom review cycles with automated reminders</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Automated workflows for performance tracking</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Pre-built process templates for quick setup</span>
+                        </li>
+                    </ul>
+                    <a href="#" class="learn-more">
+                        Explore Workflows
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                <!-- API Information -->
+                <div class="api-info">
+                    <h3>
+                        <i class="fas fa-code"></i>
+                        API Access
+                    </h3>
+                    <p>Integrate with your existing systems using our comprehensive API documentation and development tools.</p>
+                    <ul>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>RESTful API with detailed documentation</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>Real-time webhook support for events</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check-circle"></i>
+                            <span>SDKs available for major platforms</span>
+                        </li>
+                    </ul>
+                    <a href="#" class="learn-more">
+                        View API Documentation
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Integration Features -->
+        <div class="integration-features-grid">
+            <div class="feature-highlight">
+                <div class="feature-icon">
+                    <i class="fas fa-plug"></i>
+                </div>
+                <h4>Easy Setup</h4>
+                <p>Connect your tools in minutes with our guided integration process</p>
+            </div>
+            <div class="feature-highlight">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h4>Secure Connection</h4>
+                <p>Enterprise-grade security for all your integrated services</p>
+            </div>
+            <div class="feature-highlight">
+                <div class="feature-icon">
+                    <i class="fas fa-sync"></i>
+                </div>
+                <h4>Real-time Sync</h4>
+                <p>Automatic synchronization keeps your data up-to-date</p>
+            </div>
+        </div>
+    </div>
+</section>
 
         <!-- Security Section -->
         <section class="security-section">
