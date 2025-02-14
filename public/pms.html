@@ -781,130 +781,7 @@ body {
 }
 
 /* Pricing Section */
-.pricing-section {
-    padding: 6rem 0;
-    background: var(--gradient);
-    position: relative;
-}
 
-.pricing-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1.5rem;
-    margin-bottom: 3rem;
-}
-
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 34px;
-}
-
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #ccc;
-    transition: .4s;
-    border-radius: 34px;
-}
-
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: .4s;
-    border-radius: 50%;
-}
-
-input:checked + .slider {
-    background-color: var(--primary-color);
-}
-
-input:checked + .slider:before {
-    transform: translateX(26px);
-}
-
-.pricing-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2.5rem;
-    margin-top: 3rem;
-}
-
-.pricing-card {
-    background: white;
-    padding: 3rem 2.5rem;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.pricing-card.popular {
-    background: linear-gradient(145deg, #ffffff, #f8f9ff);
-    border: 2px solid var(--primary-color);
-    transform: scale(1.05);
-}
-
-.pricing-card.popular::before {
-    content: 'Most Popular';
-    position: absolute;
-    top: 1.5rem;
-    right: -3rem;
-    background: var(--primary-color);
-    color: white;
-    padding: 0.5rem 3rem;
-    transform: rotate(45deg);
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.price-header {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.price-amount {
-    font-size: 3rem;
-    color: var(--primary-color);
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-}
-
-.price-features {
-    list-style: none;
-    margin: 2rem 0;
-}
-
-.price-features li {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-    color: var(--text-color);
-}
-
-.price-features li i {
-    color: var(--primary-color);
-    font-size: 1.1rem;
-}
 
 /* Footer Styles */
 /* Enhanced Footer Styles */
@@ -1420,9 +1297,7 @@ input:checked + .slider:before {
         gap: 3rem;
     }
 
-    .pricing-card.popular {
-        transform: scale(1.02);
-    }
+   
 }
 
 @media (max-width: 768px) {
@@ -1442,8 +1317,7 @@ input:checked + .slider:before {
     }
 
     .feature-grid,
-    .learning-paths,
-    .pricing-grid {
+    .learning-paths {
         grid-template-columns: 1fr;
         padding: 0 1rem;
     }
@@ -1457,9 +1331,7 @@ input:checked + .slider:before {
         padding: 1.5rem;
     }
 
-    .pricing-card.popular {
-        transform: scale(1);
-    }
+   
 
    .footer-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -1493,10 +1365,7 @@ input:checked + .slider:before {
         justify-content: center;
     }
 
-    .pricing-toggle {
-        flex-direction: column;
-        gap: 1rem;
-    }
+   
      .integration-card {
         padding: 2rem 1.5rem;
     }
@@ -2094,9 +1963,8 @@ input:checked + .slider:before {
             <div class="container">
                 <div class="section-header">
                     <h2>Simple, Transparent Pricing</h2>
-                    <p>Choose the plan that best fits your organization's needs</p>
+                    <p>Choose the plan that best fits your business needs</p>
                 </div>
-                
                 <div class="pricing-toggle">
                     <span>Monthly</span>
                     <label class="switch">
@@ -2105,23 +1973,20 @@ input:checked + .slider:before {
                     </label>
                     <span>Annual <span class="discount">Save 20%</span></span>
                 </div>
-
                 <div class="pricing-grid">
-                    <!-- Starter Plan -->
+                    <!-- Basic Plan -->
                     <div class="pricing-card">
-                        <div class="price-header">
-                            <h3>Starter</h3>
-                            <div class="price-amount">
-                                <span class="currency">$</span>
-                                <span class="amount">10</span>
-                                <span class="period">/user/month</span>
-                            </div>
-                            <p>Perfect for small teams getting started</p>
+                        <h3>Basic</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">49</span>
+                            <span class="period">/month</span>
                         </div>
-                        <ul class="price-features">
-                            <li><i class="fas fa-check"></i>Basic performance tracking</li>
-                            <li><i class="fas fa-check"></i>Goal setting & monitoring</li>
-                            <li><i class="fas fa-check"></i>Basic analytics & reports</li>
+                        <p class="plan-description">Perfect for small businesses</p>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i>Up to 1,000 orders/month</li>
+                            <li><i class="fas fa-check"></i>2 warehouses</li>
+                            <li><i class="fas fa-check"></i>Basic integrations</li>
                             <li><i class="fas fa-check"></i>Email support</li>
                         </ul>
                         <button class="btn primary">Start Free Trial</button>
@@ -2130,19 +1995,18 @@ input:checked + .slider:before {
 
                     <!-- Professional Plan -->
                     <div class="pricing-card popular">
-                        <div class="price-header">
-                            <h3>Professional</h3>
-                            <div class="price-amount">
-                                <span class="currency">$</span>
-                                <span class="amount">25</span>
-                                <span class="period">/user/month</span>
-                            </div>
-                            <p>Ideal for growing organizations</p>
+                        <div class="popular-badge">Most Popular</div>
+                        <h3>Professional</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">99</span>
+                            <span class="period">/month</span>
                         </div>
-                        <ul class="price-features">
-                            <li><i class="fas fa-check"></i>Everything in Starter, plus:</li>
-                            <li><i class="fas fa-check"></i>Advanced performance analytics</li>
-                            <li><i class="fas fa-check"></i>Custom reporting</li>
+                        <p class="plan-description">Ideal for growing companies</p>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i>Up to 5,000 orders/month</li>
+                            <li><i class="fas fa-check"></i>5 warehouses</li>
+                            <li><i class="fas fa-check"></i>Advanced integrations</li>
                             <li><i class="fas fa-check"></i>Priority support</li>
                             <li><i class="fas fa-check"></i>API access</li>
                         </ul>
@@ -2152,19 +2016,17 @@ input:checked + .slider:before {
 
                     <!-- Enterprise Plan -->
                     <div class="pricing-card">
-                        <div class="price-header">
-                            <h3>Enterprise</h3>
-                            <div class="price-amount">
-                                <span class="custom">Custom</span>
-                            </div>
-                            <p>For large organizations with specific needs</p>
+                        <h3>Enterprise</h3>
+                        <div class="price">
+                            <span class="custom">Custom</span>
                         </div>
-                        <ul class="price-features">
-                            <li><i class="fas fa-check"></i>Everything in Professional, plus:</li>
+                        <p class="plan-description">For large organizations</p>
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i>Unlimited orders</li>
+                            <li><i class="fas fa-check"></i>Unlimited warehouses</li>
                             <li><i class="fas fa-check"></i>Custom implementation</li>
-                            <li><i class="fas fa-check"></i>Dedicated success manager</li>
-                            <li><i class="fas fa-check"></i>24/7 premium support</li>
-                            <li><i class="fas fa-check"></i>Custom integrations</li>
+                            <li><i class="fas fa-check"></i>24/7 support</li>
+                            <li><i class="fas fa-check"></i>Dedicated manager</li>
                         </ul>
                         <button class="btn secondary">Contact Sales</button>
                         <p class="trial-note">Get a customized quote for your needs</p>
@@ -2172,7 +2034,378 @@ input:checked + .slider:before {
                 </div>
             </div>
         </section>
+<style>
+    /* Enhanced Pricing Section Styles */
+.pricing-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+    overflow: hidden;
+}
 
+.pricing-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('path/to/pattern.svg');
+    opacity: 0.05;
+    pointer-events: none;
+}
+
+/* Enhanced Pricing Toggle */
+.pricing-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin: 3rem auto;
+    padding: 1rem;
+    background: white;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    width: fit-content;
+    position: relative;
+}
+
+.pricing-toggle span {
+    font-weight: 500;
+    color: var(--text-color);
+    padding: 0.5rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.discount {
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+
+/* Enhanced Switch Styles */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 32px;
+    margin: 0 0.5rem;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #e0e0e0;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 24px;
+    width: 24px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+input:checked + .slider {
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+}
+
+input:checked + .slider:before {
+    transform: translateX(28px);
+}
+
+/* Enhanced Pricing Grid */
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin: 4rem auto;
+    max-width: 1200px;
+    padding: 0 1rem;
+}
+
+.pricing-card {
+    background: white;
+    padding: 3rem 2.5rem;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+}
+
+.pricing-card:hover:not(.popular) {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-color);
+}
+
+.pricing-card.popular {
+    background: linear-gradient(145deg, #ffffff, #f8f9ff);
+    border: 2px solid var(--primary-color);
+    transform: scale(1.05);
+    z-index: 1;
+}
+
+.popular-badge {
+    position: absolute;
+    top: 1.5rem;
+    right: -3.5rem;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    color: white;
+    padding: 0.5rem 3.5rem;
+    transform: rotate(45deg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pricing-card h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+.price {
+    text-align: center;
+    margin: 1.5rem 0;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.currency {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    vertical-align: top;
+    margin-right: 0.25rem;
+}
+
+.amount {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1;
+}
+
+.period {
+    font-size: 1rem;
+    color: var(--light-text);
+    margin-left: 0.25rem;
+}
+
+.custom {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.plan-description {
+    text-align: center;
+    color: var(--light-text);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+.plan-features {
+    list-style: none;
+    margin: 2rem 0;
+    flex-grow: 1;
+}
+
+.plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    color: var(--text-color);
+    font-size: 1rem;
+    padding: 0.5rem 0;
+}
+
+.plan-features li i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.pricing-card:hover .plan-features li i {
+    background: var(--primary-color);
+    color: white;
+}
+
+.pricing-card .btn {
+    width: 100%;
+    margin-top: auto;
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.pricing-card .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(41, 98, 255, 0.2);
+}
+
+.trial-note {
+    text-align: center;
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin-top: 1rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .pricing-grid {
+        gap: 1.5rem;
+        padding: 0 2rem;
+    }
+    
+    .pricing-card {
+        padding: 2.5rem 2rem;
+    }
+
+    .amount {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .pricing-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .pricing-card.popular {
+        transform: scale(1.02);
+    }
+}
+
+@media (max-width: 768px) {
+    .pricing-toggle {
+        flex-direction: column;
+        background: transparent;
+        box-shadow: none;
+        gap: 1rem;
+    }
+
+    .pricing-toggle span {
+        background: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        width: 100%;
+        text-align: center;
+    }
+
+    .pricing-card {
+        padding: 2rem;
+    }
+
+    .pricing-card.popular {
+        transform: none;
+    }
+
+    .popular-badge {
+        font-size: 0.75rem;
+        padding: 0.4rem 3rem;
+    }
+
+    .amount {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .pricing-grid {
+        grid-template-columns: 1fr;
+        padding: 0 1rem;
+    }
+
+    .pricing-card {
+        padding: 1.5rem;
+    }
+
+    .amount {
+        font-size: 2.25rem;
+    }
+
+    .plan-features li {
+        font-size: 0.95rem;
+    }
+
+    .pricing-card .btn {
+        padding: 0.875rem;
+        font-size: 0.95rem;
+    }
+
+    .trial-note {
+        font-size: 0.8rem;
+    }
+}
+
+/* Animation for pricing cards */
+.pricing-card {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.pricing-card:nth-child(1) { animation-delay: 0.2s; }
+.pricing-card:nth-child(2) { animation-delay: 0.4s; }
+.pricing-card:nth-child(3) { animation-delay: 0.6s; }
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
         <!-- Call to Action Section -->
          <!-- Call to Action Section -->
         <section class="cta-section">
