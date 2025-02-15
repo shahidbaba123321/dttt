@@ -154,8 +154,14 @@ header .container {
     box-shadow: 0 4px 12px rgba(227, 51, 51, 0.2);
 }
         /* Mega Menu Styles */
+.mega-menu {
+    position: relative;
+}
+
 .mega-menu .dropdown-content {
     width: 1000px;
+    max-height: calc(100vh - var(--header-height) - 40px); /* Subtract header height and some padding */
+    overflow-y: auto;
     left: 50%;
     transform: translateX(-50%) translateY(10px);
     display: grid;
@@ -171,18 +177,44 @@ header .container {
     top: 100%;
     transition: all 0.3s ease;
     z-index: 1001;
+    /* Custom scrollbar styles */
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) #f1f1f1;
 }
+/* Prevent body scroll when hovering dropdown */
+.mega-menu:hover {
+    overflow: hidden;
+}
+
 
 .mega-menu:hover .dropdown-content {
     opacity: 1;
     visibility: visible;
     transform: translateX(-50%) translateY(0);
 }
-
-/* Mega Column Styles */
-.mega-column {
-    padding: 0;
+        /* Custom scrollbar styles for Webkit browsers */
+.mega-menu .dropdown-content::-webkit-scrollbar {
+    width: 6px;
 }
+.mega-menu .dropdown-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+.mega-menu .dropdown-content::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 3px;
+}
+        .mega-menu .dropdown-content::-webkit-scrollbar-thumb:hover {
+    background: #1a237e;
+}
+        
+/* Mega Column Styles */
+/* Ensure content stays within viewport */
+.mega-column {
+    height: 100%;
+    min-width: 0; /* Prevents content from forcing width */
+}
+
 
 .mega-column h3 {
     color: var(--text-dark);
@@ -406,6 +438,18 @@ header .container {
         width: 700px;
     }
 }
+        /* Adjust dropdown position based on viewport */
+@media (min-height: 800px) {
+    .mega-menu .dropdown-content {
+        max-height: 700px;
+    }
+}
+
+@media (max-height: 700px) {
+    .mega-menu .dropdown-content {
+        max-height: calc(100vh - var(--header-height) - 20px);
+    }
+}
 
 @media (max-width: 768px) {
     header .container {
@@ -469,18 +513,14 @@ header .container {
     }
 
     /* Mobile Mega Menu */
-    .mega-menu .dropdown-content {
+     .mega-menu .dropdown-content {
         width: 100%;
-        position: static;
+        max-height: none;
+        overflow: visible;
         transform: none;
+        position: static;
         box-shadow: none;
         padding: 0;
-        display: none;
-        opacity: 1;
-        visibility: visible;
-        background: var(--background-light);
-        grid-template-columns: 1fr;
-        gap: 1px;
     }
 
     .mega-menu.active .dropdown-content {
@@ -1164,6 +1204,8 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeDropdowns();
     initializeTouchEvents();
     initializeKeyboardNav();
+    initializeDropdownScroll();
+    initializeFocusTrap();
 });
 
 function initializeMobileMenu() {
@@ -1339,17 +1381,6 @@ function initializeMobileMenu() {
             }
         }, 250);
     });
-
-    // Reset scroll position when menu opens
-    function resetScroll() {
-        if (window.innerWidth <= 768 && isMenuOpen) {
-            mainNav.scrollTop = 0;
-        }
-    }
-
-    mobileMenu.addEventListener('click', () => {
-        setTimeout(resetScroll, 100);
-    });
 }
 
 function initializeDropdowns() {
@@ -1361,6 +1392,62 @@ function initializeDropdowns() {
             item.style.animationDelay = `${index * 0.05}s`;
             item.classList.add('animate-item');
         });
+    });
+}
+
+function initializeDropdownScroll() {
+    const megaMenus = document.querySelectorAll('.mega-menu');
+
+    megaMenus.forEach(menu => {
+        const dropdown = menu.querySelector('.dropdown-content');
+
+        if (dropdown) {
+            // Prevent body scroll when scrolling dropdown
+            dropdown.addEventListener('wheel', (e) => {
+                if (window.innerWidth > 768) {
+                    const { scrollTop, scrollHeight, clientHeight } = dropdown;
+                    const scrollingUp = e.deltaY < 0;
+                    const scrollingDown = e.deltaY > 0;
+
+                    if (
+                        (scrollingUp && scrollTop > 0) || 
+                        (scrollingDown && scrollTop < scrollHeight - clientHeight)
+                    ) {
+                        e.preventDefault();
+                        dropdown.scrollTop += e.deltaY;
+                    }
+                }
+            });
+
+            // Handle touch scrolling
+            let touchStart = null;
+            dropdown.addEventListener('touchstart', (e) => {
+                if (window.innerWidth > 768) {
+                    touchStart = e.touches[0].clientY;
+                }
+            });
+
+            dropdown.addEventListener('touchmove', (e) => {
+                if (window.innerWidth > 768 && touchStart !== null) {
+                    const touchY = e.touches[0].clientY;
+                    const scrollingUp = touchY > touchStart;
+                    const { scrollTop, scrollHeight, clientHeight } = dropdown;
+
+                    if (
+                        (scrollingUp && scrollTop > 0) ||
+                        (!scrollingUp && scrollTop < scrollHeight - clientHeight)
+                    ) {
+                        e.stopPropagation();
+                    } else {
+                        e.preventDefault();
+                    }
+                }
+            });
+
+            dropdown.addEventListener('touchend', () => {
+                touchStart = null;
+            });
+        }
     });
 }
 
@@ -1410,7 +1497,6 @@ function initializeKeyboardNav() {
     });
 }
 
-// Initialize focus trap for mobile menu
 function initializeFocusTrap() {
     const mainNav = document.getElementById('main-nav');
     const focusableElements = mainNav.querySelectorAll(
@@ -1438,15 +1524,6 @@ function initializeFocusTrap() {
         });
     }
 }
-
-// Initialize everything when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    initializeMobileMenu();
-    initializeDropdowns();
-    initializeTouchEvents();
-    initializeKeyboardNav();
-    initializeFocusTrap();
-});
 </script>
 </body>
 </html>
