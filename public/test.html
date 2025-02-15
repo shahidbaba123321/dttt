@@ -515,7 +515,7 @@ header .container {
     }
 
     /* Mobile Mega Menu */
-    .mega-menu .dropdown-content {
+     .mega-menu .dropdown-content {
         width: 100% !important;
         max-height: none;
         overflow: visible;
@@ -528,22 +528,27 @@ header .container {
         opacity: 0;
         visibility: hidden;
         transition: opacity 0.3s ease, visibility 0.3s ease;
+        grid-template-columns: 1fr !important; /* Force single column */
     }
 
-    .mega-menu.active .dropdown-content {
+   .mega-menu.active .dropdown-content {
         display: grid;
         opacity: 1;
         visibility: visible;
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important; /* Force single column */
+        gap: 0; /* Reduce gap between items */
     }
 
-    /* Mobile Mega Columns */
+   /* Ensure mega columns stack properly */
     .mega-column {
-        background: white;
+        width: 100%;
         padding: 15px;
-        margin: 0;
-        border-radius: 0;
+        border-bottom: 1px solid var(--border-color);
     }
+    .mega-column:last-child {
+        border-bottom: none;
+    }
+
 
     .mega-column h3 {
         font-size: 14px;
@@ -551,14 +556,18 @@ header .container {
         margin-bottom: 12px;
     }
 
+      /* Adjust list items for mobile */
     .mega-column ul {
+        display: flex;
+        flex-direction: column;
         gap: 8px;
+        width: 100%;
     }
 
-    .mega-column ul li a {
-        background: var(--background-light);
+   .mega-column ul li a {
         padding: 12px;
-        border-radius: 8px;
+        width: 100%;
+        display: flex;
         align-items: center;
     }
 
@@ -573,13 +582,18 @@ header .container {
         height: 18px;
     }
 
-    .menu-text span {
-        font-size: 14px;
+   /* Ensure text wraps properly */
+    .menu-text {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
     }
 
+    .menu-text span,
     .menu-text p {
-        font-size: 12px;
-        opacity: 0.7;
+        white-space: normal;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     /* Mobile Badge */
