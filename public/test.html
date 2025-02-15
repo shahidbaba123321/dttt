@@ -1336,40 +1336,202 @@ function initializeWiseMailAnimations() {
     const wiseMailLink = document.querySelector('a[href="mail.html"]');
     if (!wiseMailLink) return;
 
-    // Add hover effects
-    wiseMailLink.addEventListener('mouseover', function() {
-        this.style.transform = `scale(1.05) rotate(${Math.random() * 4 - 2}deg)`;
-    });
-    
-    wiseMailLink.addEventListener('mouseout', function() {
-        this.style.transform = 'scale(1) rotate(0deg)';
-    });
-    
-    // Random sparkle effect
-    setInterval(() => {
-        if (Math.random() > 0.7 && !document.hidden) {
-            wiseMailLink.classList.add('sparkle-trigger');
-            setTimeout(() => {
-                wiseMailLink.classList.remove('sparkle-trigger');
-            }, 500);
-        }
-    }, 2000);
+    // Create and append envelope icon
+    const envelope = document.createElement('span');
+    envelope.innerHTML = `
+        <svg class="mail-icon" viewBox="0 0 24 24" width="18" height="18">
+            <path d="M20,4H4C2.9,4,2,4.9,2,6v12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V6C22,4.9,21.1,4,20,4z" fill="currentColor"/>
+            <path d="M20,4H4l8,6L20,4z" fill="currentColor"/>
+        </svg>
+    `;
+    envelope.classList.add('mail-icon-wrapper');
+    wiseMailLink.prepend(envelope);
 
-    // Add floating animation variation
-    let floatOffset = 0;
-    function updateFloatAnimation() {
+    // Create notification badge
+    const badge = document.createElement('span');
+    badge.classList.add('mail-badge');
+    badge.textContent = '1';
+    wiseMailLink.appendChild(badge);
+
+    // Advanced hover animation
+    wiseMailLink.addEventListener('mouseenter', function() {
+        createMailParticles(this);
+        envelope.style.transform = 'scale(1.2) rotate(15deg)';
+        envelope.style.filter = 'drop-shadow(0 0 8px var(--primary-color))';
+        this.style.transform = 'scale(1.05)';
+        this.style.textShadow = '0 0 15px rgba(227, 51, 51, 0.3)';
+    });
+
+    wiseMailLink.addEventListener('mouseleave', function() {
+        envelope.style.transform = 'scale(1) rotate(0deg)';
+        envelope.style.filter = 'none';
+        this.style.transform = 'scale(1)';
+        this.style.textShadow = 'none';
+    });
+
+    // Continuous floating animation
+    let time = 0;
+    function floatAnimation() {
         if (!document.hidden) {
-            floatOffset += 0.02;
-            const yOffset = Math.sin(floatOffset) * 3;
-            const rotation = Math.sin(floatOffset) * 2;
-            wiseMailLink.style.transform = `translateY(${yOffset}px) rotate(${rotation}deg)`;
+            time += 0.01;
+            const yOffset = Math.sin(time) * 3;
+            const xOffset = Math.cos(time * 0.5) * 2;
+            const rotation = Math.sin(time * 0.5) * 5;
+            
+            envelope.style.transform = `translate(${xOffset}px, ${yOffset}px) rotate(${rotation}deg)`;
         }
-        requestAnimationFrame(updateFloatAnimation);
+        requestAnimationFrame(floatAnimation);
     }
-    updateFloatAnimation();
-}
+    floatAnimation();
 
-function initializeMobileMenu() {
+    // Periodic pulse effect
+    setInterval(() => {
+        if (!document.hidden && Math.random() > 0.7) {
+            envelope.classList.add('pulse');
+            setTimeout(() => envelope.classList.remove('pulse'), 1000);
+        }
+    }, 3000);
+
+    // Create particle effect
+    function createMailParticles(element) {
+        const colors = ['#ff6b6b', '#e33333', '#ff8787', '#ff4444'];
+        const particleCount = 12;
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('span');
+            particle.classList.add('mail-particle');
+            
+            const size = Math.random() * 4 + 2;
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const angle = (i / particleCount) * 360;
+            const velocity = 2 + Math.random() * 2;
+            
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.backgroundColor = color;
+            
+            const rect = element.getBoundingClientRect();
+            particle.style.left = `${rect.width / 2}px`;
+            particle.style.top = `${rect.height / 2}px`;
+            
+            particle.style.animation = `
+                particleFly${angle < 180 ? 'Up' : 'Down'} 
+                ${0.6 + Math.random() * 0.4}s 
+                ease-out forwards
+            `;
+            
+            element.appendChild(particle);
+            setTimeout(() => particle.remove(), 1000);
+        }
+    }
+
+    // Add animation styles
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+        .mail-icon-wrapper {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 6px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mail-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: badgePulse 2s infinite;
+        }
+
+        .mail-particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .pulse {
+            animation: iconPulse 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes particleFlyUp {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(
+                    ${Math.random() * 100 - 50}px,
+                    ${-Math.random() * 100 - 20}px
+                ) scale(0);
+                opacity: 0;
+            }
+        }
+
+        @keyframes particleFlyDown {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(
+                    ${Math.random() * 100 - 50}px,
+                    ${Math.random() * 100 + 20}px
+                ) scale(0);
+                opacity: 0;
+            }
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes iconPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        a[href="mail.html"] {
+            position: relative;
+            display: flex;
+            align-items: center;
+            overflow: visible;
+            padding: 5px 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        a[href="mail.html"]:hover {
+            background: rgba(227, 51, 51, 0.1);
+            border-radius: 6px;
+        }
+
+        @media (max-width: 768px) {
+            .mail-icon-wrapper {
+                margin-right: 12px;
+            }
+            
+            .mail-badge {
+                right: auto;
+                left: 20px;
+                top: 50%;
+                transform: translateY(-50%);
+            }
+        }
+    `;
+    document.head.appendChild(styleSheet);
+}
+    function initializeMobileMenu() {
     const mobileMenu = document.getElementById('mobile-menu');
     const mainNav = document.getElementById('main-nav');
     const menuOverlay = document.getElementById('menu-overlay');
@@ -1381,7 +1543,6 @@ function initializeMobileMenu() {
         megaMenus.forEach(menu => {
             const content = menu.querySelector('.dropdown-content');
             
-            // Mouse events for desktop
             menu.addEventListener('mouseenter', () => {
                 if (window.innerWidth > 768) {
                     menu.classList.add('active');
@@ -1501,18 +1662,16 @@ function initializeMobileMenu() {
     handleDesktopMegaMenu();
     handleMobileMegaMenu();
 
-    // Mobile menu click handler
+    // Event Listeners
     mobileMenu.addEventListener('click', (e) => {
         e.stopPropagation();
         toggleMenu(!isMenuOpen);
     });
 
-    // Menu overlay click handler
     menuOverlay.addEventListener('click', () => {
         toggleMenu(false);
     });
 
-    // Document click handler
     document.addEventListener('click', (e) => {
         if (isMenuOpen && 
             !mainNav.contains(e.target) && 
@@ -1521,7 +1680,6 @@ function initializeMobileMenu() {
         }
     });
 
-    // Escape key handler
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             if (isMenuOpen) {
@@ -1539,7 +1697,6 @@ function initializeMobileMenu() {
         }
     });
 
-    // Window resize handler
     let resizeTimer;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
@@ -1548,7 +1705,6 @@ function initializeMobileMenu() {
                 toggleMenu(false);
                 resetMobileMenu();
                 
-                // Reset desktop hover states
                 megaMenus.forEach(menu => {
                     const content = menu.querySelector('.dropdown-content');
                     if (content) {
@@ -1582,7 +1738,6 @@ function initializeDropdownScroll() {
         const dropdown = menu.querySelector('.dropdown-content');
 
         if (dropdown) {
-            // Prevent body scroll when scrolling dropdown
             dropdown.addEventListener('wheel', (e) => {
                 if (window.innerWidth > 768) {
                     const { scrollTop, scrollHeight, clientHeight } = dropdown;
@@ -1599,7 +1754,6 @@ function initializeDropdownScroll() {
                 }
             }, { passive: false });
 
-            // Handle touch scrolling
             let touchStart = null;
             dropdown.addEventListener('touchstart', (e) => {
                 if (window.innerWidth > 768) {
@@ -1642,7 +1796,6 @@ function initializeTouchEvents() {
                     const parent = this.parentElement;
                     const wasActive = parent.classList.contains('active');
                     
-                    // Close other open menus
                     document.querySelectorAll('.mega-menu.active').forEach(menu => {
                         if (menu !== parent) {
                             menu.classList.remove('active');
@@ -1655,7 +1808,6 @@ function initializeTouchEvents() {
                         }
                     });
 
-                    // Toggle current menu
                     parent.classList.toggle('active', !wasActive);
                     const content = parent.querySelector('.dropdown-content');
                     
@@ -1676,7 +1828,6 @@ function initializeTouchEvents() {
             });
         });
 
-        // Close dropdowns when touching outside
         document.addEventListener('touchstart', (e) => {
             if (!e.target.closest('.mega-menu')) {
                 document.querySelectorAll('.mega-menu.active').forEach(menu => {
