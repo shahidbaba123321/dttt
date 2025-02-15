@@ -254,6 +254,22 @@ header .container {
 .shifts-icon { background: #673AB7; }
 .stock-icon { background: #4CAF50; }
 .integration-icon { background: #2196F3; }
+.bookkeeping-icon { background: #FF7043; }
+.tax-icon { background: #F57C00; }
+.globalinvoice-icon { background: #FB8C00; }
+.invoice-icon { background: #FFB300; }
+.asset-icon { background: #FFA000; }
+
+/* Operations Solutions Icons */
+.inventory-icon { background: #673AB7; }
+.supplier-icon { background: #5E35B1; }
+.workflow-icon { background: #512DA8; }
+.facility-icon { background: #4527A0; }
+
+/* Integration Solutions Icons */
+.payroll-integration-icon { background: #2196F3; }
+.benefits-integration-icon { background: #1E88E5; }
+.talent-integration-icon { background: #1976D2; }        
 
 /* Menu Text Styles */
 .menu-text {
@@ -298,6 +314,56 @@ header .container {
 .menu-icon svg circle[fill="#ffffff"] {
     fill: #ffffff;
 }
+/* SVG Fill Colors */
+.finance-icon svg path:last-child,
+.bookkeeping-icon svg path:last-child,
+.tax-icon svg path:last-child,
+.globalinvoice-icon svg path:last-child,
+.invoice-icon svg path:last-child,
+.asset-icon svg path:last-child {
+    fill: #FF9800;
+}
+
+.inventory-icon svg path,
+.supplier-icon svg path,
+.workflow-icon svg path,
+.facility-icon svg path {
+    stroke: #673AB7;
+}
+
+.payroll-integration-icon svg path:last-child,
+.benefits-integration-icon svg path:last-child,
+.talent-integration-icon svg path:last-child {
+    stroke: #2196F3;
+}
+
+/* Hover Effects */
+.mega-column ul li a:hover .finance-icon,
+.mega-column ul li a:hover .bookkeeping-icon,
+.mega-column ul li a:hover .tax-icon,
+.mega-column ul li a:hover .globalinvoice-icon,
+.mega-column ul li a:hover .invoice-icon,
+.mega-column ul li a:hover .asset-icon {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.2);
+}
+
+.mega-column ul li a:hover .inventory-icon,
+.mega-column ul li a:hover .supplier-icon,
+.mega-column ul li a:hover .workflow-icon,
+.mega-column ul li a:hover .facility-icon {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(103, 58, 183, 0.2);
+}
+
+.mega-column ul li a:hover .payroll-integration-icon,
+.mega-column ul li a:hover .benefits-integration-icon,
+.mega-column ul li a:hover .talent-integration-icon {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+}
+
+        
 
 /* Hover Effects */
 .mega-column ul li a:hover .menu-icon {
@@ -529,6 +595,40 @@ header .container {
         display: block;
         opacity: 1;
     }
+
+     .finance-icon,
+    .bookkeeping-icon,
+    .tax-icon,
+    .globalinvoice-icon,
+    .invoice-icon,
+    .asset-icon,
+    .inventory-icon,
+    .supplier-icon,
+    .workflow-icon,
+    .facility-icon,
+    .payroll-integration-icon,
+    .benefits-integration-icon,
+    .talent-integration-icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .finance-icon svg,
+    .bookkeeping-icon svg,
+    .tax-icon svg,
+    .globalinvoice-icon svg,
+    .invoice-icon svg,
+    .asset-icon svg,
+    .inventory-icon svg,
+    .supplier-icon svg,
+    .workflow-icon svg,
+    .facility-icon svg,
+    .payroll-integration-icon svg,
+    .benefits-integration-icon svg,
+    .talent-integration-icon svg {
+        width: 18px;
+        height: 18px;
+    }
 }
 
 /* Small Mobile Devices */
@@ -552,6 +652,39 @@ header .container {
     }
 
     .menu-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+     .finance-icon,
+    .bookkeeping-icon,
+    .tax-icon,
+    .globalinvoice-icon,
+    .invoice-icon,
+    .asset-icon,
+    .inventory-icon,
+    .supplier-icon,
+    .workflow-icon,
+    .facility-icon,
+    .payroll-integration-icon,
+    .benefits-integration-icon,
+    .talent-integration-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .finance-icon svg,
+    .bookkeeping-icon svg,
+    .tax-icon svg,
+    .globalinvoice-icon svg,
+    .invoice-icon svg,
+    .asset-icon svg,
+    .inventory-icon svg,
+    .supplier-icon svg,
+    .workflow-icon svg,
+    .facility-icon svg,
+    .payroll-integration-icon svg,
+    .benefits-integration-icon svg,
+    .talent-integration-icon svg {
         width: 16px;
         height: 16px;
     }
@@ -651,7 +784,7 @@ header .container {
                                             </div>
                                             <div class="menu-text">
                                                 <span>People Management</span>
-                                                <p>Manage your workforce efficiently</p>
+                                                <p>Personal details, job roles, departments, & much more...</p>
                                             </div>
                                         </a>
                                     </li>
@@ -664,7 +797,7 @@ header .container {
                                             </div>
                                             <div class="menu-text">
                                                 <span>Performance Management</span>
-                                                <p>Track and improve performance</p>
+                                                <p>Goal setting, appraisals, feedback system</p>
                                             </div>
                                         </a>
                                     </li>
@@ -678,7 +811,7 @@ header .container {
                                             </div>
                                             <div class="menu-text">
                                                 <span>Attendance & Leave Management</span>
-                                                <p>Track time and attendance</p>
+                                                <p>Biometric integration, leave requests, approvals</p>
                                             </div>
                                         </a>
                                     </li>
@@ -692,7 +825,7 @@ header .container {
                                             </div>
                                             <div class="menu-text">
                                                 <span>Payroll & Compensation</span>
-                                                <p>Streamline payroll processing</p>
+                                                <p>Salary processing, tax deductions, benefits, bonuses</p>
                                             </div>
                                         </a>
                                     </li>
@@ -706,7 +839,7 @@ header .container {
                                             </div>
                                             <div class="menu-text">
                                                 <span>Employee Self-Service</span>
-                                                <p>Empower your employees</p>
+                                                <p>Profile updates, document access, communication portal</p>
                                             </div>
                                         </a>
                                     </li>
@@ -742,7 +875,7 @@ header .container {
                                             </div>
                                             <div class="menu-text">
                                                 <span>Payroll Processing</span>
-                                                <p>Efficient payroll management</p>
+                                                <p>Salary calculations, tax deductions, payslips</p>
                                             </div>
                                         </a>
                                     </li>
@@ -756,7 +889,7 @@ header .container {
                                             </div>
                                             <div class="menu-text">
                                                 <span>SmartExpenses</span>
-                                                <p>Expense management simplified</p>
+                                                <p> Reimbursements, travel & entertainment expenses</p>
                                             </div>
                                         </a>
                                     </li>
@@ -770,10 +903,81 @@ header .container {
                                             </div>
                                             <div class="menu-text">
                                                 <span>Financial Reporting</span>
-                                                <p>Comprehensive financial insights</p>
+                                                <p>Profit & loss, cash flow statements, budgeting</p>
                                             </div>
                                         </a>
                                     </li>
+                                     <li>
+                                        <a href="bookkeeping.html">
+                                            <div class="menu-icon bookkeeping-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M4 28h28V6H4v22z" fill="#ffffff"/>
+                                                    <path d="M7 14h4v11H7zm6-3h4v14h-4zm6-3h4v17h-4zm6 6h4v11h-4z" fill="#FF9800"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Book-keeping</span>
+                                                <p>Recording financial transactions, ledgers, reconciliation</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="tnc.html">
+                                            <div class="menu-icon tax-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M4 28h28V6H4v22z" fill="#ffffff"/>
+                                                    <path d="M7 14h4v11H7zm6-3h4v14h-4zm6-3h4v17h-4zm6 6h4v11h-4z" fill="#FF9800"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Taxation & Compliance</span>
+                                                <p>GST, TDS, VAT etc., employee tax filings</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="globalinvoice.html">
+                                            <div class="menu-icon globalinvoice-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M4 28h28V6H4v22z" fill="#ffffff"/>
+                                                    <path d="M7 14h4v11H7zm6-3h4v14h-4zm6-3h4v17h-4zm6 6h4v11h-4z" fill="#FF9800"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>GlobalInvoice</span>
+                                                <p>Multi-currency invoicing, compliance with international tax laws</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                      <li>
+                                        <a href="inb.html">
+                                            <div class="menu-icon invoice-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M4 28h28V6H4v22z" fill="#ffffff"/>
+                                                    <path d="M7 14h4v11H7zm6-3h4v14h-4zm6-3h4v17h-4zm6 6h4v11h-4z" fill="#FF9800"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Invoice & Billing</span>
+                                                <p>Vendor Payments, Client invoicing</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="asset.html">
+                                            <div class="menu-icon asset-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M4 28h28V6H4v22z" fill="#ffffff"/>
+                                                    <path d="M7 14h4v11H7zm6-3h4v14h-4zm6-3h4v17h-4zm6 6h4v11h-4z" fill="#FF9800"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Asset Management</span>
+                                                <p>Track company assets, depreciation calculations</p>
+                                            </div>
+                                        </a>
+                                    </li>
+
                                     <!-- Add other Financial Solutions items -->
                                 </ul>
                             </div>
@@ -792,7 +996,7 @@ header .container {
                                             </div>
                                             <div class="menu-text">
                                                 <span>Project & Task Management</span>
-                                                <p>Streamline project workflows</p>
+                                                <p>Task allocation, project tracking, deadlines</p>
                                             </div>
                                         </a>
                                     </li>
@@ -807,7 +1011,67 @@ header .container {
                                             </div>
                                             <div class="menu-text">
                                                 <span>ShiftMaster</span>
-                                                <p>Advanced shift management</p>
+                                                <p>Employee scheduling and time tracking.</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="stockflow.html">
+                                            <div class="menu-icon inventory-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <circle cx="18" cy="18" r="18" fill="#ffffff"/>
+                                                    <path d="M18 8v10l6 6" stroke="#673AB7" stroke-width="2" fill="none"/>
+                                                    <circle cx="18" cy="18" r="2" fill="#673AB7"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>StockFlow</span>
+                                                <p>Raw materials, office supplies, procurement</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="vsm.html">
+                                            <div class="menu-icon supplier-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <circle cx="18" cy="18" r="18" fill="#ffffff"/>
+                                                    <path d="M18 8v10l6 6" stroke="#673AB7" stroke-width="2" fill="none"/>
+                                                    <circle cx="18" cy="18" r="2" fill="#673AB7"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Vendor & Supplier Management </span>
+                                                <p> Contracts, payments, performance tracking</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="wfa.html">
+                                            <div class="menu-icon workflow-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <circle cx="18" cy="18" r="18" fill="#ffffff"/>
+                                                    <path d="M18 8v10l6 6" stroke="#673AB7" stroke-width="2" fill="none"/>
+                                                    <circle cx="18" cy="18" r="2" fill="#673AB7"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Workflow Automation</span>
+                                                <p> Automating repetitive HR & operational tasks</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                     <li>
+                                        <a href="facility.html">
+                                            <div class="menu-icon facility-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <circle cx="18" cy="18" r="18" fill="#ffffff"/>
+                                                    <path d="M18 8v10l6 6" stroke="#673AB7" stroke-width="2" fill="none"/>
+                                                    <circle cx="18" cy="18" r="2" fill="#673AB7"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Facility Management</span>
+                                                <p> Automating repetitive HR & operational tasks</p>
                                             </div>
                                         </a>
                                     </li>
@@ -821,7 +1085,7 @@ header .container {
                                 <ul>
                                     <li>
                                         <a href="sn.html">
-                                            <div class="menu-icon integration-icon">
+                                            <div class="menu-icon servicenow-integration-icon">
                                                 <svg viewBox="0 0 36 36">
                                                     <path d="M32 8H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h28c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" fill="#ffffff"/>
                                                     <path d="M12 14v8m6-12v16m6-12v8" stroke="#2196F3" stroke-width="2"/>
@@ -829,7 +1093,49 @@ header .container {
                                             </div>
                                             <div class="menu-text">
                                                 <span>ServiceNow & ITSM</span>
-                                                <p>IT service management integration</p>
+                                                <p>Automate HR workflows and IT service management</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                     <li>
+                                        <a href="payint.html">
+                                            <div class="menu-icon payroll-integration-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M32 8H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h28c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" fill="#ffffff"/>
+                                                    <path d="M12 14v8m6-12v16m6-12v8" stroke="#2196F3" stroke-width="2"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Payroll & Finance Integrations</span>
+                                                <p>Connect with third-party payroll and accounting systems</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="ebc.html">
+                                            <div class="menu-icon benefits-integration-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M32 8H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h28c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" fill="#ffffff"/>
+                                                    <path d="M12 14v8m6-12v16m6-12v8" stroke="#2196F3" stroke-width="2"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Employee Benefits</span>
+                                                <p>Integrate with benefits providers, insurance platforms, and wellness programs </p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="ptm.html">
+                                            <div class="menu-icon talent-integration-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M32 8H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h28c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" fill="#ffffff"/>
+                                                    <path d="M12 14v8m6-12v16m6-12v8" stroke="#2196F3" stroke-width="2"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Talent Management </span>
+                                                <p>Connect with performance management systems</p>
                                             </div>
                                         </a>
                                     </li>
