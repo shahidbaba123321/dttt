@@ -1329,7 +1329,45 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeKeyboardNav();
     initializeDropdownScroll();
     initializeFocusTrap();
+    initializeWiseMailAnimations();
 });
+
+function initializeWiseMailAnimations() {
+    const wiseMailLink = document.querySelector('a[href="mail.html"]');
+    if (!wiseMailLink) return;
+
+    // Add hover effects
+    wiseMailLink.addEventListener('mouseover', function() {
+        this.style.transform = `scale(1.05) rotate(${Math.random() * 4 - 2}deg)`;
+    });
+    
+    wiseMailLink.addEventListener('mouseout', function() {
+        this.style.transform = 'scale(1) rotate(0deg)';
+    });
+    
+    // Random sparkle effect
+    setInterval(() => {
+        if (Math.random() > 0.7 && !document.hidden) {
+            wiseMailLink.classList.add('sparkle-trigger');
+            setTimeout(() => {
+                wiseMailLink.classList.remove('sparkle-trigger');
+            }, 500);
+        }
+    }, 2000);
+
+    // Add floating animation variation
+    let floatOffset = 0;
+    function updateFloatAnimation() {
+        if (!document.hidden) {
+            floatOffset += 0.02;
+            const yOffset = Math.sin(floatOffset) * 3;
+            const rotation = Math.sin(floatOffset) * 2;
+            wiseMailLink.style.transform = `translateY(${yOffset}px) rotate(${rotation}deg)`;
+        }
+        requestAnimationFrame(updateFloatAnimation);
+    }
+    updateFloatAnimation();
+}
 
 function initializeMobileMenu() {
     const mobileMenu = document.getElementById('mobile-menu');
