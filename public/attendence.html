@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance & Leave Management - Workwise Pro</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+    /* Root Variables */
+    :root {
+        --primary-color: #2962ff;
+        --secondary-color: #6c757d;
+        --success-color: #28a745;
+        --background-color: #f8f9fa;
+        --text-color: #333;
+        --light-text: #6c757d;
+        --border-radius: 8px;
+        --transition: all 0.3s ease;
+        --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        --gradient: linear-gradient(135deg, #f0f7ff 0%, #e9ecef 100%);
+        --card-bg: #ffffff;
+        --mobile-padding: 1rem;
+        --section-spacing: 4rem;
+        --header-height: 70px;
+    }
+
+    /* General Reset */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+        font-family: 'Poppins', sans-serif;
+        line-height: 1.6;
+        color: var(--text-color);
+        background-color: var(--background-color);
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        padding-top: var(--header-height);
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 var(--mobile-padding);
+        width: 100%;
+    }
+
+    /* Hero Section Styles */
+    .attendance-hero {
+        background: var(--gradient);
+        padding: calc(var(--header-height) + 4rem) 0 6rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+        align-items: center;
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-text {
+        max-width: 600px;
+    }
+
+    .hero-text h1 {
+        font-size: clamp(2.5rem, 5vw, 3.5rem);
+        background: linear-gradient(45deg, #1a237e, #2962ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1.5rem;
+        line-height: 1.2;
+        font-weight: 700;
+    }
+
+    .hero-text p {
+        font-size: clamp(1.1rem, 2vw, 1.25rem);
+        color: #455a64;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+    }
+
+    .hero-buttons {
+        display: flex;
+        gap: 1.5rem;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem 2rem;
+        border-radius: var(--border-radius);
+        text-decoration: none;
+        transition: var(--transition);
+        font-weight: 500;
+        cursor: pointer;
+        min-width: 160px;
+        text-align: center;
+    }
+
+    .btn.primary {
+        background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
+    }
+
+    .btn.secondary {
+        background: transparent;
+        color: var(--primary-color);
+        border: 2px solid var(--primary-color);
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(41, 98, 255, 0.25);
+    }
+
+    .hero-image {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    .hero-image img {
+        width: 100%;
+        height: auto;
+        max-width: 600px;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+        100% { transform: translateY(0px); }
+    }
+    
+/* Key Features Section */
+.features-section {
+    padding: 6rem 0;
+    background: white;
+}
+
+.section-header {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 4rem;
+}
+
+.section-header h2 {
+    font-size: clamp(2rem, 4vw, 2.5rem);
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.section-header p {
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    color: var(--light-text);
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2.5rem;
+    margin-top: 3rem;
+}
+
+.feature-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    border: 1px solid rgba(41, 98, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: left;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card:hover::before {
+    transform: scaleX(1);
+}
+
+.feature-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.feature-icon i {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+}
+
+.feature-content h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.feature-content p {
+    color: var(--light-text);
+    margin-bottom: 1.5rem;
+}
+
+.feature-list {
+    list-style: none;
+}
+
+.feature-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-color);
+}
+
+.feature-list li i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+}
+
+/* Benefits Section */
+.benefits-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4rem;
+    align-items: center;
+}
+
+.benefits-content {
+    max-width: 500px;
+}
+
+.benefit-item {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+}
+
+.benefit-item:hover {
+    transform: translateX(10px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.benefit-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.benefit-icon i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.benefit-content h3 {
+    color: #1a237e;
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+}
+
+.benefit-content p {
+    color: var(--light-text);
+    font-size: 0.95rem;
+}
+
+.benefits-image {
+    position: relative;
+}
+
+.benefits-image img {
+    width: 100%;
+    max-width: 500px;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Integration Section */
+.integration-section {
+    padding: 6rem 0;
+    background: white;
+}
+
+.integration-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+.integration-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    text-align: center;
+}
+
+.integration-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.integration-icon {
+    width: 56px;
+    height: 56px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+}
+
+.integration-icon i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.integration-card h3 {
+    color: #1a237e;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+}
+
+.integration-card p {
+    color: var(--light-text);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .features-grid,
+    .benefits-grid,
+    .integration-grid {
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .features-grid,
+    .benefits-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .integration-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .benefits-image {
+        order: -1;
+        text-align: center;
+    }
+
+    .benefits-image img {
+        max-width: 80%;
+    }
+}
+
+@media (max-width: 768px) {
+    .feature-card,
+    .benefit-item {
+        padding: 1.5rem;
+    }
+
+    .integration-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .integration-card {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .feature-card,
+    .benefit-item {
+        padding: 1.25rem;
+    }
+
+    .feature-icon,
+    .benefit-icon {
+        width: 48px;
+        height: 48px;
+    }
+
+    .feature-icon i,
+    .benefit-icon i {
+        font-size: 1.25rem;
+    }
+}
+</style>
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+
+    <!-- Main Content -->
+    <main class="attendance-main">
+        <!-- Hero Section -->
+        <section class="attendance-hero">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1>Streamline Your Workforce Attendance & Leave Management</h1>
+                        <p>Integrate Biometric Systems, Manage Leave Requests, Timesheets, and Shifts Seamlessly</p>
+                        <div class="hero-buttons">
+                            <a href="#" class="btn primary">Request a Demo</a>
+                            <a href="#" class="btn secondary">Get Started Today</a>
+                        </div>
+                    </div>
+                    <div class="hero-image">
+                        <img 
+                            src="image/attendance-dashboard.png" 
+                            alt="Attendance Management Dashboard"
+                            loading="lazy"
+                        >
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Features Section -->
+        <section class="features-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Comprehensive Attendance Management Features</h2>
+                    <p>Everything you need to manage your workforce attendance efficiently</p>
+                </div>
+                <div class="features-grid">
+                    <!-- Biometric Integration -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-fingerprint"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>Biometric System Integration</h3>
+                            <p>Secure and accurate attendance tracking with advanced biometric technology</p>
+                            <ul class="feature-list">
+                                <li><i class="fas fa-check"></i>Fingerprint recognition</li>
+                                <li><i class="fas fa-check"></i>Facial recognition support</li>
+                                <li><i class="fas fa-check"></i>Prevent time theft</li>
+                                <li><i class="fas fa-check"></i>Real-time tracking</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Leave Management -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>Leave Request & Approval</h3>
+                            <p>Streamlined leave management process with automated workflows</p>
+                            <ul class="feature-list">
+                                <li><i class="fas fa-check"></i>Digital leave applications</li>
+                                <li><i class="fas fa-check"></i>Custom leave policies</li>
+                                <li><i class="fas fa-check"></i>Approval workflows</li>
+                                <li><i class="fas fa-check"></i>Leave balance tracking</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Timesheet Management -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>Timesheet Management</h3>
+                            <p>Accurate tracking of work hours and overtime calculations</p>
+                            <ul class="feature-list">
+                                <li><i class="fas fa-check"></i>Automated time tracking</li>
+                                <li><i class="fas fa-check"></i>Overtime calculations</li>
+                                <li><i class="fas fa-check"></i>Project time allocation</li>
+                                <li><i class="fas fa-check"></i>Payroll integration</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Shift Management -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>Shift Management</h3>
+                            <p>Flexible shift scheduling and rotation management</p>
+                            <ul class="feature-list">
+                                <li><i class="fas fa-check"></i>Multiple shift creation</li>
+                                <li><i class="fas fa-check"></i>Rotation scheduling</li>
+                                <li><i class="fas fa-check"></i>Shift swapping</li>
+                                <li><i class="fas fa-check"></i>Coverage analysis</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Benefits Section -->
+        <section class="benefits-section">
+            <div class="container">
+                <div class="benefits-grid">
+                    <div class="benefits-content">
+                        <div class="section-header" style="text-align: left; margin: 0 0 3rem;">
+                            <h2>Transform Your Attendance Management</h2>
+                            <p>Experience the advantages of automated attendance tracking</p>
+                        </div>
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="benefit-content">
+                                <h3>Enhanced Accuracy</h3>
+                                <p>Eliminate manual errors and ensure precise attendance tracking for accurate payroll processing</p>
+                            </div>
+                        </div>
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <i class="fas fa-rocket"></i>
+                            </div>
+                            <div class="benefit-content">
+                                <h3>Increased Efficiency</h3>
+                                <p>Automate routine tasks and free up HR resources for strategic initiatives</p>
+                            </div>
+                        </div>
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="benefit-content">
+                                <h3>Improved Compliance</h3>
+                                <p>Stay compliant with labor laws and maintain accurate attendance records</p>
+                            </div>
+                        </div>
+                        <div class="benefit-item">
+                            <div class="benefit-icon">
+                                <i class="fas fa-smile"></i>
+                            </div>
+                            <div class="benefit-content">
+                                <h3>Employee Satisfaction</h3>
+                                <p>Provide transparency and easy access to attendance and leave information</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="benefits-image">
+                        <img 
+                            src="image/benefits-illustration.png" 
+                            alt="Benefits Illustration"
+                            loading="lazy"
+                        >
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Integration Section -->
+        <section class="integration-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Seamless Integration Capabilities</h2>
+                    <p>Connect with your existing business tools and systems</p>
+                </div>
+                <div class="integration-grid">
+                    <!-- Payroll Integration -->
+                    <div class="integration-card">
+                        <div class="integration-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <h3>Payroll Systems</h3>
+                        <p>Automatic data sync for accurate salary calculations and timely payments</p>
+                    </div>
+
+                    <!-- HR Software Integration -->
+                    <div class="integration-card">
+                        <div class="integration-icon">
+                            <i class="fas fa-users-cog"></i>
+                        </div>
+                        <h3>HR Management Software</h3>
+                        <p>Unified platform for all employee-related information and processes</p>
+                    </div>
+
+                    <!-- Third-Party Integration -->
+                    <div class="integration-card">
+                        <div class="integration-icon">
+                            <i class="fas fa-plug"></i>
+                        </div>
+                        <h3>Third-Party Applications</h3>
+                        <p>Flexible API integration with various business tools and systems</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+                <!-- Pricing Section (Same as main.html) -->
+        <section class="pricing-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Transparent Pricing</h2>
+                    <p>Choose the plan that best fits your business needs</p>
+                </div>
+                <div class="pricing-toggle">
+                    <span>Monthly</span>
+                    <label class="switch">
+                        <input type="checkbox" id="billing-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span>Annual <span class="discount">Save 20%</span></span>
+                </div>
+                <div class="pricing-grid">
+                    <!-- Basic Plan -->
+                    <div class="pricing-card">
+                        <h3>Basic</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">8</span>
+                            <span class="period">/employee/month</span>
+                        </div>
+                        <p class="plan-description">Perfect for small businesses</p>
+                        <ul class="plan-features">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Basic Attendance Tracking</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Simple Leave Management</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Standard Reports</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Email Support</span>
+                            </li>
+                        </ul>
+                        <button class="btn primary">Start Free Trial</button>
+                        <p class="trial-note">14-day free trial, no credit card required</p>
+                    </div>
+
+                    <!-- Professional Plan -->
+                    <div class="pricing-card popular">
+                        <div class="popular-badge">Most Popular</div>
+                        <h3>Professional</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">15</span>
+                            <span class="period">/employee/month</span>
+                        </div>
+                        <p class="plan-description">Ideal for growing companies</p>
+                        <ul class="plan-features">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Biometric Integration</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Advanced Leave Management</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Shift Management</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Priority Support</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>API Access</span>
+                            </li>
+                        </ul>
+                        <button class="btn primary">Start Free Trial</button>
+                        <p class="trial-note">14-day free trial, no credit card required</p>
+                    </div>
+
+                    <!-- Enterprise Plan -->
+                    <div class="pricing-card">
+                        <h3>Enterprise</h3>
+                        <div class="price">
+                            <span class="custom">Custom</span>
+                        </div>
+                        <p class="plan-description">For large organizations</p>
+                        <ul class="plan-features">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Custom Biometric Solutions</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Dedicated Account Manager</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Custom Integration</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>24/7 Premium Support</span>
+                            </li>
+                        </ul>
+                        <button class="btn secondary">Contact Sales</button>
+                        <p class="trial-note">Get a customized quote for your needs</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Call to Action Section -->
+        <section class="cta-section">
+            <div class="container">
+                <div class="cta-content">
+                    <h2>Ready to Transform Your Attendance Management?</h2>
+                    <p>Join thousands of companies that trust our attendance and leave management solution. Start streamlining your workforce management today.</p>
+                    <div class="cta-buttons">
+                        <button class="btn primary">Start Free Trial</button>
+                        <button class="btn secondary">Schedule Demo</button>
+                    </div>
+                    <div class="cta-features">
+                        <div class="cta-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>14-day free trial</span>
+                        </div>
+                        <div class="cta-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>No credit card required</span>
+                        </div>
+                        <div class="cta-feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Free onboarding support</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer (Same as main.html) -->
+    <footer class="main-footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="brand-section">
+                <div class="footer-logo">
+                    <h2>Workwise Pro</h2>
+                </div>
+                <p class="footer-description">
+                    Comprehensive workforce management solutions for modern businesses. Streamline your HR operations with our innovative platform.
+                </p>
+                <div class="social-links">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <h4>Solutions</h4>
+                <ul>
+                    <li><a href="hr.html">HR Management</a></li>
+                    <li><a href="payroll.html">Payroll</a></li>
+                    <li><a href="attendance.html">Attendance</a></li>
+                    <li><a href="performance.html">Performance</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="careers.html">Careers</a></li>
+                    <li><a href="blog.html">Blog</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="documentation.html">Documentation</a></li>
+                    <li><a href="api.html">API Reference</a></li>
+                    <li><a href="guides.html">Guides</a></li>
+                    <li><a href="support.html">Support</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="privacy.html">Privacy Policy</a></li>
+                    <li><a href="terms.html">Terms of Service</a></li>
+                    <li><a href="security.html">Security</a></li>
+                    <li><a href="compliance.html">Compliance</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div class="footer-info">
+                <p>&copy; 2024 Workwise Pro. All rights reserved.</p>
+            </div>
+            <div class="footer-badges">
+                <img src="image/iso-certified.png" alt="ISO Certified" loading="lazy">
+                <img src="image/gdpr-compliant.png" alt="GDPR Compliant" loading="lazy">
+                <img src="image/secure-payment.png" alt="Secure Payment" loading="lazy">
+            </div>
+        </div>
+    </div>
+</footer>
+
+<style>
+/* Footer Styles */
+.main-footer {
+    background: #1a237e;
+    color: #ffffff;
+    padding: 6rem 0 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.main-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(41, 98, 255, 0.05), transparent);
+    pointer-events: none;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 2fr repeat(4, 1fr);
+    gap: clamp(2rem, 5vw, 4rem);
+    margin-bottom: 4rem;
+    position: relative;
+    z-index: 1;
+}
+
+.brand-section {
+    max-width: 300px;
+}
+
+.footer-logo {
+    margin-bottom: 1.5rem;
+}
+
+.footer-logo h2 {
+    color: #ffffff;
+    font-size: 1.8rem;
+    font-weight: 600;
+    background: linear-gradient(45deg, #ffffff, #42a5f5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.footer-description {
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.social-links {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.social-links a {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.25rem;
+    transition: all 0.3s ease;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.social-links a:hover {
+    color: #ffffff;
+    background: var(--primary-color);
+    transform: translateY(-3px);
+}
+  /* Footer Section Styles Continued */
+.footer-section h4 {
+    color: #ffffff;
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    position: relative;
+    padding-bottom: 0.75rem;
+}
+
+.footer-section h4::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    background: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+.footer-section:hover h4::after {
+    width: 50px;
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section ul li {
+    margin-bottom: 0.8rem;
+}
+
+.footer-section ul li a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    display: inline-block;
+    padding: 0.3rem 0;
+    position: relative;
+}
+
+.footer-section ul li a::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+.footer-section ul li a:hover {
+    color: #ffffff;
+    transform: translateX(5px);
+}
+
+.footer-section ul li a:hover::before {
+    width: 100%;
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.footer-info p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+.footer-badges {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.footer-badges img {
+    height: 40px;
+    width: auto;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.footer-badges img:hover {
+    opacity: 1;
+}
+
+/* Footer Animation Effects */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.footer-section {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+}
+
+.footer-section:nth-child(1) { animation-delay: 0.1s; }
+.footer-section:nth-child(2) { animation-delay: 0.2s; }
+.footer-section:nth-child(3) { animation-delay: 0.3s; }
+.footer-section:nth-child(4) { animation-delay: 0.4s; }
+.footer-section:nth-child(5) { animation-delay: 0.5s; }
+
+/* Footer Responsive Styles */
+@media (max-width: 1200px) {
+    .footer-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .brand-section {
+        grid-column: 1 / -1;
+        max-width: 100%;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .social-links {
+        justify-content: center;
+    }
+
+    .footer-section h4::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
+
+@media (max-width: 768px) {
+    .main-footer {
+        padding: 4rem 0 2rem;
+    }
+
+    .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+    }
+
+    .footer-section {
+        text-align: center;
+    }
+
+    .footer-section ul li a:hover {
+        transform: translateX(0);
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+        gap: 1.5rem;
+    }
+
+    .footer-badges {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .footer-badges img {
+        height: 35px;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .footer-section {
+        padding: 0 1rem;
+    }
+
+    .social-links {
+        gap: 1rem;
+    }
+
+    .social-links a {
+        width: 35px;
+        height: 35px;
+        font-size: 1.1rem;
+    }
+
+    .footer-badges img {
+        height: 30px;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .main-footer {
+        background: #0a1029;
+    }
+
+    .footer-section h4::after {
+        background: #42a5f5;
+    }
+
+    .social-links a:hover {
+        background: #42a5f5;
+    }
+}
+
+/* High Contrast Mode */
+@media (forced-colors: active) {
+    .main-footer {
+        border-top: 1px solid CanvasText;
+    }
+
+    .footer-section h4::after {
+        background: CanvasText;
+    }
+
+    .social-links a {
+        border: 1px solid CanvasText;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .main-footer {
+        background: none !important;
+        color: #000 !important;
+        padding: 1rem 0;
+    }
+
+    .social-links,
+    .footer-badges {
+        display: none;
+    }
+
+    .footer-section h4::after {
+        display: none;
+    }
+
+    .footer-bottom {
+        border-top: 1px solid #000;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .footer-section {
+        animation: none;
+    }
+
+    .footer-section ul li a,
+    .social-links a {
+        transition: none;
+    }
+}
+</style>
+
+<script>
+// Initialize all functionality when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAll();
+    loadHeader();
+});
+
+// Header Loading Function (Same as main.html)
+async function loadHeader() {
+    const headerContainer = document.getElementById('header-container');
+    
+    try {
+        const response = await fetch('header.html');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const html = await response.text();
+        headerContainer.innerHTML = html;
+
+        // Initialize mobile menu functionality after header loads
+        initializeMobileMenu();
+    } catch (error) {
+        console.error('Error loading header:', error);
+        headerContainer.innerHTML = `
+            <header class="main-header">
+                <div class="container">
+                    <a href="/" class="logo">
+                        <h1>Workwise Pro</h1>
+                    </a>
+                </div>
+            </header>
+        `;
+    }
+}
+
+function initializeAll() {
+    initializeAnimations();
+    initializePricing();
+    handleScrollEffects();
+    setupInteractions();
+}
+
+// Animation Handler
+function initializeAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+            }
+        });
+    }, observerOptions);
+
+    // Observe all animatable elements
+    document.querySelectorAll('.feature-card, .benefit-item, .integration-card, .pricing-card')
+        .forEach(el => observer.observe(el));
+}
+
+// Pricing Toggle Handler
+function initializePricing() {
+    const billingToggle = document.getElementById('billing-toggle');
+    const priceAmounts = document.querySelectorAll('.amount');
+    const monthlyPrices = ['8', '15'];
+    const annualPrices = ['6', '12'];
+
+    if (billingToggle) {
+        billingToggle.addEventListener('change', () => {
+            priceAmounts.forEach((price, index) => {
+                if (price.textContent !== 'Custom') {
+                    animateNumberChange(price, billingToggle.checked ? annualPrices[index] : monthlyPrices[index]);
+                }
+            });
+        });
+    }
+}
+
+// Number Animation Helper
+function animateNumberChange(element, newValue) {
+    const start = parseInt(element.textContent);
+    const end = parseInt(newValue);
+    const duration = 500;
+    const startTime = performance.now();
+
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        const current = Math.round(start + (end - start) * progress);
+        element.textContent = current;
+
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        }
+    }
+
+    requestAnimationFrame(update);
+}
+
+// Scroll Effects Handler
+function handleScrollEffects() {
+    let lastScroll = 0;
+    const header = document.querySelector('header');
+
+    window.addEventListener('scroll', () => {
+        const currentScroll = window.pageYOffset;
+        
+        if (currentScroll > lastScroll && currentScroll > 100) {
+            header.classList.add('header-hidden');
+        } else {
+            header.classList.remove('header-hidden');
+        }
+        
+        lastScroll = currentScroll;
+    });
+}
+
+// Interactive Elements Setup
+function setupInteractions() {
+    document.querySelectorAll('.feature-card, .benefit-item, .integration-card').forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.classList.add('card-hover');
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.classList.remove('card-hover');
+        });
+    });
+
+    // Smooth Scroll for Anchor Links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+}
+
+// Watson Assistant Chat Integration (Same as main.html)
+window.watsonAssistantChatOptions = {
+    integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
+    region: "au-syd",
+    serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
+    onLoad: async (instance) => { await instance.render(); }
+};
+
+setTimeout(function(){
+    const t = document.createElement('script');
+    t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
+        (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
+        "/WatsonAssistantChatEntry.js";
+    document.head.appendChild(t);
+});
+</script>
+</body>
+</html>
