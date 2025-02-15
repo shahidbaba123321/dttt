@@ -1047,6 +1047,117 @@ body {
     font-size: 0.875rem;
     color: var(--light-text);
 }
+    .automation-benefits {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+    overflow: hidden;
+}
+
+.automation-benefits::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('path/to/pattern.svg');
+    opacity: 0.05;
+    pointer-events: none;
+}
+
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2.5rem;
+    margin-top: 3rem;
+}
+
+.benefit-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.benefit-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.benefit-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.benefit-icon i {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+}
+
+.benefit-card h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.benefit-card p {
+    color: var(--light-text);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+/* Metric Styles */
+.benefit-metric {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.metric-bar {
+    flex-grow: 1;
+    height: 8px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.metric-fill {
+    height: 100%;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    border-radius: 4px;
+    transition: width 1.5s ease;
+    width: 0; /* Initial width, will be updated by JavaScript */
+}
+
+.metric-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    min-width: 60px;
+    text-align: right;
+}
+
+/* Animation Classes */
+.benefit-card {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.benefit-card:nth-child(1) { animation-delay: 0.1s; }
+.benefit-card:nth-child(2) { animation-delay: 0.2s; }
+.benefit-card:nth-child(3) { animation-delay: 0.3s; }
+.benefit-card:nth-child(4) { animation-delay: 0.4s; }
 
 /* Responsive Styles */
 @media (max-width: 1200px) {
@@ -1056,6 +1167,14 @@ body {
     
     .feature-image {
         max-width: 100%;
+    }
+    .benefits-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+    }
+
+    .benefit-card {
+        padding: 2rem;
     }
 }
 
@@ -1127,6 +1246,40 @@ body {
     .stat-value {
         font-size: 1.25rem;
     }
+    .automation-benefits {
+        padding: 4rem 0;
+    }
+
+    .benefits-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .benefit-card {
+        padding: 1.75rem;
+    }
+
+    .benefit-icon {
+        width: 56px;
+        height: 56px;
+    }
+
+    .benefit-icon i {
+        font-size: 1.5rem;
+    }
+
+    .benefit-card h3 {
+        font-size: 1.25rem;
+    }
+
+    .benefit-card p {
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .metric-value {
+        font-size: 1.1rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1158,6 +1311,18 @@ body {
         flex-direction: column;
         gap: 0.5rem;
         align-items: center;
+    }
+    .benefit-card {
+        padding: 1.5rem;
+    }
+
+    .metric-bar {
+        height: 6px;
+    }
+
+    .metric-value {
+        min-width: 50px;
+        font-size: 1rem;
     }
 }
 
@@ -2744,6 +2909,24 @@ function initializeMetrics() {
             fill.style.width = value;
         }, 500);
     });
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const metricFills = entry.target.querySelectorAll('.metric-fill');
+                metricFills.forEach(fill => {
+                    const width = fill.style.width;
+                    fill.style.width = '0%';
+                    setTimeout(() => {
+                        fill.style.width = width;
+                    }, 100);
+                });
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.2 });
+
+    document.querySelectorAll('.benefits-grid').forEach(grid => {
+        observer.observe(grid);
 }
 
 // Number Animation Helper
