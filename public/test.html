@@ -10,7 +10,7 @@
     <!-- Add this line for Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-      /* Root Variables */
+    /* Root Variables */
 :root {
     --primary-color: #e33333;
     --text-dark: #0f1964;
@@ -63,6 +63,7 @@ header .container {
     justify-content: space-between;
 }
 
+/* Logo Styles */
 .logo {
     display: flex;
     align-items: center;
@@ -153,18 +154,19 @@ header .container {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(227, 51, 51, 0.2);
 }
-        /* Mega Menu Styles */
+
+/* Mega Menu Styles */
 .mega-menu {
     position: relative;
 }
 
 .mega-menu .dropdown-content {
     width: 1000px;
-    max-height: calc(100vh - var(--header-height) - 40px); /* Subtract header height and some padding */
+    max-height: calc(100vh - var(--header-height) - 40px);
     overflow-y: auto;
     left: 50%;
-    transform: translateX(-50%) translateY(10px);
-    display: grid;
+    transform: translateX(-50%) translateY(20px);
+    display: none;
     grid-template-columns: repeat(4, 1fr);
     gap: 24px;
     padding: 24px;
@@ -177,44 +179,44 @@ header .container {
     top: 100%;
     transition: all 0.3s ease;
     z-index: 1001;
-    /* Custom scrollbar styles */
+    pointer-events: none;
     scrollbar-width: thin;
     scrollbar-color: var(--primary-color) #f1f1f1;
 }
-/* Prevent body scroll when hovering dropdown */
-.mega-menu:hover {
-    overflow: hidden;
-}
 
-
-.mega-menu:hover .dropdown-content {
+.mega-menu:hover .dropdown-content,
+.mega-menu.active .dropdown-content {
     opacity: 1;
     visibility: visible;
     transform: translateX(-50%) translateY(0);
+    display: grid;
+    pointer-events: auto;
 }
-        /* Custom scrollbar styles for Webkit browsers */
+
+/* Custom scrollbar styles */
 .mega-menu .dropdown-content::-webkit-scrollbar {
     width: 6px;
 }
+
 .mega-menu .dropdown-content::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 3px;
 }
+
 .mega-menu .dropdown-content::-webkit-scrollbar-thumb {
     background: var(--primary-color);
     border-radius: 3px;
 }
-        .mega-menu .dropdown-content::-webkit-scrollbar-thumb:hover {
+
+.mega-menu .dropdown-content::-webkit-scrollbar-thumb:hover {
     background: #1a237e;
 }
-        
+
 /* Mega Column Styles */
-/* Ensure content stays within viewport */
 .mega-column {
     height: 100%;
-    min-width: 0; /* Prevents content from forcing width */
+    min-width: 0;
 }
-
 
 .mega-column h3 {
     color: var(--text-dark);
@@ -301,12 +303,12 @@ header .container {
 /* Integration Solutions Icons */
 .payroll-integration-icon { background: #2196F3; }
 .benefits-integration-icon { background: #1E88E5; }
-.talent-integration-icon { background: #1976D2; }        
+.talent-integration-icon { background: #1976D2; }
 
 /* Menu Text Styles */
 .menu-text {
     flex: 1;
-    min-width: 0; /* Prevents text overflow */
+    min-width: 0;
 }
 
 .menu-text span {
@@ -346,6 +348,7 @@ header .container {
 .menu-icon svg circle[fill="#ffffff"] {
     fill: #ffffff;
 }
+
 /* SVG Fill Colors */
 .finance-icon svg path:last-child,
 .bookkeeping-icon svg path:last-child,
@@ -395,9 +398,6 @@ header .container {
     box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
 }
 
-        
-
-/* Hover Effects */
 .mega-column ul li a:hover .menu-icon {
     transform: scale(1.1);
 }
@@ -422,7 +422,8 @@ header .container {
     background: var(--text-dark);
     transition: all 0.3s ease;
 }
-        /* Mobile Responsive Styles */
+
+/* Mobile Responsive Styles */
 @media (max-width: 1200px) {
     .mega-menu .dropdown-content {
         width: 900px;
@@ -438,7 +439,8 @@ header .container {
         width: 700px;
     }
 }
-        /* Adjust dropdown position based on viewport */
+
+/* Adjust dropdown position based on viewport */
 @media (min-height: 800px) {
     .mega-menu .dropdown-content {
         max-height: 700px;
@@ -513,18 +515,26 @@ header .container {
     }
 
     /* Mobile Mega Menu */
-     .mega-menu .dropdown-content {
-        width: 100%;
+    .mega-menu .dropdown-content {
+        width: 100% !important;
         max-height: none;
         overflow: visible;
-        transform: none;
+        transform: none !important;
         position: static;
         box-shadow: none;
         padding: 0;
+        border-radius: 0;
+        display: none;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
     }
 
     .mega-menu.active .dropdown-content {
         display: grid;
+        opacity: 1;
+        visibility: visible;
+        grid-template-columns: 1fr;
     }
 
     /* Mobile Mega Columns */
@@ -615,60 +625,26 @@ header .container {
         background: var(--primary-color);
         border-radius: 4px;
     }
+}
 
-    /* Menu Overlay */
-    .menu-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
-        z-index: 999;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
+/* Menu Overlay */
+.menu-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
 
-    .menu-overlay.active {
-        display: block;
-        opacity: 1;
-    }
-
-     .finance-icon,
-    .bookkeeping-icon,
-    .tax-icon,
-    .globalinvoice-icon,
-    .invoice-icon,
-    .asset-icon,
-    .inventory-icon,
-    .supplier-icon,
-    .workflow-icon,
-    .facility-icon,
-    .payroll-integration-icon,
-    .benefits-integration-icon,
-    .talent-integration-icon {
-        width: 32px;
-        height: 32px;
-    }
-
-    .finance-icon svg,
-    .bookkeeping-icon svg,
-    .tax-icon svg,
-    .globalinvoice-icon svg,
-    .invoice-icon svg,
-    .asset-icon svg,
-    .inventory-icon svg,
-    .supplier-icon svg,
-    .workflow-icon svg,
-    .facility-icon svg,
-    .payroll-integration-icon svg,
-    .benefits-integration-icon svg,
-    .talent-integration-icon svg {
-        width: 18px;
-        height: 18px;
-    }
+.menu-overlay.active {
+    display: block;
+    opacity: 1;
 }
 
 /* Small Mobile Devices */
@@ -695,7 +671,8 @@ header .container {
         width: 16px;
         height: 16px;
     }
-     .finance-icon,
+
+    .finance-icon,
     .bookkeeping-icon,
     .tax-icon,
     .globalinvoice-icon,
@@ -788,7 +765,6 @@ header .container {
         }
     }
 }
-        
     </style>
 </head>
 <body>
@@ -1198,6 +1174,7 @@ header .container {
     </header>
 
     <div class="menu-overlay" id="menu-overlay"></div>
+    
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     initializeMobileMenu();
@@ -1214,6 +1191,101 @@ function initializeMobileMenu() {
     const menuOverlay = document.getElementById('menu-overlay');
     const megaMenus = document.querySelectorAll('.mega-menu');
     let isMenuOpen = false;
+
+    // Desktop Mega Menu Handler
+    function handleDesktopMegaMenu() {
+        megaMenus.forEach(menu => {
+            const content = menu.querySelector('.dropdown-content');
+            
+            // Mouse events for desktop
+            menu.addEventListener('mouseenter', () => {
+                if (window.innerWidth > 768) {
+                    menu.classList.add('active');
+                    if (content) {
+                        content.style.display = 'grid';
+                        requestAnimationFrame(() => {
+                            content.style.opacity = '1';
+                            content.style.visibility = 'visible';
+                            content.style.transform = 'translateX(-50%) translateY(0)';
+                        });
+                    }
+                }
+            });
+
+            menu.addEventListener('mouseleave', () => {
+                if (window.innerWidth > 768) {
+                    menu.classList.remove('active');
+                    if (content) {
+                        content.style.opacity = '0';
+                        content.style.visibility = 'hidden';
+                        content.style.transform = 'translateX(-50%) translateY(20px)';
+                        setTimeout(() => {
+                            if (!menu.classList.contains('active')) {
+                                content.style.display = 'none';
+                            }
+                        }, 300);
+                    }
+                }
+            });
+        });
+    }
+
+    // Mobile Mega Menu Handler
+    function handleMobileMegaMenu() {
+        megaMenus.forEach(menu => {
+            const link = menu.querySelector('a');
+            const content = menu.querySelector('.dropdown-content');
+            
+            link.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Close other menus
+                    megaMenus.forEach(m => {
+                        if (m !== menu && m.classList.contains('active')) {
+                            m.classList.remove('active');
+                            const otherContent = m.querySelector('.dropdown-content');
+                            if (otherContent) {
+                                otherContent.style.display = 'none';
+                                otherContent.style.opacity = '0';
+                                otherContent.style.visibility = 'hidden';
+                            }
+                        }
+                    });
+
+                    // Toggle current menu
+                    const isActive = menu.classList.contains('active');
+                    menu.classList.toggle('active');
+
+                    if (!isActive) {
+                        content.style.display = 'grid';
+                        requestAnimationFrame(() => {
+                            content.style.opacity = '1';
+                            content.style.visibility = 'visible';
+                        });
+
+                        // Scroll into view
+                        setTimeout(() => {
+                            const headerOffset = 70;
+                            const menuTop = menu.getBoundingClientRect().top;
+                            const scrollPosition = window.pageYOffset + menuTop - headerOffset;
+                            window.scrollTo({
+                                top: scrollPosition,
+                                behavior: 'smooth'
+                            });
+                        }, 100);
+                    } else {
+                        content.style.opacity = '0';
+                        content.style.visibility = 'hidden';
+                        setTimeout(() => {
+                            content.style.display = 'none';
+                        }, 300);
+                    }
+                }
+            });
+        });
+    }
 
     // Toggle mobile menu function
     function toggleMenu(show) {
@@ -1236,97 +1308,19 @@ function initializeMobileMenu() {
             if (content) {
                 content.style.display = 'none';
                 content.style.opacity = '0';
-                content.style.maxHeight = null;
+                content.style.visibility = 'hidden';
             }
         });
     }
+
+    // Initialize both desktop and mobile handlers
+    handleDesktopMegaMenu();
+    handleMobileMegaMenu();
 
     // Mobile menu click handler
     mobileMenu.addEventListener('click', (e) => {
         e.stopPropagation();
         toggleMenu(!isMenuOpen);
-    });
-
-    // Mega menu handlers
-    megaMenus.forEach(menu => {
-        const link = menu.querySelector('a');
-        const content = menu.querySelector('.dropdown-content');
-        
-        // Handle mega menu clicks on mobile
-        link.addEventListener('click', (e) => {
-            if (window.innerWidth <= 768) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Close other open menus
-                megaMenus.forEach(m => {
-                    if (m !== menu) {
-                        m.classList.remove('active');
-                        const otherContent = m.querySelector('.dropdown-content');
-                        if (otherContent) {
-                            otherContent.style.display = 'none';
-                            otherContent.style.opacity = '0';
-                            otherContent.style.maxHeight = null;
-                        }
-                    }
-                });
-
-                // Toggle current menu
-                menu.classList.toggle('active');
-                
-                if (menu.classList.contains('active')) {
-                    // Show dropdown
-                    content.style.display = 'grid';
-                    requestAnimationFrame(() => {
-                        content.style.opacity = '1';
-                        content.style.maxHeight = content.scrollHeight + 'px';
-                    });
-
-                    // Scroll to show the beginning of dropdown
-                    setTimeout(() => {
-                        const headerOffset = 70;
-                        const menuTop = menu.getBoundingClientRect().top;
-                        const scrollPosition = window.pageYOffset + menuTop - headerOffset;
-                        window.scrollTo({
-                            top: scrollPosition,
-                            behavior: 'smooth'
-                        });
-                    }, 100);
-                } else {
-                    // Hide dropdown
-                    content.style.opacity = '0';
-                    content.style.maxHeight = null;
-                    setTimeout(() => {
-                        if (!menu.classList.contains('active')) {
-                            content.style.display = 'none';
-                        }
-                    }, 300);
-                }
-            }
-        });
-
-        // Handle hover on desktop
-        if (window.innerWidth > 768) {
-            menu.addEventListener('mouseenter', function() {
-                if (!isMenuOpen) {
-                    const content = this.querySelector('.dropdown-content');
-                    content.style.display = 'grid';
-                    requestAnimationFrame(() => {
-                        content.style.opacity = '1';
-                    });
-                }
-            });
-
-            menu.addEventListener('mouseleave', function() {
-                const content = this.querySelector('.dropdown-content');
-                content.style.opacity = '0';
-                setTimeout(() => {
-                    if (content.style.opacity === '0') {
-                        content.style.display = 'none';
-                    }
-                }, 300);
-            });
-        }
     });
 
     // Menu overlay click handler
@@ -1355,6 +1349,7 @@ function initializeMobileMenu() {
                 if (content) {
                     content.style.display = 'none';
                     content.style.opacity = '0';
+                    content.style.visibility = 'hidden';
                 }
             });
         }
@@ -1375,7 +1370,8 @@ function initializeMobileMenu() {
                     if (content) {
                         content.style.display = 'none';
                         content.style.opacity = '0';
-                        content.style.maxHeight = null;
+                        content.style.visibility = 'hidden';
+                        content.style.transform = 'translateX(-50%) translateY(20px)';
                     }
                 });
             }
@@ -1417,7 +1413,7 @@ function initializeDropdownScroll() {
                         dropdown.scrollTop += e.deltaY;
                     }
                 }
-            });
+            }, { passive: false });
 
             // Handle touch scrolling
             let touchStart = null;
@@ -1425,7 +1421,7 @@ function initializeDropdownScroll() {
                 if (window.innerWidth > 768) {
                     touchStart = e.touches[0].clientY;
                 }
-            });
+            }, { passive: true });
 
             dropdown.addEventListener('touchmove', (e) => {
                 if (window.innerWidth > 768 && touchStart !== null) {
@@ -1442,7 +1438,7 @@ function initializeDropdownScroll() {
                         e.preventDefault();
                     }
                 }
-            });
+            }, { passive: false });
 
             dropdown.addEventListener('touchend', () => {
                 touchStart = null;
@@ -1462,13 +1458,36 @@ function initializeTouchEvents() {
                     const parent = this.parentElement;
                     const wasActive = parent.classList.contains('active');
                     
+                    // Close other open menus
                     document.querySelectorAll('.mega-menu.active').forEach(menu => {
                         if (menu !== parent) {
                             menu.classList.remove('active');
+                            const content = menu.querySelector('.dropdown-content');
+                            if (content) {
+                                content.style.display = 'none';
+                                content.style.opacity = '0';
+                                content.style.visibility = 'hidden';
+                            }
                         }
                     });
 
+                    // Toggle current menu
                     parent.classList.toggle('active', !wasActive);
+                    const content = parent.querySelector('.dropdown-content');
+                    
+                    if (!wasActive) {
+                        content.style.display = 'grid';
+                        requestAnimationFrame(() => {
+                            content.style.opacity = '1';
+                            content.style.visibility = 'visible';
+                        });
+                    } else {
+                        content.style.opacity = '0';
+                        content.style.visibility = 'hidden';
+                        setTimeout(() => {
+                            content.style.display = 'none';
+                        }, 300);
+                    }
                 }
             });
         });
@@ -1478,9 +1497,17 @@ function initializeTouchEvents() {
             if (!e.target.closest('.mega-menu')) {
                 document.querySelectorAll('.mega-menu.active').forEach(menu => {
                     menu.classList.remove('active');
+                    const content = menu.querySelector('.dropdown-content');
+                    if (content) {
+                        content.style.opacity = '0';
+                        content.style.visibility = 'hidden';
+                        setTimeout(() => {
+                            content.style.display = 'none';
+                        }, 300);
+                    }
                 });
             }
-        });
+        }, { passive: true });
     }
 }
 
