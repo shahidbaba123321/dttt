@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Header Component</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
     <style>
         /* Root Variables */
@@ -115,120 +116,50 @@
             color: var(--primary-color);
         }
 
-        /* Product Grid Styles */
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
-            list-style: none;
-            padding: 24px;
-        }
-
-        .product-card {
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            border-radius: 12px;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            background: white;
-        }
-
-        .product-card:hover {
-            background: #f8f9fa;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        .product-icon {
-            width: 48px;
-            height: 48px;
+        /* Auth Buttons */
+        .auth-buttons {
             display: flex;
             align-items: center;
-            justify-content: center;
-            border-radius: 12px;
-            margin-bottom: 12px;
+            gap: 1rem;
+            margin-left: 1.5rem;
         }
 
-        .product-icon svg {
-            width: 36px;
-            height: 36px;
-        }
-                /* Product Icon Specific Styles */
-        .people-icon {
-            background: #00C853;
-        }
-
-        .people-icon svg {
-            fill: #00C853;
-        }
-
-        .recruit-icon {
-            background: #FF4081;
-        }
-
-        .recruit-icon svg {
-            fill: #FF4081;
-        }
-
-        .expense-icon {
-            background: #FF5722;
-        }
-
-        .expense-icon svg {
-            fill: #FF5722;
-        }
-
-        .payroll-icon {
-            background: #2196F3;
-        }
-
-        .payroll-icon svg {
-            fill: #2196F3;
-        }
-
-        .shifts-icon {
-            background: #673AB7;
-        }
-
-        .shifts-icon svg {
-            fill: #673AB7;
-        }
-
-        .sign-icon {
-            background: #00BCD4;
-        }
-
-        .sign-icon svg {
-            fill: #00BCD4;
-        }
-
-        /* Product Info Styles */
-        .product-info {
-            margin-top: 12px;
-        }
-
-        .product-info h4 {
+        .sign-in {
             color: var(--text-dark);
-            font-size: 16px;
+            text-decoration: none;
             font-weight: 500;
-            margin-bottom: 4px;
+            font-size: 15px;
+            transition: color 0.3s ease;
         }
 
-        .product-info p {
-            color: var(--text-body);
-            font-size: 14px;
-            line-height: 1.4;
-            opacity: 0.8;
-            margin: 0;
+        .sign-in:hover {
+            color: var(--primary-color);
         }
 
-        /* Mega Menu Styles */
+        .sign-up {
+            background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 15px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .sign-up:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(227, 51, 51, 0.2);
+        }
+                /* Mega Menu Styles */
         .mega-menu .dropdown-content {
-            width: 800px;
+            width: 1000px;
             left: 50%;
             transform: translateX(-50%) translateY(10px);
-            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            padding: 24px;
             background: white;
             border-radius: 12px;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
@@ -246,21 +177,346 @@
             transform: translateX(-50%) translateY(0);
         }
 
+        /* Mega Column Styles */
+        .mega-column {
+            padding: 0;
+        }
+
+        .mega-column h3 {
+            color: var(--text-dark);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mega-column h3 i {
+            color: var(--primary-color);
+            font-size: 16px;
+        }
+
+        .mega-column ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .mega-column ul li a {
+            display: flex;
+            align-items: flex-start;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .mega-column ul li a:hover {
+            background: var(--background-light);
+        }
+
+        /* Menu Icon Styles */
+        .menu-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            margin-right: 12px;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .menu-icon svg {
+            width: 20px;
+            height: 20px;
+            transition: all 0.3s ease;
+        }
+
+        /* Icon color variations */
+        .people-icon { background: #00C853; }
+        .performance-icon { background: #2196F3; }
+        .attendance-icon { background: #4CAF50; }
+        .payroll-icon { background: #2196F3; }
+        .ess-icon { background: #FFC107; }
+        .recruit-icon { background: #FF4081; }
+        .finance-icon { background: #FF9800; }
+        .project-icon { background: #673AB7; }
+        .shifts-icon { background: #673AB7; }
+        .stock-icon { background: #4CAF50; }
+        .integration-icon { background: #2196F3; }
+
+        /* Menu Text Styles */
+        .menu-text {
+            flex: 1;
+        }
+
+        .menu-text span {
+            display: block;
+            color: var(--text-dark);
+            font-weight: 500;
+            font-size: 13px;
+            margin-bottom: 2px;
+        }
+
+        .menu-text p {
+            color: var(--text-body);
+            font-size: 12px;
+            margin: 0;
+            opacity: 0.7;
+            line-height: 1.4;
+        }
+
+        /* Badge Styles */
+        .badge {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 4px;
+            font-weight: 500;
+        }
+
         /* SVG Path Styles */
-        .product-icon svg path[fill="#ffffff"],
-        .product-icon svg circle[fill="#ffffff"] {
+        .menu-icon svg path[fill="#ffffff"],
+        .menu-icon svg circle[fill="#ffffff"] {
             fill: #ffffff;
         }
 
         /* Hover Effects */
-        .product-card:hover .product-icon {
-            transform: scale(1.05);
+        .mega-column ul li a:hover .menu-icon {
+            transform: scale(1.1);
         }
 
-        .product-card:hover .product-info h4 {
+        .mega-column ul li a:hover .menu-text span {
             color: var(--primary-color);
         }
-        </style>
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 8px;
+            z-index: 1002;
+        }
+
+        .menu-toggle span {
+            width: 24px;
+            height: 2px;
+            background: var(--text-dark);
+            transition: all 0.3s ease;
+        }
+                /* Mobile Responsive Styles */
+        @media (max-width: 1200px) {
+            .mega-menu .dropdown-content {
+                width: 900px;
+            }
+
+            header .container {
+                padding: 0 1.5rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .mega-menu .dropdown-content {
+                width: 700px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header .container {
+                padding: 0 1rem;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+
+            .menu-toggle.active span:nth-child(1) {
+                transform: rotate(45deg) translate(5px, 5px);
+            }
+
+            .menu-toggle.active span:nth-child(2) {
+                opacity: 0;
+            }
+
+            .menu-toggle.active span:nth-child(3) {
+                transform: rotate(-45deg) translate(5px, -5px);
+            }
+
+            /* Mobile Navigation */
+            .main-nav {
+                position: fixed;
+                top: var(--header-height);
+                right: -100%;
+                width: 85%;
+                height: calc(100vh - var(--header-height));
+                background: white;
+                transition: right 0.3s ease;
+                overflow-y: auto;
+                z-index: 1001;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .main-nav.active {
+                right: 0;
+            }
+
+            .nav-list {
+                flex-direction: column;
+                gap: 0;
+                height: auto;
+                padding: 1rem 0;
+                width: 100%;
+            }
+
+            .nav-list > li {
+                width: 100%;
+                height: auto;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .nav-list > li > a {
+                padding: 1rem;
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            /* Mobile Mega Menu */
+            .mega-menu .dropdown-content {
+                width: 100%;
+                grid-template-columns: 1fr;
+                padding: 16px;
+                position: static;
+                transform: none;
+                box-shadow: none;
+                gap: 16px;
+                opacity: 1;
+                visibility: visible;
+                display: none;
+            }
+
+            .mega-menu.active .dropdown-content {
+                display: grid;
+            }
+
+            .mega-column {
+                background: var(--background-light);
+                padding: 16px;
+                border-radius: 12px;
+            }
+
+            .mega-column h3 {
+                font-size: 13px;
+                margin-bottom: 12px;
+            }
+
+            .menu-icon {
+                width: 28px;
+                height: 28px;
+            }
+
+            .menu-icon svg {
+                width: 16px;
+                height: 16px;
+            }
+
+            .menu-text span {
+                font-size: 12px;
+            }
+
+            .menu-text p {
+                font-size: 11px;
+            }
+
+            /* Mobile Auth Buttons */
+            .auth-buttons {
+                flex-direction: column;
+                margin: 1rem;
+                gap: 0.5rem;
+                border-bottom: none !important;
+                margin-top: auto;
+                padding: 1rem;
+                background: white;
+                border-top: 1px solid var(--border-color);
+            }
+
+            .sign-in, .sign-up {
+                width: 100%;
+                text-align: center;
+                padding: 0.75rem;
+            }
+
+            /* Mobile Scroll Handling */
+            .main-nav {
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+                scrollbar-color: var(--primary-color) #f1f1f1;
+            }
+
+            .main-nav::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .main-nav::-webkit-scrollbar-track {
+                background: #f1f1f1;
+            }
+
+            .main-nav::-webkit-scrollbar-thumb {
+                background: var(--primary-color);
+                border-radius: 3px;
+            }
+        }
+
+        /* Menu Overlay */
+        .menu-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .menu-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Animation Classes */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-item {
+            opacity: 0;
+            animation: fadeIn 0.3s ease forwards;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -278,304 +534,229 @@
             <nav class="main-nav" id="main-nav">
                 <ul class="nav-list">
                     <li><a href="features.html">Features</a></li>
+                    
                     <li class="dropdown mega-menu">
-    <a href="#">Products <i class="fas fa-caret-down"></i></a>
-    <div class="dropdown-content mega-content">
-        <!-- HR Solutions -->
-        <div class="mega-column">
-            <h3><i class="fas fa-users-gear"></i> HR Solutions</h3>
-            <ul>
-                <li>
-                    <a href="peoplemanagement.html">
-                        <div class="menu-icon people-icon">
-                            <svg viewBox="0 0 36 36">
-                                <path d="M18 0a18 18 0 1 0 0 36 18 18 0 0 0 0-36zm0 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12zm8 24H10c0-4.4 3.6-8 8-8s8 3.6 8 8z" fill="#ffffff"/>
-                            </svg>
+                        <a href="#">Products <i class="fas fa-caret-down"></i></a>
+                        <div class="dropdown-content mega-content">
+                            <!-- HR Solutions -->
+                            <div class="mega-column">
+                                <h3><i class="fas fa-users-gear"></i> HR Solutions</h3>
+                                <ul>
+                                    <li>
+                                        <a href="peoplemanagement.html">
+                                            <div class="menu-icon people-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M18 0a18 18 0 1 0 0 36 18 18 0 0 0 0-36zm0 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12zm8 24H10c0-4.4 3.6-8 8-8s8 3.6 8 8z" fill="#ffffff"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>People Management</span>
+                                                <p>Manage your workforce efficiently</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="pms.html">
+                                            <div class="menu-icon performance-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M4 28l7-7 5 5 12-12 4 4V4H18l4 4-12 12-5-5-5 5v8z" fill="#ffffff"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Performance Management</span>
+                                                <p>Track and improve performance</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="alm.html">
+                                            <div class="menu-icon attendance-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M32 4H4C2.3 4 1 5.3 1 7v22c0 1.7 1.3 3 3 3h28c1.7 0 3-1.3 3-3V7c0-1.7-1.3-3-3-3zm-2 24H6V9h24v19z" fill="#ffffff"/>
+                                                    <path d="M16 14h-4v4h4v-4zm8 0h-4v4h4v-4zm-8 8h-4v4h4v-4zm8 0h-4v4h4v-4z" fill="#4CAF50"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Attendance & Leave Management</span>
+                                                <p>Track time and attendance</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="payroll.html">
+                                            <div class="menu-icon payroll-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M32 4H4C2.3 4 1 5.3 1 7v22c0 1.7 1.3 3 3 3h28c1.7 0 3-1.3 3-3V7c0-1.7-1.3-3-3-3z" fill="#ffffff"/>
+                                                    <path d="M18 14c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4z" fill="#2196F3"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Payroll & Compensation</span>
+                                                <p>Streamline payroll processing</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="ess.html">
+                                            <div class="menu-icon ess-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M18 2C9.2 2 2 9.2 2 18s7.2 16 16 16 16-7.2 16-16S26.8 2 18 2z" fill="#ffffff"/>
+                                                    <path d="M18 8c2.8 0 5 2.2 5 5s-2.2 5-5 5-5-2.2-5-5 2.2-5 5-5zm8 16c0-5.5-3.6-10-8-10s-8 4.5-8 10h16z" fill="#FFC107"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Employee Self-Service</span>
+                                                <p>Empower your employees</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="cs.html">
+                                            <div class="menu-icon recruit-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M18 0a18 18 0 1 0 0 36 18 18 0 0 0 0-36zm0 10a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm8 18H10c0-4.4 3.6-8 8-8s8 3.6 8 8z" fill="#ffffff"/>
+                                                    <path d="M24 20l-2-2-4 4-4-4-2 2 4 4-4 4 2 2 4-4 4 4 2-2-4-4z" fill="#FF4081"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>WiseRecruit</span>
+                                                <p>Smart recruitment solution</p>
+                                                <span class="badge">Coming Soon</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                                                        <!-- Financial Solutions -->
+                            <div class="mega-column">
+                                <h3><i class="fas fa-money-bill-trend-up"></i> Financial Solutions</h3>
+                                <ul>
+                                    <li>
+                                        <a href="pay.html">
+                                            <div class="menu-icon finance-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M32 4H4C2.3 4 1 5.3 1 7v22c0 1.7 1.3 3 3 3h28c1.7 0 3-1.3 3-3V7c0-1.7-1.3-3-3-3z" fill="#ffffff"/>
+                                                    <path d="M18 14c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4z" fill="#FF9800"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Payroll Processing</span>
+                                                <p>Efficient payroll management</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="smartexpenses.html">
+                                            <div class="menu-icon expense-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M29 0H7C5.3 0 4 1.3 4 3v30c0 1.7 1.3 3 3 3h22c1.7 0 3-1.3 3-3V3c0-1.7-1.3-3-3-3z" fill="#ffffff"/>
+                                                    <path d="M24 8H12v2h12V8zm0 6H12v2h12v-2zm0 6H12v2h12v-2z" fill="#FF5722"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>SmartExpenses</span>
+                                                <p>Expense management simplified</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="fin.html">
+                                            <div class="menu-icon finance-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M4 28h28V6H4v22z" fill="#ffffff"/>
+                                                    <path d="M7 14h4v11H7zm6-3h4v14h-4zm6-3h4v17h-4zm6 6h4v11h-4z" fill="#FF9800"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Financial Reporting</span>
+                                                <p>Comprehensive financial insights</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <!-- Add other Financial Solutions items -->
+                                </ul>
+                            </div>
+
+                            <!-- Operation Solutions -->
+                            <div class="mega-column">
+                                <h3><i class="fas fa-gears"></i> Operation Solutions</h3>
+                                <ul>
+                                    <li>
+                                        <a href="ptm.html">
+                                            <div class="menu-icon project-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M32 6H4c-1.1 0-2 .9-2 2v20c0 1.1.9 2 2 2h28c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z" fill="#ffffff"/>
+                                                    <path d="M30 12H6v12h24V12zm-4 8h-4v-4h4v4z" fill="#673AB7"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Project & Task Management</span>
+                                                <p>Streamline project workflows</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="shiftmaster.html">
+                                            <div class="menu-icon shifts-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <circle cx="18" cy="18" r="18" fill="#ffffff"/>
+                                                    <path d="M18 8v10l6 6" stroke="#673AB7" stroke-width="2" fill="none"/>
+                                                    <circle cx="18" cy="18" r="2" fill="#673AB7"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>ShiftMaster</span>
+                                                <p>Advanced shift management</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <!-- Add other Operation Solutions items -->
+                                </ul>
+                            </div>
+
+                            <!-- Integrations -->
+                            <div class="mega-column">
+                                <h3><i class="fas fa-plug"></i> Integrations</h3>
+                                <ul>
+                                    <li>
+                                        <a href="sn.html">
+                                            <div class="menu-icon integration-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M32 8H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h28c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" fill="#ffffff"/>
+                                                    <path d="M12 14v8m6-12v16m6-12v8" stroke="#2196F3" stroke-width="2"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>ServiceNow & ITSM</span>
+                                                <p>IT service management integration</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <!-- Add other Integration items -->
+                                </ul>
+                            </div>
                         </div>
-                        <div class="menu-text">
-                            <span>People Management</span>
-                            <p>Manage your workforce efficiently</p>
-                        </div>
-                    </a>
-                </li>
-                <li>
-                    <a href="pms.html">
-                        <div class="menu-icon performance-icon">
-                            <svg viewBox="0 0 36 36">
-                                <path d="M4 28l7-7 5 5 12-12 4 4V4H18l4 4-12 12-5-5-5 5v8z" fill="#ffffff"/>
-                            </svg>
-                        </div>
-                        <div class="menu-text">
-                            <span>Performance Management</span>
-                            <p>Track and improve performance</p>
-                        </div>
-                    </a>
-                </li>
-                <li>
-                    <a href="alm.html">
-                        <div class="menu-icon attendance-icon">
-                            <svg viewBox="0 0 36 36">
-                                <path d="M32 4H4C2.3 4 1 5.3 1 7v22c0 1.7 1.3 3 3 3h28c1.7 0 3-1.3 3-3V7c0-1.7-1.3-3-3-3zm-2 24H6V9h24v19z" fill="#ffffff"/>
-                                <path d="M16 14h-4v4h4v-4zm8 0h-4v4h4v-4zm-8 8h-4v4h4v-4zm8 0h-4v4h4v-4z" fill="#4CAF50"/>
-                            </svg>
-                        </div>
-                        <div class="menu-text">
-                            <span>Attendance & Leave Management</span>
-                            <p>Track time and attendance</p>
-                        </div>
-                    </a>
-                </li>
-                <li>
-                    <a href="payroll.html">
-                        <div class="menu-icon payroll-icon">
-                            <svg viewBox="0 0 36 36">
-                                <path d="M32 4H4C2.3 4 1 5.3 1 7v22c0 1.7 1.3 3 3 3h28c1.7 0 3-1.3 3-3V7c0-1.7-1.3-3-3-3z" fill="#ffffff"/>
-                                <path d="M18 14c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4z" fill="#2196F3"/>
-                            </svg>
-                        </div>
-                        <div class="menu-text">
-                            <span>Payroll & Compensation</span>
-                            <p>Streamline payroll processing</p>
-                        </div>
-                    </a>
-                </li>
-                <li>
-                    <a href="ess.html">
-                        <div class="menu-icon ess-icon">
-                            <svg viewBox="0 0 36 36">
-                                <path d="M18 2C9.2 2 2 9.2 2 18s7.2 16 16 16 16-7.2 16-16S26.8 2 18 2z" fill="#ffffff"/>
-                                <path d="M18 8c2.8 0 5 2.2 5 5s-2.2 5-5 5-5-2.2-5-5 2.2-5 5-5zm8 16c0-5.5-3.6-10-8-10s-8 4.5-8 10h16z" fill="#FFC107"/>
-                            </svg>
-                        </div>
-                        <div class="menu-text">
-                            <span>Employee Self-Service</span>
-                            <p>Empower your employees</p>
-                        </div>
-                    </a>
-                </li>
-                <li>
-                    <a href="cs.html">
-                        <div class="menu-icon recruit-icon">
-                            <svg viewBox="0 0 36 36">
-                                <path d="M18 0a18 18 0 1 0 0 36 18 18 0 0 0 0-36zm0 10a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm8 18H10c0-4.4 3.6-8 8-8s8 3.6 8 8z" fill="#ffffff"/>
-                                <path d="M24 20l-2-2-4 4-4-4-2 2 4 4-4 4 2 2 4-4 4 4 2-2-4-4z" fill="#FF4081"/>
-                            </svg>
-                        </div>
-                        <div class="menu-text">
-                            <span>WiseRecruit</span>
-                            <p>Smart recruitment solution</p>
-                            <span class="badge">Coming Soon</span>
-                        </div>
-                    </a>
-                </li>
-            </ul>
+                    </li>
+
+                    <li><a href="mail.html">Wise Mail</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    
+                    <div class="auth-buttons">
+                        <a href="/login" class="sign-in">Sign In</a>
+                        <a href="/signup" class="sign-up">Sign Up</a>
+                    </div>
+                </ul>
+            </nav>
         </div>
+    </header>
 
-        <!-- Financial Solutions -->
-        <div class="mega-column">
-            <h3><i class="fas fa-money-bill-trend-up"></i> Financial Solutions</h3>
-            <ul>
-                <li>
-                    <a href="pay.html">
-                        <div class="menu-icon finance-icon">
-                            <svg viewBox="0 0 36 36">
-                                <path d="M32 4H4C2.3 4 1 5.3 1 7v22c0 1.7 1.3 3 3 3h28c1.7 0 3-1.3 3-3V7c0-1.7-1.3-3-3-3z" fill="#ffffff"/>
-                                <path d="M18 14c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4z" fill="#FF9800"/>
-                            </svg>
-                        </div>
-                        <div class="menu-text">
-                            <span>Payroll Processing</span>
-                            <p>Efficient payroll management</p>
-                        </div>
-                    </a>
-                </li>
-                <!-- Continue with other Financial Solutions items -->
-            </ul>
-        </div>
-                <!-- Operation Solutions -->
-        <div class="mega-column">
-            <h3><i class="fas fa-gears"></i> Operation Solutions</h3>
-            <ul>
-                <li>
-                    <a href="ptm.html">
-                        <div class="menu-icon project-icon">
-                            <svg viewBox="0 0 36 36">
-                                <path d="M32 6H4c-1.1 0-2 .9-2 2v20c0 1.1.9 2 2 2h28c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z" fill="#ffffff"/>
-                                <path d="M30 12H6v12h24V12zm-4 8h-4v-4h4v4z" fill="#673AB7"/>
-                            </svg>
-                        </div>
-                        <div class="menu-text">
-                            <span>Project & Task Management</span>
-                            <p>Streamline project workflows</p>
-                        </div>
-                    </a>
-                </li>
-                <li>
-                    <a href="shiftmaster.html">
-                        <div class="menu-icon shifts-icon">
-                            <svg viewBox="0 0 36 36">
-                                <circle cx="18" cy="18" r="18" fill="#ffffff"/>
-                                <path d="M18 8v10l6 6" stroke="#673AB7" stroke-width="2" fill="none"/>
-                                <circle cx="18" cy="18" r="2" fill="#673AB7"/>
-                            </svg>
-                        </div>
-                        <div class="menu-text">
-                            <span>ShiftMaster</span>
-                            <p>Advanced shift management</p>
-                        </div>
-                    </a>
-                </li>
-                <li>
-                    <a href="stockflow.html">
-                        <div class="menu-icon stock-icon">
-                            <svg viewBox="0 0 36 36">
-                                <path d="M4 28h28V6H4v22z" fill="#ffffff"/>
-                                <path d="M7 14h4v11H7zm6-3h4v14h-4zm6-3h4v17h-4zm6 6h4v11h-4z" fill="#4CAF50"/>
-                            </svg>
-                        </div>
-                        <div class="menu-text">
-                            <span>StockFlow</span>
-                            <p>Inventory management system</p>
-                        </div>
-                    </a>
-                </li>
-                <!-- Add other Operation Solutions items with similar structure -->
-            </ul>
-        </div>
-
-        <!-- Integrations -->
-        <div class="mega-column">
-            <h3><i class="fas fa-plug"></i> Integrations</h3>
-            <ul>
-                <li>
-                    <a href="sn.html">
-                        <div class="menu-icon integration-icon">
-                            <svg viewBox="0 0 36 36">
-                                <path d="M32 8H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h28c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" fill="#ffffff"/>
-                                <path d="M12 14v8m6-12v16m6-12v8" stroke="#2196F3" stroke-width="2"/>
-                            </svg>
-                        </div>
-                        <div class="menu-text">
-                            <span>ServiceNow & ITSM</span>
-                            <p>IT service management integration</p>
-                        </div>
-                    </a>
-                </li>
-                <!-- Add other Integration items with similar structure -->
-            </ul>
-        </div>
-    </div>
-</li>
-
-<style>
-/* Icon-specific styles */
-.menu-icon {
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    margin-right: 12px;
-    flex-shrink: 0;
-    transition: all 0.3s ease;
-}
-
-.menu-icon svg {
-    width: 24px;
-    height: 24px;
-    transition: all 0.3s ease;
-}
-
-/* Icon color variations */
-.people-icon { background: #00C853; }
-.performance-icon { background: #2196F3; }
-.attendance-icon { background: #4CAF50; }
-.payroll-icon { background: #2196F3; }
-.ess-icon { background: #FFC107; }
-.recruit-icon { background: #FF4081; }
-.finance-icon { background: #FF9800; }
-.project-icon { background: #673AB7; }
-.shifts-icon { background: #673AB7; }
-.stock-icon { background: #4CAF50; }
-.integration-icon { background: #2196F3; }
-
-/* Menu text styles */
-.menu-text {
-    flex: 1;
-}
-
-.menu-text span {
-    display: block;
-    color: var(--text-dark);
-    font-weight: 500;
-    font-size: 14px;
-    margin-bottom: 2px;
-}
-
-.menu-text p {
-    color: var(--text-body);
-    font-size: 12px;
-    margin: 0;
-    opacity: 0.7;
-}
-
-/* Badge styles */
-.badge {
-    display: inline-block;
-    background: var(--primary-color);
-    color: white;
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-left: 4px;
-    font-weight: 500;
-}
-
-/* Hover effects */
-.mega-column ul li a {
-    display: flex;
-    align-items: flex-start;
-    padding: 10px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    text-decoration: none;
-}
-
-.mega-column ul li a:hover {
-    background: var(--background-light);
-}
-
-.mega-column ul li a:hover .menu-icon {
-    transform: scale(1.1);
-}
-
-/* Mobile responsive adjustments */
-@media (max-width: 768px) {
-    .menu-icon {
-        width: 32px;
-        height: 32px;
-    }
-
-    .menu-icon svg {
-        width: 20px;
-        height: 20px;
-    }
-
-    .menu-text span {
-        font-size: 13px;
-    }
-
-    .menu-text p {
-        font-size: 11px;
-    }
-}
-</style>
-                </ul></nav></div></header>
-                <script>
-                    document.addEventListener('DOMContentLoaded', function() {
+    <div class="menu-overlay" id="menu-overlay"></div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
     initializeMobileMenu();
     initializeDropdowns();
+    initializeTouchEvents();
+    initializeKeyboardNav();
 });
 
 function initializeMobileMenu() {
@@ -599,6 +780,7 @@ function initializeMobileMenu() {
                 const content = menu.querySelector('.dropdown-content');
                 if (content) {
                     content.style.maxHeight = null;
+                    content.style.opacity = null;
                 }
             });
         }
@@ -637,24 +819,31 @@ function initializeMobileMenu() {
                 menu.classList.toggle('active');
                 
                 if (menu.classList.contains('active')) {
-                    // Set max height for animation
-                    content.style.maxHeight = content.scrollHeight + "px";
-                    content.style.opacity = '1';
-                    
-                    // Scroll into view with offset
-                    setTimeout(() => {
-                        const headerHeight = 70; // Adjust based on your header height
-                        const menuTop = menu.getBoundingClientRect().top;
-                        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    content.style.display = 'grid';
+                    requestAnimationFrame(() => {
+                        content.style.opacity = '1';
+                        content.style.maxHeight = content.scrollHeight + "px";
                         
-                        window.scrollTo({
-                            top: menuTop + scrollTop - headerHeight,
-                            behavior: 'smooth'
-                        });
-                    }, 300);
+                        // Scroll into view with offset
+                        setTimeout(() => {
+                            const headerHeight = 70;
+                            const menuTop = menu.getBoundingClientRect().top;
+                            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                            
+                            window.scrollTo({
+                                top: menuTop + scrollTop - headerHeight,
+                                behavior: 'smooth'
+                            });
+                        }, 300);
+                    });
                 } else {
-                    content.style.maxHeight = null;
                     content.style.opacity = '0';
+                    content.style.maxHeight = null;
+                    setTimeout(() => {
+                        if (!menu.classList.contains('active')) {
+                            content.style.display = 'none';
+                        }
+                    }, 300);
                 }
             }
         });
@@ -663,7 +852,6 @@ function initializeMobileMenu() {
         if (window.innerWidth > 768) {
             menu.addEventListener('mouseenter', function() {
                 const content = this.querySelector('.dropdown-content');
-                content.style.opacity = '0';
                 content.style.display = 'grid';
                 requestAnimationFrame(() => {
                     content.style.opacity = '1';
@@ -687,7 +875,7 @@ function initializeMobileMenu() {
         toggleMenu(false);
     });
 
-    // Document click handler for closing menu
+    // Document click handler
     document.addEventListener('click', (e) => {
         if (isMenuOpen && 
             !mainNav.contains(e.target) && 
@@ -709,7 +897,6 @@ function initializeMobileMenu() {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
             if (window.innerWidth > 768) {
-                // Reset mobile menu states
                 toggleMenu(false);
                 megaMenus.forEach(menu => {
                     const content = menu.querySelector('.dropdown-content');
@@ -722,25 +909,12 @@ function initializeMobileMenu() {
             }
         }, 250);
     });
-
-    // Reset scroll position when menu opens
-    function resetScroll() {
-        if (window.innerWidth <= 768 && isMenuOpen) {
-            mainNav.scrollTop = 0;
-        }
-    }
-
-    mobileMenu.addEventListener('click', () => {
-        setTimeout(resetScroll, 100);
-    });
 }
 
-// Initialize dropdowns for desktop
 function initializeDropdowns() {
     const dropdowns = document.querySelectorAll('.dropdown-content');
     
     dropdowns.forEach(dropdown => {
-        // Add animation classes
         const items = dropdown.querySelectorAll('.mega-column ul li');
         items.forEach((item, index) => {
             item.style.animationDelay = `${index * 0.05}s`;
@@ -749,32 +923,30 @@ function initializeDropdowns() {
     });
 }
 
-// Add touch event handlers for mobile devices
 function initializeTouchEvents() {
     if ('ontouchstart' in window) {
         const menuItems = document.querySelectorAll('.mega-menu > a');
         
         menuItems.forEach(item => {
             item.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                const parent = this.parentElement;
-                const wasActive = parent.classList.contains('active');
-                
-                // Close all other menus
-                document.querySelectorAll('.mega-menu.active').forEach(menu => {
-                    if (menu !== parent) {
-                        menu.classList.remove('active');
-                    }
-                });
+                if (window.innerWidth > 768) {
+                    e.preventDefault();
+                    const parent = this.parentElement;
+                    const wasActive = parent.classList.contains('active');
+                    
+                    document.querySelectorAll('.mega-menu.active').forEach(menu => {
+                        if (menu !== parent) {
+                            menu.classList.remove('active');
+                        }
+                    });
 
-                // Toggle current menu
-                parent.classList.toggle('active', !wasActive);
+                    parent.classList.toggle('active', !wasActive);
+                }
             });
         });
     }
 }
 
-// Add keyboard navigation
 function initializeKeyboardNav() {
     const menuItems = document.querySelectorAll('.mega-menu a');
     
@@ -787,14 +959,6 @@ function initializeKeyboardNav() {
         });
     });
 }
-
-// Initialize everything
-document.addEventListener('DOMContentLoaded', function() {
-    initializeMobileMenu();
-    initializeDropdowns();
-    initializeTouchEvents();
-    initializeKeyboardNav();
-});
-                </script>
+</script>
 </body>
 </html>
