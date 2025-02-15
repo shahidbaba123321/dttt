@@ -2898,7 +2898,7 @@ function initializePricing() {
 
 // Metrics Initialization
 function initializeMetrics() {
-   /* const metrics = document.querySelectorAll('.benefit-metric');
+    const metrics = document.querySelectorAll('.benefit-metric');
     
     metrics.forEach(metric => {
         const fill = metric.querySelector('.metric-fill');
@@ -2908,25 +2908,7 @@ function initializeMetrics() {
         setTimeout(() => {
             fill.style.width = value;
         }, 500);
-    });*/
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const metricFills = entry.target.querySelectorAll('.metric-fill');
-                metricFills.forEach(fill => {
-                    const width = fill.style.width;
-                    fill.style.width = '0%';
-                    setTimeout(() => {
-                        fill.style.width = width;
-                    }, 100);
-                });
-                observer.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.2 });
-
-    document.querySelectorAll('.benefits-grid').forEach(grid => {
-        observer.observe(grid);
+    });
 }
 
 // Number Animation Helper
