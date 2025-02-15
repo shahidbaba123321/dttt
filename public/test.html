@@ -65,6 +65,7 @@
             display: flex;
             align-items: center;
             text-decoration: none;
+            z-index: 1002;
         }
 
         .logo h1 {
@@ -114,92 +115,6 @@
         .nav-list > li > a:hover {
             color: var(--primary-color);
         }
-                /* Enhanced Mega Menu Styles */
-        .mega-menu .dropdown-content {
-            width: 750px;
-            left: 50%;
-            transform: translateX(-50%) translateY(10px);
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
-            opacity: 0;
-            visibility: hidden;
-            position: absolute;
-            top: 100%;
-            transition: all 0.3s ease;
-        }
-
-        .mega-menu:hover .dropdown-content {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .mega-column h3 {
-            color: var(--primary-color);
-            font-size: 16px;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid var(--background-light);
-            display: flex;
-            align-items: center;
-        }
-
-        .mega-column h3 i {
-            margin-right: 8px;
-            color: var(--primary-color);
-            font-size: 18px;
-        }
-
-        .mega-column ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .mega-column ul li {
-            margin-bottom: 8px;
-        }
-
-        .mega-column ul li a {
-            color: var(--text-body);
-            text-decoration: none;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            padding: 6px 0;
-            transition: all 0.2s ease;
-        }
-
-        .mega-column ul li a i {
-            width: 20px;
-            margin-right: 8px;
-            color: var(--primary-color);
-            opacity: 0.8;
-            transition: all 0.3s ease;
-        }
-
-        .mega-column ul li a:hover {
-            color: var(--primary-color);
-            transform: translateX(5px);
-        }
-
-        .mega-column ul li a:hover i {
-            opacity: 1;
-            transform: scale(1.1);
-        }
-
-        .badge {
-            background: var(--primary-color);
-            color: white;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-left: 8px;
-        }
 
         /* Auth Buttons */
         .auth-buttons {
@@ -244,6 +159,7 @@
             gap: 5px;
             cursor: pointer;
             padding: 8px;
+            z-index: 1002;
         }
 
         .menu-toggle span {
@@ -252,115 +168,107 @@
             background: var(--text-dark);
             transition: all 0.3s ease;
         }
-                /* Mobile Styles */
-        @media screen and (max-width: 768px) {
-            header .container {
-                padding: 0 1rem;
-            }
+                /* Desktop Mega Menu Styles */
+        .mega-menu .dropdown-content {
+            width: 800px;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            display: grid;
+            grid-template-columns: 1fr;
+            padding: 30px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            visibility: hidden;
+            position: absolute;
+            top: 100%;
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
 
-            .menu-toggle {
-                display: flex;
-                z-index: 1002;
-            }
+        .mega-menu:hover .dropdown-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
 
-            .menu-toggle.active span:nth-child(1) {
-                transform: rotate(45deg) translate(5px, 5px);
-            }
+        /* Product Grid Styles */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            list-style: none;
+        }
 
-            .menu-toggle.active span:nth-child(2) {
-                opacity: 0;
-            }
+        .product-card {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 16px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            background: white;
+        }
 
-            .menu-toggle.active span:nth-child(3) {
-                transform: rotate(-45deg) translate(5px, -5px);
-            }
+        .product-card:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
 
-            .main-nav {
-                position: fixed;
-                top: var(--header-height);
-                right: -100%;
-                width: 85%;
-                height: calc(100vh - var(--header-height));
-                background: white;
-                transition: right 0.3s ease;
-                overflow-y: auto;
-                z-index: 1001;
-            }
+        .product-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
 
-            .main-nav.active {
-                right: 0;
-            }
+        .product-info h4 {
+            color: var(--text-dark);
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
 
-            .nav-list {
-                flex-direction: column;
-                gap: 0;
-                height: auto;
-                padding: 1rem 0;
-            }
+        .product-info p {
+            color: var(--text-body);
+            font-size: 13px;
+            line-height: 1.4;
+            opacity: 0.8;
+        }
 
-            .nav-list > li {
-                width: 100%;
-                height: auto;
-                border-bottom: 1px solid var(--border-color);
-            }
-
-            .nav-list > li > a {
-                padding: 1rem;
-                width: 100%;
-                justify-content: space-between;
-            }
-
+        /* Desktop-specific styles */
+        @media screen and (min-width: 769px) {
             .mega-menu .dropdown-content {
-                width: 100%;
-                grid-template-columns: 1fr;
-                position: static;
-                transform: none;
-                box-shadow: none;
-                padding: 10px;
-                opacity: 1;
-                visibility: visible;
-                display: none;
+                display: block;
             }
 
-            .mega-menu.active .dropdown-content {
-                display: grid;
+            .product-grid {
+                grid-template-columns: repeat(3, 1fr);
             }
 
-            .mega-column {
-                padding: 10px;
-                background: var(--background-light);
-                border-radius: 8px;
-                margin-bottom: 10px;
+            .product-card {
+                flex-direction: column;
             }
 
-            .mega-column h3 {
-                font-size: 14px;
+            .product-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 24px;
             }
 
-            .mega-column h3 i {
+            .product-info h4 {
                 font-size: 16px;
             }
 
-            .mega-column ul li a {
-                padding: 8px 12px;
-            }
-
-            .mega-column ul li a i {
-                width: 16px;
-                margin-right: 10px;
-            }
-
-            .auth-buttons {
-                flex-direction: column;
-                margin: 1rem;
-                gap: 0.5rem;
-                border-bottom: none !important;
-            }
-
-            .sign-in, .sign-up {
-                width: 100%;
-                text-align: center;
-                padding: 0.75rem;
+            .product-info p {
+                font-size: 13px;
             }
         }
 
@@ -383,7 +291,213 @@
             display: block;
             opacity: 1;
         }
-    </style>
+
+        /* Animation Classes */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeIn 0.3s ease forwards;
+        }
+                /* Mobile Styles */
+        @media screen and (max-width: 768px) {
+            header .container {
+                padding: 0 1rem;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+
+            .menu-toggle.active span:nth-child(1) {
+                transform: rotate(45deg) translate(5px, 5px);
+            }
+
+            .menu-toggle.active span:nth-child(2) {
+                opacity: 0;
+            }
+
+            .menu-toggle.active span:nth-child(3) {
+                transform: rotate(-45deg) translate(5px, -5px);
+            }
+
+            /* Mobile Navigation */
+            .main-nav {
+                position: fixed;
+                top: var(--header-height);
+                right: -100%;
+                width: 85%;
+                height: calc(100vh - var(--header-height));
+                background: white;
+                transition: right 0.3s ease;
+                overflow-y: auto;
+                z-index: 1001;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .main-nav.active {
+                right: 0;
+            }
+
+            .nav-list {
+                flex-direction: column;
+                gap: 0;
+                height: auto;
+                padding: 1rem 0;
+                width: 100%;
+            }
+
+            .nav-list > li {
+                width: 100%;
+                height: auto;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .nav-list > li > a {
+                padding: 1rem;
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            /* Mobile Mega Menu */
+            .mega-menu .dropdown-content {
+                position: relative;
+                width: 100%;
+                max-height: none;
+                opacity: 1;
+                visibility: visible;
+                display: none;
+                transform: none;
+                box-shadow: none;
+                background: var(--background-light);
+                padding: 1rem;
+                z-index: 1002;
+                left: 0;
+                top: 0;
+            }
+
+            .mega-menu.active .dropdown-content {
+                display: block;
+            }
+
+            /* Mobile Product Grid */
+            .product-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .product-card {
+                background: white;
+                display: flex;
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 12px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            }
+
+            .product-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+                flex-shrink: 0;
+            }
+
+            .product-info {
+                flex: 1;
+            }
+
+            .product-info h4 {
+                font-size: 14px;
+                margin-bottom: 2px;
+            }
+
+            .product-info p {
+                font-size: 12px;
+                line-height: 1.4;
+            }
+
+            /* Mobile Auth Buttons */
+            .auth-buttons {
+                flex-direction: column;
+                margin: 1rem;
+                gap: 0.5rem;
+                border-bottom: none !important;
+                margin-top: auto;
+                padding: 1rem;
+                background: white;
+                border-top: 1px solid var(--border-color);
+            }
+
+            .sign-in, .sign-up {
+                width: 100%;
+                text-align: center;
+                padding: 0.75rem;
+            }
+
+            /* Mobile Scroll Handling */
+            .main-nav {
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+                scrollbar-color: var(--primary-color) #f1f1f1;
+            }
+
+            .main-nav::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .main-nav::-webkit-scrollbar-track {
+                background: #f1f1f1;
+            }
+
+            .main-nav::-webkit-scrollbar-thumb {
+                background: var(--primary-color);
+                border-radius: 3px;
+            }
+
+            /* Ensure proper stacking */
+            .nav-list > li {
+                position: relative;
+                z-index: 1;
+            }
+
+            .nav-list > li.mega-menu {
+                z-index: 2;
+            }
+        }
+
+        /* Small Mobile Devices */
+        @media screen and (max-width: 480px) {
+            .product-card {
+                padding: 10px;
+            }
+
+            .product-icon {
+                width: 28px;
+                height: 28px;
+                font-size: 14px;
+            }
+
+            .product-info h4 {
+                font-size: 13px;
+            }
+
+            .product-info p {
+                font-size: 11px;
+            }
+        }
+        </style>
 </head>
 <body>
     <header>
@@ -405,53 +519,74 @@
                     <li class="dropdown mega-menu">
                         <a href="#">Products <i class="fas fa-caret-down"></i></a>
                         <div class="dropdown-content mega-content">
-                            <div class="mega-column">
-                                <h3><i class="fas fa-users"></i> HR Solutions</h3>
-                                <ul>
-                                    <li><a href="peoplemanagement.html"><i class="fas fa-user-tie"></i> People Management</a></li>
-                                    <li><a href="pms.html"><i class="fas fa-chart-line"></i> Performance Management</a></li>
-                                    <li><a href="alm.html"><i class="fas fa-calendar-check"></i> Attendance & Leave</a></li>
-                                    <li><a href="payroll.html"><i class="fas fa-money-check-alt"></i> Payroll & Compensation</a></li>
-                                    <li><a href="ess.html"><i class="fas fa-user-cog"></i> Employee Self-Service</a></li>
-                                    <li><a href="cs.html"><i class="fas fa-user-plus"></i> WiseRecruit <span class="badge">Coming Soon</span></a></li>
-                                </ul>
-                            </div>
-                                                        <div class="mega-column">
-                                <h3><i class="fas fa-dollar-sign"></i> Financial Solutions</h3>
-                                <ul>
-                                    <li><a href="pay.html"><i class="fas fa-file-invoice-dollar"></i> Payroll Processing</a></li>
-                                    <li><a href="smartexpenses.html"><i class="fas fa-receipt"></i> SmartExpenses</a></li>
-                                    <li><a href="fin.html"><i class="fas fa-chart-pie"></i> Financial Reporting</a></li>
-                                    <li><a href="bookkeeping.html"><i class="fas fa-book"></i> Book-keeping</a></li>
-                                    <li><a href="tnc.html"><i class="fas fa-balance-scale"></i> Taxation & Compliance</a></li>
-                                    <li><a href="globalinvoice.html"><i class="fas fa-globe"></i> GlobalInvoice</a></li>
-                                    <li><a href="inb.html"><i class="fas fa-file-invoice"></i> Invoice & Billing</a></li>
-                                    <li><a href="inb.html"><i class="fas fa-boxes"></i> Asset Management</a></li>
-                                </ul>
-                            </div>
-                            <div class="mega-column">
-                                <h3><i class="fas fa-cogs"></i> Operation Solutions</h3>
-                                <ul>
-                                    <li><a href="ptm.html"><i class="fas fa-tasks"></i> Project & Task Management</a></li>
-                                    <li><a href="smartexpenses.html"><i class="fas fa-calculator"></i> SmartExpenses</a></li>
-                                    <li><a href="shiftmaster.html"><i class="fas fa-clock"></i> ShiftMaster</a></li>
-                                    <li><a href="stockflow.html"><i class="fas fa-box"></i> StockFlow</a></li>
-                                    <li><a href="globalinvoice.html"><i class="fas fa-file-alt"></i> GlobalInvoice</a></li>
-                                    <li><a href="wfa.html"><i class="fas fa-robot"></i> Workflow Automation</a></li>
-                                    <li><a href="vsm.html"><i class="fas fa-handshake"></i> Vendor & Supplier</a></li>
-                                    <li><a href="facility.html"><i class="fas fa-building"></i> Facility Management</a></li>
-                                </ul>
-                            </div>
-                            <div class="mega-column">
-                                <h3><i class="fas fa-plug"></i> Integrations</h3>
-                                <ul>
-                                    <li><a href="sn.html"><i class="fas fa-tools"></i> ServiceNow & ITSM</a></li>
-                                    <li><a href="payint.html"><i class="fas fa-exchange-alt"></i> Payroll & Finance</a></li>
-                                    <li><a href="ebc.html"><i class="fas fa-gift"></i> Employee Benefits</a></li>
-                                    <li><a href="ptm.html"><i class="fas fa-user-graduate"></i> Talent Management</a></li>
-                                    <li><a href="aia.html"><i class="fas fa-brain"></i> AI & Analytics</a></li>
-                                </ul>
-                            </div>
+                            <ul class="product-grid">
+                                <li>
+                                    <a href="peoplemanagement.html" class="product-card">
+                                        <div class="product-icon" style="color: #00C853;">
+                                            <i class="fas fa-users"></i>
+                                        </div>
+                                        <div class="product-info">
+                                            <h4>People</h4>
+                                            <p>Organize, automate, and simplify your HR processes.</p>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="recruit.html" class="product-card">
+                                        <div class="product-icon" style="color: #FF4081;">
+                                            <i class="fas fa-user-plus"></i>
+                                        </div>
+                                        <div class="product-info">
+                                            <h4>Recruit</h4>
+                                            <p>Intuitive recruiting platform built to provide hiring solutions.</p>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="smartexpenses.html" class="product-card">
+                                        <div class="product-icon" style="color: #FF5722;">
+                                            <i class="fas fa-receipt"></i>
+                                        </div>
+                                        <div class="product-info">
+                                            <h4>Expense</h4>
+                                            <p>Effortless expense reporting platform.</p>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="payroll.html" class="product-card">
+                                        <div class="product-icon" style="color: #2196F3;">
+                                            <i class="fas fa-file-invoice-dollar"></i>
+                                        </div>
+                                        <div class="product-info">
+                                            <h4>Payroll</h4>
+                                            <p>Effortless payroll processing software for businesses.</p>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="shiftmaster.html" class="product-card">
+                                        <div class="product-icon" style="color: #673AB7;">
+                                            <i class="fas fa-clock"></i>
+                                        </div>
+                                        <div class="product-info">
+                                            <h4>Shifts</h4>
+                                            <p>Employee scheduling and time tracking app.</p>
+                                        </div>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="sign.html" class="product-card">
+                                        <div class="product-icon" style="color: #00BCD4;">
+                                            <i class="fas fa-file-signature"></i>
+                                        </div>
+                                        <div class="product-info">
+                                            <h4>Sign</h4>
+                                            <p>Digital signature app for businesses.</p>
+                                        </div>
+                                    </a>
+                                </li>
+                            </ul>
                         </div>
                     </li>
 
@@ -515,6 +650,13 @@
                         });
 
                         menu.classList.toggle('active');
+                        
+                        // Scroll into view if needed
+                        if (menu.classList.contains('active')) {
+                            setTimeout(() => {
+                                menu.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            }, 300);
+                        }
                     }
                 });
             });
@@ -547,17 +689,15 @@
                 }, 250);
             });
 
-            // Enhanced hover effect for mega menu
-            megaMenus.forEach(menu => {
-                menu.addEventListener('mouseenter', function() {
-                    if (window.innerWidth > 768) {
-                        const content = this.querySelector('.dropdown-content');
-                        content.style.opacity = '0';
-                        requestAnimationFrame(() => {
-                            content.style.opacity = '1';
-                        });
-                    }
-                });
+            // Reset scroll position when menu opens
+            function resetScroll() {
+                if (window.innerWidth <= 768 && isMenuOpen) {
+                    mainNav.scrollTop = 0;
+                }
+            }
+
+            mobileMenu.addEventListener('click', () => {
+                setTimeout(resetScroll, 100);
             });
         }
     </script>
