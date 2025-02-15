@@ -6,350 +6,910 @@
     <title>Header Component</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
+    <head>
+    <!-- Add this line for Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Root Variables */
-        :root {
-            --primary-color: #e33333;
-            --text-dark: #0f1964;
-            --text-body: #333;
-            --background-light: #fff6f4;
-            --link-blue: #2962ff;
-            --border-color: #e0e0e0;
-            --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
-            --header-height: 70px;
-        }
+    /* Root Variables */
+:root {
+    --primary-color: #e33333;
+    --text-dark: #0f1964;
+    --text-body: #333;
+    --background-light: #fff6f4;
+    --link-blue: #2962ff;
+    --border-color: #e0e0e0;
+    --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+    --header-height: 70px;
+}
 
-        /* Reset & Base Styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+/* Reset & Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
 
-        body {
-            font-family: 'Poppins', sans-serif;
-            line-height: 1.6;
-            color: var(--text-body);
-            padding-top: var(--header-height);
-            margin: 0;
-            -webkit-font-smoothing: antialiased;
-        }
+body {
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+    color: var(--text-body);
+    padding-top: var(--header-height);
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+}
 
-        /* Header & Navigation */
-        header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            z-index: 1000;
-            height: var(--header-height);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
+/* Header & Navigation */
+header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    height: var(--header-height);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
 
-        header .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
+header .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
 
-        .logo {
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-        }
+/* Logo Styles */
+.logo {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    z-index: 1002;
+}
 
-        .logo h1 {
-            background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 28px;
-            font-weight: 600;
-        }
+.logo h1 {
+    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 28px;
+    font-weight: 600;
+}
 
-        /* Main Navigation */
-        .main-nav {
-            margin-left: auto;
-            height: 100%;
-        }
+/* Main Navigation */
+.main-nav {
+    margin-left: auto;
+    height: 100%;
+}
 
-        .nav-list {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            height: 100%;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
+.nav-list {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    height: 100%;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
 
-        .nav-list > li {
-            height: 100%;
-            display: flex;
-            align-items: center;
-            position: relative;
-        }
+.nav-list > li {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
 
-        .nav-list > li > a {
-            color: var(--text-dark);
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 14px;
-            letter-spacing: 0.3px;
-            padding: 0 12px;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            transition: color 0.3s ease;
-        }
+.nav-list > li > a {
+    color: var(--text-dark);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 0.3px;
+    padding: 0 12px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    transition: color 0.3s ease;
+}
 
-        .nav-list > li > a:hover {
-            color: var(--primary-color);
-        }
+.nav-list > li > a:hover {
+    color: var(--primary-color);
+}
 
-        /* Mega Menu Styles */
-        .mega-menu .dropdown-content {
-            width: 750px;
-            left: 50%;
-            transform: translateX(-50%) translateY(10px);
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+/* Auth Buttons */
+.auth-buttons {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: 1.5rem;
+}
+
+.sign-in {
+    color: var(--text-dark);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 15px;
+    transition: color 0.3s ease;
+}
+
+.sign-in:hover {
+    color: var(--primary-color);
+}
+
+.sign-up {
+    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 15px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sign-up:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(227, 51, 51, 0.2);
+}
+
+/* Mega Menu Styles */
+.mega-menu {
+    position: relative;
+}
+
+.mega-menu .dropdown-content {
+    width: 1000px;
+    max-height: calc(100vh - var(--header-height) - 40px);
+    overflow-y: auto;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    display: none;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    padding: 24px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    position: absolute;
+    top: 100%;
+    transition: all 0.3s ease;
+    z-index: 1001;
+    pointer-events: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) #f1f1f1;
+}
+
+.mega-menu:hover .dropdown-content,
+.mega-menu.active .dropdown-content {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    display: grid;
+    pointer-events: auto;
+}
+
+/* Custom scrollbar styles */
+.mega-menu .dropdown-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.mega-menu .dropdown-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.mega-menu .dropdown-content::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 3px;
+}
+
+.mega-menu .dropdown-content::-webkit-scrollbar-thumb:hover {
+    background: #1a237e;
+}
+
+/* Mega Column Styles */
+.mega-column {
+    height: 100%;
+    min-width: 0;
+}
+
+.mega-column h3 {
+    color: var(--text-dark);
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mega-column h3 i {
+    color: var(--primary-color);
+    font-size: 16px;
+}
+
+.mega-column ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mega-column ul li a {
+    display: flex;
+    align-items: flex-start;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.mega-column ul li a:hover {
+    background: var(--background-light);
+}
+
+/* Menu Icon Styles */
+.menu-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    margin-right: 12px;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.menu-icon svg {
+    width: 20px;
+    height: 20px;
+    transition: all 0.3s ease;
+}
+
+/* Icon color variations */
+.people-icon { background: #00C853; }
+.performance-icon { background: #2196F3; }
+.attendance-icon { background: #4CAF50; }
+.payroll-icon { background: #2196F3; }
+.ess-icon { background: #FFC107; }
+.recruit-icon { background: #FF4081; }
+.finance-icon { background: #FF9800; }
+.project-icon { background: #673AB7; }
+.shifts-icon { background: #673AB7; }
+.stock-icon { background: #4CAF50; }
+.integration-icon { background: #2196F3; }
+.bookkeeping-icon { background: #FF7043; }
+.tax-icon { background: #F57C00; }
+.globalinvoice-icon { background: #FB8C00; }
+.invoice-icon { background: #FFB300; }
+.asset-icon { background: #FFA000; }
+
+/* Operations Solutions Icons */
+.inventory-icon { background: #673AB7; }
+.supplier-icon { background: #5E35B1; }
+.workflow-icon { background: #512DA8; }
+.facility-icon { background: #4527A0; }
+
+/* Integration Solutions Icons */
+.payroll-integration-icon { background: #2196F3; }
+.benefits-integration-icon { background: #1E88E5; }
+.talent-integration-icon { background: #1976D2; }
+
+/* Menu Text Styles */
+.menu-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.menu-text span {
+    display: block;
+    color: var(--text-dark);
+    font-weight: 500;
+    font-size: 13px;
+    margin-bottom: 2px;
+}
+
+.menu-text p {
+    color: var(--text-body);
+    font-size: 12px;
+    margin: 0;
+    opacity: 0.7;
+    line-height: 1.4;
+}
+
+/* Badge Styles */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+    color: white;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    margin-left: 6px;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(227, 51, 51, 0.2);
+    position: relative;
+    top: -1px;
+}
+
+/* SVG Path Styles */
+.menu-icon svg path[fill="#ffffff"],
+.menu-icon svg circle[fill="#ffffff"] {
+    fill: #ffffff;
+}
+
+/* SVG Fill Colors */
+.finance-icon svg path:last-child,
+.bookkeeping-icon svg path:last-child,
+.tax-icon svg path:last-child,
+.globalinvoice-icon svg path:last-child,
+.invoice-icon svg path:last-child,
+.asset-icon svg path:last-child {
+    fill: #FF9800;
+}
+
+.inventory-icon svg path,
+.supplier-icon svg path,
+.workflow-icon svg path,
+.facility-icon svg path {
+    stroke: #673AB7;
+}
+
+.payroll-integration-icon svg path:last-child,
+.benefits-integration-icon svg path:last-child,
+.talent-integration-icon svg path:last-child {
+    stroke: #2196F3;
+}
+
+/* Hover Effects */
+.mega-column ul li a:hover .finance-icon,
+.mega-column ul li a:hover .bookkeeping-icon,
+.mega-column ul li a:hover .tax-icon,
+.mega-column ul li a:hover .globalinvoice-icon,
+.mega-column ul li a:hover .invoice-icon,
+.mega-column ul li a:hover .asset-icon {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.2);
+}
+
+.mega-column ul li a:hover .inventory-icon,
+.mega-column ul li a:hover .supplier-icon,
+.mega-column ul li a:hover .workflow-icon,
+.mega-column ul li a:hover .facility-icon {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(103, 58, 183, 0.2);
+}
+
+.mega-column ul li a:hover .payroll-integration-icon,
+.mega-column ul li a:hover .benefits-integration-icon,
+.mega-column ul li a:hover .talent-integration-icon {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+}
+
+.mega-column ul li a:hover .menu-icon {
+    transform: scale(1.1);
+}
+
+.mega-column ul li a:hover .menu-text span {
+    color: var(--primary-color);
+}
+
+/* Mobile Menu Toggle */
+.menu-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: 8px;
+    z-index: 1002;
+}
+
+.menu-toggle span {
+    width: 24px;
+    height: 2px;
+    background: var(--text-dark);
+    transition: all 0.3s ease;
+}
+/* Add this to your CSS */
+@keyframes mailFloat {
+    0%, 100% {
+        transform: translateY(0) rotate(0);
+    }
+    25% {
+        transform: translateY(-4px) rotate(2deg);
+    }
+    75% {
+        transform: translateY(2px) rotate(-2deg);
+    }
+}
+
+@keyframes mailGlow {
+    0%, 100% {
+        filter: drop-shadow(0 0 3px rgba(227, 51, 51, 0.4));
+    }
+    50% {
+        filter: drop-shadow(0 0 8px rgba(227, 51, 51, 0.7));
+    }
+}
+
+/* Wise Mail specific styles */
+.nav-list a[href="mail.html"] {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+/* Add mail icon */
+.nav-list a[href="mail.html"]::before {
+    content: '✉';
+    display: inline-block;
+    font-size: 1.2em;
+    animation: mailFloat 3s ease-in-out infinite,
+               mailGlow 2s ease-in-out infinite;
+}
+
+/* Gradient text effect */
+.nav-list a[href="mail.html"] {
+    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 600;
+    text-shadow: 0 0 15px rgba(227, 51, 51, 0.1);
+}
+
+/* Hover effect */
+.nav-list a[href="mail.html"]:hover {
+    transform: scale(1.05);
+}
+
+/* Add sparkle effect */
+.nav-list a[href="mail.html"]::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, 
+                rgba(255, 255, 255, 0.8) 0%,
+                transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.nav-list a[href="mail.html"]:hover::after {
+    opacity: 0.5;
+    animation: sparkle 1s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0;
+    }
+}
+
+/* Add notification dot */
+.nav-list a[href="mail.html"] {
+    position: relative;
+}
+
+.nav-list a[href="mail.html"]::before {
+    position: relative;
+}
+
+.nav-list a[href="mail.html"] .notification {
+    position: absolute;
+    top: -2px;
+    right: -6px;
+    width: 8px;
+    height: 8px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(227, 51, 51, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(227, 51, 51, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(227, 51, 51, 0);
+    }
+}
+/* Mobile Responsive Styles */
+@media (max-width: 1200px) {
+    .mega-menu .dropdown-content {
+        width: 900px;
+    }
+
+    header .container {
+        padding: 0 1.5rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .mega-menu .dropdown-content {
+        width: 700px;
+    }
+}
+
+/* Adjust dropdown position based on viewport */
+@media (min-height: 800px) {
+    .mega-menu .dropdown-content {
+        max-height: 700px;
+    }
+}
+
+@media (max-height: 700px) {
+    .mega-menu .dropdown-content {
+        max-height: calc(100vh - var(--header-height) - 20px);
+    }
+}
+
+@media (max-width: 768px) {
+    header .container {
+        padding: 0 1rem;
+    }
+
+    .menu-toggle {
+        display: flex;
+    }
+
+    .menu-toggle.active span:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    .menu-toggle.active span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .menu-toggle.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(5px, -5px);
+    }
+
+    /* Mobile Navigation */
+    .main-nav {
+        position: fixed;
+        top: var(--header-height);
+        right: -100%;
+        width: 85%;
+        height: calc(100vh - var(--header-height));
+        background: white;
+        transition: right 0.3s ease;
+        overflow-y: auto;
+        z-index: 1001;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .main-nav.active {
+        right: 0;
+    }
+
+    .nav-list {
+        flex-direction: column;
+        gap: 0;
+        height: auto;
+        padding: 0;
+        width: 100%;
+    }
+
+    .nav-list > li {
+        width: 100%;
+        height: auto;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .nav-list > li > a {
+        padding: 15px;
+        width: 100%;
+        justify-content: space-between;
+        font-size: 15px;
+    }
+
+    /* Mobile Mega Menu */
+     .mega-menu .dropdown-content {
+        width: 100% !important;
+        max-height: none;
+        overflow: visible;
+        transform: none !important;
+        position: static;
+        box-shadow: none;
+        padding: 0;
+        border-radius: 0;
+        display: none;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+        grid-template-columns: 1fr !important; /* Force single column */
+    }
+
+   .mega-menu.active .dropdown-content {
+        display: grid;
+        opacity: 1;
+        visibility: visible;
+        grid-template-columns: 1fr !important; /* Force single column */
+        gap: 0; /* Reduce gap between items */
+    }
+
+   /* Ensure mega columns stack properly */
+    .mega-column {
+        width: 100%;
+        padding: 15px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .mega-column:last-child {
+        border-bottom: none;
+    }
+
+
+    .mega-column h3 {
+        font-size: 14px;
+        padding: 0 0 8px 0;
+        margin-bottom: 12px;
+    }
+
+      /* Adjust list items for mobile */
+    .mega-column ul {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+    }
+
+   .mega-column ul li a {
+        padding: 12px;
+        width: 100%;
+        display: flex;
+        align-items: center;
+    }
+
+    .menu-icon {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+    }
+
+    .menu-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+   /* Ensure text wraps properly */
+    .menu-text {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .menu-text span,
+    .menu-text p {
+        white-space: normal;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Mobile Badge */
+    .badge {
+        font-size: 10px;
+        padding: 2px 6px;
+        position: static;
+        margin-left: 8px;
+    }
+
+    /* Mobile Auth Buttons */
+    .auth-buttons {
+        flex-direction: column;
+        margin: 0;
+        padding: 15px;
+        gap: 10px;
+        background: white;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .sign-in, .sign-up {
+        width: 100%;
+        padding: 12px;
+        text-align: center;
+        border-radius: 6px;
+    }
+
+    /* Mobile Scroll */
+    .main-nav {
+        scrollbar-width: thin;
+        scrollbar-color: var(--primary-color) #f1f1f1;
+    }
+
+    .main-nav::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .main-nav::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .main-nav::-webkit-scrollbar-thumb {
+        background: var(--primary-color);
+        border-radius: 4px;
+    }
+     .nav-list a[href="mail.html"] {
+        justify-content: flex-start;
+        padding: 15px;
+    }
+    
+    .nav-list a[href="mail.html"]::before {
+        font-size: 1.4em;
+    }
+    
+    .nav-list a[href="mail.html"] .notification {
+        top: 10px;
+        right: 15px;
+    }
+}
+
+/* Menu Overlay */
+.menu-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.menu-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Small Mobile Devices */
+@media (max-width: 480px) {
+    .mega-column h3 {
+        font-size: 13px;
+    }
+
+    .menu-text span {
+        font-size: 13px;
+    }
+
+    .menu-text p {
+        font-size: 11px;
+    }
+
+    .menu-icon {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+    }
+
+    .menu-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .finance-icon,
+    .bookkeeping-icon,
+    .tax-icon,
+    .globalinvoice-icon,
+    .invoice-icon,
+    .asset-icon,
+    .inventory-icon,
+    .supplier-icon,
+    .workflow-icon,
+    .facility-icon,
+    .payroll-integration-icon,
+    .benefits-integration-icon,
+    .talent-integration-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .finance-icon svg,
+    .bookkeeping-icon svg,
+    .tax-icon svg,
+    .globalinvoice-icon svg,
+    .invoice-icon svg,
+    .asset-icon svg,
+    .inventory-icon svg,
+    .supplier-icon svg,
+    .workflow-icon svg,
+    .facility-icon svg,
+    .payroll-integration-icon svg,
+    .benefits-integration-icon svg,
+    .talent-integration-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+/* Animation Classes */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-item {
+    opacity: 0;
+    animation: fadeIn 0.3s ease forwards;
+}
+
+/* Mobile Menu Animations */
+@media (max-width: 768px) {
+    .mega-menu.active .mega-column {
+        animation: slideDown 0.3s ease-out forwards;
+    }
+
+    .mega-column ul li {
+        opacity: 0;
+        transform: translateX(-10px);
+        animation: slideIn 0.3s ease-out forwards;
+    }
+
+    .mega-column ul li:nth-child(1) { animation-delay: 0.1s; }
+    .mega-column ul li:nth-child(2) { animation-delay: 0.15s; }
+    .mega-column ul li:nth-child(3) { animation-delay: 0.2s; }
+    .mega-column ul li:nth-child(4) { animation-delay: 0.25s; }
+    .mega-column ul li:nth-child(5) { animation-delay: 0.3s; }
+    .mega-column ul li:nth-child(6) { animation-delay: 0.35s; }
+
+    @keyframes slideDown {
+        from {
             opacity: 0;
-            visibility: hidden;
-            position: absolute;
-            top: 100%;
-            transition: all 0.3s ease;
+            transform: translateY(-10px);
         }
-
-        .mega-menu:hover .dropdown-content {
+        to {
             opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) translateY(0);
+            transform: translateY(0);
         }
+    }
 
-        .mega-column h3 {
-            color: var(--primary-color);
-            font-size: 16px;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid var(--background-light);
-        }
-
-        .mega-column ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .mega-column ul li {
-            margin-bottom: 8px;
-        }
-
-        .mega-column ul li a {
-            color: var(--text-body);
-            text-decoration: none;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            padding: 6px 0;
-            transition: all 0.2s ease;
-        }
-
-        .mega-column ul li a:hover {
-            color: var(--primary-color);
-            transform: translateX(5px);
-        }
-
-        .badge {
-            background: var(--primary-color);
-            color: white;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-left: 8px;
-        }
-                /* Auth Buttons */
-        .auth-buttons {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-left: 1.5rem;
-        }
-
-        .sign-in {
-            color: var(--text-dark);
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 15px;
-            transition: color 0.3s ease;
-        }
-
-        .sign-in:hover {
-            color: var(--primary-color);
-        }
-
-        .sign-up {
-            background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 4px;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 15px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .sign-up:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(227, 51, 51, 0.2);
-        }
-
-        /* Mobile Menu Toggle */
-        .menu-toggle {
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            cursor: pointer;
-            padding: 8px;
-        }
-
-        .menu-toggle span {
-            width: 24px;
-            height: 2px;
-            background: var(--text-dark);
-            transition: all 0.3s ease;
-        }
-
-        /* Mobile Styles */
-        @media screen and (max-width: 768px) {
-            header .container {
-                padding: 0 1rem;
-            }
-
-            .menu-toggle {
-                display: flex;
-                z-index: 1002;
-            }
-
-            .menu-toggle.active span:nth-child(1) {
-                transform: rotate(45deg) translate(5px, 5px);
-            }
-
-            .menu-toggle.active span:nth-child(2) {
-                opacity: 0;
-            }
-
-            .menu-toggle.active span:nth-child(3) {
-                transform: rotate(-45deg) translate(5px, -5px);
-            }
-
-            .main-nav {
-                position: fixed;
-                top: var(--header-height);
-                right: -100%;
-                width: 85%;
-                height: calc(100vh - var(--header-height));
-                background: white;
-                transition: right 0.3s ease;
-                overflow-y: auto;
-                z-index: 1001;
-            }
-
-            .main-nav.active {
-                right: 0;
-            }
-
-            .nav-list {
-                flex-direction: column;
-                gap: 0;
-                height: auto;
-                padding: 1rem 0;
-            }
-
-            .nav-list > li {
-                width: 100%;
-                height: auto;
-                border-bottom: 1px solid var(--border-color);
-            }
-
-            .nav-list > li > a {
-                padding: 1rem;
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .mega-menu .dropdown-content {
-                width: 100%;
-                grid-template-columns: 1fr;
-                position: static;
-                transform: none;
-                box-shadow: none;
-                padding: 10px;
-                opacity: 1;
-                visibility: visible;
-                display: none;
-            }
-
-            .mega-menu.active .dropdown-content {
-                display: grid;
-            }
-
-            .mega-column {
-                padding: 10px;
-                background: var(--background-light);
-                border-radius: 8px;
-                margin-bottom: 10px;
-            }
-
-            .mega-column h3 {
-                font-size: 14px;
-            }
-
-            .auth-buttons {
-                flex-direction: column;
-                margin: 1rem;
-                gap: 0.5rem;
-                border-bottom: none !important;
-            }
-
-            .sign-in, .sign-up {
-                width: 100%;
-                text-align: center;
-                padding: 0.75rem;
-            }
-        }
-
-        /* Menu Overlay */
-        .menu-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            z-index: 999;
-            transition: opacity 0.3s ease;
+    @keyframes slideIn {
+        from {
             opacity: 0;
+            transform: translateX(-10px);
         }
-
-        .menu-overlay.active {
-            display: block;
+        to {
             opacity: 1;
+            transform: translateX(0);
         }
+    }
+}
     </style>
 </head>
 <body>
@@ -372,62 +932,382 @@
                     <li class="dropdown mega-menu">
                         <a href="#">Products <i class="fas fa-caret-down"></i></a>
                         <div class="dropdown-content mega-content">
+                            <!-- HR Solutions -->
                             <div class="mega-column">
-                <h3>HR Solutions</h3>
-                <ul>
-                  <li><a href="peoplemanagement.html">People Management</a></li>
-                  <li><a href="pms.html">Performance Management</a></li>
-                  <li><a href="alm.html">Attendence & Leave Management</a></li>
-                  <li><a href="payroll.html">Payroll & Compensation</a></li>
-                  <li><a href="ess.html">Employee Self-Service</a></li>
-                
-                  <li>
-                    <a href="cs.html">WiseRecruit <span class="badge">Coming Soon</span></a>
-                  </li>
-                </ul>
-              </div>
-              <div class="mega-column">
-                <h3>Financial Solutions</h3>
-                <ul>
-                  <li><a href="pay.html">Payroll Processing</a></li>
-                  <li><a href="smartexpenses.html">SmartExpenses</a></li>
-                  <li><a href="fin.html">Financial Reporting</a></li>
-                  <li><a href="bookkeeping.html">Book-keeping</a></li>
-                  <li><a href="tnc.html">Taxation & Compliance</a></li>
-                  <li><a href="globalinvoice.html">GlobalInvoice</a></li>
-                  <li><a href="inb.html">Invoice & Billing</a></li>
-                  <li><a href="inb.html">Asset Management</a></li>
-                  
-                </ul>
-              </div>
-              <div class="mega-column">
-                <h3>Operation Solutions</h3>
-                <ul>
-                  <li><a href="ptm.html">Project & Task Management</a></li>
-                  <li><a href="smartexpenses.html">SmartExpenses</a></li>
-                  <li><a href="shiftmaster.html">ShiftMaster</a></li>
-                  <li><a href="stockflow.html">StockFlow</a></li>
-                  <li><a href="globalinvoice.html">GlobalInvoice</a></li>
-                  <li><a href="wfa.html">Workflow Automation</a></li>
-                  <li><a href="vsm.html">Vendor & Supplier Management</a></li>
-                  <li><a href="facility.html">Facility Management</a></li>
-                  
-                </ul>
-              </div>
-                            <div class="mega-column">
-                                <h3>Integrations</h3>
+                                <h3><i class="fas fa-users-gear"></i> HR Solutions</h3>
                                 <ul>
-                                    <li><a href="sn.html">ServiceNow & ITSM</a></li>
-                                    <li><a href="payint.html">Payroll & Finance</a></li>
-                                    <li><a href="ebc.html">Employee Benefits</a></li>
-                                    <li><a href="ptm.html">Talent Management</a></li>
-                                    <li><a href="aia.html">AI & Analytics</a></li>
+                                    <li>
+                                        <a href="peoplemanagement.html">
+                                            <div class="menu-icon people-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M18 0a18 18 0 1 0 0 36 18 18 0 0 0 0-36zm0 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12zm8 24H10c0-4.4 3.6-8 8-8s8 3.6 8 8z" fill="#ffffff"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>People Management</span>
+                                                <p>Personal details, job roles, departments, & much more...</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="pms.html">
+                                            <div class="menu-icon performance-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M4 28l7-7 5 5 12-12 4 4V4H18l4 4-12 12-5-5-5 5v8z" fill="#ffffff"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Performance Management</span>
+                                                <p>Goal setting, appraisals, feedback system</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="alm.html">
+                                            <div class="menu-icon attendance-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M32 4H4C2.3 4 1 5.3 1 7v22c0 1.7 1.3 3 3 3h28c1.7 0 3-1.3 3-3V7c0-1.7-1.3-3-3-3zm-2 24H6V9h24v19z" fill="#ffffff"/>
+                                                    <path d="M16 14h-4v4h4v-4zm8 0h-4v4h4v-4zm-8 8h-4v4h4v-4zm8 0h-4v4h4v-4z" fill="#4CAF50"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Attendance & Leave Management</span>
+                                                <p>Biometric integration, leave requests, approvals</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="payroll.html">
+                                            <div class="menu-icon payroll-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M32 4H4C2.3 4 1 5.3 1 7v22c0 1.7 1.3 3 3 3h28c1.7 0 3-1.3 3-3V7c0-1.7-1.3-3-3-3z" fill="#ffffff"/>
+                                                    <path d="M18 14c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4z" fill="#2196F3"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Payroll & Compensation</span>
+                                                <p>Salary processing, tax deductions, benefits, bonuses</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="ess.html">
+                                            <div class="menu-icon ess-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M18 2C9.2 2 2 9.2 2 18s7.2 16 16 16 16-7.2 16-16S26.8 2 18 2z" fill="#ffffff"/>
+                                                    <path d="M18 8c2.8 0 5 2.2 5 5s-2.2 5-5 5-5-2.2-5-5 2.2-5 5-5zm8 16c0-5.5-3.6-10-8-10s-8 4.5-8 10h16z" fill="#FFC107"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Employee Self-Service</span>
+                                                <p>Profile updates, document access, communication portal</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="cs.html">
+                                            <div class="menu-icon recruit-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M18 0a18 18 0 1 0 0 36 18 18 0 0 0 0-36zm0 10a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm8 18H10c0-4.4 3.6-8 8-8s8 3.6 8 8z" fill="#ffffff"/>
+                                                    <path d="M24 20l-2-2-4 4-4-4-2 2 4 4-4 4 2 2 4-4 4 4 2-2-4-4z" fill="#FF4081"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>WiseRecruit</span>
+                                                <p>Smart recruitment solution</p>
+                                                <span class="badge">Coming Soon</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                                                        <!-- Financial Solutions -->
+                            <div class="mega-column">
+                                <h3><i class="fas fa-money-bill-trend-up" aria-hidden="true"></i>
+    <span>Financial Solutions</span></h3>
+                                <ul>
+                                    <li>
+                                        <a href="pay.html">
+                                            <div class="menu-icon finance-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M32 4H4C2.3 4 1 5.3 1 7v22c0 1.7 1.3 3 3 3h28c1.7 0 3-1.3 3-3V7c0-1.7-1.3-3-3-3z" fill="#ffffff"/>
+                                                    <path d="M18 14c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4z" fill="#FF9800"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Payroll Processing</span>
+                                                <p>Salary calculations, tax deductions, payslips</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="smartexpenses.html">
+                                            <div class="menu-icon expense-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M29 0H7C5.3 0 4 1.3 4 3v30c0 1.7 1.3 3 3 3h22c1.7 0 3-1.3 3-3V3c0-1.7-1.3-3-3-3z" fill="#ffffff"/>
+                                                    <path d="M24 8H12v2h12V8zm0 6H12v2h12v-2zm0 6H12v2h12v-2z" fill="#FF5722"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>SmartExpenses</span>
+                                                <p> Reimbursements, travel & entertainment expenses</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="fin.html">
+                                            <div class="menu-icon finance-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M4 28h28V6H4v22z" fill="#ffffff"/>
+                                                    <path d="M7 14h4v11H7zm6-3h4v14h-4zm6-3h4v17h-4zm6 6h4v11h-4z" fill="#FF9800"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Financial Reporting</span>
+                                                <p>Profit & loss, cash flow statements, budgeting</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                     <li>
+                                        <a href="bookkeeping.html">
+                                            <div class="menu-icon bookkeeping-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M4 28h28V6H4v22z" fill="#ffffff"/>
+                                                    <path d="M7 14h4v11H7zm6-3h4v14h-4zm6-3h4v17h-4zm6 6h4v11h-4z" fill="#FF9800"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Book-keeping</span>
+                                                <p>Recording financial transactions, ledgers, reconciliation</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="tnc.html">
+                                            <div class="menu-icon tax-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M4 28h28V6H4v22z" fill="#ffffff"/>
+                                                    <path d="M7 14h4v11H7zm6-3h4v14h-4zm6-3h4v17h-4zm6 6h4v11h-4z" fill="#FF9800"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Taxation & Compliance</span>
+                                                <p>GST, TDS, VAT etc., employee tax filings</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="globalinvoice.html">
+                                            <div class="menu-icon globalinvoice-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M4 28h28V6H4v22z" fill="#ffffff"/>
+                                                    <path d="M7 14h4v11H7zm6-3h4v14h-4zm6-3h4v17h-4zm6 6h4v11h-4z" fill="#FF9800"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>GlobalInvoice</span>
+                                                <p>Multi-currency invoicing, compliance with international tax laws</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                      <li>
+                                        <a href="inb.html">
+                                            <div class="menu-icon invoice-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M4 28h28V6H4v22z" fill="#ffffff"/>
+                                                    <path d="M7 14h4v11H7zm6-3h4v14h-4zm6-3h4v17h-4zm6 6h4v11h-4z" fill="#FF9800"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Invoice & Billing</span>
+                                                <p>Vendor Payments, Client invoicing</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="asset.html">
+                                            <div class="menu-icon asset-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M4 28h28V6H4v22z" fill="#ffffff"/>
+                                                    <path d="M7 14h4v11H7zm6-3h4v14h-4zm6-3h4v17h-4zm6 6h4v11h-4z" fill="#FF9800"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Asset Management</span>
+                                                <p>Track company assets, depreciation calculations</p>
+                                            </div>
+                                        </a>
+                                    </li>
+
+                                    <!-- Add other Financial Solutions items -->
+                                </ul>
+                            </div>
+
+                            <!-- Operation Solutions -->
+                            <div class="mega-column">
+                                <h3><i class="fas fa-gears"></i> Operation Solutions</h3>
+                                <ul>
+                                    <li>
+                                        <a href="ptm.html">
+                                            <div class="menu-icon project-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M32 6H4c-1.1 0-2 .9-2 2v20c0 1.1.9 2 2 2h28c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z" fill="#ffffff"/>
+                                                    <path d="M30 12H6v12h24V12zm-4 8h-4v-4h4v4z" fill="#673AB7"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Project & Task Management</span>
+                                                <p>Task allocation, project tracking, deadlines</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="shiftmaster.html">
+                                            <div class="menu-icon shifts-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <circle cx="18" cy="18" r="18" fill="#ffffff"/>
+                                                    <path d="M18 8v10l6 6" stroke="#673AB7" stroke-width="2" fill="none"/>
+                                                    <circle cx="18" cy="18" r="2" fill="#673AB7"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>ShiftMaster</span>
+                                                <p>Employee scheduling and time tracking.</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="stockflow.html">
+                                            <div class="menu-icon inventory-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <circle cx="18" cy="18" r="18" fill="#ffffff"/>
+                                                    <path d="M18 8v10l6 6" stroke="#673AB7" stroke-width="2" fill="none"/>
+                                                    <circle cx="18" cy="18" r="2" fill="#673AB7"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>StockFlow</span>
+                                                <p>Raw materials, office supplies, procurement</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="vsm.html">
+                                            <div class="menu-icon supplier-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <circle cx="18" cy="18" r="18" fill="#ffffff"/>
+                                                    <path d="M18 8v10l6 6" stroke="#673AB7" stroke-width="2" fill="none"/>
+                                                    <circle cx="18" cy="18" r="2" fill="#673AB7"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Vendor & Supplier Management </span>
+                                                <p> Contracts, payments, performance tracking</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="wfa.html">
+                                            <div class="menu-icon workflow-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <circle cx="18" cy="18" r="18" fill="#ffffff"/>
+                                                    <path d="M18 8v10l6 6" stroke="#673AB7" stroke-width="2" fill="none"/>
+                                                    <circle cx="18" cy="18" r="2" fill="#673AB7"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Workflow Automation</span>
+                                                <p> Automating repetitive HR & operational tasks</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                     <li>
+                                        <a href="facility.html">
+                                            <div class="menu-icon facility-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <circle cx="18" cy="18" r="18" fill="#ffffff"/>
+                                                    <path d="M18 8v10l6 6" stroke="#673AB7" stroke-width="2" fill="none"/>
+                                                    <circle cx="18" cy="18" r="2" fill="#673AB7"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Facility Management</span>
+                                                <p> Automating repetitive HR & operational tasks</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <!-- Add other Operation Solutions items -->
+                                </ul>
+                            </div>
+
+                            <!-- Integrations -->
+                            <div class="mega-column">
+                                <h3><i class="fas fa-plug"></i> Integrations</h3>
+                                <ul>
+                                    <li>
+                                        <a href="sn.html">
+                                            <div class="menu-icon servicenow-integration-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M32 8H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h28c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" fill="#ffffff"/>
+                                                    <path d="M12 14v8m6-12v16m6-12v8" stroke="#2196F3" stroke-width="2"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>ServiceNow & ITSM</span>
+                                                <p>Automate HR workflows and IT service management</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                     <li>
+                                        <a href="payint.html">
+                                            <div class="menu-icon payroll-integration-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M32 8H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h28c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" fill="#ffffff"/>
+                                                    <path d="M12 14v8m6-12v16m6-12v8" stroke="#2196F3" stroke-width="2"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Payroll & Finance Integrations</span>
+                                                <p>Connect with third-party payroll and accounting systems</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="ebc.html">
+                                            <div class="menu-icon benefits-integration-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M32 8H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h28c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" fill="#ffffff"/>
+                                                    <path d="M12 14v8m6-12v16m6-12v8" stroke="#2196F3" stroke-width="2"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Employee Benefits</span>
+                                                <p>Integrate with benefits providers, insurance platforms, and wellness programs </p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="ptm.html">
+                                            <div class="menu-icon talent-integration-icon">
+                                                <svg viewBox="0 0 36 36">
+                                                    <path d="M32 8H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h28c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z" fill="#ffffff"/>
+                                                    <path d="M12 14v8m6-12v16m6-12v8" stroke="#2196F3" stroke-width="2"/>
+                                                </svg>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Talent Management </span>
+                                                <p>Connect with performance management systems</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <!-- Add other Integration items -->
                                 </ul>
                             </div>
                         </div>
                     </li>
 
-                    <li><a href="mail.html">Wise Mail</a></li>
+                    <!-- Update your Wise Mail link to include the notification dot -->
+<li><a href="pms.html">Wise Mail<span class="notification"></span></a></li>
                     <li><a href="#pricing">Pricing</a></li>
                     
                     <div class="auth-buttons">
@@ -440,98 +1320,572 @@
     </header>
 
     <div class="menu-overlay" id="menu-overlay"></div>
+    
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMobileMenu();
+    initializeDropdowns();
+    initializeTouchEvents();
+    initializeKeyboardNav();
+    initializeDropdownScroll();
+    initializeFocusTrap();
+    initializeWiseMailAnimations();
+});
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeMobileMenu();
-        });
+function initializeWiseMailAnimations() {
+    const wiseMailLink = document.querySelector('a[href="mail.html"]');
+    if (!wiseMailLink) return;
 
-        function initializeMobileMenu() {
-            const mobileMenu = document.getElementById('mobile-menu');
-            const mainNav = document.getElementById('main-nav');
-            const menuOverlay = document.getElementById('menu-overlay');
-            const megaMenus = document.querySelectorAll('.mega-menu');
-            let isMenuOpen = false;
+    // Create and append envelope icon
+    const envelope = document.createElement('span');
+    envelope.innerHTML = `
+        <svg class="mail-icon" viewBox="0 0 24 24" width="18" height="18">
+            <path d="M20,4H4C2.9,4,2,4.9,2,6v12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V6C22,4.9,21.1,4,20,4z" fill="currentColor"/>
+            <path d="M20,4H4l8,6L20,4z" fill="currentColor"/>
+        </svg>
+    `;
+    envelope.classList.add('mail-icon-wrapper');
+    wiseMailLink.prepend(envelope);
 
-            function toggleMenu(show) {
-                isMenuOpen = show;
-                mobileMenu.classList.toggle('active', show);
-                mainNav.classList.toggle('active', show);
-                menuOverlay.classList.toggle('active', show);
-                document.body.style.overflow = show ? 'hidden' : '';
+    // Create notification badge
+    const badge = document.createElement('span');
+    badge.classList.add('mail-badge');
+    badge.textContent = '1';
+    wiseMailLink.appendChild(badge);
 
-                if (!show) {
-                    megaMenus.forEach(menu => {
-                        menu.classList.remove('active');
-                    });
-                }
+    // Advanced hover animation
+    wiseMailLink.addEventListener('mouseenter', function() {
+        createMailParticles(this);
+        envelope.style.transform = 'scale(1.2) rotate(15deg)';
+        envelope.style.filter = 'drop-shadow(0 0 8px var(--primary-color))';
+        this.style.transform = 'scale(1.05)';
+        this.style.textShadow = '0 0 15px rgba(227, 51, 51, 0.3)';
+    });
+
+    wiseMailLink.addEventListener('mouseleave', function() {
+        envelope.style.transform = 'scale(1) rotate(0deg)';
+        envelope.style.filter = 'none';
+        this.style.transform = 'scale(1)';
+        this.style.textShadow = 'none';
+    });
+
+    // Continuous floating animation
+    let time = 0;
+    function floatAnimation() {
+        if (!document.hidden) {
+            time += 0.01;
+            const yOffset = Math.sin(time) * 3;
+            const xOffset = Math.cos(time * 0.5) * 2;
+            const rotation = Math.sin(time * 0.5) * 5;
+            
+            envelope.style.transform = `translate(${xOffset}px, ${yOffset}px) rotate(${rotation}deg)`;
+        }
+        requestAnimationFrame(floatAnimation);
+    }
+    floatAnimation();
+
+    // Periodic pulse effect
+    setInterval(() => {
+        if (!document.hidden && Math.random() > 0.7) {
+            envelope.classList.add('pulse');
+            setTimeout(() => envelope.classList.remove('pulse'), 1000);
+        }
+    }, 3000);
+
+    // Create particle effect
+    function createMailParticles(element) {
+        const colors = ['#ff6b6b', '#e33333', '#ff8787', '#ff4444'];
+        const particleCount = 12;
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('span');
+            particle.classList.add('mail-particle');
+            
+            const size = Math.random() * 4 + 2;
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const angle = (i / particleCount) * 360;
+            const velocity = 2 + Math.random() * 2;
+            
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.backgroundColor = color;
+            
+            const rect = element.getBoundingClientRect();
+            particle.style.left = `${rect.width / 2}px`;
+            particle.style.top = `${rect.height / 2}px`;
+            
+            particle.style.animation = `
+                particleFly${angle < 180 ? 'Up' : 'Down'} 
+                ${0.6 + Math.random() * 0.4}s 
+                ease-out forwards
+            `;
+            
+            element.appendChild(particle);
+            setTimeout(() => particle.remove(), 1000);
+        }
+    }
+
+    // Add animation styles
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+        .mail-icon-wrapper {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 6px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mail-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: badgePulse 2s infinite;
+        }
+
+        .mail-particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .pulse {
+            animation: iconPulse 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes particleFlyUp {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
             }
+            100% {
+                transform: translate(
+                    ${Math.random() * 100 - 50}px,
+                    ${-Math.random() * 100 - 20}px
+                ) scale(0);
+                opacity: 0;
+            }
+        }
 
-            mobileMenu.addEventListener('click', (e) => {
-                e.stopPropagation();
-                toggleMenu(!isMenuOpen);
-            });
+        @keyframes particleFlyDown {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(
+                    ${Math.random() * 100 - 50}px,
+                    ${Math.random() * 100 + 20}px
+                ) scale(0);
+                opacity: 0;
+            }
+        }
 
-            megaMenus.forEach(menu => {
-                const link = menu.querySelector('a');
-                
-                link.addEventListener('click', (e) => {
-                    if (window.innerWidth <= 768) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        megaMenus.forEach(m => {
-                            if (m !== menu) {
-                                m.classList.remove('active');
-                            }
-                        });
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
 
-                        menu.classList.toggle('active');
-                    }
-                });
-            });
+        @keyframes iconPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
 
-            menuOverlay.addEventListener('click', () => {
-                toggleMenu(false);
-            });
+        a[href="mail.html"] {
+            position: relative;
+            display: flex;
+            align-items: center;
+            overflow: visible;
+            padding: 5px 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-            document.addEventListener('click', (e) => {
-                if (isMenuOpen && 
-                    !mainNav.contains(e.target) && 
-                    !mobileMenu.contains(e.target)) {
-                    toggleMenu(false);
-                }
-            });
+        a[href="mail.html"]:hover {
+            background: rgba(227, 51, 51, 0.1);
+            border-radius: 6px;
+        }
 
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && isMenuOpen) {
-                    toggleMenu(false);
-                }
-            });
+        @media (max-width: 768px) {
+            .mail-icon-wrapper {
+                margin-right: 12px;
+            }
+            
+            .mail-badge {
+                right: auto;
+                left: 20px;
+                top: 50%;
+                transform: translateY(-50%);
+            }
+        }
+    `;
+    document.head.appendChild(styleSheet);
+}
+    function initializeMobileMenu() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mainNav = document.getElementById('main-nav');
+    const menuOverlay = document.getElementById('menu-overlay');
+    const megaMenus = document.querySelectorAll('.mega-menu');
+    let isMenuOpen = false;
 
-            let resizeTimer;
-            window.addEventListener('resize', () => {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(() => {
-                    if (window.innerWidth > 768 && isMenuOpen) {
-                        toggleMenu(false);
-                    }
-                }, 250);
-            });
-
-            // Add smooth hover effect for mega menu
-            megaMenus.forEach(menu => {
-                menu.addEventListener('mouseenter', function() {
-                    if (window.innerWidth > 768) {
-                        const content = this.querySelector('.dropdown-content');
-                        content.style.opacity = '0';
+    // Desktop Mega Menu Handler
+    function handleDesktopMegaMenu() {
+        megaMenus.forEach(menu => {
+            const content = menu.querySelector('.dropdown-content');
+            
+            menu.addEventListener('mouseenter', () => {
+                if (window.innerWidth > 768) {
+                    menu.classList.add('active');
+                    if (content) {
+                        content.style.display = 'grid';
                         requestAnimationFrame(() => {
                             content.style.opacity = '1';
+                            content.style.visibility = 'visible';
+                            content.style.transform = 'translateX(-50%) translateY(0)';
                         });
                     }
-                });
+                }
+            });
+
+            menu.addEventListener('mouseleave', () => {
+                if (window.innerWidth > 768) {
+                    menu.classList.remove('active');
+                    if (content) {
+                        content.style.opacity = '0';
+                        content.style.visibility = 'hidden';
+                        content.style.transform = 'translateX(-50%) translateY(20px)';
+                        setTimeout(() => {
+                            if (!menu.classList.contains('active')) {
+                                content.style.display = 'none';
+                            }
+                        }, 300);
+                    }
+                }
+            });
+        });
+    }
+
+    // Mobile Mega Menu Handler
+    function handleMobileMegaMenu() {
+        megaMenus.forEach(menu => {
+            const link = menu.querySelector('a');
+            const content = menu.querySelector('.dropdown-content');
+            
+            link.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Close other menus
+                    megaMenus.forEach(m => {
+                        if (m !== menu && m.classList.contains('active')) {
+                            m.classList.remove('active');
+                            const otherContent = m.querySelector('.dropdown-content');
+                            if (otherContent) {
+                                otherContent.style.display = 'none';
+                                otherContent.style.opacity = '0';
+                                otherContent.style.visibility = 'hidden';
+                            }
+                        }
+                    });
+
+                    // Toggle current menu
+                    const isActive = menu.classList.contains('active');
+                    menu.classList.toggle('active');
+
+                    if (!isActive) {
+                        content.style.display = 'grid';
+                        requestAnimationFrame(() => {
+                            content.style.opacity = '1';
+                            content.style.visibility = 'visible';
+                        });
+
+                        // Scroll into view
+                        setTimeout(() => {
+                            const headerOffset = 70;
+                            const menuTop = menu.getBoundingClientRect().top;
+                            const scrollPosition = window.pageYOffset + menuTop - headerOffset;
+                            window.scrollTo({
+                                top: scrollPosition,
+                                behavior: 'smooth'
+                            });
+                        }, 100);
+                    } else {
+                        content.style.opacity = '0';
+                        content.style.visibility = 'hidden';
+                        setTimeout(() => {
+                            content.style.display = 'none';
+                        }, 300);
+                    }
+                }
+            });
+        });
+    }
+
+    // Toggle mobile menu function
+    function toggleMenu(show) {
+        isMenuOpen = show;
+        mobileMenu.classList.toggle('active', show);
+        mainNav.classList.toggle('active', show);
+        menuOverlay.classList.toggle('active', show);
+        document.body.style.overflow = show ? 'hidden' : '';
+
+        if (!show) {
+            resetMobileMenu();
+        }
+    }
+
+    // Reset mobile menu state
+    function resetMobileMenu() {
+        megaMenus.forEach(menu => {
+            menu.classList.remove('active');
+            const content = menu.querySelector('.dropdown-content');
+            if (content) {
+                content.style.display = 'none';
+                content.style.opacity = '0';
+                content.style.visibility = 'hidden';
+            }
+        });
+    }
+
+    // Initialize both desktop and mobile handlers
+    handleDesktopMegaMenu();
+    handleMobileMegaMenu();
+
+    // Event Listeners
+    mobileMenu.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMenu(!isMenuOpen);
+    });
+
+    menuOverlay.addEventListener('click', () => {
+        toggleMenu(false);
+    });
+
+    document.addEventListener('click', (e) => {
+        if (isMenuOpen && 
+            !mainNav.contains(e.target) && 
+            !mobileMenu.contains(e.target)) {
+            toggleMenu(false);
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (isMenuOpen) {
+                toggleMenu(false);
+            }
+            megaMenus.forEach(menu => {
+                menu.classList.remove('active');
+                const content = menu.querySelector('.dropdown-content');
+                if (content) {
+                    content.style.display = 'none';
+                    content.style.opacity = '0';
+                    content.style.visibility = 'hidden';
+                }
             });
         }
-    </script>
+    });
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            if (window.innerWidth > 768) {
+                toggleMenu(false);
+                resetMobileMenu();
+                
+                megaMenus.forEach(menu => {
+                    const content = menu.querySelector('.dropdown-content');
+                    if (content) {
+                        content.style.display = 'none';
+                        content.style.opacity = '0';
+                        content.style.visibility = 'hidden';
+                        content.style.transform = 'translateX(-50%) translateY(20px)';
+                    }
+                });
+            }
+        }, 250);
+    });
+}
+
+function initializeDropdowns() {
+    const dropdowns = document.querySelectorAll('.dropdown-content');
+    
+    dropdowns.forEach(dropdown => {
+        const items = dropdown.querySelectorAll('.mega-column ul li');
+        items.forEach((item, index) => {
+            item.style.animationDelay = `${index * 0.05}s`;
+            item.classList.add('animate-item');
+        });
+    });
+}
+
+function initializeDropdownScroll() {
+    const megaMenus = document.querySelectorAll('.mega-menu');
+
+    megaMenus.forEach(menu => {
+        const dropdown = menu.querySelector('.dropdown-content');
+
+        if (dropdown) {
+            dropdown.addEventListener('wheel', (e) => {
+                if (window.innerWidth > 768) {
+                    const { scrollTop, scrollHeight, clientHeight } = dropdown;
+                    const scrollingUp = e.deltaY < 0;
+                    const scrollingDown = e.deltaY > 0;
+
+                    if (
+                        (scrollingUp && scrollTop > 0) || 
+                        (scrollingDown && scrollTop < scrollHeight - clientHeight)
+                    ) {
+                        e.preventDefault();
+                        dropdown.scrollTop += e.deltaY;
+                    }
+                }
+            }, { passive: false });
+
+            let touchStart = null;
+            dropdown.addEventListener('touchstart', (e) => {
+                if (window.innerWidth > 768) {
+                    touchStart = e.touches[0].clientY;
+                }
+            }, { passive: true });
+
+            dropdown.addEventListener('touchmove', (e) => {
+                if (window.innerWidth > 768 && touchStart !== null) {
+                    const touchY = e.touches[0].clientY;
+                    const scrollingUp = touchY > touchStart;
+                    const { scrollTop, scrollHeight, clientHeight } = dropdown;
+
+                    if (
+                        (scrollingUp && scrollTop > 0) ||
+                        (!scrollingUp && scrollTop < scrollHeight - clientHeight)
+                    ) {
+                        e.stopPropagation();
+                    } else {
+                        e.preventDefault();
+                    }
+                }
+            }, { passive: false });
+
+            dropdown.addEventListener('touchend', () => {
+                touchStart = null;
+            });
+        }
+    });
+}
+
+function initializeTouchEvents() {
+    if ('ontouchstart' in window) {
+        const menuItems = document.querySelectorAll('.mega-menu > a');
+        
+        menuItems.forEach(item => {
+            item.addEventListener('touchstart', function(e) {
+                if (window.innerWidth > 768) {
+                    e.preventDefault();
+                    const parent = this.parentElement;
+                    const wasActive = parent.classList.contains('active');
+                    
+                    document.querySelectorAll('.mega-menu.active').forEach(menu => {
+                        if (menu !== parent) {
+                            menu.classList.remove('active');
+                            const content = menu.querySelector('.dropdown-content');
+                            if (content) {
+                                content.style.display = 'none';
+                                content.style.opacity = '0';
+                                content.style.visibility = 'hidden';
+                            }
+                        }
+                    });
+
+                    parent.classList.toggle('active', !wasActive);
+                    const content = parent.querySelector('.dropdown-content');
+                    
+                    if (!wasActive) {
+                        content.style.display = 'grid';
+                        requestAnimationFrame(() => {
+                            content.style.opacity = '1';
+                            content.style.visibility = 'visible';
+                        });
+                    } else {
+                        content.style.opacity = '0';
+                        content.style.visibility = 'hidden';
+                        setTimeout(() => {
+                            content.style.display = 'none';
+                        }, 300);
+                    }
+                }
+            });
+        });
+
+        document.addEventListener('touchstart', (e) => {
+            if (!e.target.closest('.mega-menu')) {
+                document.querySelectorAll('.mega-menu.active').forEach(menu => {
+                    menu.classList.remove('active');
+                    const content = menu.querySelector('.dropdown-content');
+                    if (content) {
+                        content.style.opacity = '0';
+                        content.style.visibility = 'hidden';
+                        setTimeout(() => {
+                            content.style.display = 'none';
+                        }, 300);
+                    }
+                });
+            }
+        }, { passive: true });
+    }
+}
+
+function initializeKeyboardNav() {
+    const menuItems = document.querySelectorAll('.mega-menu a, .mega-column a');
+    
+    menuItems.forEach(item => {
+        item.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.click();
+            }
+        });
+    });
+}
+
+function initializeFocusTrap() {
+    const mainNav = document.getElementById('main-nav');
+    const focusableElements = mainNav.querySelectorAll(
+        'a[href], button, input, textarea, select, details, [tabindex]:not([tabindex="-1"])'
+    );
+    
+    if (focusableElements.length > 0) {
+        const firstFocusableElement = focusableElements[0];
+        const lastFocusableElement = focusableElements[focusableElements.length - 1];
+
+        mainNav.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                if (e.shiftKey) {
+                    if (document.activeElement === firstFocusableElement) {
+                        lastFocusableElement.focus();
+                        e.preventDefault();
+                    }
+                } else {
+                    if (document.activeElement === lastFocusableElement) {
+                        firstFocusableElement.focus();
+                        e.preventDefault();
+                    }
+                }
+            }
+        });
+    }
+}
+</script>
 </body>
 </html>
