@@ -11,35 +11,58 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <style>
-    /* Root Variables */
-    :root {
-        --primary-color: #2962ff;
-        --secondary-color: #6c757d;
-        --success-color: #28a745;
-        --background-color: #f8f9fa;
-        --text-color: #333;
-        --light-text: #6c757d;
-        --border-radius: 8px;
-        --transition: all 0.3s ease;
-        --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        --gradient: linear-gradient(135deg, #f0f7ff 0%, #e9ecef 100%);
-        --card-bg: #ffffff;
-        --mobile-padding: 1rem;
-        --section-spacing: 4rem;
-        --header-height: 70px;
-         --text-dark: #0f1964;
-    --border-color: #e0e0e0;
-    }
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    /* General Reset */
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        -webkit-tap-highlight-color: transparent;
-    }
-        /* Header & Navigation Styles */
+<style>
+/* Root Variables */
+:root {
+    --primary-color: #e33333;
+    --text-dark: #0f1964;
+    --text-body: #333;
+    --background-light: #fff6f4;
+    --link-blue: #2962ff;
+    --border-color: #e0e0e0;
+    --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --gradient: linear-gradient(135deg, #f0f7ff 0%, #e9ecef 100%);
+    --card-bg: #ffffff;
+    --mobile-padding: 1rem;
+    --section-spacing: 4rem;
+    --header-height: 70px;
+}
+
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+    color: var(--text-body);
+    background-color: var(--background-light);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    padding-top: var(--header-height);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--mobile-padding);
+    width: 100%;
+}
+
+/* Header & Navigation */
 header {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -50,11 +73,6 @@ header {
     z-index: 1000;
     height: var(--header-height);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-}
-
-header.header-hidden {
-    transform: translateY(-100%);
 }
 
 header .container {
@@ -75,7 +93,7 @@ header .container {
 }
 
 .logo h1 {
-    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-size: 28px;
@@ -121,7 +139,6 @@ header .container {
 .nav-list > li > a:hover {
     color: var(--primary-color);
 }
-
 /* Auth Buttons */
 .auth-buttons {
     display: flex;
@@ -143,7 +160,7 @@ header .container {
 }
 
 .sign-up {
-    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
     color: white;
     padding: 8px 16px;
     border-radius: 4px;
@@ -155,7 +172,61 @@ header .container {
 
 .sign-up:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(41, 98, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(227, 51, 51, 0.2);
+}
+
+/* Mega Menu Styles */
+.mega-menu {
+    position: relative;
+}
+
+.mega-menu .dropdown-content {
+    width: 1000px;
+    max-height: calc(100vh - var(--header-height) - 40px);
+    overflow-y: auto;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    display: none;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    padding: 24px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    position: absolute;
+    top: 100%;
+    transition: all 0.3s ease;
+    z-index: 1001;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) #f1f1f1;
+}
+
+.mega-menu:hover .dropdown-content {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    display: grid;
+}
+
+/* Custom scrollbar styles */
+.mega-menu .dropdown-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.mega-menu .dropdown-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.mega-menu .dropdown-content::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 3px;
+}
+
+.mega-menu .dropdown-content::-webkit-scrollbar-thumb:hover {
+    background: #1a237e;
 }
 
 /* Mobile Menu Toggle */
@@ -195,287 +266,102 @@ header .container {
     opacity: 1;
 }
 
-/* Responsive Header Styles */
-@media (max-width: 1200px) {
-    header .container {
-        padding: 0 1.5rem;
-    }
-}
-
-@media (max-width: 992px) {
-    .nav-list {
-        gap: 1rem;
-    }
-}
-
-@media (max-width: 768px) {
-    header .container {
-        padding: 0 1rem;
-    }
-
-    .menu-toggle {
-        display: flex;
-    }
-
-    .menu-toggle.active span:nth-child(1) {
-        transform: rotate(45deg) translate(5px, 5px);
-    }
-
-    .menu-toggle.active span:nth-child(2) {
-        opacity: 0;
-    }
-
-    .menu-toggle.active span:nth-child(3) {
-        transform: rotate(-45deg) translate(5px, -5px);
-    }
-
-    .main-nav {
-        position: fixed;
-        top: var(--header-height);
-        right: -100%;
-        width: 85%;
-        height: calc(100vh - var(--header-height));
-        background: white;
-        transition: right 0.3s ease;
-        overflow-y: auto;
-        z-index: 1001;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .main-nav.active {
-        right: 0;
-    }
-
-    .nav-list {
-        flex-direction: column;
-        gap: 0;
-        height: auto;
-        padding: 0;
-        width: 100%;
-    }
-
-    .nav-list > li {
-        width: 100%;
-        height: auto;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .nav-list > li > a {
-        padding: 15px;
-        width: 100%;
-        justify-content: space-between;
-        font-size: 15px;
-    }
-
-    .auth-buttons {
-        flex-direction: column;
-        margin: 0;
-        padding: 15px;
-        gap: 10px;
-        background: white;
-        border-top: 1px solid var(--border-color);
-    }
-
-    .sign-in, .sign-up {
-        width: 100%;
-        padding: 12px;
-        text-align: center;
-        border-radius: 6px;
-    }
-}
-
-/* Header Animation */
-@keyframes headerSlideDown {
-    from {
-        transform: translateY(-100%);
-    }
-    to {
-        transform: translateY(0);
-    }
-}
-
-header {
-    animation: headerSlideDown 0.5s ease-out;
-}
-
-/* Mega Menu Styles */
-.mega-menu {
+/* Hero Section Styles */
+.attendance-hero {
+    background: var(--gradient);
+    padding: calc(var(--header-height) + 4rem) 0 6rem;
     position: relative;
+    overflow: hidden;
 }
 
-.mega-menu .dropdown-content {
-    width: 1000px;
-    max-height: calc(100vh - var(--header-height) - 40px);
-    overflow-y: auto;
-    left: 50%;
-    transform: translateX(-50%) translateY(10px);
-    display: none;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
-    padding: 24px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
-    opacity: 0;
-    visibility: hidden;
-    position: absolute;
-    top: 100%;
-    transition: all 0.3s ease;
-    z-index: 1001;
-}
-
-.mega-menu:hover .dropdown-content {
-    opacity: 1;
-    visibility: visible;
-    transform: translateX(-50%) translateY(0);
+.hero-content {
     display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    position: relative;
+    z-index: 2;
 }
 
-@media (max-width: 1200px) {
-    .mega-menu .dropdown-content {
-        width: 900px;
-    }
+.hero-text {
+    max-width: 600px;
 }
 
-@media (max-width: 992px) {
-    .mega-menu .dropdown-content {
-        width: 700px;
-    }
+.hero-text h1 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+    font-weight: 700;
 }
 
-@media (max-width: 768px) {
-    .mega-menu .dropdown-content {
-        position: static;
-        width: 100%;
-        transform: none;
-        box-shadow: none;
-        border-radius: 0;
-        padding: 0;
-        display: none;
-    }
-
-    .mega-menu.active .dropdown-content {
-        display: grid;
-        grid-template-columns: 1fr;
-    }
+.hero-text p {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: #455a64;
+    margin-bottom: 2rem;
+    opacity: 0.9;
 }
 
-    body {
-        font-family: 'Poppins', sans-serif;
-        line-height: 1.6;
-        color: var(--text-color);
-        background-color: var(--background-color);
-        overflow-x: hidden;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        padding-top: var(--header-height);
-    }
+.hero-buttons {
+    display: flex;
+    gap: 1.5rem;
+}
 
-    .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 var(--mobile-padding);
-        width: 100%;
-    }
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 2rem;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    transition: var(--transition);
+    font-weight: 500;
+    cursor: pointer;
+    min-width: 160px;
+    text-align: center;
+}
 
-    /* Hero Section Styles */
-    .attendance-hero {
-        background: var(--gradient);
-        padding: calc(var(--header-height) + 4rem) 0 6rem;
-        position: relative;
-        overflow: hidden;
-    }
+.btn.primary {
+    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(227, 51, 51, 0.2);
+}
 
-    .hero-content {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 4rem;
-        align-items: center;
-        position: relative;
-        z-index: 2;
-    }
+.btn.secondary {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
 
-    .hero-text {
-        max-width: 600px;
-    }
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(227, 51, 51, 0.25);
+}
 
-    .hero-text h1 {
-        font-size: clamp(2.5rem, 5vw, 3.5rem);
-        background: linear-gradient(45deg, #1a237e, #2962ff);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 1.5rem;
-        line-height: 1.2;
-        font-weight: 700;
-    }
+.hero-image {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
 
-    .hero-text p {
-        font-size: clamp(1.1rem, 2vw, 1.25rem);
-        color: #455a64;
-        margin-bottom: 2rem;
-        opacity: 0.9;
-    }
+.hero-image img {
+    width: 100%;
+    height: auto;
+    max-width: 600px;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    animation: float 3s ease-in-out infinite;
+}
 
-    .hero-buttons {
-        display: flex;
-        gap: 1.5rem;
-    }
-
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 1rem 2rem;
-        border-radius: var(--border-radius);
-        text-decoration: none;
-        transition: var(--transition);
-        font-weight: 500;
-        cursor: pointer;
-        min-width: 160px;
-        text-align: center;
-    }
-
-    .btn.primary {
-        background: linear-gradient(45deg, var(--primary-color), #42a5f5);
-        color: white;
-        border: none;
-        box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
-    }
-
-    .btn.secondary {
-        background: transparent;
-        color: var(--primary-color);
-        border: 2px solid var(--primary-color);
-    }
-
-    .btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(41, 98, 255, 0.25);
-    }
-
-    .hero-image {
-        position: relative;
-        width: 100%;
-        height: 100%;
-    }
-
-    .hero-image img {
-        width: 100%;
-        height: auto;
-        max-width: 600px;
-        border-radius: 20px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        animation: float 3s ease-in-out infinite;
-    }
-
-    @keyframes float {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-20px); }
-        100% { transform: translateY(0px); }
-    }
-    
-/* Key Features Section */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0px); }
+}
+/* Features Section Styles */
 .features-section {
     padding: 6rem 0;
     background: white;
@@ -489,8 +375,11 @@ header {
 
 .section-header h2 {
     font-size: clamp(2rem, 4vw, 2.5rem);
-    color: #1a237e;
+    color: var(--text-dark);
     margin-bottom: 1rem;
+    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .section-header p {
@@ -511,7 +400,7 @@ header {
     border-radius: 20px;
     box-shadow: var(--box-shadow);
     transition: var(--transition);
-    border: 1px solid rgba(41, 98, 255, 0.1);
+    border: 1px solid rgba(227, 51, 51, 0.1);
     position: relative;
     overflow: hidden;
 }
@@ -523,7 +412,7 @@ header {
     left: 0;
     width: 100%;
     height: 4px;
-    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
     transform: scaleX(0);
     transition: transform 0.3s ease;
     transform-origin: left;
@@ -531,7 +420,7 @@ header {
 
 .feature-card:hover {
     transform: translateY(-10px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 15px 35px rgba(227, 51, 51, 0.1);
 }
 
 .feature-card:hover::before {
@@ -541,7 +430,7 @@ header {
 .feature-icon {
     width: 64px;
     height: 64px;
-    background: rgba(41, 98, 255, 0.1);
+    background: rgba(227, 51, 51, 0.1);
     border-radius: 16px;
     display: flex;
     align-items: center;
@@ -556,12 +445,12 @@ header {
 
 .feature-content h3 {
     font-size: 1.5rem;
-    color: #1a237e;
+    color: var(--text-dark);
     margin-bottom: 1rem;
 }
 
 .feature-content p {
-    color: var(--light-text);
+    color: var(--text-body);
     margin-bottom: 1.5rem;
 }
 
@@ -574,7 +463,7 @@ header {
     align-items: center;
     gap: 0.75rem;
     margin-bottom: 0.75rem;
-    color: var(--text-color);
+    color: var(--text-body);
 }
 
 .feature-list li i {
@@ -613,13 +502,13 @@ header {
 
 .benefit-item:hover {
     transform: translateX(10px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 30px rgba(227, 51, 51, 0.1);
 }
 
 .benefit-icon {
     width: 48px;
     height: 48px;
-    background: rgba(41, 98, 255, 0.1);
+    background: rgba(227, 51, 51, 0.1);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -633,13 +522,13 @@ header {
 }
 
 .benefit-content h3 {
-    color: #1a237e;
+    color: var(--text-dark);
     margin-bottom: 0.5rem;
     font-size: 1.25rem;
 }
 
 .benefit-content p {
-    color: var(--light-text);
+    color: var(--text-body);
     font-size: 0.95rem;
 }
 
@@ -673,17 +562,18 @@ header {
     box-shadow: var(--box-shadow);
     transition: var(--transition);
     text-align: center;
+    border: 1px solid rgba(227, 51, 51, 0.1);
 }
 
 .integration-card:hover {
     transform: translateY(-10px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 15px 35px rgba(227, 51, 51, 0.1);
 }
 
 .integration-icon {
     width: 56px;
     height: 56px;
-    background: rgba(41, 98, 255, 0.1);
+    background: rgba(227, 51, 51, 0.1);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -697,13 +587,13 @@ header {
 }
 
 .integration-card h3 {
-    color: #1a237e;
+    color: var(--text-dark);
     margin-bottom: 1rem;
     font-size: 1.25rem;
 }
 
 .integration-card p {
-    color: var(--light-text);
+    color: var(--text-body);
     margin-bottom: 1.5rem;
     font-size: 0.95rem;
 }
@@ -800,180 +690,7 @@ header {
             </div>
         </section>
 
-        <!-- Key Features Section -->
-        <section class="features-section">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Comprehensive Attendance Management Features</h2>
-                    <p>Everything you need to manage your workforce attendance efficiently</p>
-                </div>
-                <div class="features-grid">
-                    <!-- Biometric Integration -->
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-fingerprint"></i>
-                        </div>
-                        <div class="feature-content">
-                            <h3>Biometric System Integration</h3>
-                            <p>Secure and accurate attendance tracking with advanced biometric technology</p>
-                            <ul class="feature-list">
-                                <li><i class="fas fa-check"></i>Fingerprint recognition</li>
-                                <li><i class="fas fa-check"></i>Facial recognition support</li>
-                                <li><i class="fas fa-check"></i>Prevent time theft</li>
-                                <li><i class="fas fa-check"></i>Real-time tracking</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- Leave Management -->
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-calendar-check"></i>
-                        </div>
-                        <div class="feature-content">
-                            <h3>Leave Request & Approval</h3>
-                            <p>Streamlined leave management process with automated workflows</p>
-                            <ul class="feature-list">
-                                <li><i class="fas fa-check"></i>Digital leave applications</li>
-                                <li><i class="fas fa-check"></i>Custom leave policies</li>
-                                <li><i class="fas fa-check"></i>Approval workflows</li>
-                                <li><i class="fas fa-check"></i>Leave balance tracking</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- Timesheet Management -->
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="feature-content">
-                            <h3>Timesheet Management</h3>
-                            <p>Accurate tracking of work hours and overtime calculations</p>
-                            <ul class="feature-list">
-                                <li><i class="fas fa-check"></i>Automated time tracking</li>
-                                <li><i class="fas fa-check"></i>Overtime calculations</li>
-                                <li><i class="fas fa-check"></i>Project time allocation</li>
-                                <li><i class="fas fa-check"></i>Payroll integration</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- Shift Management -->
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-user-clock"></i>
-                        </div>
-                        <div class="feature-content">
-                            <h3>Shift Management</h3>
-                            <p>Flexible shift scheduling and rotation management</p>
-                            <ul class="feature-list">
-                                <li><i class="fas fa-check"></i>Multiple shift creation</li>
-                                <li><i class="fas fa-check"></i>Rotation scheduling</li>
-                                <li><i class="fas fa-check"></i>Shift swapping</li>
-                                <li><i class="fas fa-check"></i>Coverage analysis</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Benefits Section -->
-        <section class="benefits-section">
-            <div class="container">
-                <div class="benefits-grid">
-                    <div class="benefits-content">
-                        <div class="section-header" style="text-align: left; margin: 0 0 3rem;">
-                            <h2>Transform Your Attendance Management</h2>
-                            <p>Experience the advantages of automated attendance tracking</p>
-                        </div>
-                        <div class="benefit-item">
-                            <div class="benefit-icon">
-                                <i class="fas fa-chart-line"></i>
-                            </div>
-                            <div class="benefit-content">
-                                <h3>Enhanced Accuracy</h3>
-                                <p>Eliminate manual errors and ensure precise attendance tracking for accurate payroll processing</p>
-                            </div>
-                        </div>
-                        <div class="benefit-item">
-                            <div class="benefit-icon">
-                                <i class="fas fa-rocket"></i>
-                            </div>
-                            <div class="benefit-content">
-                                <h3>Increased Efficiency</h3>
-                                <p>Automate routine tasks and free up HR resources for strategic initiatives</p>
-                            </div>
-                        </div>
-                        <div class="benefit-item">
-                            <div class="benefit-icon">
-                                <i class="fas fa-shield-alt"></i>
-                            </div>
-                            <div class="benefit-content">
-                                <h3>Improved Compliance</h3>
-                                <p>Stay compliant with labor laws and maintain accurate attendance records</p>
-                            </div>
-                        </div>
-                        <div class="benefit-item">
-                            <div class="benefit-icon">
-                                <i class="fas fa-smile"></i>
-                            </div>
-                            <div class="benefit-content">
-                                <h3>Employee Satisfaction</h3>
-                                <p>Provide transparency and easy access to attendance and leave information</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="benefits-image">
-                        <img 
-                            src="image/benefits-illustration.png" 
-                            alt="Benefits Illustration"
-                            loading="lazy"
-                        >
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Integration Section -->
-        <section class="integration-section">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Seamless Integration Capabilities</h2>
-                    <p>Connect with your existing business tools and systems</p>
-                </div>
-                <div class="integration-grid">
-                    <!-- Payroll Integration -->
-                    <div class="integration-card">
-                        <div class="integration-icon">
-                            <i class="fas fa-money-bill-wave"></i>
-                        </div>
-                        <h3>Payroll Systems</h3>
-                        <p>Automatic data sync for accurate salary calculations and timely payments</p>
-                    </div>
-
-                    <!-- HR Software Integration -->
-                    <div class="integration-card">
-                        <div class="integration-icon">
-                            <i class="fas fa-users-cog"></i>
-                        </div>
-                        <h3>HR Management Software</h3>
-                        <p>Unified platform for all employee-related information and processes</p>
-                    </div>
-
-                    <!-- Third-Party Integration -->
-                    <div class="integration-card">
-                        <div class="integration-icon">
-                            <i class="fas fa-plug"></i>
-                        </div>
-                        <h3>Third-Party Applications</h3>
-                        <p>Flexible API integration with various business tools and systems</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-                <!-- Pricing Section (Same as main.html) -->
+        <!-- Pricing Section -->
         <section class="pricing-section">
             <div class="container">
                 <div class="section-header">
@@ -1088,37 +805,378 @@ header {
             </div>
         </section>
 
-        <!-- Call to Action Section -->
-        <section class="cta-section">
-            <div class="container">
-                <div class="cta-content">
-                    <h2>Ready to Transform Your Attendance Management?</h2>
-                    <p>Join thousands of companies that trust our attendance and leave management solution. Start streamlining your workforce management today.</p>
-                    <div class="cta-buttons">
-                        <button class="btn primary">Start Free Trial</button>
-                        <button class="btn secondary">Schedule Demo</button>
-                    </div>
-                    <div class="cta-features">
-                        <div class="cta-feature">
-                            <i class="fas fa-check-circle"></i>
-                            <span>14-day free trial</span>
-                        </div>
-                        <div class="cta-feature">
-                            <i class="fas fa-check-circle"></i>
-                            <span>No credit card required</span>
-                        </div>
-                        <div class="cta-feature">
-                            <i class="fas fa-check-circle"></i>
-                            <span>Free onboarding support</span>
-                        </div>
-                    </div>
+<style>
+/* Pricing Section Styles */
+.pricing-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+.pricing-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin: 3rem 0;
+    padding: 1rem;
+    background: white;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(227, 51, 51, 0.1);
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 32px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #e0e0e0;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 24px;
+    width: 24px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+input:checked + .slider {
+    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+}
+
+input:checked + .slider:before {
+    transform: translateX(28px);
+}
+</style>
+<style>
+/* Additional Pricing Styles */
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 3rem;
+    padding: 1rem;
+}
+
+.pricing-card {
+    background: white;
+    padding: 3rem 2.5rem;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.pricing-card:hover:not(.popular) {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(227, 51, 51, 0.1);
+}
+
+.pricing-card.popular {
+    background: linear-gradient(145deg, #ffffff, #fff6f4);
+    border: 2px solid var(--primary-color);
+    transform: scale(1.05);
+    z-index: 1;
+}
+
+.popular-badge {
+    position: absolute;
+    top: 1.5rem;
+    right: -3.5rem;
+    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+    color: white;
+    padding: 0.5rem 3.5rem;
+    transform: rotate(45deg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(227, 51, 51, 0.2);
+}
+
+.price {
+    margin: 1.5rem 0;
+    text-align: center;
+}
+
+.currency {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    vertical-align: top;
+    margin-right: 0.25rem;
+}
+
+.amount {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1;
+}
+
+.period {
+    font-size: 1rem;
+    color: var(--light-text);
+    margin-left: 0.25rem;
+}
+
+.custom {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.plan-description {
+    text-align: center;
+    color: var(--light-text);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+.plan-features {
+    list-style: none;
+    margin: 2rem 0;
+    flex-grow: 1;
+}
+
+.plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+.plan-features li i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.trial-note {
+    text-align: center;
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin-top: 1rem;
+}
+
+/* CTA Section Styles */
+.cta-section {
+    padding: 8rem 0;
+    background: var(--gradient);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+.cta-content {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+    padding: 0 1.5rem;
+}
+
+.cta-content h2 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+    font-weight: 700;
+}
+
+.cta-content p {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: #455a64;
+    margin-bottom: 2.5rem;
+    opacity: 0.9;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 3rem;
+}
+
+.cta-features {
+    display: flex;
+    gap: 3rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cta-feature {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-color);
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.cta-feature:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.cta-feature i {
+    color: var(--primary-color);
+    font-size: 1.25rem;
+    background: rgba(227, 51, 51, 0.1);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+/* Responsive Styles for Pricing and CTA */
+@media (max-width: 1200px) {
+    .pricing-grid {
+        gap: 1.5rem;
+        padding: 0.5rem;
+    }
+
+    .pricing-card {
+        padding: 2.5rem 2rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .pricing-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .pricing-card.popular {
+        transform: scale(1.02);
+    }
+}
+
+@media (max-width: 768px) {
+    .pricing-toggle {
+        flex-direction: column;
+        background: transparent;
+        box-shadow: none;
+        gap: 1rem;
+    }
+
+    .pricing-card {
+        padding: 2rem;
+    }
+
+    .cta-buttons {
+        flex-direction: column;
+        max-width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .cta-features {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .cta-feature {
+        width: 100%;
+        max-width: 300px;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .pricing-grid {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+    }
+
+    .pricing-card {
+        padding: 1.5rem;
+    }
+
+    .popular-badge {
+        font-size: 0.75rem;
+        padding: 0.4rem 3rem;
+    }
+
+    .amount {
+        font-size: 3rem;
+    }
+
+    .plan-features li {
+        font-size: 0.95rem;
+    }
+}
+</style>
+
+<!-- Call to Action Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Ready to Transform Your Attendance Management?</h2>
+            <p>Join thousands of companies that trust our attendance and leave management solution. Start streamlining your workforce management today.</p>
+            <div class="cta-buttons">
+                <button class="btn primary">Start Free Trial</button>
+                <button class="btn secondary">Schedule Demo</button>
+            </div>
+            <div class="cta-features">
+                <div class="cta-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>14-day free trial</span>
+                </div>
+                <div class="cta-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>No credit card required</span>
+                </div>
+                <div class="cta-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Free onboarding support</span>
                 </div>
             </div>
-        </section>
-    </main>
-
-    <!-- Footer (Same as main.html) -->
-    <footer class="main-footer">
+        </div>
+    </div>
+</section>
+<!-- Footer -->
+<footer class="main-footer">
     <div class="container">
         <div class="footer-grid">
             <div class="brand-section">
@@ -1207,7 +1265,7 @@ header {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(45deg, rgba(41, 98, 255, 0.05), transparent);
+    background: linear-gradient(45deg, rgba(227, 51, 51, 0.05), transparent);
     pointer-events: none;
 }
 
@@ -1232,7 +1290,7 @@ header {
     color: #ffffff;
     font-size: 1.8rem;
     font-weight: 600;
-    background: linear-gradient(45deg, #ffffff, #42a5f5);
+    background: linear-gradient(45deg, #ffffff, #ff6b6b);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -1267,7 +1325,7 @@ header {
     background: var(--primary-color);
     transform: translateY(-3px);
 }
-  /* Footer Section Styles Continued */
+
 .footer-section h4 {
     color: #ffffff;
     font-size: 1.2rem;
@@ -1363,29 +1421,6 @@ header {
     opacity: 1;
 }
 
-/* Footer Animation Effects */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.footer-section {
-    animation: fadeInUp 0.6s ease-out forwards;
-    opacity: 0;
-}
-
-.footer-section:nth-child(1) { animation-delay: 0.1s; }
-.footer-section:nth-child(2) { animation-delay: 0.2s; }
-.footer-section:nth-child(3) { animation-delay: 0.3s; }
-.footer-section:nth-child(4) { animation-delay: 0.4s; }
-.footer-section:nth-child(5) { animation-delay: 0.5s; }
-
 /* Footer Responsive Styles */
 @media (max-width: 1200px) {
     .footer-grid {
@@ -1401,11 +1436,6 @@ header {
 
     .social-links {
         justify-content: center;
-    }
-
-    .footer-section h4::after {
-        left: 50%;
-        transform: translateX(-50%);
     }
 }
 
@@ -1423,6 +1453,11 @@ header {
         text-align: center;
     }
 
+    .footer-section h4::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
     .footer-section ul li a:hover {
         transform: translateX(0);
     }
@@ -1436,10 +1471,6 @@ header {
     .footer-badges {
         justify-content: center;
         flex-wrap: wrap;
-    }
-
-    .footer-badges img {
-        height: 35px;
     }
 }
 
@@ -1466,70 +1497,6 @@ header {
         height: 30px;
     }
 }
-
-/* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
-    .main-footer {
-        background: #0a1029;
-    }
-
-    .footer-section h4::after {
-        background: #42a5f5;
-    }
-
-    .social-links a:hover {
-        background: #42a5f5;
-    }
-}
-
-/* High Contrast Mode */
-@media (forced-colors: active) {
-    .main-footer {
-        border-top: 1px solid CanvasText;
-    }
-
-    .footer-section h4::after {
-        background: CanvasText;
-    }
-
-    .social-links a {
-        border: 1px solid CanvasText;
-    }
-}
-
-/* Print Styles */
-@media print {
-    .main-footer {
-        background: none !important;
-        color: #000 !important;
-        padding: 1rem 0;
-    }
-
-    .social-links,
-    .footer-badges {
-        display: none;
-    }
-
-    .footer-section h4::after {
-        display: none;
-    }
-
-    .footer-bottom {
-        border-top: 1px solid #000;
-    }
-}
-
-/* Reduced Motion */
-@media (prefers-reduced-motion: reduce) {
-    .footer-section {
-        animation: none;
-    }
-
-    .footer-section ul li a,
-    .social-links a {
-        transition: none;
-    }
-}
 </style>
 
 <script>
@@ -1539,12 +1506,12 @@ document.addEventListener('DOMContentLoaded', function() {
     loadHeader();
 });
 
-// Header Loading Function (Same as main.html)
+// Header Loading Function
 async function loadHeader() {
     const headerContainer = document.getElementById('header-container');
     
     try {
-        const response = await fetch('header.html');
+        const response = await fetch('mainheader.html');
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
         const html = await response.text();
@@ -1555,7 +1522,7 @@ async function loadHeader() {
     } catch (error) {
         console.error('Error loading header:', error);
         headerContainer.innerHTML = `
-            <header class="main-header">
+            <header>
                 <div class="container">
                     <a href="/" class="logo">
                         <h1>Workwise Pro</h1>
@@ -1678,7 +1645,7 @@ function setupInteractions() {
     });
 }
 
-// Watson Assistant Chat Integration (Same as main.html)
+// Watson Assistant Chat Integration
 window.watsonAssistantChatOptions = {
     integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
     region: "au-syd",
