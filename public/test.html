@@ -6,7 +6,9 @@
     <title>Header Component</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
+    <head>
+    <!-- Add this line for Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Root Variables */
         :root {
@@ -110,6 +112,10 @@
             display: flex;
             align-items: center;
             transition: color 0.3s ease;
+            position: relative;
+        z-index: 1;
+        margin-top: -1px; /* Adjust if needed */
+        border-top: 1px solid var(--border-color);
         }
 
         .nav-list > li > a:hover {
@@ -255,8 +261,17 @@
 
         /* Menu Text Styles */
         .menu-text {
-            flex: 1;
-        }
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.menu-text span:first-child {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
 
         .menu-text span {
             display: block;
@@ -276,16 +291,19 @@
 
         /* Badge Styles */
         .badge {
-            display: inline-block;
-            background: var(--primary-color);
-            color: white;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            margin-left: 4px;
-            font-weight: 500;
-        }
-
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+    color: white;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    margin-left: 6px;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(227, 51, 51, 0.2);
+    position: relative;
+    top: -1px;
+}
         /* SVG Path Styles */
         .menu-icon svg path[fill="#ffffff"],
         .menu-icon svg circle[fill="#ffffff"] {
@@ -354,6 +372,7 @@
             .menu-toggle.active span:nth-child(3) {
                 transform: rotate(-45deg) translate(5px, -5px);
             }
+            
 
             /* Mobile Navigation */
             .main-nav {
@@ -396,21 +415,21 @@
 
             /* Mobile Mega Menu */
             .mega-menu .dropdown-content {
-                width: 100%;
-                grid-template-columns: 1fr;
-                padding: 16px;
-                position: static;
-                transform: none;
-                box-shadow: none;
-                gap: 16px;
-                opacity: 1;
-                visibility: visible;
-                display: none;
-            }
+        display: none;
+        max-height: 0;
+        opacity: 0;
+        transition: all 0.3s ease;
+                 position: relative;
+        z-index: 1;
+        margin-top: -1px; /* Adjust if needed */
+        border-top: 1px solid var(--border-color);
+    }
 
-            .mega-menu.active .dropdown-content {
-                display: grid;
-            }
+    .mega-menu.active .dropdown-content {
+        display: grid;
+        max-height: none;
+        opacity: 1;
+    }
 
             .mega-column {
                 background: var(--background-light);
@@ -629,7 +648,8 @@
                             </div>
                                                         <!-- Financial Solutions -->
                             <div class="mega-column">
-                                <h3><i class="fas fa-money-bill-trend-up"></i> Financial Solutions</h3>
+                                <h3><i class="fas fa-money-bill-trend-up" aria-hidden="true"></i>
+    <span>Financial Solutions</span></h3>
                                 <ul>
                                     <li>
                                         <a href="pay.html">
@@ -775,15 +795,21 @@ function initializeMobileMenu() {
         document.body.style.overflow = show ? 'hidden' : '';
 
         if (!show) {
-            megaMenus.forEach(menu => {
-                menu.classList.remove('active');
-                const content = menu.querySelector('.dropdown-content');
-                if (content) {
-                    content.style.maxHeight = null;
-                    content.style.opacity = null;
-                }
-            });
+            resetMobileMenu();
         }
+    }
+
+    // Reset mobile menu state
+    function resetMobileMenu() {
+        megaMenus.forEach(menu => {
+            menu.classList.remove('active');
+            const content = menu.querySelector('.dropdown-content');
+            if (content) {
+                content.style.display = 'none';
+                content.style.opacity = '0';
+                content.style.maxHeight = null;
+            }
+        });
     }
 
     // Mobile menu click handler
@@ -809,8 +835,13 @@ function initializeMobileMenu() {
                         m.classList.remove('active');
                         const otherContent = m.querySelector('.dropdown-content');
                         if (otherContent) {
-                            otherContent.style.maxHeight = null;
                             otherContent.style.opacity = '0';
+                            otherContent.style.maxHeight = null;
+                            setTimeout(() => {
+                                if (!m.classList.contains('active')) {
+                                    otherContent.style.display = 'none';
+                                }
+                            }, 300);
                         }
                     }
                 });
@@ -823,18 +854,16 @@ function initializeMobileMenu() {
                     requestAnimationFrame(() => {
                         content.style.opacity = '1';
                         content.style.maxHeight = content.scrollHeight + "px";
-                        
-                        // Scroll into view with offset
-                        setTimeout(() => {
-                            const headerHeight = 70;
-                            const menuTop = menu.getBoundingClientRect().top;
-                            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-                            
-                            window.scrollTo({
-                                top: menuTop + scrollTop - headerHeight,
-                                behavior: 'smooth'
-                            });
-                        }, 300);
+                    });
+
+                    // Smooth scroll to menu
+                    const headerHeight = 70;
+                    const menuTop = menu.getBoundingClientRect().top;
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    
+                    window.scrollTo({
+                        top: menuTop + scrollTop - headerHeight,
+                        behavior: 'smooth'
                     });
                 } else {
                     content.style.opacity = '0';
@@ -851,11 +880,13 @@ function initializeMobileMenu() {
         // Handle hover on desktop
         if (window.innerWidth > 768) {
             menu.addEventListener('mouseenter', function() {
-                const content = this.querySelector('.dropdown-content');
-                content.style.display = 'grid';
-                requestAnimationFrame(() => {
-                    content.style.opacity = '1';
-                });
+                if (!isMenuOpen) { // Only handle hover if mobile menu is closed
+                    const content = this.querySelector('.dropdown-content');
+                    content.style.display = 'grid';
+                    requestAnimationFrame(() => {
+                        content.style.opacity = '1';
+                    });
+                }
             });
 
             menu.addEventListener('mouseleave', function() {
@@ -908,6 +939,17 @@ function initializeMobileMenu() {
                 });
             }
         }, 250);
+    });
+
+    // Reset scroll position when menu opens
+    function resetScroll() {
+        if (window.innerWidth <= 768 && isMenuOpen) {
+            mainNav.scrollTop = 0;
+        }
+    }
+
+    mobileMenu.addEventListener('click', () => {
+        setTimeout(resetScroll, 100);
     });
 }
 
