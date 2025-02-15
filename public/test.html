@@ -168,16 +168,17 @@
             background: var(--text-dark);
             transition: all 0.3s ease;
         }
-                /* Desktop Mega Menu Styles */
+                /* Mega Menu Styles */
         .mega-menu .dropdown-content {
-            width: 800px;
+            width: 1000px;
             left: 50%;
             transform: translateX(-50%) translateY(10px);
             display: grid;
-            grid-template-columns: 1fr;
-            padding: 30px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            padding: 24px;
             background: white;
-            border-radius: 8px;
+            border-radius: 12px;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
             opacity: 0;
             visibility: hidden;
@@ -193,107 +194,121 @@
             transform: translateX(-50%) translateY(0);
         }
 
-        /* Product Grid Styles */
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
-            list-style: none;
+        .mega-column {
+            position: relative;
         }
 
-        .product-card {
+        .mega-column h3 {
+            color: var(--primary-color);
+            font-size: 16px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mega-column h3 i {
+            font-size: 18px;
+            color: var(--primary-color);
+        }
+
+        .mega-column ul {
+            list-style: none;
+            padding: 0;
             display: flex;
             flex-direction: column;
+            gap: 8px;
+        }
+
+        .mega-column ul li a {
+            display: flex;
+            align-items: flex-start;
             gap: 12px;
-            padding: 16px;
-            border-radius: 12px;
+            padding: 8px;
+            border-radius: 8px;
             transition: all 0.3s ease;
             text-decoration: none;
-            background: white;
+            color: var(--text-dark);
         }
 
-        .product-card:hover {
-            background: #f8f9fa;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        .mega-column ul li a:hover {
+            background: var(--background-light);
+            transform: translateX(5px);
         }
 
-        .product-icon {
-            width: 40px;
-            height: 40px;
+        .menu-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--background-light);
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 8px;
-            font-size: 24px;
-            margin-bottom: 8px;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
         }
 
-        .product-info h4 {
-            color: var(--text-dark);
+        .mega-column ul li a:hover .menu-icon {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .menu-icon i {
             font-size: 16px;
+            color: var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        .menu-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+        }
+
+        .menu-text span {
+            color: var(--text-dark);
             font-weight: 500;
-            margin-bottom: 4px;
+            font-size: 14px;
         }
 
-        .product-info p {
+        .menu-text p {
             color: var(--text-body);
-            font-size: 13px;
-            line-height: 1.4;
-            opacity: 0.8;
+            font-size: 12px;
+            opacity: 0.7;
+            margin: 0;
         }
 
-        /* Desktop-specific styles */
-        @media screen and (min-width: 769px) {
-            .mega-menu .dropdown-content {
-                display: block;
-            }
-
-            .product-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-
-            .product-card {
-                flex-direction: column;
-            }
-
-            .product-icon {
-                width: 40px;
-                height: 40px;
-                font-size: 24px;
-            }
-
-            .product-info h4 {
-                font-size: 16px;
-            }
-
-            .product-info p {
-                font-size: 13px;
-            }
+        .badge {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 4px;
+            font-weight: 500;
         }
 
-        /* Menu Overlay */
-        .menu-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-            z-index: 999;
-            transition: opacity 0.3s ease;
+        /* Animation for menu items */
+        .mega-column ul li {
             opacity: 0;
+            transform: translateY(10px);
+            animation: fadeInUp 0.3s ease forwards;
         }
 
-        .menu-overlay.active {
-            display: block;
-            opacity: 1;
-        }
+        .mega-column ul li:nth-child(1) { animation-delay: 0.1s; }
+        .mega-column ul li:nth-child(2) { animation-delay: 0.15s; }
+        .mega-column ul li:nth-child(3) { animation-delay: 0.2s; }
+        .mega-column ul li:nth-child(4) { animation-delay: 0.25s; }
+        .mega-column ul li:nth-child(5) { animation-delay: 0.3s; }
+        .mega-column ul li:nth-child(6) { animation-delay: 0.35s; }
+        .mega-column ul li:nth-child(7) { animation-delay: 0.4s; }
+        .mega-column ul li:nth-child(8) { animation-delay: 0.45s; }
 
-        /* Animation Classes */
-        @keyframes fadeIn {
+        @keyframes fadeInUp {
             from {
                 opacity: 0;
                 transform: translateY(10px);
@@ -302,10 +317,6 @@
                 opacity: 1;
                 transform: translateY(0);
             }
-        }
-
-        .animate-in {
-            animation: fadeIn 0.3s ease forwards;
         }
                 /* Mobile Styles */
         @media screen and (max-width: 768px) {
@@ -383,49 +394,50 @@
                 z-index: 1002;
                 left: 0;
                 top: 0;
+                grid-template-columns: 1fr;
+                gap: 1rem;
             }
 
             .mega-menu.active .dropdown-content {
-                display: block;
+                display: grid;
             }
 
-            /* Mobile Product Grid */
-            .product-grid {
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .product-card {
+            .mega-column {
                 background: white;
-                display: flex;
-                flex-direction: row;
-                align-items: flex-start;
-                gap: 12px;
-                padding: 12px;
-                border-radius: 8px;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                padding: 1rem;
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
             }
 
-            .product-icon {
+            .mega-column h3 {
+                font-size: 14px;
+                margin-bottom: 12px;
+            }
+
+            .mega-column ul {
+                gap: 6px;
+            }
+
+            .mega-column ul li a {
+                padding: 10px;
+                background: var(--background-light);
+            }
+
+            .menu-icon {
                 width: 32px;
                 height: 32px;
-                font-size: 16px;
-                flex-shrink: 0;
             }
 
-            .product-info {
-                flex: 1;
-            }
-
-            .product-info h4 {
+            .menu-icon i {
                 font-size: 14px;
-                margin-bottom: 2px;
             }
 
-            .product-info p {
-                font-size: 12px;
-                line-height: 1.4;
+            .menu-text span {
+                font-size: 13px;
+            }
+
+            .menu-text p {
+                font-size: 11px;
             }
 
             /* Mobile Auth Buttons */
@@ -466,35 +478,48 @@
                 border-radius: 3px;
             }
 
-            /* Ensure proper stacking */
-            .nav-list > li {
-                position: relative;
-                z-index: 1;
+            /* Menu Overlay */
+            .menu-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                backdrop-filter: blur(4px);
+                z-index: 999;
+                opacity: 0;
+                transition: opacity 0.3s ease;
             }
 
-            .nav-list > li.mega-menu {
-                z-index: 2;
+            .menu-overlay.active {
+                display: block;
+                opacity: 1;
             }
         }
 
         /* Small Mobile Devices */
         @media screen and (max-width: 480px) {
-            .product-card {
-                padding: 10px;
+            .mega-column {
+                padding: 0.75rem;
             }
 
-            .product-icon {
+            .mega-column ul li a {
+                padding: 8px;
+            }
+
+            .menu-icon {
                 width: 28px;
                 height: 28px;
-                font-size: 14px;
             }
 
-            .product-info h4 {
-                font-size: 13px;
+            .menu-text span {
+                font-size: 12px;
             }
 
-            .product-info p {
-                font-size: 11px;
+            .menu-text p {
+                font-size: 10px;
             }
         }
         </style>
@@ -519,74 +544,326 @@
                     <li class="dropdown mega-menu">
                         <a href="#">Products <i class="fas fa-caret-down"></i></a>
                         <div class="dropdown-content mega-content">
-                            <ul class="product-grid">
-                                <li>
-                                    <a href="peoplemanagement.html" class="product-card">
-                                        <div class="product-icon" style="color: #00C853;">
-                                            <i class="fas fa-users"></i>
-                                        </div>
-                                        <div class="product-info">
-                                            <h4>People</h4>
-                                            <p>Organize, automate, and simplify your HR processes.</p>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="recruit.html" class="product-card">
-                                        <div class="product-icon" style="color: #FF4081;">
-                                            <i class="fas fa-user-plus"></i>
-                                        </div>
-                                        <div class="product-info">
-                                            <h4>Recruit</h4>
-                                            <p>Intuitive recruiting platform built to provide hiring solutions.</p>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="smartexpenses.html" class="product-card">
-                                        <div class="product-icon" style="color: #FF5722;">
-                                            <i class="fas fa-receipt"></i>
-                                        </div>
-                                        <div class="product-info">
-                                            <h4>Expense</h4>
-                                            <p>Effortless expense reporting platform.</p>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="payroll.html" class="product-card">
-                                        <div class="product-icon" style="color: #2196F3;">
-                                            <i class="fas fa-file-invoice-dollar"></i>
-                                        </div>
-                                        <div class="product-info">
-                                            <h4>Payroll</h4>
-                                            <p>Effortless payroll processing software for businesses.</p>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="shiftmaster.html" class="product-card">
-                                        <div class="product-icon" style="color: #673AB7;">
-                                            <i class="fas fa-clock"></i>
-                                        </div>
-                                        <div class="product-info">
-                                            <h4>Shifts</h4>
-                                            <p>Employee scheduling and time tracking app.</p>
-                                        </div>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="sign.html" class="product-card">
-                                        <div class="product-icon" style="color: #00BCD4;">
-                                            <i class="fas fa-file-signature"></i>
-                                        </div>
-                                        <div class="product-info">
-                                            <h4>Sign</h4>
-                                            <p>Digital signature app for businesses.</p>
-                                        </div>
-                                    </a>
-                                </li>
-                            </ul>
+                            <div class="mega-column">
+                                <h3><i class="fas fa-users-gear"></i> HR Solutions</h3>
+                                <ul>
+                                    <li>
+                                        <a href="peoplemanagement.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-users"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>People Management</span>
+                                                <p>Manage your workforce efficiently</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="pms.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-chart-line"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Performance Management</span>
+                                                <p>Track and improve performance</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="alm.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-calendar-check"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Attendance & Leave Management</span>
+                                                <p>Track time and attendance</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="payroll.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-money-check-alt"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Payroll & Compensation</span>
+                                                <p>Streamline payroll processing</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="ess.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-user-cog"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Employee Self-Service</span>
+                                                <p>Empower your employees</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="cs.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-user-plus"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>WiseRecruit</span>
+                                                <p>Smart recruitment solution</p>
+                                                <span class="badge">Coming Soon</span>
+                                            </div>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="mega-column">
+                                <h3><i class="fas fa-money-bill-trend-up"></i> Financial Solutions</h3>
+                                <ul>
+                                    <li>
+                                        <a href="pay.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-file-invoice-dollar"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Payroll Processing</span>
+                                                <p>Efficient payroll management</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="smartexpenses.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-receipt"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>SmartExpenses</span>
+                                                <p>Expense management simplified</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="fin.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-chart-pie"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Financial Reporting</span>
+                                                <p>Comprehensive financial insights</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="bookkeeping.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-book"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Book-keeping</span>
+                                                <p>Maintain accurate financial records</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="tnc.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-balance-scale"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Taxation & Compliance</span>
+                                                <p>Stay compliant with regulations</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="globalinvoice.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-globe"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>GlobalInvoice</span>
+                                                <p>Global invoicing solution</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="inb.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-file-invoice"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Invoice & Billing</span>
+                                                <p>Streamline billing processes</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="inb.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-boxes"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Asset Management</span>
+                                                <p>Track and manage assets</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                                                        <div class="mega-column">
+                                <h3><i class="fas fa-gears"></i> Operation Solutions</h3>
+                                <ul>
+                                    <li>
+                                        <a href="ptm.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-tasks"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Project & Task Management</span>
+                                                <p>Streamline project workflows</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="smartexpenses.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-calculator"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>SmartExpenses</span>
+                                                <p>Manage expenses efficiently</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="shiftmaster.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-clock"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>ShiftMaster</span>
+                                                <p>Advanced shift management</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="stockflow.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-box"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>StockFlow</span>
+                                                <p>Inventory management system</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="globalinvoice.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-file-alt"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>GlobalInvoice</span>
+                                                <p>Global invoicing platform</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="wfa.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-robot"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Workflow Automation</span>
+                                                <p>Automate business processes</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="vsm.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-handshake"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Vendor & Supplier Management</span>
+                                                <p>Manage vendor relationships</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="facility.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-building"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Facility Management</span>
+                                                <p>Manage facilities efficiently</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="mega-column">
+                                <h3><i class="fas fa-plug"></i> Integrations</h3>
+                                <ul>
+                                    <li>
+                                        <a href="sn.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-tools"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>ServiceNow & ITSM</span>
+                                                <p>IT service management integration</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="payint.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-exchange-alt"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Payroll & Finance</span>
+                                                <p>Financial system integration</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="ebc.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-gift"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Employee Benefits</span>
+                                                <p>Benefits management integration</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="ptm.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-user-graduate"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>Talent Management</span>
+                                                <p>Talent system integration</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="aia.html">
+                                            <div class="menu-icon">
+                                                <i class="fas fa-brain"></i>
+                                            </div>
+                                            <div class="menu-text">
+                                                <span>AI & Analytics</span>
+                                                <p>Advanced analytics integration</p>
+                                            </div>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
                     </li>
 
@@ -603,8 +880,7 @@
     </header>
 
     <div class="menu-overlay" id="menu-overlay"></div>
-
-    <script>
+        <script>
         document.addEventListener('DOMContentLoaded', function() {
             initializeMobileMenu();
         });
@@ -626,6 +902,10 @@
                 if (!show) {
                     megaMenus.forEach(menu => {
                         menu.classList.remove('active');
+                        const content = menu.querySelector('.dropdown-content');
+                        if (content) {
+                            content.style.maxHeight = null;
+                        }
                     });
                 }
             }
@@ -637,25 +917,44 @@
 
             megaMenus.forEach(menu => {
                 const link = menu.querySelector('a');
+                const content = menu.querySelector('.dropdown-content');
                 
                 link.addEventListener('click', (e) => {
                     if (window.innerWidth <= 768) {
                         e.preventDefault();
                         e.stopPropagation();
                         
+                        // Close other open menus
                         megaMenus.forEach(m => {
                             if (m !== menu) {
                                 m.classList.remove('active');
+                                const otherContent = m.querySelector('.dropdown-content');
+                                if (otherContent) {
+                                    otherContent.style.maxHeight = null;
+                                }
                             }
                         });
 
+                        // Toggle current menu
                         menu.classList.toggle('active');
                         
-                        // Scroll into view if needed
                         if (menu.classList.contains('active')) {
+                            // Calculate and set the max height for smooth animation
+                            content.style.maxHeight = content.scrollHeight + "px";
+                            
+                            // Scroll the menu into view
                             setTimeout(() => {
-                                menu.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                const menuTop = menu.getBoundingClientRect().top;
+                                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                                const offset = 80; // Adjust this value based on your header height
+                                
+                                window.scrollTo({
+                                    top: menuTop + scrollTop - offset,
+                                    behavior: 'smooth'
+                                });
                             }, 300);
+                        } else {
+                            content.style.maxHeight = null;
                         }
                     }
                 });
@@ -679,12 +978,20 @@
                 }
             });
 
+            // Handle window resize
             let resizeTimer;
             window.addEventListener('resize', () => {
                 clearTimeout(resizeTimer);
                 resizeTimer = setTimeout(() => {
-                    if (window.innerWidth > 768 && isMenuOpen) {
+                    if (window.innerWidth > 768) {
+                        // Reset mobile menu states
                         toggleMenu(false);
+                        megaMenus.forEach(menu => {
+                            const content = menu.querySelector('.dropdown-content');
+                            if (content) {
+                                content.style.maxHeight = null;
+                            }
+                        });
                     }
                 }, 250);
             });
@@ -698,6 +1005,36 @@
 
             mobileMenu.addEventListener('click', () => {
                 setTimeout(resetScroll, 100);
+            });
+
+            // Add hover effect for desktop
+            if (window.innerWidth > 768) {
+                megaMenus.forEach(menu => {
+                    menu.addEventListener('mouseenter', function() {
+                        const content = this.querySelector('.dropdown-content');
+                        content.style.opacity = '0';
+                        requestAnimationFrame(() => {
+                            content.style.opacity = '1';
+                        });
+                    });
+                });
+            }
+        }
+
+        // Initialize any additional functionality
+        function initializeAdditional() {
+            // Add smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
             });
         }
     </script>
