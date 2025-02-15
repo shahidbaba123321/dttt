@@ -422,7 +422,125 @@ header .container {
     background: var(--text-dark);
     transition: all 0.3s ease;
 }
+/* Add this to your CSS */
+@keyframes mailFloat {
+    0%, 100% {
+        transform: translateY(0) rotate(0);
+    }
+    25% {
+        transform: translateY(-4px) rotate(2deg);
+    }
+    75% {
+        transform: translateY(2px) rotate(-2deg);
+    }
+}
 
+@keyframes mailGlow {
+    0%, 100% {
+        filter: drop-shadow(0 0 3px rgba(227, 51, 51, 0.4));
+    }
+    50% {
+        filter: drop-shadow(0 0 8px rgba(227, 51, 51, 0.7));
+    }
+}
+
+/* Wise Mail specific styles */
+.nav-list a[href="mail.html"] {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+/* Add mail icon */
+.nav-list a[href="mail.html"]::before {
+    content: '✉';
+    display: inline-block;
+    font-size: 1.2em;
+    animation: mailFloat 3s ease-in-out infinite,
+               mailGlow 2s ease-in-out infinite;
+}
+
+/* Gradient text effect */
+.nav-list a[href="mail.html"] {
+    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 600;
+    text-shadow: 0 0 15px rgba(227, 51, 51, 0.1);
+}
+
+/* Hover effect */
+.nav-list a[href="mail.html"]:hover {
+    transform: scale(1.05);
+}
+
+/* Add sparkle effect */
+.nav-list a[href="mail.html"]::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, 
+                rgba(255, 255, 255, 0.8) 0%,
+                transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.nav-list a[href="mail.html"]:hover::after {
+    opacity: 0.5;
+    animation: sparkle 1s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0;
+    }
+}
+
+/* Add notification dot */
+.nav-list a[href="mail.html"] {
+    position: relative;
+}
+
+.nav-list a[href="mail.html"]::before {
+    position: relative;
+}
+
+.nav-list a[href="mail.html"] .notification {
+    position: absolute;
+    top: -2px;
+    right: -6px;
+    width: 8px;
+    height: 8px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(227, 51, 51, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(227, 51, 51, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(227, 51, 51, 0);
+    }
+}
 /* Mobile Responsive Styles */
 @media (max-width: 1200px) {
     .mega-menu .dropdown-content {
@@ -638,6 +756,19 @@ header .container {
     .main-nav::-webkit-scrollbar-thumb {
         background: var(--primary-color);
         border-radius: 4px;
+    }
+     .nav-list a[href="mail.html"] {
+        justify-content: flex-start;
+        padding: 15px;
+    }
+    
+    .nav-list a[href="mail.html"]::before {
+        font-size: 1.4em;
+    }
+    
+    .nav-list a[href="mail.html"] .notification {
+        top: 10px;
+        right: 15px;
     }
 }
 
@@ -1175,7 +1306,8 @@ header .container {
                         </div>
                     </li>
 
-                    <li><a href="mail.html">Wise Mail</a></li>
+                    <!-- Update your Wise Mail link to include the notification dot -->
+<li><a href="mail.html">Wise Mail<span class="notification"></span></a></li>
                     <li><a href="#pricing">Pricing</a></li>
                     
                     <div class="auth-buttons">
