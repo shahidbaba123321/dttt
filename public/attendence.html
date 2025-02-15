@@ -18,7 +18,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-/* Root Variables */
+/* Root Variables - Same as main.html */
 :root {
     --primary-color: #e33333;
     --text-dark: #0f1964;
@@ -28,15 +28,10 @@
     --border-color: #e0e0e0;
     --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     --transition: all 0.3s ease;
-    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    --gradient: linear-gradient(135deg, #f0f7ff 0%, #e9ecef 100%);
-    --card-bg: #ffffff;
-    --mobile-padding: 1rem;
-    --section-spacing: 4rem;
     --header-height: 70px;
 }
 
-/* General Reset */
+/* General Reset - Same as main.html */
 * {
     margin: 0;
     padding: 0;
@@ -48,222 +43,16 @@ body {
     font-family: 'Poppins', sans-serif;
     line-height: 1.6;
     color: var(--text-body);
-    background-color: var(--background-light);
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
     padding-top: var(--header-height);
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
 }
 
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 var(--mobile-padding);
-    width: 100%;
-}
-
-/* Header & Navigation */
-header {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 1000;
-    height: var(--header-height);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-header .container {
-    max-width: 1200px;
-    margin: 0 auto;
     padding: 0 2rem;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.logo {
-    display: flex;
-    align-items: center;
-    text-decoration: none;
-    z-index: 1002;
-}
-
-.logo h1 {
-    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-size: 28px;
-    font-weight: 600;
-}
-
-/* Main Navigation */
-.main-nav {
-    margin-left: auto;
-    height: 100%;
-}
-
-.nav-list {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    height: 100%;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.nav-list > li {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    position: relative;
-}
-
-.nav-list > li > a {
-    color: var(--text-dark);
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 14px;
-    letter-spacing: 0.3px;
-    padding: 0 12px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    transition: color 0.3s ease;
-}
-
-.nav-list > li > a:hover {
-    color: var(--primary-color);
-}
-/* Auth Buttons */
-.auth-buttons {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-left: 1.5rem;
-}
-
-.sign-in {
-    color: var(--text-dark);
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 15px;
-    transition: color 0.3s ease;
-}
-
-.sign-in:hover {
-    color: var(--primary-color);
-}
-
-.sign-up {
-    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 15px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.sign-up:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(227, 51, 51, 0.2);
-}
-
-/* Mega Menu Styles */
-.mega-menu {
-    position: relative;
-}
-
-.mega-menu .dropdown-content {
-    width: 1000px;
-    max-height: calc(100vh - var(--header-height) - 40px);
-    overflow-y: auto;
-    left: 50%;
-    transform: translateX(-50%) translateY(10px);
-    display: none;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
-    padding: 24px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
-    opacity: 0;
-    visibility: hidden;
-    position: absolute;
-    top: 100%;
-    transition: all 0.3s ease;
-    z-index: 1001;
-    scrollbar-width: thin;
-    scrollbar-color: var(--primary-color) #f1f1f1;
-}
-
-.mega-menu:hover .dropdown-content {
-    opacity: 1;
-    visibility: visible;
-    transform: translateX(-50%) translateY(0);
-    display: grid;
-}
-
-/* Custom scrollbar styles */
-.mega-menu .dropdown-content::-webkit-scrollbar {
-    width: 6px;
-}
-
-.mega-menu .dropdown-content::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
-
-.mega-menu .dropdown-content::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
-    border-radius: 3px;
-}
-
-.mega-menu .dropdown-content::-webkit-scrollbar-thumb:hover {
-    background: #1a237e;
-}
-
-/* Mobile Menu Toggle */
-.menu-toggle {
-    display: none;
-    flex-direction: column;
-    gap: 5px;
-    cursor: pointer;
-    padding: 8px;
-    z-index: 1002;
-}
-
-.menu-toggle span {
-    width: 24px;
-    height: 2px;
-    background: var(--text-dark);
-    transition: all 0.3s ease;
-}
-
-/* Menu Overlay */
-.menu-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
     width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    z-index: 999;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.menu-overlay.active {
-    display: block;
-    opacity: 1;
 }
 
 /* Hero Section Styles */
@@ -361,7 +150,421 @@ header .container {
     50% { transform: translateY(-20px); }
     100% { transform: translateY(0px); }
 }
-/* Features Section Styles */
+ /* Header & Navigation - Exactly as in main.html */
+header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    height: var(--header-height);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+header .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    z-index: 1002;
+}
+
+.logo h1 {
+    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 28px;
+    font-weight: 600;
+}
+
+/* Main Navigation */
+.main-nav {
+    margin-left: auto;
+    height: 100%;
+}
+
+.nav-list {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    height: 100%;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-list > li {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.nav-list > li > a {
+    color: var(--text-dark);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 0.3px;
+    padding: 0 12px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    transition: color 0.3s ease;
+}
+
+.nav-list > li > a:hover {
+    color: var(--primary-color);
+}
+
+/* Auth Buttons */
+.auth-buttons {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: 1.5rem;
+}
+
+.sign-in {
+    color: var(--text-dark);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 15px;
+    transition: color 0.3s ease;
+}
+
+.sign-in:hover {
+    color: var(--primary-color);
+}
+
+.sign-up {
+    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 15px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sign-up:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(227, 51, 51, 0.2);
+}
+
+/* Mega Menu Styles */
+.mega-menu {
+    position: relative;
+}
+
+.mega-menu .dropdown-content {
+    width: 1000px;
+    max-height: calc(100vh - var(--header-height) - 40px);
+    overflow-y: auto;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    display: none;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    padding: 24px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    position: absolute;
+    top: 100%;
+    transition: all 0.3s ease;
+    z-index: 1001;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) #f1f1f1;
+}
+
+.mega-menu:hover .dropdown-content {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    display: grid;
+}
+
+/* Prevent body scroll when hovering dropdown */
+.mega-menu:hover {
+    overflow: hidden;
+}
+
+/* Custom scrollbar styles */
+.mega-menu .dropdown-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.mega-menu .dropdown-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.mega-menu .dropdown-content::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 3px;
+}
+
+.mega-menu .dropdown-content::-webkit-scrollbar-thumb:hover {
+    background: #1a237e;
+}
+
+/* Mobile Menu Toggle */
+.menu-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: 8px;
+    z-index: 1002;
+}
+
+.menu-toggle span {
+    width: 24px;
+    height: 2px;
+    background: var(--text-dark);
+    transition: all 0.3s ease;
+}
+
+/* Menu Overlay */
+.menu-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.menu-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Responsive Header Styles */
+@media (max-width: 1200px) {
+    .mega-menu .dropdown-content {
+        width: 900px;
+    }
+
+    header .container {
+        padding: 0 1.5rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .mega-menu .dropdown-content {
+        width: 700px;
+    }
+}
+
+@media (max-width: 768px) {
+    header .container {
+        padding: 0 1rem;
+    }
+
+    .menu-toggle {
+        display: flex;
+    }
+
+    .menu-toggle.active span:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    .menu-toggle.active span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .menu-toggle.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(5px, -5px);
+    }
+
+    .main-nav {
+        position: fixed;
+        top: var(--header-height);
+        right: -100%;
+        width: 85%;
+        height: calc(100vh - var(--header-height));
+        background: white;
+        transition: right 0.3s ease;
+        overflow-y: auto;
+        z-index: 1001;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .main-nav.active {
+        right: 0;
+    }
+
+    .nav-list {
+        flex-direction: column;
+        gap: 0;
+        height: auto;
+        padding: 0;
+        width: 100%;
+    }
+
+    .nav-list > li {
+        width: 100%;
+        height: auto;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .nav-list > li > a {
+        padding: 15px;
+        width: 100%;
+        justify-content: space-between;
+        font-size: 15px;
+    }
+
+    .auth-buttons {
+        flex-direction: column;
+        margin: 0;
+        padding: 15px;
+        gap: 10px;
+        background: white;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .sign-in, .sign-up {
+        width: 100%;
+        padding: 12px;
+        text-align: center;
+        border-radius: 6px;
+    }
+}
+</style>
+</head>
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+
+    <!-- Main Content -->
+    <main class="attendance-main">
+        <!-- Hero Section -->
+        <section class="attendance-hero">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1>Streamline Your Workforce Attendance & Leave Management</h1>
+                        <p>Integrate Biometric Systems, Manage Leave Requests, Timesheets, and Shifts Seamlessly</p>
+                        <div class="hero-buttons">
+                            <a href="#" class="btn primary">Request a Demo</a>
+                            <a href="#" class="btn secondary">Get Started Today</a>
+                        </div>
+                    </div>
+                    <div class="hero-image">
+                        <img 
+                            src="image/attendance-dashboard.png" 
+                            alt="Attendance Management Dashboard"
+                            loading="lazy"
+                        >
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Features Section -->
+        <section class="features-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Comprehensive Attendance Management Features</h2>
+                    <p>Everything you need to manage your workforce attendance efficiently</p>
+                </div>
+                <div class="features-grid">
+                    <!-- Biometric Integration -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-fingerprint"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>Biometric System Integration</h3>
+                            <p>Secure and accurate attendance tracking with advanced biometric technology</p>
+                            <ul class="feature-list">
+                                <li><i class="fas fa-check"></i>Fingerprint recognition</li>
+                                <li><i class="fas fa-check"></i>Facial recognition support</li>
+                                <li><i class="fas fa-check"></i>Prevent time theft</li>
+                                <li><i class="fas fa-check"></i>Real-time tracking</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Leave Management -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>Leave Request & Approval</h3>
+                            <p>Streamlined leave management process with automated workflows</p>
+                            <ul class="feature-list">
+                                <li><i class="fas fa-check"></i>Digital leave applications</li>
+                                <li><i class="fas fa-check"></i>Custom leave policies</li>
+                                <li><i class="fas fa-check"></i>Approval workflows</li>
+                                <li><i class="fas fa-check"></i>Leave balance tracking</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Timesheet Management -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>Timesheet Management</h3>
+                            <p>Accurate tracking of work hours and overtime calculations</p>
+                            <ul class="feature-list">
+                                <li><i class="fas fa-check"></i>Automated time tracking</li>
+                                <li><i class="fas fa-check"></i>Overtime calculations</li>
+                                <li><i class="fas fa-check"></i>Project time allocation</li>
+                                <li><i class="fas fa-check"></i>Payroll integration</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Shift Management -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3>Shift Management</h3>
+                            <p>Flexible shift scheduling and rotation management</p>
+                            <ul class="feature-list">
+                                <li><i class="fas fa-check"></i>Multiple shift creation</li>
+                                <li><i class="fas fa-check"></i>Rotation scheduling</li>
+                                <li><i class="fas fa-check"></i>Shift swapping</li>
+                                <li><i class="fas fa-check"></i>Coverage analysis</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+<style>
+/* Features Section Styles - Matching main.html structure */
 .features-section {
     padding: 6rem 0;
     background: white;
@@ -470,8 +673,104 @@ header .container {
     color: var(--primary-color);
     font-size: 1.1rem;
 }
+</style>
+<!-- Benefits Section -->
+<section class="benefits-section">
+    <div class="container">
+        <div class="benefits-grid">
+            <div class="benefits-content">
+                <div class="section-header" style="text-align: left; margin: 0 0 3rem;">
+                    <h2>Transform Your Attendance Management</h2>
+                    <p>Experience the advantages of automated attendance tracking</p>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="benefit-content">
+                        <h3>Enhanced Accuracy</h3>
+                        <p>Eliminate manual errors and ensure precise attendance tracking for accurate payroll processing</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <div class="benefit-content">
+                        <h3>Increased Efficiency</h3>
+                        <p>Automate routine tasks and free up HR resources for strategic initiatives</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="benefit-content">
+                        <h3>Improved Compliance</h3>
+                        <p>Stay compliant with labor laws and maintain accurate attendance records</p>
+                    </div>
+                </div>
+                <div class="benefit-item">
+                    <div class="benefit-icon">
+                        <i class="fas fa-smile"></i>
+                    </div>
+                    <div class="benefit-content">
+                        <h3>Employee Satisfaction</h3>
+                        <p>Provide transparency and easy access to attendance and leave information</p>
+                    </div>
+                </div>
+            </div>
+            <div class="benefits-image">
+                <img 
+                    src="image/benefits-illustration.png" 
+                    alt="Benefits Illustration"
+                    loading="lazy"
+                >
+            </div>
+        </div>
+    </div>
+</section>
 
-/* Benefits Section */
+<!-- Integration Section -->
+<section class="integration-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Seamless Integration Capabilities</h2>
+            <p>Connect with your existing business tools and systems</p>
+        </div>
+        <div class="integration-grid">
+            <!-- Payroll Integration -->
+            <div class="integration-card">
+                <div class="integration-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <h3>Payroll Systems</h3>
+                <p>Automatic data sync for accurate salary calculations and timely payments</p>
+            </div>
+
+            <!-- HR Software Integration -->
+            <div class="integration-card">
+                <div class="integration-icon">
+                    <i class="fas fa-users-cog"></i>
+                </div>
+                <h3>HR Management Software</h3>
+                <p>Unified platform for all employee-related information and processes</p>
+            </div>
+
+            <!-- Third-Party Integration -->
+            <div class="integration-card">
+                <div class="integration-icon">
+                    <i class="fas fa-plug"></i>
+                </div>
+                <h3>Third-Party Applications</h3>
+                <p>Flexible API integration with various business tools and systems</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Benefits Section Styles */
 .benefits-section {
     padding: 6rem 0;
     background: var(--gradient);
@@ -543,7 +842,7 @@ header .container {
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
-/* Integration Section */
+/* Integration Section Styles */
 .integration-section {
     padding: 6rem 0;
     background: white;
@@ -600,7 +899,6 @@ header .container {
 
 /* Responsive Styles */
 @media (max-width: 1200px) {
-    .features-grid,
     .benefits-grid,
     .integration-grid {
         gap: 2rem;
@@ -608,7 +906,6 @@ header .container {
 }
 
 @media (max-width: 992px) {
-    .features-grid,
     .benefits-grid {
         grid-template-columns: 1fr;
     }
@@ -628,7 +925,6 @@ header .container {
 }
 
 @media (max-width: 768px) {
-    .feature-card,
     .benefit-item {
         padding: 1.5rem;
     }
@@ -644,166 +940,162 @@ header .container {
 }
 
 @media (max-width: 480px) {
-    .feature-card,
     .benefit-item {
         padding: 1.25rem;
     }
 
-    .feature-icon,
     .benefit-icon {
-        width: 48px;
-        height: 48px;
+        width: 40px;
+        height: 40px;
     }
 
-    .feature-icon i,
     .benefit-icon i {
         font-size: 1.25rem;
     }
 }
 </style>
-<body>
-    <!-- Header Container -->
-    <div id="header-container"></div>
+<!-- Pricing Section -->
+<section class="pricing-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Transparent Pricing</h2>
+            <p>Choose the plan that best fits your business needs</p>
+        </div>
+        <div class="pricing-toggle">
+            <span>Monthly</span>
+            <label class="switch">
+                <input type="checkbox" id="billing-toggle">
+                <span class="slider"></span>
+            </label>
+            <span>Annual <span class="discount">Save 20%</span></span>
+        </div>
+        <div class="pricing-grid">
+            <!-- Basic Plan -->
+            <div class="pricing-card">
+                <h3>Basic</h3>
+                <div class="price">
+                    <span class="currency">$</span>
+                    <span class="amount">8</span>
+                    <span class="period">/employee/month</span>
+                </div>
+                <p class="plan-description">Perfect for small businesses</p>
+                <ul class="plan-features">
+                    <li>
+                        <i class="fas fa-check"></i>
+                        <span>Basic Attendance Tracking</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check"></i>
+                        <span>Simple Leave Management</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check"></i>
+                        <span>Standard Reports</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check"></i>
+                        <span>Email Support</span>
+                    </li>
+                </ul>
+                <button class="btn primary">Start Free Trial</button>
+                <p class="trial-note">14-day free trial, no credit card required</p>
+            </div>
 
-    <!-- Main Content -->
-    <main class="attendance-main">
-        <!-- Hero Section -->
-        <section class="attendance-hero">
-            <div class="container">
-                <div class="hero-content">
-                    <div class="hero-text">
-                        <h1>Streamline Your Workforce Attendance & Leave Management</h1>
-                        <p>Integrate Biometric Systems, Manage Leave Requests, Timesheets, and Shifts Seamlessly</p>
-                        <div class="hero-buttons">
-                            <a href="#" class="btn primary">Request a Demo</a>
-                            <a href="#" class="btn secondary">Get Started Today</a>
-                        </div>
-                    </div>
-                    <div class="hero-image">
-                        <img 
-                            src="image/attendance-dashboard.png" 
-                            alt="Attendance Management Dashboard"
-                            loading="lazy"
-                        >
-                    </div>
+            <!-- Professional Plan -->
+            <div class="pricing-card popular">
+                <div class="popular-badge">Most Popular</div>
+                <h3>Professional</h3>
+                <div class="price">
+                    <span class="currency">$</span>
+                    <span class="amount">15</span>
+                    <span class="period">/employee/month</span>
+                </div>
+                <p class="plan-description">Ideal for growing companies</p>
+                <ul class="plan-features">
+                    <li>
+                        <i class="fas fa-check"></i>
+                        <span>Biometric Integration</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check"></i>
+                        <span>Advanced Leave Management</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check"></i>
+                        <span>Shift Management</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check"></i>
+                        <span>Priority Support</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check"></i>
+                        <span>API Access</span>
+                    </li>
+                </ul>
+                <button class="btn primary">Start Free Trial</button>
+                <p class="trial-note">14-day free trial, no credit card required</p>
+            </div>
+
+            <!-- Enterprise Plan -->
+            <div class="pricing-card">
+                <h3>Enterprise</h3>
+                <div class="price">
+                    <span class="custom">Custom</span>
+                </div>
+                <p class="plan-description">For large organizations</p>
+                <ul class="plan-features">
+                    <li>
+                        <i class="fas fa-check"></i>
+                        <span>Custom Biometric Solutions</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check"></i>
+                        <span>Dedicated Account Manager</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check"></i>
+                        <span>Custom Integration</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check"></i>
+                        <span>24/7 Premium Support</span>
+                    </li>
+                </ul>
+                <button class="btn secondary">Contact Sales</button>
+                <p class="trial-note">Get a customized quote for your needs</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Ready to Transform Your Attendance Management?</h2>
+            <p>Join thousands of companies that trust our attendance and leave management solution. Start streamlining your workforce management today.</p>
+            <div class="cta-buttons">
+                <button class="btn primary">Start Free Trial</button>
+                <button class="btn secondary">Schedule Demo</button>
+            </div>
+            <div class="cta-features">
+                <div class="cta-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>14-day free trial</span>
+                </div>
+                <div class="cta-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>No credit card required</span>
+                </div>
+                <div class="cta-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Free onboarding support</span>
                 </div>
             </div>
-        </section>
-
-        <!-- Pricing Section -->
-        <section class="pricing-section">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Transparent Pricing</h2>
-                    <p>Choose the plan that best fits your business needs</p>
-                </div>
-                <div class="pricing-toggle">
-                    <span>Monthly</span>
-                    <label class="switch">
-                        <input type="checkbox" id="billing-toggle">
-                        <span class="slider"></span>
-                    </label>
-                    <span>Annual <span class="discount">Save 20%</span></span>
-                </div>
-                <div class="pricing-grid">
-                    <!-- Basic Plan -->
-                    <div class="pricing-card">
-                        <h3>Basic</h3>
-                        <div class="price">
-                            <span class="currency">$</span>
-                            <span class="amount">8</span>
-                            <span class="period">/employee/month</span>
-                        </div>
-                        <p class="plan-description">Perfect for small businesses</p>
-                        <ul class="plan-features">
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Basic Attendance Tracking</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Simple Leave Management</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Standard Reports</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Email Support</span>
-                            </li>
-                        </ul>
-                        <button class="btn primary">Start Free Trial</button>
-                        <p class="trial-note">14-day free trial, no credit card required</p>
-                    </div>
-
-                    <!-- Professional Plan -->
-                    <div class="pricing-card popular">
-                        <div class="popular-badge">Most Popular</div>
-                        <h3>Professional</h3>
-                        <div class="price">
-                            <span class="currency">$</span>
-                            <span class="amount">15</span>
-                            <span class="period">/employee/month</span>
-                        </div>
-                        <p class="plan-description">Ideal for growing companies</p>
-                        <ul class="plan-features">
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Biometric Integration</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Advanced Leave Management</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Shift Management</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Priority Support</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>API Access</span>
-                            </li>
-                        </ul>
-                        <button class="btn primary">Start Free Trial</button>
-                        <p class="trial-note">14-day free trial, no credit card required</p>
-                    </div>
-
-                    <!-- Enterprise Plan -->
-                    <div class="pricing-card">
-                        <h3>Enterprise</h3>
-                        <div class="price">
-                            <span class="custom">Custom</span>
-                        </div>
-                        <p class="plan-description">For large organizations</p>
-                        <ul class="plan-features">
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Custom Biometric Solutions</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Dedicated Account Manager</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Custom Integration</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>24/7 Premium Support</span>
-                            </li>
-                        </ul>
-                        <button class="btn secondary">Contact Sales</button>
-                        <p class="trial-note">Get a customized quote for your needs</p>
-                    </div>
-                </div>
-            </div>
-        </section>
+        </div>
+    </div>
+</section>
 
 <style>
 /* Pricing Section Styles */
@@ -873,9 +1165,7 @@ input:checked + .slider {
 input:checked + .slider:before {
     transform: translateX(28px);
 }
-</style>
-<style>
-/* Additional Pricing Styles */
+
 .pricing-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -919,73 +1209,6 @@ input:checked + .slider:before {
     font-size: 0.875rem;
     font-weight: 500;
     box-shadow: 0 2px 4px rgba(227, 51, 51, 0.2);
-}
-
-.price {
-    margin: 1.5rem 0;
-    text-align: center;
-}
-
-.currency {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--primary-color);
-    vertical-align: top;
-    margin-right: 0.25rem;
-}
-
-.amount {
-    font-size: 3.5rem;
-    font-weight: 700;
-    color: var(--primary-color);
-    line-height: 1;
-}
-
-.period {
-    font-size: 1rem;
-    color: var(--light-text);
-    margin-left: 0.25rem;
-}
-
-.custom {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--primary-color);
-}
-
-.plan-description {
-    text-align: center;
-    color: var(--light-text);
-    margin-bottom: 2rem;
-    font-size: 1.1rem;
-}
-
-.plan-features {
-    list-style: none;
-    margin: 2rem 0;
-    flex-grow: 1;
-}
-
-.plan-features li {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-    color: var(--text-color);
-    font-size: 1rem;
-}
-
-.plan-features li i {
-    color: var(--primary-color);
-    font-size: 1.1rem;
-    flex-shrink: 0;
-}
-
-.trial-note {
-    text-align: center;
-    color: var(--light-text);
-    font-size: 0.875rem;
-    margin-top: 1rem;
 }
 
 /* CTA Section Styles */
@@ -1057,124 +1280,8 @@ input:checked + .slider:before {
 .cta-feature i {
     color: var(--primary-color);
     font-size: 1.25rem;
-    background: rgba(227, 51, 51, 0.1);
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-}
-
-/* Responsive Styles for Pricing and CTA */
-@media (max-width: 1200px) {
-    .pricing-grid {
-        gap: 1.5rem;
-        padding: 0.5rem;
-    }
-
-    .pricing-card {
-        padding: 2.5rem 2rem;
-    }
-}
-
-@media (max-width: 992px) {
-    .pricing-grid {
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        max-width: 800px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .pricing-card.popular {
-        transform: scale(1.02);
-    }
-}
-
-@media (max-width: 768px) {
-    .pricing-toggle {
-        flex-direction: column;
-        background: transparent;
-        box-shadow: none;
-        gap: 1rem;
-    }
-
-    .pricing-card {
-        padding: 2rem;
-    }
-
-    .cta-buttons {
-        flex-direction: column;
-        max-width: 300px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .cta-features {
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .cta-feature {
-        width: 100%;
-        max-width: 300px;
-        justify-content: center;
-    }
-}
-
-@media (max-width: 480px) {
-    .pricing-grid {
-        grid-template-columns: 1fr;
-        padding: 1rem;
-    }
-
-    .pricing-card {
-        padding: 1.5rem;
-    }
-
-    .popular-badge {
-        font-size: 0.75rem;
-        padding: 0.4rem 3rem;
-    }
-
-    .amount {
-        font-size: 3rem;
-    }
-
-    .plan-features li {
-        font-size: 0.95rem;
-    }
 }
 </style>
-
-<!-- Call to Action Section -->
-<section class="cta-section">
-    <div class="container">
-        <div class="cta-content">
-            <h2>Ready to Transform Your Attendance Management?</h2>
-            <p>Join thousands of companies that trust our attendance and leave management solution. Start streamlining your workforce management today.</p>
-            <div class="cta-buttons">
-                <button class="btn primary">Start Free Trial</button>
-                <button class="btn secondary">Schedule Demo</button>
-            </div>
-            <div class="cta-features">
-                <div class="cta-feature">
-                    <i class="fas fa-check-circle"></i>
-                    <span>14-day free trial</span>
-                </div>
-                <div class="cta-feature">
-                    <i class="fas fa-check-circle"></i>
-                    <span>No credit card required</span>
-                </div>
-                <div class="cta-feature">
-                    <i class="fas fa-check-circle"></i>
-                    <span>Free onboarding support</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 <!-- Footer -->
 <footer class="main-footer">
     <div class="container">
@@ -1247,257 +1354,6 @@ input:checked + .slider:before {
         </div>
     </div>
 </footer>
-
-<style>
-/* Footer Styles */
-.main-footer {
-    background: #1a237e;
-    color: #ffffff;
-    padding: 6rem 0 2rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.main-footer::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(45deg, rgba(227, 51, 51, 0.05), transparent);
-    pointer-events: none;
-}
-
-.footer-grid {
-    display: grid;
-    grid-template-columns: 2fr repeat(4, 1fr);
-    gap: clamp(2rem, 5vw, 4rem);
-    margin-bottom: 4rem;
-    position: relative;
-    z-index: 1;
-}
-
-.brand-section {
-    max-width: 300px;
-}
-
-.footer-logo {
-    margin-bottom: 1.5rem;
-}
-
-.footer-logo h2 {
-    color: #ffffff;
-    font-size: 1.8rem;
-    font-weight: 600;
-    background: linear-gradient(45deg, #ffffff, #ff6b6b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.footer-description {
-    color: rgba(255, 255, 255, 0.7);
-    margin-bottom: 2rem;
-    line-height: 1.6;
-    font-size: 0.95rem;
-}
-
-.social-links {
-    display: flex;
-    gap: 1.5rem;
-}
-
-.social-links a {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 1.25rem;
-    transition: all 0.3s ease;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.social-links a:hover {
-    color: #ffffff;
-    background: var(--primary-color);
-    transform: translateY(-3px);
-}
-
-.footer-section h4 {
-    color: #ffffff;
-    font-size: 1.2rem;
-    margin-bottom: 1.5rem;
-    font-weight: 600;
-    position: relative;
-    padding-bottom: 0.75rem;
-}
-
-.footer-section h4::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 30px;
-    height: 2px;
-    background: var(--primary-color);
-    transition: width 0.3s ease;
-}
-
-.footer-section:hover h4::after {
-    width: 50px;
-}
-
-.footer-section ul {
-    list-style: none;
-    padding: 0;
-}
-
-.footer-section ul li {
-    margin-bottom: 0.8rem;
-}
-
-.footer-section ul li a {
-    color: rgba(255, 255, 255, 0.7);
-    text-decoration: none;
-    transition: all 0.3s ease;
-    font-size: 0.95rem;
-    display: inline-block;
-    padding: 0.3rem 0;
-    position: relative;
-}
-
-.footer-section ul li a::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 1px;
-    background: var(--primary-color);
-    transition: width 0.3s ease;
-}
-
-.footer-section ul li a:hover {
-    color: #ffffff;
-    transform: translateX(5px);
-}
-
-.footer-section ul li a:hover::before {
-    width: 100%;
-}
-
-.footer-bottom {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: relative;
-    z-index: 1;
-}
-
-.footer-info p {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.9rem;
-}
-
-.footer-badges {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;
-}
-
-.footer-badges img {
-    height: 40px;
-    width: auto;
-    opacity: 0.7;
-    transition: opacity 0.3s ease;
-}
-
-.footer-badges img:hover {
-    opacity: 1;
-}
-
-/* Footer Responsive Styles */
-@media (max-width: 1200px) {
-    .footer-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    .brand-section {
-        grid-column: 1 / -1;
-        max-width: 100%;
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-
-    .social-links {
-        justify-content: center;
-    }
-}
-
-@media (max-width: 768px) {
-    .main-footer {
-        padding: 4rem 0 2rem;
-    }
-
-    .footer-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 2rem;
-    }
-
-    .footer-section {
-        text-align: center;
-    }
-
-    .footer-section h4::after {
-        left: 50%;
-        transform: translateX(-50%);
-    }
-
-    .footer-section ul li a:hover {
-        transform: translateX(0);
-    }
-
-    .footer-bottom {
-        flex-direction: column;
-        text-align: center;
-        gap: 1.5rem;
-    }
-
-    .footer-badges {
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-}
-
-@media (max-width: 480px) {
-    .footer-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .footer-section {
-        padding: 0 1rem;
-    }
-
-    .social-links {
-        gap: 1rem;
-    }
-
-    .social-links a {
-        width: 35px;
-        height: 35px;
-        font-size: 1.1rem;
-    }
-
-    .footer-badges img {
-        height: 30px;
-    }
-}
-</style>
 
 <script>
 // Initialize all functionality when DOM is loaded
