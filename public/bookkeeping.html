@@ -2898,7 +2898,7 @@ function initializePricing() {
 
 // Metrics Initialization
 function initializeMetrics() {
-    const metrics = document.querySelectorAll('.benefit-metric');
+   /* const metrics = document.querySelectorAll('.benefit-metric');
     
     metrics.forEach(metric => {
         const fill = metric.querySelector('.metric-fill');
@@ -2908,7 +2908,7 @@ function initializeMetrics() {
         setTimeout(() => {
             fill.style.width = value;
         }, 500);
-    });
+    });*/
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
