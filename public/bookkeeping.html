@@ -1758,120 +1758,99 @@ document.addEventListener('DOMContentLoaded', function() {
     </style>
         <!-- Pricing Section -->
         <section class="pricing-section">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Transparent Pricing</h2>
-                    <p>Choose the plan that best fits your business needs</p>
-                </div>
-                <div class="pricing-toggle">
-                    <span>Monthly</span>
-                    <label class="switch">
-                        <input type="checkbox" id="billing-toggle">
-                        <span class="slider"></span>
-                    </label>
-                    <span>Annual <span class="discount">Save 20%</span></span>
-                </div>
-                <div class="pricing-grid">
-                    <!-- Basic Plan -->
-                    <div class="pricing-card">
-                        <h3>Basic</h3>
-                        <div class="price">
-                            <span class="currency">$</span>
-                            <span class="amount">49</span>
-                            <span class="period">/month</span>
-                        </div>
-                        <p class="plan-description">Perfect for small businesses</p>
-                        <ul class="plan-features">
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Single Company Books</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Bank Reconciliation</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Basic Reports</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Email Support</span>
-                            </li>
-                        </ul>
-                        <button class="btn primary">Start Free Trial</button>
-                        <p class="trial-note">14-day free trial, no credit card required</p>
-                    </div>
+    <div class="container">
+        <div class="section-header">
+            <h2>Simple, Transparent Pricing</h2>
+            <p>Choose the plan that best fits your organization's needs</p>
+        </div>
 
-                    <!-- Professional Plan -->
-                    <div class="pricing-card popular">
-                        <div class="popular-badge">Most Popular</div>
-                        <h3>Professional</h3>
-                        <div class="price">
-                            <span class="currency">$</span>
-                            <span class="amount">99</span>
-                            <span class="period">/month</span>
-                        </div>
-                        <p class="plan-description">Ideal for growing businesses</p>
-                        <ul class="plan-features">
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Multiple Company Books</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Advanced Reporting</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Multi-Currency Support</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Priority Support</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>API Access</span>
-                            </li>
-                        </ul>
-                        <button class="btn primary">Start Free Trial</button>
-                        <p class="trial-note">14-day free trial, no credit card required</p>
-                    </div>
+        <!-- Country Selection -->
+        <div class="country-selector">
+            <select id="country-select" class="country-dropdown">
+                <option value="USD">United States (USD)</option>
+                <option value="INR">India (INR)</option>
+                <option value="GBP">United Kingdom (GBP)</option>
+                <option value="AED">UAE (AED)</option>
+                <option value="QAR">Qatar (QAR)</option>
+            </select>
+        </div>
 
-                    <!-- Enterprise Plan -->
-                    <div class="pricing-card">
-                        <h3>Enterprise</h3>
-                        <div class="price">
-                            <span class="custom">Custom</span>
-                        </div>
-                        <p class="plan-description">For large organizations</p>
-                        <ul class="plan-features">
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Unlimited Company Books</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Custom Integration</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Dedicated Account Manager</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>24/7 Premium Support</span>
-                            </li>
-                        </ul>
-                        <button class="btn secondary">Contact Sales</button>
-                        <p class="trial-note">Get a customized quote for your needs</p>
-                    </div>
+        <!-- Pricing Toggle -->
+        <div class="pricing-toggle">
+            <span class="toggle-label">Monthly</span>
+            <label class="switch">
+                <input type="checkbox" id="billing-toggle">
+                <span class="slider"></span>
+            </label>
+            <span class="toggle-label">Yearly <span class="discount">Save 20%</span></span>
+        </div>
+
+        <!-- Pricing Grid -->
+        <div class="pricing-grid">
+            <!-- Basic Plan -->
+            <div class="pricing-card">
+                <h3>Basic</h3>
+                <div class="price">
+                    <span class="currency-symbol">$</span>
+                    <span class="amount">39</span>
+                    <span class="period">/month</span>
                 </div>
+                <p class="plan-description">Perfect for small teams</p>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check"></i>Up to 50 employees</li>
+                    <li><i class="fas fa-check"></i>Basic profile management</li>
+                    <li><i class="fas fa-check"></i>Document access</li>
+                    <li><i class="fas fa-check"></i>Email support</li>
+                </ul>
+                <button class="btn primary">Start Free Trial</button>
+                <p class="trial-note">14-day free trial, no credit card required</p>
             </div>
-        </section>
+
+            <!-- Professional Plan -->
+            <div class="pricing-card popular">
+                <div class="popular-badge">Most Popular</div>
+                <h3>Professional</h3>
+                <div class="price">
+                    <span class="currency-symbol">$</span>
+                    <span class="amount">89</span>
+                    <span class="period">/month</span>
+                </div>
+                <p class="plan-description">Ideal for growing companies</p>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check"></i>Up to 200 employees</li>
+                    <li><i class="fas fa-check"></i>Advanced self-service features</li>
+                    <li><i class="fas fa-check"></i>Custom workflows</li>
+                    <li><i class="fas fa-check"></i>Priority support</li>
+                    <li><i class="fas fa-check"></i>Analytics dashboard</li>
+                </ul>
+                <button class="btn primary">Start Free Trial</button>
+                <p class="trial-note">14-day free trial, no credit card required</p>
+            </div>
+
+            <!-- Enterprise Plan -->
+            <div class="pricing-card">
+                <h3>Enterprise</h3>
+                <div class="price">
+                    <span class="custom">Custom</span>
+                </div>
+                <p class="plan-description">For large organizations</p>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check"></i>Unlimited employees</li>
+                    <li><i class="fas fa-check"></i>Custom implementation</li>
+                    <li><i class="fas fa-check"></i>Advanced integrations</li>
+                    <li><i class="fas fa-check"></i>24/7 dedicated support</li>
+                    <li><i class="fas fa-check"></i>Custom branding</li>
+                </ul>
+                <button class="btn secondary">Contact Sales</button>
+                <p class="trial-note">Get a customized quote for your needs</p>
+            </div>
+        </div>
+    </div>
+</section>
+
 <style>
     /* Enhanced Pricing Section Styles */
+/* Complete Pricing Section Styles */
 .pricing-section {
     padding: 6rem 0;
     background: var(--gradient);
@@ -1886,8 +1865,44 @@ document.addEventListener('DOMContentLoaded', function() {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(45deg, rgba(41, 98, 255, 0.05), transparent);
+    background: url('path/to/pattern.svg');
+    opacity: 0.05;
     pointer-events: none;
+}
+
+/* Country Selector Styles */
+.country-selector {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.country-dropdown {
+    padding: 0.8rem 2rem;
+    border-radius: 50px;
+    border: 1px solid rgba(41, 98, 255, 0.2);
+    background: white;
+    color: var(--text-color);
+    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 200px;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+}
+
+.country-dropdown:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(41, 98, 255, 0.1);
+}
+
+.country-dropdown:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(41, 98, 255, 0.1);
 }
 
 /* Enhanced Pricing Toggle */
@@ -1896,8 +1911,8 @@ document.addEventListener('DOMContentLoaded', function() {
     align-items: center;
     justify-content: center;
     gap: 1.5rem;
-    margin: 3rem auto;
-    padding: 0.75rem;
+    margin: 2rem auto 3rem;
+    padding: 1rem;
     background: white;
     border-radius: 50px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
@@ -1905,10 +1920,11 @@ document.addEventListener('DOMContentLoaded', function() {
     position: relative;
 }
 
-.pricing-toggle span {
+.toggle-label {
     font-weight: 500;
     color: var(--text-color);
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 1.5rem;
+    transition: all 0.3s ease;
 }
 
 .discount {
@@ -1917,11 +1933,11 @@ document.addEventListener('DOMContentLoaded', function() {
     padding: 0.35rem 0.75rem;
     border-radius: 20px;
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 600;
     margin-left: 0.5rem;
 }
 
-/* Enhanced Switch Styles */
+/* Switch Styles */
 .switch {
     position: relative;
     display: inline-block;
@@ -1969,7 +1985,7 @@ input:checked + .slider:before {
     transform: translateX(28px);
 }
 
-/* Enhanced Pricing Grid */
+/* Pricing Grid */
 .pricing-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1990,7 +2006,14 @@ input:checked + .slider:before {
     display: flex;
     flex-direction: column;
     border: 1px solid rgba(41, 98, 255, 0.1);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s ease forwards;
 }
+
+.pricing-card:nth-child(1) { animation-delay: 0.2s; }
+.pricing-card:nth-child(2) { animation-delay: 0.4s; }
+.pricing-card:nth-child(3) { animation-delay: 0.6s; }
 
 .pricing-card:hover:not(.popular) {
     transform: translateY(-10px);
@@ -2023,16 +2046,22 @@ input:checked + .slider:before {
     color: #1a237e;
     margin-bottom: 1.5rem;
     text-align: center;
+    font-weight: 600;
 }
 
 .price {
     text-align: center;
     margin: 1.5rem 0;
-    padding: 1rem 0;
+    padding: 1.5rem 0;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    position: relative;
 }
 
-.currency {
+.price.animating .amount {
+    animation: priceUpdate 0.4s ease-in-out;
+}
+
+.currency-symbol {
     font-size: 1.5rem;
     font-weight: 600;
     color: var(--primary-color);
@@ -2057,6 +2086,9 @@ input:checked + .slider:before {
     font-size: 2rem;
     font-weight: 700;
     color: var(--primary-color);
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .plan-description {
@@ -2086,6 +2118,19 @@ input:checked + .slider:before {
     color: var(--primary-color);
     font-size: 1.1rem;
     flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.pricing-card:hover .plan-features li i {
+    background: var(--primary-color);
+    color: white;
 }
 
 .pricing-card .btn {
@@ -2109,15 +2154,42 @@ input:checked + .slider:before {
     margin-top: 1rem;
 }
 
-/* Enhanced Responsive Styles */
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes priceUpdate {
+    0% {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive Styles */
 @media (max-width: 1200px) {
     .pricing-grid {
         gap: 1.5rem;
         padding: 0 2rem;
     }
-
+    
     .pricing-card {
         padding: 2.5rem 2rem;
+    }
+
+    .amount {
+        font-size: 3rem;
     }
 }
 
@@ -2132,13 +2204,14 @@ input:checked + .slider:before {
     .pricing-card.popular {
         transform: scale(1.02);
     }
-
-    .amount {
-        font-size: 3rem;
-    }
 }
 
 @media (max-width: 768px) {
+    .country-dropdown {
+        width: 100%;
+        max-width: 300px;
+    }
+
     .pricing-toggle {
         flex-direction: column;
         background: transparent;
@@ -2146,11 +2219,13 @@ input:checked + .slider:before {
         gap: 1rem;
     }
 
-    .pricing-toggle span {
+    .toggle-label {
         background: white;
         padding: 0.75rem 1.5rem;
         border-radius: 25px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        width: 100%;
+        text-align: center;
     }
 
     .pricing-card {
@@ -2165,6 +2240,10 @@ input:checked + .slider:before {
         font-size: 0.75rem;
         padding: 0.4rem 3rem;
     }
+
+    .amount {
+        font-size: 2.5rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -2178,7 +2257,7 @@ input:checked + .slider:before {
     }
 
     .amount {
-        font-size: 2.5rem;
+        font-size: 2.25rem;
     }
 
     .plan-features li {
@@ -2189,7 +2268,12 @@ input:checked + .slider:before {
         padding: 0.875rem;
         font-size: 0.95rem;
     }
+
+    .trial-note {
+        font-size: 0.8rem;
+    }
 }
+
 </style>
          <!-- Call to Action Section -->
         <section class="cta-section">
@@ -2749,92 +2833,167 @@ input:checked + .slider:before {
 }
 </style>
 <script>
-// Initialize all functionality when DOM is loaded
+ // Document Ready Handler
 document.addEventListener('DOMContentLoaded', function() {
     initializeAll();
     loadHeader();
 });
 
-// Header Loading Function (Same as pms.html)
-async function loadHeader() {
-    const headerContainer = document.getElementById('header-container');
-    
-    try {
-        const response = await fetch('header.html');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        
-        const html = await response.text();
-        headerContainer.innerHTML = html;
-
-        // Initialize mobile menu functionality after header loads
-        const mobileMenu = document.getElementById('mobile-menu');
-        const mainNav = document.getElementById('main-nav');
-        const menuOverlay = document.getElementById('menu-overlay');
-        const megaMenus = document.querySelectorAll('.mega-menu');
-
-        if (mobileMenu && mainNav) {
-            let isMenuOpen = false;
-
-            function toggleMenu(show) {
-                isMenuOpen = show;
-                mobileMenu.classList.toggle('active', show);
-                mainNav.classList.toggle('active', show);
-                menuOverlay.classList.toggle('active', show);
-                document.body.style.overflow = show ? 'hidden' : '';
-
-                if (!show) {
-                    megaMenus.forEach(menu => menu.classList.remove('active'));
-                }
-            }
-
-            mobileMenu.addEventListener('click', (e) => {
-                e.stopPropagation();
-                toggleMenu(!isMenuOpen);
-            });
-
-            // Handle mega menus on mobile
-            megaMenus.forEach(menu => {
-                const link = menu.querySelector('a');
-                link.addEventListener('click', (e) => {
-                    if (window.innerWidth <= 768) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        megaMenus.forEach(m => {
-                            if (m !== menu) m.classList.remove('active');
-                        });
-                        menu.classList.toggle('active');
-                    }
-                });
-            });
-
-            // Close menu when clicking outside
-            document.addEventListener('click', (e) => {
-                if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
-                    toggleMenu(false);
-                }
-            });
-        }
-    } catch (error) {
-        console.error('Error loading header:', error);
-        headerContainer.innerHTML = `
-            <header class="main-header">
-                <div class="container">
-                    <a href="/" class="logo">
-                        <h1>Workwise Pro</h1>
-                    </a>
-                </div>
-            </header>
-        `;
-    }
-}
-
+// Initialize All Functions
 function initializeAll() {
     initializeAnimations();
     initializePricing();
-    initializeFeatureTabs();
+    initializeMetrics();
     handleScrollEffects();
     setupInteractions();
-    initializeMetrics();
+}
+
+// Pricing Configuration
+const pricingConfig = {
+    USD: {
+        symbol: '$',
+        monthly: {
+            basic: 39,
+            professional: 89
+        },
+        yearly: {
+            basic: 31,
+            professional: 71
+        }
+    },
+    INR: {
+        symbol: '₹',
+        monthly: {
+            basic: 2999,
+            professional: 6999
+        },
+        yearly: {
+            basic: 2399,
+            professional: 5599
+        }
+    },
+    GBP: {
+        symbol: '£',
+        monthly: {
+            basic: 31,
+            professional: 71
+        },
+        yearly: {
+            basic: 25,
+            professional: 57
+        }
+    },
+    AED: {
+        symbol: 'AED',
+        monthly: {
+            basic: 143,
+            professional: 327
+        },
+        yearly: {
+            basic: 114,
+            professional: 262
+        }
+    },
+    QAR: {
+        symbol: 'QAR',
+        monthly: {
+            basic: 142,
+            professional: 324
+        },
+        yearly: {
+            basic: 114,
+            professional: 259
+        }
+    }
+};
+
+// Initialize Pricing Functionality
+function initializePricing() {
+    const billingToggle = document.getElementById('billing-toggle');
+    const countrySelect = document.getElementById('country-select');
+    const priceElements = document.querySelectorAll('.price');
+    const currencySymbols = document.querySelectorAll('.currency-symbol');
+    const amounts = document.querySelectorAll('.amount');
+    const periods = document.querySelectorAll('.period');
+
+    let currentCurrency = 'USD';
+    let isYearly = false;
+
+    // Update Pricing Display
+    function updatePricing() {
+        const config = pricingConfig[currentCurrency];
+        const priceType = isYearly ? 'yearly' : 'monthly';
+        const periodText = isYearly ? '/month/year' : '/month';
+
+        // Update currency symbols
+        currencySymbols.forEach(symbol => {
+            symbol.textContent = config.symbol;
+        });
+
+        // Update amounts with animation
+        amounts.forEach((amount, index) => {
+            if (amount.closest('.price').querySelector('.custom')) return;
+
+            const planType = index === 0 ? 'basic' : 'professional';
+            const newPrice = config[priceType][planType];
+
+            // Add animation class
+            amount.closest('.price').classList.add('animating');
+            
+            // Animate price change
+            animateNumberChange(amount, newPrice);
+
+            // Remove animation class after animation
+            setTimeout(() => {
+                amount.closest('.price').classList.remove('animating');
+            }, 400);
+        });
+
+        // Update period text
+        periods.forEach(period => {
+            period.textContent = periodText;
+        });
+    }
+
+    // Number Animation Helper
+    function animateNumberChange(element, newValue) {
+        const start = parseInt(element.textContent);
+        const end = newValue;
+        const duration = 400;
+        const startTime = performance.now();
+
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            const current = Math.round(start + (end - start) * progress);
+            element.textContent = current;
+
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            }
+        }
+
+        requestAnimationFrame(update);
+    }
+
+    // Event Listeners
+    if (billingToggle) {
+        billingToggle.addEventListener('change', () => {
+            isYearly = billingToggle.checked;
+            updatePricing();
+        });
+    }
+
+    if (countrySelect) {
+        countrySelect.addEventListener('change', () => {
+            currentCurrency = countrySelect.value;
+            updatePricing();
+        });
+    }
+
+    // Initial pricing update
+    updatePricing();
 }
 
 // Animation Handler
@@ -2848,7 +3007,7 @@ function initializeAnimations() {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('animate-in');
-                if (entry.target.classList.contains('metric-fill')) {
+                if (entry.target.classList.contains('progress-fill')) {
                     const width = entry.target.dataset.progress;
                     entry.target.style.width = width;
                 }
@@ -2856,95 +3015,95 @@ function initializeAnimations() {
         });
     }, observerOptions);
 
-    // Observe all animatable elements
-    document.querySelectorAll('.feature-card, .solution-card, .integration-card, .pricing-card, .metric-fill, .benefit-card')
+    // Observe elements
+    document.querySelectorAll('.feature-card, .pricing-card, .benefit-card, .integration-card, .progress-fill')
         .forEach(el => observer.observe(el));
 }
 
-// Feature Tabs Handler
-function initializeFeatureTabs() {
-    const tabs = document.querySelectorAll('.feature-tab');
-    const contents = document.querySelectorAll('.feature-content');
-
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            tabs.forEach(t => t.classList.remove('active'));
-            contents.forEach(c => c.classList.remove('active'));
-
-            tab.classList.add('active');
-            const contentId = tab.getAttribute('data-tab');
-            document.getElementById(contentId).classList.add('active');
-        });
-    });
-}
-
-// Pricing Toggle Handler
-function initializePricing() {
-    const billingToggle = document.getElementById('billing-toggle');
-    const priceAmounts = document.querySelectorAll('.amount');
-    const monthlyPrices = ['49', '99'];
-    const annualPrices = ['39', '79'];
-
-    if (billingToggle) {
-        billingToggle.addEventListener('change', () => {
-            priceAmounts.forEach((price, index) => {
-                if (price.textContent !== 'Custom') {
-                    animateNumberChange(price, billingToggle.checked ? annualPrices[index] : monthlyPrices[index]);
-                }
-            });
-        });
-    }
-}
-
-// Metrics Initialization
-function initializeMetrics() {
-    const metrics = document.querySelectorAll('.benefit-metric');
+// Header Loading Function
+async function loadHeader() {
+    const headerContainer = document.getElementById('header-container');
     
-    metrics.forEach(metric => {
-        const fill = metric.querySelector('.metric-fill');
-        const value = metric.querySelector('.metric-value').textContent;
-        fill.style.width = '0%';
+    try {
+        const response = await fetch('header.html');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
-        setTimeout(() => {
-            fill.style.width = value;
-        }, 500);
-    });
+        const html = await response.text();
+        headerContainer.innerHTML = html;
+
+        // Initialize mobile menu after header loads
+        initializeMobileMenu();
+    } catch (error) {
+        console.error('Error loading header:', error);
+        // Fallback header
+        headerContainer.innerHTML = `
+            <header class="main-header">
+                <div class="container">
+                    <div class="header-content">
+                        <a href="/" class="logo">
+                            <span>Workwise Pro</span>
+                        </a>
+                        <nav class="main-nav">
+                            <ul class="nav-list">
+                                <li><a href="#home">Home</a></li>
+                                <li><a href="#contact">Contact</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </header>
+        `;
+    }
 }
 
-// Number Animation Helper
-function animateNumberChange(element, newValue) {
-    const start = parseInt(element.textContent);
-    const end = parseInt(newValue);
-    const duration = 500;
-    const startTime = performance.now();
+// Mobile Menu Initialization
+function initializeMobileMenu() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mainNav = document.getElementById('main-nav');
+    const menuOverlay = document.getElementById('menu-overlay');
+    const megaMenus = document.querySelectorAll('.mega-menu');
 
-    function update(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
+    if (mobileMenu && mainNav) {
+        let isMenuOpen = false;
 
-        const current = Math.round(start + (end - start) * progress);
-        element.textContent = current;
+        function toggleMenu(show) {
+            isMenuOpen = show;
+            mobileMenu.classList.toggle('active', show);
+            mainNav.classList.toggle('active', show);
+            menuOverlay.classList.toggle('active', show);
+            document.body.style.overflow = show ? 'hidden' : '';
 
-        if (progress < 1) {
-            requestAnimationFrame(update);
+            if (!show) {
+                megaMenus.forEach(menu => menu.classList.remove('active'));
+            }
         }
-    }
 
-    requestAnimationFrame(update);
+        mobileMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMenu(!isMenuOpen);
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
+                toggleMenu(false);
+            }
+        });
+    }
 }
 
 // Scroll Effects Handler
 function handleScrollEffects() {
     let lastScroll = 0;
-    const header = document.querySelector('header');
+    const header = document.querySelector('.main-header');
 
     window.addEventListener('scroll', () => {
         const currentScroll = window.pageYOffset;
         
         if (currentScroll > lastScroll && currentScroll > 100) {
-            header.classList.add('header-hidden');
+            header?.classList.add('header-hidden');
         } else {
-            header.classList.remove('header-hidden');
+            header?.classList.remove('header-hidden');
         }
         
         lastScroll = currentScroll;
@@ -2953,8 +3112,7 @@ function handleScrollEffects() {
 
 // Interactive Elements Setup
 function setupInteractions() {
-    // Card Hover Effects
-    document.querySelectorAll('.solution-card, .integration-card, .benefit-card').forEach(card => {
+    document.querySelectorAll('.feature-card, .benefit-card, .integration-card').forEach(card => {
         card.addEventListener('mouseenter', () => {
             card.classList.add('card-hover');
         });
@@ -2963,29 +3121,38 @@ function setupInteractions() {
             card.classList.remove('card-hover');
         });
     });
+}
 
-    // Smooth Scroll for Anchor Links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
+// Initialize Metrics
+function initializeMetrics() {
+      const charts = document.querySelectorAll('.metric-chart');
+        charts.forEach(chart => {
+            const ctx = chart.getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Attendance Rate',
+                        data: [92, 95, 94, 96, 95, 98],
+                        borderColor: '#2962ff',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
         });
-    });
 }
 
-// Error Handler
-function handleError(error) {
-    console.error('An error occurred:', error);
-    // Implement error notification system here
-}
-
-// Watson Assistant Chat Integration (Same as pms.html)
+// Watson Assistant Chat Integration
 window.watsonAssistantChatOptions = {
     integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
     region: "au-syd",
