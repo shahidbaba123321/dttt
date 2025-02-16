@@ -479,34 +479,50 @@ body {
 </section>
 
 <!-- Pricing Section -->
+<!-- Pricing Section -->
 <section class="pricing-section">
     <div class="container">
         <div class="section-header">
             <h2>Simple, Transparent Pricing</h2>
-            <p>Choose the plan that best fits your business needs</p>
+            <p>Choose the plan that best fits your organization's needs</p>
         </div>
+
+        <!-- Country Selection -->
+        <div class="country-selector">
+            <select id="country-select" class="country-dropdown">
+                <option value="USD">United States (USD)</option>
+                <option value="INR">India (INR)</option>
+                <option value="GBP">United Kingdom (GBP)</option>
+                <option value="AED">UAE (AED)</option>
+                <option value="QAR">Qatar (QAR)</option>
+            </select>
+        </div>
+
+        <!-- Pricing Toggle -->
         <div class="pricing-toggle">
-            <span>Monthly</span>
+            <span class="toggle-label">Monthly</span>
             <label class="switch">
                 <input type="checkbox" id="billing-toggle">
                 <span class="slider"></span>
             </label>
-            <span>Annual <span class="discount">Save 20%</span></span>
+            <span class="toggle-label">Yearly <span class="discount">Save 20%</span></span>
         </div>
+
+        <!-- Pricing Grid -->
         <div class="pricing-grid">
             <!-- Basic Plan -->
             <div class="pricing-card">
                 <h3>Basic</h3>
                 <div class="price">
-                    <span class="currency">$</span>
-                    <span class="amount">29</span>
+                    <span class="currency-symbol">$</span>
+                    <span class="amount">39</span>
                     <span class="period">/month</span>
                 </div>
                 <p class="plan-description">Perfect for small teams</p>
                 <ul class="plan-features">
                     <li><i class="fas fa-check"></i>Up to 50 employees</li>
-                    <li><i class="fas fa-check"></i>Basic attendance tracking</li>
-                    <li><i class="fas fa-check"></i>Leave management</li>
+                    <li><i class="fas fa-check"></i>Basic profile management</li>
+                    <li><i class="fas fa-check"></i>Document access</li>
                     <li><i class="fas fa-check"></i>Email support</li>
                 </ul>
                 <button class="btn primary">Start Free Trial</button>
@@ -518,17 +534,17 @@ body {
                 <div class="popular-badge">Most Popular</div>
                 <h3>Professional</h3>
                 <div class="price">
-                    <span class="currency">$</span>
-                    <span class="amount">79</span>
+                    <span class="currency-symbol">$</span>
+                    <span class="amount">89</span>
                     <span class="period">/month</span>
                 </div>
-                <p class="plan-description">Ideal for growing businesses</p>
+                <p class="plan-description">Ideal for growing companies</p>
                 <ul class="plan-features">
                     <li><i class="fas fa-check"></i>Up to 200 employees</li>
-                    <li><i class="fas fa-check"></i>Advanced biometric integration</li>
-                    <li><i class="fas fa-check"></i>Shift management</li>
+                    <li><i class="fas fa-check"></i>Advanced self-service features</li>
+                    <li><i class="fas fa-check"></i>Custom workflows</li>
                     <li><i class="fas fa-check"></i>Priority support</li>
-                    <li><i class="fas fa-check"></i>Advanced analytics</li>
+                    <li><i class="fas fa-check"></i>Analytics dashboard</li>
                 </ul>
                 <button class="btn primary">Start Free Trial</button>
                 <p class="trial-note">14-day free trial, no credit card required</p>
@@ -544,9 +560,9 @@ body {
                 <ul class="plan-features">
                     <li><i class="fas fa-check"></i>Unlimited employees</li>
                     <li><i class="fas fa-check"></i>Custom implementation</li>
-                    <li><i class="fas fa-check"></i>Multi-location support</li>
+                    <li><i class="fas fa-check"></i>Advanced integrations</li>
                     <li><i class="fas fa-check"></i>24/7 dedicated support</li>
-                    <li><i class="fas fa-check"></i>Custom integrations</li>
+                    <li><i class="fas fa-check"></i>Custom branding</li>
                 </ul>
                 <button class="btn secondary">Contact Sales</button>
                 <p class="trial-note">Get a customized quote for your needs</p>
@@ -554,6 +570,432 @@ body {
         </div>
     </div>
 </section>
+        <style>
+            /* Complete Pricing Section Styles */
+.pricing-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+    overflow: hidden;
+}
+
+.pricing-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('path/to/pattern.svg');
+    opacity: 0.05;
+    pointer-events: none;
+}
+
+/* Country Selector Styles */
+.country-selector {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.country-dropdown {
+    padding: 0.8rem 2rem;
+    border-radius: 50px;
+    border: 1px solid rgba(41, 98, 255, 0.2);
+    background: white;
+    color: var(--text-color);
+    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 200px;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+}
+
+.country-dropdown:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(41, 98, 255, 0.1);
+}
+
+.country-dropdown:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(41, 98, 255, 0.1);
+}
+
+/* Enhanced Pricing Toggle */
+.pricing-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin: 2rem auto 3rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    width: fit-content;
+    position: relative;
+}
+
+.toggle-label {
+    font-weight: 500;
+    color: var(--text-color);
+    padding: 0.5rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.discount {
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+
+/* Switch Styles */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 32px;
+    margin: 0 0.5rem;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #e0e0e0;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 24px;
+    width: 24px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+input:checked + .slider {
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+}
+
+input:checked + .slider:before {
+    transform: translateX(28px);
+}
+
+/* Pricing Grid */
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin: 4rem auto;
+    max-width: 1200px;
+    padding: 0 1rem;
+}
+
+.pricing-card {
+    background: white;
+    padding: 3rem 2.5rem;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.pricing-card:nth-child(1) { animation-delay: 0.2s; }
+.pricing-card:nth-child(2) { animation-delay: 0.4s; }
+.pricing-card:nth-child(3) { animation-delay: 0.6s; }
+
+.pricing-card:hover:not(.popular) {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-color);
+}
+
+.pricing-card.popular {
+    background: linear-gradient(145deg, #ffffff, #f8f9ff);
+    border: 2px solid var(--primary-color);
+    transform: scale(1.05);
+    z-index: 1;
+}
+
+.popular-badge {
+    position: absolute;
+    top: 1.5rem;
+    right: -3.5rem;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    color: white;
+    padding: 0.5rem 3.5rem;
+    transform: rotate(45deg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pricing-card h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+.price {
+    text-align: center;
+    margin: 1.5rem 0;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    position: relative;
+}
+
+.price.animating .amount {
+    animation: priceUpdate 0.4s ease-in-out;
+}
+
+.currency-symbol {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    vertical-align: top;
+    margin-right: 0.25rem;
+}
+
+.amount {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1;
+}
+
+.period {
+    font-size: 1rem;
+    color: var(--light-text);
+    margin-left: 0.25rem;
+}
+
+.custom {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.plan-description {
+    text-align: center;
+    color: var(--light-text);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+.plan-features {
+    list-style: none;
+    margin: 2rem 0;
+    flex-grow: 1;
+}
+
+.plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    color: var(--text-color);
+    font-size: 1rem;
+    padding: 0.5rem 0;
+}
+
+.plan-features li i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.pricing-card:hover .plan-features li i {
+    background: var(--primary-color);
+    color: white;
+}
+
+.pricing-card .btn {
+    width: 100%;
+    margin-top: auto;
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.pricing-card .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(41, 98, 255, 0.2);
+}
+
+.trial-note {
+    text-align: center;
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin-top: 1rem;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes priceUpdate {
+    0% {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .pricing-grid {
+        gap: 1.5rem;
+        padding: 0 2rem;
+    }
+    
+    .pricing-card {
+        padding: 2.5rem 2rem;
+    }
+
+    .amount {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .pricing-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .pricing-card.popular {
+        transform: scale(1.02);
+    }
+}
+
+@media (max-width: 768px) {
+    .country-dropdown {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .pricing-toggle {
+        flex-direction: column;
+        background: transparent;
+        box-shadow: none;
+        gap: 1rem;
+    }
+
+    .toggle-label {
+        background: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        width: 100%;
+        text-align: center;
+    }
+
+    .pricing-card {
+        padding: 2rem;
+    }
+
+    .pricing-card.popular {
+        transform: none;
+    }
+
+    .popular-badge {
+        font-size: 0.75rem;
+        padding: 0.4rem 3rem;
+    }
+
+    .amount {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .pricing-grid {
+        grid-template-columns: 1fr;
+        padding: 0 1rem;
+    }
+
+    .pricing-card {
+        padding: 1.5rem;
+    }
+
+    .amount {
+        font-size: 2.25rem;
+    }
+
+    .plan-features li {
+        font-size: 0.95rem;
+    }
+
+    .pricing-card .btn {
+        padding: 0.875rem;
+        font-size: 0.95rem;
+    }
+
+    .trial-note {
+        font-size: 0.8rem;
+    }
+}
+        </style>
+        
 
 <!-- Call to Action Section -->
 <section class="cta-section">
@@ -990,231 +1432,6 @@ body {
 }
 
 /* Pricing Section Styles */
-.pricing-section {
-    padding: 6rem 0;
-    background: var(--gradient);
-    position: relative;
-    overflow: hidden;
-}
-
-.pricing-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1.5rem;
-    margin: 3rem auto;
-    padding: 1rem;
-    background: white;
-    border-radius: 50px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    width: fit-content;
-}
-
-.pricing-toggle span {
-    font-weight: 500;
-    color: var(--text-color);
-    padding: 0.5rem 1.5rem;
-    transition: all 0.3s ease;
-}
-
-.discount {
-    background: rgba(41, 98, 255, 0.1);
-    color: var(--primary-color);
-    padding: 0.35rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    margin-left: 0.5rem;
-}
-
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 32px;
-    margin: 0 0.5rem;
-}
-
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #e0e0e0;
-    transition: .4s;
-    border-radius: 34px;
-}
-
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 24px;
-    width: 24px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: .4s;
-    border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-input:checked + .slider {
-    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
-}
-
-input:checked + .slider:before {
-    transform: translateX(28px);
-}
-
-.pricing-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-    margin: 4rem auto;
-    max-width: 1200px;
-    padding: 0 1rem;
-}
-
-.pricing-card {
-    background: white;
-    padding: 3rem 2.5rem;
-    border-radius: 24px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid rgba(41, 98, 255, 0.1);
-}
-
-.pricing-card:hover:not(.popular) {
-    transform: translateY(-10px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-    border-color: var(--primary-color);
-}
-
-.pricing-card.popular {
-    background: linear-gradient(145deg, #ffffff, #f8f9ff);
-    border: 2px solid var(--primary-color);
-    transform: scale(1.05);
-    z-index: 1;
-}
-
-.popular-badge {
-    position: absolute;
-    top: 1.5rem;
-    right: -3.5rem;
-    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
-    color: white;
-    padding: 0.5rem 3.5rem;
-    transform: rotate(45deg);
-    font-size: 0.875rem;
-    font-weight: 500;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-    /* Continuing Pricing Card Styles */
-.pricing-card h3 {
-    font-size: 1.5rem;
-    color: #1a237e;
-    margin-bottom: 1.5rem;
-    text-align: center;
-    font-weight: 600;
-}
-
-.price {
-    text-align: center;
-    margin: 1.5rem 0;
-    padding: 1.5rem 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.currency {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--primary-color);
-    vertical-align: top;
-    margin-right: 0.25rem;
-}
-
-.amount {
-    font-size: 3.5rem;
-    font-weight: 700;
-    color: var(--primary-color);
-    line-height: 1;
-}
-
-.period {
-    font-size: 1rem;
-    color: var(--light-text);
-    margin-left: 0.25rem;
-}
-
-.custom {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--primary-color);
-    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.plan-description {
-    text-align: center;
-    color: var(--light-text);
-    margin-bottom: 2rem;
-    font-size: 1.1rem;
-}
-
-.plan-features {
-    list-style: none;
-    margin: 2rem 0;
-    flex-grow: 1;
-}
-
-.plan-features li {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-    color: var(--text-color);
-    font-size: 1rem;
-    padding: 0.5rem 0;
-}
-
-.plan-features li i {
-    color: var(--primary-color);
-    font-size: 1.1rem;
-    flex-shrink: 0;
-    width: 24px;
-    height: 24px;
-    background: rgba(41, 98, 255, 0.1);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.pricing-card:hover .plan-features li i {
-    background: var(--primary-color);
-    color: white;
-}
-
-.trial-note {
-    text-align: center;
-    color: var(--light-text);
-    font-size: 0.875rem;
-    margin-top: 1rem;
-}
 
 /* CTA Section Styles */
 .cta-section {
@@ -1445,14 +1662,7 @@ input:checked + .slider:before {
 
 /* Responsive Breakpoints */
 @media (max-width: 1200px) {
-    .pricing-grid {
-        gap: 1.5rem;
-        padding: 0 2rem;
-    }
-    
-    .pricing-card {
-        padding: 2.5rem 2rem;
-    }
+   
 
     .amount {
         font-size: 3rem;
@@ -1492,16 +1702,7 @@ input:checked + .slider:before {
         margin: 0 auto;
     }
 
-    .pricing-grid {
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        max-width: 800px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .pricing-card.popular {
-        transform: scale(1.02);
-    }
+    
 
     .analytics-visual {
         order: -1;
@@ -1530,22 +1731,7 @@ input:checked + .slider:before {
         grid-template-columns: 1fr;
     }
 
-    .pricing-toggle {
-        flex-direction: column;
-        background: transparent;
-        box-shadow: none;
-        gap: 1rem;
-    }
-
-    .pricing-toggle span {
-        background: white;
-        padding: 0.75rem 1.5rem;
-        border-radius: 25px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        width: 100%;
-        text-align: center;
-    }
-
+   
     .metric-card {
         flex-direction: column;
         align-items: center;
@@ -1589,8 +1775,7 @@ input:checked + .slider:before {
 
     .feature-card,
     .metric-card,
-    .integration-card,
-    .pricing-card {
+    .integration-card {
         padding: 1.5rem;
     }
 
@@ -1651,156 +1836,133 @@ input:checked + .slider:before {
 </style>
 <!-- Scripts -->
 <script>
-    // Document Ready Handler
-    document.addEventListener('DOMContentLoaded', function() {
-        initializeAll();
-        loadHeader();
-    });
+ // Document Ready Handler
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAll();
+    loadHeader();
+});
 
-    // Header Loading Function
-    async function loadHeader() {
-        const headerContainer = document.getElementById('header-container');
-        
-        try {
-            const response = await fetch('header.html');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const html = await response.text();
-            headerContainer.innerHTML = html;
+// Initialize All Functions
+function initializeAll() {
+    initializeAnimations();
+    initializePricing();
+    initializeMetrics();
+    handleScrollEffects();
+    setupInteractions();
+}
 
-            // Initialize mobile menu functionality after header loads
-            initializeMobileMenu();
-        } catch (error) {
-            console.error('Error loading header:', error);
-            headerContainer.innerHTML = `
-                <header class="main-header">
-                    <div class="container">
-                        <div class="header-content">
-                            <a href="/" class="logo">
-                                <span>Workwise Pro</span>
-                            </a>
-                            <nav class="main-nav">
-                                <ul class="nav-list">
-                                    <li><a href="#home">Home</a></li>
-                                    <li><a href="#contact">Contact</a></li>
-                                </ul>
-                            </nav>
-                        </div>
-                    </div>
-                </header>
-            `;
+// Pricing Configuration
+const pricingConfig = {
+    USD: {
+        symbol: '$',
+        monthly: {
+            basic: 39,
+            professional: 89
+        },
+        yearly: {
+            basic: 31,
+            professional: 71
+        }
+    },
+    INR: {
+        symbol: '₹',
+        monthly: {
+            basic: 2999,
+            professional: 6999
+        },
+        yearly: {
+            basic: 2399,
+            professional: 5599
+        }
+    },
+    GBP: {
+        symbol: '£',
+        monthly: {
+            basic: 31,
+            professional: 71
+        },
+        yearly: {
+            basic: 25,
+            professional: 57
+        }
+    },
+    AED: {
+        symbol: 'AED',
+        monthly: {
+            basic: 143,
+            professional: 327
+        },
+        yearly: {
+            basic: 114,
+            professional: 262
+        }
+    },
+    QAR: {
+        symbol: 'QAR',
+        monthly: {
+            basic: 142,
+            professional: 324
+        },
+        yearly: {
+            basic: 114,
+            professional: 259
         }
     }
+};
 
-    // Mobile Menu Initialization
-    function initializeMobileMenu() {
-        const mobileMenu = document.getElementById('mobile-menu');
-        const mainNav = document.getElementById('main-nav');
-        const menuOverlay = document.getElementById('menu-overlay');
-        const megaMenus = document.querySelectorAll('.mega-menu');
+// Initialize Pricing Functionality
+function initializePricing() {
+    const billingToggle = document.getElementById('billing-toggle');
+    const countrySelect = document.getElementById('country-select');
+    const priceElements = document.querySelectorAll('.price');
+    const currencySymbols = document.querySelectorAll('.currency-symbol');
+    const amounts = document.querySelectorAll('.amount');
+    const periods = document.querySelectorAll('.period');
 
-        if (mobileMenu && mainNav) {
-            let isMenuOpen = false;
+    let currentCurrency = 'USD';
+    let isYearly = false;
 
-            function toggleMenu(show) {
-                isMenuOpen = show;
-                mobileMenu.classList.toggle('active', show);
-                mainNav.classList.toggle('active', show);
-                menuOverlay.classList.toggle('active', show);
-                document.body.style.overflow = show ? 'hidden' : '';
+    // Update Pricing Display
+    function updatePricing() {
+        const config = pricingConfig[currentCurrency];
+        const priceType = isYearly ? 'yearly' : 'monthly';
+        const periodText = isYearly ? '/month/year' : '/month';
 
-                if (!show) {
-                    megaMenus.forEach(menu => menu.classList.remove('active'));
-                }
-            }
+        // Update currency symbols
+        currencySymbols.forEach(symbol => {
+            symbol.textContent = config.symbol;
+        });
 
-            mobileMenu.addEventListener('click', (e) => {
-                e.stopPropagation();
-                toggleMenu(!isMenuOpen);
-            });
+        // Update amounts with animation
+        amounts.forEach((amount, index) => {
+            if (amount.closest('.price').querySelector('.custom')) return;
 
-            // Handle mega menus on mobile
-            megaMenus.forEach(menu => {
-                const link = menu.querySelector('a');
-                if (link) {
-                    link.addEventListener('click', (e) => {
-                        if (window.innerWidth <= 768) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            megaMenus.forEach(m => {
-                                if (m !== menu) m.classList.remove('active');
-                            });
-                            menu.classList.toggle('active');
-                        }
-                    });
-                }
-            });
+            const planType = index === 0 ? 'basic' : 'professional';
+            const newPrice = config[priceType][planType];
 
-            // Close menu when clicking outside
-            document.addEventListener('click', (e) => {
-                if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
-                    toggleMenu(false);
-                }
-            });
-        }
-    }
+            // Add animation class
+            amount.closest('.price').classList.add('animating');
+            
+            // Animate price change
+            animateNumberChange(amount, newPrice);
 
-    function initializeAll() {
-        initializeAnimations();
-        initializePricing();
-        initializeMetrics();
-        handleScrollEffects();
-        setupInteractions();
-        initializeCharts();
-    }
+            // Remove animation class after animation
+            setTimeout(() => {
+                amount.closest('.price').classList.remove('animating');
+            }, 400);
+        });
 
-    // Animation Handler
-    function initializeAnimations() {
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('animate-in');
-                    if (entry.target.classList.contains('progress-fill')) {
-                        const width = entry.target.dataset.progress;
-                        entry.target.style.width = width;
-                    }
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.feature-card, .metric-card, .integration-card, .pricing-card, .progress-fill')
-            .forEach(el => observer.observe(el));
-    }
-
-    // Pricing Toggle Handler
-    function initializePricing() {
-        const billingToggle = document.getElementById('billing-toggle');
-        const priceAmounts = document.querySelectorAll('.amount');
-        const monthlyPrices = ['29', '79'];
-        const annualPrices = ['24', '64'];
-
-        if (billingToggle) {
-            billingToggle.addEventListener('change', () => {
-                priceAmounts.forEach((price, index) => {
-                    if (price.textContent !== 'Custom') {
-                        animateNumberChange(price, billingToggle.checked ? annualPrices[index] : monthlyPrices[index]);
-                    }
-                });
-            });
-        }
+        // Update period text
+        periods.forEach(period => {
+            period.textContent = periodText;
+        });
     }
 
     // Number Animation Helper
     function animateNumberChange(element, newValue) {
         const start = parseInt(element.textContent);
-        const end = parseInt(newValue);
-        const duration = 500;
+        const end = newValue;
+        const duration = 400;
         const startTime = performance.now();
 
         function update(currentTime) {
@@ -1818,9 +1980,155 @@ input:checked + .slider:before {
         requestAnimationFrame(update);
     }
 
-    // Metrics Initialization
-    function initializeMetrics() {
-        const charts = document.querySelectorAll('.metric-chart');
+    // Event Listeners
+    if (billingToggle) {
+        billingToggle.addEventListener('change', () => {
+            isYearly = billingToggle.checked;
+            updatePricing();
+        });
+    }
+
+    if (countrySelect) {
+        countrySelect.addEventListener('change', () => {
+            currentCurrency = countrySelect.value;
+            updatePricing();
+        });
+    }
+
+    // Initial pricing update
+    updatePricing();
+}
+
+// Animation Handler
+function initializeAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+                if (entry.target.classList.contains('progress-fill')) {
+                    const width = entry.target.dataset.progress;
+                    entry.target.style.width = width;
+                }
+            }
+        });
+    }, observerOptions);
+
+    // Observe elements
+    document.querySelectorAll('.feature-card, .pricing-card, .benefit-card, .integration-card, .progress-fill')
+        .forEach(el => observer.observe(el));
+}
+
+// Header Loading Function
+async function loadHeader() {
+    const headerContainer = document.getElementById('header-container');
+    
+    try {
+        const response = await fetch('header.html');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const html = await response.text();
+        headerContainer.innerHTML = html;
+
+        // Initialize mobile menu after header loads
+        initializeMobileMenu();
+    } catch (error) {
+        console.error('Error loading header:', error);
+        // Fallback header
+        headerContainer.innerHTML = `
+            <header class="main-header">
+                <div class="container">
+                    <div class="header-content">
+                        <a href="/" class="logo">
+                            <span>Workwise Pro</span>
+                        </a>
+                        <nav class="main-nav">
+                            <ul class="nav-list">
+                                <li><a href="#home">Home</a></li>
+                                <li><a href="#contact">Contact</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </header>
+        `;
+    }
+}
+
+// Mobile Menu Initialization
+function initializeMobileMenu() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mainNav = document.getElementById('main-nav');
+    const menuOverlay = document.getElementById('menu-overlay');
+    const megaMenus = document.querySelectorAll('.mega-menu');
+
+    if (mobileMenu && mainNav) {
+        let isMenuOpen = false;
+
+        function toggleMenu(show) {
+            isMenuOpen = show;
+            mobileMenu.classList.toggle('active', show);
+            mainNav.classList.toggle('active', show);
+            menuOverlay.classList.toggle('active', show);
+            document.body.style.overflow = show ? 'hidden' : '';
+
+            if (!show) {
+                megaMenus.forEach(menu => menu.classList.remove('active'));
+            }
+        }
+
+        mobileMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMenu(!isMenuOpen);
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
+                toggleMenu(false);
+            }
+        });
+    }
+}
+
+// Scroll Effects Handler
+function handleScrollEffects() {
+    let lastScroll = 0;
+    const header = document.querySelector('.main-header');
+
+    window.addEventListener('scroll', () => {
+        const currentScroll = window.pageYOffset;
+        
+        if (currentScroll > lastScroll && currentScroll > 100) {
+            header?.classList.add('header-hidden');
+        } else {
+            header?.classList.remove('header-hidden');
+        }
+        
+        lastScroll = currentScroll;
+    });
+}
+
+// Interactive Elements Setup
+function setupInteractions() {
+    document.querySelectorAll('.feature-card, .benefit-card, .integration-card').forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.classList.add('card-hover');
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.classList.remove('card-hover');
+        });
+    });
+}
+
+// Initialize Metrics
+function initializeMetrics() {
+      const charts = document.querySelectorAll('.metric-chart');
         charts.forEach(chart => {
             const ctx = chart.getContext('2d');
             new Chart(ctx, {
@@ -1845,97 +2153,23 @@ input:checked + .slider:before {
                 }
             });
         });
-    }
+}
 
-    // Scroll Effects Handler
-    function handleScrollEffects() {
-        let lastScroll = 0;
-        const header = document.querySelector('.main-header');
+// Watson Assistant Chat Integration
+window.watsonAssistantChatOptions = {
+    integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
+    region: "au-syd",
+    serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
+    onLoad: async (instance) => { await instance.render(); }
+};
 
-        window.addEventListener('scroll', () => {
-            const currentScroll = window.pageYOffset;
-            
-            if (currentScroll > lastScroll && currentScroll > 100) {
-                header?.classList.add('header-hidden');
-            } else {
-                header?.classList.remove('header-hidden');
-            }
-            
-            lastScroll = currentScroll;
-
-            // Parallax effect for hero section
-            const hero = document.querySelector('.attendance-hero');
-            if (hero) {
-                const scroll = window.pageYOffset;
-                hero.style.backgroundPositionY = `${scroll * 0.5}px`;
-            }
-        });
-    }
-
-    // Interactive Elements Setup
-    function setupInteractions() {
-        document.querySelectorAll('.feature-card').forEach(card => {
-            card.addEventListener('mouseenter', () => {
-                card.classList.add('feature-hover');
-            });
-            
-            card.addEventListener('mouseleave', () => {
-                card.classList.remove('feature-hover');
-            });
-        });
-
-        document.querySelectorAll('.metric-card').forEach(item => {
-            item.addEventListener('click', () => {
-                item.classList.add('metric-active');
-                setTimeout(() => {
-                    item.classList.remove('metric-active');
-                }, 300);
-            });
-        });
-    }
-
-    // Initialize Charts
-    function initializeCharts() {
-        const performanceChart = document.getElementById('performanceChart');
-        if (performanceChart) {
-            new Chart(performanceChart, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                    datasets: [{
-                        label: 'Attendance Rate',
-                        data: [92, 95, 94, 96, 95, 98],
-                        borderColor: '#2962ff',
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-        }
-    }
-
-    // Watson Assistant Chat Integration
-    window.watsonAssistantChatOptions = {
-        integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
-        region: "au-syd",
-        serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
-        onLoad: async (instance) => { await instance.render(); }
-    };
-    
-    setTimeout(function(){
-        const t = document.createElement('script');
-        t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
-            (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
-            "/WatsonAssistantChatEntry.js";
-        document.head.appendChild(t);
-    });
+setTimeout(function(){
+    const t = document.createElement('script');
+    t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
+        (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
+        "/WatsonAssistantChatEntry.js";
+    document.head.appendChild(t);
+});
 </script>
 </body>
 </html>
