@@ -1715,7 +1715,6 @@
     </div>
 </section>
 <!-- Security & Compliance Section -->
-<!-- Security & Compliance Section -->
 <section class="security-section">
     <div class="container">
         <div class="section-header">
@@ -1797,17 +1796,24 @@
                 </div>
             </div>
             <div class="security-visual">
-                <img src="image/security-dashboard.png" alt="Security Dashboard">
-                <div class="security-badges">
-                    <img src="image/security-badge-1.png" alt="Security Certification" class="security-badge">
-                    <img src="image/security-badge-2.png" alt="Compliance Certification" class="security-badge">
+                <div class="visual-wrapper">
+                    <img src="image/security-dashboard.png" alt="Security Dashboard" class="main-image">
+                    <div class="security-badges">
+                        <div class="badge-wrapper">
+                            <img src="image/security-badge-1.png" alt="Security Certification" class="security-badge">
+                        </div>
+                        <div class="badge-wrapper">
+                            <img src="image/security-badge-2.png" alt="Compliance Certification" class="security-badge">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
         <style>
-            /* Security Section Styles */
+/* Security Section Styles */
 .security-section {
     padding: 6rem 0;
     background: var(--gradient);
@@ -1909,30 +1915,42 @@
     color: white;
 }
 
+/* Security Visual Styles */
 .security-visual {
     position: relative;
     width: 100%;
 }
 
-.security-visual img {
+.visual-wrapper {
+    position: relative;
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.main-image {
+    width: 100%;
+    max-width: 100%;
     height: auto;
     border-radius: 20px;
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease;
-}
-
-.security-visual:hover img {
-    transform: scale(1.02);
+    display: block;
 }
 
 .security-badges {
-    position: absolute;
-    bottom: -20px;
-    right: 20px;
     display: flex;
     gap: 1rem;
-    z-index: 2;
+    justify-content: center;
+    margin-top: 2rem;
+    width: 100%;
+}
+
+.badge-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .security-badge {
@@ -1940,10 +1958,6 @@
     width: auto;
     transition: transform 0.3s ease;
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
-}
-
-.security-badge:hover {
-    transform: translateY(-5px);
 }
 
 /* Responsive Styles */
@@ -1954,10 +1968,6 @@
     
     .security-card {
         padding: 1.75rem;
-    }
-
-    .security-badges {
-        right: 10px;
     }
 
     .security-badge {
@@ -1973,21 +1983,20 @@
 
     .security-visual {
         order: -1;
-        max-width: 800px;
+    }
+
+    .visual-wrapper {
+        max-width: 700px;
         margin: 0 auto;
+    }
+
+    .main-image {
+        width: 100%;
     }
 
     .security-features {
         max-width: 800px;
         margin: 0 auto;
-    }
-
-    .security-badges {
-        position: relative;
-        bottom: 0;
-        right: 0;
-        justify-content: center;
-        margin-top: 2rem;
     }
 }
 
@@ -2014,10 +2023,13 @@
         justify-content: center;
     }
 
-    .security-visual img {
-        max-width: 90%;
-        margin: 0 auto;
-        display: block;
+    .visual-wrapper {
+        max-width: 100%;
+    }
+
+    .security-badges {
+        margin-top: 1.5rem;
+        gap: 0.75rem;
     }
 
     .security-badge {
@@ -2062,16 +2074,21 @@
         font-size: 0.9rem;
     }
 
-    .security-visual img {
-        max-width: 100%;
-    }
-
     .security-badges {
-        gap: 0.75rem;
+        margin-top: 1rem;
+        gap: 0.5rem;
     }
 
     .security-badge {
-        height: 40px;
+        height: 35px;
+    }
+
+    .visual-wrapper {
+        margin: 0 -1rem;
+    }
+
+    .main-image {
+        border-radius: 10px;
     }
 }
 
@@ -2081,7 +2098,7 @@
         transform: none;
     }
 
-    .security-visual:hover img {
+    .main-image:hover {
         transform: none;
     }
 
@@ -2089,8 +2106,7 @@
         transform: none;
     }
 }
-        </style>
-
+</style>
 <style>
 /* Integration Section Styles */
 .integration-section {
