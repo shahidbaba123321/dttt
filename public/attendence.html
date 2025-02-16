@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance & Leave Management - Workwise Pro</title>
+    <title>Attendance & Leave Management System - Workwise Pro</title>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -14,24 +14,32 @@
     <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
     
+    <!-- Sentiment Analysis -->
+    <script src="https://cdn.jsdelivr.net/npm/sentiment@5.0.2/build/sentiment.min.js"></script>
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<style>
-/* Root Variables - Same as main.html */
+    <style>
+        /* Root Variables */
 :root {
-    --primary-color: #e33333;
-    --text-dark: #0f1964;
-    --text-body: #333;
-    --background-light: #fff6f4;
-    --link-blue: #2962ff;
-    --border-color: #e0e0e0;
-    --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --primary-color: #2962ff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --background-color: #f8f9fa;
+    --text-color: #333;
+    --light-text: #6c757d;
+    --border-radius: 8px;
     --transition: all 0.3s ease;
+    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --gradient: linear-gradient(135deg, #f0f7ff 0%, #e9ecef 100%);
+    --card-bg: #ffffff;
+    --mobile-padding: 1rem;
+    --section-spacing: 4rem;
     --header-height: 70px;
 }
 
-/* General Reset - Same as main.html */
+/* General Reset */
 * {
     margin: 0;
     padding: 0;
@@ -42,20 +50,78 @@
 body {
     font-family: 'Poppins', sans-serif;
     line-height: 1.6;
-    color: var(--text-body);
-    padding-top: var(--header-height);
-    margin: 0;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    padding-top: var(--header-height);
 }
 
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 2rem;
+    padding: 0 var(--mobile-padding);
     width: 100%;
 }
 
-/* Hero Section Styles */
+/* Button Styles */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 2rem;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    transition: var(--transition);
+    font-weight: 500;
+    cursor: pointer;
+    min-width: 160px;
+    text-align: center;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+}
+
+.btn.primary {
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
+}
+
+.btn.secondary {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(41, 98, 255, 0.25);
+}
+
+/* Section Headers */
+.section-header {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 4rem;
+    padding: 0 var(--mobile-padding);
+}
+
+.section-header h2 {
+    font-size: clamp(2rem, 4vw, 2.5rem);
+    color: #1a237e;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+.section-header p {
+    font-size: clamp(1rem, 2vw, 1.1rem);
+    color: var(--light-text);
+    opacity: 0.9;
+}
+
+/* Hero Section */
 .attendance-hero {
     background: var(--gradient);
     padding: calc(var(--header-height) + 4rem) 0 6rem;
@@ -78,380 +144,80 @@ body {
 
 .hero-text h1 {
     font-size: clamp(2.5rem, 5vw, 3.5rem);
-    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #1a237e;
     margin-bottom: 1.5rem;
     line-height: 1.2;
-    font-weight: 700;
 }
 
 .hero-text p {
     font-size: clamp(1.1rem, 2vw, 1.25rem);
-    color: #455a64;
+    color: var(--light-text);
     margin-bottom: 2rem;
-    opacity: 0.9;
 }
 
 .hero-buttons {
     display: flex;
     gap: 1.5rem;
-}
-
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem 2rem;
-    border-radius: var(--border-radius);
-    text-decoration: none;
-    transition: var(--transition);
-    font-weight: 500;
-    cursor: pointer;
-    min-width: 160px;
-    text-align: center;
-}
-
-.btn.primary {
-    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
-    color: white;
-    border: none;
-    box-shadow: 0 4px 15px rgba(227, 51, 51, 0.2);
-}
-
-.btn.secondary {
-    background: transparent;
-    color: var(--primary-color);
-    border: 2px solid var(--primary-color);
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(227, 51, 51, 0.25);
+    margin-bottom: 3rem;
 }
 
 .hero-image {
     position: relative;
     width: 100%;
     height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .hero-image img {
     width: 100%;
     height: auto;
     max-width: 600px;
+    object-fit: contain;
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
-    100% { transform: translateY(0px); }
-}
- /* Header & Navigation - Exactly as in main.html */
-header {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 1000;
-    height: var(--header-height);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-header .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 2rem;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.logo {
-    display: flex;
-    align-items: center;
-    text-decoration: none;
-    z-index: 1002;
-}
-
-.logo h1 {
-    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-size: 28px;
-    font-weight: 600;
-}
-
-/* Main Navigation */
-.main-nav {
-    margin-left: auto;
-    height: 100%;
-}
-
-.nav-list {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    height: 100%;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.nav-list > li {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    position: relative;
-}
-
-.nav-list > li > a {
-    color: var(--text-dark);
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 14px;
-    letter-spacing: 0.3px;
-    padding: 0 12px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    transition: color 0.3s ease;
-}
-
-.nav-list > li > a:hover {
-    color: var(--primary-color);
-}
-
-/* Auth Buttons */
-.auth-buttons {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-left: 1.5rem;
-}
-
-.sign-in {
-    color: var(--text-dark);
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 15px;
-    transition: color 0.3s ease;
-}
-
-.sign-in:hover {
-    color: var(--primary-color);
-}
-
-.sign-up {
-    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 15px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.sign-up:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(227, 51, 51, 0.2);
-}
-
-/* Mega Menu Styles */
-.mega-menu {
-    position: relative;
-}
-
-.mega-menu .dropdown-content {
-    width: 1000px;
-    max-height: calc(100vh - var(--header-height) - 40px);
-    overflow-y: auto;
-    left: 50%;
-    transform: translateX(-50%) translateY(10px);
-    display: none;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
-    padding: 24px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
-    opacity: 0;
-    visibility: hidden;
-    position: absolute;
-    top: 100%;
     transition: all 0.3s ease;
-    z-index: 1001;
-    scrollbar-width: thin;
-    scrollbar-color: var(--primary-color) #f1f1f1;
 }
 
-.mega-menu:hover .dropdown-content {
-    opacity: 1;
-    visibility: visible;
-    transform: translateX(-50%) translateY(0);
+.hero-stats {
     display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 3rem;
 }
 
-/* Prevent body scroll when hovering dropdown */
-.mega-menu:hover {
-    overflow: hidden;
+.stat-item {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    text-align: center;
+    transition: var(--transition);
+    backdrop-filter: blur(10px);
 }
 
-/* Custom scrollbar styles */
-.mega-menu .dropdown-content::-webkit-scrollbar {
-    width: 6px;
+.stat-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
-.mega-menu .dropdown-content::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
+.stat-item i {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
 }
 
-.mega-menu .dropdown-content::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
-    border-radius: 3px;
+.stat-item h4 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 0.5rem;
 }
 
-.mega-menu .dropdown-content::-webkit-scrollbar-thumb:hover {
-    background: #1a237e;
-}
-
-/* Mobile Menu Toggle */
-.menu-toggle {
-    display: none;
-    flex-direction: column;
-    gap: 5px;
-    cursor: pointer;
-    padding: 8px;
-    z-index: 1002;
-}
-
-.menu-toggle span {
-    width: 24px;
-    height: 2px;
-    background: var(--text-dark);
-    transition: all 0.3s ease;
-}
-
-/* Menu Overlay */
-.menu-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    z-index: 999;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.menu-overlay.active {
-    display: block;
-    opacity: 1;
-}
-
-/* Responsive Header Styles */
-@media (max-width: 1200px) {
-    .mega-menu .dropdown-content {
-        width: 900px;
-    }
-
-    header .container {
-        padding: 0 1.5rem;
-    }
-}
-
-@media (max-width: 992px) {
-    .mega-menu .dropdown-content {
-        width: 700px;
-    }
-}
-
-@media (max-width: 768px) {
-    header .container {
-        padding: 0 1rem;
-    }
-
-    .menu-toggle {
-        display: flex;
-    }
-
-    .menu-toggle.active span:nth-child(1) {
-        transform: rotate(45deg) translate(5px, 5px);
-    }
-
-    .menu-toggle.active span:nth-child(2) {
-        opacity: 0;
-    }
-
-    .menu-toggle.active span:nth-child(3) {
-        transform: rotate(-45deg) translate(5px, -5px);
-    }
-
-    .main-nav {
-        position: fixed;
-        top: var(--header-height);
-        right: -100%;
-        width: 85%;
-        height: calc(100vh - var(--header-height));
-        background: white;
-        transition: right 0.3s ease;
-        overflow-y: auto;
-        z-index: 1001;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .main-nav.active {
-        right: 0;
-    }
-
-    .nav-list {
-        flex-direction: column;
-        gap: 0;
-        height: auto;
-        padding: 0;
-        width: 100%;
-    }
-
-    .nav-list > li {
-        width: 100%;
-        height: auto;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .nav-list > li > a {
-        padding: 15px;
-        width: 100%;
-        justify-content: space-between;
-        font-size: 15px;
-    }
-
-    .auth-buttons {
-        flex-direction: column;
-        margin: 0;
-        padding: 15px;
-        gap: 10px;
-        background: white;
-        border-top: 1px solid var(--border-color);
-    }
-
-    .sign-in, .sign-up {
-        width: 100%;
-        padding: 12px;
-        text-align: center;
-        border-radius: 6px;
-    }
+.stat-item p {
+    color: var(--light-text);
+    font-size: 0.9rem;
 }
 </style>
 </head>
@@ -469,496 +235,254 @@ header .container {
                         <h1>Streamline Your Workforce Attendance & Leave Management</h1>
                         <p>Integrate Biometric Systems, Manage Leave Requests, Timesheets, and Shifts Seamlessly</p>
                         <div class="hero-buttons">
-                            <a href="#" class="btn primary">Request a Demo</a>
-                            <a href="#" class="btn secondary">Get Started Today</a>
+                            <a href="#" class="btn primary">Get Started Today</a>
+                            <a href="#" class="btn secondary">Request a Demo</a>
+                        </div>
+                        <div class="hero-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-clock"></i>
+                                <h4>99.9% Accuracy</h4>
+                                <p>In attendance tracking</p>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-calendar-check"></i>
+                                <h4>60% Faster</h4>
+                                <p>Leave approval process</p>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-chart-line"></i>
+                                <h4>40% Savings</h4>
+                                <p>In HR administrative time</p>
+                            </div>
                         </div>
                     </div>
                     <div class="hero-image">
-                        <img 
-                            src="image/attendance-dashboard.png" 
-                            alt="Attendance Management Dashboard"
-                            loading="lazy"
-                        >
+                        <img src="image/attendance-dashboard.png" alt="Attendance Management Dashboard" loading="lazy">
                     </div>
                 </div>
             </div>
         </section>
-
         <!-- Key Features Section -->
-        <section class="features-section">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Comprehensive Attendance Management Features</h2>
-                    <p>Everything you need to manage your workforce attendance efficiently</p>
-                </div>
-                <div class="features-grid">
-                    <!-- Biometric Integration -->
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-fingerprint"></i>
-                        </div>
-                        <div class="feature-content">
-                            <h3>Biometric System Integration</h3>
-                            <p>Secure and accurate attendance tracking with advanced biometric technology</p>
-                            <ul class="feature-list">
-                                <li><i class="fas fa-check"></i>Fingerprint recognition</li>
-                                <li><i class="fas fa-check"></i>Facial recognition support</li>
-                                <li><i class="fas fa-check"></i>Prevent time theft</li>
-                                <li><i class="fas fa-check"></i>Real-time tracking</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- Leave Management -->
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-calendar-check"></i>
-                        </div>
-                        <div class="feature-content">
-                            <h3>Leave Request & Approval</h3>
-                            <p>Streamlined leave management process with automated workflows</p>
-                            <ul class="feature-list">
-                                <li><i class="fas fa-check"></i>Digital leave applications</li>
-                                <li><i class="fas fa-check"></i>Custom leave policies</li>
-                                <li><i class="fas fa-check"></i>Approval workflows</li>
-                                <li><i class="fas fa-check"></i>Leave balance tracking</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- Timesheet Management -->
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="feature-content">
-                            <h3>Timesheet Management</h3>
-                            <p>Accurate tracking of work hours and overtime calculations</p>
-                            <ul class="feature-list">
-                                <li><i class="fas fa-check"></i>Automated time tracking</li>
-                                <li><i class="fas fa-check"></i>Overtime calculations</li>
-                                <li><i class="fas fa-check"></i>Project time allocation</li>
-                                <li><i class="fas fa-check"></i>Payroll integration</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- Shift Management -->
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-user-clock"></i>
-                        </div>
-                        <div class="feature-content">
-                            <h3>Shift Management</h3>
-                            <p>Flexible shift scheduling and rotation management</p>
-                            <ul class="feature-list">
-                                <li><i class="fas fa-check"></i>Multiple shift creation</li>
-                                <li><i class="fas fa-check"></i>Rotation scheduling</li>
-                                <li><i class="fas fa-check"></i>Shift swapping</li>
-                                <li><i class="fas fa-check"></i>Coverage analysis</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-<style>
-/* Features Section Styles - Matching main.html structure */
-.features-section {
-    padding: 6rem 0;
-    background: white;
-}
-
-.section-header {
-    text-align: center;
-    max-width: 800px;
-    margin: 0 auto 4rem;
-}
-
-.section-header h2 {
-    font-size: clamp(2rem, 4vw, 2.5rem);
-    color: var(--text-dark);
-    margin-bottom: 1rem;
-    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.section-header p {
-    font-size: clamp(1rem, 2vw, 1.2rem);
-    color: var(--light-text);
-}
-
-.features-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2.5rem;
-    margin-top: 3rem;
-}
-
-.feature-card {
-    background: white;
-    padding: 2.5rem;
-    border-radius: 20px;
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-    border: 1px solid rgba(227, 51, 51, 0.1);
-    position: relative;
-    overflow: hidden;
-}
-
-.feature-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
-    transform: scaleX(0);
-    transition: transform 0.3s ease;
-    transform-origin: left;
-}
-
-.feature-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 15px 35px rgba(227, 51, 51, 0.1);
-}
-
-.feature-card:hover::before {
-    transform: scaleX(1);
-}
-
-.feature-icon {
-    width: 64px;
-    height: 64px;
-    background: rgba(227, 51, 51, 0.1);
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-}
-
-.feature-icon i {
-    font-size: 1.75rem;
-    color: var(--primary-color);
-}
-
-.feature-content h3 {
-    font-size: 1.5rem;
-    color: var(--text-dark);
-    margin-bottom: 1rem;
-}
-
-.feature-content p {
-    color: var(--text-body);
-    margin-bottom: 1.5rem;
-}
-
-.feature-list {
-    list-style: none;
-}
-
-.feature-list li {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
-    color: var(--text-body);
-}
-
-.feature-list li i {
-    color: var(--primary-color);
-    font-size: 1.1rem;
-}
-</style>
-<!-- Benefits Section -->
-<section class="benefits-section">
+<section class="features-section">
     <div class="container">
-        <div class="benefits-grid">
-            <div class="benefits-content">
-                <div class="section-header" style="text-align: left; margin: 0 0 3rem;">
-                    <h2>Transform Your Attendance Management</h2>
-                    <p>Experience the advantages of automated attendance tracking</p>
+        <div class="section-header">
+            <h2>Advanced Attendance Management Features</h2>
+            <p>Comprehensive tools for efficient workforce time tracking and management</p>
+        </div>
+        <div class="feature-grid">
+            <!-- Biometric Integration -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-fingerprint"></i>
                 </div>
-                <div class="benefit-item">
-                    <div class="benefit-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="benefit-content">
-                        <h3>Enhanced Accuracy</h3>
-                        <p>Eliminate manual errors and ensure precise attendance tracking for accurate payroll processing</p>
-                    </div>
-                </div>
-                <div class="benefit-item">
-                    <div class="benefit-icon">
-                        <i class="fas fa-rocket"></i>
-                    </div>
-                    <div class="benefit-content">
-                        <h3>Increased Efficiency</h3>
-                        <p>Automate routine tasks and free up HR resources for strategic initiatives</p>
-                    </div>
-                </div>
-                <div class="benefit-item">
-                    <div class="benefit-icon">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <div class="benefit-content">
-                        <h3>Improved Compliance</h3>
-                        <p>Stay compliant with labor laws and maintain accurate attendance records</p>
-                    </div>
-                </div>
-                <div class="benefit-item">
-                    <div class="benefit-icon">
-                        <i class="fas fa-smile"></i>
-                    </div>
-                    <div class="benefit-content">
-                        <h3>Employee Satisfaction</h3>
-                        <p>Provide transparency and easy access to attendance and leave information</p>
-                    </div>
-                </div>
+                <h3>Biometric Integration</h3>
+                <p>Secure and accurate attendance tracking with advanced biometric systems</p>
+                <ul>
+                    <li>Fingerprint recognition</li>
+                    <li>Facial recognition support</li>
+                    <li>Anti-spoofing technology</li>
+                    <li>Real-time verification</li>
+                </ul>
+                <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
             </div>
-            <div class="benefits-image">
-                <img 
-                    src="image/benefits-illustration.png" 
-                    alt="Benefits Illustration"
-                    loading="lazy"
-                >
+
+            <!-- Leave Management -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h3>Leave Management</h3>
+                <p>Streamlined leave request and approval workflow</p>
+                <ul>
+                    <li>Automated approval process</li>
+                    <li>Leave balance tracking</li>
+                    <li>Custom leave policies</li>
+                    <li>Calendar integration</li>
+                </ul>
+                <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            <!-- Timesheet Management -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3>Timesheet Management</h3>
+                <p>Accurate tracking of work hours and overtime</p>
+                <ul>
+                    <li>Automated time tracking</li>
+                    <li>Overtime calculation</li>
+                    <li>Shift management</li>
+                    <li>Payroll integration</li>
+                </ul>
+                <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
             </div>
         </div>
     </div>
 </section>
 
+<!-- Analytics Section -->
+<section class="analytics-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Real-Time Attendance Analytics</h2>
+            <p>Make data-driven decisions with comprehensive attendance insights</p>
+        </div>
+        <div class="analytics-container">
+            <div class="analytics-content">
+                <div class="analytics-metrics">
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="metric-details">
+                            <h3>Attendance Tracking</h3>
+                            <p>Monitor attendance patterns and trends in real-time</p>
+                            <ul class="metric-list">
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Daily Attendance Reports</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Late Arrival Analysis</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Overtime Tracking</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <div class="metric-details">
+                            <h3>Leave Analytics</h3>
+                            <p>Comprehensive leave management insights</p>
+                            <ul class="metric-list">
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Leave Balance Reports</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Department-wise Analysis</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Leave Pattern Detection</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <i class="fas fa-bullseye"></i>
+                        </div>
+                        <div class="metric-details">
+                            <h3>Compliance Monitoring</h3>
+                            <p>Stay compliant with labor laws and policies</p>
+                            <ul class="metric-list">
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Working Hours Compliance</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Break Time Tracking</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Policy Adherence Reports</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="analytics-visual">
+                <img src="image/attendance-analytics.png" alt="Attendance Analytics Dashboard">
+                <div class="stats-overlay">
+                    <div class="stat-bubble">
+                        <span class="stat-value">95%</span>
+                        <span class="stat-label">Accuracy Rate</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 <!-- Integration Section -->
 <section class="integration-section">
     <div class="container">
         <div class="section-header">
             <h2>Seamless Integration Capabilities</h2>
-            <p>Connect with your existing business tools and systems</p>
+            <p>Connect your attendance system with your existing business tools</p>
         </div>
         <div class="integration-grid">
-            <!-- Payroll Integration -->
             <div class="integration-card">
-                <div class="integration-icon">
-                    <i class="fas fa-money-bill-wave"></i>
+                <div class="status-badge connected">Connected</div>
+                <img src="image/payroll-icon.png" alt="Payroll Integration">
+                <h4>Payroll Systems</h4>
+                <p>Automatic data sync for accurate salary calculations</p>
+                <div class="integration-features">
+                    <div class="feature-item">
+                        <i class="fas fa-sync"></i>
+                        <span>Real-time Sync</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Overtime Calculation</span>
+                    </div>
                 </div>
-                <h3>Payroll Systems</h3>
-                <p>Automatic data sync for accurate salary calculations and timely payments</p>
             </div>
 
-            <!-- HR Software Integration -->
             <div class="integration-card">
-                <div class="integration-icon">
-                    <i class="fas fa-users-cog"></i>
+                <div class="status-badge popular">Popular</div>
+                <img src="image/hrms-icon.png" alt="HRMS Integration">
+                <h4>HR Management</h4>
+                <p>Unified platform for all employee data</p>
+                <div class="integration-features">
+                    <div class="feature-item">
+                        <i class="fas fa-database"></i>
+                        <span>Centralized Data</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Employee Profiles</span>
+                    </div>
                 </div>
-                <h3>HR Management Software</h3>
-                <p>Unified platform for all employee-related information and processes</p>
             </div>
 
-            <!-- Third-Party Integration -->
             <div class="integration-card">
-                <div class="integration-icon">
-                    <i class="fas fa-plug"></i>
+                <div class="status-badge new">New</div>
+                <img src="image/biometric-icon.png" alt="Biometric Integration">
+                <h4>Biometric Devices</h4>
+                <p>Compatible with leading biometric hardware</p>
+                <div class="integration-features">
+                    <div class="feature-item">
+                        <i class="fas fa-fingerprint"></i>
+                        <span>Multiple Devices</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Secure Connection</span>
+                    </div>
                 </div>
-                <h3>Third-Party Applications</h3>
-                <p>Flexible API integration with various business tools and systems</p>
             </div>
         </div>
     </div>
 </section>
 
-<style>
-/* Benefits Section Styles */
-.benefits-section {
-    padding: 6rem 0;
-    background: var(--gradient);
-    position: relative;
-}
-
-.benefits-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 4rem;
-    align-items: center;
-}
-
-.benefits-content {
-    max-width: 500px;
-}
-
-.benefit-item {
-    display: flex;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-    padding: 1.5rem;
-    background: white;
-    border-radius: 16px;
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-}
-
-.benefit-item:hover {
-    transform: translateX(10px);
-    box-shadow: 0 10px 30px rgba(227, 51, 51, 0.1);
-}
-
-.benefit-icon {
-    width: 48px;
-    height: 48px;
-    background: rgba(227, 51, 51, 0.1);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.benefit-icon i {
-    font-size: 1.5rem;
-    color: var(--primary-color);
-}
-
-.benefit-content h3 {
-    color: var(--text-dark);
-    margin-bottom: 0.5rem;
-    font-size: 1.25rem;
-}
-
-.benefit-content p {
-    color: var(--text-body);
-    font-size: 0.95rem;
-}
-
-.benefits-image {
-    position: relative;
-}
-
-.benefits-image img {
-    width: 100%;
-    max-width: 500px;
-    border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-}
-
-/* Integration Section Styles */
-.integration-section {
-    padding: 6rem 0;
-    background: white;
-}
-
-.integration-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-}
-
-.integration-card {
-    background: white;
-    padding: 2rem;
-    border-radius: 16px;
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-    text-align: center;
-    border: 1px solid rgba(227, 51, 51, 0.1);
-}
-
-.integration-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 15px 35px rgba(227, 51, 51, 0.1);
-}
-
-.integration-icon {
-    width: 56px;
-    height: 56px;
-    background: rgba(227, 51, 51, 0.1);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.5rem;
-}
-
-.integration-icon i {
-    font-size: 1.5rem;
-    color: var(--primary-color);
-}
-
-.integration-card h3 {
-    color: var(--text-dark);
-    margin-bottom: 1rem;
-    font-size: 1.25rem;
-}
-
-.integration-card p {
-    color: var(--text-body);
-    margin-bottom: 1.5rem;
-    font-size: 0.95rem;
-}
-
-/* Responsive Styles */
-@media (max-width: 1200px) {
-    .benefits-grid,
-    .integration-grid {
-        gap: 2rem;
-    }
-}
-
-@media (max-width: 992px) {
-    .benefits-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .integration-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .benefits-image {
-        order: -1;
-        text-align: center;
-    }
-
-    .benefits-image img {
-        max-width: 80%;
-    }
-}
-
-@media (max-width: 768px) {
-    .benefit-item {
-        padding: 1.5rem;
-    }
-
-    .integration-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .integration-card {
-        max-width: 400px;
-        margin: 0 auto;
-    }
-}
-
-@media (max-width: 480px) {
-    .benefit-item {
-        padding: 1.25rem;
-    }
-
-    .benefit-icon {
-        width: 40px;
-        height: 40px;
-    }
-
-    .benefit-icon i {
-        font-size: 1.25rem;
-    }
-}
-</style>
 <!-- Pricing Section -->
 <section class="pricing-section">
     <div class="container">
         <div class="section-header">
-            <h2>Transparent Pricing</h2>
+            <h2>Simple, Transparent Pricing</h2>
             <p>Choose the plan that best fits your business needs</p>
         </div>
         <div class="pricing-toggle">
@@ -975,27 +499,15 @@ header .container {
                 <h3>Basic</h3>
                 <div class="price">
                     <span class="currency">$</span>
-                    <span class="amount">8</span>
-                    <span class="period">/employee/month</span>
+                    <span class="amount">29</span>
+                    <span class="period">/month</span>
                 </div>
-                <p class="plan-description">Perfect for small businesses</p>
+                <p class="plan-description">Perfect for small teams</p>
                 <ul class="plan-features">
-                    <li>
-                        <i class="fas fa-check"></i>
-                        <span>Basic Attendance Tracking</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-check"></i>
-                        <span>Simple Leave Management</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-check"></i>
-                        <span>Standard Reports</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-check"></i>
-                        <span>Email Support</span>
-                    </li>
+                    <li><i class="fas fa-check"></i>Up to 50 employees</li>
+                    <li><i class="fas fa-check"></i>Basic attendance tracking</li>
+                    <li><i class="fas fa-check"></i>Leave management</li>
+                    <li><i class="fas fa-check"></i>Email support</li>
                 </ul>
                 <button class="btn primary">Start Free Trial</button>
                 <p class="trial-note">14-day free trial, no credit card required</p>
@@ -1007,31 +519,16 @@ header .container {
                 <h3>Professional</h3>
                 <div class="price">
                     <span class="currency">$</span>
-                    <span class="amount">15</span>
-                    <span class="period">/employee/month</span>
+                    <span class="amount">79</span>
+                    <span class="period">/month</span>
                 </div>
-                <p class="plan-description">Ideal for growing companies</p>
+                <p class="plan-description">Ideal for growing businesses</p>
                 <ul class="plan-features">
-                    <li>
-                        <i class="fas fa-check"></i>
-                        <span>Biometric Integration</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-check"></i>
-                        <span>Advanced Leave Management</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-check"></i>
-                        <span>Shift Management</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-check"></i>
-                        <span>Priority Support</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-check"></i>
-                        <span>API Access</span>
-                    </li>
+                    <li><i class="fas fa-check"></i>Up to 200 employees</li>
+                    <li><i class="fas fa-check"></i>Advanced biometric integration</li>
+                    <li><i class="fas fa-check"></i>Shift management</li>
+                    <li><i class="fas fa-check"></i>Priority support</li>
+                    <li><i class="fas fa-check"></i>Advanced analytics</li>
                 </ul>
                 <button class="btn primary">Start Free Trial</button>
                 <p class="trial-note">14-day free trial, no credit card required</p>
@@ -1045,22 +542,11 @@ header .container {
                 </div>
                 <p class="plan-description">For large organizations</p>
                 <ul class="plan-features">
-                    <li>
-                        <i class="fas fa-check"></i>
-                        <span>Custom Biometric Solutions</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-check"></i>
-                        <span>Dedicated Account Manager</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-check"></i>
-                        <span>Custom Integration</span>
-                    </li>
-                    <li>
-                        <i class="fas fa-check"></i>
-                        <span>24/7 Premium Support</span>
-                    </li>
+                    <li><i class="fas fa-check"></i>Unlimited employees</li>
+                    <li><i class="fas fa-check"></i>Custom implementation</li>
+                    <li><i class="fas fa-check"></i>Multi-location support</li>
+                    <li><i class="fas fa-check"></i>24/7 dedicated support</li>
+                    <li><i class="fas fa-check"></i>Custom integrations</li>
                 </ul>
                 <button class="btn secondary">Contact Sales</button>
                 <p class="trial-note">Get a customized quote for your needs</p>
@@ -1074,7 +560,7 @@ header .container {
     <div class="container">
         <div class="cta-content">
             <h2>Ready to Transform Your Attendance Management?</h2>
-            <p>Join thousands of companies that trust our attendance and leave management solution. Start streamlining your workforce management today.</p>
+            <p>Start streamlining your attendance tracking and leave management today with our intelligent solution</p>
             <div class="cta-buttons">
                 <button class="btn primary">Start Free Trial</button>
                 <button class="btn secondary">Schedule Demo</button>
@@ -1090,19 +576,425 @@ header .container {
                 </div>
                 <div class="cta-feature">
                     <i class="fas fa-check-circle"></i>
-                    <span>Free onboarding support</span>
+                    <span>Free implementation support</span>
                 </div>
             </div>
         </div>
     </div>
 </section>
+<!-- Footer -->
+<footer class="main-footer">
+    <div class="container">
+        <div class="footer-social">
+            <a href="#" class="social-link" aria-label="LinkedIn">
+                <i class="fab fa-linkedin"></i>
+            </a>
+            <a href="#" class="social-link" aria-label="Twitter">
+                <i class="fab fa-twitter"></i>
+            </a>
+            <a href="#" class="social-link" aria-label="Facebook">
+                <i class="fab fa-facebook"></i>
+            </a>
+            <a href="#" class="social-link" aria-label="Instagram">
+                <i class="fab fa-instagram"></i>
+            </a>
+        </div>
 
+        <div class="footer-grid">
+            <div class="footer-section">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="#integrations">Integrations</a></li>
+                    <li><a href="#enterprise">Enterprise</a></li>
+                    <li><a href="#security">Security</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="#documentation">Documentation</a></li>
+                    <li><a href="#api">API Reference</a></li>
+                    <li><a href="#guides">Guides</a></li>
+                    <li><a href="#blog">Blog</a></li>
+                    <li><a href="#community">Community</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#about">About Us</a></li>
+                    <li><a href="#careers">Careers</a></li>
+                    <li><a href="#partners">Partners</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                    <li><a href="#news">News</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="#privacy">Privacy Policy</a></li>
+                    <li><a href="#terms">Terms of Service</a></li>
+                    <li><a href="#cookie">Cookie Policy</a></li>
+                    <li><a href="#gdpr">GDPR Compliance</a></li>
+                    <li><a href="#security-policy">Security Policy</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2024 Workwise Pro. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
 <style>
+    /* Feature Cards */
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2.5rem;
+    margin-top: 4rem;
+}
+
+.feature-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: left;
+}
+
+.feature-card:hover::before {
+    transform: scaleX(1);
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.feature-icon i {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+}
+
+.feature-card h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.feature-card p {
+    color: var(--light-text);
+    margin-bottom: 1.5rem;
+    line-height: 1.7;
+}
+
+.feature-card ul {
+    list-style: none;
+    margin-bottom: 1.5rem;
+}
+
+.feature-card ul li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-color);
+}
+
+.feature-card ul li::before {
+    content: '✓';
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+/* Analytics Section */
+.analytics-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+.analytics-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    margin-top: 3rem;
+}
+
+.analytics-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.metric-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.metric-card:hover {
+    transform: translateX(10px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.metric-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.metric-icon i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.metric-details {
+    flex: 1;
+}
+
+.metric-details h3 {
+    font-size: 1.25rem;
+    color: #1a237e;
+    margin-bottom: 0.5rem;
+}
+
+.metric-details p {
+    color: var(--light-text);
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+.metric-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.metric-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
+}
+
+.metric-list li i {
+    color: var(--primary-color);
+    font-size: 1rem;
+}
+
+.analytics-visual {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.analytics-visual img {
+    width: 100%;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.analytics-visual:hover img {
+    transform: scale(1.02);
+}
+
+.stats-overlay {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 1rem;
+}
+
+.stat-bubble {
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--light-text);
+    margin-top: 0.25rem;
+}
+    /* Integration Section Styles */
+.integration-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+    overflow: hidden;
+}
+
+.integration-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('path/to/pattern.svg');
+    opacity: 0.05;
+    pointer-events: none;
+}
+
+.integration-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+    margin-bottom: 4rem;
+}
+
+.integration-card {
+    background: white;
+    padding: 2.5rem 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    position: relative;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+}
+
+.integration-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+    border-color: var(--primary-color);
+}
+
+.status-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.connected {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.status-badge.popular {
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+}
+
+.status-badge.new {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.integration-card img {
+    width: 64px;
+    height: 64px;
+    margin: 1rem auto 1.5rem;
+    transition: transform 0.3s ease;
+}
+
+.integration-card:hover img {
+    transform: scale(1.1);
+}
+
+.integration-card h4 {
+    font-size: 1.25rem;
+    color: #1a237e;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.integration-card p {
+    color: var(--light-text);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.integration-features {
+    margin-top: 1.5rem;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+    background: rgba(41, 98, 255, 0.05);
+    transform: translateX(5px);
+}
+
 /* Pricing Section Styles */
 .pricing-section {
     padding: 6rem 0;
     background: var(--gradient);
     position: relative;
+    overflow: hidden;
 }
 
 .pricing-toggle {
@@ -1110,14 +1002,29 @@ header .container {
     align-items: center;
     justify-content: center;
     gap: 1.5rem;
-    margin: 3rem 0;
+    margin: 3rem auto;
     padding: 1rem;
     background: white;
     border-radius: 50px;
-    box-shadow: 0 4px 15px rgba(227, 51, 51, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     width: fit-content;
-    margin-left: auto;
-    margin-right: auto;
+}
+
+.pricing-toggle span {
+    font-weight: 500;
+    color: var(--text-color);
+    padding: 0.5rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.discount {
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
 }
 
 .switch {
@@ -1125,6 +1032,7 @@ header .container {
     display: inline-block;
     width: 60px;
     height: 32px;
+    margin: 0 0.5rem;
 }
 
 .switch input {
@@ -1159,7 +1067,7 @@ header .container {
 }
 
 input:checked + .slider {
-    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
 }
 
 input:checked + .slider:before {
@@ -1170,8 +1078,9 @@ input:checked + .slider:before {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 2rem;
-    margin-top: 3rem;
-    padding: 1rem;
+    margin: 4rem auto;
+    max-width: 1200px;
+    padding: 0 1rem;
 }
 
 .pricing-card {
@@ -1184,15 +1093,17 @@ input:checked + .slider:before {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    border: 1px solid rgba(41, 98, 255, 0.1);
 }
 
 .pricing-card:hover:not(.popular) {
     transform: translateY(-10px);
-    box-shadow: 0 15px 35px rgba(227, 51, 51, 0.1);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-color);
 }
 
 .pricing-card.popular {
-    background: linear-gradient(145deg, #ffffff, #fff6f4);
+    background: linear-gradient(145deg, #ffffff, #f8f9ff);
     border: 2px solid var(--primary-color);
     transform: scale(1.05);
     z-index: 1;
@@ -1202,13 +1113,107 @@ input:checked + .slider:before {
     position: absolute;
     top: 1.5rem;
     right: -3.5rem;
-    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
     color: white;
     padding: 0.5rem 3.5rem;
     transform: rotate(45deg);
     font-size: 0.875rem;
     font-weight: 500;
-    box-shadow: 0 2px 4px rgba(227, 51, 51, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+    /* Continuing Pricing Card Styles */
+.pricing-card h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+.price {
+    text-align: center;
+    margin: 1.5rem 0;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.currency {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    vertical-align: top;
+    margin-right: 0.25rem;
+}
+
+.amount {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1;
+}
+
+.period {
+    font-size: 1rem;
+    color: var(--light-text);
+    margin-left: 0.25rem;
+}
+
+.custom {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.plan-description {
+    text-align: center;
+    color: var(--light-text);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+.plan-features {
+    list-style: none;
+    margin: 2rem 0;
+    flex-grow: 1;
+}
+
+.plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    color: var(--text-color);
+    font-size: 1rem;
+    padding: 0.5rem 0;
+}
+
+.plan-features li i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.pricing-card:hover .plan-features li i {
+    background: var(--primary-color);
+    color: white;
+}
+
+.trial-note {
+    text-align: center;
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin-top: 1rem;
 }
 
 /* CTA Section Styles */
@@ -1218,6 +1223,18 @@ input:checked + .slider:before {
     position: relative;
     overflow: hidden;
     text-align: center;
+}
+
+.cta-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('path/to/pattern.svg');
+    opacity: 0.05;
+    pointer-events: none;
 }
 
 .cta-content {
@@ -1230,7 +1247,7 @@ input:checked + .slider:before {
 
 .cta-content h2 {
     font-size: clamp(2.5rem, 5vw, 3.5rem);
-    background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+    background: linear-gradient(45deg, #1a237e, #2962ff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 1.5rem;
@@ -1243,6 +1260,7 @@ input:checked + .slider:before {
     color: #455a64;
     margin-bottom: 2.5rem;
     opacity: 0.9;
+    line-height: 1.6;
 }
 
 .cta-buttons {
@@ -1250,6 +1268,22 @@ input:checked + .slider:before {
     gap: 1.5rem;
     justify-content: center;
     margin-bottom: 3rem;
+}
+
+.cta-buttons .btn {
+    min-width: 200px;
+    padding: 1.25rem 2.5rem;
+    font-size: 1.1rem;
+}
+
+.cta-buttons .btn.primary {
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    box-shadow: 0 8px 25px rgba(41, 98, 255, 0.25);
+}
+
+.cta-buttons .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(41, 98, 255, 0.3);
 }
 
 .cta-features {
@@ -1280,242 +1314,578 @@ input:checked + .slider:before {
 .cta-feature i {
     color: var(--primary-color);
     font-size: 1.25rem;
+    background: rgba(41, 98, 255, 0.1);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
 }
-</style>
-<!-- Footer -->
-<footer class="main-footer">
-    <div class="container">
-        <div class="footer-grid">
-            <div class="brand-section">
-                <div class="footer-logo">
-                    <h2>Workwise Pro</h2>
-                </div>
-                <p class="footer-description">
-                    Comprehensive workforce management solutions for modern businesses. Streamline your HR operations with our innovative platform.
-                </p>
-                <div class="social-links">
-                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                </div>
-            </div>
 
-            <div class="footer-section">
-                <h4>Solutions</h4>
-                <ul>
-                    <li><a href="hr.html">HR Management</a></li>
-                    <li><a href="payroll.html">Payroll</a></li>
-                    <li><a href="attendance.html">Attendance</a></li>
-                    <li><a href="performance.html">Performance</a></li>
-                </ul>
-            </div>
+/* Footer Styles */
+.main-footer {
+    background: #000000;
+    color: #ffffff;
+    padding: 6rem 0 2rem;
+    position: relative;
+}
 
-            <div class="footer-section">
-                <h4>Company</h4>
-                <ul>
-                    <li><a href="about.html">About Us</a></li>
-                    <li><a href="careers.html">Careers</a></li>
-                    <li><a href="blog.html">Blog</a></li>
-                    <li><a href="contact.html">Contact</a></li>
-                </ul>
-            </div>
+.main-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(41, 98, 255, 0.05), transparent);
+    pointer-events: none;
+}
 
-            <div class="footer-section">
-                <h4>Resources</h4>
-                <ul>
-                    <li><a href="documentation.html">Documentation</a></li>
-                    <li><a href="api.html">API Reference</a></li>
-                    <li><a href="guides.html">Guides</a></li>
-                    <li><a href="support.html">Support</a></li>
-                </ul>
-            </div>
+.footer-social {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 4rem;
+}
 
-            <div class="footer-section">
-                <h4>Legal</h4>
-                <ul>
-                    <li><a href="privacy.html">Privacy Policy</a></li>
-                    <li><a href="terms.html">Terms of Service</a></li>
-                    <li><a href="security.html">Security</a></li>
-                    <li><a href="compliance.html">Compliance</a></li>
-                </ul>
-            </div>
-        </div>
+.social-link {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.25rem;
+    transition: all 0.3s ease;
+}
 
-        <div class="footer-bottom">
-            <div class="footer-info">
-                <p>&copy; 2024 Workwise Pro. All rights reserved.</p>
-            </div>
-            <div class="footer-badges">
-                <img src="image/iso-certified.png" alt="ISO Certified" loading="lazy">
-                <img src="image/gdpr-compliant.png" alt="GDPR Compliant" loading="lazy">
-                <img src="image/secure-payment.png" alt="Secure Payment" loading="lazy">
-            </div>
-        </div>
-    </div>
-</footer>
+.social-link:hover {
+    color: var(--primary-color);
+    transform: translateY(-3px);
+}
+    /* Continuing Footer Styles */
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(2rem, 5vw, 4rem);
+    margin-bottom: 4rem;
+    position: relative;
+}
 
-<script>
-// Initialize all functionality when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    initializeAll();
-    loadHeader();
-});
+.footer-section h4 {
+    color: #ffffff;
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    position: relative;
+    padding-bottom: 0.75rem;
+}
 
-// Header Loading Function
-async function loadHeader() {
-    const headerContainer = document.getElementById('header-container');
+.footer-section h4::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    background: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+.footer-section:hover h4::after {
+    width: 50px;
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section ul li {
+    margin-bottom: 0.8rem;
+}
+
+.footer-section ul li a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    display: inline-block;
+    padding: 0.3rem 0;
+    position: relative;
+}
+
+.footer-section ul li a::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+.footer-section ul li a:hover {
+    color: #ffffff;
+    transform: translateX(5px);
+}
+
+.footer-section ul li a:hover::before {
+    width: 100%;
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 2rem;
+    text-align: center;
+    position: relative;
+}
+
+.footer-bottom p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1200px) {
+    .pricing-grid {
+        gap: 1.5rem;
+        padding: 0 2rem;
+    }
     
-    try {
-        const response = await fetch('mainheader.html');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        
-        const html = await response.text();
-        headerContainer.innerHTML = html;
+    .pricing-card {
+        padding: 2.5rem 2rem;
+    }
 
-        // Initialize mobile menu functionality after header loads
-        initializeMobileMenu();
-    } catch (error) {
-        console.error('Error loading header:', error);
-        headerContainer.innerHTML = `
-            <header>
-                <div class="container">
-                    <a href="/" class="logo">
-                        <h1>Workwise Pro</h1>
-                    </a>
-                </div>
-            </header>
-        `;
+    .amount {
+        font-size: 3rem;
+    }
+
+    .analytics-container {
+        gap: 3rem;
+    }
+
+    .integration-grid {
+        gap: 1.5rem;
     }
 }
 
-function initializeAll() {
-    initializeAnimations();
-    initializePricing();
-    handleScrollEffects();
-    setupInteractions();
+@media (max-width: 992px) {
+    .hero-content,
+    .analytics-container {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+    }
+
+    .hero-text {
+        text-align: center;
+        max-width: 100%;
+    }
+
+    .hero-buttons {
+        justify-content: center;
+    }
+
+    .hero-image {
+        order: -1;
+    }
+
+    .hero-image img {
+        max-width: 80%;
+        margin: 0 auto;
+    }
+
+    .pricing-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .pricing-card.popular {
+        transform: scale(1.02);
+    }
+
+    .analytics-visual {
+        order: -1;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .integration-card {
+        padding: 2rem;
+    }
+
+    .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 3rem;
+    }
 }
 
-// Animation Handler
-function initializeAnimations() {
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
+@media (max-width: 768px) {
+    .hero-stats {
+        grid-template-columns: 1fr;
+        max-width: 400px;
+        margin: 3rem auto 0;
+    }
 
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('animate-in');
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pricing-toggle {
+        flex-direction: column;
+        background: transparent;
+        box-shadow: none;
+        gap: 1rem;
+    }
+
+    .pricing-toggle span {
+        background: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        width: 100%;
+        text-align: center;
+    }
+
+    .metric-card {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 1.5rem;
+    }
+
+    .metric-list li {
+        justify-content: center;
+    }
+
+    .cta-buttons {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .cta-features {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .footer-section {
+        text-align: center;
+    }
+
+    .footer-section h4::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-text h1 {
+        font-size: 2rem;
+    }
+
+    .hero-text p {
+        font-size: 1rem;
+    }
+
+    .feature-card,
+    .metric-card,
+    .integration-card,
+    .pricing-card {
+        padding: 1.5rem;
+    }
+
+    .amount {
+        font-size: 2.25rem;
+    }
+
+    .cta-content h2 {
+        font-size: 1.75rem;
+    }
+
+    .cta-feature {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .footer-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .social-link {
+        font-size: 1.1rem;
+    }
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0px); }
+}
+
+.animate-in {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Utility Classes */
+.mt-4 { margin-top: 2rem; }
+.mb-4 { margin-bottom: 2rem; }
+.text-center { text-align: center; }
+.hidden { display: none; }
+</style>
+<!-- Scripts -->
+<script>
+    // Document Ready Handler
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeAll();
+        loadHeader();
+    });
+
+    // Header Loading Function
+    async function loadHeader() {
+        const headerContainer = document.getElementById('header-container');
+        
+        try {
+            const response = await fetch('header.html');
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            const html = await response.text();
+            headerContainer.innerHTML = html;
+
+            // Initialize mobile menu functionality after header loads
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mainNav = document.getElementById('main-nav');
+            const menuOverlay = document.getElementById('menu-overlay');
+            const megaMenus = document.querySelectorAll('.mega-menu');
+
+            if (mobileMenu && mainNav) {
+                let isMenuOpen = false;
+
+                function toggleMenu(show) {
+                    isMenuOpen = show;
+                    mobileMenu.classList.toggle('active', show);
+                    mainNav.classList.toggle('active', show);
+                    menuOverlay.classList.toggle('active', show);
+                    document.body.style.overflow = show ? 'hidden' : '';
+
+                    if (!show) {
+                        megaMenus.forEach(menu => menu.classList.remove('active'));
+                    }
+                }
+
+                mobileMenu.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleMenu(!isMenuOpen);
+                });
+
+                // Handle mega menus on mobile
+                megaMenus.forEach(menu => {
+                    const link = menu.querySelector('a');
+                    link.addEventListener('click', (e) => {
+                        if (window.innerWidth <= 768) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            megaMenus.forEach(m => {
+                                if (m !== menu) m.classList.remove('active');
+                            });
+                            menu.classList.toggle('active');
+                        }
+                    });
+                });
+
+                // Close menu when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
+                        toggleMenu(false);
+                    }
+                });
             }
-        });
-    }, observerOptions);
+        } catch (error) {
+            console.error('Error loading header:', error);
+            headerContainer.innerHTML = `
+                <header class="main-header">
+                    <div class="container">
+                        <a href="/" class="logo">
+                            <h1>Workwise Pro</h1>
+                        </a>
+                    </div>
+                </header>
+            `;
+        }
+    }
 
-    // Observe all animatable elements
-    document.querySelectorAll('.feature-card, .benefit-item, .integration-card, .pricing-card')
-        .forEach(el => observer.observe(el));
-}
+    function initializeAll() {
+        initializeAnimations();
+        initializePricing();
+        initializeMetrics();
+        handleScrollEffects();
+        setupInteractions();
+        initializeCharts();
+    }
 
-// Pricing Toggle Handler
-function initializePricing() {
-    const billingToggle = document.getElementById('billing-toggle');
-    const priceAmounts = document.querySelectorAll('.amount');
-    const monthlyPrices = ['8', '15'];
-    const annualPrices = ['6', '12'];
+    // Animation Handler
+    function initializeAnimations() {
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
 
-    if (billingToggle) {
-        billingToggle.addEventListener('change', () => {
-            priceAmounts.forEach((price, index) => {
-                if (price.textContent !== 'Custom') {
-                    animateNumberChange(price, billingToggle.checked ? annualPrices[index] : monthlyPrices[index]);
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-in');
+                    if (entry.target.classList.contains('progress-fill')) {
+                        const width = entry.target.dataset.progress;
+                        entry.target.style.width = width;
+                    }
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature-card, .metric-item, .integration-card, .pricing-card, .progress-fill')
+            .forEach(el => observer.observe(el));
+    }
+
+    // Pricing Toggle Handler
+    function initializePricing() {
+        const billingToggle = document.getElementById('billing-toggle');
+        const priceAmounts = document.querySelectorAll('.amount');
+        const monthlyPrices = ['29', '79'];
+        const annualPrices = ['24', '64'];
+
+        if (billingToggle) {
+            billingToggle.addEventListener('change', () => {
+                priceAmounts.forEach((price, index) => {
+                    if (price.textContent !== 'Custom') {
+                        animateNumberChange(price, billingToggle.checked ? annualPrices[index] : monthlyPrices[index]);
+                    }
+                });
+            });
+        }
+    }
+
+    // Number Animation Helper
+    function animateNumberChange(element, newValue) {
+        const start = parseInt(element.textContent);
+        const end = parseInt(newValue);
+        const duration = 500;
+        const startTime = performance.now();
+
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            const current = Math.round(start + (end - start) * progress);
+            element.textContent = current;
+
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            }
+        }
+
+        requestAnimationFrame(update);
+    }
+
+    // Initialize Charts
+    function initializeCharts() {
+        const charts = document.querySelectorAll('.metric-chart');
+        charts.forEach(chart => {
+            const ctx = chart.getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Attendance Rate',
+                        data: [92, 95, 94, 96, 95, 98],
+                        borderColor: '#2962ff',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
                 }
             });
         });
     }
-}
 
-// Number Animation Helper
-function animateNumberChange(element, newValue) {
-    const start = parseInt(element.textContent);
-    const end = parseInt(newValue);
-    const duration = 500;
-    const startTime = performance.now();
+    // Scroll Effects Handler
+    function handleScrollEffects() {
+        let lastScroll = 0;
+        const header = document.querySelector('header');
 
-    function update(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-
-        const current = Math.round(start + (end - start) * progress);
-        element.textContent = current;
-
-        if (progress < 1) {
-            requestAnimationFrame(update);
-        }
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            
+            if (currentScroll > lastScroll && currentScroll > 100) {
+                header.classList.add('header-hidden');
+            } else {
+                header.classList.remove('header-hidden');
+            }
+            
+            lastScroll = currentScroll;
+        });
     }
 
-    requestAnimationFrame(update);
-}
-
-// Scroll Effects Handler
-function handleScrollEffects() {
-    let lastScroll = 0;
-    const header = document.querySelector('header');
-
-    window.addEventListener('scroll', () => {
-        const currentScroll = window.pageYOffset;
-        
-        if (currentScroll > lastScroll && currentScroll > 100) {
-            header.classList.add('header-hidden');
-        } else {
-            header.classList.remove('header-hidden');
-        }
-        
-        lastScroll = currentScroll;
-    });
-}
-
-// Interactive Elements Setup
-function setupInteractions() {
-    document.querySelectorAll('.feature-card, .benefit-item, .integration-card').forEach(card => {
-        card.addEventListener('mouseenter', () => {
-            card.classList.add('card-hover');
+    // Interactive Elements Setup
+    function setupInteractions() {
+        document.querySelectorAll('.feature-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.classList.add('feature-hover');
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.classList.remove('feature-hover');
+            });
         });
-        
-        card.addEventListener('mouseleave', () => {
-            card.classList.remove('card-hover');
+
+        document.querySelectorAll('.metric-item').forEach(item => {
+            item.addEventListener('click', () => {
+                item.classList.add('metric-active');
+                setTimeout(() => {
+                    item.classList.remove('metric-active');
+                }, 300);
+            });
         });
+    }
+
+    // Watson Assistant Chat Integration
+    window.watsonAssistantChatOptions = {
+        integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
+        region: "au-syd",
+        serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
+        onLoad: async (instance) => { await instance.render(); }
+    };
+    
+    setTimeout(function(){
+        const t = document.createElement('script');
+        t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
+            (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
+            "/WatsonAssistantChatEntry.js";
+        document.head.appendChild(t);
     });
-
-    // Smooth Scroll for Anchor Links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
-}
-
-// Watson Assistant Chat Integration
-window.watsonAssistantChatOptions = {
-    integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
-    region: "au-syd",
-    serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
-    onLoad: async (instance) => { await instance.render(); }
-};
-
-setTimeout(function(){
-    const t = document.createElement('script');
-    t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
-        (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
-        "/WatsonAssistantChatEntry.js";
-    document.head.appendChild(t);
-});
 </script>
 </body>
 </html>
