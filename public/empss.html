@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Self-Service Portal - Workwise Pro</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
+    
+    <!-- Sentiment Analysis -->
+    <script src="https://cdn.jsdelivr.net/npm/sentiment@5.0.2/build/sentiment.min.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* Root Variables */
+:root {
+    --primary-color: #2962ff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --background-color: #f8f9fa;
+    --text-color: #333;
+    --light-text: #6c757d;
+    --border-radius: 8px;
+    --transition: all 0.3s ease;
+    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --gradient: linear-gradient(135deg, #f0f7ff 0%, #e9ecef 100%);
+    --card-bg: #ffffff;
+    --mobile-padding: 1rem;
+    --section-spacing: 4rem;
+    --header-height: 70px;
+}
+
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    padding-top: var(--header-height);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--mobile-padding);
+    width: 100%;
+}
+
+/* Button Styles */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 2rem;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    transition: var(--transition);
+    font-weight: 500;
+    cursor: pointer;
+    min-width: 160px;
+    text-align: center;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+}
+
+.btn.primary {
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
+}
+
+.btn.secondary {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(41, 98, 255, 0.25);
+}
+
+/* Section Headers */
+.section-header {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 4rem;
+    padding: 0 var(--mobile-padding);
+}
+
+.section-header h2 {
+    font-size: clamp(2rem, 4vw, 2.5rem);
+    color: #1a237e;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+.section-header p {
+    font-size: clamp(1rem, 2vw, 1.1rem);
+    color: var(--light-text);
+    opacity: 0.9;
+}
+    </style>
+</head>
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+
+    <!-- Main Content -->
+    <main class="employees-main">
+        <!-- Hero Section -->
+        <section class="employees-hero">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1>Empower Your Workforce with Self-Service Excellence</h1>
+                        <p>Streamline Profile Updates, Document Access, Communication, and More</p>
+                        <div class="hero-buttons">
+                            <a href="#" class="btn primary">Get Started Today</a>
+                            <a href="#" class="btn secondary">Request a Demo</a>
+                        </div>
+                        <div class="hero-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-clock"></i>
+                                <h4>70% Faster</h4>
+                                <p>HR Process Completion</p>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-chart-line"></i>
+                                <h4>85% Higher</h4>
+                                <p>Employee Satisfaction</p>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-dollar-sign"></i>
+                                <h4>50% Savings</h4>
+                                <p>In Administrative Costs</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-image">
+                        <img src="image/ess-dashboard.png" alt="Employee Self-Service Dashboard" loading="lazy">
+                    </div>
+                </div>
+            </div>
+        </section>
+        <style>
+/* Hero Section Styles */
+.employees-hero {
+    background: var(--gradient);
+    padding: calc(var(--header-height) + 4rem) 0 6rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+.hero-text {
+    max-width: 600px;
+}
+
+.hero-text h1 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    color: #1a237e;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+}
+
+.hero-text p {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: var(--light-text);
+    margin-bottom: 2rem;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.hero-image {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hero-image img {
+    width: 100%;
+    height: auto;
+    max-width: 600px;
+    object-fit: contain;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    animation: float 3s ease-in-out infinite;
+    transition: all 0.3s ease;
+}
+
+.hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.stat-item {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    text-align: center;
+    transition: var(--transition);
+    backdrop-filter: blur(10px);
+}
+
+.stat-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.stat-item i {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.stat-item h4 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 0.5rem;
+}
+
+.stat-item p {
+    color: var(--light-text);
+    font-size: 0.9rem;
+}
+</style>
+
+<!-- Key Features Section -->
+<section class="features-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Comprehensive Self-Service Features</h2>
+            <p>Everything your employees need in one unified platform</p>
+        </div>
+        <div class="feature-grid">
+            <!-- Profile Management -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-user-edit"></i>
+                </div>
+                <h3>Profile Management</h3>
+                <p>Empower employees to manage their personal information</p>
+                <ul>
+                    <li>Personal details updates</li>
+                    <li>Bank information management</li>
+                    <li>Emergency contact updates</li>
+                    <li>Document uploads</li>
+                </ul>
+                <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            <!-- Document Access -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <h3>Document Access</h3>
+                <p>Centralized repository for all important documents</p>
+                <ul>
+                    <li>Policy documents</li>
+                    <li>Pay stubs access</li>
+                    <li>Training materials</li>
+                    <li>Company resources</li>
+                </ul>
+                <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            <!-- Communication Portal -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h3>Communication Portal</h3>
+                <p>Streamlined communication between employees and HR</p>
+                <ul>
+                    <li>Direct messaging</li>
+                    <li>Announcement boards</li>
+                    <li>Request tracking</li>
+                    <li>Feedback system</li>
+                </ul>
+                <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Feature Section Styles */
+.features-section {
+    padding: 6rem 0;
+    background: var(--card-bg);
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2.5rem;
+    margin-top: 4rem;
+}
+
+.feature-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: left;
+}
+
+.feature-card:hover::before {
+    transform: scaleX(1);
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.feature-icon i {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+}
+
+.feature-card h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.feature-card p {
+    color: var(--light-text);
+    margin-bottom: 1.5rem;
+    line-height: 1.7;
+}
+
+.feature-card ul {
+    list-style: none;
+    margin-bottom: 1.5rem;
+}
+
+.feature-card ul li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-color);
+}
+
+.feature-card ul li::before {
+    content: '✓';
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.learn-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.learn-more:hover {
+    gap: 1rem;
+}
+
+.learn-more i {
+    transition: transform 0.3s ease;
+}
+
+.learn-more:hover i {
+    transform: translateX(5px);
+}
+</style>
+<!-- Benefits Section -->
+<section class="benefits-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Transform Your Employee Experience</h2>
+            <p>Discover the advantages of our self-service solution</p>
+        </div>
+        <div class="benefits-grid">
+            <!-- Enhanced Efficiency -->
+            <div class="benefit-card">
+                <div class="benefit-icon">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <h3>Enhanced Efficiency</h3>
+                <p>Automate routine HR tasks and accelerate processes</p>
+                <ul class="benefit-features">
+                    <li>Reduced administrative workload</li>
+                    <li>Faster request processing</li>
+                    <li>Streamlined workflows</li>
+                    <li>Automated notifications</li>
+                </ul>
+            </div>
+
+            <!-- Improved Accuracy -->
+            <div class="benefit-card">
+                <div class="benefit-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3>Improved Accuracy</h3>
+                <p>Minimize errors with employee-managed data</p>
+                <ul class="benefit-features">
+                    <li>Real-time data updates</li>
+                    <li>Reduced data entry errors</li>
+                    <li>Accurate record keeping</li>
+                    <li>Data validation checks</li>
+                </ul>
+            </div>
+
+            <!-- Employee Engagement -->
+            <div class="benefit-card">
+                <div class="benefit-icon">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <h3>Increased Engagement</h3>
+                <p>Empower employees with control over their information</p>
+                <ul class="benefit-features">
+                    <li>Self-managed profiles</li>
+                    <li>24/7 information access</li>
+                    <li>Enhanced transparency</li>
+                    <li>Improved satisfaction</li>
+                </ul>
+            </div>
+
+            <!-- Cost Savings -->
+            <div class="benefit-card">
+                <div class="benefit-icon">
+                    <i class="fas fa-piggy-bank"></i>
+                </div>
+                <h3>Cost Savings</h3>
+                <p>Reduce operational costs through automation</p>
+                <ul class="benefit-features">
+                    <li>Lower administrative costs</li>
+                    <li>Reduced paperwork</li>
+                    <li>Time savings</li>
+                    <li>Resource optimization</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Integration Section -->
+<section class="integration-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Seamless Integration Capabilities</h2>
+            <p>Connect with your existing business tools effortlessly</p>
+        </div>
+        <div class="integration-grid">
+            <!-- Payroll Integration -->
+            <div class="integration-card">
+                <div class="status-badge connected">Connected</div>
+                <img src="image/payroll-icon.png" alt="Payroll Integration">
+                <h4>Payroll Systems</h4>
+                <p>Seamless integration for accurate salary processing</p>
+                <div class="integration-features">
+                    <div class="feature-item">
+                        <i class="fas fa-sync"></i>
+                        <span>Real-time Sync</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Secure Data Transfer</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HRMS Integration -->
+            <div class="integration-card">
+                <div class="status-badge popular">Popular</div>
+                <img src="image/hrms-icon.png" alt="HRMS Integration">
+                <h4>HR Management</h4>
+                <p>Unified platform for employee information</p>
+                <div class="integration-features">
+                    <div class="feature-item">
+                        <i class="fas fa-database"></i>
+                        <span>Centralized Data</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-users"></i>
+                        <span>Complete HR Suite</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Third-Party Apps -->
+            <div class="integration-card">
+                <div class="status-badge new">New</div>
+                <img src="image/apps-icon.png" alt="Third-Party Integration">
+                <h4>Business Tools</h4>
+                <p>Connect with your favorite applications</p>
+                <div class="integration-features">
+                    <div class="feature-item">
+                        <i class="fas fa-plug"></i>
+                        <span>Easy Integration</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-code"></i>
+                        <span>API Access</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Benefits Section Styles */
+.benefits-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2.5rem;
+    margin-top: 3rem;
+}
+
+.benefit-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.benefit-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.benefit-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.benefit-icon i {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+}
+
+.benefit-card h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.benefit-card p {
+    color: var(--light-text);
+    margin-bottom: 1.5rem;
+    line-height: 1.7;
+}
+
+.benefit-features {
+    list-style: none;
+    margin: 0;
+}
+
+.benefit-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-color);
+    padding: 0.5rem 0;
+}
+
+.benefit-features li::before {
+    content: '✓';
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+/* Integration Section Styles */
+.integration-section {
+    padding: 6rem 0;
+    background: var(--card-bg);
+    position: relative;
+}
+
+.integration-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2.5rem;
+    margin-top: 3rem;
+}
+
+.integration-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    text-align: center;
+}
+
+.integration-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.status-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-badge.connected {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.status-badge.popular {
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+}
+
+.status-badge.new {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.integration-card img {
+    width: 80px;
+    height: 80px;
+    margin: 1.5rem auto;
+}
+
+.integration-card h4 {
+    font-size: 1.25rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.integration-features {
+    margin-top: 1.5rem;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+    background: rgba(41, 98, 255, 0.05);
+}
+
+.feature-item i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+}
+</style>
+<!-- Pricing Section -->
+<section class="pricing-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Simple, Transparent Pricing</h2>
+            <p>Choose the plan that best fits your organization's needs</p>
+        </div>
+        <div class="pricing-toggle">
+            <span>Monthly</span>
+            <label class="switch">
+                <input type="checkbox" id="billing-toggle">
+                <span class="slider"></span>
+            </label>
+            <span>Annual <span class="discount">Save 20%</span></span>
+        </div>
+        <div class="pricing-grid">
+            <!-- Basic Plan -->
+            <div class="pricing-card">
+                <h3>Basic</h3>
+                <div class="price">
+                    <span class="currency">$</span>
+                    <span class="amount">39</span>
+                    <span class="period">/month</span>
+                </div>
+                <p class="plan-description">Perfect for small teams</p>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check"></i>Up to 50 employees</li>
+                    <li><i class="fas fa-check"></i>Basic profile management</li>
+                    <li><i class="fas fa-check"></i>Document access</li>
+                    <li><i class="fas fa-check"></i>Email support</li>
+                </ul>
+                <button class="btn primary">Start Free Trial</button>
+                <p class="trial-note">14-day free trial, no credit card required</p>
+            </div>
+
+            <!-- Professional Plan -->
+            <div class="pricing-card popular">
+                <div class="popular-badge">Most Popular</div>
+                <h3>Professional</h3>
+                <div class="price">
+                    <span class="currency">$</span>
+                    <span class="amount">89</span>
+                    <span class="period">/month</span>
+                </div>
+                <p class="plan-description">Ideal for growing companies</p>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check"></i>Up to 200 employees</li>
+                    <li><i class="fas fa-check"></i>Advanced self-service features</li>
+                    <li><i class="fas fa-check"></i>Custom workflows</li>
+                    <li><i class="fas fa-check"></i>Priority support</li>
+                    <li><i class="fas fa-check"></i>Analytics dashboard</li>
+                </ul>
+                <button class="btn primary">Start Free Trial</button>
+                <p class="trial-note">14-day free trial, no credit card required</p>
+            </div>
+
+            <!-- Enterprise Plan -->
+            <div class="pricing-card">
+                <h3>Enterprise</h3>
+                <div class="price">
+                    <span class="custom">Custom</span>
+                </div>
+                <p class="plan-description">For large organizations</p>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check"></i>Unlimited employees</li>
+                    <li><i class="fas fa-check"></i>Custom implementation</li>
+                    <li><i class="fas fa-check"></i>Advanced integrations</li>
+                    <li><i class="fas fa-check"></i>24/7 dedicated support</li>
+                    <li><i class="fas fa-check"></i>Custom branding</li>
+                </ul>
+                <button class="btn secondary">Contact Sales</button>
+                <p class="trial-note">Get a customized quote for your needs</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Experience the Future of Employee Management</h2>
+            <p>Transform your workplace with our comprehensive self-service solution</p>
+            <div class="cta-buttons">
+                <button class="btn primary">Start Free Trial</button>
+                <button class="btn secondary">Schedule Demo</button>
+            </div>
+            <div class="cta-features">
+                <div class="cta-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>14-day free trial</span>
+                </div>
+                <div class="cta-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>No credit card required</span>
+                </div>
+                <div class="cta-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Free implementation support</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Pricing Section Styles */
+.pricing-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+    overflow: hidden;
+}
+
+.pricing-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin: 3rem auto;
+    padding: 1rem;
+    background: white;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    width: fit-content;
+}
+
+.pricing-toggle span {
+    font-weight: 500;
+    color: var(--text-color);
+    padding: 0.5rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.discount {
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin: 4rem auto;
+    max-width: 1200px;
+    padding: 0 1rem;
+}
+
+.pricing-card {
+    background: white;
+    padding: 3rem 2.5rem;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+}
+
+.pricing-card.popular {
+    background: linear-gradient(145deg, #ffffff, #f8f9ff);
+    border: 2px solid var(--primary-color);
+    transform: scale(1.05);
+    z-index: 1;
+}
+
+.popular-badge {
+    position: absolute;
+    top: 1.5rem;
+    right: -3.5rem;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    color: white;
+    padding: 0.5rem 3.5rem;
+    transform: rotate(45deg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* CTA Section Styles */
+.cta-section {
+    padding: 8rem 0;
+    background: var(--gradient);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+.cta-content {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+    padding: 0 1.5rem;
+}
+
+.cta-content h2 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    background: linear-gradient(45deg, #1a237e, #2962ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+    font-weight: 700;
+}
+
+.cta-content p {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: #455a64;
+    margin-bottom: 2.5rem;
+    opacity: 0.9;
+    line-height: 1.6;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 3rem;
+}
+
+.cta-features {
+    display: flex;
+    gap: 3rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cta-feature {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-color);
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.cta-feature:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+</style>
+<!-- Footer -->
+<footer class="main-footer">
+    <div class="container">
+        <div class="footer-social">
+            <a href="#" class="social-link" aria-label="LinkedIn">
+                <i class="fab fa-linkedin"></i>
+            </a>
+            <a href="#" class="social-link" aria-label="Twitter">
+                <i class="fab fa-twitter"></i>
+            </a>
+            <a href="#" class="social-link" aria-label="Facebook">
+                <i class="fab fa-facebook"></i>
+            </a>
+            <a href="#" class="social-link" aria-label="Instagram">
+                <i class="fab fa-instagram"></i>
+            </a>
+        </div>
+
+        <div class="footer-grid">
+            <div class="footer-section">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="#integrations">Integrations</a></li>
+                    <li><a href="#enterprise">Enterprise</a></li>
+                    <li><a href="#security">Security</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="#documentation">Documentation</a></li>
+                    <li><a href="#api">API Reference</a></li>
+                    <li><a href="#guides">Guides</a></li>
+                    <li><a href="#blog">Blog</a></li>
+                    <li><a href="#community">Community</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#about">About Us</a></li>
+                    <li><a href="#careers">Careers</a></li>
+                    <li><a href="#partners">Partners</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                    <li><a href="#news">News</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="#privacy">Privacy Policy</a></li>
+                    <li><a href="#terms">Terms of Service</a></li>
+                    <li><a href="#cookie">Cookie Policy</a></li>
+                    <li><a href="#gdpr">GDPR Compliance</a></li>
+                    <li><a href="#security-policy">Security Policy</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2024 Workwise Pro. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<style>
+/* Footer Styles */
+.main-footer {
+    background: #000000;
+    color: #ffffff;
+    padding: 6rem 0 2rem;
+    position: relative;
+}
+
+.main-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(41, 98, 255, 0.05), transparent);
+    pointer-events: none;
+}
+
+.footer-social {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 4rem;
+}
+
+.social-link {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.25rem;
+    transition: all 0.3s ease;
+}
+
+.social-link:hover {
+    color: var(--primary-color);
+    transform: translateY(-3px);
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(2rem, 5vw, 4rem);
+    margin-bottom: 4rem;
+    position: relative;
+}
+
+.footer-section h4 {
+    color: #ffffff;
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    position: relative;
+    padding-bottom: 0.75rem;
+}
+
+.footer-section h4::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    background: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+.footer-section:hover h4::after {
+    width: 50px;
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section ul li {
+    margin-bottom: 0.8rem;
+}
+
+.footer-section ul li a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    display: inline-block;
+    padding: 0.3rem 0;
+    position: relative;
+}
+
+.footer-section ul li a::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+.footer-section ul li a:hover {
+    color: #ffffff;
+    transform: translateX(5px);
+}
+
+.footer-section ul li a:hover::before {
+    width: 100%;
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 2rem;
+    text-align: center;
+    position: relative;
+}
+
+.footer-bottom p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+</style>
+
+<!-- Scripts -->
+<script>
+    // Document Ready Handler
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeAll();
+        loadHeader();
+    });
+
+    // Header Loading Function
+    async function loadHeader() {
+        const headerContainer = document.getElementById('header-container');
+        
+        try {
+            const response = await fetch('header.html');
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            const html = await response.text();
+            headerContainer.innerHTML = html;
+
+            // Initialize mobile menu functionality after header loads
+            initializeMobileMenu();
+        } catch (error) {
+            console.error('Error loading header:', error);
+            headerContainer.innerHTML = `
+                <header class="main-header">
+                    <div class="container">
+                        <div class="header-content">
+                            <a href="/" class="logo">
+                                <span>Workwise Pro</span>
+                            </a>
+                            <nav class="main-nav">
+                                <ul class="nav-list">
+                                    <li><a href="#home">Home</a></li>
+                                    <li><a href="#contact">Contact</a></li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </header>
+            `;
+        }
+    }
+
+    function initializeAll() {
+        initializeAnimations();
+        initializePricing();
+        initializeMetrics();
+        handleScrollEffects();
+        setupInteractions();
+    }
+
+    // Animation Handler
+    function initializeAnimations() {
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-in');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature-card, .benefit-card, .integration-card, .pricing-card')
+            .forEach(el => observer.observe(el));
+    }
+
+    // Mobile Menu Initialization
+    function initializeMobileMenu() {
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mainNav = document.getElementById('main-nav');
+        const menuOverlay = document.getElementById('menu-overlay');
+        const megaMenus = document.querySelectorAll('.mega-menu');
+
+        if (mobileMenu && mainNav) {
+            let isMenuOpen = false;
+
+            function toggleMenu(show) {
+                isMenuOpen = show;
+                mobileMenu.classList.toggle('active', show);
+                mainNav.classList.toggle('active', show);
+                menuOverlay.classList.toggle('active', show);
+                document.body.style.overflow = show ? 'hidden' : '';
+
+                if (!show) {
+                    megaMenus.forEach(menu => menu.classList.remove('active'));
+                }
+            }
+
+            mobileMenu.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMenu(!isMenuOpen);
+            });
+
+            document.addEventListener('click', (e) => {
+                if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
+                    toggleMenu(false);
+                }
+            });
+        }
+    }
+
+    // Pricing Toggle Handler
+    function initializePricing() {
+        const billingToggle = document.getElementById('billing-toggle');
+        const priceAmounts = document.querySelectorAll('.amount');
+        const monthlyPrices = ['39', '89'];
+        const annualPrices = ['32', '72'];
+
+        if (billingToggle) {
+            billingToggle.addEventListener('change', () => {
+                priceAmounts.forEach((price, index) => {
+                    if (price.textContent !== 'Custom') {
+                        animateNumberChange(price, billingToggle.checked ? annualPrices[index] : monthlyPrices[index]);
+                    }
+                });
+            });
+        }
+    }
+
+    // Number Animation Helper
+    function animateNumberChange(element, newValue) {
+        const start = parseInt(element.textContent);
+        const end = parseInt(newValue);
+        const duration = 500;
+        const startTime = performance.now();
+
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            const current = Math.round(start + (end - start) * progress);
+            element.textContent = current;
+
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            }
+        }
+
+        requestAnimationFrame(update);
+    }
+
+    // Scroll Effects Handler
+    function handleScrollEffects() {
+        let lastScroll = 0;
+        const header = document.querySelector('.main-header');
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            
+            if (currentScroll > lastScroll && currentScroll > 100) {
+                header?.classList.add('header-hidden');
+            } else {
+                header?.classList.remove('header-hidden');
+            }
+            
+            lastScroll = currentScroll;
+        });
+    }
+
+    // Interactive Elements Setup
+    function setupInteractions() {
+        document.querySelectorAll('.feature-card, .benefit-card, .integration-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.classList.add('card-hover');
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.classList.remove('card-hover');
+            });
+        });
+    }
+
+    // Initialize Metrics
+    function initializeMetrics() {
+      const charts = document.querySelectorAll('.metric-chart');
+        charts.forEach(chart => {
+            const ctx = chart.getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Attendance Rate',
+                        data: [92, 95, 94, 96, 95, 98],
+                        borderColor: '#2962ff',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        });
+        // Add any specific metrics initialization if needed
+    }
+
+    // Watson Assistant Chat Integration
+    window.watsonAssistantChatOptions = {
+        integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
+        region: "au-syd",
+        serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
+        onLoad: async (instance) => { await instance.render(); }
+    };
+    
+    setTimeout(function(){
+        const t = document.createElement('script');
+        t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
+            (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
+            "/WatsonAssistantChatEntry.js";
+        document.head.appendChild(t);
+    });
+</script>
+</body>
+</html>
