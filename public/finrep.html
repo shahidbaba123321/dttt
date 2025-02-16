@@ -1604,11 +1604,11 @@
 }
 </style>
 <!-- Pricing Section -->
-<section class="pricing-section">
+ <section class="pricing-section">
     <div class="container">
         <div class="section-header">
             <h2>Simple, Transparent Pricing</h2>
-            <p>Choose the plan that best fits your financial reporting needs</p>
+            <p>Choose the plan that best fits your organization's needs</p>
         </div>
 
         <!-- Country Selection -->
@@ -1639,14 +1639,14 @@
                 <h3>Basic</h3>
                 <div class="price">
                     <span class="currency-symbol">$</span>
-                    <span class="amount">79</span>
+                    <span class="amount">39</span>
                     <span class="period">/month</span>
                 </div>
-                <p class="plan-description">For small businesses</p>
+                <p class="plan-description">Perfect for small teams</p>
                 <ul class="plan-features">
-                    <li><i class="fas fa-check"></i>Basic financial reports</li>
-                    <li><i class="fas fa-check"></i>Up to 1,000 transactions</li>
-                    <li><i class="fas fa-check"></i>5 user accounts</li>
+                    <li><i class="fas fa-check"></i>Up to 50 employees</li>
+                    <li><i class="fas fa-check"></i>Basic profile management</li>
+                    <li><i class="fas fa-check"></i>Document access</li>
                     <li><i class="fas fa-check"></i>Email support</li>
                 </ul>
                 <button class="btn primary">Start Free Trial</button>
@@ -1659,16 +1659,16 @@
                 <h3>Professional</h3>
                 <div class="price">
                     <span class="currency-symbol">$</span>
-                    <span class="amount">149</span>
+                    <span class="amount">89</span>
                     <span class="period">/month</span>
                 </div>
-                <p class="plan-description">For growing companies</p>
+                <p class="plan-description">Ideal for growing companies</p>
                 <ul class="plan-features">
-                    <li><i class="fas fa-check"></i>Advanced financial analytics</li>
-                    <li><i class="fas fa-check"></i>Unlimited transactions</li>
-                    <li><i class="fas fa-check"></i>20 user accounts</li>
+                    <li><i class="fas fa-check"></i>Up to 200 employees</li>
+                    <li><i class="fas fa-check"></i>Advanced self-service features</li>
+                    <li><i class="fas fa-check"></i>Custom workflows</li>
                     <li><i class="fas fa-check"></i>Priority support</li>
-                    <li><i class="fas fa-check"></i>Custom report builder</li>
+                    <li><i class="fas fa-check"></i>Analytics dashboard</li>
                 </ul>
                 <button class="btn primary">Start Free Trial</button>
                 <p class="trial-note">14-day free trial, no credit card required</p>
@@ -1682,11 +1682,11 @@
                 </div>
                 <p class="plan-description">For large organizations</p>
                 <ul class="plan-features">
+                    <li><i class="fas fa-check"></i>Unlimited employees</li>
                     <li><i class="fas fa-check"></i>Custom implementation</li>
-                    <li><i class="fas fa-check"></i>Unlimited everything</li>
-                    <li><i class="fas fa-check"></i>Dedicated account manager</li>
-                    <li><i class="fas fa-check"></i>24/7 phone support</li>
-                    <li><i class="fas fa-check"></i>Custom integrations</li>
+                    <li><i class="fas fa-check"></i>Advanced integrations</li>
+                    <li><i class="fas fa-check"></i>24/7 dedicated support</li>
+                    <li><i class="fas fa-check"></i>Custom branding</li>
                 </ul>
                 <button class="btn secondary">Contact Sales</button>
                 <p class="trial-note">Get a customized quote for your needs</p>
@@ -1696,7 +1696,7 @@
 </section>
 
 <style>
-/* Pricing Section Styles */
+            /* Complete Pricing Section Styles */
 .pricing-section {
     padding: 6rem 0;
     background: var(--gradient);
@@ -1716,7 +1716,7 @@
     pointer-events: none;
 }
 
-/* Country Selector */
+/* Country Selector Styles */
 .country-selector {
     text-align: center;
     margin-bottom: 2rem;
@@ -1751,13 +1751,13 @@
     box-shadow: 0 0 0 3px rgba(41, 98, 255, 0.1);
 }
 
-/* Pricing Toggle */
+/* Enhanced Pricing Toggle */
 .pricing-toggle {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 1.5rem;
-    margin: 3rem auto;
+    margin: 2rem auto 3rem;
     padding: 1rem;
     background: white;
     border-radius: 50px;
@@ -1931,6 +1931,7 @@ input:checked + .slider:before {
 .custom {
     font-size: 2rem;
     font-weight: 700;
+    color: var(--primary-color);
     background: linear-gradient(45deg, var(--primary-color), #42a5f5);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -1999,6 +2000,18 @@ input:checked + .slider:before {
     margin-top: 1rem;
 }
 
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 @keyframes priceUpdate {
     0% {
         transform: translateY(-20px);
@@ -2040,6 +2053,11 @@ input:checked + .slider:before {
 }
 
 @media (max-width: 768px) {
+    .country-dropdown {
+        width: 100%;
+        max-width: 300px;
+    }
+
     .pricing-toggle {
         flex-direction: column;
         background: transparent;
@@ -2054,11 +2072,6 @@ input:checked + .slider:before {
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         width: 100%;
         text-align: center;
-    }
-
-    .country-dropdown {
-        width: 100%;
-        max-width: 300px;
     }
 
     .pricing-card {
@@ -2106,7 +2119,7 @@ input:checked + .slider:before {
         font-size: 0.8rem;
     }
 }
-</style>
+        </style>
 <!-- CTA Section -->
 <section class="cta-section">
     <div class="container">
