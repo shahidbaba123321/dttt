@@ -1034,15 +1034,15 @@
                         <p>Comprehensive tools for budget planning and execution</p>
                         <ul class="budgeting-list">
                             <li>
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check"></i>
                                 <span>Multi-period budgeting</span>
                             </li>
                             <li>
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check"></i>
                                 <span>Department allocation</span>
                             </li>
                             <li>
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check"></i>
                                 <span>Resource planning</span>
                             </li>
                         </ul>
@@ -1058,15 +1058,15 @@
                         <p>Track actual performance against projections</p>
                         <ul class="budgeting-list">
                             <li>
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check"></i>
                                 <span>Real-time comparisons</span>
                             </li>
                             <li>
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check"></i>
                                 <span>Deviation alerts</span>
                             </li>
                             <li>
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check"></i>
                                 <span>Adjustment recommendations</span>
                             </li>
                         </ul>
@@ -1082,15 +1082,15 @@
                         <p>Enable team-wide budget participation</p>
                         <ul class="budgeting-list">
                             <li>
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check"></i>
                                 <span>Department input tools</span>
                             </li>
                             <li>
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check"></i>
                                 <span>Approval workflows</span>
                             </li>
                             <li>
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check"></i>
                                 <span>Comment and review features</span>
                             </li>
                         </ul>
@@ -1109,7 +1109,6 @@
         </div>
     </div>
 </section>
-
 <!-- Interactive Dashboards Section -->
 <section class="dashboard-section">
     <div class="container">
@@ -1172,7 +1171,6 @@
         </div>
     </div>
 </section>
-
 <style>
 /* Budgeting Section Styles */
 .budgeting-section {
@@ -1259,8 +1257,209 @@
 
 .budgeting-list li i {
     color: var(--primary-color);
-    font-size: 1rem;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
 }
+
+.budgeting-card:hover .budgeting-list li i {
+    background: var(--primary-color);
+    color: white;
+}
+
+.budgeting-visual {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.budgeting-visual img {
+    width: 100%;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.budgeting-visual:hover img {
+    transform: scale(1.02);
+}
+
+.budgeting-stats {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 1rem;
+}
+
+.stat-bubble {
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--light-text);
+    margin-top: 0.25rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .budgeting-grid {
+        gap: 3rem;
+    }
+    
+    .budgeting-card {
+        padding: 1.75rem;
+    }
+
+    .budgeting-visual img {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 992px) {
+    .budgeting-grid {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+    }
+
+    .budgeting-visual {
+        order: -1;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .budgeting-features {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .budgeting-stats {
+        position: relative;
+        top: -30px;
+        right: 0;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .budgeting-section {
+        padding: 4rem 0;
+    }
+
+    .budgeting-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.5rem;
+    }
+
+    .budgeting-icon {
+        margin: 0 auto 1rem;
+    }
+
+    .budgeting-content h3 {
+        font-size: 1.2rem;
+    }
+
+    .budgeting-list li {
+        justify-content: center;
+    }
+
+    .budgeting-visual img {
+        max-width: 90%;
+        margin: 0 auto;
+        display: block;
+    }
+}
+
+@media (max-width: 480px) {
+    .budgeting-section {
+        padding: 3rem 0;
+    }
+
+    .budgeting-card {
+        padding: 1.25rem;
+    }
+
+    .budgeting-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .budgeting-icon i {
+        font-size: 1.25rem;
+    }
+
+    .budgeting-content h3 {
+        font-size: 1.1rem;
+    }
+
+    .budgeting-content p {
+        font-size: 0.9rem;
+    }
+
+    .budgeting-list li {
+        font-size: 0.9rem;
+        gap: 0.5rem;
+    }
+
+    .budgeting-list li i {
+        width: 20px;
+        height: 20px;
+        font-size: 0.9rem;
+    }
+
+    .stat-bubble {
+        padding: 0.75rem 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+    }
+
+    .budgeting-visual img {
+        max-width: 100%;
+        margin: 0 auto;
+    }
+}
+
+/* Touch Device Optimization */
+@media (hover: none) {
+    .budgeting-card:hover {
+        transform: none;
+    }
+
+    .budgeting-visual:hover img {
+        transform: none;
+    }
+}
+        
+<style>
+
 
 /* Dashboard Section Styles */
 .dashboard-section {
@@ -1371,7 +1570,7 @@
 
 /* Responsive Styles */
 @media (max-width: 1200px) {
-    .budgeting-grid,
+    
     .dashboard-showcase {
         gap: 3rem;
     }
@@ -1382,9 +1581,7 @@
 }
 
 @media (max-width: 992px) {
-    .budgeting-grid {
-        grid-template-columns: 1fr;
-    }
+    
 
     .dashboard-showcase {
         grid-template-columns: 1fr;
@@ -1398,20 +1595,7 @@
 }
 
 @media (max-width: 768px) {
-    .budgeting-card {
-        flex-direction: column;
-        text-align: center;
-        align-items: center;
-    }
-
-    .budgeting-icon {
-        margin-bottom: 1rem;
-    }
-
-    .budgeting-list li {
-        justify-content: center;
-    }
-
+    
     .dashboard-features {
         grid-template-columns: 1fr;
         gap: 1rem;
@@ -1427,36 +1611,34 @@
 }
 
 @media (max-width: 480px) {
-    .budgeting-section,
+    
     .dashboard-section {
         padding: 4rem 0;
     }
 
-    .budgeting-card,
+    
     .dashboard-feature {
         padding: 1.25rem;
     }
 
-    .budgeting-icon,
+    
     .feature-icon {
         width: 40px;
         height: 40px;
     }
 
-    .budgeting-icon i,
+   
     .feature-icon i {
         font-size: 1.25rem;
     }
 
-    .budgeting-content h3 {
-        font-size: 1.2rem;
-    }
+   
 
     .feature-content h4 {
         font-size: 1rem;
     }
 
-    .budgeting-content p,
+    
     .feature-content p {
         font-size: 0.9rem;
     }
@@ -1533,6 +1715,7 @@
     </div>
 </section>
 <!-- Security & Compliance Section -->
+<!-- Security & Compliance Section -->
 <section class="security-section">
     <div class="container">
         <div class="section-header">
@@ -1550,15 +1733,15 @@
                         <p>Multi-layered security infrastructure</p>
                         <ul class="security-list">
                             <li>
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check"></i>
                                 <span>256-bit encryption</span>
                             </li>
                             <li>
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check"></i>
                                 <span>Regular security audits</span>
                             </li>
                             <li>
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check"></i>
                                 <span>Intrusion detection</span>
                             </li>
                         </ul>
@@ -1574,15 +1757,15 @@
                         <p>Granular permission management</p>
                         <ul class="security-list">
                             <li>
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check"></i>
                                 <span>Role-based access</span>
                             </li>
                             <li>
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check"></i>
                                 <span>Two-factor authentication</span>
                             </li>
                             <li>
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check"></i>
                                 <span>Activity logging</span>
                             </li>
                         </ul>
@@ -1598,15 +1781,15 @@
                         <p>Meeting global regulatory requirements</p>
                         <ul class="security-list">
                             <li>
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check"></i>
                                 <span>GDPR compliance</span>
                             </li>
                             <li>
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check"></i>
                                 <span>SOC 2 certification</span>
                             </li>
                             <li>
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check"></i>
                                 <span>ISO 27001 certified</span>
                             </li>
                         </ul>
@@ -1623,6 +1806,290 @@
         </div>
     </div>
 </section>
+        <style>
+            /* Security Section Styles */
+.security-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+.security-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    margin-top: 3rem;
+}
+
+.security-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.security-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.security-card:hover {
+    transform: translateX(10px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.security-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.security-icon i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.security-content {
+    flex: 1;
+}
+
+.security-content h3 {
+    font-size: 1.25rem;
+    color: #1a237e;
+    margin-bottom: 0.5rem;
+}
+
+.security-content p {
+    color: var(--light-text);
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+.security-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.security-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
+}
+
+.security-list li i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.security-card:hover .security-list li i {
+    background: var(--primary-color);
+    color: white;
+}
+
+.security-visual {
+    position: relative;
+    width: 100%;
+}
+
+.security-visual img {
+    width: 100%;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.security-visual:hover img {
+    transform: scale(1.02);
+}
+
+.security-badges {
+    position: absolute;
+    bottom: -20px;
+    right: 20px;
+    display: flex;
+    gap: 1rem;
+    z-index: 2;
+}
+
+.security-badge {
+    height: 60px;
+    width: auto;
+    transition: transform 0.3s ease;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.security-badge:hover {
+    transform: translateY(-5px);
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .security-grid {
+        gap: 3rem;
+    }
+    
+    .security-card {
+        padding: 1.75rem;
+    }
+
+    .security-badges {
+        right: 10px;
+    }
+
+    .security-badge {
+        height: 50px;
+    }
+}
+
+@media (max-width: 992px) {
+    .security-grid {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+    }
+
+    .security-visual {
+        order: -1;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .security-features {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .security-badges {
+        position: relative;
+        bottom: 0;
+        right: 0;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .security-section {
+        padding: 4rem 0;
+    }
+
+    .security-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.5rem;
+    }
+
+    .security-icon {
+        margin: 0 auto 1rem;
+    }
+
+    .security-content h3 {
+        font-size: 1.2rem;
+    }
+
+    .security-list li {
+        justify-content: center;
+    }
+
+    .security-visual img {
+        max-width: 90%;
+        margin: 0 auto;
+        display: block;
+    }
+
+    .security-badge {
+        height: 45px;
+    }
+}
+
+@media (max-width: 480px) {
+    .security-section {
+        padding: 3rem 0;
+    }
+
+    .security-card {
+        padding: 1.25rem;
+    }
+
+    .security-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .security-icon i {
+        font-size: 1.25rem;
+    }
+
+    .security-content h3 {
+        font-size: 1.1rem;
+    }
+
+    .security-content p {
+        font-size: 0.9rem;
+    }
+
+    .security-list li {
+        font-size: 0.9rem;
+        gap: 0.5rem;
+    }
+
+    .security-list li i {
+        width: 20px;
+        height: 20px;
+        font-size: 0.9rem;
+    }
+
+    .security-visual img {
+        max-width: 100%;
+    }
+
+    .security-badges {
+        gap: 0.75rem;
+    }
+
+    .security-badge {
+        height: 40px;
+    }
+}
+
+/* Touch Device Optimization */
+@media (hover: none) {
+    .security-card:hover {
+        transform: none;
+    }
+
+    .security-visual:hover img {
+        transform: none;
+    }
+
+    .security-badge:hover {
+        transform: none;
+    }
+}
+        </style>
 
 <style>
 /* Integration Section Styles */
