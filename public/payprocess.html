@@ -1,0 +1,2661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payroll Processing Solution - Workwise Pro</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
+    
+    <!-- Sentiment Analysis -->
+    <script src="https://cdn.jsdelivr.net/npm/sentiment@5.0.2/build/sentiment.min.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* Root Variables */
+        :root {
+            --primary-color: #2962ff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --background-color: #f8f9fa;
+            --text-color: #333;
+            --light-text: #6c757d;
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --gradient: linear-gradient(135deg, #f0f7ff 0%, #e9ecef 100%);
+            --card-bg: #ffffff;
+            --mobile-padding: 1rem;
+            --section-spacing: 4rem;
+            --header-height: 70px;
+        }
+
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            padding-top: var(--header-height);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--mobile-padding);
+            width: 100%;
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 2rem;
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            transition: var(--transition);
+            font-weight: 500;
+            cursor: pointer;
+            min-width: 160px;
+            text-align: center;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+        }
+
+        .btn.primary {
+            background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
+        }
+
+        .btn.secondary {
+            background: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(41, 98, 255, 0.25);
+        }
+
+        /* Section Headers */
+        .section-header {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 4rem;
+            padding: 0 var(--mobile-padding);
+        }
+
+        .section-header h2 {
+            font-size: clamp(2rem, 4vw, 2.5rem);
+            color: #1a237e;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .section-header p {
+            font-size: clamp(1rem, 2vw, 1.1rem);
+            color: var(--light-text);
+            opacity: 0.9;
+        }
+
+        /* Hero Section */
+        .payroll-hero {
+            background: var(--gradient);
+            padding: calc(var(--header-height) + 4rem) 0 6rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-text {
+            max-width: 600px;
+        }
+
+        .hero-text h1 {
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            color: #1a237e;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .hero-text p {
+            font-size: clamp(1.1rem, 2vw, 1.25rem);
+            color: var(--light-text);
+            margin-bottom: 2rem;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .hero-image {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-image img {
+            width: 100%;
+            height: auto;
+            max-width: 600px;
+            object-fit: contain;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            animation: float 3s ease-in-out infinite;
+            transition: all 0.3s ease;
+        }
+
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-item i {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .stat-item h4 {
+            font-size: 1.5rem;
+            color: #1a237e;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-item p {
+            color: var(--light-text);
+            font-size: 0.9rem;
+        }
+        /* Responsive Styles for All Sections */
+@media (max-width: 1200px) {
+    .integration-grid,
+    .portal-container {
+        gap: 2rem;
+    }
+
+    .integration-card,
+    .portal-card {
+        padding: 2rem;
+    }
+
+    .portal-visual img {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 992px) {
+    .integration-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .portal-container {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+    }
+
+    .portal-visual {
+        order: -1;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .portal-features {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .tax-grid {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+    }
+
+    .tax-visual {
+        order: -1;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .integration-grid {
+        grid-template-columns: 1fr;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .integration-card {
+        padding: 1.5rem;
+    }
+
+    .portal-card,
+    .tax-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.5rem;
+    }
+
+    .portal-icon,
+    .tax-icon {
+        margin: 0 auto 1rem;
+    }
+
+    .portal-list li,
+    .tax-list li {
+        justify-content: center;
+    }
+
+    .portal-stats,
+    .tax-stats {
+        position: relative;
+        top: -30px;
+        right: 0;
+        justify-content: center;
+    }
+
+    .feature-item {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .section-header {
+        padding: 0 1rem;
+    }
+
+    .section-header h2 {
+        font-size: 1.8rem;
+    }
+
+    .section-header p {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .integration-section,
+    .portal-section,
+    .tax-section {
+        padding: 4rem 0;
+    }
+
+    .integration-card,
+    .portal-card,
+    .tax-card {
+        padding: 1.25rem;
+    }
+
+    .integration-card img {
+        width: 60px;
+        height: 60px;
+    }
+
+    .portal-icon,
+    .tax-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .portal-icon i,
+    .tax-icon i {
+        font-size: 1.25rem;
+    }
+
+    .portal-content h3,
+    .tax-details h3 {
+        font-size: 1.1rem;
+    }
+
+    .portal-content p,
+    .tax-details p {
+        font-size: 0.9rem;
+    }
+
+    .feature-item {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .portal-stats .stat-bubble,
+    .tax-stats .stat-bubble {
+        padding: 0.75rem 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+    }
+}
+
+/* Additional Mobile Optimizations */
+@media (max-width: 360px) {
+    .integration-card,
+    .portal-card,
+    .tax-card {
+        padding: 1rem;
+    }
+
+    .portal-list li,
+    .tax-list li {
+        gap: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .feature-item {
+        font-size: 0.85rem;
+    }
+
+    .section-header h2 {
+        font-size: 1.6rem;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) {
+    .integration-card:hover,
+    .portal-card:hover,
+    .tax-card:hover {
+        transform: none;
+    }
+
+    .feature-item:hover {
+        background: none;
+    }
+}
+    </style>
+</head>
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+
+    <!-- Main Content -->
+    <main class="payroll-main">
+        <!-- Hero Section -->
+        <section class="payroll-hero">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1>Effortless Payroll Management for Modern Businesses</h1>
+                        <p>Automate salary calculations, tax deductions, payslip generation, and integrate seamlessly with your bank accounts.</p>
+                        <div class="hero-buttons">
+                            <a href="#" class="btn primary">Get Started Today</a>
+                            <a href="#" class="btn secondary">Watch Demo</a>
+                        </div>
+                        <div class="hero-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-clock"></i>
+                                <h4>80% Faster</h4>
+                                <p>Payroll Processing</p>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-shield-alt"></i>
+                                <h4>100% Accurate</h4>
+                                <p>Tax Calculations</p>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-chart-line"></i>
+                                <h4>50% Savings</h4>
+                                <p>Administrative Costs</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-image">
+                        <img src="image/payroll-dashboard.png" alt="Payroll Management Dashboard" loading="lazy">
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Automated Salary Calculations Section -->
+<section class="features-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Automated Salary Calculations</h2>
+            <p>Ensure accurate and timely salary computations with our advanced processing system</p>
+        </div>
+        <div class="feature-grid">
+            <!-- Multiple Pay Periods -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h3>Multiple Pay Periods</h3>
+                <p>Flexible scheduling for all payment frequencies</p>
+                <ul>
+                    <li>Weekly payments</li>
+                    <li>Bi-weekly scheduling</li>
+                    <li>Monthly calculations</li>
+                    <li>Custom period setup</li>
+                </ul>
+                <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            <!-- Salary Components -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <h3>Salary Components</h3>
+                <p>Handle complex salary structures with ease</p>
+                <ul>
+                    <li>Basic salary management</li>
+                    <li>Allowance calculations</li>
+                    <li>Overtime processing</li>
+                    <li>Bonus distributions</li>
+                </ul>
+                <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            <!-- Bulk Processing -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-users-cog"></i>
+                </div>
+                <h3>Bulk Processing</h3>
+                <p>Efficient handling of large-scale payroll</p>
+                <ul>
+                    <li>Mass salary processing</li>
+                    <li>Batch calculations</li>
+                    <li>Group adjustments</li>
+                    <li>Multi-department handling</li>
+                </ul>
+                <a href="#" class="learn-more">Learn More <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Tax Management Section -->
+<section class="tax-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Seamless Tax Management</h2>
+            <p>Stay compliant with automated tax calculations and deductions</p>
+        </div>
+        <div class="tax-grid">
+            <div class="tax-content">
+                <div class="tax-features">
+                    <div class="tax-card">
+                        <div class="tax-icon">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <div class="tax-details">
+                            <h3>Automatic Tax Updates</h3>
+                            <p>Real-time updates to tax tables and rates</p>
+                            <ul class="tax-list">
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Automatic rate adjustments</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Tax bracket management</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Compliance monitoring</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="tax-card">
+                        <div class="tax-icon">
+                            <i class="fas fa-file-invoice"></i>
+                        </div>
+                        <div class="tax-details">
+                            <h3>Tax Reports & Filings</h3>
+                            <p>Comprehensive tax documentation and reporting</p>
+                            <ul class="tax-list">
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Automated tax forms</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Digital filing system</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Report generation</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="tax-card">
+                        <div class="tax-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="tax-details">
+                            <h3>Tax Categories</h3>
+                            <p>Support for various tax types and exemptions</p>
+                            <ul class="tax-list">
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Income tax handling</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Social security</span>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Custom deductions</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tax-visual">
+                <img src="image/tax-process.png" alt="Tax Management Process">
+                <div class="tax-stats">
+                    <div class="stat-bubble">
+                        <span class="stat-value">100%</span>
+                        <span class="stat-label">Tax Compliance</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Feature Section Styles */
+.features-section {
+    padding: 6rem 0;
+    background: var(--card-bg);
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2.5rem;
+    margin-top: 4rem;
+}
+
+.feature-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: left;
+}
+
+.feature-card:hover::before {
+    transform: scaleX(1);
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.feature-icon i {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+}
+
+.feature-card h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.feature-card p {
+    color: var(--light-text);
+    margin-bottom: 1.5rem;
+    line-height: 1.7;
+}
+
+.feature-card ul {
+    list-style: none;
+    margin-bottom: 1.5rem;
+}
+
+.feature-card ul li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-color);
+}
+
+.feature-card ul li::before {
+    content: '✓';
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.learn-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.learn-more:hover {
+    gap: 1rem;
+}
+
+.learn-more i {
+    transition: transform 0.3s ease;
+}
+
+.learn-more:hover i {
+    transform: translateX(5px);
+}
+
+/* Tax Section Styles */
+.tax-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+.tax-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    margin-top: 3rem;
+}
+
+.tax-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.tax-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.tax-card:hover {
+    transform: translateX(10px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.tax-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.tax-icon i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.tax-details {
+    flex: 1;
+}
+
+.tax-details h3 {
+    font-size: 1.25rem;
+    color: #1a237e;
+    margin-bottom: 0.5rem;
+}
+
+.tax-details p {
+    color: var(--light-text);
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+.tax-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.tax-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
+}
+
+.tax-list li i {
+    color: var(--primary-color);
+    font-size: 1rem;
+}
+
+.tax-visual {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.tax-visual img {
+    width: 100%;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.tax-visual:hover img {
+    transform: scale(1.02);
+}
+
+.tax-stats {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 1rem;
+}
+
+.stat-bubble {
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--light-text);
+    margin-top: 0.25rem;
+}
+</style>
+<!-- Bank Account Integration Section -->
+<section class="integration-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Seamless Bank Account Integration</h2>
+            <p>Enhance efficiency with direct salary disbursements and real-time financial tracking</p>
+        </div>
+        <div class="integration-grid">
+            <!-- Direct Deposit -->
+            <div class="integration-card">
+                <div class="status-badge connected">Active</div>
+                <img src="image/direct-deposit.png" alt="Direct Deposit">
+                <h4>Direct Deposit</h4>
+                <p>Automate salary payments directly to employee accounts</p>
+                <div class="integration-features">
+                    <div class="feature-item">
+                        <i class="fas fa-sync"></i>
+                        <span>Automated Transfers</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Scheduled Payments</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bank Feeds -->
+            <div class="integration-card">
+                <div class="status-badge popular">Popular</div>
+                <img src="image/bank-feeds.png" alt="Bank Feeds">
+                <h4>Automated Bank Feeds</h4>
+                <p>Real-time synchronization with bank transactions</p>
+                <div class="integration-features">
+                    <div class="feature-item">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>Live Sync</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-history"></i>
+                        <span>Transaction History</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Secure Processing -->
+            <div class="integration-card">
+                <div class="status-badge new">Enhanced</div>
+                <img src="image/secure-payment.png" alt="Secure Processing">
+                <h4>Secure Payment Processing</h4>
+                <p>Encrypted channels for financial transactions</p>
+                <div class="integration-features">
+                    <div class="feature-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>End-to-End Encryption</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-lock"></i>
+                        <span>Secure Authentication</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Employee Self-Service Portal Section -->
+<section class="portal-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Employee Self-Service Portal</h2>
+            <p>Empower your employees with easy access to their payroll information</p>
+        </div>
+        <div class="portal-container">
+            <div class="portal-features">
+                <div class="portal-card">
+                    <div class="portal-icon">
+                        <i class="fas fa-file-invoice"></i>
+                    </div>
+                    <div class="portal-content">
+                        <h3>Digital Payslips</h3>
+                        <p>Access and download payslips anytime, anywhere</p>
+                        <ul class="portal-list">
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Instant access to current and past payslips</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Download in multiple formats</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Email notifications for new payslips</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="portal-card">
+                    <div class="portal-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="portal-content">
+                        <h3>Payment History</h3>
+                        <p>Complete overview of historical payments</p>
+                        <ul class="portal-list">
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Detailed payment records</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Customizable date ranges</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Export functionality</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="portal-card">
+                    <div class="portal-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="portal-content">
+                        <h3>Secure Access</h3>
+                        <p>Protected access to sensitive information</p>
+                        <ul class="portal-list">
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Two-factor authentication</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Encrypted data storage</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle"></i>
+                                <span>Secure login system</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="portal-visual">
+                <img src="image/employee-portal.png" alt="Employee Self-Service Portal">
+                <div class="portal-stats">
+                    <div class="stat-bubble">
+                        <span class="stat-value">24/7</span>
+                        <span class="stat-label">Access</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Integration Section Styles */
+.integration-section {
+    padding: 6rem 0;
+    background: var(--card-bg);
+    position: relative;
+}
+
+.integration-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2.5rem;
+    margin-top: 3rem;
+}
+
+.integration-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    text-align: center;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+}
+
+.integration-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-color);
+}
+
+.status-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-badge.connected {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.status-badge.popular {
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+}
+
+.status-badge.new {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.integration-card img {
+    width: 80px;
+    height: 80px;
+    margin: 1.5rem auto;
+}
+
+.integration-card h4 {
+    font-size: 1.25rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.integration-features {
+    margin-top: 1.5rem;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+    background: rgba(41, 98, 255, 0.05);
+}
+
+.feature-item i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+}
+
+/* Portal Section Styles */
+.portal-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+.portal-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    margin-top: 3rem;
+}
+
+.portal-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.portal-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.portal-card:hover {
+    transform: translateX(10px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.portal-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.portal-icon i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.portal-content {
+    flex: 1;
+}
+
+.portal-content h3 {
+    font-size: 1.25rem;
+    color: #1a237e;
+    margin-bottom: 0.5rem;
+}
+
+.portal-content p {
+    color: var(--light-text);
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+.portal-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.portal-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
+}
+
+.portal-list li i {
+    color: var(--primary-color);
+    font-size: 1rem;
+}
+
+.portal-visual {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.portal-visual img {
+    width: 100%;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.portal-visual:hover img {
+    transform: scale(1.02);
+}
+
+.portal-stats {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 1rem;
+}
+
+.portal-stats .stat-bubble {
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    text-align: center;
+}
+</style>
+<!-- Compliance and Reporting Section -->
+<section class="compliance-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Compliance and Reporting</h2>
+            <p>Maintain adherence to labor laws and generate comprehensive payroll reports</p>
+        </div>
+        <div class="compliance-grid">
+            <div class="compliance-features">
+                <div class="compliance-card">
+                    <div class="compliance-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="compliance-content">
+                        <h3>Automated Compliance Checks</h3>
+                        <p>Real-time validation against labor laws and regulations</p>
+                        <ul class="compliance-list">
+                            <li>
+                                <i class="fas fa-shield-alt"></i>
+                                <span>Labor law compliance</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-clock"></i>
+                                <span>Working hours monitoring</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-file-alt"></i>
+                                <span>Documentation verification</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="compliance-card">
+                    <div class="compliance-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="compliance-content">
+                        <h3>Customizable Reports</h3>
+                        <p>Generate detailed reports tailored to your needs</p>
+                        <ul class="compliance-list">
+                            <li>
+                                <i class="fas fa-file-export"></i>
+                                <span>Multiple export formats</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-chart-pie"></i>
+                                <span>Visual analytics</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Scheduled reporting</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="compliance-card">
+                    <div class="compliance-icon">
+                        <i class="fas fa-analytics"></i>
+                    </div>
+                    <div class="compliance-content">
+                        <h3>Real-time Analytics</h3>
+                        <p>Monitor payroll metrics and trends instantly</p>
+                        <ul class="compliance-list">
+                            <li>
+                                <i class="fas fa-chart-line"></i>
+                                <span>Performance tracking</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-search-dollar"></i>
+                                <span>Cost analysis</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-project-diagram"></i>
+                                <span>Trend identification</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="compliance-visual">
+                <img src="image/compliance-dashboard.png" alt="Compliance Dashboard">
+                <div class="compliance-stats">
+                    <div class="stat-bubble">
+                        <span class="stat-value">99.9%</span>
+                        <span class="stat-label">Compliance Rate</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Compliance Section Styles */
+.compliance-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+.compliance-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    margin-top: 3rem;
+}
+
+.compliance-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.compliance-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.compliance-card:hover {
+    transform: translateX(10px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.compliance-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.compliance-icon i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.compliance-content {
+    flex: 1;
+}
+
+.compliance-content h3 {
+    font-size: 1.25rem;
+    color: #1a237e;
+    margin-bottom: 0.5rem;
+}
+
+.compliance-content p {
+    color: var(--light-text);
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+.compliance-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.compliance-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
+}
+
+.compliance-list li i {
+    color: var(--primary-color);
+    font-size: 1rem;
+}
+
+.compliance-visual {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.compliance-visual img {
+    width: 100%;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.compliance-visual:hover img {
+    transform: scale(1.02);
+}
+
+.compliance-stats {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 1rem;
+}
+
+.compliance-stats .stat-bubble {
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    text-align: center;
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .compliance-grid {
+        gap: 3rem;
+    }
+    
+    .compliance-card {
+        padding: 2rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .compliance-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .compliance-visual {
+        order: -1;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .compliance-card {
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
+    }
+
+    .compliance-icon {
+        margin-bottom: 1rem;
+    }
+
+    .compliance-list li {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .compliance-card {
+        padding: 1.5rem;
+    }
+
+    .compliance-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .compliance-icon i {
+        font-size: 1.25rem;
+    }
+
+    .compliance-content h3 {
+        font-size: 1.2rem;
+    }
+
+    .compliance-content p {
+        font-size: 0.9rem;
+    }
+}
+</style>
+<!-- Pricing Section with Country Selection -->
+<section class="pricing-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Simple, Transparent Pricing</h2>
+            <p>Choose the plan that best fits your organization's needs</p>
+        </div>
+
+        <!-- Country Selection -->
+        <div class="country-selector">
+            <select id="country-select" class="country-dropdown">
+                <option value="USD">United States (USD)</option>
+                <option value="INR">India (INR)</option>
+                <option value="GBP">United Kingdom (GBP)</option>
+                <option value="AED">UAE (AED)</option>
+                <option value="QAR">Qatar (QAR)</option>
+            </select>
+        </div>
+
+        <!-- Pricing Toggle -->
+        <div class="pricing-toggle">
+            <span class="toggle-label">Monthly</span>
+            <label class="switch">
+                <input type="checkbox" id="billing-toggle">
+                <span class="slider"></span>
+            </label>
+            <span class="toggle-label">Yearly <span class="discount">Save 20%</span></span>
+        </div>
+
+        <!-- Pricing Grid -->
+        <div class="pricing-grid">
+            <!-- Basic Plan -->
+            <div class="pricing-card">
+                <h3>Basic</h3>
+                <div class="price">
+                    <span class="currency-symbol">$</span>
+                    <span class="amount">49</span>
+                    <span class="period">/month</span>
+                </div>
+                <p class="plan-description">Perfect for small businesses</p>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check"></i>Up to 50 employees</li>
+                    <li><i class="fas fa-check"></i>Basic payroll processing</li>
+                    <li><i class="fas fa-check"></i>Tax calculations</li>
+                    <li><i class="fas fa-check"></i>Email support</li>
+                </ul>
+                <button class="btn primary">Start Free Trial</button>
+                <p class="trial-note">14-day free trial, no credit card required</p>
+            </div>
+
+            <!-- Professional Plan -->
+            <div class="pricing-card popular">
+                <div class="popular-badge">Most Popular</div>
+                <h3>Professional</h3>
+                <div class="price">
+                    <span class="currency-symbol">$</span>
+                    <span class="amount">99</span>
+                    <span class="period">/month</span>
+                </div>
+                <p class="plan-description">Ideal for growing companies</p>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check"></i>Up to 200 employees</li>
+                    <li><i class="fas fa-check"></i>Advanced payroll features</li>
+                    <li><i class="fas fa-check"></i>Multi-state tax filing</li>
+                    <li><i class="fas fa-check"></i>Priority support</li>
+                    <li><i class="fas fa-check"></i>Advanced reporting</li>
+                </ul>
+                <button class="btn primary">Start Free Trial</button>
+                <p class="trial-note">14-day free trial, no credit card required</p>
+            </div>
+
+            <!-- Enterprise Plan -->
+            <div class="pricing-card">
+                <h3>Enterprise</h3>
+                <div class="price">
+                    <span class="custom">Custom</span>
+                </div>
+                <p class="plan-description">For large organizations</p>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check"></i>Unlimited employees</li>
+                    <li><i class="fas fa-check"></i>Custom implementation</li>
+                    <li><i class="fas fa-check"></i>Global payroll</li>
+                    <li><i class="fas fa-check"></i>24/7 dedicated support</li>
+                    <li><i class="fas fa-check"></i>Custom integrations</li>
+                </ul>
+                <button class="btn secondary">Contact Sales</button>
+                <p class="trial-note">Get a customized quote for your needs</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Transform Your Payroll Management Today</h2>
+            <p>Experience the power of automated payroll processing with our comprehensive solution</p>
+            <div class="cta-buttons">
+                <button class="btn primary">Schedule a Free Demo</button>
+                <button class="btn secondary">Contact Sales</button>
+            </div>
+            <div class="cta-features">
+                <div class="cta-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Free 14-day trial</span>
+                </div>
+                <div class="cta-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>No credit card required</span>
+                </div>
+                <div class="cta-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Full feature access</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Pricing Section Styles */
+.pricing-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+    overflow: hidden;
+}
+
+.country-selector {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.country-dropdown {
+    padding: 0.8rem 2rem;
+    border-radius: 50px;
+    border: 1px solid rgba(41, 98, 255, 0.2);
+    background: white;
+    color: var(--text-color);
+    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 200px;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+}
+
+.country-dropdown:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(41, 98, 255, 0.1);
+}
+
+.pricing-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin: 2rem auto 3rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    width: fit-content;
+}
+
+.toggle-label {
+    font-weight: 500;
+    color: var(--text-color);
+    padding: 0.5rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 32px;
+    margin: 0 0.5rem;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #e0e0e0;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 24px;
+    width: 24px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+input:checked + .slider {
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+}
+
+input:checked + .slider:before {
+    transform: translateX(28px);
+}
+/* Continuing Pricing Section Styles */
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin: 4rem auto;
+    max-width: 1200px;
+    padding: 0 1rem;
+}
+
+.pricing-card {
+    background: white;
+    padding: 3rem 2.5rem;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.pricing-card:nth-child(1) { animation-delay: 0.2s; }
+.pricing-card:nth-child(2) { animation-delay: 0.4s; }
+.pricing-card:nth-child(3) { animation-delay: 0.6s; }
+
+.pricing-card:hover:not(.popular) {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-color);
+}
+
+.pricing-card.popular {
+    background: linear-gradient(145deg, #ffffff, #f8f9ff);
+    border: 2px solid var(--primary-color);
+    transform: scale(1.05);
+    z-index: 1;
+}
+
+.popular-badge {
+    position: absolute;
+    top: 1.5rem;
+    right: -3.5rem;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    color: white;
+    padding: 0.5rem 3.5rem;
+    transform: rotate(45deg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.price {
+    text-align: center;
+    margin: 1.5rem 0;
+    padding: 1.5rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.currency-symbol {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    vertical-align: top;
+    margin-right: 0.25rem;
+}
+
+.amount {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1;
+}
+
+.period {
+    font-size: 1rem;
+    color: var(--light-text);
+    margin-left: 0.25rem;
+}
+
+.custom {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.plan-description {
+    text-align: center;
+    color: var(--light-text);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+.plan-features {
+    list-style: none;
+    margin: 2rem 0;
+    flex-grow: 1;
+}
+
+.plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    color: var(--text-color);
+    font-size: 1rem;
+    padding: 0.5rem 0;
+}
+
+.plan-features li i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.trial-note {
+    text-align: center;
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin-top: 1rem;
+}
+
+/* CTA Section Styles */
+.cta-section {
+    padding: 8rem 0;
+    background: var(--gradient);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+.cta-content {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+    padding: 0 1.5rem;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: ctaFadeIn 0.8s ease forwards;
+}
+
+.cta-content h2 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    background: linear-gradient(45deg, #1a237e, #2962ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+    font-weight: 700;
+}
+
+.cta-content p {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: #455a64;
+    margin-bottom: 2.5rem;
+    opacity: 0.9;
+    line-height: 1.6;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 3rem;
+}
+
+.cta-features {
+    display: flex;
+    gap: 3rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cta-feature {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-color);
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: ctaFeatureFadeIn 0.6s ease forwards;
+}
+
+.cta-feature:nth-child(1) { animation-delay: 0.3s; }
+.cta-feature:nth-child(2) { animation-delay: 0.5s; }
+.cta-feature:nth-child(3) { animation-delay: 0.7s; }
+
+.cta-feature:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Animations */
+@keyframes ctaFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes ctaFeatureFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .pricing-grid {
+        gap: 1.5rem;
+        padding: 0 2rem;
+    }
+    
+    .pricing-card {
+        padding: 2.5rem 2rem;
+    }
+
+    .amount {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .pricing-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .pricing-card.popular {
+        transform: scale(1.02);
+    }
+
+    .cta-content {
+        max-width: 90%;
+    }
+}
+
+@media (max-width: 768px) {
+    .pricing-toggle {
+        flex-direction: column;
+        background: transparent;
+        box-shadow: none;
+        gap: 1rem;
+    }
+
+    .toggle-label {
+        background: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        width: 100%;
+        text-align: center;
+    }
+
+    .country-dropdown {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .pricing-card {
+        padding: 2rem;
+    }
+
+    .pricing-card.popular {
+        transform: none;
+    }
+
+    .cta-buttons {
+        flex-direction: column;
+        gap: 1rem;
+        max-width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .cta-features {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .cta-feature {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .pricing-card {
+        padding: 1.5rem;
+    }
+
+    .amount {
+        font-size: 2.25rem;
+    }
+
+    .plan-features li {
+        font-size: 0.95rem;
+    }
+
+    .cta-content h2 {
+        font-size: 1.75rem;
+    }
+
+    .cta-content p {
+        font-size: 1rem;
+    }
+
+    .cta-feature {
+        font-size: 0.95rem;
+        padding: 0.75rem 1rem;
+    }
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMobileMenu();
+    initializeDropdowns();
+    initializeTouchEvents();
+    initializeKeyboardNav();
+    initializeDropdownScroll();
+    initializeFocusTrap();
+    initializeWiseMailAnimations();
+});
+
+function initializeWiseMailAnimations() {
+    const wiseMailLink = document.querySelector('a[href="mail.html"]');
+    if (!wiseMailLink) return;
+
+    // Create and append envelope icon
+    const envelope = document.createElement('span');
+    envelope.innerHTML = `
+        <svg class="mail-icon" viewBox="0 0 24 24" width="18" height="18">
+            <path d="M20,4H4C2.9,4,2,4.9,2,6v12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V6C22,4.9,21.1,4,20,4z" fill="currentColor"/>
+            <path d="M20,4H4l8,6L20,4z" fill="currentColor"/>
+        </svg>
+    `;
+    envelope.classList.add('mail-icon-wrapper');
+    wiseMailLink.prepend(envelope);
+
+    // Create notification badge
+    const badge = document.createElement('span');
+    badge.classList.add('mail-badge');
+    badge.textContent = '1';
+    wiseMailLink.appendChild(badge);
+
+    // Advanced hover animation
+    wiseMailLink.addEventListener('mouseenter', function() {
+        createMailParticles(this);
+        envelope.style.transform = 'scale(1.2) rotate(15deg)';
+        envelope.style.filter = 'drop-shadow(0 0 8px var(--primary-color))';
+        this.style.transform = 'scale(1.05)';
+        this.style.textShadow = '0 0 15px rgba(227, 51, 51, 0.3)';
+    });
+
+    wiseMailLink.addEventListener('mouseleave', function() {
+        envelope.style.transform = 'scale(1) rotate(0deg)';
+        envelope.style.filter = 'none';
+        this.style.transform = 'scale(1)';
+        this.style.textShadow = 'none';
+    });
+
+    // Continuous floating animation
+    let time = 0;
+    function floatAnimation() {
+        if (!document.hidden) {
+            time += 0.01;
+            const yOffset = Math.sin(time) * 3;
+            const xOffset = Math.cos(time * 0.5) * 2;
+            const rotation = Math.sin(time * 0.5) * 5;
+            
+            envelope.style.transform = `translate(${xOffset}px, ${yOffset}px) rotate(${rotation}deg)`;
+        }
+        requestAnimationFrame(floatAnimation);
+    }
+    floatAnimation();
+
+    // Periodic pulse effect
+    setInterval(() => {
+        if (!document.hidden && Math.random() > 0.7) {
+            envelope.classList.add('pulse');
+            setTimeout(() => envelope.classList.remove('pulse'), 1000);
+        }
+    }, 3000);
+
+    // Create particle effect
+    function createMailParticles(element) {
+        const colors = ['#ff6b6b', '#e33333', '#ff8787', '#ff4444'];
+        const particleCount = 12;
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('span');
+            particle.classList.add('mail-particle');
+            
+            const size = Math.random() * 4 + 2;
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const angle = (i / particleCount) * 360;
+            const velocity = 2 + Math.random() * 2;
+            
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.backgroundColor = color;
+            
+            const rect = element.getBoundingClientRect();
+            particle.style.left = `${rect.width / 2}px`;
+            particle.style.top = `${rect.height / 2}px`;
+            
+            particle.style.animation = `
+                particleFly${angle < 180 ? 'Up' : 'Down'} 
+                ${0.6 + Math.random() * 0.4}s 
+                ease-out forwards
+            `;
+            
+            element.appendChild(particle);
+            setTimeout(() => particle.remove(), 1000);
+        }
+    }
+
+    // Add animation styles
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+        .mail-icon-wrapper {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 6px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mail-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: badgePulse 2s infinite;
+        }
+
+        .mail-particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .pulse {
+            animation: iconPulse 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes particleFlyUp {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(
+                    ${Math.random() * 100 - 50}px,
+                    ${-Math.random() * 100 - 20}px
+                ) scale(0);
+                opacity: 0;
+            }
+        }
+
+        @keyframes particleFlyDown {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(
+                    ${Math.random() * 100 - 50}px,
+                    ${Math.random() * 100 + 20}px
+                ) scale(0);
+                opacity: 0;
+            }
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes iconPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        a[href="mail.html"] {
+            position: relative;
+            display: flex;
+            align-items: center;
+            overflow: visible;
+            padding: 5px 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        a[href="mail.html"]:hover {
+            background: rgba(227, 51, 51, 0.1);
+            border-radius: 6px;
+        }
+
+        @media (max-width: 768px) {
+            .mail-icon-wrapper {
+                margin-right: 12px;
+            }
+            
+            .mail-badge {
+                right: auto;
+                left: 20px;
+                top: 50%;
+                transform: translateY(-50%);
+            }
+        }
+    `;
+    document.head.appendChild(styleSheet);
+}
+    function initializeMobileMenu() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mainNav = document.getElementById('main-nav');
+    const menuOverlay = document.getElementById('menu-overlay');
+    const megaMenus = document.querySelectorAll('.mega-menu');
+    let isMenuOpen = false;
+
+    // Desktop Mega Menu Handler
+    function handleDesktopMegaMenu() {
+        megaMenus.forEach(menu => {
+            const content = menu.querySelector('.dropdown-content');
+            
+            menu.addEventListener('mouseenter', () => {
+                if (window.innerWidth > 768) {
+                    menu.classList.add('active');
+                    if (content) {
+                        content.style.display = 'grid';
+                        requestAnimationFrame(() => {
+                            content.style.opacity = '1';
+                            content.style.visibility = 'visible';
+                            content.style.transform = 'translateX(-50%) translateY(0)';
+                        });
+                    }
+                }
+            });
+
+            menu.addEventListener('mouseleave', () => {
+                if (window.innerWidth > 768) {
+                    menu.classList.remove('active');
+                    if (content) {
+                        content.style.opacity = '0';
+                        content.style.visibility = 'hidden';
+                        content.style.transform = 'translateX(-50%) translateY(20px)';
+                        setTimeout(() => {
+                            if (!menu.classList.contains('active')) {
+                                content.style.display = 'none';
+                            }
+                        }, 300);
+                    }
+                }
+            });
+        });
+    }
+
+    // Mobile Mega Menu Handler
+    function handleMobileMegaMenu() {
+        megaMenus.forEach(menu => {
+            const link = menu.querySelector('a');
+            const content = menu.querySelector('.dropdown-content');
+            
+            link.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Close other menus
+                    megaMenus.forEach(m => {
+                        if (m !== menu && m.classList.contains('active')) {
+                            m.classList.remove('active');
+                            const otherContent = m.querySelector('.dropdown-content');
+                            if (otherContent) {
+                                otherContent.style.display = 'none';
+                                otherContent.style.opacity = '0';
+                                otherContent.style.visibility = 'hidden';
+                            }
+                        }
+                    });
+
+                    // Toggle current menu
+                    const isActive = menu.classList.contains('active');
+                    menu.classList.toggle('active');
+
+                    if (!isActive) {
+                        content.style.display = 'grid';
+                        requestAnimationFrame(() => {
+                            content.style.opacity = '1';
+                            content.style.visibility = 'visible';
+                        });
+
+                        // Scroll into view
+                        setTimeout(() => {
+                            const headerOffset = 70;
+                            const menuTop = menu.getBoundingClientRect().top;
+                            const scrollPosition = window.pageYOffset + menuTop - headerOffset;
+                            window.scrollTo({
+                                top: scrollPosition,
+                                behavior: 'smooth'
+                            });
+                        }, 100);
+                    } else {
+                        content.style.opacity = '0';
+                        content.style.visibility = 'hidden';
+                        setTimeout(() => {
+                            content.style.display = 'none';
+                        }, 300);
+                    }
+                }
+            });
+        });
+    }
+
+    // Toggle mobile menu function
+    function toggleMenu(show) {
+        isMenuOpen = show;
+        mobileMenu.classList.toggle('active', show);
+        mainNav.classList.toggle('active', show);
+        menuOverlay.classList.toggle('active', show);
+        document.body.style.overflow = show ? 'hidden' : '';
+
+        if (!show) {
+            resetMobileMenu();
+        }
+    }
+
+    // Reset mobile menu state
+    function resetMobileMenu() {
+        megaMenus.forEach(menu => {
+            menu.classList.remove('active');
+            const content = menu.querySelector('.dropdown-content');
+            if (content) {
+                content.style.display = 'none';
+                content.style.opacity = '0';
+                content.style.visibility = 'hidden';
+            }
+        });
+    }
+
+    // Initialize both desktop and mobile handlers
+    handleDesktopMegaMenu();
+    handleMobileMegaMenu();
+
+    // Event Listeners
+    mobileMenu.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMenu(!isMenuOpen);
+    });
+
+    menuOverlay.addEventListener('click', () => {
+        toggleMenu(false);
+    });
+
+    document.addEventListener('click', (e) => {
+        if (isMenuOpen && 
+            !mainNav.contains(e.target) && 
+            !mobileMenu.contains(e.target)) {
+            toggleMenu(false);
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (isMenuOpen) {
+                toggleMenu(false);
+            }
+            megaMenus.forEach(menu => {
+                menu.classList.remove('active');
+                const content = menu.querySelector('.dropdown-content');
+                if (content) {
+                    content.style.display = 'none';
+                    content.style.opacity = '0';
+                    content.style.visibility = 'hidden';
+                }
+            });
+        }
+    });
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            if (window.innerWidth > 768) {
+                toggleMenu(false);
+                resetMobileMenu();
+                
+                megaMenus.forEach(menu => {
+                    const content = menu.querySelector('.dropdown-content');
+                    if (content) {
+                        content.style.display = 'none';
+                        content.style.opacity = '0';
+                        content.style.visibility = 'hidden';
+                        content.style.transform = 'translateX(-50%) translateY(20px)';
+                    }
+                });
+            }
+        }, 250);
+    });
+}
+
+function initializeDropdowns() {
+    const dropdowns = document.querySelectorAll('.dropdown-content');
+    
+    dropdowns.forEach(dropdown => {
+        const items = dropdown.querySelectorAll('.mega-column ul li');
+        items.forEach((item, index) => {
+            item.style.animationDelay = `${index * 0.05}s`;
+            item.classList.add('animate-item');
+        });
+    });
+}
+
+function initializeDropdownScroll() {
+    const megaMenus = document.querySelectorAll('.mega-menu');
+
+    megaMenus.forEach(menu => {
+        const dropdown = menu.querySelector('.dropdown-content');
+
+        if (dropdown) {
+            dropdown.addEventListener('wheel', (e) => {
+                if (window.innerWidth > 768) {
+                    const { scrollTop, scrollHeight, clientHeight } = dropdown;
+                    const scrollingUp = e.deltaY < 0;
+                    const scrollingDown = e.deltaY > 0;
+
+                    if (
+                        (scrollingUp && scrollTop > 0) || 
+                        (scrollingDown && scrollTop < scrollHeight - clientHeight)
+                    ) {
+                        e.preventDefault();
+                        dropdown.scrollTop += e.deltaY;
+                    }
+                }
+            }, { passive: false });
+
+            let touchStart = null;
+            dropdown.addEventListener('touchstart', (e) => {
+                if (window.innerWidth > 768) {
+                    touchStart = e.touches[0].clientY;
+                }
+            }, { passive: true });
+
+            dropdown.addEventListener('touchmove', (e) => {
+                if (window.innerWidth > 768 && touchStart !== null) {
+                    const touchY = e.touches[0].clientY;
+                    const scrollingUp = touchY > touchStart;
+                    const { scrollTop, scrollHeight, clientHeight } = dropdown;
+
+                    if (
+                        (scrollingUp && scrollTop > 0) ||
+                        (!scrollingUp && scrollTop < scrollHeight - clientHeight)
+                    ) {
+                        e.stopPropagation();
+                    } else {
+                        e.preventDefault();
+                    }
+                }
+            }, { passive: false });
+
+            dropdown.addEventListener('touchend', () => {
+                touchStart = null;
+            });
+        }
+    });
+}
+
+function initializeTouchEvents() {
+    if ('ontouchstart' in window) {
+        const menuItems = document.querySelectorAll('.mega-menu > a');
+        
+        menuItems.forEach(item => {
+            item.addEventListener('touchstart', function(e) {
+                if (window.innerWidth > 768) {
+                    e.preventDefault();
+                    const parent = this.parentElement;
+                    const wasActive = parent.classList.contains('active');
+                    
+                    document.querySelectorAll('.mega-menu.active').forEach(menu => {
+                        if (menu !== parent) {
+                            menu.classList.remove('active');
+                            const content = menu.querySelector('.dropdown-content');
+                            if (content) {
+                                content.style.display = 'none';
+                                content.style.opacity = '0';
+                                content.style.visibility = 'hidden';
+                            }
+                        }
+                    });
+
+                    parent.classList.toggle('active', !wasActive);
+                    const content = parent.querySelector('.dropdown-content');
+                    
+                    if (!wasActive) {
+                        content.style.display = 'grid';
+                        requestAnimationFrame(() => {
+                            content.style.opacity = '1';
+                            content.style.visibility = 'visible';
+                        });
+                    } else {
+                        content.style.opacity = '0';
+                        content.style.visibility = 'hidden';
+                        setTimeout(() => {
+                            content.style.display = 'none';
+                        }, 300);
+                    }
+                }
+            });
+        });
+
+        document.addEventListener('touchstart', (e) => {
+            if (!e.target.closest('.mega-menu')) {
+                document.querySelectorAll('.mega-menu.active').forEach(menu => {
+                    menu.classList.remove('active');
+                    const content = menu.querySelector('.dropdown-content');
+                    if (content) {
+                        content.style.opacity = '0';
+                        content.style.visibility = 'hidden';
+                        setTimeout(() => {
+                            content.style.display = 'none';
+                        }, 300);
+                    }
+                });
+            }
+        }, { passive: true });
+    }
+}
+
+function initializeKeyboardNav() {
+    const menuItems = document.querySelectorAll('.mega-menu a, .mega-column a');
+    
+    menuItems.forEach(item => {
+        item.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.click();
+            }
+        });
+    });
+}
+
+function initializeFocusTrap() {
+    const mainNav = document.getElementById('main-nav');
+    const focusableElements = mainNav.querySelectorAll(
+        'a[href], button, input, textarea, select, details, [tabindex]:not([tabindex="-1"])'
+    );
+    
+    if (focusableElements.length > 0) {
+        const firstFocusableElement = focusableElements[0];
+        const lastFocusableElement = focusableElements[focusableElements.length - 1];
+
+        mainNav.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                if (e.shiftKey) {
+                    if (document.activeElement === firstFocusableElement) {
+                        lastFocusableElement.focus();
+                        e.preventDefault();
+                    }
+                } else {
+                    if (document.activeElement === lastFocusableElement) {
+                        firstFocusableElement.focus();
+                        e.preventDefault();
+                    }
+                }
+            }
+        });
+    }
+}
+</script>
+</body>
+</html>
