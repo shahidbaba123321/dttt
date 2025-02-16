@@ -1663,40 +1663,67 @@ input:checked + .slider:before {
         
         try {
             const response = await fetch('header.html');
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const html = await response.text();
             headerContainer.innerHTML = html;
 
             // Initialize mobile menu functionality after header loads
-            const mobileMenu = document.getElementById('mobile-menu');
-            const mainNav = document.getElementById('main-nav');
-            const menuOverlay = document.getElementById('menu-overlay');
-            const megaMenus = document.querySelectorAll('.mega-menu');
+            initializeMobileMenu();
+        } catch (error) {
+            console.error('Error loading header:', error);
+            headerContainer.innerHTML = `
+                <header class="main-header">
+                    <div class="container">
+                        <div class="header-content">
+                            <a href="/" class="logo">
+                                <span>Workwise Pro</span>
+                            </a>
+                            <nav class="main-nav">
+                                <ul class="nav-list">
+                                    <li><a href="#home">Home</a></li>
+                                    <li><a href="#contact">Contact</a></li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </header>
+            `;
+        }
+    }
 
-            if (mobileMenu && mainNav) {
-                let isMenuOpen = false;
+    // Mobile Menu Initialization
+    function initializeMobileMenu() {
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mainNav = document.getElementById('main-nav');
+        const menuOverlay = document.getElementById('menu-overlay');
+        const megaMenus = document.querySelectorAll('.mega-menu');
 
-                function toggleMenu(show) {
-                    isMenuOpen = show;
-                    mobileMenu.classList.toggle('active', show);
-                    mainNav.classList.toggle('active', show);
-                    menuOverlay.classList.toggle('active', show);
-                    document.body.style.overflow = show ? 'hidden' : '';
+        if (mobileMenu && mainNav) {
+            let isMenuOpen = false;
 
-                    if (!show) {
-                        megaMenus.forEach(menu => menu.classList.remove('active'));
-                    }
+            function toggleMenu(show) {
+                isMenuOpen = show;
+                mobileMenu.classList.toggle('active', show);
+                mainNav.classList.toggle('active', show);
+                menuOverlay.classList.toggle('active', show);
+                document.body.style.overflow = show ? 'hidden' : '';
+
+                if (!show) {
+                    megaMenus.forEach(menu => menu.classList.remove('active'));
                 }
+            }
 
-                mobileMenu.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    toggleMenu(!isMenuOpen);
-                });
+            mobileMenu.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMenu(!isMenuOpen);
+            });
 
-                // Handle mega menus on mobile
-                megaMenus.forEach(menu => {
-                    const link = menu.querySelector('a');
+            // Handle mega menus on mobile
+            megaMenus.forEach(menu => {
+                const link = menu.querySelector('a');
+                if (link) {
                     link.addEventListener('click', (e) => {
                         if (window.innerWidth <= 768) {
                             e.preventDefault();
@@ -1707,26 +1734,15 @@ input:checked + .slider:before {
                             menu.classList.toggle('active');
                         }
                     });
-                });
+                }
+            });
 
-                // Close menu when clicking outside
-                document.addEventListener('click', (e) => {
-                    if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
-                        toggleMenu(false);
-                    }
-                });
-            }
-        } catch (error) {
-            console.error('Error loading header:', error);
-            headerContainer.innerHTML = `
-                <header class="main-header">
-                    <div class="container">
-                        <a href="/" class="logo">
-                            <h1>Workwise Pro</h1>
-                        </a>
-                    </div>
-                </header>
-            `;
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
+                    toggleMenu(false);
+                }
+            });
         }
     }
 
@@ -1758,7 +1774,7 @@ input:checked + .slider:before {
             });
         }, observerOptions);
 
-        document.querySelectorAll('.feature-card, .metric-item, .integration-card, .pricing-card, .progress-fill')
+        document.querySelectorAll('.feature-card, .metric-card, .integration-card, .pricing-card, .progress-fill')
             .forEach(el => observer.observe(el));
     }
 
@@ -1802,8 +1818,8 @@ input:checked + .slider:before {
         requestAnimationFrame(update);
     }
 
-    // Initialize Charts
-    function initializeCharts() {
+    // Metrics Initialization
+    function initializeMetrics() {
         const charts = document.querySelectorAll('.metric-chart');
         charts.forEach(chart => {
             const ctx = chart.getContext('2d');
@@ -1834,18 +1850,25 @@ input:checked + .slider:before {
     // Scroll Effects Handler
     function handleScrollEffects() {
         let lastScroll = 0;
-        const header = document.querySelector('header');
+        const header = document.querySelector('.main-header');
 
         window.addEventListener('scroll', () => {
             const currentScroll = window.pageYOffset;
             
             if (currentScroll > lastScroll && currentScroll > 100) {
-                header.classList.add('header-hidden');
+                header?.classList.add('header-hidden');
             } else {
-                header.classList.remove('header-hidden');
+                header?.classList.remove('header-hidden');
             }
             
             lastScroll = currentScroll;
+
+            // Parallax effect for hero section
+            const hero = document.querySelector('.attendance-hero');
+            if (hero) {
+                const scroll = window.pageYOffset;
+                hero.style.backgroundPositionY = `${scroll * 0.5}px`;
+            }
         });
     }
 
@@ -1861,7 +1884,7 @@ input:checked + .slider:before {
             });
         });
 
-        document.querySelectorAll('.metric-item').forEach(item => {
+        document.querySelectorAll('.metric-card').forEach(item => {
             item.addEventListener('click', () => {
                 item.classList.add('metric-active');
                 setTimeout(() => {
@@ -1869,6 +1892,33 @@ input:checked + .slider:before {
                 }, 300);
             });
         });
+    }
+
+    // Initialize Charts
+    function initializeCharts() {
+        const performanceChart = document.getElementById('performanceChart');
+        if (performanceChart) {
+            new Chart(performanceChart, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Attendance Rate',
+                        data: [92, 95, 94, 96, 95, 98],
+                        borderColor: '#2962ff',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
     }
 
     // Watson Assistant Chat Integration
