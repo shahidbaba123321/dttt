@@ -120,6 +120,209 @@ body {
     color: var(--light-text);
     opacity: 0.9;
 }
+        /* Main Sections Responsive Styles */
+@media (max-width: 1024px) {
+    .hero-content,
+    .analytics-content,
+    .workflow-grid {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+    }
+
+    .hero-image img {
+        max-width: 500px;
+    }
+
+    .pricing-card.popular {
+        transform: scale(1.02);
+    }
+
+    .benefits-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .integration-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 992px) {
+    .hero-content {
+        gap: 2rem;
+    }
+
+    .hero-image img {
+        max-width: 450px;
+    }
+
+    .feature-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .pricing-grid {
+        grid-template-columns: 1fr;
+        max-width: 600px;
+        margin: 4rem auto;
+    }
+
+    .pricing-card.popular {
+        transform: none;
+    }
+
+    .benefits-grid {
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .hero-text {
+        max-width: 100%;
+    }
+
+    .hero-buttons {
+        justify-content: center;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .hero-image {
+        order: -1;
+        margin-bottom: 2rem;
+    }
+
+    .hero-image img {
+        max-width: 80%;
+        margin: 0 auto;
+    }
+
+    .hero-stats {
+        grid-template-columns: 1fr;
+        max-width: 400px;
+        margin: 3rem auto 0;
+    }
+
+    .feature-grid,
+    .benefits-grid,
+    .integration-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .feature-card,
+    .benefit-card,
+    .integration-card {
+        padding: 2rem;
+    }
+
+    .pricing-toggle {
+        flex-direction: column;
+        background: transparent;
+        box-shadow: none;
+        gap: 1rem;
+        padding: 0;
+    }
+
+    .pricing-toggle span {
+        background: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        width: 100%;
+        text-align: center;
+    }
+
+    .switch {
+        margin: 1rem 0;
+    }
+
+    .pricing-card {
+        padding: 2rem;
+    }
+
+    .cta-buttons {
+        flex-direction: column;
+        gap: 1rem;
+        max-width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .cta-features {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-text h1 {
+        font-size: 2rem;
+    }
+
+    .hero-text p {
+        font-size: 1rem;
+    }
+
+    .hero-image img {
+        max-width: 90%;
+    }
+
+    .feature-card,
+    .benefit-card,
+    .integration-card,
+    .pricing-card {
+        padding: 1.5rem;
+    }
+
+    .feature-icon,
+    .benefit-icon,
+    .integration-icon {
+        width: 48px;
+        height: 48px;
+    }
+
+    .feature-icon i,
+    .benefit-icon i,
+    .integration-icon i {
+        font-size: 1.25rem;
+    }
+
+    .pricing-card .btn {
+        padding: 0.875rem;
+        font-size: 0.95rem;
+    }
+
+    .amount {
+        font-size: 2.25rem;
+    }
+
+    .cta-content h2 {
+        font-size: 1.75rem;
+    }
+
+    .cta-feature {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .footer-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .footer-section h4::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
     </style>
 </head>
 <body>
@@ -847,7 +1050,7 @@ body {
 </section>
 
 <style>
-/* Complete Pricing Section Styles */
+/* Pricing Section Complete Styles */
 .pricing-section {
     padding: 6rem 0;
     background: var(--gradient);
@@ -855,6 +1058,19 @@ body {
     overflow: hidden;
 }
 
+.pricing-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('path/to/pattern.svg');
+    opacity: 0.05;
+    pointer-events: none;
+}
+
+/* Enhanced Pricing Toggle */
 .pricing-toggle {
     display: flex;
     align-items: center;
@@ -866,8 +1082,27 @@ body {
     border-radius: 50px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     width: fit-content;
+    position: relative;
 }
 
+.pricing-toggle span {
+    font-weight: 500;
+    color: var(--text-color);
+    padding: 0.5rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.discount {
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+
+/* Enhanced Switch Styles */
 .switch {
     position: relative;
     display: inline-block;
@@ -915,6 +1150,16 @@ input:checked + .slider:before {
     transform: translateX(28px);
 }
 
+/* Enhanced Pricing Grid */
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin: 4rem auto;
+    max-width: 1200px;
+    padding: 0 1rem;
+}
+
 .pricing-card {
     background: white;
     padding: 3rem 2.5rem;
@@ -926,12 +1171,47 @@ input:checked + .slider:before {
     display: flex;
     flex-direction: column;
     border: 1px solid rgba(41, 98, 255, 0.1);
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s ease forwards;
 }
+
+.pricing-card:nth-child(1) { animation-delay: 0.2s; }
+.pricing-card:nth-child(2) { animation-delay: 0.4s; }
+.pricing-card:nth-child(3) { animation-delay: 0.6s; }
 
 .pricing-card:hover:not(.popular) {
     transform: translateY(-10px);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
     border-color: var(--primary-color);
+}
+
+.pricing-card.popular {
+    background: linear-gradient(145deg, #ffffff, #f8f9ff);
+    border: 2px solid var(--primary-color);
+    transform: scale(1.05);
+    z-index: 1;
+}
+
+.popular-badge {
+    position: absolute;
+    top: 1.5rem;
+    right: -3.5rem;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    color: white;
+    padding: 0.5rem 3.5rem;
+    transform: rotate(45deg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pricing-card h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-weight: 600;
 }
 
 .price {
@@ -1008,6 +1288,25 @@ input:checked + .slider:before {
     transition: all 0.3s ease;
 }
 
+.pricing-card:hover .plan-features li i {
+    background: var(--primary-color);
+    color: white;
+}
+
+.pricing-card .btn {
+    width: 100%;
+    margin-top: auto;
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.pricing-card .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(41, 98, 255, 0.2);
+}
+
 .trial-note {
     text-align: center;
     color: var(--light-text);
@@ -1015,7 +1314,65 @@ input:checked + .slider:before {
     margin-top: 1rem;
 }
 
-/* Complete CTA Section Styles */
+/* Pricing Section Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+    /* Responsive Styles for Pricing and CTA */
+@media (max-width: 992px) {
+    .pricing-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .pricing-card.popular {
+        transform: scale(1.02);
+    }
+}
+
+@media (max-width: 768px) {
+    .pricing-toggle {
+        flex-direction: column;
+        background: transparent;
+        box-shadow: none;
+        gap: 1rem;
+    }
+
+    .pricing-toggle span {
+        background: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        width: 100%;
+        text-align: center;
+    }
+
+    
+}
+
+@media (max-width: 480px) {
+    .pricing-card {
+        padding: 2rem 1.5rem;
+    }
+
+    .amount {
+        font-size: 2.5rem;
+    }
+
+  
+}
+    /* Enhanced CTA Section Styles */
 .cta-section {
     padding: 8rem 0;
     background: var(--gradient);
@@ -1042,6 +1399,9 @@ input:checked + .slider:before {
     position: relative;
     z-index: 1;
     padding: 0 1.5rem;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: ctaFadeIn 0.8s ease forwards;
 }
 
 .cta-content h2 {
@@ -1080,6 +1440,10 @@ input:checked + .slider:before {
     box-shadow: 0 8px 25px rgba(41, 98, 255, 0.25);
 }
 
+.cta-buttons .btn.secondary {
+    border: 2px solid var(--primary-color);
+}
+
 .cta-buttons .btn:hover {
     transform: translateY(-3px);
     box-shadow: 0 12px 30px rgba(41, 98, 255, 0.3);
@@ -1103,7 +1467,14 @@ input:checked + .slider:before {
     border-radius: 50px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: ctaFeatureFadeIn 0.6s ease forwards;
 }
+
+.cta-feature:nth-child(1) { animation-delay: 0.3s; }
+.cta-feature:nth-child(2) { animation-delay: 0.5s; }
+.cta-feature:nth-child(3) { animation-delay: 0.7s; }
 
 .cta-feature:hover {
     transform: translateY(-2px);
@@ -1121,40 +1492,64 @@ input:checked + .slider:before {
     justify-content: center;
     border-radius: 50%;
 }
-    /* Responsive Styles for Pricing and CTA */
-@media (max-width: 992px) {
-    .pricing-grid {
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        max-width: 800px;
-        margin-left: auto;
-        margin-right: auto;
+
+/* Additional Responsive Adjustments */
+@media (max-width: 1200px) {
+    .cta-section {
+        padding: 6rem 0;
     }
 
-    .pricing-card.popular {
-        transform: scale(1.02);
+    .cta-content {
+        max-width: 90%;
+    }
+
+    .cta-buttons .btn {
+        min-width: 180px;
+        padding: 1.1rem 2rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .cta-content h2 {
+        font-size: 2.5rem;
+    }
+
+    .cta-content p {
+        font-size: 1.1rem;
+    }
+
+    .cta-features {
+        gap: 2rem;
     }
 }
 
 @media (max-width: 768px) {
-    .pricing-toggle {
-        flex-direction: column;
-        background: transparent;
-        box-shadow: none;
-        gap: 1rem;
+    .cta-section {
+        padding: 5rem 0;
     }
 
-    .pricing-toggle span {
-        background: white;
-        padding: 0.75rem 1.5rem;
-        border-radius: 25px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        width: 100%;
-        text-align: center;
+    .cta-content h2 {
+        font-size: 2rem;
+    }
+
+    .cta-content p {
+        font-size: 1rem;
+        margin-bottom: 2rem;
     }
 
     .cta-buttons {
         flex-direction: column;
         gap: 1rem;
+        max-width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 2rem;
+    }
+
+    .cta-buttons .btn {
+        width: 100%;
+        min-width: auto;
+        padding: 1rem 2rem;
     }
 
     .cta-features {
@@ -1171,26 +1566,71 @@ input:checked + .slider:before {
 }
 
 @media (max-width: 480px) {
-    .pricing-card {
-        padding: 2rem 1.5rem;
-    }
-
-    .amount {
-        font-size: 2.5rem;
+    .cta-section {
+        padding: 4rem 0;
     }
 
     .cta-content h2 {
-        font-size: 2rem;
+        font-size: 1.75rem;
     }
 
     .cta-content p {
-        font-size: 1rem;
+        font-size: 0.95rem;
     }
 
-    .cta-buttons .btn {
-        width: 100%;
-        min-width: auto;
-        padding: 1rem 2rem;
+    .cta-feature {
+        font-size: 0.95rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .cta-feature i {
+        width: 28px;
+        height: 28px;
+        font-size: 1.1rem;
+    }
+}
+
+/* CTA Animations */
+@keyframes ctaFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes ctaFeatureFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Additional Animation Classes */
+.animate-fade-up {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.animate-fade-in {
+    opacity: 0;
+    animation: fadeIn 0.6s ease forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
     }
 }
 </style>
