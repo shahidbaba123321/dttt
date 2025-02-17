@@ -2004,3 +2004,927 @@
     }
 }
 </style>
+        <!-- Call to Action Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Transform Your Tax Management Today</h2>
+            <p>Discover how our comprehensive tax solutions can simplify your global tax compliance needs</p>
+            <div class="cta-buttons">
+                <button class="btn primary">Contact Us for Consultation</button>
+                <button class="btn secondary">Explore Solutions</button>
+            </div>
+            <div class="cta-features">
+                <div class="cta-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Free consultation</span>
+                </div>
+                <div class="cta-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Live demo available</span>
+                </div>
+                <div class="cta-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Expert support team</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* CTA Section Styles */
+.cta-section {
+    padding: 8rem 0;
+    background: var(--gradient);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+.cta-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('path/to/pattern.svg');
+    opacity: 0.05;
+    pointer-events: none;
+}
+
+.cta-content {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+    padding: 0 1.5rem;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: ctaFadeIn 0.8s ease forwards;
+}
+
+.cta-content h2 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    background: linear-gradient(45deg, #1a237e, #2962ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+    font-weight: 700;
+}
+
+.cta-content p {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: #455a64;
+    margin-bottom: 2.5rem;
+    opacity: 0.9;
+    line-height: 1.6;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 3rem;
+}
+
+.cta-buttons .btn {
+    min-width: 200px;
+    padding: 1.25rem 2.5rem;
+    font-size: 1.1rem;
+}
+
+.cta-buttons .btn.primary {
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    box-shadow: 0 8px 25px rgba(41, 98, 255, 0.25);
+}
+
+.cta-buttons .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(41, 98, 255, 0.3);
+}
+
+.cta-features {
+    display: flex;
+    gap: 3rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cta-feature {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-color);
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: ctaFeatureFadeIn 0.6s ease forwards;
+}
+
+.cta-feature:nth-child(1) { animation-delay: 0.3s; }
+.cta-feature:nth-child(2) { animation-delay: 0.5s; }
+.cta-feature:nth-child(3) { animation-delay: 0.7s; }
+
+.cta-feature:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.cta-feature i {
+    color: var(--primary-color);
+    font-size: 1.25rem;
+    background: rgba(41, 98, 255, 0.1);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+/* CTA Animations */
+@keyframes ctaFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes ctaFeatureFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+    .cta-content {
+        max-width: 90%;
+    }
+
+    .cta-buttons .btn {
+        min-width: 180px;
+        padding: 1.1rem 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .cta-section {
+        padding: 6rem 0;
+    }
+
+    .cta-content h2 {
+        font-size: 2rem;
+    }
+
+    .cta-content p {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .cta-buttons {
+        flex-direction: column;
+        gap: 1rem;
+        max-width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 2rem;
+    }
+
+    .cta-buttons .btn {
+        width: 100%;
+        min-width: auto;
+        padding: 1rem 2rem;
+    }
+
+    .cta-features {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .cta-feature {
+        width: 100%;
+        max-width: 300px;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .cta-section {
+        padding: 4rem 0;
+    }
+
+    .cta-content h2 {
+        font-size: 1.75rem;
+    }
+
+    .cta-content p {
+        font-size: 0.95rem;
+    }
+
+    .cta-feature {
+        font-size: 0.95rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .cta-feature i {
+        width: 28px;
+        height: 28px;
+        font-size: 1.1rem;
+    }
+}
+
+/* Touch Device Optimization */
+@media (hover: none) {
+    .cta-feature:hover {
+        transform: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .cta-buttons .btn:hover {
+        transform: none;
+    }
+}
+</style>
+    </main>
+    <!-- Footer -->
+<footer class="main-footer">
+    <div class="container">
+        <div class="footer-social">
+            <a href="#" class="social-link" aria-label="LinkedIn">
+                <i class="fab fa-linkedin"></i>
+            </a>
+            <a href="#" class="social-link" aria-label="Twitter">
+                <i class="fab fa-twitter"></i>
+            </a>
+            <a href="#" class="social-link" aria-label="Facebook">
+                <i class="fab fa-facebook"></i>
+            </a>
+            <a href="#" class="social-link" aria-label="Instagram">
+                <i class="fab fa-instagram"></i>
+            </a>
+        </div>
+
+        <div class="footer-grid">
+            <div class="footer-section">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="#integrations">Integrations</a></li>
+                    <li><a href="#enterprise">Enterprise</a></li>
+                    <li><a href="#security">Security</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="#documentation">Documentation</a></li>
+                    <li><a href="#api">API Reference</a></li>
+                    <li><a href="#guides">Guides</a></li>
+                    <li><a href="#blog">Blog</a></li>
+                    <li><a href="#community">Community</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#about">About Us</a></li>
+                    <li><a href="#careers">Careers</a></li>
+                    <li><a href="#partners">Partners</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                    <li><a href="#news">News</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="#privacy">Privacy Policy</a></li>
+                    <li><a href="#terms">Terms of Service</a></li>
+                    <li><a href="#cookie">Cookie Policy</a></li>
+                    <li><a href="#gdpr">GDPR Compliance</a></li>
+                    <li><a href="#security-policy">Security Policy</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2024 Workwise Pro. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<style>
+/* Footer Styles */
+.main-footer {
+    background: #000000;
+    color: #ffffff;
+    padding: 6rem 0 2rem;
+    position: relative;
+}
+
+.main-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(41, 98, 255, 0.05), transparent);
+    pointer-events: none;
+}
+
+.footer-social {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 4rem;
+}
+
+.social-link {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.25rem;
+    transition: all 0.3s ease;
+}
+
+.social-link:hover {
+    color: var(--primary-color);
+    transform: translateY(-3px);
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(2rem, 5vw, 4rem);
+    margin-bottom: 4rem;
+    position: relative;
+}
+
+.footer-section h4 {
+    color: #ffffff;
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    position: relative;
+    padding-bottom: 0.75rem;
+}
+
+.footer-section h4::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    background: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+.footer-section:hover h4::after {
+    width: 50px;
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section ul li {
+    margin-bottom: 0.8rem;
+}
+
+.footer-section ul li a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    display: inline-block;
+    padding: 0.3rem 0;
+    position: relative;
+}
+
+.footer-section ul li a::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+.footer-section ul li a:hover {
+    color: #ffffff;
+    transform: translateX(5px);
+}
+
+.footer-section ul li a:hover::before {
+    width: 100%;
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 2rem;
+    text-align: center;
+    position: relative;
+}
+
+.footer-bottom p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+/* Footer Responsive Styles */
+@media (max-width: 1024px) {
+    .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 3rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-footer {
+        padding: 4rem 0 2rem;
+    }
+
+    .footer-social {
+        margin-bottom: 3rem;
+    }
+
+    .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .footer-section {
+        text-align: center;
+    }
+
+    .footer-section h4::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .footer-section ul li a:hover {
+        transform: translateX(0);
+    }
+
+    .social-link {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-footer {
+        padding: 3rem 0 1.5rem;
+    }
+
+    .footer-social {
+        margin-bottom: 2rem;
+        gap: 1.25rem;
+    }
+
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .footer-section {
+        padding: 0 1rem;
+    }
+
+    .footer-section h4 {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+
+    .footer-section ul li {
+        margin-bottom: 0.6rem;
+    }
+
+    .footer-section ul li a {
+        font-size: 0.9rem;
+    }
+
+    .social-link {
+        font-size: 1.1rem;
+    }
+
+    .footer-bottom {
+        padding-top: 1.5rem;
+    }
+
+    .footer-bottom p {
+        font-size: 0.85rem;
+    }
+}
+
+/* Additional Footer Responsive Adjustments */
+@media (max-width: 360px) {
+    .footer-social {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .footer-section {
+        padding: 0 0.5rem;
+    }
+
+    .footer-section h4 {
+        font-size: 1rem;
+    }
+
+    .footer-section ul li a {
+        font-size: 0.85rem;
+    }
+}
+
+/* Touch Device Optimization */
+@media (hover: none) {
+    .social-link:hover {
+        transform: none;
+    }
+
+    .footer-section ul li a:hover {
+        transform: none;
+    }
+}
+</style>
+    <script>
+// Document Ready Handler
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAll();
+    loadHeader();
+});
+
+// Header Loading Function
+async function loadHeader() {
+    const headerContainer = document.getElementById('header-container');
+    
+    try {
+        const response = await fetch('header.html');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const html = await response.text();
+        headerContainer.innerHTML = html;
+
+        // Initialize mobile menu functionality after header loads
+        initializeMobileMenu();
+    } catch (error) {
+        console.error('Error loading header:', error);
+        headerContainer.innerHTML = `
+            <header class="main-header">
+                <div class="container">
+                    <div class="header-content">
+                        <a href="/" class="logo">
+                            <span>Workwise Pro</span>
+                        </a>
+                        <nav class="main-nav">
+                            <ul class="nav-list">
+                                <li><a href="#home">Home</a></li>
+                                <li><a href="#contact">Contact</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </header>
+        `;
+    }
+}
+
+// Initialize All Functions
+function initializeAll() {
+    initializeAnimations();
+    initializePricing();
+    initializeMetrics();
+    handleScrollEffects();
+    setupInteractions();
+}
+
+// Pricing Configuration
+const pricingConfig = {
+    USD: {
+        symbol: '$',
+        monthly: {
+            basic: 79,
+            professional: 149
+        },
+        yearly: {
+            basic: 63,
+            professional: 119
+        }
+    },
+    INR: {
+        symbol: '₹',
+        monthly: {
+            basic: 5999,
+            professional: 11999
+        },
+        yearly: {
+            basic: 4799,
+            professional: 9599
+        }
+    },
+    GBP: {
+        symbol: '£',
+        monthly: {
+            basic: 59,
+            professional: 119
+        },
+        yearly: {
+            basic: 47,
+            professional: 95
+        }
+    },
+    AED: {
+        symbol: 'AED',
+        monthly: {
+            basic: 289,
+            professional: 549
+        },
+        yearly: {
+            basic: 231,
+            professional: 439
+        }
+    },
+    QAR: {
+        symbol: 'QAR',
+        monthly: {
+            basic: 289,
+            professional: 549
+        },
+        yearly: {
+            basic: 231,
+            professional: 439
+        }
+    }
+};
+
+// Initialize Pricing Functionality
+function initializePricing() {
+    const billingToggle = document.getElementById('billing-toggle');
+    const countrySelect = document.getElementById('country-select');
+    const priceElements = document.querySelectorAll('.price');
+    const currencySymbols = document.querySelectorAll('.currency-symbol');
+    const amounts = document.querySelectorAll('.amount');
+    const periods = document.querySelectorAll('.period');
+
+    let currentCurrency = 'USD';
+    let isYearly = false;
+
+    // Update Pricing Display
+    function updatePricing() {
+        const config = pricingConfig[currentCurrency];
+        const priceType = isYearly ? 'yearly' : 'monthly';
+        const periodText = isYearly ? '/month/year' : '/month';
+
+        currencySymbols.forEach(symbol => {
+            symbol.textContent = config.symbol;
+        });
+
+        amounts.forEach((amount, index) => {
+            if (amount.closest('.price').querySelector('.custom')) return;
+
+            const planType = index === 0 ? 'basic' : 'professional';
+            const newPrice = config[priceType][planType];
+
+            // Add animation class
+            amount.closest('.price').classList.add('animating');
+            
+            // Animate price change
+            animateNumberChange(amount, newPrice);
+
+            // Remove animation class after animation
+            setTimeout(() => {
+                amount.closest('.price').classList.remove('animating');
+            }, 400);
+        });
+
+        periods.forEach(period => {
+            period.textContent = periodText;
+        });
+    }
+
+    // Number Animation Helper
+    function animateNumberChange(element, newValue) {
+        const start = parseInt(element.textContent);
+        const end = newValue;
+        const duration = 400;
+        const startTime = performance.now();
+
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            const current = Math.round(start + (end - start) * progress);
+            element.textContent = current;
+
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            }
+        }
+
+        requestAnimationFrame(update);
+    }
+
+    // Event Listeners
+    if (billingToggle) {
+        billingToggle.addEventListener('change', () => {
+            isYearly = billingToggle.checked;
+            updatePricing();
+        });
+    }
+
+    if (countrySelect) {
+        countrySelect.addEventListener('change', () => {
+            currentCurrency = countrySelect.value;
+            updatePricing();
+        });
+    }
+
+    // Initial pricing update
+    updatePricing();
+}
+
+// Mobile Menu Initialization
+function initializeMobileMenu() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mainNav = document.getElementById('main-nav');
+    const menuOverlay = document.getElementById('menu-overlay');
+    const megaMenus = document.querySelectorAll('.mega-menu');
+
+    if (mobileMenu && mainNav) {
+        let isMenuOpen = false;
+
+        function toggleMenu(show) {
+            isMenuOpen = show;
+            mobileMenu.classList.toggle('active', show);
+            mainNav.classList.toggle('active', show);
+            menuOverlay.classList.toggle('active', show);
+            document.body.style.overflow = show ? 'hidden' : '';
+
+            if (!show) {
+                megaMenus.forEach(menu => menu.classList.remove('active'));
+            }
+        }
+
+        mobileMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMenu(!isMenuOpen);
+        });
+
+        // Handle mega menus on mobile
+        megaMenus.forEach(menu => {
+            const link = menu.querySelector('a');
+            if (link) {
+                link.addEventListener('click', (e) => {
+                    if (window.innerWidth <= 768) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        megaMenus.forEach(m => {
+                            if (m !== menu) m.classList.remove('active');
+                        });
+                        menu.classList.toggle('active');
+                    }
+                });
+            }
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
+                toggleMenu(false);
+            }
+        });
+    }
+}
+
+// Animation Handler
+function initializeAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+                if (entry.target.classList.contains('progress-fill')) {
+                    const width = entry.target.dataset.progress;
+                    entry.target.style.width = width;
+                }
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.feature-card, .tax-card, .compliance-card, .integration-card, .progress-fill')
+        .forEach(el => observer.observe(el));
+}
+
+// Scroll Effects Handler
+function handleScrollEffects() {
+    let lastScroll = 0;
+    const header = document.querySelector('.main-header');
+
+    window.addEventListener('scroll', () => {
+        const currentScroll = window.pageYOffset;
+        
+        if (currentScroll > lastScroll && currentScroll > 100) {
+            header?.classList.add('header-hidden');
+        } else {
+            header?.classList.remove('header-hidden');
+        }
+        
+        lastScroll = currentScroll;
+    });
+}
+
+// Interactive Elements Setup
+function setupInteractions() {
+    document.querySelectorAll('.feature-card, .tax-card, .compliance-card, .integration-card').forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.classList.add('card-hover');
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.classList.remove('card-hover');
+        });
+    });
+}
+
+// Metrics Initialization
+function initializeMetrics() {
+    const charts = document.querySelectorAll('.metric-chart');
+    charts.forEach(chart => {
+        if (chart.getContext) {
+            const ctx = chart.getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Tax Compliance Rate',
+                        data: [92, 95, 94, 96, 95, 98],
+                        borderColor: '#2962ff',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+    });
+}
+
+// Watson Assistant Chat Integration
+window.watsonAssistantChatOptions = {
+    integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
+    region: "au-syd",
+    serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
+    onLoad: async (instance) => { await instance.render(); }
+};
+
+setTimeout(function(){
+    const t = document.createElement('script');
+    t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
+        (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
+        "/WatsonAssistantChatEntry.js";
+    document.head.appendChild(t);
+});
+</script>
+</body>
+</html>
+
