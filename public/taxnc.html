@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Tax & Compliance Solutions - Workwise Pro</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
+    
+    <!-- Sentiment Analysis -->
+    <script src="https://cdn.jsdelivr.net/npm/sentiment@5.0.2/build/sentiment.min.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* Root Variables */
+        :root {
+            --primary-color: #2962ff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --background-color: #f8f9fa;
+            --text-color: #333;
+            --light-text: #6c757d;
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --gradient: linear-gradient(135deg, #f0f7ff 0%, #e9ecef 100%);
+            --card-bg: #ffffff;
+            --mobile-padding: 1rem;
+            --section-spacing: 4rem;
+            --header-height: 70px;
+        }
+
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            padding-top: var(--header-height);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--mobile-padding);
+            width: 100%;
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 2rem;
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            transition: var(--transition);
+            font-weight: 500;
+            cursor: pointer;
+            min-width: 160px;
+            text-align: center;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+        }
+
+        .btn.primary {
+            background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
+        }
+
+        .btn.secondary {
+            background: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(41, 98, 255, 0.25);
+        }
+
+        /* Hero Section */
+        .tax-hero {
+            background: var(--gradient);
+            padding: calc(var(--header-height) + 4rem) 0 6rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-text {
+            max-width: 600px;
+        }
+
+        .hero-text h1 {
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            color: #1a237e;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .hero-text p {
+            font-size: clamp(1.1rem, 2vw, 1.25rem);
+            color: var(--light-text);
+            margin-bottom: 2rem;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .hero-image {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-image img {
+            width: 100%;
+            height: auto;
+            max-width: 600px;
+            object-fit: contain;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            animation: float 3s ease-in-out infinite;
+            transition: all 0.3s ease;
+        }
+
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-item i {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .stat-item h4 {
+            font-size: 1.5rem;
+            color: #1a237e;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-item p {
+            color: var(--light-text);
+            font-size: 0.9rem;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 1024px) {
+            .hero-content {
+                gap: 3rem;
+            }
+
+            .hero-image img {
+                max-width: 500px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-text {
+                max-width: 100%;
+            }
+
+            .hero-buttons {
+                justify-content: center;
+            }
+
+            .hero-image {
+                order: -1;
+            }
+
+            .hero-image img {
+                max-width: 450px;
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-buttons {
+                flex-direction: column;
+                gap: 1rem;
+                max-width: 300px;
+                margin: 0 auto 2rem;
+            }
+
+            .hero-image img {
+                max-width: 80%;
+            }
+
+            .hero-stats {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                max-width: 400px;
+                margin: 3rem auto 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .tax-hero {
+                padding: calc(var(--header-height) + 2rem) 0 4rem;
+            }
+
+            .hero-text h1 {
+                font-size: 2rem;
+            }
+
+            .hero-text p {
+                font-size: 1rem;
+            }
+
+            .hero-image img {
+                max-width: 90%;
+            }
+
+            .stat-item {
+                padding: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+
+    <!-- Main Content -->
+    <main class="tax-main">
+        <!-- Hero Section -->
+        <section class="tax-hero">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1>Simplify Global Taxation & Compliance</h1>
+                        <p>Effortlessly manage GST, TDS, VAT, and employee tax filings across multiple jurisdictions with our integrated platform.</p>
+                        <div class="hero-buttons">
+                            <a href="#" class="btn primary">Request a Free Consultation</a>
+                            <a href="#" class="btn secondary">Watch Demo</a>
+                        </div>
+                        <div class="hero-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-globe"></i>
+                                <h4>5+ Countries</h4>
+                                <p>Tax Compliance</p>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-check-circle"></i>
+                                <h4>100% Accurate</h4>
+                                <p>Tax Calculations</p>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-clock"></i>
+                                <h4>Real-time</h4>
+                                <p>Regulatory Updates</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-image">
+                        <img src="image/tax-dashboard.png" alt="Global Tax Management Dashboard" loading="lazy">
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Multi-Country Tax Management Section -->
+<section class="tax-management-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Multi-Country Tax Management</h2>
+            <p>Tailored solutions for diverse tax regimes across India, USA, UAE, UK, and Qatar</p>
+        </div>
+        <div class="tax-management-grid">
+            <div class="tax-features">
+                <div class="tax-card">
+                    <div class="tax-icon">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <div class="tax-content">
+                        <h3>Automated Tax Calculations</h3>
+                        <p>Accurately compute GST, VAT, and other taxes based on regional regulations</p>
+                        <ul class="tax-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Real-time tax computation</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Multi-currency support</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Automatic rate updates</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="tax-card">
+                    <div class="tax-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="tax-content">
+                        <h3>Regulatory Updates</h3>
+                        <p>Stay informed with real-time updates on tax laws and compliance requirements</p>
+                        <ul class="tax-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Live compliance alerts</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Policy change notifications</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Deadline reminders</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="tax-card">
+                    <div class="tax-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="tax-content">
+                        <h3>Localized Reporting</h3>
+                        <p>Generate country-specific tax reports and filings with ease</p>
+                        <ul class="tax-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Custom report templates</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Multiple format support</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Automated filing</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="tax-visual">
+                <div class="visual-wrapper">
+                    <img src="image/global-tax-map.png" alt="Global Tax Coverage" class="main-image">
+                    <div class="country-badges">
+                        <div class="badge-wrapper">
+                            <img src="image/country-badge-1.png" alt="India GST" class="country-badge">
+                        </div>
+                        <div class="badge-wrapper">
+                            <img src="image/country-badge-2.png" alt="USA Sales Tax" class="country-badge">
+                        </div>
+                        <div class="badge-wrapper">
+                            <img src="image/country-badge-3.png" alt="UK VAT" class="country-badge">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Country-Specific Taxation Section -->
+<section class="country-tax-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Country-Specific Taxation Details</h2>
+            <p>Comprehensive tax solutions tailored for each jurisdiction</p>
+        </div>
+        <div class="country-grid">
+            <div class="country-card india">
+                <div class="country-icon">
+                    <img src="image/india-flag.png" alt="India Flag">
+                </div>
+                <h3>India</h3>
+                <div class="tax-details">
+                    <div class="tax-type">
+                        <h4>GST</h4>
+                        <p>Multi-tiered tax system (5% - 28%)</p>
+                        <ul class="feature-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>GSTR Filing</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>E-way Bill Generation</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="tax-type">
+                        <h4>TDS</h4>
+                        <p>Tax Deducted at Source</p>
+                        <ul class="feature-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Automated Deductions</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Return Filing</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="country-card usa">
+                <div class="country-icon">
+                    <img src="image/usa-flag.png" alt="USA Flag">
+                </div>
+                <h3>USA</h3>
+                <div class="tax-details">
+                    <div class="tax-type">
+                        <h4>Sales Tax</h4>
+                        <p>State-level taxation system</p>
+                        <ul class="feature-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Multi-state Filing</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Nexus Analysis</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="country-card uk">
+                <div class="country-icon">
+                    <img src="image/uk-flag.png" alt="UK Flag">
+                </div>
+                <h3>United Kingdom</h3>
+                <div class="tax-details">
+                    <div class="tax-type">
+                        <h4>VAT</h4>
+                        <p>Standard rate of 20%</p>
+                        <ul class="feature-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>VAT Returns</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>MTD Compliance</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="country-card uae">
+                <div class="country-icon">
+                    <img src="image/uae-flag.png" alt="UAE Flag">
+                </div>
+                <h3>UAE</h3>
+                <div class="tax-details">
+                    <div class="tax-type">
+                        <h4>VAT</h4>
+                        <p>Standard rate of 5%</p>
+                        <ul class="feature-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>VAT Registration</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Return Filing</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Tax Management Section Styles */
+.tax-management-section {
+    padding: 6rem 0;
+    background: var(--card-bg);
+    position: relative;
+}
+
+.tax-management-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    margin-top: 3rem;
+}
+
+.tax-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.tax-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.tax-card:hover {
+    transform: translateX(10px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.tax-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.tax-icon i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.tax-content {
+    flex: 1;
+}
+
+.tax-content h3 {
+    font-size: 1.25rem;
+    color: #1a237e;
+    margin-bottom: 0.5rem;
+}
+
+.tax-content p {
+    color: var(--light-text);
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+.tax-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.tax-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
+}
+
+.tax-list li i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.tax-card:hover .tax-list li i {
+    background: var(--primary-color);
+    color: white;
+}
+
+.tax-visual {
+    position: relative;
+    width: 100%;
+}
+
+.visual-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.main-image {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.country-badges {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    width: 100%;
+}
+
+.badge-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.country-badge {
+    height: 40px;
+    width: auto;
+    transition: transform 0.3s ease;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.country-badge:hover {
+    transform: translateY(-5px);
+}
+
+/* Country-Specific Section Styles */
+.country-tax-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+.country-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.country-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+}
+
+.country-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.country-icon {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 1.5rem;
+}
+
+.country-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.country-card h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1.5rem;
+}
+
+.tax-type {
+    margin-bottom: 1.5rem;
+}
+
+.tax-type:last-child {
+    margin-bottom: 0;
+}
+
+.tax-type h4 {
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.tax-type p {
+    color: var(--light-text);
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+.feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.feature-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.feature-list li i {
+    color: var(--primary-color);
+    font-size: 1rem;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.country-card:hover .feature-list li i {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .tax-management-grid {
+        gap: 3rem;
+    }
+    
+    .tax-card {
+        padding: 1.75rem;
+    }
+
+    .country-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+}
+
+@media (max-width: 992px) {
+    .tax-management-grid {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+    }
+
+    .tax-visual {
+        order: -1;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .tax-features {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .country-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .tax-management-section,
+    .country-tax-section {
+        padding: 4rem 0;
+    }
+
+    .tax-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.5rem;
+    }
+
+    .tax-icon {
+        margin: 0 auto 1rem;
+    }
+
+    .tax-list li {
+        justify-content: center;
+    }
+
+    .country-grid {
+        grid-template-columns: 1fr;
+        max-width: 400px;
+        margin: 3rem auto 0;
+    }
+
+    .country-card {
+        text-align: center;
+    }
+
+    .country-icon {
+        margin: 0 auto 1.5rem;
+    }
+
+    .feature-list li {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .tax-card,
+    .country-card {
+        padding: 1.25rem;
+    }
+
+    .tax-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .tax-icon i {
+        font-size: 1.25rem;
+    }
+
+    .tax-content h3,
+    .country-card h3 {
+        font-size: 1.2rem;
+    }
+
+    .tax-content p,
+    .tax-type p {
+        font-size: 0.9rem;
+    }
+
+    .tax-list li,
+    .feature-list li {
+        font-size: 0.9rem;
+        gap: 0.5rem;
+    }
+
+    .country-icon {
+        width: 50px;
+        height: 50px;
+    }
+
+    .tax-type h4 {
+        font-size: 1rem;
+    }
+}
+
+/* Touch Device Optimization */
+@media (hover: none) {
+    .tax-card:hover,
+    .country-card:hover {
+        transform: none;
+    }
+
+    .country-badge:hover {
+        transform: none;
+    }
+}
+</style>
+<!-- Employee Taxation Services Section -->
+<section class="employee-tax-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Employee Taxation Services</h2>
+            <p>Seamless management of employee-related taxes, including TDS and payroll tax filings</p>
+        </div>
+        <div class="employee-tax-grid">
+            <div class="employee-features">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                    <h3>TDS Management</h3>
+                    <p>Automate Tax Deducted at Source processes to comply with Indian tax laws</p>
+                    <ul class="feature-list">
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Automated calculations</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Form 16 generation</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Quarterly returns</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Compliance tracking</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-sync"></i>
+                    </div>
+                    <h3>Payroll Tax Integration</h3>
+                    <p>Synchronize payroll systems to handle employee tax withholdings</p>
+                    <ul class="feature-list">
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Multi-country support</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Automatic deductions</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Tax bracket management</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Real-time calculations</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <h3>Employee Self-Service</h3>
+                    <p>Empower employees to access their tax documents and filing statuses</p>
+                    <ul class="feature-list">
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Document access</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Status tracking</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Tax declaration</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Investment proofs</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="employee-visual">
+                <div class="visual-wrapper">
+                    <img src="image/employee-tax-dashboard.png" alt="Employee Tax Dashboard" class="main-image">
+                    <div class="stats-overlay">
+                        <div class="stat-bubble">
+                            <span class="stat-value">100%</span>
+                            <span class="stat-label">Compliance</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Indirect Tax Compliance Section -->
+<section class="indirect-tax-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Indirect Tax Compliance</h2>
+            <p>Navigate the complexities of indirect taxes such as GST and VAT with our intuitive tools</p>
+        </div>
+        <div class="indirect-tax-grid">
+            <div class="tax-visual">
+                <div class="visual-wrapper">
+                    <img src="image/indirect-tax-flow.png" alt="Indirect Tax Process" class="main-image">
+                </div>
+            </div>
+            <div class="tax-solutions">
+                <div class="solution-card">
+                    <div class="solution-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <div class="solution-content">
+                        <h3>GST Solutions for India</h3>
+                        <p>Comprehensive GST management and compliance</p>
+                        <ul class="solution-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>GSTR filing automation</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Input tax credit</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>E-way bill generation</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="solution-card">
+                    <div class="solution-icon">
+                        <i class="fas fa-globe-europe"></i>
+                    </div>
+                    <div class="solution-content">
+                        <h3>VAT Compliance</h3>
+                        <p>UAE and UK VAT management solutions</p>
+                        <ul class="solution-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Return preparation</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Digital record keeping</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Compliance monitoring</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="solution-card">
+                    <div class="solution-icon">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <div class="solution-content">
+                        <h3>Cross-Border Transactions</h3>
+                        <p>International trade tax management</p>
+                        <ul class="solution-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Import/Export taxation</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Currency conversion</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Duty calculations</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Employee Taxation Section Styles */
+.employee-tax-section {
+    padding: 6rem 0;
+    background: var(--card-bg);
+    position: relative;
+}
+
+.employee-tax-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    margin-top: 3rem;
+}
+
+.employee-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.feature-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: left;
+}
+
+.feature-card:hover::before {
+    transform: scaleX(1);
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.feature-icon i {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+}
+
+.feature-card h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.feature-card p {
+    color: var(--light-text);
+    margin-bottom: 1.5rem;
+    line-height: 1.7;
+}
+
+.feature-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.feature-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
+}
+
+.feature-list li i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover .feature-list li i {
+    background: var(--primary-color);
+    color: white;
+}
+
+.employee-visual {
+    position: relative;
+    width: 100%;
+}
+
+.visual-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.main-image {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.stats-overlay {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 1rem;
+}
+
+.stat-bubble {
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    text-align: center;
+}
+
+/* Indirect Tax Section Styles */
+.indirect-tax-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+.indirect-tax-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    margin-top: 3rem;
+}
+
+.tax-solutions {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.solution-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.solution-card:hover {
+    transform: translateX(10px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.solution-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.solution-icon i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.solution-content {
+    flex: 1;
+}
+
+.solution-content h3 {
+    font-size: 1.25rem;
+    color: #1a237e;
+    margin-bottom: 0.5rem;
+}
+
+.solution-content p {
+    color: var(--light-text);
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+.solution-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.solution-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
+}
+
+.solution-list li i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.solution-card:hover .solution-list li i {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .employee-tax-grid,
+    .indirect-tax-grid {
+        gap: 3rem;
+    }
+    
+    .feature-card,
+    .solution-card {
+        padding: 2rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .employee-tax-grid,
+    .indirect-tax-grid {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+    }
+
+    .employee-visual,
+    .tax-visual {
+        order: -1;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .employee-features,
+    .tax-solutions {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .employee-tax-section,
+    .indirect-tax-section {
+        padding: 4rem 0;
+    }
+
+    .feature-card {
+        padding: 1.5rem;
+    }
+
+    .solution-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.5rem;
+    }
+
+    .solution-icon {
+        margin: 0 auto 1rem;
+    }
+
+    .solution-list li {
+        justify-content: center;
+    }
+
+    .stats-overlay {
+        position: relative;
+        top: -30px;
+        right: 0;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .feature-card,
+    .solution-card {
+        padding: 1.25rem;
+    }
+
+    .feature-icon,
+    .solution-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .feature-icon i,
+    .solution-icon i {
+        font-size: 1.25rem;
+    }
+
+    .feature-card h3,
+    .solution-content h3 {
+        font-size: 1.2rem;
+    }
+
+    .feature-card p,
+    .solution-content p {
+        font-size: 0.9rem;
+    }
+
+    .feature-list li,
+    .solution-list li {
+        font-size: 0.9rem;
+        gap: 0.5rem;
+    }
+
+    .feature-list li i,
+    .solution-list li i {
+        width: 20px;
+        height: 20px;
+        font-size: 0.9rem;
+    }
+
+    .stat-bubble {
+        padding: 0.75rem 1rem;
+    }
+}
+
+/* Touch Device Optimization */
+@media (hover: none) {
+    .feature-card:hover,
+    .solution-card:hover {
+        transform: none;
+    }
+
+    .main-image:hover {
+        transform: none;
+    }
+}
+</style>
+<!-- Compliance Monitoring Section -->
+<section class="compliance-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Compliance Monitoring and Reporting</h2>
+            <p>Maintain adherence to ever-evolving tax laws with our proactive compliance monitoring</p>
+        </div>
+        <div class="compliance-grid">
+            <div class="compliance-features">
+                <div class="compliance-card">
+                    <div class="compliance-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="compliance-content">
+                        <h3>Automated Alerts</h3>
+                        <p>Stay informed about upcoming deadlines and changes</p>
+                        <ul class="compliance-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Filing deadline reminders</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Regulatory updates</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Custom alert settings</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="compliance-card">
+                    <div class="compliance-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="compliance-content">
+                        <h3>Audit-Ready Reports</h3>
+                        <p>Generate comprehensive reports for smooth audits</p>
+                        <ul class="compliance-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Detailed audit trails</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Custom report generation</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Historical data access</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="compliance-card">
+                    <div class="compliance-icon">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <div class="compliance-content">
+                        <h3>Document Management</h3>
+                        <p>Secure storage and organization of tax documents</p>
+                        <ul class="compliance-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Centralized storage</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Version control</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Secure access</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="compliance-visual">
+                <div class="visual-wrapper">
+                    <img src="image/compliance-calendar.png" alt="Compliance Calendar" class="main-image">
+                    <div class="alert-badges">
+                        <div class="alert-badge upcoming">
+                            <i class="fas fa-clock"></i>
+                            <span>Upcoming Deadline</span>
+                        </div>
+                        <div class="alert-badge completed">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Filing Complete</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Integration Capabilities Section -->
+<section class="integration-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Integration Capabilities</h2>
+            <p>Enhance efficiency by connecting with your existing systems</p>
+        </div>
+        <div class="integration-grid">
+            <div class="integration-visual">
+                <div class="visual-wrapper">
+                    <img src="image/integration-diagram.png" alt="Integration Diagram" class="main-image">
+                </div>
+            </div>
+            <div class="integration-features">
+                <div class="integration-card">
+                    <div class="status-badge connected">Active</div>
+                    <div class="integration-icon">
+                        <i class="fas fa-sync"></i>
+                    </div>
+                    <h3>Data Synchronization</h3>
+                    <p>Real-time data updates with accounting software</p>
+                    <ul class="feature-list">
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Automated sync</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Error handling</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Data validation</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="integration-card">
+                    <div class="status-badge popular">Popular</div>
+                    <div class="integration-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3>API Access</h3>
+                    <p>Custom integration capabilities for unique needs</p>
+                    <ul class="feature-list">
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>RESTful APIs</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Webhook support</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Developer tools</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="integration-card">
+                    <div class="status-badge new">New</div>
+                    <div class="integration-icon">
+                        <i class="fas fa-plug"></i>
+                    </div>
+                    <h3>Third-Party Services</h3>
+                    <p>Connect with popular financial services</p>
+                    <ul class="feature-list">
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Payment gateways</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Banking systems</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>ERP solutions</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Compliance Section Styles */
+.compliance-section {
+    padding: 6rem 0;
+    background: var(--card-bg);
+    position: relative;
+}
+
+.compliance-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    margin-top: 3rem;
+}
+
+.compliance-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.compliance-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.compliance-card:hover {
+    transform: translateX(10px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.compliance-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.compliance-icon i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.compliance-content {
+    flex: 1;
+}
+
+.compliance-content h3 {
+    font-size: 1.25rem;
+    color: #1a237e;
+    margin-bottom: 0.5rem;
+}
+
+.compliance-content p {
+    color: var(--light-text);
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+.compliance-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.compliance-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
+}
+
+.compliance-list li i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.compliance-card:hover .compliance-list li i {
+    background: var(--primary-color);
+    color: white;
+}
+
+.alert-badges {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.alert-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    font-size: 0.9rem;
+}
+
+.alert-badge.upcoming {
+    color: #f59e0b;
+}
+
+.alert-badge.completed {
+    color: #10b981;
+}
+
+.alert-badge i {
+    font-size: 1.1rem;
+}
+
+/* Integration Section Styles */
+.integration-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+.integration-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    margin-top: 3rem;
+}
+
+.integration-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.integration-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.integration-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.status-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-badge.connected {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.status-badge.popular {
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+}
+
+.status-badge.new {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .compliance-grid,
+    .integration-grid {
+        gap: 3rem;
+    }
+    
+    .compliance-card,
+    .integration-card {
+        padding: 1.75rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .compliance-grid,
+    .integration-grid {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+    }
+
+    .compliance-visual,
+    .integration-visual {
+        order: -1;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .compliance-features,
+    .integration-features {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .alert-badges {
+        position: relative;
+        top: -30px;
+        right: 0;
+        flex-direction: row;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .compliance-section,
+    .integration-section {
+        padding: 4rem 0;
+    }
+
+    .compliance-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.5rem;
+    }
+
+    .compliance-icon {
+        margin: 0 auto 1rem;
+    }
+
+    .compliance-list li {
+        justify-content: center;
+    }
+
+    .integration-card {
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .integration-icon {
+        margin: 0 auto 1rem;
+    }
+
+    .feature-list li {
+        justify-content: center;
+    }
+
+    .alert-badges {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .compliance-card,
+    .integration-card {
+        padding: 1.25rem;
+    }
+
+    .compliance-icon,
+    .integration-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .compliance-icon i,
+    .integration-icon i {
+        font-size: 1.25rem;
+    }
+
+    .compliance-content h3,
+    .integration-card h3 {
+        font-size: 1.2rem;
+    }
+
+    .compliance-content p,
+    .integration-card p {
+        font-size: 0.9rem;
+    }
+
+    .compliance-list li,
+    .feature-list li {
+        font-size: 0.9rem;
+        gap: 0.5rem;
+    }
+
+    .alert-badge {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+
+    .status-badge {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+    }
+}
+
+/* Touch Device Optimization */
+@media (hover: none) {
+    .compliance-card:hover,
+    .integration-card:hover {
+        transform: none;
+    }
+}
+</style>
