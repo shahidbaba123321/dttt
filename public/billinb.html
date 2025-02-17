@@ -660,11 +660,12 @@
 </section>
 
 <style>
-/* Vendor Section Styles */
+/* Vendor Section Styling */
 .vendor-section {
     padding: 6rem 0;
     background: var(--card-bg);
     position: relative;
+    overflow: hidden;
 }
 
 .vendor-grid {
@@ -678,106 +679,150 @@
 .vendor-features {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 2rem;
 }
 
 .feature-card {
     background: white;
-    padding: 2rem;
+    padding: 2.5rem;
     border-radius: 16px;
     box-shadow: var(--box-shadow);
     transition: var(--transition);
     position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--primary-color), #42a5f5);
+    opacity: 0;
+    transition: var(--transition);
 }
 
 .feature-card:hover {
     transform: translateX(10px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card:hover::before {
+    opacity: 1;
 }
 
 .feature-icon {
-    width: 48px;
-    height: 48px;
+    width: 56px;
+    height: 56px;
     background: rgba(41, 98, 255, 0.1);
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 1.5rem;
+    transition: var(--transition);
 }
 
 .feature-icon i {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     color: var(--primary-color);
+    transition: var(--transition);
+}
+
+.feature-card:hover .feature-icon {
+    background: var(--primary-color);
+}
+
+.feature-card:hover .feature-icon i {
+    color: white;
 }
 
 .feature-content h3 {
-    font-size: 1.25rem;
+    font-size: 1.4rem;
     color: #1a237e;
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
 }
 
 .feature-content p {
     color: var(--light-text);
-    font-size: 0.95rem;
+    font-size: 1rem;
     margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.feature-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.feature-list li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.5rem 0;
+}
+
+.feature-list li:last-child {
+    margin-bottom: 0;
+}
+
+.feature-list li i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.feature-card:hover .feature-list li i {
+    background: var(--primary-color);
+    color: white;
 }
 
 .status-indicator {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 1rem;
-    padding: 0.5rem;
+    margin-top: 1.5rem;
+    padding: 1rem;
     background: rgba(40, 167, 69, 0.1);
     border-radius: 8px;
-    width: fit-content;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 .status-dot {
     width: 8px;
     height: 8px;
-    border-radius: 50%;
     background: #28a745;
-}
-
-.status-dot.active {
+    border-radius: 50%;
     animation: pulse 2s infinite;
 }
 
-@keyframes pulse {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.5); opacity: 0.5; }
-    100% { transform: scale(1); opacity: 1; }
+.vendor-visual {
+    position: relative;
 }
 
-.currency-tags {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 1rem;
+.visual-wrapper {
+    position: relative;
+    width: 100%;
 }
 
-.currency-tag {
-    padding: 0.25rem 0.75rem;
-    background: rgba(41, 98, 255, 0.1);
-    color: var(--primary-color);
+.main-image {
+    width: 100%;
+    height: auto;
     border-radius: 20px;
-    font-size: 0.875rem;
-}
-
-.compliance-badge {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 1rem;
-    padding: 0.5rem 1rem;
-    background: rgba(41, 98, 255, 0.1);
-    border-radius: 8px;
-    width: fit-content;
-}
-
-.compliance-badge i {
-    color: var(--primary-color);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    transition: var(--transition);
 }
 
 .payment-status-overlay {
@@ -790,13 +835,19 @@
 }
 
 .status-card {
+    background: white;
+    padding: 1.25rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 1rem;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: var(--transition);
+}
+
+.status-card:hover {
+    transform: translateX(-5px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
 .status-card.upcoming {
@@ -821,6 +872,7 @@
 
 .status-info h4 {
     font-size: 0.9rem;
+    color: var(--text-color);
     margin-bottom: 0.25rem;
 }
 
@@ -829,87 +881,132 @@
     color: var(--light-text);
 }
 
-/* Responsive Styles */
-@media (max-width: 1200px) {
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.5; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Tablet Responsiveness */
+@media (max-width: 1024px) {
     .vendor-grid {
         gap: 3rem;
     }
-    
+
     .feature-card {
-        padding: 1.75rem;
+        padding: 2rem;
+    }
+
+    .feature-content h3 {
+        font-size: 1.3rem;
     }
 }
 
-@media (max-width: 992px) {
-    .vendor-grid {
-        grid-template-columns: 1fr;
-        gap: 3rem;
-    }
-
-    .vendor-visual {
-        order: -1;
-        max-width: 800px;
-        margin: 0 auto;
-    }
-
-    .vendor-features {
-        max-width: 800px;
-        margin: 0 auto;
-    }
-}
-
+/* Mobile Responsiveness */
 @media (max-width: 768px) {
     .vendor-section {
         padding: 4rem 0;
     }
 
+    .vendor-grid {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+    }
+
+    .vendor-features {
+        gap: 1.5rem;
+    }
+
     .feature-card {
-        padding: 1.5rem;
+        padding: 1.75rem;
         text-align: center;
     }
 
     .feature-icon {
         margin: 0 auto 1.25rem;
+        width: 48px;
+        height: 48px;
+    }
+
+    .feature-icon i {
+        font-size: 1.5rem;
+    }
+
+    .feature-content h3 {
+        font-size: 1.25rem;
+    }
+
+    .feature-content p {
+        font-size: 0.95rem;
     }
 
     .feature-list li {
         justify-content: center;
+        gap: 0.75rem;
     }
 
-    .status-indicator,
-    .currency-tags,
-    .compliance-badge {
-        margin: 1rem auto 0;
+    .status-indicator {
+        justify-content: center;
+        margin: 1.25rem auto 0;
+        max-width: 250px;
+    }
+
+    .vendor-visual {
+        order: -1;
+    }
+
+    .main-image {
+        border-radius: 12px;
     }
 
     .payment-status-overlay {
         position: relative;
         top: 0;
         right: 0;
-        margin-top: 1rem;
+        margin-top: 1.5rem;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
     }
 
     .status-card {
-        margin: 0 auto;
+        width: 100%;
+        max-width: 300px;
+        padding: 1rem;
     }
 }
 
+/* Small Mobile Devices */
 @media (max-width: 480px) {
+    .vendor-section {
+        padding: 3rem 0;
+    }
+
     .feature-card {
-        padding: 1.25rem;
+        padding: 1.5rem;
     }
 
-    .feature-icon {
-        width: 40px;
-        height: 40px;
+    .feature-content h3 {
+        font-size: 1.2rem;
     }
 
-    .feature-icon i {
-        font-size: 1.25rem;
+    .feature-content p {
+        font-size: 0.9rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .feature-list li {
+        font-size: 0.9rem;
+    }
+
+    .status-indicator {
+        padding: 0.75rem;
+        font-size: 0.85rem;
     }
 
     .status-card {
-        padding: 0.75rem;
+        padding: 0.875rem;
     }
 
     .status-info h4 {
@@ -925,6 +1022,27 @@
 @media (hover: none) {
     .feature-card:hover {
         transform: none;
+    }
+
+    .feature-card::before {
+        display: none;
+    }
+
+    .status-card:hover {
+        transform: none;
+    }
+
+    .feature-card:hover .feature-icon {
+        background: rgba(41, 98, 255, 0.1);
+    }
+
+    .feature-card:hover .feature-icon i {
+        color: var(--primary-color);
+    }
+
+    .feature-card:hover .feature-list li i {
+        background: rgba(41, 98, 255, 0.1);
+        color: var(--primary-color);
     }
 }
 </style>
