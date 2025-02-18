@@ -2759,6 +2759,7 @@ function initializeAll() {
     handleScrollEffects();
     setupInteractions();
     initializeCalendar();
+    initializeCharts();
 }
 // Calendar Initialization
 function initializeCalendar() {
@@ -2830,7 +2831,93 @@ const pricingConfig = {
         }
     }
 };
+// Update the chart initialization function
+function initializeCharts() {
+    // Main Chart with better responsiveness
+    const mainChartCtx = document.getElementById('mainChart');
+    if (mainChartCtx) {
+        const mainChart = new Chart(mainChartCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Asset Utilization',
+                    data: [75, 82, 80, 85, 83, 85],
+                    borderColor: 'rgba(41, 98, 255, 0.5)',
+                    tension: 0.4,
+                    fill: true,
+                    backgroundColor: 'rgba(41, 98, 255, 0.1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            font: {
+                                size: window.innerWidth < 768 ? 10 : 12
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: window.innerWidth < 768 ? 10 : 12
+                            }
+                        }
+                    }
+                }
+            }
+        });
 
+        // Handle resize
+        window.addEventListener('resize', function() {
+            mainChart.resize();
+        });
+    }
+
+    // Mini Charts with better responsiveness
+    document.querySelectorAll('.mini-chart').forEach((canvas, index) => {
+        const ctx = canvas.getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['', '', '', '', ''],
+                datasets: [{
+                    data: index === 0 ? [70, 75, 80, 82, 85] : [2.1, 2.3, 2.4, 2.5, 2.5],
+                    borderColor: 'rgba(41, 98, 255, 0.5)',
+                    tension: 0.4,
+                    pointRadius: 0,
+                    borderWidth: window.innerWidth < 768 ? 1 : 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        display: false
+                    },
+                    y: {
+                        display: false
+                    }
+                }
+            }
+        });
+    });
+}
 // Initialize Pricing Functionality
 function initializePricing() {
     const billingToggle = document.getElementById('billing-toggle');
