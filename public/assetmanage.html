@@ -1,0 +1,3359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Management Solutions - Workwise Pro</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #2962ff;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --background-color: #f8f9fa;
+            --text-color: #333;
+            --light-text: #6c757d;
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --gradient: linear-gradient(135deg, #f0f7ff 0%, #e9ecef 100%);
+            --card-bg: #ffffff;
+            --mobile-padding: 1rem;
+            --section-spacing: 4rem;
+            --header-height: 70px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            padding-top: var(--header-height);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--mobile-padding);
+            width: 100%;
+        }
+
+        /* Hero Section Styles */
+        .asset-hero {
+            background: var(--gradient);
+            padding: calc(var(--header-height) + 4rem) 0 6rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-text {
+            max-width: 600px;
+        }
+
+        .hero-text h1 {
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            color: #1a237e;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .hero-text p {
+            font-size: clamp(1.1rem, 2vw, 1.25rem);
+            color: var(--light-text);
+            margin-bottom: 2rem;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 2rem;
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            transition: var(--transition);
+            font-weight: 500;
+            cursor: pointer;
+            min-width: 160px;
+            text-align: center;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+        }
+
+        .btn.primary {
+            background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
+        }
+
+        .btn.secondary {
+            background: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(41, 98, 255, 0.25);
+        }
+
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .stat-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-item i {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .stat-item h4 {
+            font-size: 1.5rem;
+            color: #1a237e;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-item p {
+            color: var(--light-text);
+            font-size: 0.9rem;
+        }
+
+        .hero-image {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-image img {
+            width: 100%;
+            height: auto;
+            max-width: 600px;
+            object-fit: contain;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 1024px) {
+            .hero-content {
+                gap: 3rem;
+            }
+
+            .hero-image img {
+                max-width: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .asset-hero {
+                padding: calc(var(--header-height) + 2rem) 0 4rem;
+            }
+
+            .hero-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-text {
+                order: 1;
+                max-width: 100%;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .hero-stats {
+                grid-template-columns: 1fr;
+                max-width: 300px;
+                margin: 2rem auto 0;
+            }
+
+            .hero-image {
+                order: 0;
+                margin: 0 -1.5rem;
+            }
+
+            .hero-image img {
+                max-width: 100%;
+                border-radius: 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-text h1 {
+                font-size: 2rem;
+            }
+
+            .hero-text p {
+                font-size: 1rem;
+            }
+
+            .stat-item {
+                padding: 1.25rem;
+            }
+
+            .stat-item h4 {
+                font-size: 1.25rem;
+            }
+        }
+
+        /* Touch Device Optimization */
+        @media (hover: none) {
+            .btn:hover {
+                transform: none;
+                box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
+            }
+
+            .stat-item:hover {
+                transform: none;
+                box-shadow: var(--box-shadow);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+
+    <!-- Main Content -->
+    <main class="asset-main">
+        <!-- Hero Section -->
+        <section class="asset-hero">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1>Optimize Your Asset Lifecycle Management</h1>
+                        <p>Efficiently track assets and automate depreciation for precise financial insights.</p>
+                        <div class="hero-buttons">
+                            <a href="#" class="btn primary">Request a Free Demo</a>
+                            <a href="#" class="btn secondary">Watch Demo</a>
+                        </div>
+                        <div class="hero-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-chart-line"></i>
+                                <h4>98%</h4>
+                                <p>Asset Tracking Accuracy</p>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-clock"></i>
+                                <h4>60%</h4>
+                                <p>Time Saved</p>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-calculator"></i>
+                                <h4>100%</h4>
+                                <p>Depreciation Accuracy</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-image">
+                        <img src="image/asset-dashboard.png" alt="Asset Management Dashboard" loading="lazy">
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Real-Time Asset Tracking Section -->
+<section class="tracking-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Real-Time Asset Tracking</h2>
+            <p>Maintain a centralized record of all company assets, including details such as location, status, and ownership</p>
+        </div>
+        <div class="tracking-grid">
+            <div class="tracking-features">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3>Centralized Asset Database</h3>
+                        <p>Consolidate information on all assets for easy access and management</p>
+                        <ul class="feature-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Asset categorization</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Document storage</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Search functionality</span>
+                            </li>
+                        </ul>
+                        <div class="asset-counter">
+                            <div class="counter-item">
+                                <span class="counter-value">2,500+</span>
+                                <span class="counter-label">Assets Tracked</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3>Location Monitoring</h3>
+                        <p>Track asset locations to prevent misplacement and optimize usage</p>
+                        <ul class="feature-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Real-time tracking</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Movement history</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Location alerts</span>
+                            </li>
+                        </ul>
+                        <div class="location-preview">
+                            <div class="location-badge">
+                                <i class="fas fa-satellite"></i>
+                                <span>GPS Enabled</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3>Ownership Assignment</h3>
+                        <p>Assign assets to specific departments or individuals for accountability</p>
+                        <ul class="feature-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>User assignment</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Department tracking</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Transfer history</span>
+                            </li>
+                        </ul>
+                        <div class="assignment-preview">
+                            <div class="user-avatars">
+                                <div class="avatar active" title="Currently assigned">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="avatar-connector"></div>
+                                <div class="avatar">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tracking-visual">
+                <div class="visual-wrapper">
+                    <img src="image/asset-tracking-map.png" alt="Asset Location Map" class="main-image">
+                    <div class="asset-markers">
+                        <div class="asset-marker active">
+                            <div class="marker-dot"></div>
+                            <div class="marker-pulse"></div>
+                            <div class="marker-info">
+                                <h4>Laptop #A1234</h4>
+                                <p>IT Department</p>
+                                <span class="status">Active</span>
+                            </div>
+                        </div>
+                        <div class="asset-marker">
+                            <div class="marker-dot"></div>
+                            <div class="marker-pulse"></div>
+                            <div class="marker-info">
+                                <h4>Printer #P5678</h4>
+                                <p>Marketing Department</p>
+                                <span class="status">In Use</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Tracking Section Styles */
+.tracking-section {
+    padding: 6rem 0;
+    background: var(--card-bg);
+    position: relative;
+}
+
+.section-header {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 3rem;
+}
+
+.section-header h2 {
+    font-size: clamp(2rem, 4vw, 2.5rem);
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.section-header p {
+    font-size: clamp(1rem, 2vw, 1.1rem);
+    color: var(--light-text);
+}
+
+.tracking-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    margin-top: 3rem;
+}
+
+.tracking-features {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.feature-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--primary-color), #42a5f5);
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.feature-card:hover {
+    transform: translateX(10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card:hover::before {
+    opacity: 1;
+}
+
+.feature-icon {
+    width: 56px;
+    height: 56px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    transition: var(--transition);
+}
+
+.feature-icon i {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+    transition: var(--transition);
+}
+
+.feature-content h3 {
+    font-size: 1.4rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.feature-content p {
+    color: var(--light-text);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.feature-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.feature-list li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.feature-list li i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    width: 24px;
+    height: 24px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.asset-counter,
+.location-preview,
+.assignment-preview {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: rgba(41, 98, 255, 0.05);
+    border-radius: 12px;
+}
+
+.counter-item {
+    text-align: center;
+}
+
+.counter-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.counter-label {
+    font-size: 0.9rem;
+    color: var(--light-text);
+}
+
+.location-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--primary-color);
+    font-size: 0.9rem;
+    justify-content: center;
+}
+
+.user-avatars {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.avatar-connector {
+    width: 30px;
+    height: 2px;
+    background: var(--primary-color);
+}
+
+.tracking-visual {
+    position: relative;
+}
+
+.main-image {
+    width: 100%;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+}
+
+.asset-markers {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.asset-marker {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+}
+
+.marker-dot {
+    width: 12px;
+    height: 12px;
+    background: var(--primary-color);
+    border-radius: 50%;
+}
+
+.marker-pulse {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 24px;
+    height: 24px;
+    background: rgba(41, 98, 255, 0.3);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.marker-info {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 0.75rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 200px;
+    text-align: center;
+    opacity: 0;
+    transition: var(--transition);
+    pointer-events: none;
+}
+
+.asset-marker:hover .marker-info {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-10px);
+}
+
+.marker-info h4 {
+    font-size: 0.9rem;
+    color: var(--text-color);
+    margin-bottom: 0.25rem;
+}
+
+.marker-info p {
+    font-size: 0.8rem;
+    color: var(--light-text);
+    margin-bottom: 0.5rem;
+}
+
+.marker-info .status {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    border-radius: 12px;
+    font-size: 0.75rem;
+}
+
+@keyframes pulse {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 1024px) {
+    .tracking-grid {
+        gap: 3rem;
+    }
+
+    .feature-card {
+        padding: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .tracking-section {
+        padding: 4rem 0;
+    }
+
+    .tracking-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .tracking-features {
+        gap: 1.5rem;
+    }
+
+    .feature-card {
+        padding: 1.75rem;
+        text-align: center;
+    }
+
+    .feature-icon {
+        margin: 0 auto 1.25rem;
+    }
+
+    .feature-list li {
+        justify-content: center;
+    }
+
+    .tracking-visual {
+        order: -1;
+        margin: 0 -1.5rem;
+    }
+
+    .main-image {
+        border-radius: 0;
+    }
+
+    .asset-markers {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .feature-card {
+        padding: 1.5rem;
+    }
+
+    .feature-content h3 {
+        font-size: 1.2rem;
+    }
+
+    .feature-content p {
+        font-size: 0.9rem;
+    }
+
+    .counter-value {
+        font-size: 1.25rem;
+    }
+
+    .location-badge,
+    .counter-label {
+        font-size: 0.85rem;
+    }
+}
+
+/* Touch Device Optimization */
+@media (hover: none) {
+    .feature-card:hover {
+        transform: none;
+    }
+
+    .feature-card::before {
+        display: none;
+    }
+
+    .asset-marker:hover .marker-info {
+        opacity: 0;
+    }
+}
+</style>
+<!-- Automated Depreciation Calculations Section -->
+<section class="depreciation-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Automated Depreciation Calculations</h2>
+            <p>Simplify financial reporting with automated depreciation calculations using various methods</p>
+        </div>
+        <div class="depreciation-grid">
+            <div class="depreciation-visual">
+                <div class="visual-wrapper">
+                    <canvas id="depreciationChart" width="600" height="400"></canvas>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: rgba(41, 98, 255, 0.5)"></span>
+                            <span>Straight-line</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: rgba(66, 165, 245, 0.5)"></span>
+                            <span>Double Declining</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: rgba(100, 181, 246, 0.5)"></span>
+                            <span>Sum-of-Years</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="depreciation-features">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3>Multiple Depreciation Methods</h3>
+                        <p>Choose from various depreciation calculation methods</p>
+                        <ul class="feature-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Straight-line method</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Double declining balance</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Sum-of-years-digits</span>
+                            </li>
+                        </ul>
+                        <div class="method-selector">
+                            <button class="method-btn active" data-method="straight">
+                                <i class="fas fa-chart-line"></i>
+                                Straight-line
+                            </button>
+                            <button class="method-btn" data-method="double">
+                                <i class="fas fa-chart-area"></i>
+                                Double Declining
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3>Customizable Schedules</h3>
+                        <p>Set depreciation periods and calculate based on fiscal year settings</p>
+                        <ul class="feature-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Flexible time periods</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Fiscal year alignment</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Custom start dates</span>
+                            </li>
+                        </ul>
+                        <div class="schedule-preview">
+                            <div class="timeline">
+                                <div class="timeline-marker current"></div>
+                                <div class="timeline-progress" style="width: 45%"></div>
+                            </div>
+                            <div class="timeline-labels">
+                                <span>Start</span>
+                                <span>Current</span>
+                                <span>End</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3>Comprehensive Reporting</h3>
+                        <p>Generate detailed reports for audits and tax filings</p>
+                        <ul class="feature-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Detailed audit trails</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Tax compliance reports</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Custom report generation</span>
+                            </li>
+                        </ul>
+                        <div class="report-actions">
+                            <button class="report-btn">
+                                <i class="fas fa-download"></i>
+                                Export Report
+                            </button>
+                            <button class="report-btn">
+                                <i class="fas fa-print"></i>
+                                Print Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Depreciation Section Styles */
+.depreciation-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+.depreciation-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    margin-top: 3rem;
+}
+
+.visual-wrapper {
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+}
+
+.chart-legend {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+}
+
+.method-selector {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.method-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.9rem;
+}
+
+.method-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.schedule-preview {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: rgba(41, 98, 255, 0.05);
+    border-radius: 12px;
+}
+
+.timeline {
+    height: 4px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 2px;
+    position: relative;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: var(--primary-color);
+    border-radius: 2px;
+}
+
+.timeline-marker {
+    width: 12px;
+    height: 12px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.timeline-marker.current {
+    left: 45%;
+}
+
+.timeline-labels {
+    display: flex;
+    justify-content: space-between;
+    color: var(--light-text);
+    font-size: 0.85rem;
+}
+
+.report-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.report-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.9rem;
+}
+
+.report-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 1024px) {
+    .depreciation-grid {
+        gap: 3rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .depreciation-section {
+        padding: 4rem 0;
+    }
+
+    .depreciation-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .visual-wrapper {
+        padding: 1.5rem;
+        margin: 0 -1rem;
+        border-radius: 0;
+    }
+
+    .method-selector,
+    .report-actions {
+        justify-content: center;
+    }
+
+    .method-btn,
+    .report-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .chart-legend {
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .visual-wrapper {
+        padding: 1rem;
+    }
+
+    .legend-item {
+        font-size: 0.8rem;
+    }
+
+    .method-btn,
+    .report-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .timeline-labels {
+        font-size: 0.8rem;
+    }
+}
+
+/* Touch Device Optimization */
+@media (hover: none) {
+    .report-btn:hover {
+        background: rgba(41, 98, 255, 0.1);
+        color: var(--primary-color);
+    }
+}
+</style>
+
+<script>
+// Initialize Depreciation Chart
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('depreciationChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'],
+            datasets: [{
+                label: 'Straight-line',
+                data: [100, 80, 60, 40, 20],
+                borderColor: 'rgba(41, 98, 255, 0.5)',
+                backgroundColor: 'rgba(41, 98, 255, 0.1)',
+                tension: 0.4
+            },
+            {
+                label: 'Double Declining',
+                data: [100, 50, 25, 12.5, 6.25],
+                borderColor: 'rgba(66, 165, 245, 0.5)',
+                backgroundColor: 'rgba(66, 165, 245, 0.1)',
+                tension: 0.4
+            },
+            {
+                label: 'Sum-of-Years',
+                data: [100, 70, 45, 25, 10],
+                borderColor: 'rgba(100, 181, 246, 0.5)',
+                backgroundColor: 'rgba(100, 181, 246, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Asset Value (%)'
+                    }
+                }
+            }
+        }
+    });
+
+    // Method Button Handlers
+    const methodBtns = document.querySelectorAll('.method-btn');
+    methodBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            methodBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+});
+</script>
+<!-- Maintenance Management Section -->
+<section class="maintenance-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Maintenance Management</h2>
+            <p>Extend asset lifespans and reduce downtime with proactive maintenance scheduling and tracking</p>
+        </div>
+        <div class="maintenance-grid">
+            <div class="maintenance-features">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3>Preventive Maintenance Alerts</h3>
+                        <p>Receive notifications for upcoming maintenance tasks</p>
+                        <ul class="feature-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Scheduled notifications</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Priority-based alerts</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Custom schedules</span>
+                            </li>
+                        </ul>
+                        <div class="alert-preview">
+                            <div class="alert-item upcoming">
+                                <i class="fas fa-clock"></i>
+                                <div class="alert-content">
+                                    <h4>Server Maintenance Due</h4>
+                                    <p>In 3 days</p>
+                                </div>
+                            </div>
+                            <div class="alert-item overdue">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <div class="alert-content">
+                                    <h4>Printer Check Overdue</h4>
+                                    <p>2 days past</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3>Service History Logs</h3>
+                        <p>Maintain records of all maintenance activities for each asset</p>
+                        <ul class="feature-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Detailed maintenance logs</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Cost tracking</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Performance history</span>
+                            </li>
+                        </ul>
+                        <div class="history-timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-dot completed"></div>
+                                <div class="timeline-content">
+                                    <h4>Regular Maintenance</h4>
+                                    <p>Completed on Oct 15</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-dot pending"></div>
+                                <div class="timeline-content">
+                                    <h4>Parts Replacement</h4>
+                                    <p>Scheduled for Nov 1</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-tools"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3>Vendor Management</h3>
+                        <p>Track service providers and associated costs</p>
+                        <ul class="feature-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Vendor database</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Cost comparison</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Performance ratings</span>
+                            </li>
+                        </ul>
+                        <div class="vendor-preview">
+                            <div class="vendor-cards">
+                                <div class="vendor-card">
+                                    <div class="vendor-rating">
+                                        <i class="fas fa-star"></i>
+                                        <span>4.8</span>
+                                    </div>
+                                    <h4>Tech Solutions Inc</h4>
+                                    <p>IT Equipment</p>
+                                </div>
+                                <div class="vendor-card">
+                                    <div class="vendor-rating">
+                                        <i class="fas fa-star"></i>
+                                        <span>4.5</span>
+                                    </div>
+                                    <h4>Maintenance Pro</h4>
+                                    <p>Heavy Equipment</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="maintenance-visual">
+                <div class="visual-wrapper">
+                    <div class="calendar-view">
+                        <div class="calendar-header">
+                            <h3>Maintenance Calendar</h3>
+                            <div class="calendar-controls">
+                                <button class="calendar-btn">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <span>October 2023</span>
+                                <button class="calendar-btn">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="calendar-grid">
+                            <!-- Calendar days will be populated by JavaScript -->
+                        </div>
+                        <div class="calendar-legend">
+                            <div class="legend-item">
+                                <span class="legend-dot scheduled"></span>
+                                <span>Scheduled</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-dot completed"></span>
+                                <span>Completed</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-dot overdue"></span>
+                                <span>Overdue</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Maintenance Section Styles */
+.maintenance-section {
+    padding: 6rem 0;
+    background: var(--card-bg);
+    position: relative;
+}
+
+.maintenance-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: start;
+    margin-top: 3rem;
+}
+
+.alert-preview {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.alert-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.alert-item.upcoming {
+    border-left: 4px solid #ffc107;
+}
+
+.alert-item.overdue {
+    border-left: 4px solid #dc3545;
+}
+
+.alert-item i {
+    font-size: 1.25rem;
+}
+
+.alert-item.upcoming i {
+    color: #ffc107;
+}
+
+.alert-item.overdue i {
+    color: #dc3545;
+}
+
+.alert-content h4 {
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    color: var(--text-color);
+}
+
+.alert-content p {
+    font-size: 0.8rem;
+    color: var(--light-text);
+    margin: 0;
+}
+
+.history-timeline {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: rgba(41, 98, 255, 0.05);
+    border-radius: 12px;
+}
+
+.timeline-item {
+    display: flex;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    position: relative;
+}
+
+.timeline-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 25px;
+    bottom: 0;
+    width: 2px;
+    background: rgba(41, 98, 255, 0.1);
+}
+
+.timeline-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 5px;
+}
+
+.timeline-dot.completed {
+    background: #28a745;
+}
+
+.timeline-dot.pending {
+    background: #ffc107;
+}
+
+.timeline-content h4 {
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    color: var(--text-color);
+}
+
+.timeline-content p {
+    font-size: 0.8rem;
+    color: var(--light-text);
+    margin: 0;
+}
+
+.vendor-preview {
+    margin-top: 1.5rem;
+}
+
+.vendor-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.vendor-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    position: relative;
+}
+
+.vendor-rating {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    color: #ffc107;
+}
+
+.vendor-card h4 {
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    color: var(--text-color);
+}
+
+.vendor-card p {
+    font-size: 0.8rem;
+    color: var(--light-text);
+    margin: 0;
+}
+
+.calendar-view {
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.calendar-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.calendar-btn {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.calendar-btn:hover {
+    background: rgba(41, 98, 255, 0.1);
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.calendar-legend {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.legend-dot.scheduled {
+    background: #ffc107;
+}
+
+.legend-dot.completed {
+    background: #28a745;
+}
+
+.legend-dot.overdue {
+    background: #dc3545;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 1024px) {
+    .maintenance-grid {
+        gap: 3rem;
+    }
+
+    .vendor-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .maintenance-section {
+        padding: 4rem 0;
+    }
+
+    .maintenance-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .feature-card {
+        text-align: center;
+    }
+
+    .feature-icon {
+        margin: 0 auto 1.25rem;
+    }
+
+    .feature-list li {
+        justify-content: center;
+    }
+
+    .alert-item,
+    .timeline-item,
+    .vendor-card {
+        text-align: left;
+    }
+
+    .calendar-view {
+        margin: 0 -1rem;
+        border-radius: 0;
+        padding: 1.5rem;
+    }
+
+    .calendar-legend {
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .alert-item {
+        padding: 0.75rem;
+    }
+
+    .vendor-card {
+        padding: 0.75rem;
+    }
+
+    .calendar-grid {
+        gap: 0.25rem;
+    }
+
+    .legend-item {
+        font-size: 0.8rem;
+    }
+}
+
+/* Touch Device Optimization */
+@media (hover: none) {
+    .calendar-btn:hover {
+        background: none;
+    }
+}
+</style>
+
+<script>
+// Initialize Calendar
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCalendar();
+});
+
+function initializeCalendar() {
+    const calendarGrid = document.querySelector('.calendar-grid');
+    const daysInMonth = 31; // Example for October
+    const firstDay = 0; // Sunday
+
+    // Add day headers
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    days.forEach(day => {
+        const dayHeader = document.createElement('div');
+        dayHeader.className = 'calendar-day header';
+        dayHeader.textContent = day;
+        calendarGrid.appendChild(dayHeader);
+    });
+
+    // Add empty cells for days before first of month
+    for (let i = 0; i < firstDay; i++) {
+        const emptyDay = document.createElement('div');
+        emptyDay.className = 'calendar-day empty';
+        calendarGrid.appendChild(emptyDay);
+    }
+
+    // Add days of the month
+    for (let i = 1; i <= daysInMonth; i++) {
+        const dayCell = document.createElement('div');
+        dayCell.className = 'calendar-day';
+        dayCell.innerHTML = `
+            <span class="day-number">${i}</span>
+            ${i === 15 ? '<span class="maintenance-dot completed"></span>' : ''}
+            ${i === 22 ? '<span class="maintenance-dot scheduled"></span>' : ''}
+            ${i === 5 ? '<span class="maintenance-dot overdue"></span>' : ''}
+        `;
+        calendarGrid.appendChild(dayCell);
+    }
+}
+</script>
+<!-- Integration Capabilities Section -->
+<section class="integration-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Integration Capabilities</h2>
+            <p>Enhance operational efficiency by integrating our asset management solution with your existing systems</p>
+        </div>
+        <div class="integration-grid">
+            <div class="integration-visual">
+                <div class="visual-wrapper">
+                    <img src="image/integration-diagram.png" alt="Integration Diagram" class="main-image">
+                    <div class="connection-lines">
+                        <svg class="connection-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                            <path class="connection-path" d="M10,50 Q50,10 90,50"/>
+                            <path class="connection-path" d="M10,50 Q50,90 90,50"/>
+                        </svg>
+                    </div>
+                    <div class="integration-nodes">
+                        <div class="node erp">
+                            <i class="fas fa-building"></i>
+                            <span>ERP Systems</span>
+                        </div>
+                        <div class="node accounting">
+                            <i class="fas fa-calculator"></i>
+                            <span>Accounting</span>
+                        </div>
+                        <div class="node mobile">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>Mobile App</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="integration-features">
+                <div class="integration-card">
+                    <div class="status-badge connected">Active</div>
+                    <div class="integration-icon">
+                        <i class="fas fa-sync"></i>
+                    </div>
+                    <h3>Accounting Software Sync</h3>
+                    <p>Seamlessly connect with popular accounting platforms for unified financial data</p>
+                    <ul class="feature-list">
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Real-time data sync</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Automated reconciliation</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Financial reporting</span>
+                        </li>
+                    </ul>
+                    <div class="integration-platforms">
+                        <img src="image/quickbooks-logo.png" alt="QuickBooks" class="platform-logo">
+                        <img src="image/sage-logo.png" alt="Sage" class="platform-logo">
+                        <img src="image/xero-logo.png" alt="Xero" class="platform-logo">
+                    </div>
+                </div>
+
+                <div class="integration-card">
+                    <div class="status-badge popular">Popular</div>
+                    <div class="integration-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3>API Access</h3>
+                    <p>Enable custom integrations tailored to your business processes</p>
+                    <ul class="feature-list">
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>RESTful API endpoints</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Webhook support</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Developer tools</span>
+                        </li>
+                    </ul>
+                    <div class="api-preview">
+                        <code>GET /api/v1/assets</code>
+                        <div class="api-response">
+                            <span class="response-status">200 OK</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="integration-card">
+                    <div class="status-badge new">New</div>
+                    <div class="integration-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>Mobile Accessibility</h3>
+                    <p>Manage assets on-the-go with our mobile-friendly interface</p>
+                    <ul class="feature-list">
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Native mobile apps</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Offline capabilities</span>
+                        </li>
+                        <li>
+                            <i class="fas fa-check"></i>
+                            <span>Push notifications</span>
+                        </li>
+                    </ul>
+                    <div class="app-stores">
+                        <button class="store-btn">
+                            <i class="fab fa-apple"></i>
+                            App Store
+                        </button>
+                        <button class="store-btn">
+                            <i class="fab fa-google-play"></i>
+                            Google Play
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Integration Section Styles */
+.integration-section {
+    padding: 6rem 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+.integration-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    margin-top: 3rem;
+}
+
+.visual-wrapper {
+    position: relative;
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+}
+
+.connection-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.connection-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.connection-path {
+    fill: none;
+    stroke: var(--primary-color);
+    stroke-width: 2;
+    stroke-dasharray: 10;
+    animation: dashMove 20s linear infinite;
+    opacity: 0.3;
+}
+
+@keyframes dashMove {
+    to {
+        stroke-dashoffset: -200;
+    }
+}
+
+.integration-nodes {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 2rem;
+}
+
+.node {
+    background: white;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+}
+
+.node:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.node i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.node span {
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+.integration-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.integration-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.status-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-badge.connected {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+.status-badge.popular {
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+}
+
+.status-badge.new {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.integration-platforms {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.platform-logo {
+    height: 30px;
+    width: auto;
+    opacity: 0.7;
+    transition: var(--transition);
+}
+
+.platform-logo:hover {
+    opacity: 1;
+}
+
+.api-preview {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-family: monospace;
+}
+
+.api-response {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.response-status {
+    color: #28a745;
+    font-size: 0.9rem;
+}
+
+.app-stores {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.store-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    background: var(--text-color);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.9rem;
+}
+
+.store-btn:hover {
+    background: var(--primary-color);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 1024px) {
+    .integration-grid {
+        gap: 3rem;
+    }
+    
+    .integration-card {
+        padding: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .integration-section {
+        padding: 4rem 0;
+    }
+
+    .integration-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .visual-wrapper {
+        margin: 0 -1rem;
+        border-radius: 0;
+    }
+
+    .integration-nodes {
+        flex-direction: column;
+        padding: 1rem;
+    }
+
+    .node {
+        width: 100%;
+        max-width: 200px;
+        margin: 0.5rem 0;
+    }
+
+    .integration-card {
+        text-align: center;
+    }
+
+    .integration-icon {
+        margin: 0 auto 1.25rem;
+    }
+
+    .feature-list li {
+        justify-content: center;
+    }
+
+    .integration-platforms,
+    .app-stores {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .integration-card {
+        padding: 1.5rem;
+    }
+
+    .status-badge {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .store-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .platform-logo {
+        height: 25px;
+    }
+}
+
+/* Touch Device Optimization */
+@media (hover: none) {
+    .integration-card:hover {
+        transform: none;
+    }
+
+    .node:hover {
+        transform: none;
+    }
+
+    .store-btn:hover {
+        background: var(--text-color);
+    }
+}
+</style>
+<!-- Advanced Analytics Section -->
+<section class="analytics-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Advanced Analytics and Reporting</h2>
+            <p>Make informed decisions with in-depth analytics and customizable reports on asset performance</p>
+        </div>
+        <div class="analytics-grid">
+            <div class="analytics-features">
+                <div class="analytics-card">
+                    <div class="card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Interactive Dashboards</h3>
+                        <p>Visualize key metrics such as asset utilization and depreciation trends</p>
+                        <div class="metrics-preview">
+                            <div class="metric-item">
+                                <span class="metric-value">85%</span>
+                                <span class="metric-label">Asset Utilization</span>
+                                <canvas class="mini-chart" width="100" height="40"></canvas>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-value">$2.5M</span>
+                                <span class="metric-label">Asset Value</span>
+                                <canvas class="mini-chart" width="100" height="40"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-filters">
+                            <button class="filter-btn active">Day</button>
+                            <button class="filter-btn">Week</button>
+                            <button class="filter-btn">Month</button>
+                            <button class="filter-btn">Year</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analytics-card">
+                    <div class="card-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Custom Report Generation</h3>
+                        <p>Create reports tailored to specific business requirements</p>
+                        <div class="report-builder">
+                            <div class="report-options">
+                                <div class="option-group">
+                                    <label>Report Type</label>
+                                    <select class="report-select">
+                                        <option>Asset Performance</option>
+                                        <option>Maintenance History</option>
+                                        <option>Depreciation Summary</option>
+                                    </select>
+                                </div>
+                                <div class="option-group">
+                                    <label>Time Period</label>
+                                    <select class="report-select">
+                                        <option>Last 30 Days</option>
+                                        <option>Last Quarter</option>
+                                        <option>Last Year</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="generate-btn">
+                                <i class="fas fa-file-export"></i>
+                                Generate Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analytics-card">
+                    <div class="card-icon">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Export Options</h3>
+                        <p>Download reports in various formats for sharing and compliance purposes</p>
+                        <div class="export-options">
+                            <button class="export-btn">
+                                <i class="fas fa-file-pdf"></i>
+                                PDF Report
+                            </button>
+                            <button class="export-btn">
+                                <i class="fas fa-file-excel"></i>
+                                Excel Sheet
+                            </button>
+                            <button class="export-btn">
+                                <i class="fas fa-file-csv"></i>
+                                CSV Data
+                            </button>
+                        </div>
+                        <div class="export-history">
+                            <h4>Recent Exports</h4>
+                            <div class="history-item">
+                                <i class="fas fa-file-pdf"></i>
+                                <span>Monthly Asset Report.pdf</span>
+                                <small>2 hours ago</small>
+                            </div>
+                            <div class="history-item">
+                                <i class="fas fa-file-excel"></i>
+                                <span>Depreciation Data.xlsx</span>
+                                <small>Yesterday</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="analytics-visual">
+                <div class="visual-wrapper">
+                    <div class="dashboard-preview">
+                        <div class="dashboard-header">
+                            <h3>Asset Performance Overview</h3>
+                            <div class="date-range">Last 30 Days</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="mainChart" width="600" height="400"></canvas>
+                        </div>
+                        <div class="dashboard-metrics">
+                            <div class="metric-box">
+                                <h4>Total Assets</h4>
+                                <span class="value">1,234</span>
+                                <span class="trend positive">+5.2%</span>
+                            </div>
+                            <div class="metric-box">
+                                <h4>Utilization Rate</h4>
+                                <span class="value">85%</span>
+                                <span class="trend positive">+2.1%</span>
+                            </div>
+                            <div class="metric-box">
+                                <h4>Maintenance Cost</h4>
+                                <span class="value">$45.2K</span>
+                                <span class="trend negative">-3.4%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Optimize Your Asset Management Today</h2>
+            <p>Discover how our comprehensive platform can transform your asset tracking and financial reporting processes</p>
+            <div class="cta-buttons">
+                <button class="btn primary">Contact Us for a Demo</button>
+                <button class="btn secondary">Explore Solutions</button>
+            </div>
+            <div class="cta-features">
+                <div class="cta-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>30-Day Free Trial</span>
+                </div>
+                <div class="cta-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Live Demo Available</span>
+                </div>
+                <div class="cta-feature">
+                    <i class="fas fa-check-circle"></i>
+                    <span>24/7 Support</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Analytics Section Styles */
+.analytics-section {
+    padding: 6rem 0;
+    background: var(--card-bg);
+    position: relative;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: start;
+    margin-top: 3rem;
+}
+
+.analytics-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    margin-bottom: 1.5rem;
+}
+
+.analytics-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.metrics-preview {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.metric-item {
+    background: rgba(41, 98, 255, 0.05);
+    padding: 1.25rem;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.metric-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 0.25rem;
+}
+
+.metric-label {
+    font-size: 0.9rem;
+    color: var(--light-text);
+}
+
+.chart-filters {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.filter-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.filter-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.report-builder {
+    margin-top: 1.5rem;
+}
+
+.report-options {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.option-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.report-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    background: white;
+    color: var(--text-color);
+}
+
+.generate-btn {
+    width: 100%;
+    padding: 1rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.export-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.export-btn {
+    padding: 0.75rem;
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+    border: none;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.export-btn i {
+    font-size: 1.25rem;
+}
+
+.export-history {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.export-history h4 {
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.history-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    font-size: 0.9rem;
+}
+
+.history-item i {
+    color: var(--primary-color);
+}
+
+.history-item small {
+    margin-left: auto;
+    color: var(--light-text);
+}
+
+.dashboard-preview {
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.date-range {
+    padding: 0.5rem 1rem;
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+.dashboard-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.metric-box {
+    background: rgba(41, 98, 255, 0.05);
+    padding: 1.25rem;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.metric-box h4 {
+    font-size: 0.9rem;
+    color: var(--light-text);
+    margin-bottom: 0.5rem;
+}
+
+.metric-box .value {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.25rem;
+}
+
+.trend {
+    font-size: 0.85rem;
+}
+
+.trend.positive {
+    color: #28a745;
+}
+
+.trend.negative {
+    color: #dc3545;
+}
+
+/* CTA Section Styles */
+.cta-section {
+    padding: 8rem 0;
+    background: var(--gradient);
+    position: relative;
+    text-align: center;
+}
+
+.cta-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.cta-content h2 {
+    font-size: clamp(2rem, 4vw, 3rem);
+    color: #1a237e;
+    margin-bottom: 1.5rem;
+}
+
+.cta-content p {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: var(--light-text);
+    margin-bottom: 2.5rem;
+}
+
+.cta-features {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin-top: 3rem;
+}
+
+.cta-feature {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-color);
+}
+
+.cta-feature i {
+    color: var(--primary-color);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 1024px) {
+    .analytics-grid {
+        gap: 3rem;
+    }
+    
+    .dashboard-metrics {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .analytics-section,
+    .cta-section {
+        padding: 4rem 0;
+    }
+
+    .analytics-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .analytics-card {
+        padding: 1.75rem;
+        text-align: center;
+    }
+
+    .metrics-preview {
+        grid-template-columns: 1fr;
+    }
+
+    .export-options {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-preview {
+        margin: 0 -1rem;
+        border-radius: 0;
+    }
+
+    .dashboard-metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .cta-buttons {
+        flex-direction: column;
+        gap: 1rem;
+        max-width: 300px;
+        margin: 0 auto;
+    }
+
+    .cta-features {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .analytics-card {
+        padding: 1.5rem;
+    }
+
+    .metric-value {
+        font-size: 1.25rem;
+    }
+
+    .filter-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+}
+
+/* Touch Device Optimization */
+@media (hover: none) {
+    .analytics-card:hover {
+        transform: none;
+    }
+
+    .export-btn:hover {
+        background: rgba(41, 98, 255, 0.1);
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMobileMenu();
+    initializeDropdowns();
+    initializeTouchEvents();
+    initializeKeyboardNav();
+    initializeDropdownScroll();
+    initializeFocusTrap();
+    initializeWiseMailAnimations();
+  initializeCharts();
+    setupInteractions();
+});
+  
+  function initializeCharts() {
+    // Main Chart
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Asset Utilization',
+                data: [75, 82, 80, 85, 83, 85],
+                borderColor: 'rgba(41, 98, 255, 0.5)',
+                tension: 0.4,
+                fill: true,
+                backgroundColor: 'rgba(41, 98, 255, 0.1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Mini Charts
+    document.querySelectorAll('.mini-chart').forEach((canvas, index) => {
+        const ctx = canvas.getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['', '', '', '', ''],
+                datasets: [{
+                    data: index === 0 ? [70, 75, 80, 82, 85] : [2.1, 2.3, 2.4, 2.5, 2.5],
+                    borderColor: 'rgba(41, 98, 255, 0.5)',
+                    tension: 0.4,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        display: false
+                    },
+                    y: {
+                        display: false
+                    }
+                }
+            }
+        });
+    });
+}
+
+  function setupInteractions() {
+    // Filter Buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Export Buttons
+    document.querySelectorAll('.export-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+            }, 100);
+        });
+    });
+}
+
+function initializeWiseMailAnimations() {
+    const wiseMailLink = document.querySelector('a[href="mail.html"]');
+    if (!wiseMailLink) return;
+
+    // Create and append envelope icon
+    const envelope = document.createElement('span');
+    envelope.innerHTML = `
+        <svg class="mail-icon" viewBox="0 0 24 24" width="18" height="18">
+            <path d="M20,4H4C2.9,4,2,4.9,2,6v12c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V6C22,4.9,21.1,4,20,4z" fill="currentColor"/>
+            <path d="M20,4H4l8,6L20,4z" fill="currentColor"/>
+        </svg>
+    `;
+    envelope.classList.add('mail-icon-wrapper');
+    wiseMailLink.prepend(envelope);
+
+    // Create notification badge
+    const badge = document.createElement('span');
+    badge.classList.add('mail-badge');
+    badge.textContent = '1';
+    wiseMailLink.appendChild(badge);
+
+    // Advanced hover animation
+    wiseMailLink.addEventListener('mouseenter', function() {
+        createMailParticles(this);
+        envelope.style.transform = 'scale(1.2) rotate(15deg)';
+        envelope.style.filter = 'drop-shadow(0 0 8px var(--primary-color))';
+        this.style.transform = 'scale(1.05)';
+        this.style.textShadow = '0 0 15px rgba(227, 51, 51, 0.3)';
+    });
+
+    wiseMailLink.addEventListener('mouseleave', function() {
+        envelope.style.transform = 'scale(1) rotate(0deg)';
+        envelope.style.filter = 'none';
+        this.style.transform = 'scale(1)';
+        this.style.textShadow = 'none';
+    });
+
+    // Continuous floating animation
+    let time = 0;
+    function floatAnimation() {
+        if (!document.hidden) {
+            time += 0.01;
+            const yOffset = Math.sin(time) * 3;
+            const xOffset = Math.cos(time * 0.5) * 2;
+            const rotation = Math.sin(time * 0.5) * 5;
+            
+            envelope.style.transform = `translate(${xOffset}px, ${yOffset}px) rotate(${rotation}deg)`;
+        }
+        requestAnimationFrame(floatAnimation);
+    }
+    floatAnimation();
+
+    // Periodic pulse effect
+    setInterval(() => {
+        if (!document.hidden && Math.random() > 0.7) {
+            envelope.classList.add('pulse');
+            setTimeout(() => envelope.classList.remove('pulse'), 1000);
+        }
+    }, 3000);
+
+    // Create particle effect
+    function createMailParticles(element) {
+        const colors = ['#ff6b6b', '#e33333', '#ff8787', '#ff4444'];
+        const particleCount = 12;
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('span');
+            particle.classList.add('mail-particle');
+            
+            const size = Math.random() * 4 + 2;
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const angle = (i / particleCount) * 360;
+            const velocity = 2 + Math.random() * 2;
+            
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.backgroundColor = color;
+            
+            const rect = element.getBoundingClientRect();
+            particle.style.left = `${rect.width / 2}px`;
+            particle.style.top = `${rect.height / 2}px`;
+            
+            particle.style.animation = `
+                particleFly${angle < 180 ? 'Up' : 'Down'} 
+                ${0.6 + Math.random() * 0.4}s 
+                ease-out forwards
+            `;
+            
+            element.appendChild(particle);
+            setTimeout(() => particle.remove(), 1000);
+        }
+    }
+
+    // Add animation styles
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+        .mail-icon-wrapper {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 6px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mail-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: badgePulse 2s infinite;
+        }
+
+        .mail-particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .pulse {
+            animation: iconPulse 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes particleFlyUp {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(
+                    ${Math.random() * 100 - 50}px,
+                    ${-Math.random() * 100 - 20}px
+                ) scale(0);
+                opacity: 0;
+            }
+        }
+
+        @keyframes particleFlyDown {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(
+                    ${Math.random() * 100 - 50}px,
+                    ${Math.random() * 100 + 20}px
+                ) scale(0);
+                opacity: 0;
+            }
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes iconPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        a[href="mail.html"] {
+            position: relative;
+            display: flex;
+            align-items: center;
+            overflow: visible;
+            padding: 5px 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        a[href="mail.html"]:hover {
+            background: rgba(227, 51, 51, 0.1);
+            border-radius: 6px;
+        }
+
+        @media (max-width: 768px) {
+            .mail-icon-wrapper {
+                margin-right: 12px;
+            }
+            
+            .mail-badge {
+                right: auto;
+                left: 20px;
+                top: 50%;
+                transform: translateY(-50%);
+            }
+        }
+    `;
+    document.head.appendChild(styleSheet);
+}
+    function initializeMobileMenu() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mainNav = document.getElementById('main-nav');
+    const menuOverlay = document.getElementById('menu-overlay');
+    const megaMenus = document.querySelectorAll('.mega-menu');
+    let isMenuOpen = false;
+
+    // Desktop Mega Menu Handler
+    function handleDesktopMegaMenu() {
+        megaMenus.forEach(menu => {
+            const content = menu.querySelector('.dropdown-content');
+            
+            menu.addEventListener('mouseenter', () => {
+                if (window.innerWidth > 768) {
+                    menu.classList.add('active');
+                    if (content) {
+                        content.style.display = 'grid';
+                        requestAnimationFrame(() => {
+                            content.style.opacity = '1';
+                            content.style.visibility = 'visible';
+                            content.style.transform = 'translateX(-50%) translateY(0)';
+                        });
+                    }
+                }
+            });
+
+            menu.addEventListener('mouseleave', () => {
+                if (window.innerWidth > 768) {
+                    menu.classList.remove('active');
+                    if (content) {
+                        content.style.opacity = '0';
+                        content.style.visibility = 'hidden';
+                        content.style.transform = 'translateX(-50%) translateY(20px)';
+                        setTimeout(() => {
+                            if (!menu.classList.contains('active')) {
+                                content.style.display = 'none';
+                            }
+                        }, 300);
+                    }
+                }
+            });
+        });
+    }
+
+    // Mobile Mega Menu Handler
+    function handleMobileMegaMenu() {
+        megaMenus.forEach(menu => {
+            const link = menu.querySelector('a');
+            const content = menu.querySelector('.dropdown-content');
+            
+            link.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Close other menus
+                    megaMenus.forEach(m => {
+                        if (m !== menu && m.classList.contains('active')) {
+                            m.classList.remove('active');
+                            const otherContent = m.querySelector('.dropdown-content');
+                            if (otherContent) {
+                                otherContent.style.display = 'none';
+                                otherContent.style.opacity = '0';
+                                otherContent.style.visibility = 'hidden';
+                            }
+                        }
+                    });
+
+                    // Toggle current menu
+                    const isActive = menu.classList.contains('active');
+                    menu.classList.toggle('active');
+
+                    if (!isActive) {
+                        content.style.display = 'grid';
+                        requestAnimationFrame(() => {
+                            content.style.opacity = '1';
+                            content.style.visibility = 'visible';
+                        });
+
+                        // Scroll into view
+                        setTimeout(() => {
+                            const headerOffset = 70;
+                            const menuTop = menu.getBoundingClientRect().top;
+                            const scrollPosition = window.pageYOffset + menuTop - headerOffset;
+                            window.scrollTo({
+                                top: scrollPosition,
+                                behavior: 'smooth'
+                            });
+                        }, 100);
+                    } else {
+                        content.style.opacity = '0';
+                        content.style.visibility = 'hidden';
+                        setTimeout(() => {
+                            content.style.display = 'none';
+                        }, 300);
+                    }
+                }
+            });
+        });
+    }
+
+    // Toggle mobile menu function
+    function toggleMenu(show) {
+        isMenuOpen = show;
+        mobileMenu.classList.toggle('active', show);
+        mainNav.classList.toggle('active', show);
+        menuOverlay.classList.toggle('active', show);
+        document.body.style.overflow = show ? 'hidden' : '';
+
+        if (!show) {
+            resetMobileMenu();
+        }
+    }
+
+    // Reset mobile menu state
+    function resetMobileMenu() {
+        megaMenus.forEach(menu => {
+            menu.classList.remove('active');
+            const content = menu.querySelector('.dropdown-content');
+            if (content) {
+                content.style.display = 'none';
+                content.style.opacity = '0';
+                content.style.visibility = 'hidden';
+            }
+        });
+    }
+
+    // Initialize both desktop and mobile handlers
+    handleDesktopMegaMenu();
+    handleMobileMegaMenu();
+
+    // Event Listeners
+    mobileMenu.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMenu(!isMenuOpen);
+    });
+
+    menuOverlay.addEventListener('click', () => {
+        toggleMenu(false);
+    });
+
+    document.addEventListener('click', (e) => {
+        if (isMenuOpen && 
+            !mainNav.contains(e.target) && 
+            !mobileMenu.contains(e.target)) {
+            toggleMenu(false);
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (isMenuOpen) {
+                toggleMenu(false);
+            }
+            megaMenus.forEach(menu => {
+                menu.classList.remove('active');
+                const content = menu.querySelector('.dropdown-content');
+                if (content) {
+                    content.style.display = 'none';
+                    content.style.opacity = '0';
+                    content.style.visibility = 'hidden';
+                }
+            });
+        }
+    });
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            if (window.innerWidth > 768) {
+                toggleMenu(false);
+                resetMobileMenu();
+                
+                megaMenus.forEach(menu => {
+                    const content = menu.querySelector('.dropdown-content');
+                    if (content) {
+                        content.style.display = 'none';
+                        content.style.opacity = '0';
+                        content.style.visibility = 'hidden';
+                        content.style.transform = 'translateX(-50%) translateY(20px)';
+                    }
+                });
+            }
+        }, 250);
+    });
+}
+
+function initializeDropdowns() {
+    const dropdowns = document.querySelectorAll('.dropdown-content');
+    
+    dropdowns.forEach(dropdown => {
+        const items = dropdown.querySelectorAll('.mega-column ul li');
+        items.forEach((item, index) => {
+            item.style.animationDelay = `${index * 0.05}s`;
+            item.classList.add('animate-item');
+        });
+    });
+}
+
+function initializeDropdownScroll() {
+    const megaMenus = document.querySelectorAll('.mega-menu');
+
+    megaMenus.forEach(menu => {
+        const dropdown = menu.querySelector('.dropdown-content');
+
+        if (dropdown) {
+            dropdown.addEventListener('wheel', (e) => {
+                if (window.innerWidth > 768) {
+                    const { scrollTop, scrollHeight, clientHeight } = dropdown;
+                    const scrollingUp = e.deltaY < 0;
+                    const scrollingDown = e.deltaY > 0;
+
+                    if (
+                        (scrollingUp && scrollTop > 0) || 
+                        (scrollingDown && scrollTop < scrollHeight - clientHeight)
+                    ) {
+                        e.preventDefault();
+                        dropdown.scrollTop += e.deltaY;
+                    }
+                }
+            }, { passive: false });
+
+            let touchStart = null;
+            dropdown.addEventListener('touchstart', (e) => {
+                if (window.innerWidth > 768) {
+                    touchStart = e.touches[0].clientY;
+                }
+            }, { passive: true });
+
+            dropdown.addEventListener('touchmove', (e) => {
+                if (window.innerWidth > 768 && touchStart !== null) {
+                    const touchY = e.touches[0].clientY;
+                    const scrollingUp = touchY > touchStart;
+                    const { scrollTop, scrollHeight, clientHeight } = dropdown;
+
+                    if (
+                        (scrollingUp && scrollTop > 0) ||
+                        (!scrollingUp && scrollTop < scrollHeight - clientHeight)
+                    ) {
+                        e.stopPropagation();
+                    } else {
+                        e.preventDefault();
+                    }
+                }
+            }, { passive: false });
+
+            dropdown.addEventListener('touchend', () => {
+                touchStart = null;
+            });
+        }
+    });
+}
+
+function initializeTouchEvents() {
+    if ('ontouchstart' in window) {
+        const menuItems = document.querySelectorAll('.mega-menu > a');
+        
+        menuItems.forEach(item => {
+            item.addEventListener('touchstart', function(e) {
+                if (window.innerWidth > 768) {
+                    e.preventDefault();
+                    const parent = this.parentElement;
+                    const wasActive = parent.classList.contains('active');
+                    
+                    document.querySelectorAll('.mega-menu.active').forEach(menu => {
+                        if (menu !== parent) {
+                            menu.classList.remove('active');
+                            const content = menu.querySelector('.dropdown-content');
+                            if (content) {
+                                content.style.display = 'none';
+                                content.style.opacity = '0';
+                                content.style.visibility = 'hidden';
+                            }
+                        }
+                    });
+
+                    parent.classList.toggle('active', !wasActive);
+                    const content = parent.querySelector('.dropdown-content');
+                    
+                    if (!wasActive) {
+                        content.style.display = 'grid';
+                        requestAnimationFrame(() => {
+                            content.style.opacity = '1';
+                            content.style.visibility = 'visible';
+                        });
+                    } else {
+                        content.style.opacity = '0';
+                        content.style.visibility = 'hidden';
+                        setTimeout(() => {
+                            content.style.display = 'none';
+                        }, 300);
+                    }
+                }
+            });
+        });
+
+        document.addEventListener('touchstart', (e) => {
+            if (!e.target.closest('.mega-menu')) {
+                document.querySelectorAll('.mega-menu.active').forEach(menu => {
+                    menu.classList.remove('active');
+                    const content = menu.querySelector('.dropdown-content');
+                    if (content) {
+                        content.style.opacity = '0';
+                        content.style.visibility = 'hidden';
+                        setTimeout(() => {
+                            content.style.display = 'none';
+                        }, 300);
+                    }
+                });
+            }
+        }, { passive: true });
+    }
+}
+
+function initializeKeyboardNav() {
+    const menuItems = document.querySelectorAll('.mega-menu a, .mega-column a');
+    
+    menuItems.forEach(item => {
+        item.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.click();
+            }
+        });
+    });
+}
+
+function initializeFocusTrap() {
+    const mainNav = document.getElementById('main-nav');
+    const focusableElements = mainNav.querySelectorAll(
+        'a[href], button, input, textarea, select, details, [tabindex]:not([tabindex="-1"])'
+    );
+    
+    if (focusableElements.length > 0) {
+        const firstFocusableElement = focusableElements[0];
+        const lastFocusableElement = focusableElements[focusableElements.length - 1];
+
+        mainNav.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                if (e.shiftKey) {
+                    if (document.activeElement === firstFocusableElement) {
+                        lastFocusableElement.focus();
+                        e.preventDefault();
+                    }
+                } else {
+                    if (document.activeElement === lastFocusableElement) {
+                        firstFocusableElement.focus();
+                        e.preventDefault();
+                    }
+                }
+            }
+        });
+    }
+}
+</script>
