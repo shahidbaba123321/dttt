@@ -872,76 +872,7 @@
     color: var(--text-color);
 }
 
-/* Enhanced Integration Section */
-.integration-section {
-    padding: var(--section-padding) 0;
-    background: var(--gradient);
-    position: relative;
-}
 
-.integration-nodes {
-    position: relative;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    padding: clamp(1.5rem, 4vw, 2.5rem);
-    flex-wrap: wrap;
-    gap: clamp(1rem, 3vw, 2rem);
-}
-
-.node {
-    background: white;
-    padding: clamp(1rem, 2.5vw, 1.5rem);
-    border-radius: 12px;
-    box-shadow: var(--box-shadow);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-    transition: var(--transition);
-    cursor: pointer;
-    min-width: 120px;
-}
-
-.node:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-}
-
-.node i {
-    font-size: clamp(1.25rem, 3vw, 1.5rem);
-    color: var(--primary-color);
-}
-
-.node span {
-    font-size: clamp(0.85rem, 2vw, 0.9rem);
-    color: var(--text-color);
-    text-align: center;
-}
-
-/* Enhanced Connection Lines */
-.connection-lines {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-}
-
-.connection-svg {
-    width: 100%;
-    height: 100%;
-}
-
-.connection-path {
-    fill: none;
-    stroke: var(--primary-color);
-    stroke-width: 2;
-    stroke-dasharray: 10;
-    animation: dashMove 20s linear infinite;
-    opacity: 0.3;
-}
 
 /* Enhanced Notification System */
 .notification {
@@ -994,15 +925,7 @@
         width: 100%;
     }
 
-    .integration-nodes {
-        flex-direction: column;
-        padding: 1rem;
-    }
 
-    .node {
-        width: 100%;
-        max-width: 200px;
-    }
 
     .connection-lines {
         display: none;
@@ -1037,7 +960,7 @@
         transform: none;
     }
 
-    .node:active,
+   
     .alert-item:active {
         transform: scale(0.98);
     }
@@ -2620,6 +2543,398 @@
                 </div>
             </div>
         </section>
+        <style>
+           /* Integration Capabilities Section Styles */
+.integration-section {
+    padding: var(--section-padding) 0;
+    background: var(--gradient);
+    position: relative;
+    overflow: hidden;
+}
+
+.integration-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(41, 98, 255, 0.03), transparent);
+    pointer-events: none;
+}
+
+.integration-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--grid-gap);
+    margin-top: 3rem;
+    position: relative;
+}
+
+/* Integration Diagram Styles */
+.integration-diagram {
+    background: white;
+    padding: clamp(2rem, 5vw, 3rem);
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+    position: relative;
+}
+
+.diagram-container {
+    position: relative;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Central Platform Styles */
+.central-platform {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 3;
+}
+
+.platform-icon {
+    width: 80px;
+    height: 80px;
+    background: var(--primary-color);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    box-shadow: 0 8px 24px rgba(41, 98, 255, 0.2);
+    transition: var(--transition);
+}
+
+.platform-icon:hover {
+    transform: translateY(-5px) rotate(10deg);
+    box-shadow: 0 12px 30px rgba(41, 98, 255, 0.3);
+}
+
+.platform-icon i {
+    font-size: 2.5rem;
+    color: white;
+}
+
+.central-platform span {
+    display: block;
+    color: var(--text-color);
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+/* Connection Lines Styles */
+.connection-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.connection-svg {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+.connection-path {
+    fill: none;
+    stroke: var(--primary-color);
+    stroke-width: 2;
+    stroke-dasharray: 10;
+    animation: dashMove 20s linear infinite;
+    opacity: 0.3;
+}
+
+/* Integration Nodes Styles */
+.integration-nodes {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+.node {
+    position: absolute;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    cursor: pointer;
+    min-width: 160px;
+    text-align: center;
+}
+
+.node:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(41, 98, 255, 0.15);
+}
+
+.node i {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+    transition: var(--transition);
+}
+
+.node:hover i {
+    transform: scale(1.1);
+}
+
+.node span {
+    display: block;
+    color: var(--text-color);
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+/* Node Positions */
+.node.erp {
+    top: 10%;
+    left: 10%;
+}
+
+.node.accounting {
+    top: 10%;
+    right: 10%;
+}
+
+.node.mobile {
+    bottom: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Integration Features Styles */
+.integration-features {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.integration-card {
+    background: white;
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    position: relative;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+}
+
+.integration-card:hover {
+    transform: translateX(10px);
+    box-shadow: 0 15px 35px rgba(41, 98, 255, 0.1);
+    border-color: rgba(41, 98, 255, 0.2);
+}
+
+/* Status Badge Styles */
+.status-badge {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    z-index: 1;
+}
+
+.status-badge.connected {
+    background: rgba(40, 167, 69, 0.1);
+    color: var(--success-color);
+}
+
+.status-badge.popular {
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+}
+
+.status-badge.new {
+    background: rgba(255, 193, 7, 0.1);
+    color: var(--warning-color);
+}
+
+/* Integration Platforms Styles */
+.integration-platforms {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.platform-logo {
+    height: 30px;
+    width: auto;
+    opacity: 0.7;
+    transition: var(--transition);
+    filter: grayscale(100%);
+}
+
+.platform-logo:hover {
+    opacity: 1;
+    filter: grayscale(0%);
+    transform: scale(1.1);
+}
+
+/* API Preview Styles */
+.api-preview {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    position: relative;
+}
+
+.api-preview code {
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.api-response {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.response-status {
+    color: var(--success-color);
+    font-size: 0.9rem;
+}
+
+/* App Store Buttons */
+.app-stores {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.store-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.5rem;
+    background: var(--text-color);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.95rem;
+}
+
+.store-btn:hover {
+    background: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+/* Animation Keyframes */
+@keyframes dashMove {
+    to {
+        stroke-dashoffset: -200;
+    }
+}
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+    .integration-grid {
+        gap: 2rem;
+    }
+
+    .node {
+        padding: 1.25rem;
+        min-width: 140px;
+    }
+}
+
+@media (max-width: 768px) {
+    .integration-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .diagram-container {
+        min-height: 300px;
+    }
+
+    .integration-nodes {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+        position: relative;
+        padding: 2rem 0;
+    }
+
+    .node {
+        position: relative;
+        top: auto;
+        left: auto;
+        right: auto;
+        bottom: auto;
+        transform: none;
+        width: 100%;
+        max-width: 200px;
+    }
+
+    .connection-lines {
+        display: none;
+    }
+
+    .store-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .integration-card {
+        padding: 1.25rem;
+    }
+
+    .status-badge {
+        top: 1rem;
+        right: 1rem;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .platform-icon {
+        width: 60px;
+        height: 60px;
+    }
+
+    .platform-icon i {
+        font-size: 2rem;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) {
+    .integration-card:hover,
+    .node:hover,
+    .platform-icon:hover {
+        transform: none;
+    }
+
+    .store-btn:active {
+        transform: scale(0.98);
+    }
+} 
+        </style>
 
         <!-- Advanced Analytics Section -->
         <section class="analytics-section">
