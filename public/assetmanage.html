@@ -833,21 +833,21 @@
         </div>
         <div class="depreciation-grid">
             <div class="depreciation-visual">
-                <div class="visual-wrapper">
-                    <canvas id="depreciationChart" width="600" height="400"></canvas>
-                    <div class="chart-legend">
-                        <div class="legend-item">
-                            <span class="legend-color" style="background: rgba(41, 98, 255, 0.5)"></span>
-                            <span>Straight-line</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-color" style="background: rgba(66, 165, 245, 0.5)"></span>
-                            <span>Double Declining</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-color" style="background: rgba(100, 181, 246, 0.5)"></span>
-                            <span>Sum-of-Years</span>
-                        </div>
+                <div class="chart-container">
+                    <canvas id="depreciationChart"></canvas>
+                </div>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: rgba(41, 98, 255, 0.5)"></span>
+                        <span>Straight-line</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: rgba(66, 165, 245, 0.5)"></span>
+                        <span>Double Declining</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: rgba(100, 181, 246, 0.5)"></span>
+                        <span>Sum-of-Years</span>
                     </div>
                 </div>
             </div>
@@ -971,23 +971,32 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 4rem;
-    align-items: center;
+    align-items: start;
     margin-top: 3rem;
 }
 
-.visual-wrapper {
+.depreciation-visual {
     background: white;
     padding: 2rem;
     border-radius: 20px;
     box-shadow: var(--box-shadow);
 }
 
+/* Chart Container */
+.chart-container {
+    position: relative;
+    height: 400px;
+    width: 100%;
+    margin-bottom: 1.5rem;
+}
+
 .chart-legend {
     display: flex;
     justify-content: center;
     gap: 2rem;
-    margin-top: 2rem;
     flex-wrap: wrap;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .legend-item {
@@ -1004,10 +1013,84 @@
     border-radius: 4px;
 }
 
+/* Feature Cards */
+.depreciation-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.feature-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.feature-icon i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.feature-content h3 {
+    font-size: 1.25rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.feature-content p {
+    color: var(--light-text);
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+.feature-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    margin-bottom: 1.5rem;
+}
+
+.feature-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.feature-list li i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    width: 24px;
+    height: 24px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Method Selector */
 .method-selector {
     display: flex;
     gap: 1rem;
-    margin-top: 1.5rem;
     flex-wrap: wrap;
 }
 
@@ -1030,11 +1113,12 @@
     color: white;
 }
 
+/* Schedule Preview */
 .schedule-preview {
-    margin-top: 1.5rem;
-    padding: 1.5rem;
     background: rgba(41, 98, 255, 0.05);
+    padding: 1.5rem;
     border-radius: 12px;
+    margin-top: 1.5rem;
 }
 
 .timeline {
@@ -1075,10 +1159,10 @@
     font-size: 0.85rem;
 }
 
+/* Report Actions */
 .report-actions {
     display: flex;
     gap: 1rem;
-    margin-top: 1.5rem;
     flex-wrap: wrap;
 }
 
@@ -1106,6 +1190,14 @@
     .depreciation-grid {
         gap: 3rem;
     }
+    
+    .chart-container {
+        height: 350px;
+    }
+
+    .feature-card {
+        padding: 1.75rem;
+    }
 }
 
 @media (max-width: 768px) {
@@ -1118,10 +1210,30 @@
         gap: 2rem;
     }
 
-    .visual-wrapper {
-        padding: 1.5rem;
+    .depreciation-visual {
         margin: 0 -1rem;
         border-radius: 0;
+        padding: 1rem;
+    }
+
+    .chart-container {
+        height: 300px;
+    }
+
+    .chart-legend {
+        gap: 1rem;
+    }
+
+    .feature-card {
+        text-align: center;
+    }
+
+    .feature-icon {
+        margin: 0 auto 1.25rem;
+    }
+
+    .feature-list li {
+        justify-content: center;
     }
 
     .method-selector,
@@ -1132,27 +1244,34 @@
     .method-btn,
     .report-btn {
         width: 100%;
-        justify-content: center;
-    }
-
-    .chart-legend {
-        gap: 1rem;
     }
 }
 
 @media (max-width: 480px) {
-    .visual-wrapper {
-        padding: 1rem;
+    .chart-container {
+        height: 250px;
     }
 
-    .legend-item {
-        font-size: 0.8rem;
+    .depreciation-visual {
+        padding: 0.75rem;
+    }
+
+    .feature-card {
+        padding: 1.5rem;
+    }
+
+    .feature-content h3 {
+        font-size: 1.2rem;
+    }
+
+    .feature-content p {
+        font-size: 0.9rem;
     }
 
     .method-btn,
     .report-btn {
-        padding: 0.6rem 1rem;
         font-size: 0.85rem;
+        padding: 0.6rem 1rem;
     }
 
     .timeline-labels {
@@ -1162,6 +1281,10 @@
 
 /* Touch Device Optimization */
 @media (hover: none) {
+    .feature-card:hover {
+        transform: none;
+    }
+
     .report-btn:hover {
         background: rgba(41, 98, 255, 0.1);
         color: var(--primary-color);
@@ -2714,6 +2837,9 @@ function initializeCalendar() {
 document.addEventListener('DOMContentLoaded', function() {
     initializeAll();
     loadHeader();
+    initializeDepreciationChart();
+    initializeMethodButtons();
+    initializeReportActions();
 });
 
 // Header Loading Function
@@ -2760,6 +2886,10 @@ function initializeAll() {
     setupInteractions();
     initializeCalendar();
     initializeCharts();
+    initializeDepreciationChart();
+    initializeMethodButtons();
+    initializeReportActions();
+    
 }
 // Calendar Initialization
 function initializeCalendar() {
@@ -2918,6 +3048,247 @@ function initializeCharts() {
         });
     });
 }
+
+    function initializeDepreciationChart() {
+    const ctx = document.getElementById('depreciationChart').getContext('2d');
+    
+    // Chart data for different depreciation methods
+    const chartData = {
+        straightLine: [100, 80, 60, 40, 20],
+        doubleDeclining: [100, 50, 25, 12.5, 6.25],
+        sumOfYears: [100, 70, 45, 25, 10]
+    };
+
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'],
+            datasets: [{
+                label: 'Straight-line',
+                data: chartData.straightLine,
+                borderColor: 'rgba(41, 98, 255, 0.5)',
+                backgroundColor: 'rgba(41, 98, 255, 0.1)',
+                tension: 0.4,
+                fill: true
+            },
+            {
+                label: 'Double Declining',
+                data: chartData.doubleDeclining,
+                borderColor: 'rgba(66, 165, 245, 0.5)',
+                backgroundColor: 'rgba(66, 165, 245, 0.1)',
+                tension: 0.4,
+                fill: true
+            },
+            {
+                label: 'Sum-of-Years',
+                data: chartData.sumOfYears,
+                borderColor: 'rgba(100, 181, 246, 0.5)',
+                backgroundColor: 'rgba(100, 181, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    titleColor: '#333',
+                    bodyColor: '#666',
+                    borderColor: 'rgba(0, 0, 0, 0.1)',
+                    borderWidth: 1,
+                    padding: 12,
+                    boxPadding: 6,
+                    usePointStyle: true,
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.parsed.y}%`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        },
+                        font: {
+                            size: window.innerWidth < 768 ? 10 : 12
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: {
+                            size: window.innerWidth < 768 ? 10 : 12
+                        }
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    // Handle window resize
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            chart.resize();
+        }, 250);
+    });
+
+    return chart;
+}
+function initializeMethodButtons() {
+    const methodButtons = document.querySelectorAll('.method-btn');
+    const chart = Chart.getChart('depreciationChart');
+
+    methodButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Remove active class from all buttons
+            methodButtons.forEach(b => b.classList.remove('active'));
+            // Add active class to clicked button
+            this.classList.add('active');
+
+            // Update chart based on selected method
+            const method = this.dataset.method;
+            updateChartView(method, chart);
+
+            // Add click animation
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+            }, 100);
+        });
+    });
+}
+
+function updateChartView(method, chart) {
+    if (!chart) return;
+
+    // Hide/show datasets based on selected method
+    chart.data.datasets.forEach((dataset, index) => {
+        const meta = chart.getDatasetMeta(index);
+        if (method === 'straight' && index === 0) {
+            meta.hidden = false;
+        } else if (method === 'double' && index === 1) {
+            meta.hidden = false;
+        } else {
+            meta.hidden = true;
+        }
+    });
+
+    chart.update();
+}
+
+function initializeReportActions() {
+    const reportButtons = document.querySelectorAll('.report-btn');
+    
+    reportButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Save original button content
+            const originalContent = this.innerHTML;
+            
+            // Show loading state
+            this.innerHTML = `
+                <i class="fas fa-spinner fa-spin"></i>
+                Processing...
+            `;
+            
+            // Disable button
+            this.disabled = true;
+            
+            // Simulate report generation/printing
+            setTimeout(() => {
+                // Restore button state
+                this.innerHTML = originalContent;
+                this.disabled = false;
+                
+                // Show success message
+                showNotification('Report ' + 
+                    (this.textContent.includes('Export') ? 'exported' : 'sent to printer') + 
+                    ' successfully!');
+            }, 1500);
+        });
+    });
+}
+
+function showNotification(message) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #28a745;
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(100px);
+        opacity: 0;
+        transition: all 0.3s ease;
+        z-index: 1000;
+    `;
+    notification.textContent = message;
+    
+    // Add to document
+    document.body.appendChild(notification);
+    
+    // Trigger animation
+    setTimeout(() => {
+        notification.style.transform = 'translateY(0)';
+        notification.style.opacity = '1';
+        
+        // Remove after delay
+        setTimeout(() => {
+            notification.style.transform = 'translateY(100px)';
+            notification.style.opacity = '0';
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 3000);
+    }, 100);
+}
+    const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const chart = Chart.getChart('depreciationChart');
+            if (chart) {
+                chart.data.datasets.forEach((dataset, index) => {
+                    chart.show(index);
+                });
+            }
+        }
+    });
+}, {
+    threshold: 0.1
+});
+
+// Observe the chart container
+const chartContainer = document.querySelector('.chart-container');
+if (chartContainer) {
+    observer.observe(chartContainer);
+}
+
 // Initialize Pricing Functionality
 function initializePricing() {
     const billingToggle = document.getElementById('billing-toggle');
