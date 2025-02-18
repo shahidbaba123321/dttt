@@ -2833,13 +2833,13 @@ function initializeCalendar() {
     
 
 <script>
+// Chart Instance Management
+const chartInstances = new Map();
+
 // Document Ready Handler
 document.addEventListener('DOMContentLoaded', function() {
     initializeAll();
     loadHeader();
-    initializeDepreciationChart();
-    initializeMethodButtons();
-    initializeReportActions();
 });
 
 // Header Loading Function
@@ -2852,8 +2852,6 @@ async function loadHeader() {
         
         const html = await response.text();
         headerContainer.innerHTML = html;
-
-        // Initialize mobile menu functionality after header loads
         initializeMobileMenu();
     } catch (error) {
         console.error('Error loading header:', error);
@@ -2880,92 +2878,43 @@ async function loadHeader() {
 // Initialize All Functions
 function initializeAll() {
     initializeAnimations();
-    initializePricing();
-    initializeMetrics();
     handleScrollEffects();
     setupInteractions();
-    initializeCalendar();
-    initializeCharts();
-    initializeDepreciationChart();
-    initializeMethodButtons();
-    initializeReportActions();
     
-}
-// Calendar Initialization
-function initializeCalendar() {
-    // Add any calendar-specific functionality here
-    const calendarEvents = document.querySelectorAll('.calendar-event');
-    
-    calendarEvents.forEach(event => {
-        event.addEventListener('click', () => {
-            event.classList.toggle('expanded');
-        });
-    });
-}
-
-// Pricing Configuration
-const pricingConfig = {
-    USD: {
-        symbol: '$',
-        monthly: {
-            basic: 79,
-            professional: 149
-        },
-        yearly: {
-            basic: 63,
-            professional: 119
-        }
-    },
-    INR: {
-        symbol: '₹',
-        monthly: {
-            basic: 5999,
-            professional: 11999
-        },
-        yearly: {
-            basic: 4799,
-            professional: 9599
-        }
-    },
-    GBP: {
-        symbol: '£',
-        monthly: {
-            basic: 59,
-            professional: 119
-        },
-        yearly: {
-            basic: 47,
-            professional: 95
-        }
-    },
-    AED: {
-        symbol: 'AED',
-        monthly: {
-            basic: 289,
-            professional: 549
-        },
-        yearly: {
-            basic: 231,
-            professional: 439
-        }
-    },
-    QAR: {
-        symbol: 'QAR',
-        monthly: {
-            basic: 289,
-            professional: 549
-        },
-        yearly: {
-            basic: 231,
-            professional: 439
-        }
+    // Conditional initializations
+    if (document.querySelector('.metric-chart')) {
+        initializeMetrics();
     }
-};
-// Update the chart initialization function
+    
+    if (document.getElementById('depreciationChart')) {
+        initializeDepreciationChart();
+        initializeMethodButtons();
+        initializeReportActions();
+    }
+    
+    if (document.getElementById('billing-toggle')) {
+        initializePricing();
+    }
+    
+    if (document.querySelector('.calendar-event')) {
+        initializeCalendar();
+    }
+
+    // Initialize main chart if exists
+    if (document.getElementById('mainChart')) {
+        initializeCharts();
+    }
+}
+    // Initialize Charts Function
 function initializeCharts() {
-    // Main Chart with better responsiveness
     const mainChartCtx = document.getElementById('mainChart');
     if (mainChartCtx) {
+        // Destroy existing chart if it exists
+        const existingChart = Chart.getChart('mainChart');
+        if (existingChart) {
+            existingChart.destroy();
+        }
+
         const mainChart = new Chart(mainChartCtx, {
             type: 'line',
             data: {
@@ -3007,16 +2956,22 @@ function initializeCharts() {
             }
         });
 
-        // Handle resize
-        window.addEventListener('resize', function() {
-            mainChart.resize();
-        });
+        // Store chart instance
+        chartInstances.set('mainChart', mainChart);
     }
 
-    // Mini Charts with better responsiveness
+    // Initialize Mini Charts
     document.querySelectorAll('.mini-chart').forEach((canvas, index) => {
         const ctx = canvas.getContext('2d');
-        new Chart(ctx, {
+        if (!ctx) return;
+
+        // Destroy existing chart if it exists
+        const existingChart = Chart.getChart(canvas);
+        if (existingChart) {
+            existingChart.destroy();
+        }
+
+        const miniChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: ['', '', '', '', ''],
@@ -3046,13 +3001,23 @@ function initializeCharts() {
                 }
             }
         });
+
+        // Store mini chart instance
+        chartInstances.set(`miniChart${index}`, miniChart);
     });
 }
 
-    function initializeDepreciationChart() {
-    const ctx = document.getElementById('depreciationChart').getContext('2d');
-    
-    // Chart data for different depreciation methods
+// Depreciation Chart Initialization
+function initializeDepreciationChart() {
+    const ctx = document.getElementById('depreciationChart');
+    if (!ctx) return;
+
+    // Destroy existing chart if it exists
+    const existingChart = Chart.getChart('depreciationChart');
+    if (existingChart) {
+        existingChart.destroy();
+    }
+
     const chartData = {
         straightLine: [100, 80, 60, 40, 20],
         doubleDeclining: [100, 50, 25, 12.5, 6.25],
@@ -3145,33 +3110,26 @@ function initializeCharts() {
         }
     });
 
-    // Handle window resize
-    let resizeTimer;
-    window.addEventListener('resize', function() {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(function() {
-            chart.resize();
-        }, 250);
-    });
-
+    // Store chart instance
+    chartInstances.set('depreciationChart', chart);
     return chart;
 }
+    // Method Buttons Initialization
 function initializeMethodButtons() {
     const methodButtons = document.querySelectorAll('.method-btn');
-    const chart = Chart.getChart('depreciationChart');
+    const chart = chartInstances.get('depreciationChart');
+
+    if (!chart || !methodButtons.length) return;
 
     methodButtons.forEach(btn => {
         btn.addEventListener('click', function() {
-            // Remove active class from all buttons
             methodButtons.forEach(b => b.classList.remove('active'));
-            // Add active class to clicked button
             this.classList.add('active');
 
-            // Update chart based on selected method
             const method = this.dataset.method;
             updateChartView(method, chart);
 
-            // Add click animation
+            // Button click animation
             this.style.transform = 'scale(0.95)';
             setTimeout(() => {
                 this.style.transform = 'scale(1)';
@@ -3180,10 +3138,10 @@ function initializeMethodButtons() {
     });
 }
 
+// Update Chart View
 function updateChartView(method, chart) {
     if (!chart) return;
 
-    // Hide/show datasets based on selected method
     chart.data.datasets.forEach((dataset, index) => {
         const meta = chart.getDatasetMeta(index);
         if (method === 'straight' && index === 0) {
@@ -3195,15 +3153,56 @@ function updateChartView(method, chart) {
         }
     });
 
-    chart.update();
+    chart.update('none'); // Use 'none' for better performance
 }
 
+// Initialize Metrics
+function initializeMetrics() {
+    const charts = document.querySelectorAll('.metric-chart');
+    charts.forEach((chart, index) => {
+        if (chart.getContext) {
+            const ctx = chart.getContext('2d');
+            
+            // Destroy existing chart if it exists
+            const existingChart = Chart.getChart(chart);
+            if (existingChart) {
+                existingChart.destroy();
+            }
+
+            const metricChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Tax Compliance Rate',
+                        data: [92, 95, 94, 96, 95, 98],
+                        borderColor: '#2962ff',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Store metric chart instance
+            chartInstances.set(`metricChart${index}`, metricChart);
+        }
+    });
+}
+
+// Initialize Report Actions
 function initializeReportActions() {
     const reportButtons = document.querySelectorAll('.report-btn');
     
     reportButtons.forEach(btn => {
         btn.addEventListener('click', function() {
-            // Save original button content
             const originalContent = this.innerHTML;
             
             // Show loading state
@@ -3212,16 +3211,13 @@ function initializeReportActions() {
                 Processing...
             `;
             
-            // Disable button
             this.disabled = true;
             
             // Simulate report generation/printing
             setTimeout(() => {
-                // Restore button state
                 this.innerHTML = originalContent;
                 this.disabled = false;
                 
-                // Show success message
                 showNotification('Report ' + 
                     (this.textContent.includes('Export') ? 'exported' : 'sent to printer') + 
                     ' successfully!');
@@ -3230,66 +3226,7 @@ function initializeReportActions() {
     });
 }
 
-function showNotification(message) {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = 'notification';
-    notification.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: #28a745;
-        color: white;
-        padding: 1rem 2rem;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        transform: translateY(100px);
-        opacity: 0;
-        transition: all 0.3s ease;
-        z-index: 1000;
-    `;
-    notification.textContent = message;
-    
-    // Add to document
-    document.body.appendChild(notification);
-    
-    // Trigger animation
-    setTimeout(() => {
-        notification.style.transform = 'translateY(0)';
-        notification.style.opacity = '1';
-        
-        // Remove after delay
-        setTimeout(() => {
-            notification.style.transform = 'translateY(100px)';
-            notification.style.opacity = '0';
-            setTimeout(() => {
-                notification.remove();
-            }, 300);
-        }, 3000);
-    }, 100);
-}
-    const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            const chart = Chart.getChart('depreciationChart');
-            if (chart) {
-                chart.data.datasets.forEach((dataset, index) => {
-                    chart.show(index);
-                });
-            }
-        }
-    });
-}, {
-    threshold: 0.1
-});
-
-// Observe the chart container
-const chartContainer = document.querySelector('.chart-container');
-if (chartContainer) {
-    observer.observe(chartContainer);
-}
-
-// Initialize Pricing Functionality
+// Initialize Pricing
 function initializePricing() {
     const billingToggle = document.getElementById('billing-toggle');
     const countrySelect = document.getElementById('country-select');
@@ -3301,7 +3238,6 @@ function initializePricing() {
     let currentCurrency = 'USD';
     let isYearly = false;
 
-    // Update Pricing Display
     function updatePricing() {
         const config = pricingConfig[currentCurrency];
         const priceType = isYearly ? 'yearly' : 'monthly';
@@ -3317,13 +3253,9 @@ function initializePricing() {
             const planType = index === 0 ? 'basic' : 'professional';
             const newPrice = config[priceType][planType];
 
-            // Add animation class
             amount.closest('.price').classList.add('animating');
-            
-            // Animate price change
             animateNumberChange(amount, newPrice);
 
-            // Remove animation class after animation
             setTimeout(() => {
                 amount.closest('.price').classList.remove('animating');
             }, 400);
@@ -3375,7 +3307,37 @@ function initializePricing() {
     updatePricing();
 }
 
-// Mobile Menu Initialization
+// Global Resize Handler
+let globalResizeTimer;
+window.addEventListener('resize', function() {
+    clearTimeout(globalResizeTimer);
+    globalResizeTimer = setTimeout(function() {
+        chartInstances.forEach(chart => {
+            if (chart && typeof chart.resize === 'function') {
+                chart.resize();
+            }
+        });
+    }, 250);
+});
+
+// Error Handler
+window.addEventListener('error', function(e) {
+    console.error('Global error handler:', e.error);
+    // Prevent chart errors from breaking the page
+    if (e.error?.message?.includes('Chart')) {
+        e.preventDefault();
+    }
+});
+
+// Cleanup function for page unload
+window.addEventListener('beforeunload', function() {
+    // Destroy all chart instances
+    chartInstances.forEach(chart => {
+        if (chart && typeof chart.destroy === 'function') {
+            chart.destroy();
+        }
+    });
+    // Mobile Menu Initialization
 function initializeMobileMenu() {
     const mobileMenu = document.getElementById('mobile-menu');
     const mainNav = document.getElementById('main-nav');
@@ -3389,7 +3351,7 @@ function initializeMobileMenu() {
             isMenuOpen = show;
             mobileMenu.classList.toggle('active', show);
             mainNav.classList.toggle('active', show);
-            menuOverlay.classList.toggle('active', show);
+            if (menuOverlay) menuOverlay.classList.toggle('active', show);
             document.body.style.overflow = show ? 'hidden' : '';
 
             if (!show) {
@@ -3428,7 +3390,87 @@ function initializeMobileMenu() {
     }
 }
 
-// Animation Handler
+// Enhanced Notification System
+function showNotification(message) {
+    // Remove any existing notifications
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notification => {
+        notification.remove();
+    });
+
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #28a745;
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(100px);
+        opacity: 0;
+        transition: all 0.3s ease;
+        z-index: 1000;
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.95rem;
+        max-width: 90%;
+        word-wrap: break-word;
+    `;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // Trigger animation in next frame for better performance
+    requestAnimationFrame(() => {
+        notification.style.transform = 'translateY(0)';
+        notification.style.opacity = '1';
+        
+        setTimeout(() => {
+            notification.style.transform = 'translateY(100px)';
+            notification.style.opacity = '0';
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 3000);
+    });
+}
+
+// Calendar Initialization with Enhanced Features
+function initializeCalendar() {
+    const calendarEvents = document.querySelectorAll('.calendar-event');
+    
+    calendarEvents.forEach(event => {
+        event.addEventListener('click', () => {
+            // Remove expanded class from other events
+            calendarEvents.forEach(otherEvent => {
+                if (otherEvent !== event) {
+                    otherEvent.classList.remove('expanded');
+                }
+            });
+            
+            event.classList.toggle('expanded');
+
+            // Scroll event into view if it's expanded
+            if (event.classList.contains('expanded')) {
+                event.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        });
+    });
+
+    // Close expanded events when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.calendar-event')) {
+            calendarEvents.forEach(event => {
+                event.classList.remove('expanded');
+            });
+        }
+    });
+}
+
+// Animation Handler with Performance Optimization
 function initializeAnimations() {
     const observerOptions = {
         threshold: 0.1,
@@ -3438,11 +3480,13 @@ function initializeAnimations() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                entry.target.classList.add('animate-in');
-                if (entry.target.classList.contains('progress-fill')) {
-                    const width = entry.target.dataset.progress;
-                    entry.target.style.width = width;
-                }
+                requestAnimationFrame(() => {
+                    entry.target.classList.add('animate-in');
+                    if (entry.target.classList.contains('progress-fill')) {
+                        const width = entry.target.dataset.progress;
+                        entry.target.style.width = width;
+                    }
+                });
             }
         });
     }, observerOptions);
@@ -3451,82 +3495,69 @@ function initializeAnimations() {
         .forEach(el => observer.observe(el));
 }
 
-// Scroll Effects Handler
+// Scroll Effects Handler with Throttling
 function handleScrollEffects() {
     let lastScroll = 0;
+    let ticking = false;
     const header = document.querySelector('.main-header');
 
     window.addEventListener('scroll', () => {
-        const currentScroll = window.pageYOffset;
-        
-        if (currentScroll > lastScroll && currentScroll > 100) {
-            header?.classList.add('header-hidden');
-        } else {
-            header?.classList.remove('header-hidden');
-        }
-        
-        lastScroll = currentScroll;
-    });
-}
-
-// Interactive Elements Setup
-function setupInteractions() {
-    document.querySelectorAll('.feature-card, .tax-card, .compliance-card, .integration-card').forEach(card => {
-        card.addEventListener('mouseenter', () => {
-            card.classList.add('card-hover');
-        });
-        
-        card.addEventListener('mouseleave', () => {
-            card.classList.remove('card-hover');
-        });
-    });
-}
-
-// Metrics Initialization
-function initializeMetrics() {
-    const charts = document.querySelectorAll('.metric-chart');
-    charts.forEach(chart => {
-        if (chart.getContext) {
-            const ctx = chart.getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                    datasets: [{
-                        label: 'Tax Compliance Rate',
-                        data: [92, 95, 94, 96, 95, 98],
-                        borderColor: '#2962ff',
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
+        if (!ticking) {
+            window.requestAnimationFrame(() => {
+                const currentScroll = window.pageYOffset;
+                
+                if (currentScroll > lastScroll && currentScroll > 100) {
+                    header?.classList.add('header-hidden');
+                } else {
+                    header?.classList.remove('header-hidden');
                 }
+                
+                lastScroll = currentScroll;
+                ticking = false;
             });
+
+            ticking = true;
         }
     });
 }
 
-// Watson Assistant Chat Integration
+// Watson Assistant Chat Integration with Error Handling
 window.watsonAssistantChatOptions = {
     integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
     region: "au-syd",
     serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
-    onLoad: async (instance) => { await instance.render(); }
+    onLoad: async (instance) => {
+        try {
+            await instance.render();
+        } catch (error) {
+            console.error('Watson Assistant failed to load:', error);
+            showNotification('Chat support is temporarily unavailable');
+        }
+    }
 };
 
-setTimeout(function(){
-    const t = document.createElement('script');
-    t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
-        (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
-        "/WatsonAssistantChatEntry.js";
-    document.head.appendChild(t);
+// Load Watson Assistant Script
+setTimeout(function() {
+    try {
+        const t = document.createElement('script');
+        t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
+            (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
+            "/WatsonAssistantChatEntry.js";
+        document.head.appendChild(t);
+    } catch (error) {
+        console.error('Failed to load Watson Assistant script:', error);
+    }
+}, 0);
+
+// Performance Monitoring
+if (window.performance) {
+    window.addEventListener('load', function() {
+        const timing = window.performance.timing;
+        const pageLoadTime = timing.loadEventEnd - timing.navigationStart;
+        console.log('Page load time:', pageLoadTime + 'ms');
+    });
+}
+    chartInstances.clear();
 });
 </script>
 </body>
