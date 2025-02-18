@@ -10,18 +10,14 @@
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
-    
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root {
             --primary-color: #2962ff;
             --secondary-color: #6c757d;
             --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
             --background-color: #f8f9fa;
             --text-color: #333;
             --light-text: #6c757d;
@@ -58,6 +54,91 @@
             margin: 0 auto;
             padding: 0 var(--mobile-padding);
             width: 100%;
+        }
+
+        /* Header Styles */
+        .main-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: white;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: var(--header-height);
+            padding: 0 1.5rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .logo-img {
+            height: 40px;
+            width: auto;
+        }
+
+        .nav-list {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-list a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-list a:hover {
+            color: var(--primary-color);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .mobile-menu-btn span {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: var(--text-color);
+            transition: var(--transition);
+        }
+
+        .menu-overlay {
+            display: none;
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            width: 100%;
+            height: calc(100vh - var(--header-height));
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .menu-overlay.active {
+            display: block;
+            opacity: 1;
         }
 
         /* Hero Section Styles */
@@ -196,275 +277,113 @@
             50% { transform: translateY(-20px); }
             100% { transform: translateY(0px); }
         }
+        /* Mobile Responsiveness for Header and Hero */
+@media (max-width: 1024px) {
+    .hero-content {
+        gap: 3rem;
+    }
 
-        /* Mobile Responsiveness */
-        @media (max-width: 1024px) {
-            .hero-content {
-                gap: 3rem;
-            }
-
-            .hero-image img {
-                max-width: 500px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .asset-hero {
-                padding: calc(var(--header-height) + 2rem) 0 4rem;
-            }
-
-            .hero-content {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-
-            .hero-text {
-                order: 1;
-                max-width: 100%;
-            }
-
-            .hero-buttons {
-                flex-direction: column;
-                align-items: center;
-                gap: 1rem;
-            }
-
-            .btn {
-                width: 100%;
-                max-width: 300px;
-            }
-
-            .hero-stats {
-                grid-template-columns: 1fr;
-                max-width: 300px;
-                margin: 2rem auto 0;
-            }
-
-            .hero-image {
-                order: 0;
-                margin: 0 -1.5rem;
-            }
-
-            .hero-image img {
-                max-width: 100%;
-                border-radius: 0;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .hero-text h1 {
-                font-size: 2rem;
-            }
-
-            .hero-text p {
-                font-size: 1rem;
-            }
-
-            .stat-item {
-                padding: 1.25rem;
-            }
-
-            .stat-item h4 {
-                font-size: 1.25rem;
-            }
-        }
-
-        /* Touch Device Optimization */
-        @media (hover: none) {
-            .btn:hover {
-                transform: none;
-                box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
-            }
-
-            .stat-item:hover {
-                transform: none;
-                box-shadow: var(--box-shadow);
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Header Container -->
-    <div id="header-container"></div>
-
-    <!-- Main Content -->
-    <main class="asset-main">
-        <!-- Hero Section -->
-        <section class="asset-hero">
-            <div class="container">
-                <div class="hero-content">
-                    <div class="hero-text">
-                        <h1>Optimize Your Asset Lifecycle Management</h1>
-                        <p>Efficiently track assets and automate depreciation for precise financial insights.</p>
-                        <div class="hero-buttons">
-                            <a href="#" class="btn primary">Request a Free Demo</a>
-                            <a href="#" class="btn secondary">Watch Demo</a>
-                        </div>
-                        <div class="hero-stats">
-                            <div class="stat-item">
-                                <i class="fas fa-chart-line"></i>
-                                <h4>98%</h4>
-                                <p>Asset Tracking Accuracy</p>
-                            </div>
-                            <div class="stat-item">
-                                <i class="fas fa-clock"></i>
-                                <h4>60%</h4>
-                                <p>Time Saved</p>
-                            </div>
-                            <div class="stat-item">
-                                <i class="fas fa-calculator"></i>
-                                <h4>100%</h4>
-                                <p>Depreciation Accuracy</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="hero-image">
-                        <img src="image/asset-dashboard.png" alt="Asset Management Dashboard" loading="lazy">
-                    </div>
-                </div>
-            </div>
-        </section>
-        <!-- Real-Time Asset Tracking Section -->
-<section class="tracking-section">
-    <div class="container">
-        <div class="section-header">
-            <h2>Real-Time Asset Tracking</h2>
-            <p>Maintain a centralized record of all company assets, including details such as location, status, and ownership</p>
-        </div>
-        <div class="tracking-grid">
-            <div class="tracking-features">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-database"></i>
-                    </div>
-                    <div class="feature-content">
-                        <h3>Centralized Asset Database</h3>
-                        <p>Consolidate information on all assets for easy access and management</p>
-                        <ul class="feature-list">
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Asset categorization</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Document storage</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Search functionality</span>
-                            </li>
-                        </ul>
-                        <div class="asset-counter">
-                            <div class="counter-item">
-                                <span class="counter-value">2,500+</span>
-                                <span class="counter-label">Assets Tracked</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-map-marker-alt"></i>
-                    </div>
-                    <div class="feature-content">
-                        <h3>Location Monitoring</h3>
-                        <p>Track asset locations to prevent misplacement and optimize usage</p>
-                        <ul class="feature-list">
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Real-time tracking</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Movement history</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Location alerts</span>
-                            </li>
-                        </ul>
-                        <div class="location-preview">
-                            <div class="location-badge">
-                                <i class="fas fa-satellite"></i>
-                                <span>GPS Enabled</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="feature-content">
-                        <h3>Ownership Assignment</h3>
-                        <p>Assign assets to specific departments or individuals for accountability</p>
-                        <ul class="feature-list">
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>User assignment</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Department tracking</span>
-                            </li>
-                            <li>
-                                <i class="fas fa-check"></i>
-                                <span>Transfer history</span>
-                            </li>
-                        </ul>
-                        <div class="assignment-preview">
-                            <div class="user-avatars">
-                                <div class="avatar active" title="Currently assigned">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                                <div class="avatar-connector"></div>
-                                <div class="avatar">
-                                    <i class="fas fa-building"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="tracking-visual">
-                <div class="visual-wrapper">
-                    <img src="image/asset-tracking-map.png" alt="Asset Location Map" class="main-image">
-                    <div class="asset-markers">
-                        <div class="asset-marker active">
-                            <div class="marker-dot"></div>
-                            <div class="marker-pulse"></div>
-                            <div class="marker-info">
-                                <h4>Laptop #A1234</h4>
-                                <p>IT Department</p>
-                                <span class="status">Active</span>
-                            </div>
-                        </div>
-                        <div class="asset-marker">
-                            <div class="marker-dot"></div>
-                            <div class="marker-pulse"></div>
-                            <div class="marker-info">
-                                <h4>Printer #P5678</h4>
-                                <p>Marketing Department</p>
-                                <span class="status">In Use</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<style>
-/* Tracking Section Styles */
-.tracking-section {
-    padding: 6rem 0;
-    background: var(--card-bg);
-    position: relative;
+    .hero-image img {
+        max-width: 500px;
+    }
 }
 
+@media (max-width: 768px) {
+    .mobile-menu-btn {
+        display: flex;
+    }
+
+    .nav-list {
+        position: fixed;
+        top: var(--header-height);
+        left: 0;
+        width: 100%;
+        background: white;
+        flex-direction: column;
+        gap: 0;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+    .nav-list.active {
+        transform: translateX(0);
+    }
+
+    .nav-list a {
+        display: block;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .asset-hero {
+        padding: calc(var(--header-height) + 2rem) 0 4rem;
+    }
+
+    .hero-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .hero-text {
+        order: 1;
+        max-width: 100%;
+    }
+
+    .hero-buttons {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .btn {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .hero-stats {
+        grid-template-columns: 1fr;
+        max-width: 300px;
+        margin: 2rem auto 0;
+    }
+
+    .hero-image {
+        order: 0;
+        margin: 0 -1.5rem;
+    }
+
+    .hero-image img {
+        max-width: 100%;
+        border-radius: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-content {
+        padding: 0 1rem;
+    }
+
+    .logo-img {
+        height: 32px;
+    }
+
+    .hero-text h1 {
+        font-size: 2rem;
+    }
+
+    .hero-text p {
+        font-size: 1rem;
+    }
+
+    .stat-item {
+        padding: 1.25rem;
+    }
+
+    .stat-item h4 {
+        font-size: 1.25rem;
+    }
+}
+
+/* Section Header Styles */
 .section-header {
     text-align: center;
     max-width: 800px;
@@ -482,20 +401,7 @@
     color: var(--light-text);
 }
 
-.tracking-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-    align-items: center;
-    margin-top: 3rem;
-}
-
-.tracking-features {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-}
-
+/* Feature Card Base Styles */
 .feature-card {
     background: white;
     padding: 2.5rem;
@@ -582,6 +488,255 @@
     justify-content: center;
 }
 
+/* Grid Layout Base Styles */
+.grid-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: start;
+    margin-top: 3rem;
+}
+
+.features-column {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Visual Elements Base Styles */
+.visual-wrapper {
+    position: relative;
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+}
+
+.main-image {
+    width: 100%;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Animation Classes */
+.animate-in {
+    animation: fadeInUp 0.6s ease forwards;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Touch Device Optimization */
+@media (hover: none) {
+    .feature-card:hover {
+        transform: none;
+    }
+
+    .feature-card::before {
+        display: none;
+    }
+
+    .btn:hover {
+        transform: none;
+        box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
+    }
+
+    .stat-item:hover {
+        transform: none;
+        box-shadow: var(--box-shadow);
+    }
+}
+        </style>
+</head>
+        <body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+
+    <!-- Main Content -->
+    <main class="asset-main">
+        <!-- Hero Section -->
+        <section class="asset-hero">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1>Optimize Your Asset Lifecycle Management</h1>
+                        <p>Efficiently track assets and automate depreciation for precise financial insights.</p>
+                        <div class="hero-buttons">
+                            <a href="#" class="btn primary">Request a Free Demo</a>
+                            <a href="#" class="btn secondary">Watch Demo</a>
+                        </div>
+                        <div class="hero-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-chart-line"></i>
+                                <h4>98%</h4>
+                                <p>Asset Tracking Accuracy</p>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-clock"></i>
+                                <h4>60%</h4>
+                                <p>Time Saved</p>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-calculator"></i>
+                                <h4>100%</h4>
+                                <p>Depreciation Accuracy</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-image">
+                        <img src="image/asset-dashboard.png" alt="Asset Management Dashboard" loading="lazy">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Real-Time Asset Tracking Section -->
+        <section class="tracking-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Real-Time Asset Tracking</h2>
+                    <p>Maintain a centralized record of all company assets, including details such as location, status, and ownership</p>
+                </div>
+                <div class="tracking-grid grid-section">
+                    <div class="tracking-features features-column">
+                        <div class="feature-card" data-aos="fade-up">
+                            <div class="feature-icon">
+                                <i class="fas fa-database"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h3>Centralized Asset Database</h3>
+                                <p>Consolidate information on all assets for easy access and management</p>
+                                <ul class="feature-list">
+                                    <li>
+                                        <i class="fas fa-check"></i>
+                                        <span>Asset categorization</span>
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-check"></i>
+                                        <span>Document storage</span>
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-check"></i>
+                                        <span>Search functionality</span>
+                                    </li>
+                                </ul>
+                                <div class="asset-counter">
+                                    <div class="counter-item">
+                                        <span class="counter-value">2,500+</span>
+                                        <span class="counter-label">Assets Tracked</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                            <div class="feature-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h3>Location Monitoring</h3>
+                                <p>Track asset locations to prevent misplacement and optimize usage</p>
+                                <ul class="feature-list">
+                                    <li>
+                                        <i class="fas fa-check"></i>
+                                        <span>Real-time tracking</span>
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-check"></i>
+                                        <span>Movement history</span>
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-check"></i>
+                                        <span>Location alerts</span>
+                                    </li>
+                                </ul>
+                                <div class="location-preview">
+                                    <div class="location-badge">
+                                        <i class="fas fa-satellite"></i>
+                                        <span>GPS Enabled</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                            <div class="feature-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h3>Ownership Assignment</h3>
+                                <p>Assign assets to specific departments or individuals for accountability</p>
+                                <ul class="feature-list">
+                                    <li>
+                                        <i class="fas fa-check"></i>
+                                        <span>User assignment</span>
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-check"></i>
+                                        <span>Department tracking</span>
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-check"></i>
+                                        <span>Transfer history</span>
+                                    </li>
+                                </ul>
+                                <div class="assignment-preview">
+                                    <div class="user-avatars">
+                                        <div class="avatar active" title="Currently assigned">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <div class="avatar-connector"></div>
+                                        <div class="avatar">
+                                            <i class="fas fa-building"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tracking-visual">
+                        <div class="visual-wrapper">
+                            <img src="image/asset-tracking-map.png" alt="Asset Location Map" class="main-image" loading="lazy">
+                            <div class="asset-markers">
+                                <div class="asset-marker active">
+                                    <div class="marker-dot"></div>
+                                    <div class="marker-pulse"></div>
+                                    <div class="marker-info">
+                                        <h4>Laptop #A1234</h4>
+                                        <p>IT Department</p>
+                                        <span class="status">Active</span>
+                                    </div>
+                                </div>
+                                <div class="asset-marker">
+                                    <div class="marker-dot"></div>
+                                    <div class="marker-pulse"></div>
+                                    <div class="marker-info">
+                                        <h4>Printer #P5678</h4>
+                                        <p>Marketing Department</p>
+                                        <span class="status">In Use</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+<style>
+/* Tracking Section Specific Styles */
+.tracking-section {
+    padding: 6rem 0;
+    background: var(--card-bg);
+    position: relative;
+}
+
 .asset-counter,
 .location-preview,
 .assignment-preview {
@@ -644,16 +799,6 @@
     background: var(--primary-color);
 }
 
-.tracking-visual {
-    position: relative;
-}
-
-.main-image {
-    width: 100%;
-    border-radius: 20px;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
-}
-
 .asset-markers {
     position: absolute;
     top: 0;
@@ -687,172 +832,41 @@
     animation: pulse 2s infinite;
 }
 
-.marker-info {
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: white;
-    padding: 0.75rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    width: 200px;
-    text-align: center;
-    opacity: 0;
-    transition: var(--transition);
-    pointer-events: none;
-}
-
-.asset-marker:hover .marker-info {
-    opacity: 1;
-    transform: translateX(-50%) translateY(-10px);
-}
-
-.marker-info h4 {
-    font-size: 0.9rem;
-    color: var(--text-color);
-    margin-bottom: 0.25rem;
-}
-
-.marker-info p {
-    font-size: 0.8rem;
-    color: var(--light-text);
-    margin-bottom: 0.5rem;
-}
-
-.marker-info .status {
-    display: inline-block;
-    padding: 0.25rem 0.5rem;
-    background: rgba(40, 167, 69, 0.1);
-    color: #28a745;
-    border-radius: 12px;
-    font-size: 0.75rem;
-}
-
 @keyframes pulse {
     0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
     100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
 }
-
-/* Mobile Responsiveness */
-@media (max-width: 1024px) {
-    .tracking-grid {
-        gap: 3rem;
-    }
-
-    .feature-card {
-        padding: 2rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .tracking-section {
-        padding: 4rem 0;
-    }
-
-    .tracking-grid {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-    }
-
-    .tracking-features {
-        gap: 1.5rem;
-    }
-
-    .feature-card {
-        padding: 1.75rem;
-        text-align: center;
-    }
-
-    .feature-icon {
-        margin: 0 auto 1.25rem;
-    }
-
-    .feature-list li {
-        justify-content: center;
-    }
-
-    .tracking-visual {
-        order: -1;
-        margin: 0 -1.5rem;
-    }
-
-    .main-image {
-        border-radius: 0;
-    }
-
-    .asset-markers {
-        display: none;
-    }
-}
-
-@media (max-width: 480px) {
-    .feature-card {
-        padding: 1.5rem;
-    }
-
-    .feature-content h3 {
-        font-size: 1.2rem;
-    }
-
-    .feature-content p {
-        font-size: 0.9rem;
-    }
-
-    .counter-value {
-        font-size: 1.25rem;
-    }
-
-    .location-badge,
-    .counter-label {
-        font-size: 0.85rem;
-    }
-}
-
-/* Touch Device Optimization */
-@media (hover: none) {
-    .feature-card:hover {
-        transform: none;
-    }
-
-    .feature-card::before {
-        display: none;
-    }
-
-    .asset-marker:hover .marker-info {
-        opacity: 0;
-    }
-}
-</style>
-<!-- Automated Depreciation Calculations Section -->
+        <!-- Automated Depreciation Calculations Section -->
 <section class="depreciation-section">
     <div class="container">
         <div class="section-header">
             <h2>Automated Depreciation Calculations</h2>
             <p>Simplify financial reporting with automated depreciation calculations using various methods</p>
         </div>
-        <div class="depreciation-grid">
+        <div class="depreciation-grid grid-section">
             <div class="depreciation-visual">
-                <div class="chart-container">
-                    <canvas id="depreciationChart"></canvas>
-                </div>
-                <div class="chart-legend">
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: rgba(41, 98, 255, 0.5)"></span>
-                        <span>Straight-line</span>
+                <div class="visual-wrapper">
+                    <div class="chart-container">
+                        <canvas id="depreciationChart"></canvas>
                     </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: rgba(66, 165, 245, 0.5)"></span>
-                        <span>Double Declining</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: rgba(100, 181, 246, 0.5)"></span>
-                        <span>Sum-of-Years</span>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: rgba(41, 98, 255, 0.5)"></span>
+                            <span>Straight-line</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: rgba(66, 165, 245, 0.5)"></span>
+                            <span>Double Declining</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: rgba(100, 181, 246, 0.5)"></span>
+                            <span>Sum-of-Years</span>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="depreciation-features">
-                <div class="feature-card">
+            <div class="depreciation-features features-column">
+                <div class="feature-card" data-aos="fade-up">
                     <div class="feature-icon">
                         <i class="fas fa-calculator"></i>
                     </div>
@@ -886,7 +900,7 @@
                     </div>
                 </div>
 
-                <div class="feature-card">
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
                     <div class="feature-icon">
                         <i class="fas fa-calendar-alt"></i>
                     </div>
@@ -921,7 +935,7 @@
                     </div>
                 </div>
 
-                <div class="feature-card">
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
                     <div class="feature-icon">
                         <i class="fas fa-file-alt"></i>
                     </div>
@@ -960,29 +974,13 @@
 </section>
 
 <style>
-/* Depreciation Section Styles */
+/* Depreciation Section Specific Styles */
 .depreciation-section {
     padding: 6rem 0;
     background: var(--gradient);
     position: relative;
 }
 
-.depreciation-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-    align-items: start;
-    margin-top: 3rem;
-}
-
-.depreciation-visual {
-    background: white;
-    padding: 2rem;
-    border-radius: 20px;
-    box-shadow: var(--box-shadow);
-}
-
-/* Chart Container */
 .chart-container {
     position: relative;
     height: 400px;
@@ -1013,85 +1011,11 @@
     border-radius: 4px;
 }
 
-/* Feature Cards */
-.depreciation-features {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.feature-card {
-    background: white;
-    padding: 2rem;
-    border-radius: 16px;
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-}
-
-.feature-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-}
-
-.feature-icon {
-    width: 48px;
-    height: 48px;
-    background: rgba(41, 98, 255, 0.1);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-}
-
-.feature-icon i {
-    font-size: 1.5rem;
-    color: var(--primary-color);
-}
-
-.feature-content h3 {
-    font-size: 1.25rem;
-    color: #1a237e;
-    margin-bottom: 1rem;
-}
-
-.feature-content p {
-    color: var(--light-text);
-    font-size: 0.95rem;
-    margin-bottom: 1.5rem;
-}
-
-.feature-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    margin-bottom: 1.5rem;
-}
-
-.feature-list li {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
-}
-
-.feature-list li i {
-    color: var(--primary-color);
-    font-size: 1.1rem;
-    width: 24px;
-    height: 24px;
-    background: rgba(41, 98, 255, 0.1);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Method Selector */
 .method-selector {
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
+    margin-top: 1.5rem;
 }
 
 .method-btn {
@@ -1113,7 +1037,6 @@
     color: white;
 }
 
-/* Schedule Preview */
 .schedule-preview {
     background: rgba(41, 98, 255, 0.05);
     padding: 1.5rem;
@@ -1159,11 +1082,11 @@
     font-size: 0.85rem;
 }
 
-/* Report Actions */
 .report-actions {
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
+    margin-top: 1.5rem;
 }
 
 .report-btn {
@@ -1184,184 +1107,16 @@
     background: var(--primary-color);
     color: white;
 }
-
-/* Mobile Responsiveness */
-@media (max-width: 1024px) {
-    .depreciation-grid {
-        gap: 3rem;
-    }
-    
-    .chart-container {
-        height: 350px;
-    }
-
-    .feature-card {
-        padding: 1.75rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .depreciation-section {
-        padding: 4rem 0;
-    }
-
-    .depreciation-grid {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-    }
-
-    .depreciation-visual {
-        margin: 0 -1rem;
-        border-radius: 0;
-        padding: 1rem;
-    }
-
-    .chart-container {
-        height: 300px;
-    }
-
-    .chart-legend {
-        gap: 1rem;
-    }
-
-    .feature-card {
-        text-align: center;
-    }
-
-    .feature-icon {
-        margin: 0 auto 1.25rem;
-    }
-
-    .feature-list li {
-        justify-content: center;
-    }
-
-    .method-selector,
-    .report-actions {
-        justify-content: center;
-    }
-
-    .method-btn,
-    .report-btn {
-        width: 100%;
-    }
-}
-
-@media (max-width: 480px) {
-    .chart-container {
-        height: 250px;
-    }
-
-    .depreciation-visual {
-        padding: 0.75rem;
-    }
-
-    .feature-card {
-        padding: 1.5rem;
-    }
-
-    .feature-content h3 {
-        font-size: 1.2rem;
-    }
-
-    .feature-content p {
-        font-size: 0.9rem;
-    }
-
-    .method-btn,
-    .report-btn {
-        font-size: 0.85rem;
-        padding: 0.6rem 1rem;
-    }
-
-    .timeline-labels {
-        font-size: 0.8rem;
-    }
-}
-
-/* Touch Device Optimization */
-@media (hover: none) {
-    .feature-card:hover {
-        transform: none;
-    }
-
-    .report-btn:hover {
-        background: rgba(41, 98, 255, 0.1);
-        color: var(--primary-color);
-    }
-}
-</style>
-
-<script>
-// Initialize Depreciation Chart
-document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('depreciationChart').getContext('2d');
-    const chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'],
-            datasets: [{
-                label: 'Straight-line',
-                data: [100, 80, 60, 40, 20],
-                borderColor: 'rgba(41, 98, 255, 0.5)',
-                backgroundColor: 'rgba(41, 98, 255, 0.1)',
-                tension: 0.4
-            },
-            {
-                label: 'Double Declining',
-                data: [100, 50, 25, 12.5, 6.25],
-                borderColor: 'rgba(66, 165, 245, 0.5)',
-                backgroundColor: 'rgba(66, 165, 245, 0.1)',
-                tension: 0.4
-            },
-            {
-                label: 'Sum-of-Years',
-                data: [100, 70, 45, 25, 10],
-                borderColor: 'rgba(100, 181, 246, 0.5)',
-                backgroundColor: 'rgba(100, 181, 246, 0.1)',
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Asset Value (%)'
-                    }
-                }
-            }
-        }
-    });
-
-    // Method Button Handlers
-    const methodBtns = document.querySelectorAll('.method-btn');
-    methodBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            methodBtns.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-        });
-    });
-});
-</script>
-<!-- Maintenance Management Section -->
+        <!-- Maintenance Management Section -->
 <section class="maintenance-section">
     <div class="container">
         <div class="section-header">
             <h2>Maintenance Management</h2>
             <p>Extend asset lifespans and reduce downtime with proactive maintenance scheduling and tracking</p>
         </div>
-        <div class="maintenance-grid">
-            <div class="maintenance-features">
-                <div class="feature-card">
+        <div class="maintenance-grid grid-section">
+            <div class="maintenance-features features-column">
+                <div class="feature-card" data-aos="fade-up">
                     <div class="feature-icon">
                         <i class="fas fa-bell"></i>
                     </div>
@@ -1401,7 +1156,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
 
-                <div class="feature-card">
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
                     <div class="feature-icon">
                         <i class="fas fa-history"></i>
                     </div>
@@ -1441,7 +1196,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
 
-                <div class="feature-card">
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
                     <div class="feature-icon">
                         <i class="fas fa-tools"></i>
                     </div>
@@ -1525,19 +1280,11 @@ document.addEventListener('DOMContentLoaded', function() {
 </section>
 
 <style>
-/* Maintenance Section Styles */
+/* Maintenance Section Specific Styles */
 .maintenance-section {
     padding: 6rem 0;
     background: var(--card-bg);
     position: relative;
-}
-
-.maintenance-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-    align-items: start;
-    margin-top: 3rem;
 }
 
 .alert-preview {
@@ -1558,11 +1305,11 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .alert-item.upcoming {
-    border-left: 4px solid #ffc107;
+    border-left: 4px solid var(--warning-color);
 }
 
 .alert-item.overdue {
-    border-left: 4px solid #dc3545;
+    border-left: 4px solid var(--danger-color);
 }
 
 .alert-item i {
@@ -1570,11 +1317,11 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .alert-item.upcoming i {
-    color: #ffc107;
+    color: var(--warning-color);
 }
 
 .alert-item.overdue i {
-    color: #dc3545;
+    color: var(--danger-color);
 }
 
 .alert-content h4 {
@@ -1622,64 +1369,11 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .timeline-dot.completed {
-    background: #28a745;
+    background: var(--success-color);
 }
 
 .timeline-dot.pending {
-    background: #ffc107;
-}
-
-.timeline-content h4 {
-    font-size: 0.9rem;
-    margin-bottom: 0.25rem;
-    color: var(--text-color);
-}
-
-.timeline-content p {
-    font-size: 0.8rem;
-    color: var(--light-text);
-    margin: 0;
-}
-
-.vendor-preview {
-    margin-top: 1.5rem;
-}
-
-.vendor-cards {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-}
-
-.vendor-card {
-    background: white;
-    padding: 1rem;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    position: relative;
-}
-
-.vendor-rating {
-    position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.8rem;
-    color: #ffc107;
-}
-
-.vendor-card h4 {
-    font-size: 0.9rem;
-    margin-bottom: 0.25rem;
-    color: var(--text-color);
-}
-
-.vendor-card p {
-    font-size: 0.8rem;
-    color: var(--light-text);
-    margin: 0;
+    background: var(--warning-color);
 }
 
 .calendar-view {
@@ -1723,172 +1417,56 @@ document.addEventListener('DOMContentLoaded', function() {
     margin-bottom: 1.5rem;
 }
 
-.calendar-legend {
+.calendar-day {
+    aspect-ratio: 1;
+    padding: 0.5rem;
     display: flex;
-    justify-content: center;
-    gap: 2rem;
-}
-
-.legend-item {
-    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: center;
+    border-radius: 8px;
+    background: rgba(41, 98, 255, 0.05);
+}
+
+.calendar-day.header {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.day-number {
     font-size: 0.9rem;
+    color: var(--text-color);
 }
 
-.legend-dot {
-    width: 10px;
-    height: 10px;
+.maintenance-dot {
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
+    margin-top: 0.25rem;
 }
 
-.legend-dot.scheduled {
-    background: #ffc107;
+.maintenance-dot.scheduled {
+    background: var(--warning-color);
 }
 
-.legend-dot.completed {
-    background: #28a745;
+.maintenance-dot.completed {
+    background: var(--success-color);
 }
 
-.legend-dot.overdue {
-    background: #dc3545;
+.maintenance-dot.overdue {
+    background: var(--danger-color);
 }
-
-/* Mobile Responsiveness */
-@media (max-width: 1024px) {
-    .maintenance-grid {
-        gap: 3rem;
-    }
-
-    .vendor-cards {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 768px) {
-    .maintenance-section {
-        padding: 4rem 0;
-    }
-
-    .maintenance-grid {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-    }
-
-    .feature-card {
-        text-align: center;
-    }
-
-    .feature-icon {
-        margin: 0 auto 1.25rem;
-    }
-
-    .feature-list li {
-        justify-content: center;
-    }
-
-    .alert-item,
-    .timeline-item,
-    .vendor-card {
-        text-align: left;
-    }
-
-    .calendar-view {
-        margin: 0 -1rem;
-        border-radius: 0;
-        padding: 1.5rem;
-    }
-
-    .calendar-legend {
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .calendar-header {
-        flex-direction: column;
-        gap: 1rem;
-        text-align: center;
-    }
-
-    .alert-item {
-        padding: 0.75rem;
-    }
-
-    .vendor-card {
-        padding: 0.75rem;
-    }
-
-    .calendar-grid {
-        gap: 0.25rem;
-    }
-
-    .legend-item {
-        font-size: 0.8rem;
-    }
-}
-
-/* Touch Device Optimization */
-@media (hover: none) {
-    .calendar-btn:hover {
-        background: none;
-    }
-}
-</style>
-
-<script>
-// Initialize Calendar
-document.addEventListener('DOMContentLoaded', function() {
-    initializeCalendar();
-});
-
-function initializeCalendar() {
-    const calendarGrid = document.querySelector('.calendar-grid');
-    const daysInMonth = 31; // Example for October
-    const firstDay = 0; // Sunday
-
-    // Add day headers
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    days.forEach(day => {
-        const dayHeader = document.createElement('div');
-        dayHeader.className = 'calendar-day header';
-        dayHeader.textContent = day;
-        calendarGrid.appendChild(dayHeader);
-    });
-
-    // Add empty cells for days before first of month
-    for (let i = 0; i < firstDay; i++) {
-        const emptyDay = document.createElement('div');
-        emptyDay.className = 'calendar-day empty';
-        calendarGrid.appendChild(emptyDay);
-    }
-
-    // Add days of the month
-    for (let i = 1; i <= daysInMonth; i++) {
-        const dayCell = document.createElement('div');
-        dayCell.className = 'calendar-day';
-        dayCell.innerHTML = `
-            <span class="day-number">${i}</span>
-            ${i === 15 ? '<span class="maintenance-dot completed"></span>' : ''}
-            ${i === 22 ? '<span class="maintenance-dot scheduled"></span>' : ''}
-            ${i === 5 ? '<span class="maintenance-dot overdue"></span>' : ''}
-        `;
-        calendarGrid.appendChild(dayCell);
-    }
-}
-</script>
-<!-- Integration Capabilities Section -->
+        <!-- Integration Capabilities Section -->
 <section class="integration-section">
     <div class="container">
         <div class="section-header">
             <h2>Integration Capabilities</h2>
             <p>Enhance operational efficiency by integrating our asset management solution with your existing systems</p>
         </div>
-        <div class="integration-grid">
+        <div class="integration-grid grid-section">
             <div class="integration-visual">
                 <div class="visual-wrapper">
-                    <img src="image/integration-diagram.png" alt="Integration Diagram" class="main-image">
+                    <img src="image/integration-diagram.png" alt="Integration Diagram" class="main-image" loading="lazy">
                     <div class="connection-lines">
                         <svg class="connection-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
                             <path class="connection-path" d="M10,50 Q50,10 90,50"/>
@@ -1911,94 +1489,100 @@ function initializeCalendar() {
                     </div>
                 </div>
             </div>
-            <div class="integration-features">
-                <div class="integration-card">
+            <div class="integration-features features-column">
+                <div class="integration-card" data-aos="fade-up">
                     <div class="status-badge connected">Active</div>
-                    <div class="integration-icon">
+                    <div class="feature-icon">
                         <i class="fas fa-sync"></i>
                     </div>
-                    <h3>Accounting Software Sync</h3>
-                    <p>Seamlessly connect with popular accounting platforms for unified financial data</p>
-                    <ul class="feature-list">
-                        <li>
-                            <i class="fas fa-check"></i>
-                            <span>Real-time data sync</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-check"></i>
-                            <span>Automated reconciliation</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-check"></i>
-                            <span>Financial reporting</span>
-                        </li>
-                    </ul>
-                    <div class="integration-platforms">
-                        <img src="image/quickbooks-logo.png" alt="QuickBooks" class="platform-logo">
-                        <img src="image/sage-logo.png" alt="Sage" class="platform-logo">
-                        <img src="image/xero-logo.png" alt="Xero" class="platform-logo">
-                    </div>
-                </div>
-
-                <div class="integration-card">
-                    <div class="status-badge popular">Popular</div>
-                    <div class="integration-icon">
-                        <i class="fas fa-code"></i>
-                    </div>
-                    <h3>API Access</h3>
-                    <p>Enable custom integrations tailored to your business processes</p>
-                    <ul class="feature-list">
-                        <li>
-                            <i class="fas fa-check"></i>
-                            <span>RESTful API endpoints</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-check"></i>
-                            <span>Webhook support</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-check"></i>
-                            <span>Developer tools</span>
-                        </li>
-                    </ul>
-                    <div class="api-preview">
-                        <code>GET /api/v1/assets</code>
-                        <div class="api-response">
-                            <span class="response-status">200 OK</span>
+                    <div class="feature-content">
+                        <h3>Accounting Software Sync</h3>
+                        <p>Seamlessly connect with popular accounting platforms for unified financial data</p>
+                        <ul class="feature-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Real-time data sync</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Automated reconciliation</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Financial reporting</span>
+                            </li>
+                        </ul>
+                        <div class="integration-platforms">
+                            <img src="image/quickbooks-logo.png" alt="QuickBooks" class="platform-logo">
+                            <img src="image/sage-logo.png" alt="Sage" class="platform-logo">
+                            <img src="image/xero-logo.png" alt="Xero" class="platform-logo">
                         </div>
                     </div>
                 </div>
 
-                <div class="integration-card">
+                <div class="integration-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="status-badge popular">Popular</div>
+                    <div class="feature-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3>API Access</h3>
+                        <p>Enable custom integrations tailored to your business processes</p>
+                        <ul class="feature-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>RESTful API endpoints</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Webhook support</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Developer tools</span>
+                            </li>
+                        </ul>
+                        <div class="api-preview">
+                            <code>GET /api/v1/assets</code>
+                            <div class="api-response">
+                                <span class="response-status">200 OK</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="integration-card" data-aos="fade-up" data-aos-delay="200">
                     <div class="status-badge new">New</div>
-                    <div class="integration-icon">
+                    <div class="feature-icon">
                         <i class="fas fa-mobile-alt"></i>
                     </div>
-                    <h3>Mobile Accessibility</h3>
-                    <p>Manage assets on-the-go with our mobile-friendly interface</p>
-                    <ul class="feature-list">
-                        <li>
-                            <i class="fas fa-check"></i>
-                            <span>Native mobile apps</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-check"></i>
-                            <span>Offline capabilities</span>
-                        </li>
-                        <li>
-                            <i class="fas fa-check"></i>
-                            <span>Push notifications</span>
-                        </li>
-                    </ul>
-                    <div class="app-stores">
-                        <button class="store-btn">
-                            <i class="fab fa-apple"></i>
-                            App Store
-                        </button>
-                        <button class="store-btn">
-                            <i class="fab fa-google-play"></i>
-                            Google Play
-                        </button>
+                    <div class="feature-content">
+                        <h3>Mobile Accessibility</h3>
+                        <p>Manage assets on-the-go with our mobile-friendly interface</p>
+                        <ul class="feature-list">
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Native mobile apps</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Offline capabilities</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-check"></i>
+                                <span>Push notifications</span>
+                            </li>
+                        </ul>
+                        <div class="app-stores">
+                            <button class="store-btn">
+                                <i class="fab fa-apple"></i>
+                                App Store
+                            </button>
+                            <button class="store-btn">
+                                <i class="fab fa-google-play"></i>
+                                Google Play
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2007,27 +1591,11 @@ function initializeCalendar() {
 </section>
 
 <style>
-/* Integration Section Styles */
+/* Integration Section Specific Styles */
 .integration-section {
     padding: 6rem 0;
     background: var(--gradient);
     position: relative;
-}
-
-.integration-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-    align-items: center;
-    margin-top: 3rem;
-}
-
-.visual-wrapper {
-    position: relative;
-    background: white;
-    padding: 2rem;
-    border-radius: 20px;
-    box-shadow: var(--box-shadow);
 }
 
 .connection-lines {
@@ -2099,18 +1667,8 @@ function initializeCalendar() {
 }
 
 .integration-card {
-    background: white;
-    padding: 2.5rem;
-    border-radius: 16px;
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
     position: relative;
-    margin-bottom: 1.5rem;
-}
-
-.integration-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    padding: 2.5rem;
 }
 
 .status-badge {
@@ -2125,7 +1683,7 @@ function initializeCalendar() {
 
 .status-badge.connected {
     background: rgba(40, 167, 69, 0.1);
-    color: #28a745;
+    color: var(--success-color);
 }
 
 .status-badge.popular {
@@ -2135,7 +1693,7 @@ function initializeCalendar() {
 
 .status-badge.new {
     background: rgba(255, 193, 7, 0.1);
-    color: #ffc107;
+    color: var(--warning-color);
 }
 
 .integration-platforms {
@@ -2172,7 +1730,7 @@ function initializeCalendar() {
 }
 
 .response-status {
-    color: #28a745;
+    color: var(--success-color);
     font-size: 0.9rem;
 }
 
@@ -2202,31 +1760,7 @@ function initializeCalendar() {
 }
 
 /* Mobile Responsiveness */
-@media (max-width: 1024px) {
-    .integration-grid {
-        gap: 3rem;
-    }
-    
-    .integration-card {
-        padding: 2rem;
-    }
-}
-
 @media (max-width: 768px) {
-    .integration-section {
-        padding: 4rem 0;
-    }
-
-    .integration-grid {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-    }
-
-    .visual-wrapper {
-        margin: 0 -1rem;
-        border-radius: 0;
-    }
-
     .integration-nodes {
         flex-direction: column;
         padding: 1rem;
@@ -2238,56 +1772,24 @@ function initializeCalendar() {
         margin: 0.5rem 0;
     }
 
-    .integration-card {
-        text-align: center;
-    }
-
-    .integration-icon {
-        margin: 0 auto 1.25rem;
-    }
-
-    .feature-list li {
-        justify-content: center;
-    }
-
     .integration-platforms,
     .app-stores {
         justify-content: center;
     }
-}
-
-@media (max-width: 480px) {
-    .integration-card {
-        padding: 1.5rem;
-    }
-
-    .status-badge {
-        font-size: 0.8rem;
-        padding: 0.4rem 0.8rem;
-    }
 
     .store-btn {
         width: 100%;
-        justify-content: center;
-    }
-
-    .platform-logo {
-        height: 25px;
     }
 }
 
-/* Touch Device Optimization */
-@media (hover: none) {
-    .integration-card:hover {
-        transform: none;
+@media (max-width: 480px) {
+    .platform-logo {
+        height: 25px;
     }
 
-    .node:hover {
-        transform: none;
-    }
-
-    .store-btn:hover {
-        background: var(--text-color);
+    .api-preview {
+        font-size: 0.8rem;
+        padding: 0.75rem;
     }
 }
 </style>
@@ -2298,9 +1800,9 @@ function initializeCalendar() {
             <h2>Advanced Analytics and Reporting</h2>
             <p>Make informed decisions with in-depth analytics and customizable reports on asset performance</p>
         </div>
-        <div class="analytics-grid">
-            <div class="analytics-features">
-                <div class="analytics-card">
+        <div class="analytics-grid grid-section">
+            <div class="analytics-features features-column">
+                <div class="analytics-card" data-aos="fade-up">
                     <div class="card-icon">
                         <i class="fas fa-chart-line"></i>
                     </div>
@@ -2328,7 +1830,7 @@ function initializeCalendar() {
                     </div>
                 </div>
 
-                <div class="analytics-card">
+                <div class="analytics-card" data-aos="fade-up" data-aos-delay="100">
                     <div class="card-icon">
                         <i class="fas fa-file-alt"></i>
                     </div>
@@ -2362,7 +1864,7 @@ function initializeCalendar() {
                     </div>
                 </div>
 
-                <div class="analytics-card">
+                <div class="analytics-card" data-aos="fade-up" data-aos-delay="200">
                     <div class="card-icon">
                         <i class="fas fa-download"></i>
                     </div>
@@ -2407,7 +1909,7 @@ function initializeCalendar() {
                             <div class="date-range">Last 30 Days</div>
                         </div>
                         <div class="chart-container">
-                            <canvas id="mainChart" width="600" height="400"></canvas>
+                            <canvas id="mainChart"></canvas>
                         </div>
                         <div class="dashboard-metrics">
                             <div class="metric-box">
@@ -2462,19 +1964,11 @@ function initializeCalendar() {
 </section>
 
 <style>
-/* Analytics Section Styles */
+/* Analytics Section Specific Styles */
 .analytics-section {
     padding: 6rem 0;
     background: var(--card-bg);
     position: relative;
-}
-
-.analytics-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-    align-items: start;
-    margin-top: 3rem;
 }
 
 .analytics-card {
@@ -2486,11 +1980,6 @@ function initializeCalendar() {
     margin-bottom: 1.5rem;
 }
 
-.analytics-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-}
-
 .metrics-preview {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -2498,30 +1987,11 @@ function initializeCalendar() {
     margin: 1.5rem 0;
 }
 
-.metric-item {
-    background: rgba(41, 98, 255, 0.05);
-    padding: 1.25rem;
-    border-radius: 12px;
-    text-align: center;
-}
-
-.metric-value {
-    display: block;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--primary-color);
-    margin-bottom: 0.25rem;
-}
-
-.metric-label {
-    font-size: 0.9rem;
-    color: var(--light-text);
-}
-
 .chart-filters {
     display: flex;
     gap: 0.5rem;
     margin-top: 1rem;
+    flex-wrap: wrap;
 }
 
 .filter-btn {
@@ -2601,37 +2071,10 @@ function initializeCalendar() {
     transition: var(--transition);
 }
 
-.export-btn i {
-    font-size: 1.25rem;
-}
-
 .export-history {
     margin-top: 1.5rem;
     padding-top: 1.5rem;
     border-top: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.export-history h4 {
-    margin-bottom: 1rem;
-    font-size: 1rem;
-    color: var(--text-color);
-}
-
-.history-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 0;
-    font-size: 0.9rem;
-}
-
-.history-item i {
-    color: var(--primary-color);
-}
-
-.history-item small {
-    margin-left: auto;
-    color: var(--light-text);
 }
 
 .dashboard-preview {
@@ -2639,21 +2082,6 @@ function initializeCalendar() {
     padding: 2rem;
     border-radius: 20px;
     box-shadow: var(--box-shadow);
-}
-
-.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.date-range {
-    padding: 0.5rem 1rem;
-    background: rgba(41, 98, 255, 0.1);
-    color: var(--primary-color);
-    border-radius: 20px;
-    font-size: 0.9rem;
 }
 
 .dashboard-metrics {
@@ -2670,30 +2098,16 @@ function initializeCalendar() {
     text-align: center;
 }
 
-.metric-box h4 {
-    font-size: 0.9rem;
-    color: var(--light-text);
-    margin-bottom: 0.5rem;
-}
-
-.metric-box .value {
-    display: block;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-color);
-    margin-bottom: 0.25rem;
-}
-
 .trend {
     font-size: 0.85rem;
 }
 
 .trend.positive {
-    color: #28a745;
+    color: var(--success-color);
 }
 
 .trend.negative {
-    color: #dc3545;
+    color: var(--danger-color);
 }
 
 /* CTA Section Styles */
@@ -2707,18 +2121,6 @@ function initializeCalendar() {
 .cta-content {
     max-width: 800px;
     margin: 0 auto;
-}
-
-.cta-content h2 {
-    font-size: clamp(2rem, 4vw, 3rem);
-    color: #1a237e;
-    margin-bottom: 1.5rem;
-}
-
-.cta-content p {
-    font-size: clamp(1.1rem, 2vw, 1.25rem);
-    color: var(--light-text);
-    margin-bottom: 2.5rem;
 }
 
 .cta-features {
@@ -2740,33 +2142,14 @@ function initializeCalendar() {
 }
 
 /* Mobile Responsiveness */
-@media (max-width: 1024px) {
-    .analytics-grid {
-        gap: 3rem;
-    }
-    
-    .dashboard-metrics {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
 @media (max-width: 768px) {
     .analytics-section,
     .cta-section {
         padding: 4rem 0;
     }
 
-    .analytics-grid {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-    }
-
-    .analytics-card {
-        padding: 1.75rem;
-        text-align: center;
-    }
-
-    .metrics-preview {
+    .metrics-preview,
+    .dashboard-metrics {
         grid-template-columns: 1fr;
     }
 
@@ -2774,26 +2157,22 @@ function initializeCalendar() {
         grid-template-columns: 1fr;
     }
 
+    .chart-filters,
+    .cta-features {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .filter-btn,
+    .export-btn,
+    .generate-btn {
+        width: 100%;
+    }
+
     .dashboard-preview {
         margin: 0 -1rem;
         border-radius: 0;
-    }
-
-    .dashboard-metrics {
-        grid-template-columns: 1fr;
-    }
-
-    .cta-buttons {
-        flex-direction: column;
-        gap: 1rem;
-        max-width: 300px;
-        margin: 0 auto;
-    }
-
-    .cta-features {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: center;
+        padding: 1.5rem;
     }
 }
 
@@ -2802,35 +2181,17 @@ function initializeCalendar() {
         padding: 1.5rem;
     }
 
-    .metric-value {
-        font-size: 1.25rem;
-    }
-
-    .filter-btn {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.85rem;
-    }
-
     .dashboard-header {
         flex-direction: column;
         gap: 1rem;
-        text-align: center;
-    }
-}
-
-/* Touch Device Optimization */
-@media (hover: none) {
-    .analytics-card:hover {
-        transform: none;
     }
 
-    .export-btn:hover {
-        background: rgba(41, 98, 255, 0.1);
+    .cta-content h2 {
+        font-size: 1.8rem;
     }
 }
 </style>
-    </main>
-    <!-- Footer -->
+<!-- Footer -->
 <footer class="main-footer">
     <div class="container">
         <div class="footer-social">
@@ -2899,6 +2260,7 @@ function initializeCalendar() {
         </div>
     </div>
 </footer>
+
 <style>
 /* Footer Styles */
 .main-footer {
@@ -2929,7 +2291,7 @@ function initializeCalendar() {
 .social-link {
     color: rgba(255, 255, 255, 0.7);
     font-size: 1.25rem;
-    transition: all 0.3s ease;
+    transition: var(--transition);
 }
 
 .social-link:hover {
@@ -2981,7 +2343,7 @@ function initializeCalendar() {
 .footer-section ul li a {
     color: rgba(255, 255, 255, 0.7);
     text-decoration: none;
-    transition: all 0.3s ease;
+    transition: var(--transition);
     font-size: 0.95rem;
     display: inline-block;
     padding: 0.3rem 0;
@@ -3038,9 +2400,7 @@ function initializeCalendar() {
     }
 
     .footer-grid {
-        grid-template-columns: repeat(2, 1fr);
         gap: 2.5rem;
-        margin-bottom: 3rem;
     }
 
     .footer-section {
@@ -3055,26 +2415,12 @@ function initializeCalendar() {
     .footer-section ul li a:hover {
         transform: translateX(0);
     }
-
-    .social-link {
-        font-size: 1.2rem;
-    }
 }
 
 @media (max-width: 480px) {
-    .main-footer {
-        padding: 3rem 0 1.5rem;
-    }
-
-    .footer-social {
-        margin-bottom: 2rem;
-        gap: 1.25rem;
-    }
-
     .footer-grid {
         grid-template-columns: 1fr;
         gap: 2rem;
-        margin-bottom: 2rem;
     }
 
     .footer-section {
@@ -3083,70 +2429,11 @@ function initializeCalendar() {
 
     .footer-section h4 {
         font-size: 1.1rem;
-        margin-bottom: 1rem;
-    }
-
-    .footer-section ul li {
-        margin-bottom: 0.6rem;
     }
 
     .footer-section ul li a {
         font-size: 0.9rem;
     }
-
-    .social-link {
-        font-size: 1.1rem;
-    }
-
-    .footer-bottom {
-        padding-top: 1.5rem;
-    }
-
-    .footer-bottom p {
-        font-size: 0.85rem;
-    }
-}
-
-/* Additional Footer Responsive Adjustments */
-@media (max-width: 360px) {
-    .footer-social {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 1rem;
-    }
-
-    .footer-section {
-        padding: 0 0.5rem;
-    }
-
-    .footer-section h4 {
-        font-size: 1rem;
-    }
-
-    .footer-section ul li a {
-        font-size: 0.85rem;
-    }
-}
-
-/* Notification Styles */
-.notification {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: #28a745;
-    color: white;
-    padding: 1rem 2rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transform: translateY(100px);
-    opacity: 0;
-    transition: all 0.3s ease;
-    z-index: 1000;
-}
-
-.notification.show {
-    transform: translateY(0);
-    opacity: 1;
 }
 
 /* Touch Device Optimization */
@@ -3158,17 +2445,10 @@ function initializeCalendar() {
     .footer-section ul li a:hover {
         transform: none;
     }
-
-    .footer-section h4::after {
-        transition: none;
-    }
-
-    .footer-section:hover h4::after {
-        width: 30px;
-    }
 }
 </style>
-
+    </main>
+        
 <script>
 // Chart Instance Management
 const chartInstances = new Map();
@@ -3177,6 +2457,7 @@ const chartInstances = new Map();
 document.addEventListener('DOMContentLoaded', function() {
     loadHeader().then(() => {
         initializeAll();
+    });
 });
 
 // Header Loading Function
@@ -3197,18 +2478,28 @@ async function loadHeader() {
                 <div class="container">
                     <div class="header-content">
                         <a href="/" class="logo">
-                            <span>Workwise Pro</span>
+                            <img src="image/logo.png" alt="Workwise Pro" class="logo-img">
                         </a>
-                        <nav class="main-nav">
+                        <nav class="main-nav" id="main-nav">
                             <ul class="nav-list">
-                                <li><a href="#home">Home</a></li>
+                                <li><a href="index.html">Home</a></li>
+                                <li><a href="invoice.html">Invoice</a></li>
+                                <li><a href="bill.html">Billing</a></li>
+                                <li><a href="asset.html">Assets</a></li>
                                 <li><a href="#contact">Contact</a></li>
                             </ul>
                         </nav>
+                        <button class="mobile-menu-btn" id="mobile-menu">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
                     </div>
                 </div>
+                <div class="menu-overlay" id="menu-overlay"></div>
             </header>
         `;
+        initializeMobileMenu();
     }
 }
 
@@ -3218,7 +2509,6 @@ function initializeAll() {
     handleScrollEffects();
     setupInteractions();
     
-    // Conditional initializations
     if (document.querySelector('.metric-chart')) {
         initializeMetrics();
     }
@@ -3237,10 +2527,113 @@ function initializeAll() {
         initializeCalendar();
     }
 
-    // Initialize main chart if exists
     if (document.getElementById('mainChart')) {
         initializeCharts();
     }
+}
+
+// Mobile Menu Initialization
+function initializeMobileMenu() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mainNav = document.getElementById('main-nav');
+    const menuOverlay = document.getElementById('menu-overlay');
+    const megaMenus = document.querySelectorAll('.mega-menu');
+
+    if (mobileMenu && mainNav) {
+        let isMenuOpen = false;
+
+        function toggleMenu(show) {
+            isMenuOpen = show;
+            mobileMenu.classList.toggle('active', show);
+            mainNav.classList.toggle('active', show);
+            if (menuOverlay) menuOverlay.classList.toggle('active', show);
+            document.body.style.overflow = show ? 'hidden' : '';
+
+            if (!show) {
+                megaMenus.forEach(menu => menu.classList.remove('active'));
+            }
+        }
+
+        mobileMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMenu(!isMenuOpen);
+        });
+
+        // Handle mega menus on mobile
+        megaMenus.forEach(menu => {
+            const link = menu.querySelector('a');
+            if (link) {
+                link.addEventListener('click', (e) => {
+                    if (window.innerWidth <= 768) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        megaMenus.forEach(m => {
+                            if (m !== menu) m.classList.remove('active');
+                        });
+                        menu.classList.toggle('active');
+                    }
+                });
+            }
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
+                toggleMenu(false);
+            }
+        });
+    }
+}
+
+// Animation Handler
+function initializeAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                requestAnimationFrame(() => {
+                    entry.target.classList.add('animate-in');
+                    if (entry.target.classList.contains('progress-fill')) {
+                        const width = entry.target.dataset.progress;
+                        entry.target.style.width = width;
+                    }
+                });
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.feature-card, .tax-card, .compliance-card, .integration-card, .progress-fill')
+        .forEach(el => observer.observe(el));
+}
+
+// Scroll Effects Handler
+function handleScrollEffects() {
+    let lastScroll = 0;
+    let ticking = false;
+    const header = document.querySelector('.main-header');
+
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            window.requestAnimationFrame(() => {
+                const currentScroll = window.pageYOffset;
+                
+                if (currentScroll > lastScroll && currentScroll > 100) {
+                    header?.classList.add('header-hidden');
+                } else {
+                    header?.classList.remove('header-hidden');
+                }
+                
+                lastScroll = currentScroll;
+                ticking = false;
+            });
+
+            ticking = true;
+        }
+    });
 }
     // Initialize Charts Function
 function initializeCharts() {
@@ -3451,7 +2844,8 @@ function initializeDepreciationChart() {
     chartInstances.set('depreciationChart', chart);
     return chart;
 }
-    // Method Buttons Initialization
+
+// Method Buttons Initialization
 function initializeMethodButtons() {
     const methodButtons = document.querySelectorAll('.method-btn');
     const chart = chartInstances.get('depreciationChart');
@@ -3492,8 +2886,7 @@ function updateChartView(method, chart) {
 
     chart.update('none'); // Use 'none' for better performance
 }
-
-// Initialize Metrics
+    // Initialize Metrics
 function initializeMetrics() {
     const charts = document.querySelectorAll('.metric-chart');
     charts.forEach((chart, index) => {
@@ -3563,168 +2956,103 @@ function initializeReportActions() {
     });
 }
 
-// Initialize Pricing
-function initializePricing() {
-    const billingToggle = document.getElementById('billing-toggle');
-    const countrySelect = document.getElementById('country-select');
-    const priceElements = document.querySelectorAll('.price');
-    const currencySymbols = document.querySelectorAll('.currency-symbol');
-    const amounts = document.querySelectorAll('.amount');
-    const periods = document.querySelectorAll('.period');
+// Calendar Initialization
+function initializeCalendar() {
+    const calendarGrid = document.querySelector('.calendar-grid');
+    if (!calendarGrid) return;
 
-    let currentCurrency = 'USD';
-    let isYearly = false;
+    const daysInMonth = 31; // Example for October
+    const firstDay = 0; // Sunday
 
-    function updatePricing() {
-        const config = pricingConfig[currentCurrency];
-        const priceType = isYearly ? 'yearly' : 'monthly';
-        const periodText = isYearly ? '/month/year' : '/month';
+    // Add day headers
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    days.forEach(day => {
+        const dayHeader = document.createElement('div');
+        dayHeader.className = 'calendar-day header';
+        dayHeader.textContent = day;
+        calendarGrid.appendChild(dayHeader);
+    });
 
-        currencySymbols.forEach(symbol => {
-            symbol.textContent = config.symbol;
-        });
-
-        amounts.forEach((amount, index) => {
-            if (amount.closest('.price').querySelector('.custom')) return;
-
-            const planType = index === 0 ? 'basic' : 'professional';
-            const newPrice = config[priceType][planType];
-
-            amount.closest('.price').classList.add('animating');
-            animateNumberChange(amount, newPrice);
-
-            setTimeout(() => {
-                amount.closest('.price').classList.remove('animating');
-            }, 400);
-        });
-
-        periods.forEach(period => {
-            period.textContent = periodText;
-        });
+    // Add empty cells for days before first of month
+    for (let i = 0; i < firstDay; i++) {
+        const emptyDay = document.createElement('div');
+        emptyDay.className = 'calendar-day empty';
+        calendarGrid.appendChild(emptyDay);
     }
 
-    // Number Animation Helper
-    function animateNumberChange(element, newValue) {
-        const start = parseInt(element.textContent);
-        const end = newValue;
-        const duration = 400;
-        const startTime = performance.now();
-
-        function update(currentTime) {
-            const elapsed = currentTime - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-
-            const current = Math.round(start + (end - start) * progress);
-            element.textContent = current;
-
-            if (progress < 1) {
-                requestAnimationFrame(update);
-            }
-        }
-
-        requestAnimationFrame(update);
+    // Add days of the month
+    for (let i = 1; i <= daysInMonth; i++) {
+        const dayCell = document.createElement('div');
+        dayCell.className = 'calendar-day';
+        dayCell.innerHTML = `
+            <span class="day-number">${i}</span>
+            ${i === 15 ? '<span class="maintenance-dot completed"></span>' : ''}
+            ${i === 22 ? '<span class="maintenance-dot scheduled"></span>' : ''}
+            ${i === 5 ? '<span class="maintenance-dot overdue"></span>' : ''}
+        `;
+        calendarGrid.appendChild(dayCell);
     }
 
-    // Event Listeners
-    if (billingToggle) {
-        billingToggle.addEventListener('change', () => {
-            isYearly = billingToggle.checked;
-            updatePricing();
+    // Initialize calendar controls
+    const prevBtn = document.querySelector('.calendar-btn:first-child');
+    const nextBtn = document.querySelector('.calendar-btn:last-child');
+    
+    if (prevBtn && nextBtn) {
+        prevBtn.addEventListener('click', () => {
+            // Handle previous month
+            showNotification('Previous month functionality will be implemented');
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            // Handle next month
+            showNotification('Next month functionality will be implemented');
         });
     }
-
-    if (countrySelect) {
-        countrySelect.addEventListener('change', () => {
-            currentCurrency = countrySelect.value;
-            updatePricing();
-        });
-    }
-
-    // Initial pricing update
-    updatePricing();
 }
 
-// Global Resize Handler
-let globalResizeTimer;
-window.addEventListener('resize', function() {
-    clearTimeout(globalResizeTimer);
-    globalResizeTimer = setTimeout(function() {
-        chartInstances.forEach(chart => {
-            if (chart && typeof chart.resize === 'function') {
-                chart.resize();
-            }
+// Setup Interactions
+function setupInteractions() {
+    // Filter button interactions
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            filterButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Add filter functionality here
+            showNotification(`Filter applied: ${this.textContent.trim()}`);
         });
-    }, 250);
-});
-
-// Error Handler
-window.addEventListener('error', function(e) {
-    console.error('Global error handler:', e.error);
-    // Prevent chart errors from breaking the page
-    if (e.error?.message?.includes('Chart')) {
-        e.preventDefault();
-    }
-});
-
-// Cleanup function for page unload
-window.addEventListener('beforeunload', function() {
-    // Destroy all chart instances
-    chartInstances.forEach(chart => {
-        if (chart && typeof chart.destroy === 'function') {
-            chart.destroy();
-        }
     });
-    // Mobile Menu Initialization
-function initializeMobileMenu() {
-    const mobileMenu = document.getElementById('mobile-menu');
-    const mainNav = document.getElementById('main-nav');
-    const menuOverlay = document.getElementById('menu-overlay');
-    const megaMenus = document.querySelectorAll('.mega-menu');
 
-    if (mobileMenu && mainNav) {
-        let isMenuOpen = false;
-
-        function toggleMenu(show) {
-            isMenuOpen = show;
-            mobileMenu.classList.toggle('active', show);
-            mainNav.classList.toggle('active', show);
-            if (menuOverlay) menuOverlay.classList.toggle('active', show);
-            document.body.style.overflow = show ? 'hidden' : '';
-
-            if (!show) {
-                megaMenus.forEach(menu => menu.classList.remove('active'));
-            }
-        }
-
-        mobileMenu.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleMenu(!isMenuOpen);
+    // Export button interactions
+    const exportButtons = document.querySelectorAll('.export-btn');
+    exportButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const format = this.textContent.trim();
+            simulateExport(format);
         });
+    });
 
-        // Handle mega menus on mobile
-        megaMenus.forEach(menu => {
-            const link = menu.querySelector('a');
-            if (link) {
-                link.addEventListener('click', (e) => {
-                    if (window.innerWidth <= 768) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        megaMenus.forEach(m => {
-                            if (m !== menu) m.classList.remove('active');
-                        });
-                        menu.classList.toggle('active');
-                    }
-                });
-            }
-        });
-
-        // Close menu when clicking outside
-        document.addEventListener('click', (e) => {
-            if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
-                toggleMenu(false);
-            }
+    // Generate report button
+    const generateBtn = document.querySelector('.generate-btn');
+    if (generateBtn) {
+        generateBtn.addEventListener('click', function() {
+            const reportType = document.querySelector('.report-select').value;
+            simulateReportGeneration(reportType);
         });
     }
+}
+
+// Simulate Export
+function simulateExport(format) {
+    showNotification(`Exporting report in ${format} format...`);
+    // Add actual export functionality here
+}
+
+// Simulate Report Generation
+function simulateReportGeneration(reportType) {
+    showNotification(`Generating ${reportType} report...`);
+    // Add actual report generation functionality here
 }
 
 // Enhanced Notification System
@@ -3774,128 +3102,224 @@ function showNotification(message) {
         }, 3000);
     });
 }
+    // Performance Monitoring and Optimization
+function initializePerformanceMonitoring() {
+    if (window.performance) {
+        // Navigation Timing API
+        window.addEventListener('load', function() {
+            const timing = window.performance.timing;
+            const pageLoadTime = timing.loadEventEnd - timing.navigationStart;
+            console.log('Page load time:', pageLoadTime + 'ms');
 
-// Calendar Initialization with Enhanced Features
-function initializeCalendar() {
-    const calendarEvents = document.querySelectorAll('.calendar-event');
-    
-    calendarEvents.forEach(event => {
-        event.addEventListener('click', () => {
-            // Remove expanded class from other events
-            calendarEvents.forEach(otherEvent => {
-                if (otherEvent !== event) {
-                    otherEvent.classList.remove('expanded');
-                }
-            });
-            
-            event.classList.toggle('expanded');
+            // Report performance metrics
+            const metrics = {
+                dns: timing.domainLookupEnd - timing.domainLookupStart,
+                tcp: timing.connectEnd - timing.connectStart,
+                ttfb: timing.responseStart - timing.requestStart,
+                domLoad: timing.domContentLoadedEventEnd - timing.navigationStart,
+                fullLoad: timing.loadEventEnd - timing.navigationStart
+            };
 
-            // Scroll event into view if it's expanded
-            if (event.classList.contains('expanded')) {
-                event.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
+            console.table(metrics);
         });
-    });
 
-    // Close expanded events when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.calendar-event')) {
-            calendarEvents.forEach(event => {
-                event.classList.remove('expanded');
-            });
-        }
-    });
-}
-
-// Animation Handler with Performance Optimization
-function initializeAnimations() {
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                requestAnimationFrame(() => {
-                    entry.target.classList.add('animate-in');
-                    if (entry.target.classList.contains('progress-fill')) {
-                        const width = entry.target.dataset.progress;
-                        entry.target.style.width = width;
+        // Performance Observer
+        if ('PerformanceObserver' in window) {
+            const observer = new PerformanceObserver((list) => {
+                for (const entry of list.getEntries()) {
+                    if (entry.entryType === 'largest-contentful-paint') {
+                        console.log('LCP:', entry.startTime);
                     }
-                });
-            }
-        });
-    }, observerOptions);
-
-    document.querySelectorAll('.feature-card, .tax-card, .compliance-card, .integration-card, .progress-fill')
-        .forEach(el => observer.observe(el));
-}
-
-// Scroll Effects Handler with Throttling
-function handleScrollEffects() {
-    let lastScroll = 0;
-    let ticking = false;
-    const header = document.querySelector('.main-header');
-
-    window.addEventListener('scroll', () => {
-        if (!ticking) {
-            window.requestAnimationFrame(() => {
-                const currentScroll = window.pageYOffset;
-                
-                if (currentScroll > lastScroll && currentScroll > 100) {
-                    header?.classList.add('header-hidden');
-                } else {
-                    header?.classList.remove('header-hidden');
                 }
-                
-                lastScroll = currentScroll;
-                ticking = false;
             });
 
-            ticking = true;
+            observer.observe({ entryTypes: ['largest-contentful-paint'] });
         }
-    });
+    }
 }
 
-// Watson Assistant Chat Integration with Error Handling
-window.watsonAssistantChatOptions = {
-    integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
-    region: "au-syd",
-    serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
-    onLoad: async (instance) => {
-        try {
-            await instance.render();
-        } catch (error) {
-            console.error('Watson Assistant failed to load:', error);
-            showNotification('Chat support is temporarily unavailable');
+// Error Handling and Reporting
+const errorHandler = {
+    init: function() {
+        window.addEventListener('error', this.handleError.bind(this));
+        window.addEventListener('unhandledrejection', this.handlePromiseError.bind(this));
+    },
+
+    handleError: function(event) {
+        console.error('Global error handler:', event.error);
+        
+        // Prevent chart errors from breaking the page
+        if (event.error?.message?.includes('Chart')) {
+            event.preventDefault();
+            this.recoverChart(event);
         }
+
+        // Log error to analytics (implement your own error logging)
+        this.logError({
+            type: 'runtime',
+            message: event.error?.message,
+            stack: event.error?.stack,
+            location: window.location.href
+        });
+    },
+
+    handlePromiseError: function(event) {
+        console.error('Unhandled Promise Rejection:', event.reason);
+        
+        this.logError({
+            type: 'promise',
+            message: event.reason?.message,
+            stack: event.reason?.stack,
+            location: window.location.href
+        });
+    },
+
+    recoverChart: function(event) {
+        const chartId = event.target?.id || '';
+        if (chartId && chartInstances.has(chartId)) {
+            const chart = chartInstances.get(chartId);
+            try {
+                chart.destroy();
+                // Attempt to reinitialize the chart
+                if (chartId === 'depreciationChart') {
+                    initializeDepreciationChart();
+                } else if (chartId === 'mainChart') {
+                    initializeCharts();
+                }
+            } catch (e) {
+                console.error('Failed to recover chart:', e);
+            }
+        }
+    },
+
+    logError: function(errorData) {
+        // Implement your error logging logic here
+        console.error('Error logged:', errorData);
     }
 };
 
-// Load Watson Assistant Script
-setTimeout(function() {
-    try {
-        const t = document.createElement('script');
-        t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
-            (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
-            "/WatsonAssistantChatEntry.js";
-        document.head.appendChild(t);
-    } catch (error) {
-        console.error('Failed to load Watson Assistant script:', error);
-    }
-}, 0);
+// Resource Loading Optimization
+function optimizeResourceLoading() {
+    // Lazy load images
+    document.querySelectorAll('img[loading="lazy"]').forEach(img => {
+        if ('loading' in HTMLImageElement.prototype) {
+            img.loading = 'lazy';
+        } else {
+            // Fallback for browsers that don't support lazy loading
+            const lazyImageObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        lazyImageObserver.unobserve(img);
+                    }
+                });
+            });
+            lazyImageObserver.observe(img);
+        }
+    });
 
-// Performance Monitoring
-if (window.performance) {
-    window.addEventListener('load', function() {
-        const timing = window.performance.timing;
-        const pageLoadTime = timing.loadEventEnd - timing.navigationStart;
-        console.log('Page load time:', pageLoadTime + 'ms');
+    // Preload critical resources
+    const preloadLinks = [
+        { rel: 'preload', as: 'style', href: 'critical.css' },
+        { rel: 'preload', as: 'script', href: 'critical.js' }
+    ];
+
+    preloadLinks.forEach(link => {
+        const linkElement = document.createElement('link');
+        linkElement.rel = link.rel;
+        linkElement.as = link.as;
+        linkElement.href = link.href;
+        document.head.appendChild(linkElement);
     });
 }
-    chartInstances.clear();
+
+// Cleanup Functions
+function initializeCleanup() {
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function() {
+        // Destroy all chart instances
+        chartInstances.forEach(chart => {
+            if (chart && typeof chart.destroy === 'function') {
+                chart.destroy();
+            }
+        });
+        chartInstances.clear();
+
+        // Clear any running animations
+        cancelAnimationFrame(window.rafId);
+
+        // Clear intervals and timeouts
+        const highestId = window.setTimeout(() => {}, 0);
+        for (let i = 0; i < highestId; i++) {
+            window.clearTimeout(i);
+        }
+    });
+
+    // Cleanup on visibility change
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            // Pause animations and non-essential operations
+            document.querySelectorAll('.animate-in').forEach(el => {
+                el.style.animationPlayState = 'paused';
+            });
+        } else {
+            // Resume animations
+            document.querySelectorAll('.animate-in').forEach(el => {
+                el.style.animationPlayState = 'running';
+            });
+        }
+    });
+}
+
+// Watson Assistant Chat Integration
+function initializeWatsonAssistant() {
+    window.watsonAssistantChatOptions = {
+        integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
+        region: "au-syd",
+        serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
+        onLoad: async (instance) => {
+            try {
+                await instance.render();
+            } catch (error) {
+                console.error('Watson Assistant failed to load:', error);
+                showNotification('Chat support is temporarily unavailable');
+            }
+        }
+    };
+
+    setTimeout(function() {
+        try {
+            const t = document.createElement('script');
+            t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
+                (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
+                "/WatsonAssistantChatEntry.js";
+            document.head.appendChild(t);
+        } catch (error) {
+            console.error('Failed to load Watson Assistant script:', error);
+        }
+    }, 0);
+}
+
+// Initialize everything
+initializePerformanceMonitoring();
+errorHandler.init();
+optimizeResourceLoading();
+initializeCleanup();
+initializeWatsonAssistant();
+
+// Global resize handler with debouncing
+let globalResizeTimer;
+window.addEventListener('resize', function() {
+    clearTimeout(globalResizeTimer);
+    globalResizeTimer = setTimeout(function() {
+        chartInstances.forEach(chart => {
+            if (chart && typeof chart.resize === 'function') {
+                chart.resize();
+            }
+        });
+    }, 250);
 });
 </script>
-</body>
+        </body>
 </html>
