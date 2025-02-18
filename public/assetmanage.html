@@ -2718,7 +2718,42 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeWiseMailAnimations();
   initializeCharts();
     setupInteractions();
+    loadHeader();
 });
+    // Header Loading Function
+async function loadHeader() {
+    const headerContainer = document.getElementById('header-container');
+    
+    try {
+        const response = await fetch('header.html');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const html = await response.text();
+        headerContainer.innerHTML = html;
+
+        // Initialize mobile menu functionality after header loads
+        initializeMobileMenu();
+    } catch (error) {
+        console.error('Error loading header:', error);
+        headerContainer.innerHTML = `
+            <header class="main-header">
+                <div class="container">
+                    <div class="header-content">
+                        <a href="/" class="logo">
+                            <span>Workwise Pro</span>
+                        </a>
+                        <nav class="main-nav">
+                            <ul class="nav-list">
+                                <li><a href="#home">Home</a></li>
+                                <li><a href="#contact">Contact</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </header>
+        `;
+    }
+}
   
   function initializeCharts() {
     // Main Chart
