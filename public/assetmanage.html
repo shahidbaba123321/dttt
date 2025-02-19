@@ -3949,11 +3949,12 @@ async function loadHeader() {
 }
 
 // Enhanced Mobile Menu
+// Enhanced Mobile Menu Initialization
 function initializeMobileMenu() {
     const mobileMenu = document.getElementById('mobile-menu');
     const mainNav = document.getElementById('main-nav');
     const menuOverlay = document.getElementById('menu-overlay');
-    const megaMenus = document.querySelectorAll('.mega-menu');
+    const navList = document.querySelector('.nav-list');
     let isMenuOpen = false;
 
     if (mobileMenu && mainNav) {
@@ -3961,12 +3962,15 @@ function initializeMobileMenu() {
             isMenuOpen = show;
             mobileMenu.classList.toggle('active', show);
             mainNav.classList.toggle('active', show);
-            menuOverlay?.classList.toggle('active', show);
+            navList.classList.toggle('active', show);
+            if (menuOverlay) menuOverlay.classList.toggle('active', show);
             document.body.style.overflow = show ? 'hidden' : '';
 
-            if (!show) {
-                megaMenus.forEach(menu => menu.classList.remove('active'));
-            }
+            // Toggle hamburger animation
+            const spans = mobileMenu.querySelectorAll('span');
+            spans.forEach((span, index) => {
+                span.classList.toggle('active', show);
+            });
         }
 
         mobileMenu.addEventListener('click', (e) => {
@@ -3974,22 +3978,26 @@ function initializeMobileMenu() {
             toggleMenu(!isMenuOpen);
         });
 
-        // Enhanced mega menu handling
-        megaMenus.forEach(menu => {
-            const link = menu.querySelector('a');
-            if (link) {
-                link.addEventListener('click', (e) => {
-                    if (window.innerWidth <= 768) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        megaMenus.forEach(m => {
-                            if (m !== menu) m.classList.remove('active');
-                        });
-                        menu.classList.toggle('active');
-                    }
-                });
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
+                toggleMenu(false);
             }
         });
+
+        // Close menu when pressing Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && isMenuOpen) {
+                toggleMenu(false);
+            }
+        });
+
+        // Prevent clicks within the menu from closing it
+        mainNav.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    }
+}
 
         // Close menu when clicking outside
         document.addEventListener('click', (e) => {
