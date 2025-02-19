@@ -96,215 +96,6 @@ body {
 }
 
 
-/* Task Allocation Section Styles */
-.task-allocation {
-    padding: var(--section-spacing) 0;
-    background: white;
-}
-
-.task-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-    margin-top: 3rem;
-}
-
-.task-card {
-    background: white;
-    padding: 2rem;
-    border-radius: 16px;
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-    border: 1px solid rgba(41, 98, 255, 0.1);
-}
-
-.task-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(41, 98, 255, 0.1);
-}
-
-.task-icon {
-    width: 64px;
-    height: 64px;
-    background: rgba(41, 98, 255, 0.1);
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-}
-
-.task-icon i {
-    font-size: 1.75rem;
-    color: var(--primary-color);
-}
-
-.task-card h3 {
-    color: #1a237e;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-.task-card p {
-    color: var(--light-text);
-    margin-bottom: 1.5rem;
-}
-
-.task-features {
-    list-style: none;
-    margin-top: 1.5rem;
-}
-
-.task-features li {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 0;
-    color: var(--text-color);
-}
-
-.task-features li i {
-    color: var(--primary-color);
-    font-size: 1rem;
-}
-
-@media (max-width: 1200px) {
-    .task-grid {
-        gap: 1.5rem;
-    }
-    
-    .task-card {
-        padding: 1.5rem;
-    }
-}
-
-@media (max-width: 992px) {
-    .task-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .task-grid {
-        grid-template-columns: 1fr;
-        max-width: 500px;
-        margin: 2rem auto 0;
-    }
-
-    .task-card {
-        text-align: center;
-    }
-
-    .task-icon {
-        margin: 0 auto 1.5rem;
-    }
-
-    .task-features li {
-        justify-content: center;
-    }
-}
-
-@media (max-width: 480px) {
-    .task-card {
-        padding: 1.25rem;
-    }
-
-    .task-icon {
-        width: 48px;
-        height: 48px;
-    }
-
-    .task-icon i {
-        font-size: 1.5rem;
-    }
-}
-        /* Project Tracking Section Styles */
-.tracking-section {
-    padding: var(--section-spacing) 0;
-    background: var(--gradient);
-    position: relative;
-}
-
-.tracking-grid {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 3rem;
-    margin-top: 3rem;
-}
-
-.gantt-container {
-    background: white;
-    padding: 2rem;
-    border-radius: 16px;
-    box-shadow: var(--box-shadow);
-}
-
-.gantt-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.gantt-header h3 {
-    color: #1a237e;
-    font-size: 1.25rem;
-    font-weight: 600;
-}
-
-.gantt-controls {
-    display: flex;
-    gap: 1rem;
-}
-
-.gantt-controls select {
-    padding: 0.75rem 1.5rem;
-    border: 1px solid rgba(41, 98, 255, 0.2);
-    border-radius: 8px;
-    background: white;
-    color: var(--text-color);
-}
-
-.gantt-body {
-    height: 400px;
-    position: relative;
-}
-
-.metrics-container {
-    background: white;
-    padding: 2rem;
-    border-radius: 16px;
-    box-shadow: var(--box-shadow);
-}
-
-.metric-item {
-    margin-bottom: 1.5rem;
-}
-
-.metric-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-}
-
-.metric-header span {
-    color: var(--text-color);
-    font-size: 0.875rem;
-}
-
-.progress-bar {
-    height: 8px;
-    background: rgba(41, 98, 255, 0.1);
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.progress-fill {
-    height: 100%;
-    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
-    border-radius: 4px;
-    transition: width 0.6s ease;
-}
 
 /* Deadline Management Section Styles */
 .deadline-section {
@@ -1238,7 +1029,303 @@ body {
         </div>
     </div>
 </section>
+<style>
+    /* Task Allocation Section Styles */
+.features-section {
+    padding: var(--section-spacing) 0;
+    background: white;
+    position: relative;
+}
 
+.section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.section-header h2 {
+    font-size: clamp(2rem, 4vw, 2.5rem);
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.section-header p {
+    font-size: 1.25rem;
+    color: var(--light-text);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2.5rem;
+    margin-top: 3rem;
+}
+
+.feature-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: left;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card:hover::before {
+    transform: scaleX(1);
+}
+
+.feature-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.feature-icon i {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+}
+
+.feature-card h3 {
+    font-size: 1.5rem;
+    color: #1a237e;
+    margin-bottom: 1rem;
+}
+
+.feature-card p {
+    color: var(--light-text);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.feature-list {
+    list-style: none;
+    margin: 1.5rem 0;
+}
+
+.feature-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
+    color: var(--text-color);
+}
+
+.feature-list li i {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    width: 24px;
+    height: 24px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Animation for cards */
+.feature-card {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.feature-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.feature-card:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .features-grid {
+        gap: 2rem;
+    }
+
+    .feature-card {
+        padding: 2rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .section-header p {
+        font-size: 1.1rem;
+    }
+
+    .feature-card h3 {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .features-section {
+        padding: 4rem 0;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+        max-width: 500px;
+        margin: 2rem auto 0;
+    }
+
+    .feature-card {
+        padding: 1.75rem;
+    }
+
+    .section-header {
+        margin-bottom: 2rem;
+    }
+
+    .section-header h2 {
+        font-size: 1.75rem;
+    }
+
+    .section-header p {
+        font-size: 1rem;
+        padding: 0 1rem;
+    }
+
+    .feature-icon {
+        width: 56px;
+        height: 56px;
+    }
+
+    .feature-icon i {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .features-section {
+        padding: 3rem 0;
+    }
+
+    .feature-card {
+        padding: 1.5rem;
+    }
+
+    .feature-icon {
+        width: 48px;
+        height: 48px;
+    }
+
+    .feature-icon i {
+        font-size: 1.25rem;
+    }
+
+    .feature-card h3 {
+        font-size: 1.2rem;
+    }
+
+    .feature-list li {
+        gap: 0.5rem;
+    }
+
+    .feature-list li i {
+        width: 20px;
+        height: 20px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) {
+    .feature-card:hover {
+        transform: none;
+        box-shadow: var(--box-shadow);
+    }
+
+    .feature-card::before {
+        display: none;
+    }
+}
+
+/* High-contrast mode */
+@media (prefers-contrast: high) {
+    .feature-card {
+        border: 2px solid #1a237e;
+    }
+
+    .feature-list li i {
+        background: #2962ff;
+        color: white;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .feature-card {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+
+    .feature-card:hover {
+        transform: none;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .features-section {
+        padding: 2rem 0;
+    }
+
+    .feature-card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        break-inside: avoid;
+    }
+
+    .feature-icon {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+}
+</style>
 <!-- Deadline Management Section -->
 <section class="deadline-section">
     <div class="container">
