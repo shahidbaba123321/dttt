@@ -78,47 +78,6 @@ header .container {
     font-size: 28px;
     font-weight: 600;
 }
-        /* Mobile Menu Button Styles */
-.mobile-menu-btn {
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 44px;
-    height: 44px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    z-index: 1001;
-}
-
-.mobile-menu-btn span {
-    display: block;
-    width: 24px;
-    height: 2px;
-    background: var(--text-color);
-    transition: all 0.3s ease;
-    position: relative;
-}
-
-.mobile-menu-btn span + span {
-    margin-top: 6px;
-}
-
-/* Active State for Menu Button */
-.mobile-menu-btn.active span:nth-child(1) {
-    transform: translateY(8px) rotate(45deg);
-}
-
-.mobile-menu-btn.active span:nth-child(2) {
-    opacity: 0;
-}
-
-.mobile-menu-btn.active span:nth-child(3) {
-    transform: translateY(-8px) rotate(-45deg);
-}
-
 
 /* Main Navigation */
 .main-nav {
@@ -160,17 +119,6 @@ header .container {
     color: var(--primary-color);
 }
 
-        .nav-list a {
-    color: var(--text-color);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.3s ease;
-    padding: 0.5rem 0;
-}
-
-.nav-list a:hover {
-    color: var(--primary-color);
-}
 /* Auth Buttons */
 .auth-buttons {
     display: flex;
@@ -828,14 +776,15 @@ header .container {
 .menu-overlay {
     display: none;
     position: fixed;
-    top: var(--header-height);
+    top: 0;
     left: 0;
     width: 100%;
-    height: calc(100vh - var(--header-height));
+    height: 100%;
     background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 999;
     opacity: 0;
     transition: opacity 0.3s ease;
-    z-index: 999;
 }
 
 .menu-overlay.active {
@@ -901,7 +850,6 @@ header .container {
         width: 16px;
         height: 16px;
     }
-    
 }
 
 /* Animation Classes */
@@ -962,81 +910,6 @@ header .container {
         }
     }
 }
-        /* Mobile Styles */
-@media (max-width: 768px) {
-    .mobile-menu-btn {
-        display: flex;
-    }
-
-    .nav-list {
-        position: fixed;
-        top: var(--header-height);
-        left: 0;
-        width: 100%;
-        height: calc(100vh - var(--header-height));
-        background: white;
-        flex-direction: column;
-        gap: 0;
-        padding: 1rem 0;
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        z-index: 1000;
-    }
-
-    .nav-list.active {
-        transform: translateX(0);
-    }
-
-    .nav-list a {
-        display: block;
-        padding: 1rem 2rem;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    .nav-list a:hover {
-        background: rgba(41, 98, 255, 0.05);
-    }
-
-    /* Fix for iOS height issues */
-    @supports (-webkit-touch-callout: none) {
-        .nav-list {
-            height: -webkit-fill-available;
-        }
-    }
-}
-        /* Additional Mobile Optimizations */
-@media (max-width: 480px) {
-    .header-content {
-        padding: 0 1rem;
-    }
-
-    .mobile-menu-btn {
-        width: 40px;
-        height: 40px;
-    }
-
-    .mobile-menu-btn span {
-        width: 20px;
-    }
-
-    .nav-list a {
-        padding: 0.875rem 1.5rem;
-        font-size: 0.95rem;
-    }
-}
-
-/* Touch Device Optimizations */
-@media (hover: none) {
-    .nav-list a {
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    .nav-list a:active {
-        background: rgba(41, 98, 255, 0.05);
-    }
-}
     </style>
 </head>
 <body>
@@ -1090,7 +963,7 @@ header .container {
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="attendence.html">
+                                        <a href="alm.html">
                                             <div class="menu-icon attendance-icon">
                                                 <svg viewBox="0 0 36 36">
                                                     <path d="M32 4H4C2.3 4 1 5.3 1 7v22c0 1.7 1.3 3 3 3h28c1.7 0 3-1.3 3-3V7c0-1.7-1.3-3-3-3zm-2 24H6V9h24v19z" fill="#ffffff"/>
@@ -1099,7 +972,7 @@ header .container {
                                             </div>
                                             <div class="menu-text">
                                                 <span>Attendance & Leave Management</span>
-                                                <p>Integrate biometric systems, manage leave requests & approvals, timesheets management, and shift management</p>
+                                                <p>Biometric integration, leave requests, approvals</p>
                                             </div>
                                         </a>
                                     </li>
@@ -1118,7 +991,7 @@ header .container {
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="empss.html">
+                                        <a href="ess.html">
                                             <div class="menu-icon ess-icon">
                                                 <svg viewBox="0 0 36 36">
                                                     <path d="M18 2C9.2 2 2 9.2 2 18s7.2 16 16 16 16-7.2 16-16S26.8 2 18 2z" fill="#ffffff"/>
@@ -1154,7 +1027,7 @@ header .container {
     <span>Financial Solutions</span></h3>
                                 <ul>
                                     <li>
-                                        <a href="payprocess.html">
+                                        <a href="pay.html">
                                             <div class="menu-icon finance-icon">
                                                 <svg viewBox="0 0 36 36">
                                                     <path d="M32 4H4C2.3 4 1 5.3 1 7v22c0 1.7 1.3 3 3 3h28c1.7 0 3-1.3 3-3V7c0-1.7-1.3-3-3-3z" fill="#ffffff"/>
@@ -1182,7 +1055,7 @@ header .container {
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="finrep.html">
+                                        <a href="fin.html">
                                             <div class="menu-icon finance-icon">
                                                 <svg viewBox="0 0 36 36">
                                                     <path d="M4 28h28V6H4v22z" fill="#ffffff"/>
@@ -1199,11 +1072,8 @@ header .container {
                                         <a href="bookkeeping.html">
                                             <div class="menu-icon bookkeeping-icon">
                                                 <svg viewBox="0 0 36 36">
-                                                   <!-- <path d="M4 28h28V6H4v22z" fill="#ffffff"/>
-                                                    <path d="M7 14h4v11H7zm6-3h4v14h-4zm6-3h4v17h-4zm6 6h4v11h-4z" fill="#FF9800"/> -->
                                                     <path d="M4 28h28V6H4v22z" fill="#ffffff"/>
-    <path d="M7 14h4v11H7zm6-3h4v14h-4zm6-3h4v17h-4zm6 6h4v11h-4z" fill="#4CAF50"/>
-    <path d="M10 6v22M26 6v22M4 10h28M4 18h28" stroke="#000000" stroke-width="2" fill="none"/>
+                                                    <path d="M7 14h4v11H7zm6-3h4v14h-4zm6-3h4v17h-4zm6 6h4v11h-4z" fill="#FF9800"/>
                                                 </svg>
                                             </div>
                                             <div class="menu-text">
@@ -1213,7 +1083,7 @@ header .container {
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="taxnc.html">
+                                        <a href="tnc.html">
                                             <div class="menu-icon tax-icon">
                                                 <svg viewBox="0 0 36 36">
                                                     <path d="M4 28h28V6H4v22z" fill="#ffffff"/>
@@ -1241,7 +1111,7 @@ header .container {
                                         </a>
                                     </li>
                                       <li>
-                                        <a href="billinb.html">
+                                        <a href="inb.html">
                                             <div class="menu-icon invoice-icon">
                                                 <svg viewBox="0 0 36 36">
                                                     <path d="M4 28h28V6H4v22z" fill="#ffffff"/>
@@ -1255,7 +1125,7 @@ header .container {
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="assetmanage.html">
+                                        <a href="asset.html">
                                             <div class="menu-icon asset-icon">
                                                 <svg viewBox="0 0 36 36">
                                                     <path d="M4 28h28V6H4v22z" fill="#ffffff"/>
