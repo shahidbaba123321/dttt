@@ -62,59 +62,7 @@ body {
 }
 
 /* Enhanced Hero Section */
-.asset-hero {
-    background: var(--gradient);
-    padding: calc(var(--header-height) + 4rem) 0 6rem;
-    position: relative;
-    overflow: hidden;
-}
 
-.asset-hero::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, rgba(41, 98, 255, 0.05), transparent);
-    pointer-events: none;
-}
-
-.hero-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-    align-items: center;
-    position: relative;
-    z-index: 2;
-}
-
-.hero-text {
-    max-width: 600px;
-}
-
-.hero-text h1 {
-    font-size: clamp(2.5rem, 5vw, 3.5rem);
-    background: linear-gradient(45deg, #1a237e, #2962ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 1.5rem;
-    line-height: 1.2;
-    font-weight: 700;
-}
-
-.hero-text p {
-    font-size: clamp(1.1rem, 2vw, 1.25rem);
-    color: #455a64;
-    margin-bottom: 2rem;
-    opacity: 0.9;
-}
-
-.hero-buttons {
-    display: flex;
-    gap: 1.5rem;
-    margin-bottom: 3rem;
-}
 
 .btn {
     display: inline-flex;
@@ -280,92 +228,18 @@ body {
 }
 
 /* Analytics Dashboard Section */
-.analytics-section {
-    padding: 6rem 0;
-    background: var(--gradient);
-    position: relative;
-}
-
-.analytics-grid {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: var(--grid-gap);
-    margin-top: 3rem;
-}
-
-.dashboard-preview {
-    background: white;
-    padding: clamp(1.5rem, 4vw, 2rem);
-    border-radius: 20px;
-    box-shadow: var(--box-shadow);
-}
-
-.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: clamp(1.5rem, 3vw, 2rem);
-}
-
-.chart-container {
-    height: clamp(250px, 50vw, 400px);
-    margin-bottom: clamp(1.5rem, 3vw, 2rem);
-    position: relative;
-}
 
 /* Responsive Styles */
 @media (max-width: 1200px) {
-    .hero-content,
-    .analytics-grid {
-        gap: 3rem;
-    }
-
-    .hero-image img {
-        max-width: 500px;
-    }
+    
 }
 
 @media (max-width: 992px) {
-    .analytics-grid {
-        grid-template-columns: 1fr;
-    }
+   
 }
 
 @media (max-width: 768px) {
-    .hero-content {
-        grid-template-columns: 1fr;
-        text-align: center;
-    }
-
-    .hero-text {
-        order: 1;
-        max-width: 100%;
-    }
-
-    .hero-buttons {
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .btn {
-        width: 100%;
-        max-width: 300px;
-    }
-
-    .features-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-
-    .feature-card {
-        padding: 2rem;
-    }
-
-    .dashboard-preview {
-        margin: 0 -1.5rem;
-        border-radius: 0;
-    }
+    
 }
 
 @media (max-width: 480px) {
@@ -412,491 +286,535 @@ body {
     <!-- Main Content -->
     <main class="asset-main">
         <!-- Hero Section -->
-        <section class="asset-hero">
-            <div class="container">
-                <div class="hero-content">
-                    <div class="hero-text">
-                        <h1>Optimize Your Asset Lifecycle Management</h1>
-                        <p>Transform your asset management with intelligent tracking, maintenance scheduling, and real-time analytics.</p>
-                        <div class="hero-buttons">
-                            <a href="#" class="btn primary">Request a Demo</a>
-                            <a href="#" class="btn secondary">Watch Video</a>
-                        </div>
-                        <div class="global-presence">
-                            <h3>Trusted by Industry Leaders</h3>
-                            <div class="company-badges">
-                                <div class="company-badge">
-                                    <i class="fas fa-building"></i>
-                                    <span>Enterprise</span>
-                                </div>
-                                <div class="company-badge">
-                                    <i class="fas fa-hospital"></i>
-                                    <span>Healthcare</span>
-                                </div>
-                                <div class="company-badge">
-                                    <i class="fas fa-industry"></i>
-                                    <span>Manufacturing</span>
-                                </div>
-                                <div class="company-badge">
-                                    <i class="fas fa-university"></i>
-                                    <span>Government</span>
-                                </div>
-                            </div>
-                        </div>
+       <!-- Hero Section -->
+<section class="asset-hero">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>Optimize Your Asset Lifecycle Management</h1>
+                <p>Efficiently track assets and automate depreciation for precise financial insights.</p>
+                <div class="hero-buttons">
+                    <a href="#" class="btn primary">Request a Free Demo</a>
+                    <a href="#" class="btn secondary">Watch Demo</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-chart-line"></i>
+                        <h4>98%</h4>
+                        <p>Asset Tracking Accuracy</p>
                     </div>
-                    <div class="hero-image">
-                        <img src="image/asset-dashboard.png" alt="Asset Management Dashboard" loading="lazy">
+                    <div class="stat-item">
+                        <i class="fas fa-clock"></i>
+                        <h4>60%</h4>
+                        <p>Time Saved</p>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-calculator"></i>
+                        <h4>100%</h4>
+                        <p>Depreciation Accuracy</p>
                     </div>
                 </div>
             </div>
-        </section>
-
-        <!-- Key Features Section -->
-        <section class="features-section">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Comprehensive Asset Management</h2>
-                    <p>Everything you need to track, maintain, and optimize your assets</p>
-                </div>
-
-                <div class="features-grid">
-                    <!-- Asset Tracking -->
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-search-location"></i>
-                        </div>
-                        <h3>Real-time Asset Tracking</h3>
-                        <p>Monitor your assets' location and status in real-time</p>
-                        <ul class="feature-list">
-                            <li><i class="fas fa-check"></i>GPS Location Tracking</li>
-                            <li><i class="fas fa-check"></i>Status Monitoring</li>
-                            <li><i class="fas fa-check"></i>Usage Analytics</li>
-                            <li><i class="fas fa-check"></i>Custom Alerts</li>
-                        </ul>
-                    </div>
-
-                    <!-- Maintenance Management -->
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-tools"></i>
-                        </div>
-                        <h3>Maintenance Scheduling</h3>
-                        <p>Automate maintenance workflows and reduce downtime</p>
-                        <ul class="feature-list">
-                            <li><i class="fas fa-check"></i>Preventive Maintenance</li>
-                            <li><i class="fas fa-check"></i>Work Order Management</li>
-                            <li><i class="fas fa-check"></i>Service History</li>
-                            <li><i class="fas fa-check"></i>Cost Tracking</li>
-                        </ul>
-                    </div>
-
-                    <!-- Depreciation Tracking -->
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <h3>Depreciation Management</h3>
-                        <p>Track asset value and manage depreciation accurately</p>
-                        <ul class="feature-list">
-                            <li><i class="fas fa-check"></i>Multiple Methods</li>
-                            <li><i class="fas fa-check"></i>Automated Calculations</li>
-                            <li><i class="fas fa-check"></i>Tax Compliance</li>
-                            <li><i class="fas fa-check"></i>Financial Reporting</li>
-                        </ul>
-                    </div>
-
-                    <!-- Compliance Management -->
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                        <h3>Compliance & Reporting</h3>
-                        <p>Stay compliant with regulatory requirements</p>
-                        <ul class="feature-list">
-                            <li><i class="fas fa-check"></i>Audit Trails</li>
-                            <li><i class="fas fa-check"></i>Compliance Reports</li>
-                            <li><i class="fas fa-check"></i>Document Management</li>
-                            <li><i class="fas fa-check"></i>Risk Assessment</li>
-                        </ul>
-                    </div>
-                </div>
+            <div class="hero-image">
+                <img src="image/asset-dashboard.png" alt="Asset Management Dashboard" loading="lazy">
             </div>
-        </section>
-                <!-- Analytics Dashboard Section -->
-        <section class="analytics-section">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Advanced Analytics & Insights</h2>
-                    <p>Make data-driven decisions with comprehensive asset analytics</p>
+        </div>
+    </div>
+</section>
+
+<!-- Key Features Section -->
+<section class="features-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Comprehensive Asset Management</h2>
+            <p>Everything you need to track, maintain, and optimize your assets</p>
+        </div>
+
+        <div class="features-grid">
+            <!-- Asset Tracking -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-search-location"></i>
                 </div>
-
-                <div class="analytics-grid">
-                    <div class="dashboard-preview">
-                        <div class="dashboard-header">
-                            <h3>Asset Performance Overview</h3>
-                            <div class="date-range">
-                                <i class="fas fa-calendar"></i>
-                                <span>Last 30 Days</span>
-                            </div>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="mainChart"></canvas>
-                        </div>
-                        <div class="metrics-grid">
-                            <div class="metric-box">
-                                <h4>Total Assets</h4>
-                                <div class="value">1,234</div>
-                                <div class="trend positive">
-                                    <i class="fas fa-arrow-up"></i>
-                                    <span>5.2%</span>
-                                </div>
-                            </div>
-                            <div class="metric-box">
-                                <h4>Asset Utilization</h4>
-                                <div class="value">85%</div>
-                                <div class="trend positive">
-                                    <i class="fas fa-arrow-up"></i>
-                                    <span>2.1%</span>
-                                </div>
-                            </div>
-                            <div class="metric-box">
-                                <h4>Maintenance Cost</h4>
-                                <div class="value">$45.2K</div>
-                                <div class="trend negative">
-                                    <i class="fas fa-arrow-down"></i>
-                                    <span>3.4%</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="analytics-features">
-                        <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-chart-bar"></i>
-                            </div>
-                            <h3>Performance Metrics</h3>
-                            <p>Track key performance indicators for all assets</p>
-                            <ul class="feature-list">
-                                <li><i class="fas fa-check"></i>Utilization Rates</li>
-                                <li><i class="fas fa-check"></i>Maintenance Metrics</li>
-                                <li><i class="fas fa-check"></i>Cost Analysis</li>
-                            </ul>
-                        </div>
-
-                        <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-file-alt"></i>
-                            </div>
-                            <h3>Custom Reports</h3>
-                            <p>Generate detailed reports for better decision making</p>
-                            <div class="report-builder">
-                                <div class="report-options">
-                                    <select class="report-select">
-                                        <option>Asset Performance Report</option>
-                                        <option>Maintenance History Report</option>
-                                        <option>Depreciation Summary</option>
-                                        <option>Compliance Report</option>
-                                    </select>
-                                </div>
-                                <button class="generate-btn">
-                                    <i class="fas fa-file-export"></i>
-                                    Generate Report
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <h3>Real-time Asset Tracking</h3>
+                <p>Monitor your assets' location and status in real-time</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i>GPS Location Tracking</li>
+                    <li><i class="fas fa-check"></i>Status Monitoring</li>
+                    <li><i class="fas fa-check"></i>Usage Analytics</li>
+                    <li><i class="fas fa-check"></i>Custom Alerts</li>
+                </ul>
             </div>
-        </section>
 
-<style>
-/* Analytics Section Enhanced Styles */
-.metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-    margin-top: 1.5rem;
+            <!-- Maintenance Management -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-tools"></i>
+                </div>
+                <h3>Maintenance Scheduling</h3>
+                <p>Automate maintenance workflows and reduce downtime</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i>Preventive Maintenance</li>
+                    <li><i class="fas fa-check"></i>Work Order Management</li>
+                    <li><i class="fas fa-check"></i>Service History</li>
+                    <li><i class="fas fa-check"></i>Cost Tracking</li>
+                </ul>
+            </div>
+
+            <!-- Depreciation Tracking -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Depreciation Management</h3>
+                <p>Track asset value and manage depreciation accurately</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i>Multiple Methods</li>
+                    <li><i class="fas fa-check"></i>Automated Calculations</li>
+                    <li><i class="fas fa-check"></i>Tax Compliance</li>
+                    <li><i class="fas fa-check"></i>Financial Reporting</li>
+                </ul>
+            </div>
+
+            <!-- Compliance Management -->
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Compliance & Reporting</h3>
+                <p>Stay compliant with regulatory requirements</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i>Audit Trails</li>
+                    <li><i class="fas fa-check"></i>Compliance Reports</li>
+                    <li><i class="fas fa-check"></i>Document Management</li>
+                    <li><i class="fas fa-check"></i>Risk Assessment</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+        <style>
+            /* Hero Section Responsive Styles */
+.asset-hero {
+    background: var(--gradient);
+    padding: calc(var(--header-height) + 4rem) 0 6rem;
+    position: relative;
+    overflow: hidden;
 }
 
-.metric-box {
-    background: rgba(41, 98, 255, 0.05);
-    padding: 1.25rem;
-    border-radius: 12px;
+.hero-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--grid-gap);
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+.hero-text {
+    max-width: 600px;
+}
+
+.hero-text h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    color: #1a237e;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+}
+
+.hero-text p {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: var(--light-text);
+    margin-bottom: 2rem;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(1rem, 3vw, 2rem);
+    margin-top: 2rem;
+}
+
+.stat-item {
+    background: rgba(255, 255, 255, 0.9);
+    padding: clamp(1rem, 3vw, 1.5rem);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
     text-align: center;
     transition: var(--transition);
 }
 
-.metric-box:hover {
-    transform: translateY(-5px);
+.hero-image img {
+    width: 100%;
+    height: auto;
+    max-width: 600px;
+    border-radius: clamp(8px, 2vw, 20px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Features Section Responsive Styles */
+.features-section {
+    padding: var(--section-padding) 0;
+    background: white;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--grid-gap);
+    margin-top: 3rem;
+}
+
+.feature-card {
+    background: var(--card-bg);
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    border-radius: 16px;
     box-shadow: var(--box-shadow);
-}
-
-.metric-box h4 {
-    color: var(--light-text);
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-}
-
-.metric-box .value {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--text-color);
-    margin-bottom: 0.5rem;
-}
-
-.trend {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-    font-size: 0.85rem;
-}
-
-.trend.positive {
-    color: var(--success-color);
-}
-
-.trend.negative {
-    color: var(--danger-color);
-}
-
-/* Report Builder Styles */
-.report-builder {
-    margin-top: 1.5rem;
-}
-
-.report-select {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    font-family: inherit;
-}
-
-.generate-btn {
-    width: 100%;
-    padding: 1rem;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    cursor: pointer;
     transition: var(--transition);
-}
-
-.generate-btn:hover {
-    background: #1a54ff;
-    transform: translateY(-2px);
-}
-
-/* Date Range Styles */
-.date-range {
+    height: 100%;
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: rgba(41, 98, 255, 0.1);
-    border-radius: 20px;
-    font-size: 0.9rem;
-    color: var(--primary-color);
-    cursor: pointer;
-    transition: var(--transition);
+    flex-direction: column;
 }
 
-.date-range:hover {
-    background: rgba(41, 98, 255, 0.15);
-}
-
-/* Enhanced Responsive Styles */
-@media (max-width: 768px) {
-    .metrics-grid {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
+/* Responsive Breakpoints */
+@media (max-width: 1200px) {
+    .hero-content {
+        gap: 3rem;
     }
 
-    .metric-box {
+    .hero-image img {
+        max-width: 500px;
+    }
+
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 992px) {
+    .hero-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .hero-text {
+        order: 1;
+        max-width: 100%;
+    }
+
+    .hero-image {
+        order: 0;
+    }
+
+    .hero-buttons {
+        justify-content: center;
+    }
+
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .asset-hero {
+        padding: calc(var(--header-height) + 2rem) 0 4rem;
+    }
+
+    .hero-buttons {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .btn {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .hero-stats {
+        grid-template-columns: 1fr;
+        max-width: 300px;
+        margin: 2rem auto 0;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .feature-card {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-text h1 {
+        font-size: 2rem;
+    }
+
+    .hero-text p {
+        font-size: 1rem;
+    }
+
+    .stat-item {
         padding: 1rem;
     }
 
-    .metric-box .value {
+    .stat-item h4 {
         font-size: 1.25rem;
     }
 
-    .analytics-features {
-        margin-top: 2rem;
+    .feature-card {
+        padding: 1.25rem;
     }
 
-    .date-range {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.85rem;
+    .feature-icon {
+        width: 48px;
+        height: 48px;
+    }
+
+    .feature-icon i {
+        font-size: 1.5rem;
     }
 }
-</style>
-        <!-- Maintenance Management Section -->
-        <section class="maintenance-section">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Proactive Maintenance Management</h2>
-                    <p>Optimize asset performance with scheduled maintenance and real-time monitoring</p>
-                </div>
 
-                <div class="maintenance-grid">
-                    <div class="maintenance-features">
-                        <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-bell"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3>Preventive Maintenance Alerts</h3>
-                                <p>Stay ahead of maintenance needs with automated alerts</p>
-                                <div class="alert-preview">
-                                    <div class="alert-item upcoming">
-                                        <i class="fas fa-clock"></i>
-                                        <div class="alert-content">
-                                            <h4>Server Maintenance Due</h4>
-                                            <p>In 3 days</p>
-                                        </div>
-                                    </div>
-                                    <div class="alert-item overdue">
-                                        <i class="fas fa-exclamation-circle"></i>
-                                        <div class="alert-content">
-                                            <h4>Equipment Check Overdue</h4>
-                                            <p>2 days past</p>
-                                        </div>
-                                    </div>
+/* Touch Device Optimizations */
+@media (hover: none) {
+    .stat-item:hover,
+    .feature-card:hover {
+        transform: none;
+    }
+
+    .btn:hover {
+        transform: none;
+    }
+}
+
+/* Animation Keyframes */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0px); }
+}
+        </style>
+               <!-- Analytics Dashboard Section -->
+<section class="analytics-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Advanced Analytics & Insights</h2>
+            <p>Make data-driven decisions with comprehensive asset analytics</p>
+        </div>
+
+        <div class="analytics-grid">
+            <div class="dashboard-preview">
+                <div class="dashboard-header">
+                    <h3>Asset Performance Overview</h3>
+                    <div class="date-range">
+                        <i class="fas fa-calendar"></i>
+                        <span>Last 30 Days</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="mainChart"></canvas>
+                </div>
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <h4>Total Assets</h4>
+                        <div class="value">1,234</div>
+                        <div class="trend positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>5.2%</span>
+                        </div>
+                    </div>
+                    <div class="metric-box">
+                        <h4>Asset Utilization</h4>
+                        <div class="value">85%</div>
+                        <div class="trend positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>2.1%</span>
+                        </div>
+                    </div>
+                    <div class="metric-box">
+                        <h4>Maintenance Cost</h4>
+                        <div class="value">$45.2K</div>
+                        <div class="trend negative">
+                            <i class="fas fa-arrow-down"></i>
+                            <span>3.4%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="analytics-features">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3>Custom Reports</h3>
+                    <p>Generate detailed reports for better decision making</p>
+                    <div class="report-builder">
+                        <div class="report-options">
+                            <select class="report-select">
+                                <option>Asset Performance Report</option>
+                                <option>Maintenance History Report</option>
+                                <option>Depreciation Summary</option>
+                                <option>Compliance Report</option>
+                            </select>
+                        </div>
+                        <button class="generate-btn">
+                            <i class="fas fa-file-export"></i>
+                            Generate Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Maintenance Management Section -->
+<section class="maintenance-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Proactive Maintenance Management</h2>
+            <p>Optimize asset performance with scheduled maintenance and real-time monitoring</p>
+        </div>
+
+        <div class="maintenance-grid">
+            <div class="maintenance-features">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3>Preventive Maintenance Alerts</h3>
+                        <p>Stay ahead of maintenance needs with automated alerts</p>
+                        <div class="alert-preview">
+                            <div class="alert-item upcoming">
+                                <i class="fas fa-clock"></i>
+                                <div class="alert-content">
+                                    <h4>Equipment Maintenance Due</h4>
+                                    <p>In 3 days</p>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-calendar-check"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3>Maintenance Calendar</h3>
-                                <p>Visual schedule of all maintenance activities</p>
-                                <div class="calendar-preview">
-                                    <div class="calendar-header">
-                                        <h4>October 2023</h4>
-                                        <div class="calendar-controls">
-                                            <button class="calendar-btn"><i class="fas fa-chevron-left"></i></button>
-                                            <button class="calendar-btn"><i class="fas fa-chevron-right"></i></button>
-                                        </div>
-                                    </div>
-                                    <div class="calendar-grid">
-                                        <!-- Calendar days will be populated by JavaScript -->
-                                    </div>
+                            <div class="alert-item overdue">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <div class="alert-content">
+                                    <h4>Vehicle Service Overdue</h4>
+                                    <p>2 days past</p>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="maintenance-visual">
-                        <div class="visual-wrapper">
-                            <img src="image/maintenance-dashboard.png" alt="Maintenance Dashboard" class="main-image">
-                            <div class="status-indicators">
-                                <div class="status-item">
-                                    <div class="status-icon operational"></div>
-                                    <span>Operational</span>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3>Maintenance Calendar</h3>
+                        <p>Visual schedule of all maintenance activities</p>
+                        <div class="calendar-preview">
+                            <div class="calendar-header">
+                                <h4>Maintenance Schedule</h4>
+                                <div class="calendar-controls">
+                                    <button class="calendar-btn"><i class="fas fa-chevron-left"></i></button>
+                                    <button class="calendar-btn"><i class="fas fa-chevron-right"></i></button>
                                 </div>
-                                <div class="status-item">
-                                    <div class="status-icon maintenance"></div>
-                                    <span>In Maintenance</span>
-                                </div>
-                                <div class="status-item">
-                                    <div class="status-icon attention"></div>
-                                    <span>Needs Attention</span>
-                                </div>
+                            </div>
+                            <div class="calendar-grid" id="maintenance-calendar">
+                                <!-- Calendar will be populated by JavaScript -->
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
 
-        <!-- Integration Section -->
-        <section class="integration-section">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Seamless Integration Capabilities</h2>
-                    <p>Connect with your existing systems for streamlined operations</p>
-                </div>
-
-                <div class="integration-grid">
-                    <div class="integration-features">
-                        <div class="integration-card">
-                            <div class="status-badge connected">Active</div>
-                            <div class="feature-icon">
-                                <i class="fas fa-sync"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3>ERP Integration</h3>
-                                <p>Seamlessly connect with major ERP systems</p>
-                                <ul class="feature-list">
-                                    <li><i class="fas fa-check"></i>Real-time data sync</li>
-                                    <li><i class="fas fa-check"></i>Automated workflows</li>
-                                    <li><i class="fas fa-check"></i>Financial reporting</li>
-                                </ul>
-                            </div>
+            <div class="maintenance-visual">
+                <div class="visual-wrapper">
+                    <img src="image/maintenance-dashboard.png" alt="Maintenance Dashboard" class="main-image">
+                    <div class="status-indicators">
+                        <div class="status-item">
+                            <div class="status-icon operational"></div>
+                            <span>Operational</span>
                         </div>
-
-                        <div class="integration-card">
-                            <div class="status-badge popular">Popular</div>
-                            <div class="feature-icon">
-                                <i class="fas fa-code"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3>API Access</h3>
-                                <p>Build custom integrations with our robust API</p>
-                                <div class="api-preview">
-                                    <code>GET /api/v1/assets</code>
-                                    <div class="api-response">
-                                        <span class="response-status">200 OK</span>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="status-item">
+                            <div class="status-icon maintenance"></div>
+                            <span>In Maintenance</span>
                         </div>
-                    </div>
-
-                    <div class="integration-visual">
-                        <div class="visual-wrapper">
-                            <div class="integration-diagram">
-                                <div class="central-node">
-                                    <i class="fas fa-database"></i>
-                                    <span>Asset Management</span>
-                                </div>
-                                <div class="connection-lines">
-                                    <!-- Connection lines will be drawn with SVG -->
-                                </div>
-                                <div class="integration-nodes">
-                                    <div class="node erp">
-                                        <i class="fas fa-building"></i>
-                                        <span>ERP Systems</span>
-                                    </div>
-                                    <div class="node accounting">
-                                        <i class="fas fa-calculator"></i>
-                                        <span>Accounting</span>
-                                    </div>
-                                    <div class="node iot">
-                                        <i class="fas fa-microchip"></i>
-                                        <span>IoT Devices</span>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="status-item">
+                            <div class="status-icon attention"></div>
+                            <span>Needs Attention</span>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+    </div>
+</section>
 
 <style>
+/* Analytics Section Styles */
+.analytics-section {
+    padding: var(--section-padding) 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+.analytics-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: var(--grid-gap);
+    margin-top: 3rem;
+}
+
+.dashboard-preview {
+    background: white;
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.chart-container {
+    height: 300px;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.metric-box {
+    background: rgba(41, 98, 255, 0.05);
+    padding: clamp(1rem, 2.5vw, 1.25rem);
+    border-radius: 12px;
+    text-align: center;
+}
+
 /* Maintenance Section Styles */
+.maintenance-section {
+    padding: var(--section-padding) 0;
+    background: white;
+}
+
 .maintenance-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -917,7 +835,6 @@ body {
     border-radius: 12px;
     margin-bottom: 1rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    transition: var(--transition);
 }
 
 .alert-item.upcoming {
@@ -928,19 +845,6 @@ body {
     border-left: 4px solid var(--danger-color);
 }
 
-.alert-item i {
-    font-size: 1.25rem;
-}
-
-.alert-item.upcoming i {
-    color: var(--warning-color);
-}
-
-.alert-item.overdue i {
-    color: var(--danger-color);
-}
-
-/* Calendar Styles */
 .calendar-preview {
     background: white;
     padding: 1.5rem;
@@ -948,43 +852,258 @@ body {
     margin-top: 1.5rem;
 }
 
-.calendar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+    margin-top: 1rem;
 }
 
-.calendar-controls {
+.status-indicators {
     display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
     gap: 0.5rem;
 }
 
-.calendar-btn {
-    background: none;
-    border: none;
-    padding: 0.5rem;
-    cursor: pointer;
-    color: var(--primary-color);
+.status-icon {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
 }
 
+.status-icon.operational { background: var(--success-color); }
+.status-icon.maintenance { background: var(--warning-color); }
+.status-icon.attention { background: var(--danger-color); }
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .analytics-grid,
+    .maintenance-grid {
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .analytics-grid,
+    .maintenance-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .maintenance-visual {
+        order: -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .metrics-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .alert-item {
+        padding: 0.875rem;
+    }
+
+    .calendar-preview {
+        padding: 1rem;
+    }
+
+    .status-indicators {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-preview,
+    .calendar-preview {
+        padding: 1rem;
+    }
+
+    .metric-box {
+        padding: 1rem;
+    }
+
+    .alert-item {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .calendar-grid {
+        gap: 0.25rem;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) {
+    .alert-item:hover,
+    .metric-box:hover {
+        transform: none;
+    }
+}
+</style>
+       <!-- Integration Features Section -->
+<section class="integration-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Seamless Integration Capabilities</h2>
+            <p>Connect with your existing systems for streamlined asset management</p>
+        </div>
+
+        <div class="integration-grid">
+            <div class="integration-features">
+                <div class="integration-card">
+                    <div class="status-badge connected">Active</div>
+                    <div class="feature-icon">
+                        <i class="fas fa-sync"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3>ERP Integration</h3>
+                        <p>Seamlessly connect with major ERP systems</p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i>Real-time data sync</li>
+                            <li><i class="fas fa-check"></i>Automated workflows</li>
+                            <li><i class="fas fa-check"></i>Financial reporting</li>
+                        </ul>
+                        <div class="integration-platforms">
+                            <img src="image/sap-logo.png" alt="SAP" class="platform-logo">
+                            <img src="image/oracle-logo.png" alt="Oracle" class="platform-logo">
+                            <img src="image/microsoft-logo.png" alt="Microsoft" class="platform-logo">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="integration-card">
+                    <div class="status-badge popular">Popular</div>
+                    <div class="feature-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3>API Access</h3>
+                        <p>Build custom integrations with our robust API</p>
+                        <div class="api-preview">
+                            <code>GET /api/v1/assets</code>
+                            <div class="api-response">
+                                <span class="response-status">200 OK</span>
+                            </div>
+                        </div>
+                        <div class="api-features">
+                            <span class="api-feature">RESTful</span>
+                            <span class="api-feature">OAuth 2.0</span>
+                            <span class="api-feature">Webhooks</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="integration-card">
+                    <div class="status-badge new">New</div>
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3>IoT Integration</h3>
+                        <p>Connect with IoT devices for real-time asset monitoring</p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i>Real-time sensor data</li>
+                            <li><i class="fas fa-check"></i>Predictive maintenance</li>
+                            <li><i class="fas fa-check"></i>Automated alerts</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="integration-visual">
+                <div class="visual-wrapper">
+                    <div class="integration-diagram">
+                        <div class="central-node">
+                            <i class="fas fa-database"></i>
+                            <span>Asset Management</span>
+                        </div>
+                        <div class="connection-lines">
+                            <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+                                <path class="connection-path" d="M10,50 Q50,10 90,50"/>
+                                <path class="connection-path" d="M10,50 Q50,90 90,50"/>
+                            </svg>
+                        </div>
+                        <div class="integration-nodes">
+                            <div class="node erp">
+                                <i class="fas fa-building"></i>
+                                <span>ERP Systems</span>
+                            </div>
+                            <div class="node iot">
+                                <i class="fas fa-microchip"></i>
+                                <span>IoT Devices</span>
+                            </div>
+                            <div class="node api">
+                                <i class="fas fa-code"></i>
+                                <span>API</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
 /* Integration Section Styles */
+.integration-section {
+    padding: var(--section-padding) 0;
+    background: var(--gradient);
+    position: relative;
+    overflow: hidden;
+}
+
+.integration-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--grid-gap);
+    margin-top: 3rem;
+    align-items: start;
+}
+
+/* Integration Cards */
 .integration-card {
     background: white;
-    padding: 2rem;
+    padding: clamp(1.5rem, 4vw, 2.5rem);
     border-radius: 16px;
     box-shadow: var(--box-shadow);
     position: relative;
     margin-bottom: 2rem;
+    transition: var(--transition);
+    border: 1px solid rgba(41, 98, 255, 0.1);
 }
 
+.integration-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-color);
+}
+
+/* Status Badges */
 .status-badge {
     position: absolute;
     top: 1rem;
     right: 1rem;
-    padding: 0.4rem 1rem;
+    padding: 0.5rem 1rem;
     border-radius: 20px;
     font-size: 0.875rem;
+    font-weight: 500;
 }
 
 .status-badge.connected {
@@ -997,12 +1116,47 @@ body {
     color: var(--primary-color);
 }
 
+.status-badge.new {
+    background: rgba(255, 193, 7, 0.1);
+    color: var(--warning-color);
+}
+
+/* Integration Platforms */
+.integration-platforms {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.platform-logo {
+    height: 30px;
+    width: auto;
+    opacity: 0.7;
+    transition: var(--transition);
+    filter: grayscale(100%);
+}
+
+.platform-logo:hover {
+    opacity: 1;
+    filter: grayscale(0%);
+    transform: scale(1.1);
+}
+
+/* API Preview */
 .api-preview {
     background: #f8f9fa;
-    padding: 1rem;
+    padding: 1.25rem;
     border-radius: 8px;
-    margin-top: 1rem;
-    font-family: monospace;
+    margin-top: 1.5rem;
+    font-family: 'Courier New', monospace;
+}
+
+.api-response {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .response-status {
@@ -1010,10 +1164,29 @@ body {
     font-size: 0.9rem;
 }
 
-/* Integration Diagram Styles */
+.api-features {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.api-feature {
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+}
+
+/* Integration Diagram */
 .integration-diagram {
     position: relative;
     min-height: 400px;
+    padding: 2rem;
+    background: white;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
 }
 
 .central-node {
@@ -1022,38 +1195,128 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
+    z-index: 2;
 }
 
-.integration-nodes {
+.central-node i {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.connection-lines {
     position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
+    pointer-events: none;
 }
 
-.node {
-    position: absolute;
-    background: white;
-    padding: 1rem;
-    border-radius: 12px;
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
+.connection-path {
+    fill: none;
+    stroke: var(--primary-color);
+    stroke-width: 2;
+    stroke-dasharray: 10;
+    animation: dashMove 20s linear infinite;
+    opacity: 0.3;
+}
+
+@keyframes dashMove {
+    to {
+        stroke-dashoffset: -200;
+    }
 }
 
 /* Responsive Styles */
+@media (max-width: 1200px) {
+    .integration-grid {
+        gap: 3rem;
+    }
+    
+    .integration-platforms {
+        gap: 1.5rem;
+    }
+}
+
 @media (max-width: 992px) {
-    .maintenance-grid,
     .integration-grid {
         grid-template-columns: 1fr;
+    }
+
+    .integration-visual {
+        order: -1;
+    }
+
+    .integration-diagram {
+        min-height: 300px;
     }
 }
 
 @media (max-width: 768px) {
-    .integration-diagram {
-        min-height: 300px;
-    }
-
     .integration-card {
         padding: 1.5rem;
+    }
+
+    .status-badge {
+        position: relative;
+        top: 0;
+        right: 0;
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+
+    .api-preview {
+        padding: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .api-features {
+        justify-content: center;
+    }
+
+    .integration-platforms {
+        justify-content: center;
+    }
+
+    .platform-logo {
+        height: 25px;
+    }
+
+    .integration-diagram {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .integration-card {
+        padding: 1.25rem;
+    }
+
+    .feature-icon {
+        width: 48px;
+        height: 48px;
+    }
+
+    .api-feature {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+
+    .integration-diagram {
+        min-height: 250px;
+        padding: 1rem;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) {
+    .integration-card:hover {
+        transform: none;
+    }
+
+    .platform-logo:hover {
+        transform: none;
     }
 }
 </style>
