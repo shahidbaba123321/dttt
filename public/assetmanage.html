@@ -3850,9 +3850,9 @@ async function loadHeader() {
     
     try {
         console.log('Current location:', window.location.href);
-        console.log('Attempting to load header from:', new URL('./header.html', window.location.href).href);
+        console.log('Attempting to load header from:', new URL('header.html', window.location.href).href);
         
-        const response = await fetch('./header.html');
+        const response = await fetch('header.html');
         console.log('Response status:', response.status);
         
         if (!response.ok) {
