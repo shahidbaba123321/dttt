@@ -843,9 +843,9 @@
         </section>
 
         <style>
-          /* Hero Section Styles - Matching Main File */
+         /* Hero Section Styles - Exact Match with Main File */
 .project-hero {
-    background: var(--gradient);
+    background: linear-gradient(135deg, #f0f7ff 0%, #e9ecef 100%);
     padding: calc(var(--header-height) + 4rem) 0 6rem;
     position: relative;
     overflow: hidden;
@@ -856,8 +856,6 @@
     grid-template-columns: 1fr 1fr;
     gap: 4rem;
     align-items: center;
-    position: relative;
-    z-index: 2;
 }
 
 .hero-text {
@@ -867,16 +865,15 @@
 .hero-text h1 {
     font-size: clamp(2.5rem, 5vw, 3.5rem);
     line-height: 1.2;
-    color: var(--text-color);
+    color: #1a237e;
     margin-bottom: 1.5rem;
     font-weight: 700;
 }
 
 .hero-text p {
     font-size: clamp(1.1rem, 2vw, 1.25rem);
-    color: var(--light-text);
+    color: #6c757d;
     margin-bottom: 2.5rem;
-    line-height: 1.6;
 }
 
 .hero-buttons {
@@ -885,27 +882,35 @@
     margin-bottom: 3rem;
 }
 
-.hero-buttons .btn {
-    padding: 1rem 2.5rem;
-    font-weight: 600;
-    transition: var(--transition);
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    cursor: pointer;
+    min-width: 160px;
+    text-align: center;
 }
 
-.hero-buttons .btn.primary {
-    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+.btn.primary {
+    background: linear-gradient(45deg, #2962ff, #42a5f5);
     color: white;
     border: none;
     box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
 }
 
-.hero-buttons .btn.secondary {
+.btn.secondary {
     background: transparent;
-    color: var(--primary-color);
-    border: 2px solid var(--primary-color);
+    color: #2962ff;
+    border: 2px solid #2962ff;
 }
 
-.hero-buttons .btn:hover {
-    transform: translateY(-3px);
+.btn:hover {
+    transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(41, 98, 255, 0.25);
 }
 
@@ -913,7 +918,6 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 2rem;
-    margin-top: 2rem;
 }
 
 .stat-item {
@@ -924,36 +928,25 @@
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.4);
     text-align: center;
-    transition: var(--transition);
-}
-
-.stat-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 40px rgba(41, 98, 255, 0.15);
 }
 
 .stat-item i {
     font-size: 1.5rem;
-    color: var(--primary-color);
+    color: #2962ff;
     margin-bottom: 0.5rem;
 }
 
 .stat-item h4 {
     font-size: 2rem;
-    color: var(--text-color);
+    color: #1a237e;
     margin: 0.5rem 0;
     font-weight: 700;
 }
 
 .stat-item p {
-    color: var(--light-text);
+    color: #6c757d;
     font-size: 0.9rem;
     margin: 0;
-}
-
-.hero-image {
-    position: relative;
-    z-index: 1;
 }
 
 .hero-image img {
@@ -962,16 +955,8 @@
     max-width: 600px;
     border-radius: 16px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    animation: float 6s ease-in-out infinite;
 }
 
-@keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
-    100% { transform: translateY(0px); }
-}
-
-/* Responsive Styles */
 @media (max-width: 1200px) {
     .hero-content {
         gap: 3rem;
@@ -1015,29 +1000,23 @@
 
     .hero-buttons {
         flex-direction: column;
-        max-width: 300px;
-        margin: 2rem auto 3rem;
-    }
-
-    .hero-stats {
-        grid-template-columns: repeat(2, 1fr);
+        align-items: center;
         gap: 1rem;
     }
 
-    .stat-item {
-        padding: 1rem;
+    .btn {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .hero-stats {
+        grid-template-columns: 1fr;
+        max-width: 300px;
+        margin: 2rem auto 0;
     }
 }
 
 @media (max-width: 480px) {
-    .hero-stats {
-        grid-template-columns: 1fr;
-    }
-
-    .stat-item h4 {
-        font-size: 1.75rem;
-    }
-
     .hero-text h1 {
         font-size: 2rem;
     }
@@ -1045,8 +1024,15 @@
     .hero-text p {
         font-size: 1rem;
     }
-}
 
+    .stat-item {
+        padding: 1rem;
+    }
+
+    .stat-item h4 {
+        font-size: 1.25rem;
+    }
+}
 
 /* Touch Device Optimizations */
 @media (hover: none) {
