@@ -843,23 +843,12 @@
         </section>
 
         <style>
-            /* Enhanced Hero Section Styles */
+          /* Hero Section Styles - Matching Main File */
 .project-hero {
     background: var(--gradient);
-    padding: calc(var(--header-height) + 6rem) 0 8rem;
+    padding: calc(var(--header-height) + 4rem) 0 6rem;
     position: relative;
     overflow: hidden;
-}
-
-.project-hero::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle at top right, rgba(41, 98, 255, 0.1), transparent 60%);
-    pointer-events: none;
 }
 
 .hero-content {
@@ -878,10 +867,9 @@
 .hero-text h1 {
     font-size: clamp(2.5rem, 5vw, 3.5rem);
     line-height: 1.2;
-    color: #1a237e;
+    color: var(--text-color);
     margin-bottom: 1.5rem;
     font-weight: 700;
-    letter-spacing: -0.02em;
 }
 
 .hero-text p {
@@ -889,7 +877,6 @@
     color: var(--light-text);
     margin-bottom: 2.5rem;
     line-height: 1.6;
-    opacity: 0.9;
 }
 
 .hero-buttons {
@@ -901,31 +888,25 @@
 .hero-buttons .btn {
     padding: 1rem 2.5rem;
     font-weight: 600;
-    min-width: 180px;
-    text-align: center;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
+    transition: var(--transition);
 }
 
 .hero-buttons .btn.primary {
     background: linear-gradient(45deg, var(--primary-color), #42a5f5);
     color: white;
     border: none;
-    box-shadow: 0 4px 15px rgba(41, 98, 255, 0.25);
+    box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
 }
 
 .hero-buttons .btn.secondary {
-    background: rgba(255, 255, 255, 0.1);
+    background: transparent;
     color: var(--primary-color);
     border: 2px solid var(--primary-color);
-    backdrop-filter: blur(10px);
 }
 
 .hero-buttons .btn:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(41, 98, 255, 0.2);
+    box-shadow: 0 6px 20px rgba(41, 98, 255, 0.25);
 }
 
 .hero-stats {
@@ -937,13 +918,13 @@
 
 .stat-item {
     background: rgba(255, 255, 255, 0.95);
-    padding: 1.75rem 1.5rem;
+    padding: 1.5rem;
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.4);
     text-align: center;
-    transition: all 0.3s ease;
+    transition: var(--transition);
 }
 
 .stat-item:hover {
@@ -952,25 +933,22 @@
 }
 
 .stat-item i {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     color: var(--primary-color);
-    margin-bottom: 0.75rem;
-    display: inline-block;
+    margin-bottom: 0.5rem;
 }
 
 .stat-item h4 {
-    font-size: 2.25rem;
-    color: #1a237e;
+    font-size: 2rem;
+    color: var(--text-color);
     margin: 0.5rem 0;
     font-weight: 700;
-    line-height: 1.2;
 }
 
 .stat-item p {
     color: var(--light-text);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     margin: 0;
-    font-weight: 500;
 }
 
 .hero-image {
@@ -982,8 +960,8 @@
     width: 100%;
     height: auto;
     max-width: 600px;
-    border-radius: 20px;
-    box-shadow: 0 20px 40px rgba(41, 98, 255, 0.15);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     animation: float 6s ease-in-out infinite;
 }
 
@@ -994,35 +972,13 @@
 }
 
 /* Responsive Styles */
-@media (max-width: 1400px) {
+@media (max-width: 1200px) {
     .hero-content {
         gap: 3rem;
     }
     
     .hero-image img {
-        max-width: 550px;
-    }
-
-    .stat-item {
-        padding: 1.5rem;
-    }
-}
-
-@media (max-width: 1200px) {
-    .project-hero {
-        padding: calc(var(--header-height) + 5rem) 0 6rem;
-    }
-
-    .hero-image img {
         max-width: 500px;
-    }
-
-    .hero-text h1 {
-        font-size: clamp(2.25rem, 4vw, 3rem);
-    }
-
-    .stat-item h4 {
-        font-size: 2rem;
     }
 }
 
@@ -1050,35 +1006,17 @@
         max-width: 600px;
         margin: 2rem auto 0;
     }
-
-    .stat-item:hover {
-        transform: translateY(-3px);
-    }
 }
 
 @media (max-width: 768px) {
     .project-hero {
-        padding: calc(var(--header-height) + 3rem) 0 4rem;
-    }
-
-    .hero-text h1 {
-        font-size: clamp(2rem, 3vw, 2.5rem);
-    }
-
-    .hero-text p {
-        font-size: 1.1rem;
+        padding: calc(var(--header-height) + 2rem) 0 4rem;
     }
 
     .hero-buttons {
         flex-direction: column;
         max-width: 300px;
-        margin: 2rem auto;
-        gap: 1rem;
-    }
-
-    .hero-buttons .btn {
-        width: 100%;
-        min-width: auto;
+        margin: 2rem auto 3rem;
     }
 
     .hero-stats {
@@ -1086,41 +1024,29 @@
         gap: 1rem;
     }
 
-    .hero-image img {
-        max-width: 100%;
-        margin-top: 2rem;
+    .stat-item {
+        padding: 1rem;
     }
 }
 
 @media (max-width: 480px) {
-    .project-hero {
-        padding: calc(var(--header-height) + 2rem) 0 3rem;
-    }
-
-    .hero-text h1 {
-        font-size: 1.75rem;
-    }
-
-    .hero-text p {
-        font-size: 1rem;
-    }
-
     .hero-stats {
         grid-template-columns: 1fr;
-    }
-
-    .stat-item {
-        padding: 1.25rem;
     }
 
     .stat-item h4 {
         font-size: 1.75rem;
     }
 
-    .stat-item p {
-        font-size: 0.875rem;
+    .hero-text h1 {
+        font-size: 2rem;
+    }
+
+    .hero-text p {
+        font-size: 1rem;
     }
 }
+
 
 /* Touch Device Optimizations */
 @media (hover: none) {
