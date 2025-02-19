@@ -1384,61 +1384,39 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Enhanced Header Loading
+// Header Loading Function
 async function loadHeader() {
     const headerContainer = document.getElementById('header-container');
     
     try {
-        console.log('Current location:', window.location.href);
-        console.log('Attempting to load header from:', new URL('header.html', window.location.href).href);
-        
         const response = await fetch('header.html');
-        console.log('Response status:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
         const html = await response.text();
-        console.log('Header HTML loaded successfully');
-        
         headerContainer.innerHTML = html;
+
+        // Initialize mobile menu after header loads
         initializeMobileMenu();
     } catch (error) {
-        console.error('Detailed error information:', {
-            message: error.message,
-            stack: error.stack,
-            location: window.location.pathname,
-            type: error.name
-        });
-        showNotification('Error loading header. Using fallback.', 'warning');
+        console.error('Error loading header:', error);
         // Fallback header
         headerContainer.innerHTML = `
             <header class="main-header">
                 <div class="container">
                     <div class="header-content">
                         <a href="/" class="logo">
-                            <img src="image/logo.png" alt="Workwise Pro" class="logo-img">
+                            <span>Workwise Pro</span>
                         </a>
-                        <nav class="main-nav" id="main-nav">
+                        <nav class="main-nav">
                             <ul class="nav-list">
-                                <li><a href="index.html">Home</a></li>
-                                <li><a href="invoice.html">Invoice</a></li>
-                                <li><a href="bill.html">Billing</a></li>
-                                <li><a href="asset.html">Assets</a></li>
+                                <li><a href="#home">Home</a></li>
                                 <li><a href="#contact">Contact</a></li>
                             </ul>
                         </nav>
-                        <button class="mobile-menu-btn" id="mobile-menu">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </button>
                     </div>
                 </div>
-                <div class="menu-overlay" id="menu-overlay"></div>
             </header>
         `;
-        initializeMobileMenu();
     }
 }
 
