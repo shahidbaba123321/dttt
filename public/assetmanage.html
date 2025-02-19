@@ -3824,7 +3824,7 @@ p { font-size: var(--body-size); }
     </div>
 
     <script>
-        // Enhanced Chart Instance Management
+       // Chart Instance Management
 const chartInstances = new Map();
 
 // Document Ready Handler with Enhanced Error Handling
@@ -3844,19 +3844,33 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Enhanced Header Loading
+// Enhanced Header Loading with Debug Logs
 async function loadHeader() {
     const headerContainer = document.getElementById('header-container');
     
     try {
-        const response = await fetch('header.html');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        console.log('Current location:', window.location.href);
+        console.log('Attempting to load header from:', new URL('./header.html', window.location.href).href);
+        
+        const response = await fetch('./header.html');
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
         const html = await response.text();
+        console.log('Header HTML loaded successfully');
+        
         headerContainer.innerHTML = html;
         initializeMobileMenu();
     } catch (error) {
-        console.error('Error loading header:', error);
+        console.error('Detailed error information:', {
+            message: error.message,
+            stack: error.stack,
+            location: window.location.pathname,
+            type: error.name
+        });
         // Fallback header
         headerContainer.innerHTML = `
             <header class="main-header">
@@ -3889,7 +3903,25 @@ async function loadHeader() {
 }
 
 // Enhanced Mobile Menu
-function initializeMobileMenu()
+function initializeMobileMenu() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mainNav = document.getElementById('main-nav');
+    const menuOverlay = document.getElementById('menu-overlay');
+    let isMenuOpen = false;
+
+    if (mobileMenu && mainNav) {
+        function toggleMenu(show) {
+            isMenuOpen = show;
+            mobileMenu.classList.toggle('active', show);
+            mainNav.classList.toggle('active', show);
+            if (menuOverlay) menuOverlay.classList.toggle('active', show);
+            document.body.style.overflow = show ? 'hidden' : '';
+        }
+
+        mobileMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMenu(!isMenuOpen);
+        });
 
         // Close menu when clicking outside
         document.addEventListener('click', (e) => {
@@ -3906,8 +3938,7 @@ function initializeMobileMenu()
         });
     }
 }
-
-// Enhanced Animation System
+        // Enhanced Animation System
 function initializeAnimations() {
     const observerOptions = {
         threshold: 0.1,
@@ -4079,8 +4110,7 @@ function initializeCharts() {
     // Initialize Mini Charts with Error Handling
     initializeMiniCharts();
 }
-
-// Enhanced Mini Charts Initialization
+        // Enhanced Mini Charts Initialization
 function initializeMiniCharts() {
     document.querySelectorAll('.mini-chart').forEach((canvas, index) => {
         try {
@@ -4203,6 +4233,12 @@ function generateChartData() {
         }
     };
 }
+
+// Helper function to handle errors
+function handleError(error, context) {
+    console.error(`Error in ${context}:`, error);
+    showNotification(`An error occurred in ${context}. Please try again.`, 'error');
+}
         // Enhanced Report Preview System
 function showReportPreview(reportData) {
     try {
@@ -4284,127 +4320,7 @@ function showReportPreview(reportData) {
             </div>
         `;
 
-        // Add enhanced modal styles
-        const modalStyles = `
-            <style>
-                .report-preview-modal {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.5);
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    z-index: 1000;
-                    opacity: 0;
-                    transition: opacity 0.3s ease;
-                    backdrop-filter: blur(4px);
-                }
-                
-                .modal-content {
-                    background: white;
-                    border-radius: 16px;
-                    padding: clamp(1.5rem, 4vw, 2.5rem);
-                    max-width: 90%;
-                    width: 800px;
-                    max-height: 90vh;
-                    overflow-y: auto;
-                    transform: translateY(20px);
-                    transition: transform 0.3s ease;
-                    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-                }
-                
-                .modal-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 1.5rem;
-                    padding-bottom: 1rem;
-                    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-                }
-
-                .modal-controls {
-                    display: flex;
-                    align-items: center;
-                    gap: 1rem;
-                }
-
-                .report-date {
-                    font-size: 0.9rem;
-                    color: var(--light-text);
-                }
-
-                .report-sections {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 2rem;
-                }
-
-                .report-section {
-                    background: var(--background-color);
-                    padding: 1.5rem;
-                    border-radius: 12px;
-                }
-
-                .metrics-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 1rem;
-                    margin-top: 1rem;
-                }
-
-                .insights-list {
-                    list-style: none;
-                    padding: 0;
-                    margin: 0;
-                }
-
-                .insights-list li {
-                    display: flex;
-                    align-items: center;
-                    gap: 1rem;
-                    padding: 1rem;
-                    background: white;
-                    border-radius: 8px;
-                    margin-bottom: 0.5rem;
-                }
-
-                .insights-list i {
-                    color: var(--primary-color);
-                }
-
-                .report-actions {
-                    display: flex;
-                    gap: 1rem;
-                    margin-top: 2rem;
-                    justify-content: flex-end;
-                }
-
-                @media (max-width: 768px) {
-                    .modal-content {
-                        padding: 1.25rem;
-                        width: 95%;
-                    }
-
-                    .metrics-grid {
-                        grid-template-columns: 1fr;
-                    }
-
-                    .report-actions {
-                        flex-direction: column;
-                    }
-
-                    .report-actions button {
-                        width: 100%;
-                    }
-                }
-            </style>
-        `;
-
-        // Append modal and styles to body
-        document.body.insertAdjacentHTML('beforeend', modalStyles);
+        // Append modal to body
         document.body.appendChild(modal);
 
         // Initialize report chart
@@ -4506,7 +4422,7 @@ function setupModalInteractions(modal) {
     });
 
     shareBtn.addEventListener('click', () => {
-        showShareOptions();
+        showNotification('Share options coming soon...', 'info');
     });
 }
         // Enhanced Notification System
@@ -4535,108 +4451,6 @@ function showNotification(message, type = 'success', duration = 3000) {
             <div class="notification-progress"></div>
         `;
 
-        // Add notification styles if not already present
-        if (!document.getElementById('notification-styles')) {
-            const styles = document.createElement('style');
-            styles.id = 'notification-styles';
-            styles.textContent = `
-                .notification {
-                    position: fixed;
-                    bottom: 20px;
-                    right: 20px;
-                    min-width: 300px;
-                    max-width: 450px;
-                    background: white;
-                    border-radius: 12px;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                    transform: translateY(100px);
-                    opacity: 0;
-                    transition: all 0.3s ease;
-                    z-index: 1000;
-                    overflow: hidden;
-                }
-
-                .notification-content {
-                    display: flex;
-                    align-items: center;
-                    padding: 1rem;
-                    gap: 1rem;
-                }
-
-                .notification i {
-                    font-size: 1.25rem;
-                }
-
-                .notification.success i {
-                    color: var(--success-color);
-                }
-
-                .notification.error i {
-                    color: var(--danger-color);
-                }
-
-                .notification.warning i {
-                    color: var(--warning-color);
-                }
-
-                .notification-text {
-                    flex: 1;
-                }
-
-                .notification-message {
-                    display: block;
-                    color: var(--text-color);
-                    font-size: 0.95rem;
-                }
-
-                .notification-retry {
-                    display: block;
-                    font-size: 0.8rem;
-                    color: var(--primary-color);
-                    margin-top: 0.25rem;
-                    cursor: pointer;
-                }
-
-                .notification-close {
-                    background: none;
-                    border: none;
-                    color: var(--light-text);
-                    cursor: pointer;
-                    padding: 0.5rem;
-                    transition: color 0.3s ease;
-                }
-
-                .notification-close:hover {
-                    color: var(--text-color);
-                }
-
-                .notification-progress {
-                    height: 3px;
-                    background: var(--primary-color);
-                    width: 100%;
-                    transform-origin: left;
-                    animation: progress ${duration}ms linear;
-                }
-
-                @keyframes progress {
-                    from { transform: scaleX(1); }
-                    to { transform: scaleX(0); }
-                }
-
-                @media (max-width: 768px) {
-                    .notification {
-                        width: calc(100% - 40px);
-                        min-width: unset;
-                        max-width: unset;
-                        bottom: 10px;
-                        right: 20px;
-                        left: 20px;
-                    }
-                }
-            `;
-            document.head.appendChild(styles);
-        }
-
         document.body.appendChild(notification);
 
         // Animate notification entrance
@@ -4656,7 +4470,7 @@ function showNotification(message, type = 'success', duration = 3000) {
         if (retryBtn) {
             retryBtn.addEventListener('click', () => {
                 removeNotification(notification);
-                // Implement retry logic here
+                // Implement retry logic here based on the context
             });
         }
 
@@ -4687,6 +4501,188 @@ function getNotificationIcon(type) {
         default:
             return 'fa-info-circle';
     }
+}
+
+// Simulation Functions
+function simulateDownload() {
+    setTimeout(() => {
+        showNotification('Report downloaded successfully', 'success');
+    }, 2000);
+}
+
+function simulatePrint() {
+    setTimeout(() => {
+        showNotification('Report sent to printer', 'success');
+    }, 2000);
+}
+
+// Performance Monitoring
+const performanceMonitor = {
+    metrics: {},
+    
+    start: function(label) {
+        this.metrics[label] = performance.now();
+    },
+    
+    end: function(label) {
+        if (this.metrics[label]) {
+            const duration = performance.now() - this.metrics[label];
+            console.log(`${label}: ${duration.toFixed(2)}ms`);
+            delete this.metrics[label];
+            return duration;
+        }
+        return null;
+    },
+
+    measure: async function(label, callback) {
+        this.start(label);
+        try {
+            const result = await callback();
+            const duration = this.end(label);
+            if (duration > 1000) {
+                showNotification(`Warning: ${label} took ${(duration/1000).toFixed(1)}s to complete`, 'warning');
+            }
+            return result;
+        } catch (error) {
+            this.end(label);
+            throw error;
+        }
+    }
+};
+
+// Utility Functions
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function throttle(func, limit) {
+    let inThrottle;
+    return function executedFunction(...args) {
+        if (!inThrottle) {
+            func(...args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+// Resource Loading Optimization
+function preloadResources() {
+    const resources = [
+        { type: 'image', url: 'image/asset-dashboard.png' },
+        { type: 'image', url: 'image/integration-diagram.png' },
+        { type: 'style', url: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css' }
+    ];
+
+    resources.forEach(resource => {
+        if (resource.type === 'image') {
+            const img = new Image();
+            img.src = resource.url;
+        } else if (resource.type === 'style') {
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.as = 'style';
+            link.href = resource.url;
+            document.head.appendChild(link);
+        }
+    });
+}// Enhanced Notification System
+function showNotification(message, type = 'success', duration = 3000) {
+    try {
+        // Remove existing notifications
+        const existingNotifications = document.querySelectorAll('.notification');
+        existingNotifications.forEach(notification => {
+            notification.remove();
+        });
+
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        
+        notification.innerHTML = `
+            <div class="notification-content">
+                <i class="fas ${getNotificationIcon(type)}"></i>
+                <div class="notification-text">
+                    <span class="notification-message">${message}</span>
+                    ${type === 'error' ? '<span class="notification-retry">Click to retry</span>' : ''}
+                </div>
+                <button class="notification-close" aria-label="Close notification">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="notification-progress"></div>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Animate notification entrance
+        requestAnimationFrame(() => {
+            notification.style.transform = 'translateY(0)';
+            notification.style.opacity = '1';
+        });
+
+        // Setup notification interactions
+        const closeBtn = notification.querySelector('.notification-close');
+        const retryBtn = notification.querySelector('.notification-retry');
+
+        closeBtn.addEventListener('click', () => {
+            removeNotification(notification);
+        });
+
+        if (retryBtn) {
+            retryBtn.addEventListener('click', () => {
+                removeNotification(notification);
+                // Implement retry logic here based on the context
+            });
+        }
+
+        // Auto-remove notification after duration
+        setTimeout(() => {
+            removeNotification(notification);
+        }, duration);
+
+    } catch (error) {
+        console.error('Error showing notification:', error);
+    }
+}
+
+function removeNotification(notification) {
+    notification.style.transform = 'translateY(100px)';
+    notification.style.opacity = '0';
+    setTimeout(() => notification.remove(), 300);
+}
+
+function getNotificationIcon(type) {
+    switch (type) {
+        case 'success':
+            return 'fa-check-circle';
+        case 'error':
+            return 'fa-exclamation-circle';
+        case 'warning':
+            return 'fa-exclamation-triangle';
+        default:
+            return 'fa-info-circle';
+    }
+}
+
+// Simulation Functions
+function simulateDownload() {
+    setTimeout(() => {
+        showNotification('Report downloaded successfully', 'success');
+    }, 2000);
+}
+
+function simulatePrint() {
+    setTimeout(() => {
+        showNotification('Report sent to printer', 'success');
+    }, 2000);
 }
 
 // Performance Monitoring
@@ -4768,17 +4764,6 @@ function preloadResources() {
         }
     });
 }
-
-// Initialize performance monitoring
-document.addEventListener('DOMContentLoaded', () => {
-    performanceMonitor.start('pageLoad');
-    preloadResources();
-});
-
-window.addEventListener('load', () => {
-    const loadTime = performanceMonitor.end('pageLoad');
-    console.log(`Page fully loaded in ${(loadTime/1000).toFixed(2)}s`);
-});
         // Global Error Handler and Recovery System
 const errorHandler = {
     maxRetries: 3,
@@ -4880,7 +4865,6 @@ const errorHandler = {
     },
 
     logError: function(errorData) {
-        // Implement your error logging logic here
         console.error('Error logged:', errorData);
         
         // Example: Send to analytics service
@@ -4971,9 +4955,20 @@ const cleanupSystem = {
     },
 
     reinitializeIntervals: function() {
-        // Implement interval reinitialize logic
+        // Implement interval reinitialize logic here
+        console.log('Reinitializing intervals...');
     }
 };
+        // Initialize performance monitoring
+document.addEventListener('DOMContentLoaded', () => {
+    performanceMonitor.start('pageLoad');
+    preloadResources();
+});
+
+window.addEventListener('load', () => {
+    const loadTime = performanceMonitor.end('pageLoad');
+    console.log(`Page fully loaded in ${(loadTime/1000).toFixed(2)}s`);
+});
 
 // Final Initialization
 document.addEventListener('DOMContentLoaded', function() {
@@ -5023,13 +5018,115 @@ document.addEventListener('visibilitychange', function() {
     }
 });
 
-// Export necessary functions and objects
+// Dashboard Data Refresh Function
+async function refreshDashboardData() {
+    try {
+        // Simulate data refresh
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log('Dashboard data refreshed');
+    } catch (error) {
+        throw new Error('Failed to refresh dashboard data');
+    }
+}
+
+// Chart Update Function
+function updateCharts() {
+    chartInstances.forEach((chart, id) => {
+        try {
+            if (chart && typeof chart.update === 'function') {
+                chart.update();
+            }
+        } catch (error) {
+            handleError(error, `Chart Update: ${id}`);
+        }
+    });
+}
+
+// Export Functionality Setup
+function setupExportFunctionality() {
+    const exportButtons = document.querySelectorAll('.export-btn');
+    exportButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const format = btn.dataset.format || 'pdf';
+            handleExport(format);
+        });
+    });
+}
+
+// Export Handler
+function handleExport(format) {
+    showNotification(`Preparing ${format.toUpperCase()} export...`, 'info');
+    
+    setTimeout(() => {
+        showNotification(`${format.toUpperCase()} exported successfully`, 'success');
+    }, 2000);
+}
+
+// Analytics Dashboard Initialization
+function initializeAnalyticsDashboard() {
+    try {
+        // Initialize main dashboard components
+        if (document.getElementById('mainChart')) {
+            initializeCharts();
+        }
+        
+        // Setup real-time updates
+        const updateInterval = setInterval(() => {
+            updateDashboardMetrics();
+        }, 30000); // Update every 30 seconds
+        
+        // Register interval for cleanup
+        cleanupSystem.registerInterval(updateInterval);
+        
+    } catch (error) {
+        handleError(error, 'Analytics Dashboard Initialization');
+    }
+}
+
+// Dashboard Metrics Update
+function updateDashboardMetrics() {
+    const metrics = document.querySelectorAll('.metric-value');
+    metrics.forEach(metric => {
+        const currentValue = parseFloat(metric.textContent);
+        const newValue = currentValue + (Math.random() - 0.5) * 10;
+        metric.textContent = newValue.toFixed(2);
+    });
+}
+
+// Integration Features Initialization
+function initializeIntegrationFeatures() {
+    try {
+        setupIntegrationNodes();
+        initializeConnectionAnimations();
+    } catch (error) {
+        handleError(error, 'Integration Features Initialization');
+    }
+}
+
+// Setup Integration Nodes
+function setupIntegrationNodes() {
+    const nodes = document.querySelectorAll('.integration-node');
+    nodes.forEach(node => {
+        node.addEventListener('click', () => {
+            showIntegrationDetails(node.dataset.type);
+        });
+    });
+}
+
+// Show Integration Details
+function showIntegrationDetails(type) {
+    showNotification(`Integration details for: ${type}`, 'info');
+}
+
+// Export necessary functions and objects for global access
 window.APP = {
     showNotification,
     handleError,
     performanceMonitor,
     cleanupSystem,
-    errorHandler
+    errorHandler,
+    refreshDashboardData,
+    updateCharts
 };
     </script>
     </body>
