@@ -1082,7 +1082,7 @@ textarea:focus {
             const headerContainer = document.getElementById('header-container');
             
             try {
-                const response = await fetch('header.html');
+                const response = await fetch('test.html');
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 
                 const html = await response.text();
