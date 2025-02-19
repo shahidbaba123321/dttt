@@ -1366,24 +1366,193 @@ body {
 <div id="modal-container"></div>
 
 <script>
-// Document Ready Handler
+ // Document Ready Handler
 document.addEventListener('DOMContentLoaded', function() {
-    try {
-        loadHeader().then(() => {
-            initializeAll();
-            initializeAnalyticsDashboard();
-            initializeIntegrationFeatures();
-            setupReportGeneration();
-            setupExportFunctionality();
-        }).catch(error => {
-            handleError(error, 'Header Loading');
-        });
-    } catch (error) {
-        handleError(error, 'Initial Loading');
-    }
+    initializeAll();
+    loadHeader();
 });
 
-// Enhanced Header Loading
+// Initialize All Functions
+function initializeAll() {
+    initializeAnimations();
+    initializePricing();
+    initializeMetrics();
+    handleScrollEffects();
+    setupInteractions();
+}
+
+// Pricing Configuration
+const pricingConfig = {
+    USD: {
+        symbol: '$',
+        monthly: {
+            basic: 39,
+            professional: 89
+        },
+        yearly: {
+            basic: 31,
+            professional: 71
+        }
+    },
+    INR: {
+        symbol: '₹',
+        monthly: {
+            basic: 2999,
+            professional: 6999
+        },
+        yearly: {
+            basic: 2399,
+            professional: 5599
+        }
+    },
+    GBP: {
+        symbol: '£',
+        monthly: {
+            basic: 31,
+            professional: 71
+        },
+        yearly: {
+            basic: 25,
+            professional: 57
+        }
+    },
+    AED: {
+        symbol: 'AED',
+        monthly: {
+            basic: 143,
+            professional: 327
+        },
+        yearly: {
+            basic: 114,
+            professional: 262
+        }
+    },
+    QAR: {
+        symbol: 'QAR',
+        monthly: {
+            basic: 142,
+            professional: 324
+        },
+        yearly: {
+            basic: 114,
+            professional: 259
+        }
+    }
+};
+
+// Initialize Pricing Functionality
+function initializePricing() {
+    const billingToggle = document.getElementById('billing-toggle');
+    const countrySelect = document.getElementById('country-select');
+    const priceElements = document.querySelectorAll('.price');
+    const currencySymbols = document.querySelectorAll('.currency-symbol');
+    const amounts = document.querySelectorAll('.amount');
+    const periods = document.querySelectorAll('.period');
+
+    let currentCurrency = 'USD';
+    let isYearly = false;
+
+    // Update Pricing Display
+    function updatePricing() {
+        const config = pricingConfig[currentCurrency];
+        const priceType = isYearly ? 'yearly' : 'monthly';
+        const periodText = isYearly ? '/month/year' : '/month';
+
+        // Update currency symbols
+        currencySymbols.forEach(symbol => {
+            symbol.textContent = config.symbol;
+        });
+
+        // Update amounts with animation
+        amounts.forEach((amount, index) => {
+            if (amount.closest('.price').querySelector('.custom')) return;
+
+            const planType = index === 0 ? 'basic' : 'professional';
+            const newPrice = config[priceType][planType];
+
+            // Add animation class
+            amount.closest('.price').classList.add('animating');
+            
+            // Animate price change
+            animateNumberChange(amount, newPrice);
+
+            // Remove animation class after animation
+            setTimeout(() => {
+                amount.closest('.price').classList.remove('animating');
+            }, 400);
+        });
+
+        // Update period text
+        periods.forEach(period => {
+            period.textContent = periodText;
+        });
+    }
+
+    // Number Animation Helper
+    function animateNumberChange(element, newValue) {
+        const start = parseInt(element.textContent);
+        const end = newValue;
+        const duration = 400;
+        const startTime = performance.now();
+
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            const current = Math.round(start + (end - start) * progress);
+            element.textContent = current;
+
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            }
+        }
+
+        requestAnimationFrame(update);
+    }
+
+    // Event Listeners
+    if (billingToggle) {
+        billingToggle.addEventListener('change', () => {
+            isYearly = billingToggle.checked;
+            updatePricing();
+        });
+    }
+
+    if (countrySelect) {
+        countrySelect.addEventListener('change', () => {
+            currentCurrency = countrySelect.value;
+            updatePricing();
+        });
+    }
+
+    // Initial pricing update
+    updatePricing();
+}
+
+// Animation Handler
+function initializeAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+                if (entry.target.classList.contains('progress-fill')) {
+                    const width = entry.target.dataset.progress;
+                    entry.target.style.width = width;
+                }
+            }
+        });
+    }, observerOptions);
+
+    // Observe elements
+    document.querySelectorAll('.feature-card, .pricing-card, .benefit-card, .integration-card, .progress-fill')
+        .forEach(el => observer.observe(el));
+}
+
 // Header Loading Function
 async function loadHeader() {
     const headerContainer = document.getElementById('header-container');
@@ -1420,162 +1589,103 @@ async function loadHeader() {
     }
 }
 
-// Initialize All Functions
-function initializeAll() {
-    initializeAnimations();
-    handleScrollEffects();
-    setupInteractions();
-    initializeCharts();
-    initializeMaintenanceCalendar();
-}
+// Mobile Menu Initialization
+function initializeMobileMenu() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mainNav = document.getElementById('main-nav');
+    const menuOverlay = document.getElementById('menu-overlay');
+    const megaMenus = document.querySelectorAll('.mega-menu');
 
-// Enhanced Animation System
-function initializeAnimations() {
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
+    if (mobileMenu && mainNav) {
+        let isMenuOpen = false;
 
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                requestAnimationFrame(() => {
-                    entry.target.classList.add('animate-in');
-                });
+        function toggleMenu(show) {
+            isMenuOpen = show;
+            mobileMenu.classList.toggle('active', show);
+            mainNav.classList.toggle('active', show);
+            menuOverlay.classList.toggle('active', show);
+            document.body.style.overflow = show ? 'hidden' : '';
+
+            if (!show) {
+                megaMenus.forEach(menu => menu.classList.remove('active'));
+            }
+        }
+
+        mobileMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMenu(!isMenuOpen);
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
+                toggleMenu(false);
             }
         });
-    }, observerOptions);
+    }
+}
 
-    document.querySelectorAll('.feature-card, .integration-card, .maintenance-card').forEach(el => {
-        observer.observe(el);
+// Scroll Effects Handler
+function handleScrollEffects() {
+    let lastScroll = 0;
+    const header = document.querySelector('.main-header');
+
+    window.addEventListener('scroll', () => {
+        const currentScroll = window.pageYOffset;
+        
+        if (currentScroll > lastScroll && currentScroll > 100) {
+            header?.classList.add('header-hidden');
+        } else {
+            header?.classList.remove('header-hidden');
+        }
+        
+        lastScroll = currentScroll;
     });
 }
 
-// Initialize Charts
-function initializeCharts() {
-    const mainChartCtx = document.getElementById('mainChart');
-    if (mainChartCtx) {
-        new Chart(mainChartCtx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                datasets: [{
-                    label: 'Asset Utilization',
-                    data: [75, 82, 80, 85, 83, 85],
-                    borderColor: 'rgba(41, 98, 255, 0.5)',
-                    backgroundColor: 'rgba(41, 98, 255, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+// Interactive Elements Setup
+function setupInteractions() {
+    document.querySelectorAll('.feature-card, .benefit-card, .integration-card').forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.classList.add('card-hover');
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.classList.remove('card-hover');
+        });
+    });
+}
+
+// Initialize Metrics
+function initializeMetrics() {
+      const charts = document.querySelectorAll('.metric-chart');
+        charts.forEach(chart => {
+            const ctx = chart.getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Attendance Rate',
+                        data: [92, 95, 94, 96, 95, 98],
+                        borderColor: '#2962ff',
+                        tension: 0.4
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
                         }
                     }
                 }
-            }
+            });
         });
-    }
 }
 
-// Setup Report Generation
-function setupReportGeneration() {
-    const generateButtons = document.querySelectorAll('.generate-btn');
-    generateButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const reportType = btn.closest('.feature-content')?.querySelector('.report-select')?.value || 'Default';
-            generateReport(reportType, btn);
-        });
-    });
-}
-
-function generateReport(type, button) {
-    const originalText = button.innerHTML;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
-    button.disabled = true;
-
-    setTimeout(() => {
-        showNotification(`${type} report generated successfully!`, 'success');
-        button.innerHTML = originalText;
-        button.disabled = false;
-    }, 2000);
-}
-
-// Enhanced Notification System
-function showNotification(message, type = 'success', duration = 3000) {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `
-        <div class="notification-content">
-            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
-            <span>${message}</span>
-        </div>
-    `;
-
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.style.opacity = '1';
-        notification.style.transform = 'translateY(0)';
-    }, 100);
-
-    setTimeout(() => {
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateY(100%)';
-        setTimeout(() => notification.remove(), 300);
-    }, duration);
-}
-
-// Initialize Maintenance Calendar
-function initializeMaintenanceCalendar() {
-    const calendarGrid = document.querySelector('.calendar-grid');
-    if (!calendarGrid) return;
-
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const currentDate = new Date();
-    const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
-    const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
-
-    // Add day headers
-    days.forEach(day => {
-        const dayHeader = document.createElement('div');
-        dayHeader.className = 'calendar-day header';
-        dayHeader.textContent = day;
-        calendarGrid.appendChild(dayHeader);
-    });
-
-    // Add empty cells for days before first of month
-    for (let i = 0; i < firstDay; i++) {
-        const emptyDay = document.createElement('div');
-        emptyDay.className = 'calendar-day empty';
-        calendarGrid.appendChild(emptyDay);
-    }
-
-    // Add days of the month
-    for (let i = 1; i <= daysInMonth; i++) {
-        const dayCell = document.createElement('div');
-        dayCell.className = 'calendar-day';
-        dayCell.innerHTML = `
-            <span class="day-number">${i}</span>
-            ${i === 15 ? '<span class="maintenance-dot completed"></span>' : ''}
-            ${i === 22 ? '<span class="maintenance-dot scheduled"></span>' : ''}
-        `;
-        calendarGrid.appendChild(dayCell);
-    }
-}
-
-// Watson Assistant Integration
+// Watson Assistant Chat Integration
 window.watsonAssistantChatOptions = {
     integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
     region: "au-syd",
@@ -1583,7 +1693,7 @@ window.watsonAssistantChatOptions = {
     onLoad: async (instance) => { await instance.render(); }
 };
 
-setTimeout(function() {
+setTimeout(function(){
     const t = document.createElement('script');
     t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
         (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
@@ -1591,5 +1701,5 @@ setTimeout(function() {
     document.head.appendChild(t);
 });
 </script>
-</body>
+    </body>
 </html>
