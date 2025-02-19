@@ -13,6 +13,934 @@
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Hero Section Styles */
+.project-hero {
+    background: var(--gradient);
+    padding: calc(var(--header-height) + 4rem) 0 6rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+.hero-text {
+    max-width: 600px;
+}
+
+.hero-text h1 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    line-height: 1.2;
+    color: #1a237e;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+
+.hero-text p {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: var(--light-text);
+    margin-bottom: 2.5rem;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+.stat-item {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 1.5rem;
+    border-radius: 16px;
+    text-align: center;
+    transition: var(--transition);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.stat-item:hover {
+    transform: translateY(-5px);
+}
+
+.stat-item i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.stat-item h4 {
+    font-size: 2rem;
+    color: #1a237e;
+    margin: 0.5rem 0;
+    font-weight: 700;
+}
+
+.hero-image img {
+    width: 100%;
+    height: auto;
+    max-width: 600px;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    animation: float 6s ease-in-out infinite;
+}
+
+@media (max-width: 1200px) {
+    .hero-content {
+        gap: 3rem;
+    }
+    
+    .hero-image img {
+        max-width: 500px;
+    }
+}
+
+@media (max-width: 992px) {
+    .hero-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .hero-text {
+        max-width: 100%;
+        order: 1;
+    }
+
+    .hero-image {
+        order: 0;
+        margin: 0 auto;
+    }
+
+    .hero-buttons {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .project-hero {
+        padding: calc(var(--header-height) + 2rem) 0 4rem;
+    }
+
+    .hero-buttons {
+        flex-direction: column;
+        max-width: 300px;
+        margin: 2rem auto;
+    }
+
+    .hero-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-item {
+        padding: 1rem;
+    }
+
+    .stat-item h4 {
+        font-size: 1.75rem;
+    }
+}
+
+/* Task Allocation Section Styles */
+.task-allocation {
+    padding: var(--section-spacing) 0;
+    background: white;
+}
+
+.task-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.task-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    border: 1px solid rgba(41, 98, 255, 0.1);
+}
+
+.task-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(41, 98, 255, 0.1);
+}
+
+.task-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.task-icon i {
+    font-size: 1.75rem;
+    color: var(--primary-color);
+}
+
+.task-card h3 {
+    color: #1a237e;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.task-card p {
+    color: var(--light-text);
+    margin-bottom: 1.5rem;
+}
+
+.task-features {
+    list-style: none;
+    margin-top: 1.5rem;
+}
+
+.task-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    color: var(--text-color);
+}
+
+.task-features li i {
+    color: var(--primary-color);
+    font-size: 1rem;
+}
+
+@media (max-width: 1200px) {
+    .task-grid {
+        gap: 1.5rem;
+    }
+    
+    .task-card {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .task-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .task-grid {
+        grid-template-columns: 1fr;
+        max-width: 500px;
+        margin: 2rem auto 0;
+    }
+
+    .task-card {
+        text-align: center;
+    }
+
+    .task-icon {
+        margin: 0 auto 1.5rem;
+    }
+
+    .task-features li {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .task-card {
+        padding: 1.25rem;
+    }
+
+    .task-icon {
+        width: 48px;
+        height: 48px;
+    }
+
+    .task-icon i {
+        font-size: 1.5rem;
+    }
+}
+        /* Project Tracking Section Styles */
+.tracking-section {
+    padding: var(--section-spacing) 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+.tracking-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 3rem;
+    margin-top: 3rem;
+}
+
+.gantt-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+}
+
+.gantt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.gantt-header h3 {
+    color: #1a237e;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.gantt-controls {
+    display: flex;
+    gap: 1rem;
+}
+
+.gantt-controls select {
+    padding: 0.75rem 1.5rem;
+    border: 1px solid rgba(41, 98, 255, 0.2);
+    border-radius: 8px;
+    background: white;
+    color: var(--text-color);
+}
+
+.gantt-body {
+    height: 400px;
+    position: relative;
+}
+
+.metrics-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+}
+
+.metric-item {
+    margin-bottom: 1.5rem;
+}
+
+.metric-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.metric-header span {
+    color: var(--text-color);
+    font-size: 0.875rem;
+}
+
+.progress-bar {
+    height: 8px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    border-radius: 4px;
+    transition: width 0.6s ease;
+}
+
+/* Deadline Management Section Styles */
+.deadline-section {
+    padding: var(--section-spacing) 0;
+    background: white;
+}
+
+.deadline-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 3rem;
+    margin-top: 3rem;
+}
+
+.calendar-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.calendar-navigation {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.calendar-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    padding: 0.5rem;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: var(--transition);
+}
+
+.calendar-day:hover {
+    background: rgba(41, 98, 255, 0.05);
+}
+
+.calendar-day.has-event {
+    border-color: var(--primary-color);
+}
+
+.day-number {
+    font-size: 0.875rem;
+    color: var(--text-color);
+}
+
+.event-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    margin-top: 0.25rem;
+}
+
+.deadline-list {
+    margin-top: 2rem;
+}
+
+.deadline-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+    transition: var(--transition);
+}
+
+.deadline-item:hover {
+    transform: translateX(5px);
+    box-shadow: var(--box-shadow);
+}
+
+.deadline-info h4 {
+    color: var(--text-color);
+    margin-bottom: 0.25rem;
+}
+
+.deadline-info p {
+    color: var(--light-text);
+    font-size: 0.875rem;
+}
+
+.deadline-status {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-upcoming {
+    background: rgba(255, 193, 7, 0.1);
+    color: var(--warning-color);
+}
+
+.status-overdue {
+    background: rgba(220, 53, 69, 0.1);
+    color: var(--danger-color);
+}
+
+/* Responsive Styles for Both Sections */
+@media (max-width: 1200px) {
+    .tracking-grid,
+    .deadline-grid {
+        gap: 2rem;
+    }
+
+    .gantt-container,
+    .calendar-container {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .tracking-grid,
+    .deadline-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .gantt-body {
+        height: 300px;
+    }
+
+    .calendar-grid {
+        gap: 0.25rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .gantt-header,
+    .calendar-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .gantt-controls,
+    .calendar-navigation {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .deadline-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .calendar-day {
+        padding: 0.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .gantt-container,
+    .calendar-container {
+        padding: 1rem;
+    }
+
+    .calendar-grid {
+        font-size: 0.75rem;
+    }
+
+    .deadline-status {
+        width: 100%;
+        text-align: center;
+    }
+}
+        /* Invoicing Section Styles */
+.invoicing-section {
+    padding: var(--section-spacing) 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+.invoicing-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 3rem;
+    margin-top: 3rem;
+}
+
+.invoice-preview {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+}
+
+.invoice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(41, 98, 255, 0.1);
+    margin-bottom: 2rem;
+}
+
+.company-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.company-info img {
+    height: 40px;
+    width: auto;
+}
+
+.company-info h3 {
+    color: #1a237e;
+    font-size: 1.25rem;
+}
+
+.status-badge {
+    padding: 0.5rem 1.25rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-badge.paid {
+    background: rgba(40, 167, 69, 0.1);
+    color: var(--success-color);
+}
+
+.status-badge.pending {
+    background: rgba(255, 193, 7, 0.1);
+    color: var(--warning-color);
+}
+
+.invoice-details {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+.detail-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.detail-group span {
+    color: var(--light-text);
+    font-size: 0.875rem;
+}
+
+.detail-group strong {
+    color: var(--text-color);
+    font-size: 1.25rem;
+}
+
+.invoice-items {
+    margin-top: 2rem;
+}
+
+.item-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+.item-row.header {
+    background: rgba(41, 98, 255, 0.05);
+    font-weight: 500;
+}
+
+/* Integration Section Styles */
+.integration-section {
+    padding: var(--section-spacing) 0;
+    background: white;
+}
+
+.integration-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    margin-top: 3rem;
+}
+
+.integration-showcase {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+}
+
+.integration-logos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.integration-logo {
+    height: 40px;
+    width: auto;
+    opacity: 0.7;
+    transition: var(--transition);
+    filter: grayscale(100%);
+}
+
+.integration-logo:hover {
+    opacity: 1;
+    filter: grayscale(0%);
+    transform: scale(1.1);
+}
+
+.api-preview {
+    background: #1a237e;
+    padding: 2rem;
+    border-radius: 16px;
+    color: white;
+}
+
+.code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.code-block {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1.5rem;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+    overflow-x: auto;
+}
+
+.copy-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.copy-btn:hover {
+    color: white;
+}
+
+/* CTA Section Styles */
+.cta-section {
+    padding: 8rem 0;
+    background: var(--gradient);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+.cta-content {
+    max-width: 800px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+
+.cta-content h2 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    color: #1a237e;
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+}
+
+.cta-content p {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: var(--light-text);
+    margin-bottom: 2.5rem;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 3rem;
+}
+
+.cta-features {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cta-feature {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.cta-feature i {
+    color: var(--primary-color);
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .invoicing-grid,
+    .integration-grid {
+        gap: 2rem;
+    }
+
+    .invoice-preview,
+    .integration-showcase,
+    .api-preview {
+        padding: 2rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .invoicing-grid,
+    .integration-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .invoice-details {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .integration-logos {
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .invoice-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .invoice-details {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .item-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+
+    .integration-logo {
+        height: 30px;
+    }
+
+    .cta-buttons {
+        flex-direction: column;
+        max-width: 300px;
+        margin: 2rem auto;
+    }
+
+    .cta-features {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .cta-feature {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .invoice-preview,
+    .integration-showcase,
+    .api-preview {
+        padding: 1.25rem;
+    }
+
+    .code-block {
+        padding: 1rem;
+        font-size: 0.75rem;
+    }
+
+    .company-info {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .status-badge {
+        width: 100%;
+        text-align: center;
+    }
+
+    .cta-content h2 {
+        font-size: 1.75rem;
+    }
+
+    .cta-content p {
+        font-size: 1rem;
+    }
+}
+
+/* Animation Classes */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.invoice-preview,
+.integration-showcase,
+.api-preview,
+.cta-content {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* Print Styles */
+@media print {
+    .invoice-preview {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+
+    .cta-section,
+    .integration-section {
+        display: none;
+    }
+}
+    </style>
 </head>
 <body>
     <!-- Header Container -->
@@ -425,598 +1353,7 @@ curl -X POST https://api.workwise.pro/v1/projects \
                 </div>
             </div>
         </footer>
-        <style>
-          /* Project Tracking Section Styles */
-.tracking-section {
-    padding: var(--section-spacing) 0;
-    background: var(--gradient);
-    position: relative;
-}
-
-.tracking-grid {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 3rem;
-    margin-top: 3rem;
-}
-
-.gantt-chart-container {
-    background: white;
-    padding: 2rem;
-    border-radius: 16px;
-    box-shadow: var(--box-shadow);
-}
-
-.chart-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.chart-header h3 {
-    color: #1a237e;
-    font-size: 1.25rem;
-    font-weight: 600;
-}
-
-.time-range {
-    padding: 0.75rem 1.5rem;
-    border: 1px solid rgba(41, 98, 255, 0.2);
-    border-radius: 8px;
-    background: white;
-    color: var(--text-color);
-}
-
-.chart-body {
-    height: 400px;
-    position: relative;
-}
-
-/* Progress Metrics Styles */
-.progress-metrics {
-    margin-top: 1.5rem;
-}
-
-.metric {
-    margin-bottom: 1.5rem;
-}
-
-.metric-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-    color: var(--text-color);
-    font-size: 0.875rem;
-}
-
-.progress-bar {
-    height: 8px;
-    background: rgba(41, 98, 255, 0.1);
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.progress {
-    height: 100%;
-    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
-    border-radius: 4px;
-    transition: width 0.3s ease;
-}
-
-/* Deadline Section Styles */
-.deadline-section {
-    padding: var(--section-spacing) 0;
-    background: white;
-}
-
-.deadline-grid {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 3rem;
-    margin-top: 3rem;
-}
-
-.calendar-view {
-    background: white;
-    padding: 2rem;
-    border-radius: 16px;
-    box-shadow: var(--box-shadow);
-}
-
-.calendar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.calendar-nav {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.nav-btn {
-    width: 32px;
-    height: 32px;
-    border: none;
-    background: rgba(41, 98, 255, 0.1);
-    color: var(--primary-color);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.nav-btn:hover {
-    background: var(--primary-color);
-    color: white;
-}
-
-.current-month {
-    font-weight: 500;
-    color: var(--text-color);
-}
-
-/* Deadline List Styles */
-.deadline-list {
-    margin-top: 1.5rem;
-}
-
-.deadline-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background: white;
-    border-radius: 12px;
-    margin-bottom: 1rem;
-    border: 1px solid rgba(41, 98, 255, 0.1);
-    transition: var(--transition);
-}
-
-.deadline-item:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--box-shadow);
-}
-
-.deadline-item.urgent {
-    border-left: 4px solid var(--danger-color);
-}
-
-.deadline-item.upcoming {
-    border-left: 4px solid var(--warning-color);
-}
-
-.deadline-info h4 {
-    color: var(--text-color);
-    margin-bottom: 0.25rem;
-}
-
-.deadline-info p {
-    color: var(--light-text);
-    font-size: 0.875rem;
-}
-
-.status {
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 500;
-}
-
-.status.urgent {
-    background: rgba(220, 53, 69, 0.1);
-    color: var(--danger-color);
-}
-
-.status.upcoming {
-    background: rgba(255, 193, 7, 0.1);
-    color: var(--warning-color);
-}
-
-/* Invoicing Section Styles */
-.invoicing-section {
-    padding: var(--section-spacing) 0;
-    background: var(--gradient);
-}
-
-.invoicing-grid {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 3rem;
-    margin-top: 3rem;
-}
-
-.invoice-card {
-    background: white;
-    padding: 2rem;
-    border-radius: 16px;
-    box-shadow: var(--box-shadow);
-}
-
-.invoice-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.company-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.company-info img {
-    height: 40px;
-    width: auto;
-}
-
-.status-badge {
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.status-badge.paid {
-    background: rgba(40, 167, 69, 0.1);
-    color: var(--success-color);
-}
-
-.invoice-details {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-}
-
-.detail-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.detail-group span {
-    color: var(--light-text);
-    font-size: 0.875rem;
-}
-
-.detail-group strong {
-    color: var(--text-color);
-    font-size: 1.125rem;
-}
-
-/* Integration Section Styles */
-.integration-section {
-    padding: var(--section-spacing) 0;
-    background: white;
-}
-
-.integration-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
-    margin-top: 3rem;
-}
-
-.integration-logos {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
-    justify-content: center;
-    align-items: center;
-}
-
-.integration-logo {
-    height: 40px;
-    width: auto;
-    opacity: 0.7;
-    transition: var(--transition);
-    filter: grayscale(100%);
-}
-
-.integration-logo:hover {
-    opacity: 1;
-    filter: grayscale(0%);
-    transform: scale(1.1);
-}
-
-.code-block {
-    background: #1a237e;
-    padding: 1.5rem;
-    border-radius: 12px;
-    color: white;
-}
-
-.code-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.copy-btn {
-    background: none;
-    border: none;
-    color: rgba(255, 255, 255, 0.7);
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.copy-btn:hover {
-    color: white;
-}
-
-/* Responsive Styles */
-@media (max-width: 1200px) {
-    .tracking-grid,
-    .deadline-grid,
-    .invoicing-grid,
-    .integration-grid {
-        gap: 2rem;
-    }
-}
-
-@media (max-width: 992px) {
-    .tracking-grid,
-    .deadline-grid,
-    .invoicing-grid,
-    .integration-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .chart-body {
-        height: 300px;
-    }
-}
-
-@media (max-width: 768px) {
-    .invoice-details {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-
-    .integration-logos {
-        gap: 1rem;
-    }
-
-    .integration-logo {
-        height: 30px;
-    }
-}
-
-@media (max-width: 480px) {
-    .calendar-header,
-    .chart-header {
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .deadline-item {
-        flex-direction: column;
-        text-align: center;
-        gap: 1rem;
-    }
-
-    .code-block {
-        padding: 1rem;
-        font-size: 0.875rem;
-    }
-}
-
-/* Animation Classes */
-.tracking-grid,
-.deadline-grid,
-.invoicing-grid,
-.integration-grid {
-    animation: fadeInUp 0.6s ease-out forwards;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-        </style>
-        <style>
-/* Enhanced CTA Section Styles */
-.cta-section {
-    padding: 8rem 0;
-    background: var(--gradient);
-    position: relative;
-    overflow: hidden;
-    text-align: center;
-}
-
-.cta-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(45deg, rgba(41, 98, 255, 0.05), transparent);
-    pointer-events: none;
-}
-
-.cta-content {
-    max-width: 800px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-}
-
-.cta-content h2 {
-    font-size: clamp(2rem, 5vw, 3rem);
-    background: linear-gradient(45deg, #1a237e, #2962ff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 1.5rem;
-    line-height: 1.2;
-}
-
-.cta-buttons {
-    display: flex;
-    gap: 1.5rem;
-    justify-content: center;
-    margin: 2rem 0 3rem;
-}
-
-.cta-features {
-    display: flex;
-    gap: 2rem;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.cta-feature {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 0.75rem 1.5rem;
-    border-radius: 50px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-}
-
-.cta-feature i {
-    color: var(--primary-color);
-}
-
-/* Enhanced Footer Styles */
-.main-footer {
-    background: #000000;
-    color: #ffffff;
-    padding: 6rem 0 2rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.footer-grid {
-    display: grid;
-    grid-template-columns: 2fr repeat(4, 1fr);
-    gap: clamp(2rem, 5vw, 4rem);
-    margin-bottom: 4rem;
-}
-
-.footer-section h4 {
-    color: #ffffff;
-    font-size: 1.2rem;
-    margin-bottom: 1.5rem;
-    position: relative;
-    padding-bottom: 0.75rem;
-}
-
-.footer-section h4::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 30px;
-    height: 2px;
-    background: var(--primary-color);
-    transition: width 0.3s ease;
-}
-
-.footer-section ul li a {
-    color: rgba(255, 255, 255, 0.7);
-    text-decoration: none;
-    transition: var(--transition);
-    display: inline-block;
-    padding: 0.5rem 0;
-}
-
-.footer-section ul li a:hover {
-    color: #ffffff;
-    transform: translateX(5px);
-}
-
-.social-links {
-    display: flex;
-    gap: 1rem;
-}
-
-.social-links a {
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(255, 255, 255, 0.7);
-    transition: var(--transition);
-}
-
-.social-links a:hover {
-    background: var(--primary-color);
-    color: white;
-    transform: translateY(-3px);
-}
-
-/* Responsive Styles */
-@media (max-width: 992px) {
-    .footer-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 3rem;
-    }
-
-    .brand-section {
-        grid-column: 1 / -1;
-        text-align: center;
-    }
-
-    .social-links {
-        justify-content: center;
-    }
-}
-
-@media (max-width: 768px) {
-    .cta-section {
-        padding: 4rem 0;
-    }
-
-    .cta-buttons {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .cta-features {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .footer-section {
-        text-align: center;
-    }
-
-    .footer-section h4::after {
-        left: 50%;
-        transform: translateX(-50%);
-    }
-}
-
-@media (max-width: 480px) {
-    .cta-feature {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .footer-grid {
-        grid-template-columns: 1fr;
-    }
-}
-</style>
+       
     </main>
 <script>
   // Document Ready Handler
