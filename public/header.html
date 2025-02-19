@@ -78,6 +78,47 @@ header .container {
     font-size: 28px;
     font-weight: 600;
 }
+        /* Mobile Menu Button Styles */
+.mobile-menu-btn {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 44px;
+    height: 44px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1001;
+}
+
+.mobile-menu-btn span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: var(--text-color);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.mobile-menu-btn span + span {
+    margin-top: 6px;
+}
+
+/* Active State for Menu Button */
+.mobile-menu-btn.active span:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+}
+
+.mobile-menu-btn.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.mobile-menu-btn.active span:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+}
+
 
 /* Main Navigation */
 .main-nav {
@@ -119,6 +160,17 @@ header .container {
     color: var(--primary-color);
 }
 
+        .nav-list a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    padding: 0.5rem 0;
+}
+
+.nav-list a:hover {
+    color: var(--primary-color);
+}
 /* Auth Buttons */
 .auth-buttons {
     display: flex;
@@ -776,15 +828,14 @@ header .container {
 .menu-overlay {
     display: none;
     position: fixed;
-    top: 0;
+    top: var(--header-height);
     left: 0;
     width: 100%;
-    height: 100%;
+    height: calc(100vh - var(--header-height));
     background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    z-index: 999;
     opacity: 0;
     transition: opacity 0.3s ease;
+    z-index: 999;
 }
 
 .menu-overlay.active {
@@ -850,6 +901,7 @@ header .container {
         width: 16px;
         height: 16px;
     }
+    
 }
 
 /* Animation Classes */
@@ -908,6 +960,81 @@ header .container {
             opacity: 1;
             transform: translateX(0);
         }
+    }
+}
+        /* Mobile Styles */
+@media (max-width: 768px) {
+    .mobile-menu-btn {
+        display: flex;
+    }
+
+    .nav-list {
+        position: fixed;
+        top: var(--header-height);
+        left: 0;
+        width: 100%;
+        height: calc(100vh - var(--header-height));
+        background: white;
+        flex-direction: column;
+        gap: 0;
+        padding: 1rem 0;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        z-index: 1000;
+    }
+
+    .nav-list.active {
+        transform: translateX(0);
+    }
+
+    .nav-list a {
+        display: block;
+        padding: 1rem 2rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-list a:hover {
+        background: rgba(41, 98, 255, 0.05);
+    }
+
+    /* Fix for iOS height issues */
+    @supports (-webkit-touch-callout: none) {
+        .nav-list {
+            height: -webkit-fill-available;
+        }
+    }
+}
+        /* Additional Mobile Optimizations */
+@media (max-width: 480px) {
+    .header-content {
+        padding: 0 1rem;
+    }
+
+    .mobile-menu-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .mobile-menu-btn span {
+        width: 20px;
+    }
+
+    .nav-list a {
+        padding: 0.875rem 1.5rem;
+        font-size: 0.95rem;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) {
+    .nav-list a {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .nav-list a:active {
+        background: rgba(41, 98, 255, 0.05);
     }
 }
     </style>
