@@ -10,9 +10,12 @@
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <style>
-       /* Root Variables and Base Styles */
+<style>
+/* Root Variables */
 :root {
     --primary-color: #2962ff;
     --secondary-color: #6c757d;
@@ -30,23 +33,14 @@
     --mobile-padding: 1rem;
     --section-spacing: 4rem;
     --header-height: 70px;
-    --section-padding: clamp(3rem, 8vw, 6rem);
-    --container-padding: clamp(1rem, 5vw, 2rem);
-    --grid-gap: clamp(2rem, 4vw, 4rem);
-    --h1-size: clamp(2rem, 5vw, 3.5rem);
-    --h2-size: clamp(1.75rem, 4vw, 2.5rem);
-    --h3-size: clamp(1.25rem, 3vw, 1.75rem);
-    --body-size: clamp(0.875rem, 2vw, 1rem);
 }
 
+/* Base Styles */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
-    backface-visibility: hidden;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -54,139 +48,20 @@ body {
     line-height: 1.6;
     color: var(--text-color);
     background-color: var(--background-color);
-    width: 100%;
     overflow-x: hidden;
-    max-width: 100vw;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     padding-top: var(--header-height);
 }
 
 .container {
-    width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 var(--container-padding);
-    overflow: hidden;
-}
-
-/* Typography */
-h1 { font-size: var(--h1-size); }
-h2 { font-size: var(--h2-size); }
-h3 { font-size: var(--h3-size); }
-p { font-size: var(--body-size); }
-
-/* Header Styles */
-.main-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background: white;
-    z-index: 1000;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-}
-
-.header-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: var(--header-height);
-    padding: 0 var(--container-padding);
-}
-
-.logo {
-    display: flex;
-    align-items: center;
-    text-decoration: none;
-}
-
-.logo-img {
-    height: 40px;
-    width: auto;
-}
-
-/* Navigation */
-.nav-list {
-    display: flex;
-    gap: 2rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.nav-list a {
-    color: var(--text-color);
-    text-decoration: none;
-    font-weight: 500;
-    transition: var(--transition);
-    padding: 0.5rem 0;
-    position: relative;
-}
-
-.nav-list a::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: var(--primary-color);
-    transition: var(--transition);
-}
-
-.nav-list a:hover::after {
+    padding: 0 var(--mobile-padding);
     width: 100%;
 }
 
-/* Mobile Menu Button */
-.mobile-menu-btn {
-    display: none;
-    flex-direction: column;
-    gap: 4px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0.5rem;
-}
-
-.mobile-menu-btn span {
-    display: block;
-    width: 24px;
-    height: 2px;
-    background: var(--text-color);
-    transition: var(--transition);
-}
-
-.mobile-menu-btn.active span:nth-child(1) {
-    transform: translateY(8px) rotate(45deg);
-}
-
-.mobile-menu-btn.active span:nth-child(2) {
-    opacity: 0;
-}
-
-.mobile-menu-btn.active span:nth-child(3) {
-    transform: translateY(-8px) rotate(-45deg);
-}
-
-/* Menu Overlay */
-.menu-overlay {
-    display: none;
-    position: fixed;
-    top: var(--header-height);
-    left: 0;
-    width: 100%;
-    height: calc(100vh - var(--header-height));
-    background: rgba(0, 0, 0, 0.5);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.menu-overlay.active {
-    display: block;
-    opacity: 1;
-}
-        /* Hero Section Styles */
+/* Enhanced Hero Section */
 .asset-hero {
     background: var(--gradient);
     padding: calc(var(--header-height) + 4rem) 0 6rem;
@@ -194,10 +69,21 @@ p { font-size: var(--body-size); }
     overflow: hidden;
 }
 
+.asset-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(41, 98, 255, 0.05), transparent);
+    pointer-events: none;
+}
+
 .hero-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--grid-gap);
+    gap: 4rem;
     align-items: center;
     position: relative;
     z-index: 2;
@@ -208,17 +94,22 @@ p { font-size: var(--body-size); }
 }
 
 .hero-text h1 {
-    color: #1a237e;
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    background: linear-gradient(45deg, #1a237e, #2962ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     margin-bottom: 1.5rem;
     line-height: 1.2;
+    font-weight: 700;
 }
 
 .hero-text p {
-    color: var(--light-text);
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: #455a64;
     margin-bottom: 2rem;
+    opacity: 0.9;
 }
 
-/* Button Styles */
 .hero-buttons {
     display: flex;
     gap: 1.5rem;
@@ -229,7 +120,7 @@ p { font-size: var(--body-size); }
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: clamp(0.75rem, 2vw, 1rem) clamp(1.5rem, 3vw, 2rem);
+    padding: 1rem 2rem;
     border-radius: var(--border-radius);
     text-decoration: none;
     transition: var(--transition);
@@ -237,8 +128,6 @@ p { font-size: var(--body-size); }
     cursor: pointer;
     min-width: 160px;
     text-align: center;
-    font-size: clamp(0.875rem, 2vw, 1rem);
-    letter-spacing: 0.5px;
 }
 
 .btn.primary {
@@ -259,81 +148,64 @@ p { font-size: var(--body-size); }
     box-shadow: 0 6px 20px rgba(41, 98, 255, 0.25);
 }
 
-/* Hero Stats */
-.hero-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: clamp(1rem, 3vw, 2rem);
-    margin-top: 2rem;
+/* Global Presence Styles */
+.global-presence {
+    margin-top: 2.5rem;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-.stat-item {
-    background: rgba(255, 255, 255, 0.9);
-    padding: clamp(1rem, 3vw, 1.5rem);
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
+.global-presence h3 {
+    font-size: 1.2rem;
+    color: #1a237e;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+    /* Feature Cards and Section Styles */
+.features-section {
+    padding: 6rem 0;
+    background: white;
+}
+
+.section-header {
     text-align: center;
-    transition: var(--transition);
+    margin-bottom: 3rem;
 }
 
-.stat-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-}
-
-.stat-item i {
-    font-size: clamp(1.5rem, 3vw, 2rem);
-    color: var(--primary-color);
+.section-header h2 {
+    font-size: clamp(2rem, 4vw, 2.5rem);
+    color: #1a237e;
     margin-bottom: 1rem;
 }
 
-.stat-item h4 {
-    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
-    color: #1a237e;
-    margin-bottom: 0.5rem;
-}
-
-.stat-item p {
+.section-header p {
+    font-size: 1.25rem;
     color: var(--light-text);
-    font-size: clamp(0.8rem, 1.5vw, 0.9rem);
-}
-
-/* Hero Image */
-.hero-image {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.hero-image img {
-    width: 100%;
-    height: auto;
     max-width: 600px;
-    object-fit: contain;
-    border-radius: clamp(8px, 2vw, 20px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    animation: float 3s ease-in-out infinite;
+    margin: 0 auto;
 }
 
-@keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
-    100% { transform: translateY(0px); }
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2.5rem;
+    margin-top: 3rem;
 }
 
-/* Feature Card Base Styles */
 .feature-card {
-    background: var(--card-bg);
-    padding: clamp(1.5rem, 4vw, 2.5rem);
-    border-radius: 16px;
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
     box-shadow: var(--box-shadow);
-    transition: var(--transition);
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(41, 98, 255, 0.1);
     position: relative;
     overflow: hidden;
 }
@@ -343,69 +215,56 @@ p { font-size: var(--body-size); }
     position: absolute;
     top: 0;
     left: 0;
-    width: 4px;
-    height: 100%;
-    background: linear-gradient(to bottom, var(--primary-color), #42a5f5);
-    opacity: 0;
-    transition: var(--transition);
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+    transform-origin: left;
 }
 
 .feature-card:hover {
-    transform: translateX(10px);
+    transform: translateY(-10px);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
 }
 
 .feature-card:hover::before {
-    opacity: 1;
+    transform: scaleX(1);
 }
 
 .feature-icon {
-    width: 56px;
-    height: 56px;
+    width: 64px;
+    height: 64px;
     background: rgba(41, 98, 255, 0.1);
-    border-radius: 12px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 1.5rem;
-    transition: var(--transition);
 }
 
 .feature-icon i {
     font-size: 1.75rem;
     color: var(--primary-color);
-    transition: var(--transition);
 }
 
-.feature-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.feature-content h3 {
+.feature-card h3 {
+    font-size: 1.5rem;
     color: #1a237e;
     margin-bottom: 1rem;
 }
 
-.feature-content p {
-    color: var(--light-text);
-    margin-bottom: 1.5rem;
-    line-height: 1.6;
-}
-        /* Feature List Styles */
 .feature-list {
     list-style: none;
-    margin: 0;
-    padding: 0;
+    margin: 1.5rem 0;
 }
 
 .feature-list li {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
 }
 
 .feature-list li i {
@@ -420,10 +279,10 @@ p { font-size: var(--body-size); }
     justify-content: center;
 }
 
-/* Analytics Section Styles */
+/* Analytics Dashboard Section */
 .analytics-section {
-    padding: var(--section-padding) 0;
-    background: var(--card-bg);
+    padding: 6rem 0;
+    background: var(--gradient);
     position: relative;
 }
 
@@ -434,145 +293,6 @@ p { font-size: var(--body-size); }
     margin-top: 3rem;
 }
 
-.analytics-card {
-    background: white;
-    padding: clamp(1.5rem, 4vw, 2.5rem);
-    border-radius: 16px;
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-    margin-bottom: 1.5rem;
-}
-
-/* Metrics Preview */
-.metrics-preview {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: clamp(0.75rem, 2vw, 1rem);
-    margin: 1.5rem 0;
-}
-
-.metric-item {
-    background: rgba(41, 98, 255, 0.05);
-    padding: clamp(1rem, 3vw, 1.5rem);
-    border-radius: 12px;
-    text-align: center;
-}
-
-.metric-value {
-    font-size: clamp(1.25rem, 3vw, 1.5rem);
-    font-weight: 600;
-    color: var(--primary-color);
-    margin-bottom: 0.5rem;
-}
-
-.metric-label {
-    font-size: clamp(0.8rem, 2vw, 0.9rem);
-    color: var(--light-text);
-}
-
-/* Chart Controls */
-.chart-filters {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 1rem;
-    flex-wrap: wrap;
-}
-
-.filter-btn {
-    padding: clamp(0.4rem, 1.5vw, 0.5rem) clamp(0.8rem, 2vw, 1rem);
-    border: none;
-    background: rgba(41, 98, 255, 0.1);
-    color: var(--primary-color);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: var(--transition);
-    font-size: clamp(0.8rem, 2vw, 0.9rem);
-}
-
-.filter-btn.active {
-    background: var(--primary-color);
-    color: white;
-}
-
-/* Report Builder */
-.report-builder {
-    margin-top: 1.5rem;
-}
-
-.report-options {
-    display: grid;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-.option-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: var(--text-color);
-    font-size: clamp(0.85rem, 2vw, 0.9rem);
-}
-
-.report-select {
-    width: 100%;
-    padding: clamp(0.6rem, 2vw, 0.75rem);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    background: white;
-    color: var(--text-color);
-    font-size: clamp(0.85rem, 2vw, 0.9rem);
-}
-
-/* Generate Button */
-.generate-btn {
-    width: 100%;
-    padding: clamp(0.8rem, 2.5vw, 1rem);
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    transition: var(--transition);
-    font-size: clamp(0.85rem, 2vw, 0.9rem);
-}
-
-.generate-btn:hover {
-    background: #1a54ff;
-    transform: translateY(-2px);
-}
-
-/* Export Options */
-.export-options {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: clamp(0.5rem, 2vw, 1rem);
-    margin-top: 1.5rem;
-}
-
-.export-btn {
-    padding: clamp(0.6rem, 2vw, 0.75rem);
-    background: rgba(41, 98, 255, 0.1);
-    color: var(--primary-color);
-    border: none;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    transition: var(--transition);
-    font-size: clamp(0.8rem, 2vw, 0.9rem);
-}
-
-.export-btn:hover {
-    background: var(--primary-color);
-    color: white;
-}
-
-/* Dashboard Preview */
 .dashboard-preview {
     background: white;
     padding: clamp(1.5rem, 4vw, 2rem);
@@ -587,761 +307,31 @@ p { font-size: var(--body-size); }
     margin-bottom: clamp(1.5rem, 3vw, 2rem);
 }
 
-.date-range {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: rgba(41, 98, 255, 0.1);
-    border-radius: 20px;
-    font-size: clamp(0.8rem, 2vw, 0.9rem);
-    color: var(--primary-color);
-}
-        /* Chart Container */
 .chart-container {
     height: clamp(250px, 50vw, 400px);
     margin-bottom: clamp(1.5rem, 3vw, 2rem);
     position: relative;
 }
 
-/* Dashboard Metrics */
-.dashboard-metrics {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: clamp(0.75rem, 2vw, 1rem);
-}
-
-.metric-box {
-    background: rgba(41, 98, 255, 0.05);
-    padding: clamp(1rem, 2.5vw, 1.25rem);
-    border-radius: 12px;
-    text-align: center;
-}
-
-.metric-box h4 {
-    font-size: clamp(0.8rem, 2vw, 0.9rem);
-    color: var(--light-text);
-    margin-bottom: 0.5rem;
-}
-
-.value {
-    font-size: clamp(1.25rem, 3vw, 1.5rem);
-    font-weight: 600;
-    color: var(--text-color);
-    margin-bottom: 0.5rem;
-}
-
-.trend {
-    font-size: clamp(0.75rem, 1.5vw, 0.85rem);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-}
-
-.trend.positive {
-    color: var(--success-color);
-}
-
-.trend.negative {
-    color: var(--danger-color);
-}
-
-/* Maintenance Section Styles */
-.maintenance-section {
-    padding: var(--section-padding) 0;
-    background: var(--card-bg);
-    position: relative;
-}
-
-.alert-preview {
-    margin-top: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.alert-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: clamp(0.875rem, 2.5vw, 1rem);
-    border-radius: 12px;
-    background: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    transition: var(--transition);
-}
-
-.alert-item:hover {
-    transform: translateX(5px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.alert-item.upcoming {
-    border-left: 4px solid var(--warning-color);
-}
-
-.alert-item.overdue {
-    border-left: 4px solid var(--danger-color);
-}
-
-.alert-item i {
-    font-size: clamp(1.1rem, 2.5vw, 1.25rem);
-}
-
-.alert-item.upcoming i {
-    color: var(--warning-color);
-}
-
-.alert-item.overdue i {
-    color: var(--danger-color);
-}
-
-/* Report Preview Modal */
-.report-preview-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    backdrop-filter: blur(4px);
-}
-
-.modal-content {
-    background: white;
-    border-radius: 16px;
-    padding: clamp(1.5rem, 4vw, 2.5rem);
-    max-width: 90%;
-    width: 500px;
-    transform: translateY(20px);
-    transition: transform 0.3s ease;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.modal-header h3 {
-    color: var(--text-color);
-    font-size: clamp(1.1rem, 2.5vw, 1.3rem);
-}
-
-.close-btn {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    color: var(--light-text);
-    transition: var(--transition);
-}
-
-.close-btn:hover {
-    color: var(--danger-color);
-    transform: rotate(90deg);
-}
-
-.report-details {
-    margin-bottom: 1.5rem;
-}
-
-.report-details p {
-    margin-bottom: 0.75rem;
-    display: flex;
-    justify-content: space-between;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.report-details p:last-child {
-    border-bottom: none;
-}
-
-.report-details strong {
-    color: var(--text-color);
-}
-        /* Notification System */
-.notification {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    padding: clamp(0.875rem, 2.5vw, 1rem) clamp(1.5rem, 4vw, 2rem);
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    transform: translateY(100px);
-    opacity: 0;
-    transition: all 0.3s ease;
-    z-index: 1000;
-    max-width: 90%;
-}
-
-.notification-content {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.notification i {
-    font-size: clamp(1.1rem, 2.5vw, 1.25rem);
-}
-
-.notification.success i {
-    color: var(--success-color);
-}
-
-.notification.error i {
-    color: var(--danger-color);
-}
-
-/* Vendor Payments Section */
-.vendor-section {
-    padding: var(--section-padding) 0;
-    background: var(--gradient);
-    position: relative;
-}
-
-.vendor-grid {
-    display: grid;
-    grid-template-columns: 1.2fr 0.8fr;
-    gap: var(--grid-gap);
-    margin-top: 3rem;
-}
-
-/* Vendor Features */
-.vendor-features {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-}
-
-.vendor-features .feature-card {
-    background: var(--card-bg);
-    padding: clamp(1.5rem, 4vw, 2.5rem);
-    border-radius: 16px;
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-    border: 1px solid rgba(41, 98, 255, 0.1);
-}
-
-.vendor-features .feature-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(41, 98, 255, 0.1);
-    border-color: rgba(41, 98, 255, 0.2);
-}
-
-/* Payment Preview */
-.payment-preview {
-    margin-top: 1.5rem;
-    background: rgba(41, 98, 255, 0.03);
-    border-radius: 12px;
-    padding: clamp(1rem, 3vw, 1.5rem);
-}
-
-.upcoming-payment {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.payment-status {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--warning-color);
-    font-size: 0.9rem;
-}
-
-.payment-amount {
-    font-size: clamp(1.5rem, 3vw, 2rem);
-    font-weight: 600;
-    color: var(--text-color);
-}
-
-.payment-date {
-    font-size: 0.9rem;
-    color: var(--light-text);
-}
-
-/* Currency Preview */
-.currency-preview {
-    margin-top: 1.5rem;
-}
-
-.currency-badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-}
-
-.currency-badge {
-    background: rgba(41, 98, 255, 0.1);
-    color: var(--primary-color);
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: var(--transition);
-}
-
-.currency-badge:hover {
-    background: var(--primary-color);
-    color: white;
-    transform: translateY(-2px);
-}
-
-/* Compliance Preview */
-.compliance-preview {
-    margin-top: 1.5rem;
-}
-
-.compliance-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    background: rgba(40, 167, 69, 0.1);
-    color: var(--success-color);
-    padding: 0.75rem 1.25rem;
-    border-radius: 25px;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.compliance-badge i {
-    font-size: 1.1rem;
-}
-
-/* Vendor Dashboard Preview */
-.vendor-visual .dashboard-preview {
-    background: white;
-    padding: clamp(1.5rem, 4vw, 2.5rem);
-    border-radius: 20px;
-    box-shadow: var(--box-shadow);
-}
-
-.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.dashboard-header h3 {
-    color: var(--text-color);
-    font-size: clamp(1.1rem, 2.5vw, 1.3rem);
-}
-
-.date-filter {
-    background: rgba(41, 98, 255, 0.1);
-    color: var(--primary-color);
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.9rem;
-}
-        /* Payment List Styles */
-.payment-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.payment-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background: rgba(41, 98, 255, 0.03);
-    border-radius: 12px;
-    transition: var(--transition);
-}
-
-.payment-item:hover {
-    background: rgba(41, 98, 255, 0.05);
-    transform: translateX(5px);
-}
-
-.vendor-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.vendor-logo {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    object-fit: cover;
-}
-
-.vendor-details h4 {
-    color: var(--text-color);
-    font-size: 1rem;
-    margin-bottom: 0.25rem;
-}
-
-.vendor-details p {
-    color: var(--light-text);
-    font-size: 0.9rem;
-}
-
-.payment-details {
-    text-align: right;
-}
-
-.amount {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-color);
-    margin-bottom: 0.25rem;
-}
-
-.due-date {
-    font-size: 0.9rem;
-    color: var(--light-text);
-}
-
-.payment-status.pending {
-    background: rgba(255, 193, 7, 0.1);
-    color: var(--warning-color);
-}
-
-/* Client Invoicing Section */
-.invoicing-section {
-    padding: var(--section-padding) 0;
-    background: var(--card-bg);
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-}
-
-.invoicing-grid {
-    display: grid;
-    grid-template-columns: 1.2fr 0.8fr;
-    gap: var(--grid-gap);
-    margin-top: 3rem;
-    align-items: start;
-    width: 100%;
-}
-
-/* Invoice Preview */
-.invoice-preview {
-    position: sticky;
-    top: calc(var(--header-height) + 2rem);
-}
-
-.invoice-template {
-    background: white;
-    padding: clamp(2rem, 5vw, 3rem);
-    border-radius: 20px;
-    box-shadow: var(--box-shadow);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    transition: var(--transition);
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-.invoice-template:hover {
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-    transform: translateY(-5px);
-}
-
-/* Template Header */
-.template-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 2.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.company-branding {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.company-logo {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
-    object-fit: cover;
-}
-
-.company-info h3 {
-    color: var(--text-color);
-    font-size: clamp(1.1rem, 2.5vw, 1.3rem);
-    margin-bottom: 0.25rem;
-}
-
-.company-info p {
-    color: var(--light-text);
-    font-size: 0.9rem;
-}
-
-.invoice-details {
-    text-align: right;
-}
-
-.invoice-number {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--primary-color);
-    margin-bottom: 0.5rem;
-}
-
-.invoice-date {
-    color: var(--light-text);
-    font-size: 0.9rem;
-}
-        /* Template Body Styles */
-.template-body {
-    margin-bottom: 2.5rem;
-}
-
-.items-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 2rem;
-    min-width: 500px;
-}
-
-.items-table th {
-    background: rgba(41, 98, 255, 0.05);
-    color: var(--text-color);
-    font-weight: 600;
-    text-align: left;
-    padding: 1rem;
-    font-size: 0.95rem;
-}
-
-.items-table td {
-    padding: 1rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    color: var(--text-color);
-    font-size: 0.95rem;
-}
-
-.items-table tr:last-child td {
-    border-bottom: none;
-}
-
-/* Invoice Total Styles */
-.invoice-total {
-    border-top: 2px solid rgba(0, 0, 0, 0.08);
-    padding-top: 1.5rem;
-    margin-left: auto;
-    width: 100%;
-    max-width: 300px;
-}
-
-.total-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.75rem 0;
-    font-size: 0.95rem;
-    color: var(--text-color);
-}
-
-.total-row.grand-total {
-    border-top: 2px solid rgba(0, 0, 0, 0.08);
-    margin-top: 0.5rem;
-    padding-top: 1rem;
-    font-weight: 600;
-    font-size: 1.1rem;
-    color: var(--primary-color);
-}
-
-/* Template Footer */
-.template-footer {
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
-    padding-top: 1.5rem;
-}
-
-.payment-options h4 {
-    color: var(--text-color);
-    font-size: 1rem;
-    margin-bottom: 1rem;
-}
-
-.payment-icons {
-    display: flex;
-    gap: 1.5rem;
-    color: var(--light-text);
-}
-
-.payment-icons i {
-    font-size: 2rem;
-    transition: var(--transition);
-}
-
-.payment-icons i:hover {
-    color: var(--primary-color);
-    transform: translateY(-2px);
-}
-
-/* Status Timeline */
-.status-timeline {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 1.5rem;
-    padding: 1.5rem;
-    background: rgba(41, 98, 255, 0.03);
-    border-radius: 12px;
-}
-
-.timeline-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    position: relative;
-    flex: 1;
-}
-
-.timeline-item:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    top: 25%;
-    right: -50%;
-    width: 100%;
-    height: 2px;
-    background: rgba(41, 98, 255, 0.1);
-    z-index: 1;
-}
-
-.timeline-item i {
-    width: 40px;
-    height: 40px;
-    background: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--light-text);
-    font-size: 1.1rem;
-    position: relative;
-    z-index: 2;
-    transition: var(--transition);
-}
-
-.timeline-item span {
-    font-size: 0.9rem;
-    color: var(--light-text);
-    text-align: center;
-}
-
-.timeline-item.complete i {
-    background: var(--success-color);
-    color: white;
-}
-
-.timeline-item.active i {
-    background: var(--primary-color);
-    color: white;
-}
-
-/* Payment Methods Grid */
-.method-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-    margin-top: 1.5rem;
-}
-
-.method-item {
-    background: rgba(41, 98, 255, 0.03);
-    padding: 1rem;
-    border-radius: 12px;
-    text-align: center;
-    transition: var(--transition);
-}
-
-.method-item:hover {
-    background: rgba(41, 98, 255, 0.08);
-    transform: translateY(-3px);
-}
-
-.method-item i {
-    font-size: 1.5rem;
-    color: var(--primary-color);
-    margin-bottom: 0.5rem;
-}
-
-.method-item span {
-    font-size: 0.9rem;
-    color: var(--text-color);
-}
-        /* Responsive Styles */
-@media (max-width: 1024px) {
-    .vendor-grid,
-    .invoicing-grid {
-        gap: 2rem;
-    }
-
-    .hero-content {
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .hero-content,
+    .analytics-grid {
         gap: 3rem;
     }
 
     .hero-image img {
         max-width: 500px;
     }
+}
 
+@media (max-width: 992px) {
     .analytics-grid {
-        gap: clamp(2rem, 4vw, 3rem);
+        grid-template-columns: 1fr;
     }
 }
 
 @media (max-width: 768px) {
-    /* Mobile Menu */
-    .mobile-menu-btn {
-        display: flex;
-    }
-
-    .nav-list {
-        position: fixed;
-        top: var(--header-height);
-        left: 0;
-        width: 100%;
-        height: calc(100vh - var(--header-height));
-        background: white;
-        flex-direction: column;
-        gap: 0;
-        padding: 1rem 0;
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        z-index: 1000;
-    }
-
-    .nav-list.active {
-        transform: translateX(0);
-    }
-
-    .nav-list a {
-        display: block;
-        padding: 1rem 2rem;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    /* Hero Section */
     .hero-content {
         grid-template-columns: 1fr;
         text-align: center;
@@ -1363,160 +353,26 @@ p { font-size: var(--body-size); }
         max-width: 300px;
     }
 
-    .hero-stats {
+    .features-grid {
         grid-template-columns: 1fr;
-        max-width: 300px;
-        margin: 2rem auto 0;
-    }
-
-    .hero-image {
-        order: 0;
-        margin: 0 -var(--container-padding);
-    }
-
-    .hero-image img {
-        border-radius: 0;
-    }
-
-    /* Grid Layouts */
-    .vendor-grid,
-    .invoicing-grid,
-    .analytics-grid {
-        grid-template-columns: 1fr;
-    }
-
-    /* Invoice Template */
-    .invoice-preview {
-        position: relative;
-        top: 0;
-        order: 2;
-    }
-
-    .invoicing-features {
-        order: 1;
-    }
-
-    .template-header {
-        flex-direction: column;
         gap: 1.5rem;
     }
 
-    .company-branding {
-        flex-direction: column;
-        text-align: center;
+    .feature-card {
+        padding: 2rem;
     }
 
-    .invoice-details {
-        text-align: center;
-        width: 100%;
-    }
-
-    /* Table Scrolling */
-    .items-table-wrapper {
+    .dashboard-preview {
         margin: 0 -1.5rem;
-        padding: 0 1.5rem;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .items-table-wrapper::after {
-        content: '';
-        position: absolute;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        width: 30px;
-        background: linear-gradient(to right, transparent, rgba(255,255,255,0.9));
-        pointer-events: none;
-    }
-
-    /* Timeline */
-    .status-timeline {
-        flex-direction: column;
-        gap: 1.5rem;
-        padding: 1rem;
-    }
-
-    .timeline-item:not(:last-child)::after {
-        top: 100%;
-        right: auto;
-        width: 2px;
-        height: 20px;
-    }
-
-    /* Payment Methods */
-    .method-grid {
-        grid-template-columns: 1fr;
-    }
-
-    /* Analytics */
-    .metrics-preview,
-    .dashboard-metrics {
-        grid-template-columns: 1fr;
-    }
-
-    .export-options {
-        grid-template-columns: 1fr;
-    }
-
-    .dashboard-header {
-        flex-direction: column;
-        gap: 1rem;
-        text-align: center;
-    }
-
-    .chart-filters {
-        justify-content: center;
-    }
-
-    /* Notifications */
-    .notification {
-        left: 20px;
-        right: 20px;
-        bottom: 10px;
-        text-align: center;
-    }
-
-    .notification-content {
-        flex-direction: column;
-        gap: 0.5rem;
+        border-radius: 0;
     }
 }
 
 @media (max-width: 480px) {
-    /* Typography */
-    .template-header {
-        padding-bottom: 1rem;
-        margin-bottom: 1.5rem;
+    .feature-card {
+        padding: 1.5rem;
     }
 
-    .company-logo {
-        width: 40px;
-        height: 40px;
-    }
-
-    .company-info h3 {
-        font-size: 1.1rem;
-    }
-
-    .invoice-number {
-        font-size: 1rem;
-    }
-
-    /* Tables */
-    .items-table th,
-    .items-table td {
-        padding: 0.75rem;
-        font-size: 0.875rem;
-    }
-
-    /* Cards */
-    .feature-card,
-    .analytics-card {
-        padding: 1.25rem;
-    }
-
-    /* Icons */
     .feature-icon {
         width: 48px;
         height: 48px;
@@ -1526,254 +382,30 @@ p { font-size: var(--body-size); }
         font-size: 1.5rem;
     }
 
-    /* Buttons */
-    .currency-badge {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.8rem;
-    }
-
-    /* Dashboard */
-    .dashboard-preview {
-        margin: 0 -var(--container-padding);
-        border-radius: 0;
-    }
-
-    .filter-btn,
-    .export-btn {
-        width: 100%;
-    }
-}
-        /* Touch Device Optimizations */
-@media (hover: none) {
-    .feature-card:hover,
-    .analytics-card:hover,
-    .invoice-template:hover,
-    .method-item:hover {
-        transform: none;
-        box-shadow: var(--box-shadow);
-    }
-
-    .btn:hover,
-    .currency-badge:hover,
-    .payment-icons i:hover {
-        transform: none;
-    }
-
-    .feature-card:active,
-    .analytics-card:active,
-    .method-item:active {
-        transform: scale(0.98);
-    }
-
-    .btn:active,
-    .currency-badge:active {
-        transform: scale(0.95);
-    }
-
-    .nav-list a:hover::after {
-        width: 0;
-    }
-
-    .nav-list a:active {
-        background: rgba(41, 98, 255, 0.05);
+    .dashboard-header {
+        flex-direction: column;
+        gap: 1rem;
     }
 }
 
-/* iOS Specific Fixes */
-@supports (-webkit-touch-callout: none) {
-    .nav-list,
-    .scrollable-element {
-        height: -webkit-fill-available;
-    }
-
-    .invoice-template,
-    .items-table-wrapper {
-        -webkit-overflow-scrolling: touch;
-        scroll-behavior: smooth;
-    }
+/* Animation Classes */
+.animate-in {
+    animation: fadeInUp 0.6s ease forwards;
+    opacity: 0;
 }
 
-/* Animations */
-@keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
-    100% { transform: translateY(0px); }
-}
-
-@keyframes dashMove {
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
     to {
-        stroke-dashoffset: -200;
+        opacity: 1;
+        transform: translateY(0);
     }
 }
-
-@keyframes pulse {
-    0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
-}
-
-/* Loading States */
-.loading {
-    position: relative;
-    overflow: hidden;
-}
-
-.loading::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.5),
-        transparent
-    );
-    animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-}
-
-/* Accessibility */
-@media (prefers-reduced-motion: reduce) {
-    * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-    }
-}
-
-.visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
-}
-
-/* Focus States */
-:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
-}
-
-/* Utility Classes */
-.hide-on-mobile {
-    @media screen and (max-width: 768px) {
-        display: none;
-    }
-}
-
-.show-on-mobile {
-    display: none;
-    @media screen and (max-width: 768px) {
-        display: block;
-    }
-}
-
-.text-center {
-    text-align: center;
-}
-
-.w-100 {
-    width: 100%;
-}
-
-.mb-1 { margin-bottom: 0.5rem; }
-.mb-2 { margin-bottom: 1rem; }
-.mb-3 { margin-bottom: 1.5rem; }
-.mb-4 { margin-bottom: 2rem; }
-
-.mt-1 { margin-top: 0.5rem; }
-.mt-2 { margin-top: 1rem; }
-.mt-3 { margin-top: 1.5rem; }
-.mt-4 { margin-top: 2rem; }
-
-/* Print Styles */
-@media print {
-    body {
-        background: white;
-    }
-
-    .no-print {
-        display: none !important;
-    }
-
-    .invoice-template {
-        box-shadow: none;
-        border: none;
-    }
-
-    .items-table {
-        break-inside: avoid;
-    }
-
-    a[href]::after {
-        content: " (" attr(href) ")";
-    }
-}
-
-/* Scrollbar Styling */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #1a54ff;
-}
-
-/* Performance Optimizations */
-.will-change {
-    will-change: transform;
-}
-
-.hardware-accelerated {
-    transform: translateZ(0);
-    backface-visibility: hidden;
-}
-
-/* Error States */
-.has-error {
-    border-color: var(--danger-color);
-}
-
-.error-message {
-    color: var(--danger-color);
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-}
-
-/* Success States */
-.has-success {
-    border-color: var(--success-color);
-}
-
-.success-message {
-    color: var(--success-color);
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-}
-        </style>
-</head>
-   <body>
+    </style>
+    <body>
     <!-- Header Container -->
     <div id="header-container"></div>
 
@@ -1785,26 +417,30 @@ p { font-size: var(--body-size); }
                 <div class="hero-content">
                     <div class="hero-text">
                         <h1>Optimize Your Asset Lifecycle Management</h1>
-                        <p>Efficiently track assets and automate depreciation for precise financial insights.</p>
+                        <p>Transform your asset management with intelligent tracking, maintenance scheduling, and real-time analytics.</p>
                         <div class="hero-buttons">
-                            <a href="#" class="btn primary">Request a Free Demo</a>
-                            <a href="#" class="btn secondary">Watch Demo</a>
+                            <a href="#" class="btn primary">Request a Demo</a>
+                            <a href="#" class="btn secondary">Watch Video</a>
                         </div>
-                        <div class="hero-stats">
-                            <div class="stat-item">
-                                <i class="fas fa-chart-line"></i>
-                                <h4>98%</h4>
-                                <p>Asset Tracking Accuracy</p>
-                            </div>
-                            <div class="stat-item">
-                                <i class="fas fa-clock"></i>
-                                <h4>60%</h4>
-                                <p>Time Saved</p>
-                            </div>
-                            <div class="stat-item">
-                                <i class="fas fa-calculator"></i>
-                                <h4>100%</h4>
-                                <p>Depreciation Accuracy</p>
+                        <div class="global-presence">
+                            <h3>Trusted by Industry Leaders</h3>
+                            <div class="company-badges">
+                                <div class="company-badge">
+                                    <i class="fas fa-building"></i>
+                                    <span>Enterprise</span>
+                                </div>
+                                <div class="company-badge">
+                                    <i class="fas fa-hospital"></i>
+                                    <span>Healthcare</span>
+                                </div>
+                                <div class="company-badge">
+                                    <i class="fas fa-industry"></i>
+                                    <span>Manufacturing</span>
+                                </div>
+                                <div class="company-badge">
+                                    <i class="fas fa-university"></i>
+                                    <span>Government</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1815,130 +451,367 @@ p { font-size: var(--body-size); }
             </div>
         </section>
 
-        <!-- Vendor Payments Section -->
-        <section class="vendor-section">
+        <!-- Key Features Section -->
+        <section class="features-section">
             <div class="container">
                 <div class="section-header">
-                    <h2>Vendor Payments</h2>
-                    <p>Simplify your accounts payable process with our intuitive vendor payment system</p>
+                    <h2>Comprehensive Asset Management</h2>
+                    <p>Everything you need to track, maintain, and optimize your assets</p>
                 </div>
-                <div class="vendor-grid">
-                    <div class="vendor-features">
+
+                <div class="features-grid">
+                    <!-- Asset Tracking -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-search-location"></i>
+                        </div>
+                        <h3>Real-time Asset Tracking</h3>
+                        <p>Monitor your assets' location and status in real-time</p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i>GPS Location Tracking</li>
+                            <li><i class="fas fa-check"></i>Status Monitoring</li>
+                            <li><i class="fas fa-check"></i>Usage Analytics</li>
+                            <li><i class="fas fa-check"></i>Custom Alerts</li>
+                        </ul>
+                    </div>
+
+                    <!-- Maintenance Management -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <h3>Maintenance Scheduling</h3>
+                        <p>Automate maintenance workflows and reduce downtime</p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i>Preventive Maintenance</li>
+                            <li><i class="fas fa-check"></i>Work Order Management</li>
+                            <li><i class="fas fa-check"></i>Service History</li>
+                            <li><i class="fas fa-check"></i>Cost Tracking</li>
+                        </ul>
+                    </div>
+
+                    <!-- Depreciation Tracking -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3>Depreciation Management</h3>
+                        <p>Track asset value and manage depreciation accurately</p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i>Multiple Methods</li>
+                            <li><i class="fas fa-check"></i>Automated Calculations</li>
+                            <li><i class="fas fa-check"></i>Tax Compliance</li>
+                            <li><i class="fas fa-check"></i>Financial Reporting</li>
+                        </ul>
+                    </div>
+
+                    <!-- Compliance Management -->
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>Compliance & Reporting</h3>
+                        <p>Stay compliant with regulatory requirements</p>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i>Audit Trails</li>
+                            <li><i class="fas fa-check"></i>Compliance Reports</li>
+                            <li><i class="fas fa-check"></i>Document Management</li>
+                            <li><i class="fas fa-check"></i>Risk Assessment</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+                <!-- Analytics Dashboard Section -->
+        <section class="analytics-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Advanced Analytics & Insights</h2>
+                    <p>Make data-driven decisions with comprehensive asset analytics</p>
+                </div>
+
+                <div class="analytics-grid">
+                    <div class="dashboard-preview">
+                        <div class="dashboard-header">
+                            <h3>Asset Performance Overview</h3>
+                            <div class="date-range">
+                                <i class="fas fa-calendar"></i>
+                                <span>Last 30 Days</span>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="mainChart"></canvas>
+                        </div>
+                        <div class="metrics-grid">
+                            <div class="metric-box">
+                                <h4>Total Assets</h4>
+                                <div class="value">1,234</div>
+                                <div class="trend positive">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>5.2%</span>
+                                </div>
+                            </div>
+                            <div class="metric-box">
+                                <h4>Asset Utilization</h4>
+                                <div class="value">85%</div>
+                                <div class="trend positive">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>2.1%</span>
+                                </div>
+                            </div>
+                            <div class="metric-box">
+                                <h4>Maintenance Cost</h4>
+                                <div class="value">$45.2K</div>
+                                <div class="trend negative">
+                                    <i class="fas fa-arrow-down"></i>
+                                    <span>3.4%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analytics-features">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <h3>Performance Metrics</h3>
+                            <p>Track key performance indicators for all assets</p>
+                            <ul class="feature-list">
+                                <li><i class="fas fa-check"></i>Utilization Rates</li>
+                                <li><i class="fas fa-check"></i>Maintenance Metrics</li>
+                                <li><i class="fas fa-check"></i>Cost Analysis</li>
+                            </ul>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <h3>Custom Reports</h3>
+                            <p>Generate detailed reports for better decision making</p>
+                            <div class="report-builder">
+                                <div class="report-options">
+                                    <select class="report-select">
+                                        <option>Asset Performance Report</option>
+                                        <option>Maintenance History Report</option>
+                                        <option>Depreciation Summary</option>
+                                        <option>Compliance Report</option>
+                                    </select>
+                                </div>
+                                <button class="generate-btn">
+                                    <i class="fas fa-file-export"></i>
+                                    Generate Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+<style>
+/* Analytics Section Enhanced Styles */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.metric-box {
+    background: rgba(41, 98, 255, 0.05);
+    padding: 1.25rem;
+    border-radius: 12px;
+    text-align: center;
+    transition: var(--transition);
+}
+
+.metric-box:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow);
+}
+
+.metric-box h4 {
+    color: var(--light-text);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.metric-box .value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.trend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+}
+
+.trend.positive {
+    color: var(--success-color);
+}
+
+.trend.negative {
+    color: var(--danger-color);
+}
+
+/* Report Builder Styles */
+.report-builder {
+    margin-top: 1.5rem;
+}
+
+.report-select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-family: inherit;
+}
+
+.generate-btn {
+    width: 100%;
+    padding: 1rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.generate-btn:hover {
+    background: #1a54ff;
+    transform: translateY(-2px);
+}
+
+/* Date Range Styles */
+.date-range {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.date-range:hover {
+    background: rgba(41, 98, 255, 0.15);
+}
+
+/* Enhanced Responsive Styles */
+@media (max-width: 768px) {
+    .metrics-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .metric-box {
+        padding: 1rem;
+    }
+
+    .metric-box .value {
+        font-size: 1.25rem;
+    }
+
+    .analytics-features {
+        margin-top: 2rem;
+    }
+
+    .date-range {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+}
+</style>
+        <!-- Maintenance Management Section -->
+        <section class="maintenance-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Proactive Maintenance Management</h2>
+                    <p>Optimize asset performance with scheduled maintenance and real-time monitoring</p>
+                </div>
+
+                <div class="maintenance-grid">
+                    <div class="maintenance-features">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h3>Preventive Maintenance Alerts</h3>
+                                <p>Stay ahead of maintenance needs with automated alerts</p>
+                                <div class="alert-preview">
+                                    <div class="alert-item upcoming">
+                                        <i class="fas fa-clock"></i>
+                                        <div class="alert-content">
+                                            <h4>Server Maintenance Due</h4>
+                                            <p>In 3 days</p>
+                                        </div>
+                                    </div>
+                                    <div class="alert-item overdue">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        <div class="alert-content">
+                                            <h4>Equipment Check Overdue</h4>
+                                            <p>2 days past</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="feature-card">
                             <div class="feature-icon">
                                 <i class="fas fa-calendar-check"></i>
                             </div>
                             <div class="feature-content">
-                                <h3>Automated Payment Scheduling</h3>
-                                <p>Set up recurring payments to vendors, reducing manual intervention</p>
-                                <ul class="feature-list">
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Recurring payment setup</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Payment reminders</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Approval workflows</span>
-                                    </li>
-                                </ul>
-                                <div class="payment-preview">
-                                    <div class="upcoming-payment">
-                                        <div class="payment-status">
-                                            <i class="fas fa-clock"></i>
-                                            <span>Next Payment</span>
+                                <h3>Maintenance Calendar</h3>
+                                <p>Visual schedule of all maintenance activities</p>
+                                <div class="calendar-preview">
+                                    <div class="calendar-header">
+                                        <h4>October 2023</h4>
+                                        <div class="calendar-controls">
+                                            <button class="calendar-btn"><i class="fas fa-chevron-left"></i></button>
+                                            <button class="calendar-btn"><i class="fas fa-chevron-right"></i></button>
                                         </div>
-                                        <div class="payment-amount">$5,000</div>
-                                        <div class="payment-date">Due in 3 days</div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-globe-americas"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3>Multi-Currency Support</h3>
-                                <p>Handle payments in various currencies for international vendors</p>
-                                <ul class="feature-list">
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Real-time exchange rates</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Currency conversion</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Multi-currency reporting</span>
-                                    </li>
-                                </ul>
-                                <div class="currency-preview">
-                                    <div class="currency-badges">
-                                        <span class="currency-badge">USD</span>
-                                        <span class="currency-badge">EUR</span>
-                                        <span class="currency-badge">GBP</span>
-                                        <span class="currency-badge">AED</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-shield-alt"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3>Compliance Assurance</h3>
-                                <p>Stay aligned with regional payment regulations and tax laws</p>
-                                <ul class="feature-list">
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Regulatory compliance</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Tax documentation</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Audit trails</span>
-                                    </li>
-                                </ul>
-                                <div class="compliance-preview">
-                                    <div class="compliance-badge">
-                                        <i class="fas fa-certificate"></i>
-                                        <span>Compliance Verified</span>
+                                    <div class="calendar-grid">
+                                        <!-- Calendar days will be populated by JavaScript -->
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="vendor-visual">
-                        <div class="dashboard-preview">
-                            <div class="dashboard-header">
-                                <h3>Upcoming Payments</h3>
-                                <div class="date-filter">Last 7 days</div>
-                            </div>
-                            <div class="payment-list">
-                                <div class="payment-item">
-                                    <div class="vendor-info">
-                                        <img src="image/vendor-logo-1.png" alt="Vendor Logo" class="vendor-logo">
-                                        <div class="vendor-details">
-                                            <h4>Tech Solutions Inc</h4>
-                                            <p>Monthly Service</p>
-                                        </div>
-                                    </div>
-                                    <div class="payment-details">
-                                        <div class="amount">$5,000</div>
-                                        <div class="due-date">Due: Oct 30</div>
-                                    </div>
-                                    <div class="payment-status pending">Pending</div>
+
+                    <div class="maintenance-visual">
+                        <div class="visual-wrapper">
+                            <img src="image/maintenance-dashboard.png" alt="Maintenance Dashboard" class="main-image">
+                            <div class="status-indicators">
+                                <div class="status-item">
+                                    <div class="status-icon operational"></div>
+                                    <span>Operational</span>
+                                </div>
+                                <div class="status-item">
+                                    <div class="status-icon maintenance"></div>
+                                    <span>In Maintenance</span>
+                                </div>
+                                <div class="status-item">
+                                    <div class="status-icon attention"></div>
+                                    <span>Needs Attention</span>
                                 </div>
                             </div>
                         </div>
@@ -1947,714 +820,40 @@ p { font-size: var(--body-size); }
             </div>
         </section>
 
-        <!-- Client Invoicing Section -->
-        <section class="invoicing-section">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Client Invoicing</h2>
-                    <p>Enhance your revenue cycle with professional invoicing tools that cater to clients worldwide</p>
-                </div>
-                <div class="invoicing-grid">
-                    <div class="invoice-preview">
-                        <div class="invoice-template">
-                            <div class="template-header">
-                                <div class="company-branding">
-                                    <img src="image/company-logo.png" alt="Company Logo" class="company-logo">
-                                    <div class="company-info">
-                                        <h3>Your Company Name</h3>
-                                        <p>Professional Invoice Template</p>
-                                    </div>
-                                </div>
-                                <div class="invoice-details">
-                                    <div class="invoice-number">INV-2024-001</div>
-                                    <div class="invoice-date">Date: Jan 15, 2024</div>
-                                </div>
-                            </div>
-                            <div class="template-body">
-                                <div class="invoice-items">
-                                    <table class="items-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Item</th>
-                                                <th>Quantity</th>
-                                                <th>Rate</th>
-                                                <th>Amount</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>Professional Services</td>
-                                                <td>1</td>
-                                                <td>$1,000.00</td>
-                                                <td>$1,000.00</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div class="invoice-total">
-                                    <div class="total-row">
-                                        <span>Subtotal</span>
-                                        <span>$1,000.00</span>
-                                    </div>
-                                    <div class="total-row">
-                                        <span>Tax (10%)</span>
-                                        <span>$100.00</span>
-                                    </div>
-                                    <div class="total-row grand-total">
-                                        <span>Total</span>
-                                        <span>$1,100.00</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="template-footer">
-                                <div class="payment-options">
-                                    <h4>Payment Methods</h4>
-                                    <div class="payment-icons">
-                                        <i class="fab fa-cc-visa"></i>
-                                        <i class="fab fa-cc-mastercard"></i>
-                                        <i class="fab fa-cc-paypal"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="invoicing-features">
-                        <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-paint-brush"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3>Customizable Invoice Templates</h3>
-                                <p>Design invoices that reflect your brand identity</p>
-                                <ul class="feature-list">
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Brand customization</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Multiple layouts</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Language support</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-chart-line"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3>Real-Time Tracking</h3>
-                                <p>Monitor invoice statuses and receive instant notifications</p>
-                                <div class="tracking-preview">
-                                    <div class="status-timeline">
-                                        <div class="timeline-item complete">
-                                            <i class="fas fa-paper-plane"></i>
-                                            <span>Sent</span>
-                                        </div>
-                                        <div class="timeline-item complete">
-                                            <i class="fas fa-eye"></i>
-                                            <span>Viewed</span>
-                                        </div>
-                                        <div class="timeline-item active">
-                                            <i class="fas fa-credit-card"></i>
-                                            <span>Payment Pending</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-lock"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3>Secure Payment Integration</h3>
-                                <p>Offer multiple secure payment options to your clients</p>
-                                <div class="payment-methods">
-                                    <div class="method-grid">
-                                        <div class="method-item">
-                                            <i class="fab fa-cc-visa"></i>
-                                            <span>Credit Card</span>
-                                        </div>
-                                        <div class="method-item">
-                                            <i class="fab fa-paypal"></i>
-                                            <span>PayPal</span>
-                                        </div>
-                                        <div class="method-item">
-                                            <i class="fas fa-university"></i>
-                                            <span>Bank Transfer</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Regional Compliance Section -->
-        <section class="compliance-section">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Regional Compliance and Taxation</h2>
-                    <p>Navigate the complexities of international billing with features designed to ensure compliance</p>
-                </div>
-                <div class="compliance-grid">
-                    <div class="compliance-map">
-                        <div class="map-container">
-                            <img src="image/world-map.png" alt="Global Coverage Map" class="map-image">
-                            <div class="country-markers">
-                                <div class="country-marker" data-country="India">
-                                    <div class="marker-dot"></div>
-                                    <div class="country-info">
-                                        <h4>India</h4>
-                                        <p>GST Compliant</p>
-                                    </div>
-                                </div>
-                                <div class="country-marker" data-country="USA">
-                                    <div class="marker-dot"></div>
-                                    <div class="country-info">
-                                        <h4>United States</h4>
-                                        <p>Sales Tax Compliant</p>
-                                    </div>
-                                </div>
-                                <div class="country-marker" data-country="EU">
-                                    <div class="marker-dot"></div>
-                                    <div class="country-info">
-                                        <h4>European Union</h4>
-                                        <p>VAT Compliant</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="compliance-features">
-                        <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-calculator"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3>Automated Tax Calculations</h3>
-                                <p>Apply country-specific taxes automatically</p>
-                                <div class="tax-types">
-                                    <div class="tax-badge">
-                                        <span>GST</span>
-                                        <small>India</small>
-                                    </div>
-                                    <div class="tax-badge">
-                                        <span>VAT</span>
-                                        <small>UK/UAE</small>
-                                    </div>
-                                    <div class="tax-badge">
-                                        <span>Sales Tax</span>
-                                        <small>USA</small>
-                                    </div>
-                                </div>
-                                <ul class="feature-list">
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Automatic rate updates</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Multi-jurisdiction support</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Tax reporting</span>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                                                <div class="feature-card">
-                            <div class="feature-icon">
-                                <i class="fas fa-file-alt"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3>Compliance Documentation</h3>
-                                <p>Generate and maintain required documentation for different regions</p>
-                                <ul class="feature-list">
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Automated report generation</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Document templates</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Digital record keeping</span>
-                                    </li>
-                                </ul>
-                                <div class="document-preview">
-                                    <div class="document-item">
-                                        <i class="fas fa-file-pdf"></i>
-                                        <span>Tax Report Q4 2023</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <style>
-          /* Regional Compliance Section Styles */
-.compliance-section {
-    padding: var(--section-padding) 0;
-    background: var(--gradient);
-    position: relative;
-    overflow: hidden;
-}
-
-.compliance-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: url('path/to/pattern.svg') repeat;
-    opacity: 0.03;
-    pointer-events: none;
-}
-
-.compliance-grid {
-    display: grid;
-    grid-template-columns: 1.2fr 0.8fr;
-    gap: var(--grid-gap);
-    margin-top: 3rem;
-    position: relative;
-}
-
-/* Map Container Styles */
-.compliance-map {
-    position: relative;
-    background: white;
-    padding: clamp(1.5rem, 4vw, 2.5rem);
-    border-radius: 20px;
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-}
-
-.map-container {
-    position: relative;
-    width: 100%;
-    min-height: 400px;
-    overflow: hidden;
-}
-
-.map-image {
-    width: 100%;
-    height: auto;
-    object-fit: cover;
-    border-radius: 12px;
-    transition: var(--transition);
-}
-
-/* Country Markers Styles */
-.country-markers {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-}
-
-.country-marker {
-    position: absolute;
-    transform: translate(-50%, -50%);
-    cursor: pointer;
-    pointer-events: auto;
-}
-
-.marker-dot {
-    width: 12px;
-    height: 12px;
-    background: var(--primary-color);
-    border-radius: 50%;
-    position: relative;
-}
-
-.marker-dot::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 24px;
-    height: 24px;
-    background: rgba(41, 98, 255, 0.2);
-    border-radius: 50%;
-    animation: pulse 2s infinite;
-}
-
-.country-info {
-    position: absolute;
-    bottom: calc(100% + 10px);
-    left: 50%;
-    transform: translateX(-50%);
-    background: white;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    min-width: 150px;
-    text-align: center;
-    opacity: 0;
-    visibility: hidden;
-    transition: var(--transition);
-}
-
-.country-info::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 8px solid transparent;
-    border-top-color: white;
-}
-
-.country-marker:hover .country-info {
-    opacity: 1;
-    visibility: visible;
-    transform: translateX(-50%) translateY(-5px);
-}
-
-.country-info h4 {
-    color: var(--text-color);
-    font-size: 0.95rem;
-    margin-bottom: 0.25rem;
-}
-
-.country-info p {
-    color: var(--primary-color);
-    font-size: 0.85rem;
-    font-weight: 500;
-}
-
-/* Compliance Features Styles */
-.compliance-features {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-}
-
-.compliance-features .feature-card {
-    background: white;
-    padding: clamp(1.5rem, 4vw, 2.5rem);
-    border-radius: 16px;
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-    border: 1px solid rgba(41, 98, 255, 0.1);
-}
-
-.compliance-features .feature-card:hover {
-    transform: translateX(10px);
-    box-shadow: 0 15px 35px rgba(41, 98, 255, 0.1);
-    border-color: rgba(41, 98, 255, 0.2);
-}
-
-/* Tax Types Styles */
-.tax-types {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin: 1.5rem 0;
-}
-
-.tax-badge {
-    background: white;
-    padding: 0.75rem 1.25rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transition: var(--transition);
-}
-
-.tax-badge:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-}
-
-.tax-badge span {
-    color: var(--primary-color);
-    font-weight: 600;
-    font-size: 1.1rem;
-    margin-bottom: 0.25rem;
-}
-
-.tax-badge small {
-    color: var(--light-text);
-    font-size: 0.85rem;
-}
-
-/* Document Preview Styles */
-.document-preview {
-    margin-top: 1.5rem;
-    padding: 1.25rem;
-    background: rgba(41, 98, 255, 0.03);
-    border-radius: 12px;
-}
-
-.document-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background: white;
-    border-radius: 8px;
-    transition: var(--transition);
-}
-
-.document-item:hover {
-    transform: translateX(5px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.document-item i {
-    color: var(--primary-color);
-    font-size: 1.25rem;
-}
-
-.document-item span {
-    color: var(--text-color);
-    font-size: 0.95rem;
-}
-
-/* Animation Keyframes */
-@keyframes pulse {
-    0% {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-    }
-    100% {
-        transform: translate(-50%, -50%) scale(2);
-        opacity: 0;
-    }
-}
-
-/* Responsive Styles */
-@media (max-width: 1024px) {
-    .compliance-grid {
-        gap: 2rem;
-    }
-
-    .map-container {
-        min-height: 350px;
-    }
-}
-
-@media (max-width: 768px) {
-    .compliance-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .map-container {
-        min-height: 300px;
-    }
-
-    .tax-types {
-        justify-content: center;
-    }
-
-    .tax-badge {
-        width: calc(50% - 0.5rem);
-    }
-}
-
-@media (max-width: 480px) {
-    .compliance-features .feature-card {
-        padding: 1.25rem;
-    }
-
-    .tax-badge {
-        width: 100%;
-    }
-
-    .country-info {
-        min-width: 120px;
-        padding: 0.5rem 0.75rem;
-    }
-
-    .document-item {
-        padding: 0.75rem;
-    }
-}
-
-/* Interactive Map Markers */
-.country-marker[data-country="India"] {
-    top: 45%;
-    left: 70%;
-}
-
-.country-marker[data-country="USA"] {
-    top: 35%;
-    left: 20%;
-}
-
-.country-marker[data-country="EU"] {
-    top: 30%;
-    left: 45%;
-}
-
-/* Touch Device Optimizations */
-@media (hover: none) {
-    .compliance-features .feature-card:hover,
-    .tax-badge:hover,
-    .document-item:hover {
-        transform: none;
-    }
-
-    .country-marker .country-info {
-        opacity: 1;
-        visibility: visible;
-        transform: translateX(-50%) translateY(0);
-    }
-}
-
-/* Enhanced Feature List */
-.compliance-features .feature-list {
-    margin-top: 1.5rem;
-}
-
-.compliance-features .feature-list li {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.75rem 0;
-}
-
-.compliance-features .feature-list li i {
-    width: 24px;
-    height: 24px;
-    background: rgba(41, 98, 255, 0.1);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--primary-color);
-    font-size: 0.9rem;
-}
-
-/* Loading States */
-.map-container.loading::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: var(--primary-color);
-}  
-        </style>
-
-        <!-- Integration Capabilities Section -->
+        <!-- Integration Section -->
         <section class="integration-section">
             <div class="container">
                 <div class="section-header">
-                    <h2>Integration Capabilities</h2>
-                    <p>Seamlessly connect our Invoice & Billing solution with your existing financial systems</p>
+                    <h2>Seamless Integration Capabilities</h2>
+                    <p>Connect with your existing systems for streamlined operations</p>
                 </div>
+
                 <div class="integration-grid">
-                    <div class="integration-diagram">
-                        <div class="diagram-container">
-                            <div class="central-platform">
-                                <div class="platform-icon">
-                                    <i class="fas fa-cube"></i>
-                                </div>
-                                <span>Billing Platform</span>
-                            </div>
-                            <div class="integration-connections">
-                                <svg class="connection-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-                                    <path class="connection-path" d="M10,50 Q50,10 90,50"/>
-                                    <path class="connection-path" d="M10,50 Q50,90 90,50"/>
-                                </svg>
-                            </div>
-                            <div class="integration-nodes">
-                                <div class="node erp">
-                                    <i class="fas fa-building"></i>
-                                    <span>ERP Systems</span>
-                                </div>
-                                <div class="node accounting">
-                                    <i class="fas fa-calculator"></i>
-                                    <span>Accounting</span>
-                                </div>
-                                <div class="node mobile">
-                                    <i class="fas fa-mobile-alt"></i>
-                                    <span>Mobile App</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                     <div class="integration-features">
-                        <div class="integration-card" data-aos="fade-up">
+                        <div class="integration-card">
                             <div class="status-badge connected">Active</div>
                             <div class="feature-icon">
                                 <i class="fas fa-sync"></i>
                             </div>
                             <div class="feature-content">
-                                <h3>Accounting Software Sync</h3>
-                                <p>Seamlessly connect with popular accounting platforms for unified financial data</p>
+                                <h3>ERP Integration</h3>
+                                <p>Seamlessly connect with major ERP systems</p>
                                 <ul class="feature-list">
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Real-time data sync</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Automated reconciliation</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Financial reporting</span>
-                                    </li>
+                                    <li><i class="fas fa-check"></i>Real-time data sync</li>
+                                    <li><i class="fas fa-check"></i>Automated workflows</li>
+                                    <li><i class="fas fa-check"></i>Financial reporting</li>
                                 </ul>
-                                <div class="integration-platforms">
-                                    <img src="image/quickbooks-logo.png" alt="QuickBooks" class="platform-logo">
-                                    <img src="image/sage-logo.png" alt="Sage" class="platform-logo">
-                                    <img src="image/xero-logo.png" alt="Xero" class="platform-logo">
-                                </div>
                             </div>
                         </div>
-                        <div class="integration-card" data-aos="fade-up" data-aos-delay="100">
+
+                        <div class="integration-card">
                             <div class="status-badge popular">Popular</div>
                             <div class="feature-icon">
                                 <i class="fas fa-code"></i>
                             </div>
                             <div class="feature-content">
                                 <h3>API Access</h3>
-                                <p>Enable custom integrations tailored to your business processes</p>
-                                <ul class="feature-list">
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>RESTful API endpoints</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Webhook support</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Developer tools</span>
-                                    </li>
-                                </ul>
+                                <p>Build custom integrations with our robust API</p>
                                 <div class="api-preview">
                                     <code>GET /api/v1/assets</code>
                                     <div class="api-response">
@@ -2663,38 +862,31 @@ p { font-size: var(--body-size); }
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="integration-card" data-aos="fade-up" data-aos-delay="200">
-                            <div class="status-badge new">New</div>
-                            <div class="feature-icon">
-                                <i class="fas fa-mobile-alt"></i>
-                            </div>
-                            <div class="feature-content">
-                                <h3>Mobile Accessibility</h3>
-                                <p>Manage assets on-the-go with our mobile-friendly interface</p>
-                                <ul class="feature-list">
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Native mobile apps</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Offline capabilities</span>
-                                    </li>
-                                    <li>
-                                        <i class="fas fa-check"></i>
-                                        <span>Push notifications</span>
-                                    </li>
-                                </ul>
-                                <div class="app-stores">
-                                    <button class="store-btn">
-                                        <i class="fab fa-apple"></i>
-                                        App Store
-                                    </button>
-                                    <button class="store-btn">
-                                        <i class="fab fa-google-play"></i>
-                                        Google Play
-                                    </button>
+                    <div class="integration-visual">
+                        <div class="visual-wrapper">
+                            <div class="integration-diagram">
+                                <div class="central-node">
+                                    <i class="fas fa-database"></i>
+                                    <span>Asset Management</span>
+                                </div>
+                                <div class="connection-lines">
+                                    <!-- Connection lines will be drawn with SVG -->
+                                </div>
+                                <div class="integration-nodes">
+                                    <div class="node erp">
+                                        <i class="fas fa-building"></i>
+                                        <span>ERP Systems</span>
+                                    </div>
+                                    <div class="node accounting">
+                                        <i class="fas fa-calculator"></i>
+                                        <span>Accounting</span>
+                                    </div>
+                                    <div class="node iot">
+                                        <i class="fas fa-microchip"></i>
+                                        <span>IoT Devices</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2702,212 +894,97 @@ p { font-size: var(--body-size); }
                 </div>
             </div>
         </section>
-        <style>
-           /* Integration Capabilities Section Styles */
-.integration-section {
-    padding: var(--section-padding) 0;
-    background: var(--gradient);
-    position: relative;
-    overflow: hidden;
-}
 
-.integration-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(45deg, rgba(41, 98, 255, 0.03), transparent);
-    pointer-events: none;
-}
-
-.integration-grid {
+<style>
+/* Maintenance Section Styles */
+.maintenance-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--grid-gap);
     margin-top: 3rem;
-    position: relative;
 }
 
-/* Integration Diagram Styles */
-.integration-diagram {
+.alert-preview {
+    margin-top: 1.5rem;
+}
+
+.alert-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
     background: white;
-    padding: clamp(2rem, 5vw, 3rem);
-    border-radius: 20px;
-    box-shadow: var(--box-shadow);
-    position: relative;
-}
-
-.diagram-container {
-    position: relative;
-    min-height: 400px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Central Platform Styles */
-.central-platform {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    z-index: 3;
-}
-
-.platform-icon {
-    width: 80px;
-    height: 80px;
-    background: var(--primary-color);
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1rem;
-    box-shadow: 0 8px 24px rgba(41, 98, 255, 0.2);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     transition: var(--transition);
 }
 
-.platform-icon:hover {
-    transform: translateY(-5px) rotate(10deg);
-    box-shadow: 0 12px 30px rgba(41, 98, 255, 0.3);
+.alert-item.upcoming {
+    border-left: 4px solid var(--warning-color);
 }
 
-.platform-icon i {
-    font-size: 2.5rem;
-    color: white;
+.alert-item.overdue {
+    border-left: 4px solid var(--danger-color);
 }
 
-.central-platform span {
-    display: block;
-    color: var(--text-color);
-    font-weight: 500;
-    font-size: 1.1rem;
+.alert-item i {
+    font-size: 1.25rem;
 }
 
-/* Connection Lines Styles */
-.connection-lines {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 2;
+.alert-item.upcoming i {
+    color: var(--warning-color);
 }
 
-.connection-svg {
-    width: 100%;
-    height: 100%;
-    position: absolute;
+.alert-item.overdue i {
+    color: var(--danger-color);
 }
 
-.connection-path {
-    fill: none;
-    stroke: var(--primary-color);
-    stroke-width: 2;
-    stroke-dasharray: 10;
-    animation: dashMove 20s linear infinite;
-    opacity: 0.3;
-}
-
-/* Integration Nodes Styles */
-.integration-nodes {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    z-index: 1;
-}
-
-.node {
-    position: absolute;
+/* Calendar Styles */
+.calendar-preview {
     background: white;
     padding: 1.5rem;
-    border-radius: 16px;
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-    cursor: pointer;
-    min-width: 160px;
-    text-align: center;
+    border-radius: 12px;
+    margin-top: 1.5rem;
 }
 
-.node:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(41, 98, 255, 0.15);
-}
-
-.node i {
-    font-size: 2rem;
-    color: var(--primary-color);
-    margin-bottom: 0.75rem;
-    transition: var(--transition);
-}
-
-.node:hover i {
-    transform: scale(1.1);
-}
-
-.node span {
-    display: block;
-    color: var(--text-color);
-    font-weight: 500;
-    font-size: 1rem;
-}
-
-/* Node Positions */
-.node.erp {
-    top: 10%;
-    left: 10%;
-}
-
-.node.accounting {
-    top: 10%;
-    right: 10%;
-}
-
-.node.mobile {
-    bottom: 10%;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-/* Integration Features Styles */
-.integration-features {
+.calendar-header {
     display: flex;
-    flex-direction: column;
-    gap: 2rem;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
 }
 
+.calendar-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.calendar-btn {
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    color: var(--primary-color);
+}
+
+/* Integration Section Styles */
 .integration-card {
     background: white;
-    padding: clamp(1.5rem, 4vw, 2.5rem);
+    padding: 2rem;
     border-radius: 16px;
     box-shadow: var(--box-shadow);
-    transition: var(--transition);
     position: relative;
-    border: 1px solid rgba(41, 98, 255, 0.1);
+    margin-bottom: 2rem;
 }
 
-.integration-card:hover {
-    transform: translateX(10px);
-    box-shadow: 0 15px 35px rgba(41, 98, 255, 0.1);
-    border-color: rgba(41, 98, 255, 0.2);
-}
-
-/* Status Badge Styles */
 .status-badge {
     position: absolute;
-    top: 1.5rem;
-    right: 1.5rem;
-    padding: 0.5rem 1rem;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.4rem 1rem;
     border-radius: 20px;
     font-size: 0.875rem;
-    font-weight: 500;
-    z-index: 1;
 }
 
 .status-badge.connected {
@@ -2920,53 +997,12 @@ p { font-size: var(--body-size); }
     color: var(--primary-color);
 }
 
-.status-badge.new {
-    background: rgba(255, 193, 7, 0.1);
-    color: var(--warning-color);
-}
-
-/* Integration Platforms Styles */
-.integration-platforms {
-    display: flex;
-    gap: 2rem;
-    margin-top: 1.5rem;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.platform-logo {
-    height: 30px;
-    width: auto;
-    opacity: 0.7;
-    transition: var(--transition);
-    filter: grayscale(100%);
-}
-
-.platform-logo:hover {
-    opacity: 1;
-    filter: grayscale(0%);
-    transform: scale(1.1);
-}
-
-/* API Preview Styles */
 .api-preview {
-    margin-top: 1.5rem;
-    padding: 1.25rem;
     background: #f8f9fa;
+    padding: 1rem;
     border-radius: 8px;
-    font-family: 'Courier New', monospace;
-    position: relative;
-}
-
-.api-preview code {
-    color: var(--text-color);
-    font-size: 0.9rem;
-}
-
-.api-response {
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    margin-top: 1rem;
+    font-family: monospace;
 }
 
 .response-status {
@@ -2974,296 +1010,167 @@ p { font-size: var(--body-size); }
     font-size: 0.9rem;
 }
 
-/* App Store Buttons */
-.app-stores {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1.5rem;
-    flex-wrap: wrap;
+/* Integration Diagram Styles */
+.integration-diagram {
+    position: relative;
+    min-height: 400px;
 }
 
-.store-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.875rem 1.5rem;
-    background: var(--text-color);
-    color: white;
-    border: none;
+.central-node {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.integration-nodes {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.node {
+    position: absolute;
+    background: white;
+    padding: 1rem;
     border-radius: 12px;
-    cursor: pointer;
+    box-shadow: var(--box-shadow);
     transition: var(--transition);
-    font-size: 0.95rem;
-}
-
-.store-btn:hover {
-    background: var(--primary-color);
-    transform: translateY(-2px);
-}
-
-/* Animation Keyframes */
-@keyframes dashMove {
-    to {
-        stroke-dashoffset: -200;
-    }
 }
 
 /* Responsive Styles */
-@media (max-width: 1024px) {
+@media (max-width: 992px) {
+    .maintenance-grid,
     .integration-grid {
-        gap: 2rem;
-    }
-
-    .node {
-        padding: 1.25rem;
-        min-width: 140px;
+        grid-template-columns: 1fr;
     }
 }
 
 @media (max-width: 768px) {
-    .integration-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .diagram-container {
+    .integration-diagram {
         min-height: 300px;
     }
 
-    .integration-nodes {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1.5rem;
-        position: relative;
-        padding: 2rem 0;
-    }
-
-    .node {
-        position: relative;
-        top: auto;
-        left: auto;
-        right: auto;
-        bottom: auto;
-        transform: none;
-        width: 100%;
-        max-width: 200px;
-    }
-
-    .connection-lines {
-        display: none;
-    }
-
-    .store-btn {
-        width: 100%;
-        justify-content: center;
-    }
-}
-
-@media (max-width: 480px) {
     .integration-card {
-        padding: 1.25rem;
-    }
-
-    .status-badge {
-        top: 1rem;
-        right: 1rem;
-        font-size: 0.8rem;
-        padding: 0.4rem 0.8rem;
-    }
-
-    .platform-icon {
-        width: 60px;
-        height: 60px;
-    }
-
-    .platform-icon i {
-        font-size: 2rem;
+        padding: 1.5rem;
     }
 }
-
-/* Touch Device Optimizations */
-@media (hover: none) {
-    .integration-card:hover,
-    .node:hover,
-    .platform-icon:hover {
-        transform: none;
-    }
-
-    .store-btn:active {
-        transform: scale(0.98);
-    }
-} 
-        </style>
-
-        <!-- Advanced Analytics Section -->
-        <section class="analytics-section">
-            <div class="container">
-                <div class="section-header">
-                    <h2>Advanced Analytics and Reporting</h2>
-                    <p>Make informed decisions with in-depth analytics and customizable reports on asset performance</p>
-                </div>
-                <div class="analytics-grid">
-                    <div class="analytics-features">
-                        <div class="analytics-card" data-aos="fade-up">
-                            <div class="card-icon">
-                                <i class="fas fa-chart-line"></i>
-                            </div>
-                            <div class="card-content">
-                                <h3>Interactive Dashboards</h3>
-                                <p>Visualize key metrics such as asset utilization and depreciation trends</p>
-                                <div class="metrics-preview">
-                                    <div class="metric-item">
-                                        <span class="metric-value">85%</span>
-                                        <span class="metric-label">Asset Utilization</span>
-                                        <canvas class="mini-chart" width="100" height="40"></canvas>
-                                    </div>
-                                    <div class="metric-item">
-                                        <span class="metric-value">$2.5M</span>
-                                        <span class="metric-label">Asset Value</span>
-                                        <canvas class="mini-chart" width="100" height="40"></canvas>
-                                    </div>
-                                </div>
-                                <div class="chart-filters">
-                                    <button class="filter-btn active">Day</button>
-                                    <button class="filter-btn">Week</button>
-                                    <button class="filter-btn">Month</button>
-                                    <button class="filter-btn">Year</button>
-                                </div>
-                            </div>
-                        </div>
-                                                <div class="analytics-card" data-aos="fade-up" data-aos-delay="100">
-                            <div class="card-icon">
-                                <i class="fas fa-file-alt"></i>
-                            </div>
-                            <div class="card-content">
-                                <h3>Custom Report Generation</h3>
-                                <p>Create reports tailored to specific business requirements</p>
-                                <div class="report-builder">
-                                    <div class="report-options">
-                                        <div class="option-group">
-                                            <label>Report Type</label>
-                                            <select class="report-select">
-                                                <option>Asset Performance</option>
-                                                <option>Maintenance History</option>
-                                                <option>Depreciation Summary</option>
-                                            </select>
-                                        </div>
-                                        <div class="option-group">
-                                            <label>Time Period</label>
-                                            <select class="report-select">
-                                                <option>Last 30 Days</option>
-                                                <option>Last Quarter</option>
-                                                <option>Last Year</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <button class="generate-btn">
-                                        <i class="fas fa-file-export"></i>
-                                        Generate Report
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="analytics-card" data-aos="fade-up" data-aos-delay="200">
-                            <div class="card-icon">
-                                <i class="fas fa-download"></i>
-                            </div>
-                            <div class="card-content">
-                                <h3>Export Options</h3>
-                                <p>Download reports in various formats for sharing and compliance purposes</p>
-                                <div class="export-options">
-                                    <button class="export-btn">
-                                        <i class="fas fa-file-pdf"></i>
-                                        PDF Report
-                                    </button>
-                                    <button class="export-btn">
-                                        <i class="fas fa-file-excel"></i>
-                                        Excel Sheet
-                                    </button>
-                                    <button class="export-btn">
-                                        <i class="fas fa-file-csv"></i>
-                                        CSV Data
-                                    </button>
-                                </div>
-                                <div class="export-history">
-                                    <h4>Recent Exports</h4>
-                                    <div class="history-item">
-                                        <i class="fas fa-file-pdf"></i>
-                                        <span>Monthly Asset Report.pdf</span>
-                                        <small>2 hours ago</small>
-                                    </div>
-                                    <div class="history-item">
-                                        <i class="fas fa-file-excel"></i>
-                                        <span>Depreciation Data.xlsx</span>
-                                        <small>Yesterday</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="analytics-visual">
-                        <div class="visual-wrapper">
-                            <div class="dashboard-preview">
-                                <div class="dashboard-header">
-                                    <h3>Asset Performance Overview</h3>
-                                    <div class="date-range">Last 30 Days</div>
-                                </div>
-                                <div class="chart-container">
-                                    <canvas id="mainChart"></canvas>
-                                </div>
-                                <div class="dashboard-metrics">
-                                    <div class="metric-box">
-                                        <h4>Total Assets</h4>
-                                        <span class="value">1,234</span>
-                                        <span class="trend positive">+5.2%</span>
-                                    </div>
-                                    <div class="metric-box">
-                                        <h4>Utilization Rate</h4>
-                                        <span class="value">85%</span>
-                                        <span class="trend positive">+2.1%</span>
-                                    </div>
-                                    <div class="metric-box">
-                                        <h4>Maintenance Cost</h4>
-                                        <span class="value">$45.2K</span>
-                                        <span class="trend negative">-3.4%</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-                <!-- Call to Action Section -->
+</style>
+        <!-- Call to Action Section -->
         <section class="cta-section">
             <div class="container">
                 <div class="cta-content">
-                    <h2>Optimize Your Asset Management Today</h2>
-                    <p>Discover how our comprehensive platform can transform your asset tracking and financial reporting processes</p>
+                    <h2>Transform Your Asset Management Today</h2>
+                    <p>Join thousands of organizations optimizing their asset lifecycle with Workwise Pro</p>
                     <div class="cta-buttons">
-                        <button class="btn primary">Contact Us for a Demo</button>
-                        <button class="btn secondary">Explore Solutions</button>
+                        <button class="btn primary">Start Free Trial</button>
+                        <button class="btn secondary">Schedule Demo</button>
                     </div>
                     <div class="cta-features">
                         <div class="cta-feature">
                             <i class="fas fa-check-circle"></i>
-                            <span>30-Day Free Trial</span>
+                            <span>30-day free trial</span>
                         </div>
                         <div class="cta-feature">
                             <i class="fas fa-check-circle"></i>
-                            <span>Live Demo Available</span>
+                            <span>No credit card required</span>
                         </div>
                         <div class="cta-feature">
                             <i class="fas fa-check-circle"></i>
-                            <span>24/7 Support</span>
+                            <span>Free implementation support</span>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
-        <style>
-    /* Enhanced CTA Section Styles */
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-grid">
+                        <div class="footer-section brand-section">
+                            <div class="footer-logo">
+                                <img src="image/logo-white.png" alt="Workwise Pro Logo">
+                            </div>
+                            <p class="footer-description">
+                                Transform your asset management with our comprehensive solution for tracking, maintenance, and optimization.
+                            </p>
+                            <div class="social-links">
+                                <a href="#" aria-label="LinkedIn">
+                                    <i class="fab fa-linkedin"></i>
+                                </a>
+                                <a href="#" aria-label="Twitter">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                                <a href="#" aria-label="Facebook">
+                                    <i class="fab fa-facebook"></i>
+                                </a>
+                                <a href="#" aria-label="Instagram">
+                                    <i class="fab fa-instagram"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="footer-section">
+                            <h4>Solutions</h4>
+                            <ul>
+                                <li><a href="#">Asset Tracking</a></li>
+                                <li><a href="#">Maintenance Management</a></li>
+                                <li><a href="#">Depreciation Tracking</a></li>
+                                <li><a href="#">Compliance Management</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="footer-section">
+                            <h4>Company</h4>
+                            <ul>
+                                <li><a href="#">About Us</a></li>
+                                <li><a href="#">Careers</a></li>
+                                <li><a href="#">Press</a></li>
+                                <li><a href="#">Contact</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="footer-section">
+                            <h4>Resources</h4>
+                            <ul>
+                                <li><a href="#">Documentation</a></li>
+                                <li><a href="#">API Reference</a></li>
+                                <li><a href="#">Blog</a></li>
+                                <li><a href="#">Help Center</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="footer-section">
+                            <h4>Legal</h4>
+                            <ul>
+                                <li><a href="#">Privacy Policy</a></li>
+                                <li><a href="#">Terms of Service</a></li>
+                                <li><a href="#">Security</a></li>
+                                <li><a href="#">Compliance</a></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="footer-bottom">
+                        <div class="footer-info">
+                            <p>&copy; 2024 Workwise Pro. All rights reserved.</p>
+                        </div>
+                        <div class="footer-badges">
+                            <img src="image/security-badge.png" alt="Security Certified">
+                            <img src="image/gdpr-badge.png" alt="GDPR Compliant">
+                            <img src="image/iso-badge.png" alt="ISO 27001">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+<style>
+/* Enhanced CTA Section Styles */
 .cta-section {
     padding: 8rem 0;
     background: var(--gradient);
@@ -3279,8 +1186,7 @@ p { font-size: var(--body-size); }
     left: 0;
     width: 100%;
     height: 100%;
-    background: url('path/to/pattern.svg');
-    opacity: 0.05;
+    background: linear-gradient(45deg, rgba(41, 98, 255, 0.05), transparent);
     pointer-events: none;
 }
 
@@ -3289,57 +1195,27 @@ p { font-size: var(--body-size); }
     margin: 0 auto;
     position: relative;
     z-index: 1;
-    padding: 0 1.5rem;
 }
 
 .cta-content h2 {
-    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    font-size: clamp(2rem, 5vw, 3rem);
     background: linear-gradient(45deg, #1a237e, #2962ff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 1.5rem;
     line-height: 1.2;
-    font-weight: 700;
-}
-
-.cta-content p {
-    font-size: clamp(1.1rem, 2vw, 1.25rem);
-    color: #455a64;
-    margin-bottom: 2.5rem;
-    opacity: 0.9;
-    line-height: 1.6;
 }
 
 .cta-buttons {
     display: flex;
     gap: 1.5rem;
     justify-content: center;
-    margin-bottom: 3rem;
-}
-
-.cta-buttons .btn {
-    min-width: 200px;
-    padding: 1.25rem 2.5rem;
-    font-size: 1.1rem;
-}
-
-.cta-buttons .btn.primary {
-    background: linear-gradient(45deg, var(--primary-color), #42a5f5);
-    box-shadow: 0 8px 25px rgba(41, 98, 255, 0.25);
-}
-
-.cta-buttons .btn.secondary {
-    border: 2px solid var(--primary-color);
-}
-
-.cta-buttons .btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(41, 98, 255, 0.3);
+    margin: 2rem 0 3rem;
 }
 
 .cta-features {
     display: flex;
-    gap: 3rem;
+    gap: 2rem;
     justify-content: center;
     flex-wrap: wrap;
 }
@@ -3348,252 +1224,36 @@ p { font-size: var(--body-size); }
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    color: var(--text-color);
-    font-size: 1.1rem;
-    padding: 0.5rem 1rem;
     background: rgba(255, 255, 255, 0.9);
+    padding: 0.75rem 1.5rem;
     border-radius: 50px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-}
-
-.cta-feature:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
 }
 
 .cta-feature i {
     color: var(--primary-color);
-    font-size: 1.25rem;
-    background: rgba(41, 98, 255, 0.1);
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
 }
 
-
-
-/* Responsive Styles for CTA */
-@media (max-width: 768px) {
-    .cta-section {
-        padding: 6rem 0;
-    }
-
-    .cta-content h2 {
-        font-size: 2rem;
-    }
-
-    .cta-content p {
-        font-size: 1rem;
-        margin-bottom: 2rem;
-    }
-
-    .cta-buttons {
-        flex-direction: column;
-        gap: 1rem;
-        max-width: 300px;
-        margin-left: auto;
-        margin-right: auto;
-        margin-bottom: 2rem;
-    }
-
-    .cta-buttons .btn {
-        width: 100%;
-        min-width: auto;
-        padding: 1rem 2rem;
-    }
-
-    .cta-features {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: center;
-    }
-
-    .cta-feature {
-        width: 100%;
-        max-width: 300px;
-        justify-content: center;
-    }
-}
-
-@media (max-width: 480px) {
-    .cta-section {
-        padding: 4rem 0;
-    }
-
-    .cta-content h2 {
-        font-size: 1.75rem;
-    }
-
-    .cta-feature {
-        font-size: 0.95rem;
-    }
-}
-
-/* Animation for CTA Section */
-.cta-content {
-    opacity: 0;
-    transform: translateY(30px);
-    animation: ctaFadeIn 0.8s ease forwards;
-}
-
-.cta-feature {
-    opacity: 0;
-    transform: translateY(20px);
-    animation: ctaFeatureFadeIn 0.6s ease forwards;
-}
-
-.cta-feature:nth-child(1) { animation-delay: 0.3s; }
-.cta-feature:nth-child(2) { animation-delay: 0.5s; }
-.cta-feature:nth-child(3) { animation-delay: 0.7s; }
-
-@keyframes ctaFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes ctaFeatureFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-</style>
-    </main>
-
-    <!-- Footer -->
-    <footer class="main-footer">
-        <div class="container">
-            <div class="footer-social">
-                <a href="#" class="social-link" aria-label="LinkedIn">
-                    <i class="fab fa-linkedin"></i>
-                </a>
-                <a href="#" class="social-link" aria-label="Twitter">
-                    <i class="fab fa-twitter"></i>
-                </a>
-                <a href="#" class="social-link" aria-label="Facebook">
-                    <i class="fab fa-facebook"></i>
-                </a>
-                <a href="#" class="social-link" aria-label="Instagram">
-                    <i class="fab fa-instagram"></i>
-                </a>
-            </div>
-
-            <div class="footer-grid">
-                <div class="footer-section">
-                    <h4>Product</h4>
-                    <ul>
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="#pricing">Pricing</a></li>
-                        <li><a href="#integrations">Integrations</a></li>
-                        <li><a href="#enterprise">Enterprise</a></li>
-                        <li><a href="#security">Security</a></li>
-                    </ul>
-                </div>
-
-                <div class="footer-section">
-                    <h4>Resources</h4>
-                    <ul>
-                        <li><a href="#documentation">Documentation</a></li>
-                        <li><a href="#api">API Reference</a></li>
-                        <li><a href="#guides">Guides</a></li>
-                        <li><a href="#blog">Blog</a></li>
-                        <li><a href="#community">Community</a></li>
-                    </ul>
-                </div>
-
-                <div class="footer-section">
-                    <h4>Company</h4>
-                    <ul>
-                        <li><a href="#about">About Us</a></li>
-                        <li><a href="#careers">Careers</a></li>
-                        <li><a href="#partners">Partners</a></li>
-                        <li><a href="#contact">Contact</a></li>
-                        <li><a href="#news">News</a></li>
-                    </ul>
-                </div>
-
-                <div class="footer-section">
-                    <h4>Legal</h4>
-                    <ul>
-                        <li><a href="#privacy">Privacy Policy</a></li>
-                        <li><a href="#terms">Terms of Service</a></li>
-                        <li><a href="#cookie">Cookie Policy</a></li>
-                        <li><a href="#gdpr">GDPR Compliance</a></li>
-                        <li><a href="#security-policy">Security Policy</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="footer-bottom">
-                <p>&copy; 2024 Workwise Pro. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
-<style>
-/* Footer Styles */
+/* Enhanced Footer Styles */
 .main-footer {
     background: #000000;
     color: #ffffff;
     padding: 6rem 0 2rem;
     position: relative;
-}
-
-.main-footer::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(45deg, rgba(41, 98, 255, 0.05), transparent);
-    pointer-events: none;
-}
-
-.footer-social {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
-    margin-bottom: 4rem;
-}
-
-.social-link {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 1.25rem;
-    transition: all 0.3s ease;
-}
-
-.social-link:hover {
-    color: var(--primary-color);
-    transform: translateY(-3px);
+    overflow: hidden;
 }
 
 .footer-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 2fr repeat(4, 1fr);
     gap: clamp(2rem, 5vw, 4rem);
     margin-bottom: 4rem;
-    position: relative;
 }
 
 .footer-section h4 {
     color: #ffffff;
     font-size: 1.2rem;
     margin-bottom: 1.5rem;
-    font-weight: 600;
     position: relative;
     padding-bottom: 0.75rem;
 }
@@ -3609,38 +1269,12 @@ p { font-size: var(--body-size); }
     transition: width 0.3s ease;
 }
 
-.footer-section:hover h4::after {
-    width: 50px;
-}
-
-.footer-section ul {
-    list-style: none;
-    padding: 0;
-}
-
-.footer-section ul li {
-    margin-bottom: 0.8rem;
-}
-
 .footer-section ul li a {
     color: rgba(255, 255, 255, 0.7);
     text-decoration: none;
-    transition: all 0.3s ease;
-    font-size: 0.95rem;
+    transition: var(--transition);
     display: inline-block;
-    padding: 0.3rem 0;
-    position: relative;
-}
-
-.footer-section ul li a::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 1px;
-    background: var(--primary-color);
-    transition: width 0.3s ease;
+    padding: 0.5rem 0;
 }
 
 .footer-section ul li a:hover {
@@ -3648,43 +1282,59 @@ p { font-size: var(--body-size); }
     transform: translateX(5px);
 }
 
-.footer-section ul li a:hover::before {
-    width: 100%;
+.social-links {
+    display: flex;
+    gap: 1rem;
 }
 
-.footer-bottom {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding-top: 2rem;
-    text-align: center;
-    position: relative;
-}
-
-.footer-bottom p {
+.social-links a {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: rgba(255, 255, 255, 0.7);
-    font-size: 0.9rem;
+    transition: var(--transition);
 }
 
-/* Footer Responsive Styles */
-@media (max-width: 1024px) {
+.social-links a:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-3px);
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
     .footer-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 3rem;
     }
+
+    .brand-section {
+        grid-column: 1 / -1;
+        text-align: center;
+    }
+
+    .social-links {
+        justify-content: center;
+    }
 }
 
 @media (max-width: 768px) {
-    .main-footer {
-        padding: 4rem 0 2rem;
+    .cta-section {
+        padding: 4rem 0;
     }
 
-    .footer-social {
-        margin-bottom: 3rem;
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
     }
 
-    .footer-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 2.5rem;
-        margin-bottom: 3rem;
+    .cta-features {
+        flex-direction: column;
+        align-items: center;
     }
 
     .footer-section {
@@ -3695,139 +1345,28 @@ p { font-size: var(--body-size); }
         left: 50%;
         transform: translateX(-50%);
     }
-
-    .footer-section ul li a:hover {
-        transform: translateX(0);
-    }
-
-    .social-link {
-        font-size: 1.2rem;
-    }
 }
 
 @media (max-width: 480px) {
-    .main-footer {
-        padding: 3rem 0 1.5rem;
-    }
-
-    .footer-social {
-        margin-bottom: 2rem;
-        gap: 1.25rem;
+    .cta-feature {
+        width: 100%;
+        justify-content: center;
     }
 
     .footer-grid {
         grid-template-columns: 1fr;
-        gap: 2rem;
-        margin-bottom: 2rem;
-    }
-
-    .footer-section {
-        padding: 0 1rem;
-    }
-
-    .footer-section h4 {
-        font-size: 1.1rem;
-        margin-bottom: 1rem;
-    }
-
-    .footer-section ul li {
-        margin-bottom: 0.6rem;
-    }
-
-    .footer-section ul li a {
-        font-size: 0.9rem;
-    }
-
-    .social-link {
-        font-size: 1.1rem;
-    }
-
-    .footer-bottom {
-        padding-top: 1.5rem;
-    }
-
-    .footer-bottom p {
-        font-size: 0.85rem;
-    }
-}
-
-/* Additional Footer Responsive Adjustments */
-@media (max-width: 360px) {
-    .footer-social {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 1rem;
-    }
-
-    .footer-section {
-        padding: 0 0.5rem;
-    }
-
-    .footer-section h4 {
-        font-size: 1rem;
-    }
-
-    .footer-section ul li a {
-        font-size: 0.85rem;
-    }
-}
-
-/* Notification Styles */
-.notification {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: #28a745;
-    color: white;
-    padding: 1rem 2rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transform: translateY(100px);
-    opacity: 0;
-    transition: all 0.3s ease;
-    z-index: 1000;
-}
-
-.notification.show {
-    transform: translateY(0);
-    opacity: 1;
-}
-
-/* Touch Device Optimization */
-@media (hover: none) {
-    .social-link:hover {
-        transform: none;
-    }
-
-    .footer-section ul li a:hover {
-        transform: none;
-    }
-
-    .footer-section h4::after {
-        transition: none;
-    }
-
-    .footer-section:hover h4::after {
-        width: 30px;
     }
 }
 </style>
-    <!-- Notification Container -->
-    <div id="notification-container"></div>
+   
+<!-- Notification Container -->
+<div id="notification-container"></div>
 
-    <!-- Modal Container -->
-    <div id="modal-container"></div>
+<!-- Modal Container -->
+<div id="modal-container"></div>
 
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loading-overlay">
-        <div class="loader"></div>
-    </div>
-
-    <script>
-       // Chart Instance Management
-const chartInstances = new Map();
-
-// Document Ready Handler with Enhanced Error Handling
+<script>
+// Document Ready Handler
 document.addEventListener('DOMContentLoaded', function() {
     try {
         loadHeader().then(() => {
@@ -3844,15 +1383,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Enhanced Header Loading with Debug Logs
+// Enhanced Header Loading
 async function loadHeader() {
     const headerContainer = document.getElementById('header-container');
     
     try {
         console.log('Current location:', window.location.href);
-        console.log('Attempting to load header from:', new URL('header.html', window.location.href).href);
+        console.log('Attempting to load header from:', new URL('./header.html', window.location.href).href);
         
-        const response = await fetch('header.html');
+        const response = await fetch('./header.html');
         console.log('Response status:', response.status);
         
         if (!response.ok) {
@@ -3871,6 +1410,7 @@ async function loadHeader() {
             location: window.location.pathname,
             type: error.name
         });
+        showNotification('Error loading header. Using fallback.', 'warning');
         // Fallback header
         headerContainer.innerHTML = `
             <header class="main-header">
@@ -3902,43 +1442,16 @@ async function loadHeader() {
     }
 }
 
-// Enhanced Mobile Menu
-function initializeMobileMenu() {
-    const mobileMenu = document.getElementById('mobile-menu');
-    const mainNav = document.getElementById('main-nav');
-    const menuOverlay = document.getElementById('menu-overlay');
-    let isMenuOpen = false;
-
-    if (mobileMenu && mainNav) {
-        function toggleMenu(show) {
-            isMenuOpen = show;
-            mobileMenu.classList.toggle('active', show);
-            mainNav.classList.toggle('active', show);
-            if (menuOverlay) menuOverlay.classList.toggle('active', show);
-            document.body.style.overflow = show ? 'hidden' : '';
-        }
-
-        mobileMenu.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleMenu(!isMenuOpen);
-        });
-
-        // Close menu when clicking outside
-        document.addEventListener('click', (e) => {
-            if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
-                toggleMenu(false);
-            }
-        });
-
-        // Handle escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && isMenuOpen) {
-                toggleMenu(false);
-            }
-        });
-    }
+// Initialize All Functions
+function initializeAll() {
+    initializeAnimations();
+    handleScrollEffects();
+    setupInteractions();
+    initializeCharts();
+    initializeMaintenanceCalendar();
 }
-        // Enhanced Animation System
+
+// Enhanced Animation System
 function initializeAnimations() {
     const observerOptions = {
         threshold: 0.1,
@@ -3950,1184 +1463,155 @@ function initializeAnimations() {
             if (entry.isIntersecting) {
                 requestAnimationFrame(() => {
                     entry.target.classList.add('animate-in');
-                    if (entry.target.classList.contains('progress-fill')) {
-                        const width = entry.target.dataset.progress;
-                        entry.target.style.width = width;
-                    }
                 });
             }
         });
     }, observerOptions);
 
-    document.querySelectorAll('.feature-card, .tax-card, .compliance-card, .integration-card, .progress-fill')
-        .forEach(el => observer.observe(el));
-}
-
-// Enhanced Scroll Effects
-function handleScrollEffects() {
-    let lastScroll = 0;
-    let ticking = false;
-    const header = document.querySelector('.main-header');
-    const scrollThreshold = 100;
-
-    window.addEventListener('scroll', () => {
-        if (!ticking) {
-            window.requestAnimationFrame(() => {
-                const currentScroll = window.pageYOffset;
-                
-                if (currentScroll > lastScroll && currentScroll > scrollThreshold) {
-                    header?.classList.add('header-hidden');
-                } else {
-                    header?.classList.remove('header-hidden');
-                }
-                
-                // Add scroll-based animations
-                document.querySelectorAll('.animate-on-scroll').forEach(element => {
-                    const elementTop = element.getBoundingClientRect().top;
-                    const elementVisible = 150;
-
-                    if (elementTop < window.innerHeight - elementVisible) {
-                        element.classList.add('active');
-                    }
-                });
-                
-                lastScroll = currentScroll;
-                ticking = false;
-            });
-
-            ticking = true;
-        }
+    document.querySelectorAll('.feature-card, .integration-card, .maintenance-card').forEach(el => {
+        observer.observe(el);
     });
 }
 
-// Initialize All Functions
-function initializeAll() {
-    try {
-        initializeAnimations();
-        handleScrollEffects();
-        setupInteractions();
-        
-        if (document.querySelector('.metric-chart')) {
-            initializeMetrics();
-        }
-        
-        if (document.getElementById('depreciationChart')) {
-            initializeDepreciationChart();
-            initializeMethodButtons();
-            initializeReportActions();
-        }
-        
-        if (document.getElementById('billing-toggle')) {
-            initializePricing();
-        }
-        
-        if (document.querySelector('.calendar-event')) {
-            initializeCalendar();
-        }
-
-        if (document.getElementById('mainChart')) {
-            initializeCharts();
-        }
-    } catch (error) {
-        handleError(error, 'Function Initialization');
-    }
-}
-
-// Enhanced Chart Initialization
+// Initialize Charts
 function initializeCharts() {
     const mainChartCtx = document.getElementById('mainChart');
     if (mainChartCtx) {
-        try {
-            // Destroy existing chart if it exists
-            const existingChart = Chart.getChart('mainChart');
-            if (existingChart) {
-                existingChart.destroy();
-            }
-
-            const mainChart = new Chart(mainChartCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                    datasets: [{
-                        label: 'Asset Utilization',
-                        data: [75, 82, 80, 85, 83, 85],
-                        borderColor: 'rgba(41, 98, 255, 0.5)',
-                        backgroundColor: 'rgba(41, 98, 255, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                            titleColor: '#333',
-                            bodyColor: '#666',
-                            borderColor: 'rgba(0, 0, 0, 0.1)',
-                            borderWidth: 1,
-                            padding: 12,
-                            boxPadding: 6,
-                            usePointStyle: true
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                font: {
-                                    size: window.innerWidth < 768 ? 10 : 12
-                                }
-                            },
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                font: {
-                                    size: window.innerWidth < 768 ? 10 : 12
-                                }
-                            },
-                            grid: {
-                                display: false
-                            }
-                        }
-                    }
-                }
-            });
-
-            chartInstances.set('mainChart', mainChart);
-        } catch (error) {
-            handleError(error, 'Main Chart Initialization');
-        }
-    }
-
-    // Initialize Mini Charts with Error Handling
-    initializeMiniCharts();
-}
-        // Enhanced Mini Charts Initialization
-function initializeMiniCharts() {
-    document.querySelectorAll('.mini-chart').forEach((canvas, index) => {
-        try {
-            const ctx = canvas.getContext('2d');
-            if (!ctx) return;
-
-            // Destroy existing chart if it exists
-            const existingChart = Chart.getChart(canvas);
-            if (existingChart) {
-                existingChart.destroy();
-            }
-
-            const miniChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['', '', '', '', ''],
-                    datasets: [{
-                        data: index === 0 ? [70, 75, 80, 82, 85] : [2.1, 2.3, 2.4, 2.5, 2.5],
-                        borderColor: 'rgba(41, 98, 255, 0.5)',
-                        tension: 0.4,
-                        pointRadius: 0,
-                        borderWidth: window.innerWidth < 768 ? 1 : 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        x: {
-                            display: false
-                        },
-                        y: {
-                            display: false
-                        }
-                    }
-                }
-            });
-
-            chartInstances.set(`miniChart${index}`, miniChart);
-        } catch (error) {
-            handleError(error, `Mini Chart ${index} Initialization`);
-        }
-    });
-}
-
-// Enhanced Report Generation System
-function setupReportGeneration() {
-    const generateButtons = document.querySelectorAll('.generate-btn, .report-btn');
-    
-    generateButtons.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const reportType = this.closest('.feature-content')?.querySelector('.report-select')?.value || 'Default';
-            generateDummyReport(reportType, this);
-        });
-    });
-}
-
-function generateDummyReport(type, button) {
-    try {
-        // Store original button content
-        const originalContent = button.innerHTML;
-        
-        // Show loading state
-        button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Generating...`;
-        button.disabled = true;
-
-        // Simulate report generation
-        setTimeout(() => {
-            // Create dummy report data
-            const reportData = {
-                type: type,
-                date: new Date().toLocaleDateString(),
-                data: generateSampleData(),
-                charts: generateChartData()
-            };
-
-            // Show success state
-            button.innerHTML = `<i class="fas fa-check"></i> Generated!`;
-            
-            // Display report preview
-            showReportPreview(reportData);
-
-            // Reset button after delay
-            setTimeout(() => {
-                button.innerHTML = originalContent;
-                button.disabled = false;
-            }, 1500);
-        }, 2000);
-    } catch (error) {
-        handleError(error, 'Report Generation');
-        button.innerHTML = originalContent;
-        button.disabled = false;
-    }
-}
-
-function generateSampleData() {
-    return {
-        totalAssets: Math.floor(Math.random() * 1000) + 500,
-        totalValue: (Math.random() * 1000000).toFixed(2),
-        depreciationRate: (Math.random() * 20).toFixed(2),
-        maintenanceCosts: (Math.random() * 50000).toFixed(2),
-        utilizationRate: (Math.random() * 30 + 70).toFixed(1),
-        complianceScore: (Math.random() * 20 + 80).toFixed(1)
-    };
-}
-
-function generateChartData() {
-    return {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-        datasets: {
-            utilization: [75, 78, 80, 82, 85, 87],
-            maintenance: [12000, 15000, 13000, 16000, 14000, 15000],
-            depreciation: [100, 95, 90, 85, 80, 75]
-        }
-    };
-}
-
-// Helper function to handle errors
-function handleError(error, context) {
-    console.error(`Error in ${context}:`, error);
-    showNotification(`An error occurred in ${context}. Please try again.`, 'error');
-}
-        // Enhanced Report Preview System
-function showReportPreview(reportData) {
-    try {
-        // Create modal with enhanced structure
-        const modal = document.createElement('div');
-        modal.className = 'report-preview-modal';
-        
-        modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>${reportData.type} Report</h3>
-                    <div class="modal-controls">
-                        <span class="report-date">Generated: ${reportData.date}</span>
-                        <button class="close-btn" aria-label="Close Report">&times;</button>
-                    </div>
-                </div>
-                <div class="modal-body">
-                    <div class="report-sections">
-                        <div class="report-section">
-                            <h4>Asset Overview</h4>
-                            <div class="metrics-grid">
-                                <div class="metric-item">
-                                    <span class="metric-label">Total Assets</span>
-                                    <span class="metric-value">${reportData.data.totalAssets}</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label">Total Value</span>
-                                    <span class="metric-value">$${formatNumber(reportData.data.totalValue)}</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label">Utilization Rate</span>
-                                    <span class="metric-value">${reportData.data.utilizationRate}%</span>
-                                </div>
-                                <div class="metric-item">
-                                    <span class="metric-label">Compliance Score</span>
-                                    <span class="metric-value">${reportData.data.complianceScore}%</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="report-section">
-                            <h4>Financial Analysis</h4>
-                            <div class="chart-container">
-                                <canvas id="reportChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="report-section">
-                            <h4>Key Insights</h4>
-                            <ul class="insights-list">
-                                <li>
-                                    <i class="fas fa-arrow-trend-up"></i>
-                                    <span>Asset utilization has increased by ${(Math.random() * 10 + 5).toFixed(1)}% this quarter</span>
-                                </li>
-                                <li>
-                                    <i class="fas fa-clock"></i>
-                                    <span>Average maintenance response time: ${(Math.random() * 24 + 12).toFixed(1)} hours</span>
-                                </li>
-                                <li>
-                                    <i class="fas fa-chart-pie"></i>
-                                    <span>Top performing asset category: ${getRandomCategory()}</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="report-actions">
-                        <button class="btn primary download-btn">
-                            <i class="fas fa-download"></i> Download PDF
-                        </button>
-                        <button class="btn secondary print-btn">
-                            <i class="fas fa-print"></i> Print Report
-                        </button>
-                        <button class="btn secondary share-btn">
-                            <i class="fas fa-share-alt"></i> Share Report
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Append modal to body
-        document.body.appendChild(modal);
-
-        // Initialize report chart
-        initializeReportChart(reportData.charts);
-
-        // Animate modal entrance
-        requestAnimationFrame(() => {
-            modal.style.opacity = '1';
-            modal.querySelector('.modal-content').style.transform = 'translateY(0)';
-        });
-
-        // Enhanced modal interaction handling
-        setupModalInteractions(modal);
-
-    } catch (error) {
-        handleError(error, 'Report Preview');
-    }
-}
-
-// Helper Functions
-function formatNumber(number) {
-    return new Intl.NumberFormat('en-US').format(number);
-}
-
-function getRandomCategory() {
-    const categories = ['IT Equipment', 'Office Furniture', 'Vehicles', 'Manufacturing Equipment'];
-    return categories[Math.floor(Math.random() * categories.length)];
-}
-
-function initializeReportChart(chartData) {
-    const ctx = document.getElementById('reportChart');
-    if (!ctx) return;
-
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: chartData.labels,
-            datasets: [{
-                label: 'Asset Utilization',
-                data: chartData.datasets.utilization,
-                borderColor: 'rgba(41, 98, 255, 0.5)',
-                backgroundColor: 'rgba(41, 98, 255, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
+        new Chart(mainChartCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Asset Utilization',
+                    data: [75, 82, 80, 85, 83, 85],
+                    borderColor: 'rgba(41, 98, 255, 0.5)',
+                    backgroundColor: 'rgba(41, 98, 255, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
                     }
                 }
             }
-        }
-    });
-}
-
-function setupModalInteractions(modal) {
-    const closeBtn = modal.querySelector('.close-btn');
-    const downloadBtn = modal.querySelector('.download-btn');
-    const printBtn = modal.querySelector('.print-btn');
-    const shareBtn = modal.querySelector('.share-btn');
-
-    // Close modal
-    const closeModal = () => {
-        modal.style.opacity = '0';
-        modal.querySelector('.modal-content').style.transform = 'translateY(20px)';
-        setTimeout(() => modal.remove(), 300);
-    };
-
-    closeBtn.addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
-    });
-
-    // Handle escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeModal();
-    });
-
-    // Action buttons
-    downloadBtn.addEventListener('click', () => {
-        showNotification('Report download started...', 'success');
-        simulateDownload();
-    });
-
-    printBtn.addEventListener('click', () => {
-        showNotification('Preparing report for printing...', 'success');
-        simulatePrint();
-    });
-
-    shareBtn.addEventListener('click', () => {
-        showNotification('Share options coming soon...', 'info');
-    });
-}
-        // Enhanced Notification System
-function showNotification(message, type = 'success', duration = 3000) {
-    try {
-        // Remove existing notifications
-        const existingNotifications = document.querySelectorAll('.notification');
-        existingNotifications.forEach(notification => {
-            notification.remove();
-        });
-
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        
-        notification.innerHTML = `
-            <div class="notification-content">
-                <i class="fas ${getNotificationIcon(type)}"></i>
-                <div class="notification-text">
-                    <span class="notification-message">${message}</span>
-                    ${type === 'error' ? '<span class="notification-retry">Click to retry</span>' : ''}
-                </div>
-                <button class="notification-close" aria-label="Close notification">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="notification-progress"></div>
-        `;
-
-        document.body.appendChild(notification);
-
-        // Animate notification entrance
-        requestAnimationFrame(() => {
-            notification.style.transform = 'translateY(0)';
-            notification.style.opacity = '1';
-        });
-
-        // Setup notification interactions
-        const closeBtn = notification.querySelector('.notification-close');
-        const retryBtn = notification.querySelector('.notification-retry');
-
-        closeBtn.addEventListener('click', () => {
-            removeNotification(notification);
-        });
-
-        if (retryBtn) {
-            retryBtn.addEventListener('click', () => {
-                removeNotification(notification);
-                // Implement retry logic here based on the context
-            });
-        }
-
-        // Auto-remove notification after duration
-        setTimeout(() => {
-            removeNotification(notification);
-        }, duration);
-
-    } catch (error) {
-        console.error('Error showing notification:', error);
-    }
-}
-
-function removeNotification(notification) {
-    notification.style.transform = 'translateY(100px)';
-    notification.style.opacity = '0';
-    setTimeout(() => notification.remove(), 300);
-}
-
-function getNotificationIcon(type) {
-    switch (type) {
-        case 'success':
-            return 'fa-check-circle';
-        case 'error':
-            return 'fa-exclamation-circle';
-        case 'warning':
-            return 'fa-exclamation-triangle';
-        default:
-            return 'fa-info-circle';
-    }
-}
-
-// Simulation Functions
-function simulateDownload() {
-    setTimeout(() => {
-        showNotification('Report downloaded successfully', 'success');
-    }, 2000);
-}
-
-function simulatePrint() {
-    setTimeout(() => {
-        showNotification('Report sent to printer', 'success');
-    }, 2000);
-}
-
-// Performance Monitoring
-const performanceMonitor = {
-    metrics: {},
-    
-    start: function(label) {
-        this.metrics[label] = performance.now();
-    },
-    
-    end: function(label) {
-        if (this.metrics[label]) {
-            const duration = performance.now() - this.metrics[label];
-            console.log(`${label}: ${duration.toFixed(2)}ms`);
-            delete this.metrics[label];
-            return duration;
-        }
-        return null;
-    },
-
-    measure: async function(label, callback) {
-        this.start(label);
-        try {
-            const result = await callback();
-            const duration = this.end(label);
-            if (duration > 1000) {
-                showNotification(`Warning: ${label} took ${(duration/1000).toFixed(1)}s to complete`, 'warning');
-            }
-            return result;
-        } catch (error) {
-            this.end(label);
-            throw error;
-        }
-    }
-};
-
-// Utility Functions
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-function throttle(func, limit) {
-    let inThrottle;
-    return function executedFunction(...args) {
-        if (!inThrottle) {
-            func(...args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    };
-}
-
-// Resource Loading Optimization
-function preloadResources() {
-    const resources = [
-        { type: 'image', url: 'image/asset-dashboard.png' },
-        { type: 'image', url: 'image/integration-diagram.png' },
-        { type: 'style', url: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css' }
-    ];
-
-    resources.forEach(resource => {
-        if (resource.type === 'image') {
-            const img = new Image();
-            img.src = resource.url;
-        } else if (resource.type === 'style') {
-            const link = document.createElement('link');
-            link.rel = 'preload';
-            link.as = 'style';
-            link.href = resource.url;
-            document.head.appendChild(link);
-        }
-    });
-}// Enhanced Notification System
-function showNotification(message, type = 'success', duration = 3000) {
-    try {
-        // Remove existing notifications
-        const existingNotifications = document.querySelectorAll('.notification');
-        existingNotifications.forEach(notification => {
-            notification.remove();
-        });
-
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        
-        notification.innerHTML = `
-            <div class="notification-content">
-                <i class="fas ${getNotificationIcon(type)}"></i>
-                <div class="notification-text">
-                    <span class="notification-message">${message}</span>
-                    ${type === 'error' ? '<span class="notification-retry">Click to retry</span>' : ''}
-                </div>
-                <button class="notification-close" aria-label="Close notification">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="notification-progress"></div>
-        `;
-
-        document.body.appendChild(notification);
-
-        // Animate notification entrance
-        requestAnimationFrame(() => {
-            notification.style.transform = 'translateY(0)';
-            notification.style.opacity = '1';
-        });
-
-        // Setup notification interactions
-        const closeBtn = notification.querySelector('.notification-close');
-        const retryBtn = notification.querySelector('.notification-retry');
-
-        closeBtn.addEventListener('click', () => {
-            removeNotification(notification);
-        });
-
-        if (retryBtn) {
-            retryBtn.addEventListener('click', () => {
-                removeNotification(notification);
-                // Implement retry logic here based on the context
-            });
-        }
-
-        // Auto-remove notification after duration
-        setTimeout(() => {
-            removeNotification(notification);
-        }, duration);
-
-    } catch (error) {
-        console.error('Error showing notification:', error);
-    }
-}
-
-function removeNotification(notification) {
-    notification.style.transform = 'translateY(100px)';
-    notification.style.opacity = '0';
-    setTimeout(() => notification.remove(), 300);
-}
-
-function getNotificationIcon(type) {
-    switch (type) {
-        case 'success':
-            return 'fa-check-circle';
-        case 'error':
-            return 'fa-exclamation-circle';
-        case 'warning':
-            return 'fa-exclamation-triangle';
-        default:
-            return 'fa-info-circle';
-    }
-}
-
-// Simulation Functions
-function simulateDownload() {
-    setTimeout(() => {
-        showNotification('Report downloaded successfully', 'success');
-    }, 2000);
-}
-
-function simulatePrint() {
-    setTimeout(() => {
-        showNotification('Report sent to printer', 'success');
-    }, 2000);
-}
-
-// Performance Monitoring
-const performanceMonitor = {
-    metrics: {},
-    
-    start: function(label) {
-        this.metrics[label] = performance.now();
-    },
-    
-    end: function(label) {
-        if (this.metrics[label]) {
-            const duration = performance.now() - this.metrics[label];
-            console.log(`${label}: ${duration.toFixed(2)}ms`);
-            delete this.metrics[label];
-            return duration;
-        }
-        return null;
-    },
-
-    measure: async function(label, callback) {
-        this.start(label);
-        try {
-            const result = await callback();
-            const duration = this.end(label);
-            if (duration > 1000) {
-                showNotification(`Warning: ${label} took ${(duration/1000).toFixed(1)}s to complete`, 'warning');
-            }
-            return result;
-        } catch (error) {
-            this.end(label);
-            throw error;
-        }
-    }
-};
-
-// Utility Functions
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-function throttle(func, limit) {
-    let inThrottle;
-    return function executedFunction(...args) {
-        if (!inThrottle) {
-            func(...args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    };
-}
-
-// Resource Loading Optimization
-function preloadResources() {
-    const resources = [
-        { type: 'image', url: 'image/asset-dashboard.png' },
-        { type: 'image', url: 'image/integration-diagram.png' },
-        { type: 'style', url: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css' }
-    ];
-
-    resources.forEach(resource => {
-        if (resource.type === 'image') {
-            const img = new Image();
-            img.src = resource.url;
-        } else if (resource.type === 'style') {
-            const link = document.createElement('link');
-            link.rel = 'preload';
-            link.as = 'style';
-            link.href = resource.url;
-            document.head.appendChild(link);
-        }
-    });
-}
-        // Global Error Handler and Recovery System
-const errorHandler = {
-    maxRetries: 3,
-    retryDelay: 1000,
-    errorCounts: new Map(),
-
-    init: function() {
-        window.addEventListener('error', this.handleError.bind(this));
-        window.addEventListener('unhandledrejection', this.handlePromiseError.bind(this));
-    },
-
-    handleError: function(event) {
-        console.error('Global error handler:', event.error);
-        
-        const errorKey = event.error?.message || 'Unknown Error';
-        const errorCount = (this.errorCounts.get(errorKey) || 0) + 1;
-        this.errorCounts.set(errorKey, errorCount);
-
-        if (errorCount <= this.maxRetries) {
-            this.attemptRecovery(event, errorKey);
-        } else {
-            this.handleUnrecoverableError(event.error);
-        }
-
-        // Prevent chart errors from breaking the page
-        if (event.error?.message?.includes('Chart')) {
-            event.preventDefault();
-            this.recoverChart(event);
-        }
-
-        this.logError({
-            type: 'runtime',
-            message: event.error?.message,
-            stack: event.error?.stack,
-            location: window.location.href,
-            timestamp: new Date().toISOString()
-        });
-    },
-
-    handlePromiseError: function(event) {
-        console.error('Unhandled Promise Rejection:', event.reason);
-        
-        this.logError({
-            type: 'promise',
-            message: event.reason?.message,
-            stack: event.reason?.stack,
-            location: window.location.href,
-            timestamp: new Date().toISOString()
-        });
-    },
-
-    attemptRecovery: async function(event, errorKey) {
-        const delay = this.retryDelay * this.errorCounts.get(errorKey);
-        
-        showNotification(
-            `Attempting to recover from error (Attempt ${this.errorCounts.get(errorKey)} of ${this.maxRetries})...`, 
-            'warning'
-        );
-
-        await new Promise(resolve => setTimeout(resolve, delay));
-
-        try {
-            if (event.error?.message?.includes('Chart')) {
-                this.recoverChart(event);
-            } else if (event.error?.message?.includes('fetch')) {
-                this.recoverDataFetch(event);
-            } else {
-                this.recoverGeneral(event);
-            }
-        } catch (error) {
-            console.error('Recovery attempt failed:', error);
-        }
-    },
-
-    recoverChart: function(event) {
-        const chartId = event.target?.id || '';
-        if (chartId && chartInstances.has(chartId)) {
-            const chart = chartInstances.get(chartId);
-            try {
-                chart.destroy();
-                if (chartId === 'depreciationChart') {
-                    initializeDepreciationChart();
-                } else if (chartId === 'mainChart') {
-                    initializeCharts();
-                }
-                showNotification('Chart recovered successfully', 'success');
-            } catch (e) {
-                console.error('Failed to recover chart:', e);
-            }
-        }
-    },
-
-    handleUnrecoverableError: function(error) {
-        showNotification(
-            'An unrecoverable error has occurred. Please refresh the page.',
-            'error',
-            10000
-        );
-    },
-
-    logError: function(errorData) {
-        console.error('Error logged:', errorData);
-        
-        // Example: Send to analytics service
-        if (typeof gtag !== 'undefined') {
-            gtag('event', 'error', {
-                'event_category': 'Error',
-                'event_label': errorData.message,
-                'value': 1
-            });
-        }
-    }
-};
-
-// Cleanup System
-const cleanupSystem = {
-    intervals: new Set(),
-    timeouts: new Set(),
-    eventListeners: new Map(),
-
-    init: function() {
-        window.addEventListener('beforeunload', this.cleanup.bind(this));
-        document.addEventListener('visibilitychange', this.handleVisibilityChange.bind(this));
-    },
-
-    registerInterval: function(id) {
-        this.intervals.add(id);
-    },
-
-    registerTimeout: function(id) {
-        this.timeouts.add(id);
-    },
-
-    registerEventListener: function(element, event, handler) {
-        if (!this.eventListeners.has(element)) {
-            this.eventListeners.set(element, new Map());
-        }
-        this.eventListeners.get(element).set(event, handler);
-        element.addEventListener(event, handler);
-    },
-
-    cleanup: function() {
-        // Clear intervals
-        this.intervals.forEach(id => {
-            clearInterval(id);
-        });
-        this.intervals.clear();
-
-        // Clear timeouts
-        this.timeouts.forEach(id => {
-            clearTimeout(id);
-        });
-        this.timeouts.clear();
-
-        // Remove event listeners
-        this.eventListeners.forEach((listeners, element) => {
-            listeners.forEach((handler, event) => {
-                element.removeEventListener(event, handler);
-            });
-        });
-        this.eventListeners.clear();
-
-        // Destroy charts
-        chartInstances.forEach(chart => {
-            if (chart && typeof chart.destroy === 'function') {
-                chart.destroy();
-            }
-        });
-        chartInstances.clear();
-
-        // Clear animations
-        cancelAnimationFrame(window.rafId);
-    },
-
-    handleVisibilityChange: function() {
-        if (document.hidden) {
-            // Pause non-essential operations
-            this.intervals.forEach(id => clearInterval(id));
-            document.querySelectorAll('.animate-in').forEach(el => {
-                el.style.animationPlayState = 'paused';
-            });
-        } else {
-            // Resume operations
-            this.reinitializeIntervals();
-            document.querySelectorAll('.animate-in').forEach(el => {
-                el.style.animationPlayState = 'running';
-            });
-        }
-    },
-
-    reinitializeIntervals: function() {
-        // Implement interval reinitialize logic here
-        console.log('Reinitializing intervals...');
-    }
-};
-        // Initialize performance monitoring
-document.addEventListener('DOMContentLoaded', () => {
-    performanceMonitor.start('pageLoad');
-    preloadResources();
-});
-
-window.addEventListener('load', () => {
-    const loadTime = performanceMonitor.end('pageLoad');
-    console.log(`Page fully loaded in ${(loadTime/1000).toFixed(2)}s`);
-});
-
-// Final Initialization
-document.addEventListener('DOMContentLoaded', function() {
-    performanceMonitor.measure('initialization', async () => {
-        try {
-            // Initialize error handling and cleanup
-            errorHandler.init();
-            cleanupSystem.init();
-
-            // Load and initialize components
-            await loadHeader();
-            initializeAll();
-            initializeAnalyticsDashboard();
-            initializeIntegrationFeatures();
-            setupReportGeneration();
-            setupExportFunctionality();
-
-            // Register service worker if available
-            if ('serviceWorker' in navigator) {
-                try {
-                    const registration = await navigator.serviceWorker.register('/service-worker.js');
-                    console.log('ServiceWorker registration successful');
-                } catch (error) {
-                    console.error('ServiceWorker registration failed:', error);
-                }
-            }
-
-            showNotification('System initialized successfully', 'success');
-        } catch (error) {
-            handleError(error, 'System Initialization');
-        }
-    });
-});
-
-// Handle page visibility changes
-document.addEventListener('visibilitychange', function() {
-    if (!document.hidden) {
-        // Refresh data when page becomes visible
-        performanceMonitor.measure('dataRefresh', async () => {
-            try {
-                await refreshDashboardData();
-                updateCharts();
-            } catch (error) {
-                handleError(error, 'Data Refresh');
-            }
         });
     }
-});
-
-// Dashboard Data Refresh Function
-async function refreshDashboardData() {
-    try {
-        // Simulate data refresh
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        console.log('Dashboard data refreshed');
-    } catch (error) {
-        throw new Error('Failed to refresh dashboard data');
-    }
 }
 
-// Chart Update Function
-function updateCharts() {
-    chartInstances.forEach((chart, id) => {
-        try {
-            if (chart && typeof chart.update === 'function') {
-                chart.update();
-            }
-        } catch (error) {
-            handleError(error, `Chart Update: ${id}`);
-        }
-    });
-}
-
-// Export Functionality Setup
-function setupExportFunctionality() {
-    const exportButtons = document.querySelectorAll('.export-btn');
-    exportButtons.forEach(btn => {
+// Setup Report Generation
+function setupReportGeneration() {
+    const generateButtons = document.querySelectorAll('.generate-btn');
+    generateButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-            const format = btn.dataset.format || 'pdf';
-            handleExport(format);
+            const reportType = btn.closest('.feature-content')?.querySelector('.report-select')?.value || 'Default';
+            generateReport(reportType, btn);
         });
     });
 }
 
-// Export Handler
-function handleExport(format) {
-    showNotification(`Preparing ${format.toUpperCase()} export...`, 'info');
-    
+function generateReport(type, button) {
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    button.disabled = true;
+
     setTimeout(() => {
-        showNotification(`${format.toUpperCase()} exported successfully`, 'success');
+        showNotification(`${type} report generated successfully!`, 'success');
+        button.innerHTML = originalText;
+        button.disabled = false;
     }, 2000);
 }
 
-// Analytics Dashboard Initialization
-function initializeAnalyticsDashboard() {
-    try {
-        // Initialize main dashboard components
-        if (document.getElementById('mainChart')) {
-            initializeCharts();
-        }
-        
-        // Setup real-time updates
-        const updateInterval = setInterval(() => {
-            updateDashboardMetrics();
-        }, 30000); // Update every 30 seconds
-        
-        // Register interval for cleanup
-        cleanupSystem.registerInterval(updateInterval);
-        
-    } catch (error) {
-        handleError(error, 'Analytics Dashboard Initialization');
+// Enhanced Notification System
+function showNotification(message, type = 'success', duration = 3000) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateY(0)';
+    }, 100);
+
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(100%)';
+        setTimeout(() => notification.remove(), 300);
+    }, duration);
+}
+
+// Initialize Maintenance Calendar
+function initializeMaintenanceCalendar() {
+    const calendarGrid = document.querySelector('.calendar-grid');
+    if (!calendarGrid) return;
+
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const currentDate = new Date();
+    const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+    const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+
+    // Add day headers
+    days.forEach(day => {
+        const dayHeader = document.createElement('div');
+        dayHeader.className = 'calendar-day header';
+        dayHeader.textContent = day;
+        calendarGrid.appendChild(dayHeader);
+    });
+
+    // Add empty cells for days before first of month
+    for (let i = 0; i < firstDay; i++) {
+        const emptyDay = document.createElement('div');
+        emptyDay.className = 'calendar-day empty';
+        calendarGrid.appendChild(emptyDay);
+    }
+
+    // Add days of the month
+    for (let i = 1; i <= daysInMonth; i++) {
+        const dayCell = document.createElement('div');
+        dayCell.className = 'calendar-day';
+        dayCell.innerHTML = `
+            <span class="day-number">${i}</span>
+            ${i === 15 ? '<span class="maintenance-dot completed"></span>' : ''}
+            ${i === 22 ? '<span class="maintenance-dot scheduled"></span>' : ''}
+        `;
+        calendarGrid.appendChild(dayCell);
     }
 }
 
-// Dashboard Metrics Update
-function updateDashboardMetrics() {
-    const metrics = document.querySelectorAll('.metric-value');
-    metrics.forEach(metric => {
-        const currentValue = parseFloat(metric.textContent);
-        const newValue = currentValue + (Math.random() - 0.5) * 10;
-        metric.textContent = newValue.toFixed(2);
-    });
-}
-
-// Integration Features Initialization
-function initializeIntegrationFeatures() {
-    try {
-        setupIntegrationNodes();
-        initializeConnectionAnimations();
-    } catch (error) {
-        handleError(error, 'Integration Features Initialization');
-    }
-}
-
-// Setup Integration Nodes
-function setupIntegrationNodes() {
-    const nodes = document.querySelectorAll('.integration-node');
-    nodes.forEach(node => {
-        node.addEventListener('click', () => {
-            showIntegrationDetails(node.dataset.type);
-        });
-    });
-}
-
-// Show Integration Details
-function showIntegrationDetails(type) {
-    showNotification(`Integration details for: ${type}`, 'info');
-}
-
-// Export necessary functions and objects for global access
-window.APP = {
-    showNotification,
-    handleError,
-    performanceMonitor,
-    cleanupSystem,
-    errorHandler,
-    refreshDashboardData,
-    updateCharts
+// Watson Assistant Integration
+window.watsonAssistantChatOptions = {
+    integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
+    region: "au-syd",
+    serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
+    onLoad: async (instance) => { await instance.render(); }
 };
-    </script>
-    </body>
+
+setTimeout(function() {
+    const t = document.createElement('script');
+    t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
+        (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
+        "/WatsonAssistantChatEntry.js";
+    document.head.appendChild(t);
+});
+</script>
+</body>
 </html>
