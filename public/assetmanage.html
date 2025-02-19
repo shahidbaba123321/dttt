@@ -773,7 +773,361 @@ body {
         </div>
     </div>
 </section>
+<style>
+    /* Maintenance Section Styles */
+.maintenance-section {
+    padding: var(--section-spacing) 0;
+    background: white;
+    position: relative;
+}
 
+.maintenance-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3rem;
+    margin-top: 3rem;
+}
+
+.maintenance-features {
+    display: grid;
+    gap: 2rem;
+}
+
+/* Feature Cards */
+.maintenance-features .feature-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    border: 1px solid rgba(41, 98, 255, 0.1);
+    transition: var(--transition);
+}
+
+.maintenance-features .feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(41, 98, 255, 0.1);
+    border-color: var(--primary-color);
+}
+
+.feature-content {
+    margin-top: 1.5rem;
+}
+
+.feature-content h3 {
+    color: #1a237e;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.feature-content p {
+    color: var(--light-text);
+    margin-bottom: 1.5rem;
+}
+
+/* Alert Styles */
+.alert-preview {
+    display: grid;
+    gap: 1rem;
+}
+
+.alert-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: var(--transition);
+}
+
+.alert-item:hover {
+    transform: translateX(5px);
+}
+
+.alert-item.upcoming {
+    border-left: 4px solid var(--warning-color);
+}
+
+.alert-item.overdue {
+    border-left: 4px solid var(--danger-color);
+}
+
+.alert-item i {
+    font-size: 1.25rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+}
+
+.alert-content h4 {
+    color: var(--text-color);
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.alert-content p {
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+/* Calendar Styles */
+.calendar-preview {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.calendar-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.calendar-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: rgba(41, 98, 255, 0.1);
+    color: var(--primary-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.calendar-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+}
+
+/* Maintenance Visual */
+.maintenance-visual {
+    position: relative;
+}
+
+.visual-wrapper {
+    position: relative;
+    height: 100%;
+}
+
+.visual-wrapper img.main-image {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+}
+
+.status-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    background: white;
+    border-radius: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.status-icon {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.status-icon.operational {
+    background: var(--success-color);
+}
+
+.status-icon.maintenance {
+    background: var(--warning-color);
+}
+
+.status-icon.attention {
+    background: var(--danger-color);
+}
+
+.status-item span {
+    color: var(--text-color);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .maintenance-grid {
+        gap: 2rem;
+    }
+
+    .maintenance-features .feature-card {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .maintenance-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .maintenance-visual {
+        order: -1;
+    }
+
+    .visual-wrapper {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .maintenance-features {
+        gap: 1.5rem;
+    }
+
+    .feature-content h3 {
+        font-size: 1.25rem;
+    }
+
+    .alert-item {
+        padding: 1rem;
+    }
+
+    .calendar-preview {
+        padding: 1rem;
+    }
+
+    .status-indicators {
+        gap: 1rem;
+    }
+
+    .status-item {
+        padding: 0.5rem 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .maintenance-features .feature-card {
+        padding: 1.25rem;
+    }
+
+    .alert-item {
+        flex-direction: column;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .alert-item i {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+
+    .calendar-grid {
+        gap: 0.25rem;
+    }
+
+    .status-indicators {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .status-item {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) {
+    .maintenance-features .feature-card:hover,
+    .alert-item:hover {
+        transform: none;
+    }
+
+    .calendar-btn:hover {
+        background: rgba(41, 98, 255, 0.1);
+        color: var(--primary-color);
+    }
+}
+
+/* Animation Classes */
+.maintenance-features .feature-card,
+.alert-item,
+.calendar-preview,
+.status-item {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Loading States */
+.maintenance-section.loading .feature-card,
+.maintenance-section.loading .alert-item,
+.maintenance-section.loading .calendar-preview {
+    position: relative;
+    overflow: hidden;
+}
+
+.maintenance-section.loading .feature-card::after,
+.maintenance-section.loading .alert-item::after,
+.maintenance-section.loading .calendar-preview::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        rgba(255, 255, 255, 0) 0%, 
+        rgba(255, 255, 255, 0.5) 50%, 
+        rgba(255, 255, 255, 0) 100%);
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+</style>
 <style>
 /* Analytics Section Styles */
 .analytics-section {
