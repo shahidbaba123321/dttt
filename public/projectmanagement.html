@@ -716,17 +716,19 @@ body {
         <style>
          /* Hero Section Styles - Exact Match with Main File */
 .project-hero {
-    background: linear-gradient(135deg, #f0f7ff 0%, #e9ecef 100%);
+    background: var(--gradient);
     padding: calc(var(--header-height) + 4rem) 0 6rem;
     position: relative;
     overflow: hidden;
 }
 
 .hero-content {
-    display: grid;
+     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 4rem;
     align-items: center;
+    position: relative;
+    z-index: 2;
 }
 
 .hero-text {
