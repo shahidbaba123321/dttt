@@ -1,0 +1,2302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payroll & Finance Integrations - Workwise Pro</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* Root Variables - Including Finance Theme Colors */
+:root {
+    --primary-color: #2962ff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --background-color: #f8f9fa;
+    --text-color: #333;
+    --light-text: #6c757d;
+    --finance-primary: #1E4D8C;
+    --finance-secondary: #34A853;
+    --finance-accent: #5C6BC0;
+    --gradient-start: #F8F9FF;
+    --gradient-end: #E8F0FE;
+}
+/* Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    padding-top: var(--header-height);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--mobile-padding);
+    width: 100%;
+}
+/* Payroll Hero Section */
+.payroll-hero {
+    position: relative;
+    padding: calc(var(--header-height) + 6rem) 0 8rem;
+    overflow: hidden;
+}
+
+.hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.gradient-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+}
+
+.pattern-grid {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(var(--finance-primary) 1px, transparent 1px),
+        linear-gradient(90deg, var(--finance-primary) 1px, transparent 1px);
+    background-size: 50px 50px;
+    opacity: 0.03;
+}
+
+/* Hero Content */
+.hero-content {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+/* Solution Badge */
+.solution-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    background: rgba(30, 77, 140, 0.1);
+    border-radius: 50px;
+    margin-bottom: 2rem;
+    color: var(--finance-primary);
+}
+
+.solution-badge i {
+    font-size: 1.1rem;
+}
+
+/* Hero Text */
+.hero-text h1 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    line-height: 1.2;
+    color: var(--finance-primary);
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+
+.hero-text p {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: var(--light-text);
+    margin-bottom: 2.5rem;
+    opacity: 0.9;
+}
+
+/* Hero Buttons */
+.hero-buttons {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn.primary {
+    background: linear-gradient(45deg, var(--finance-primary), var(--finance-accent));
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(30, 77, 140, 0.2);
+}
+
+.btn.secondary {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--finance-primary);
+    border: 1px solid rgba(30, 77, 140, 0.2);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(30, 77, 140, 0.15);
+}
+
+/* Integration Stats */
+.integration-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 8px 32px rgba(30, 77, 140, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(30, 77, 140, 0.12);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(30, 77, 140, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--finance-primary);
+    font-size: 1.25rem;
+}
+
+.stat-content h4 {
+    font-size: 1.75rem;
+    color: var(--finance-primary);
+    margin: 0 0 0.25rem;
+    font-weight: 700;
+}
+
+.stat-content p {
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+/* Dashboard Preview */
+.dashboard-preview {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(30, 77, 140, 0.1);
+    overflow: hidden;
+}
+
+.preview-header {
+    background: var(--finance-primary);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.preview-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.preview-controls span {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.preview-title {
+    color: white;
+    font-size: 0.875rem;
+    margin-left: 1rem;
+}
+
+.preview-content {
+    padding: 1.5rem;
+}
+
+/* Dashboard Grid */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.dashboard-widget {
+    background: #f8f9fa;
+    padding: 1.25rem;
+    border-radius: 12px;
+}
+
+.widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.widget-header h4 {
+    color: var(--text-color);
+    font-size: 1rem;
+    margin: 0;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-badge.success {
+    background: rgba(52, 168, 83, 0.1);
+    color: var(--finance-secondary);
+}
+
+/* Transaction List */
+.transaction-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.transaction-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 8px;
+}
+
+.transaction-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(30, 77, 140, 0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--finance-primary);
+}
+
+.transaction-details {
+    flex: 1;
+}
+
+.transaction-details h5 {
+    color: var(--text-color);
+    margin: 0 0 0.25rem;
+    font-size: 0.875rem;
+}
+
+.transaction-details span {
+    color: var(--light-text);
+    font-size: 0.75rem;
+}
+
+.status.complete {
+    color: var(--finance-secondary);
+    font-size: 0.75rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .hero-content {
+        gap: 3rem;
+    }
+    
+    .dashboard-grid {
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .hero-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .solution-badge {
+        margin: 0 auto 2rem;
+    }
+
+    .hero-buttons {
+        justify-content: center;
+    }
+
+    .integration-stats {
+        max-width: 600px;
+        margin: 2rem auto 0;
+    }
+
+    .dashboard-preview {
+        max-width: 700px;
+        margin: 2rem auto 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .payroll-hero {
+        padding: calc(var(--header-height) + 4rem) 0 6rem;
+    }
+
+    .hero-buttons {
+        flex-direction: column;
+        max-width: 300px;
+        margin: 2rem auto;
+    }
+
+    .integration-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .integration-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        padding: 1rem;
+    }
+
+    .preview-content {
+        padding: 1rem;
+    }
+
+    .transaction-item {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .transaction-icon {
+        margin: 0 auto;
+    }
+}
+  </style>
+</head>
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+
+    <!-- Main Content -->
+    <main class="payroll-main">
+        <!-- Hero Section -->
+        <section class="payroll-hero">
+            <div class="hero-background">
+                <div class="gradient-overlay"></div>
+                <div class="pattern-grid"></div>
+            </div>
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <div class="solution-badge">
+                            <i class="fas fa-money-check-alt"></i>
+                            <span>Payroll & Finance</span>
+                        </div>
+                        <h1>Unify Your HR and Finance Operations</h1>
+                        <p>Seamlessly integrate payroll and accounting systems for efficient, accurate financial management.</p>
+                        <div class="hero-buttons">
+                            <a href="#" class="btn primary">
+                                <span>Learn More</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                            <a href="#" class="btn secondary">
+                                <i class="fas fa-play-circle"></i>
+                                <span>Watch Demo</span>
+                            </a>
+                        </div>
+                        <div class="integration-stats">
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-sync"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h4>99.9%</h4>
+                                    <p>Sync Accuracy</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h4>60%</h4>
+                                    <p>Time Saved</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h4>5000+</h4>
+                                    <p>Companies</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-visual">
+                        <div class="dashboard-preview">
+                            <div class="preview-header">
+                                <div class="preview-controls">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                                <div class="preview-title">Payroll Dashboard</div>
+                            </div>
+                            <div class="preview-content">
+                                <div class="dashboard-grid">
+                                    <div class="dashboard-widget">
+                                        <div class="widget-header">
+                                            <h4>Payroll Status</h4>
+                                            <span class="status-badge success">Processing</span>
+                                        </div>
+                                        <div class="widget-chart">
+                                            <canvas id="payrollChart"></canvas>
+                                        </div>
+                                    </div>
+                                    <div class="dashboard-widget">
+                                        <div class="widget-header">
+                                            <h4>Recent Transactions</h4>
+                                        </div>
+                                        <div class="transaction-list">
+                                            <div class="transaction-item">
+                                                <div class="transaction-icon">
+                                                    <i class="fas fa-file-invoice-dollar"></i>
+                                                </div>
+                                                <div class="transaction-details">
+                                                    <h5>Payroll Processing</h5>
+                                                    <span>Dec 2023</span>
+                                                </div>
+                                                <div class="transaction-status">
+                                                    <span class="status complete">Complete</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Payroll Integration Section -->
+<section class="payroll-integration">
+    <div class="container">
+        <div class="section-header">
+            <div class="header-badge">
+                <i class="fas fa-sync-alt"></i>
+                <span>Payroll Integration</span>
+            </div>
+            <h2>Seamless Payroll Integration</h2>
+            <p>Integrate your HRMS with various payroll systems to automate and simplify payroll processing</p>
+        </div>
+
+        <div class="integration-platform">
+            <div class="platform-dashboard">
+                <div class="sync-status">
+                    <div class="status-header">
+                        <h3>Data Synchronization</h3>
+                        <div class="sync-indicator active">
+                            <i class="fas fa-circle"></i>
+                            Live Sync Active
+                        </div>
+                    </div>
+                    
+                    <div class="sync-metrics">
+                        <div class="metric-item">
+                            <div class="metric-ring">
+                                <svg viewBox="0 0 36 36">
+                                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    <path class="progress" stroke-dasharray="98, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                </svg>
+                                <span>98%</span>
+                            </div>
+                            <div class="metric-label">Sync Accuracy</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-ring">
+                                <svg viewBox="0 0 36 36">
+                                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    <path class="progress" stroke-dasharray="95, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                </svg>
+                                <span>95%</span>
+                            </div>
+                            <div class="metric-label">Data Validation</div>
+                        </div>
+                    </div>
+
+                    <div class="sync-details">
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="detail-info">
+                                <h4>Employee Data</h4>
+                                <div class="sync-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress" style="width: 100%"></div>
+                                    </div>
+                                    <span>Synced</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="detail-info">
+                                <h4>Attendance Records</h4>
+                                <div class="sync-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress" style="width: 95%"></div>
+                                    </div>
+                                    <span>Processing</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon">
+                                <i class="fas fa-calendar"></i>
+                            </div>
+                            <div class="detail-info">
+                                <h4>Leave Records</h4>
+                                <div class="sync-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress" style="width: 100%"></div>
+                                    </div>
+                                    <span>Synced</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="compliance-monitor">
+                    <div class="monitor-header">
+                        <h3>Compliance Status</h3>
+                        <button class="refresh-btn">
+                            <i class="fas fa-sync-alt"></i>
+                            Update
+                        </button>
+                    </div>
+                    <div class="compliance-grid">
+                        <div class="compliance-card">
+                            <div class="card-icon">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <div class="card-content">
+                                <h4>Tax Calculations</h4>
+                                <span class="status-badge compliant">Compliant</span>
+                            </div>
+                        </div>
+                        <div class="compliance-card">
+                            <div class="card-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="card-content">
+                                <h4>Data Security</h4>
+                                <span class="status-badge compliant">Protected</span>
+                            </div>
+                        </div>
+                        <div class="compliance-card">
+                            <div class="card-icon">
+                                <i class="fas fa-balance-scale"></i>
+                            </div>
+                            <div class="card-content">
+                                <h4>Labor Laws</h4>
+                                <span class="status-badge compliant">Compliant</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="integration-features">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h3>Automated Data Sync</h3>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i>Real-time Updates</li>
+                        <li><i class="fas fa-check"></i>Error Detection</li>
+                        <li><i class="fas fa-check"></i>Data Validation</li>
+                        <li><i class="fas fa-check"></i>Conflict Resolution</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Compliance Management</h3>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i>Tax Compliance</li>
+                        <li><i class="fas fa-check"></i>Labor Laws</li>
+                        <li><i class="fas fa-check"></i>Data Protection</li>
+                        <li><i class="fas fa-check"></i>Audit Trails</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<style>
+  /* Payroll Integration Section Styles */
+.payroll-integration {
+    padding: var(--section-spacing) 0;
+    background: white;
+    position: relative;
+}
+
+/* Section Header */
+.header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: rgba(30, 77, 140, 0.1);
+    color: var(--finance-primary);
+    border-radius: 20px;
+    margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+    font-size: clamp(2rem, 4vw, 2.5rem);
+    color: var(--finance-primary);
+    margin-bottom: 1rem;
+}
+
+.section-header p {
+    font-size: 1.25rem;
+    color: var(--light-text);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Integration Platform Layout */
+.integration-platform {
+    margin-top: 4rem;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 3rem;
+}
+
+/* Platform Dashboard */
+.platform-dashboard {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(30, 77, 140, 0.08);
+    overflow: hidden;
+}
+
+/* Sync Status */
+.sync-status {
+    padding: 2rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.status-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.sync-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--light-text);
+}
+
+.sync-indicator.active {
+    color: var(--finance-secondary);
+}
+
+.sync-indicator i {
+    font-size: 0.75rem;
+}
+
+.sync-indicator.active i {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Sync Metrics */
+.sync-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.metric-item {
+    text-align: center;
+}
+
+.metric-ring {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 1rem;
+}
+
+.metric-ring svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.metric-ring path {
+    fill: none;
+    stroke-width: 2.8;
+    stroke-linecap: round;
+}
+
+.metric-ring path:first-child {
+    stroke: rgba(30, 77, 140, 0.1);
+}
+
+.metric-ring path.progress {
+    stroke: var(--finance-primary);
+    transition: stroke-dasharray 1s ease;
+}
+
+.metric-ring span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--finance-primary);
+}
+
+.metric-label {
+    color: var(--light-text);
+    font-size: 0.875rem;
+}
+
+/* Sync Details */
+.sync-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.detail-icon {
+    width: 40px;
+    height: 40px;
+    background: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--finance-primary);
+}
+
+.detail-info {
+    flex: 1;
+}
+
+.detail-info h4 {
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.sync-progress {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 6px;
+    background: rgba(30, 77, 140, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    background: var(--finance-primary);
+    border-radius: 3px;
+    transition: width 0.6s ease;
+}
+
+.sync-progress span {
+    font-size: 0.75rem;
+    color: var(--finance-secondary);
+}
+
+/* Compliance Monitor */
+.compliance-monitor {
+    padding: 2rem;
+}
+
+.monitor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.refresh-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(30, 77, 140, 0.1);
+    color: var(--finance-primary);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.refresh-btn:hover {
+    background: var(--finance-primary);
+    color: white;
+}
+
+/* Compliance Grid */
+.compliance-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.compliance-card {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.card-icon {
+    width: 40px;
+    height: 40px;
+    background: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--finance-primary);
+    margin: 0 auto 1rem;
+}
+
+.card-content h4 {
+    color: var(--text-color);
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.status-badge.compliant {
+    background: rgba(52, 168, 83, 0.1);
+    color: var(--finance-secondary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .integration-platform {
+        gap: 2rem;
+    }
+
+    .compliance-grid {
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .integration-platform {
+        grid-template-columns: 1fr;
+    }
+
+    .sync-metrics {
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .sync-metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .compliance-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .monitor-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .platform-dashboard {
+        padding: 1rem;
+    }
+
+    .sync-status,
+    .compliance-monitor {
+        padding: 1rem;
+    }
+
+    .compliance-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-item {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .detail-icon {
+        margin: 0 auto;
+    }
+
+    .sync-progress {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+</style>
+<!-- Accounting System Integration Section -->
+<section class="accounting-section">
+    <div class="container">
+        <div class="section-header">
+            <div class="header-badge">
+                <i class="fas fa-calculator"></i>
+                <span>Accounting Integration</span>
+            </div>
+            <h2>Comprehensive Accounting System Integration</h2>
+            <p>Connect your HRMS with leading accounting software for streamlined financial operations</p>
+        </div>
+
+        <div class="accounting-platform">
+            <div class="financial-dashboard">
+                <div class="dashboard-header">
+                    <h3>Financial Overview</h3>
+                    <div class="period-selector">
+                        <button class="period-btn active">Month</button>
+                        <button class="period-btn">Quarter</button>
+                        <button class="period-btn">Year</button>
+                    </div>
+                </div>
+
+                <div class="financial-metrics">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span>Total Payroll Expenses</span>
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="metric-value">
+                            <h4>$847,392</h4>
+                            <span class="trend positive">
+                                <i class="fas fa-arrow-up"></i>
+                                12.5%
+                            </span>
+                        </div>
+                        <div class="metric-chart">
+                            <canvas id="expenseChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="journal-entries">
+                        <div class="entries-header">
+                            <h4>Recent Journal Entries</h4>
+                            <button class="view-all">View All</button>
+                        </div>
+                        <div class="entries-list">
+                            <div class="entry-item">
+                                <div class="entry-type">
+                                    <i class="fas fa-file-invoice-dollar"></i>
+                                    <span>Payroll Entry</span>
+                                </div>
+                                <div class="entry-details">
+                                    <span class="date">Dec 15, 2023</span>
+                                    <span class="amount">$125,450</span>
+                                </div>
+                                <div class="entry-status">
+                                    <span class="status posted">Posted</span>
+                                </div>
+                            </div>
+                            <div class="entry-item">
+                                <div class="entry-type">
+                                    <i class="fas fa-receipt"></i>
+                                    <span>Benefits Accrual</span>
+                                </div>
+                                <div class="entry-details">
+                                    <span class="date">Dec 14, 2023</span>
+                                    <span class="amount">$45,780</span>
+                                </div>
+                                <div class="entry-status">
+                                    <span class="status pending">Pending</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="integration-connectors">
+                    <h4>Active Integrations</h4>
+                    <div class="connector-grid">
+                        <div class="connector-card active">
+                            <img src="image/quickbooks-logo.png" alt="QuickBooks">
+                            <span class="status">Connected</span>
+                        </div>
+                        <div class="connector-card active">
+                            <img src="image/sage-logo.png" alt="Sage">
+                            <span class="status">Connected</span>
+                        </div>
+                        <div class="connector-card">
+                            <img src="image/xero-logo.png" alt="Xero">
+                            <span class="status">Available</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="security-panel">
+                <div class="security-header">
+                    <h3>Data Security & Compliance</h3>
+                    <div class="security-status">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Protected</span>
+                    </div>
+                </div>
+
+                <div class="security-features">
+                    <div class="security-card">
+                        <div class="security-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <div class="security-info">
+                            <h4>Data Encryption</h4>
+                            <p>256-bit AES encryption for all data transfers</p>
+                            <div class="security-indicator active">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Enabled</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="security-card">
+                        <div class="security-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div class="security-info">
+                            <h4>Access Controls</h4>
+                            <p>Role-based access management system</p>
+                            <div class="security-indicator active">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Configured</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="security-card">
+                        <div class="security-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <div class="security-info">
+                            <h4>Audit Trails</h4>
+                            <p>Comprehensive activity logging and monitoring</p>
+                            <div class="security-indicator active">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Active</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="compliance-certifications">
+                    <h4>Compliance & Certifications</h4>
+                    <div class="certification-grid">
+                        <div class="certification-item">
+                            <img src="image/gdpr-badge.png" alt="GDPR Compliant">
+                            <span>GDPR</span>
+                        </div>
+                        <div class="certification-item">
+                            <img src="image/iso-badge.png" alt="ISO 27001">
+                            <span>ISO 27001</span>
+                        </div>
+                        <div class="certification-item">
+                            <img src="image/soc2-badge.png" alt="SOC 2">
+                            <span>SOC 2</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<style>
+  /* Accounting Section Styles */
+.accounting-section {
+    padding: var(--section-spacing) 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+/* Accounting Platform Layout */
+.accounting-platform {
+    margin-top: 4rem;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 3rem;
+}
+
+/* Financial Dashboard */
+.financial-dashboard {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(30, 77, 140, 0.08);
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.period-selector {
+    display: flex;
+    gap: 0.5rem;
+    background: #f8f9fa;
+    padding: 0.25rem;
+    border-radius: 8px;
+}
+
+.period-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: none;
+    color: var(--light-text);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.period-btn.active {
+    background: white;
+    color: var(--finance-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Financial Metrics */
+.financial-metrics {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.metric-card {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 16px;
+}
+
+.metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.metric-value {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.metric-value h4 {
+    font-size: 2rem;
+    color: var(--finance-primary);
+}
+
+.trend {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.trend.positive {
+    color: var(--finance-secondary);
+}
+
+.metric-chart {
+    height: 120px;
+}
+
+/* Journal Entries */
+.journal-entries {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 16px;
+}
+
+.entries-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.view-all {
+    color: var(--finance-primary);
+    background: none;
+    border: none;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.entries-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.entry-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.entry-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.entry-type {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--finance-primary);
+}
+
+.entry-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.date {
+    font-size: 0.75rem;
+    color: var(--light-text);
+}
+
+.amount {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.status {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+}
+
+.status.posted {
+    background: rgba(52, 168, 83, 0.1);
+    color: var(--finance-secondary);
+}
+
+.status.pending {
+    background: rgba(255, 193, 7, 0.1);
+    color: var(--warning-color);
+}
+
+/* Integration Connectors */
+.integration-connectors {
+    margin-top: 2rem;
+}
+
+.connector-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.connector-card {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 12px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.connector-card.active {
+    background: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.connector-card img {
+    height: 30px;
+    width: auto;
+    margin-bottom: 0.5rem;
+}
+
+/* Security Panel */
+.security-panel {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 8px 32px rgba(30, 77, 140, 0.08);
+}
+
+.security-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.security-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--finance-secondary);
+}
+
+.security-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.security-card {
+    display: flex;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.security-card:hover {
+    transform: translateX(5px);
+    background: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.security-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(30, 77, 140, 0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--finance-primary);
+}
+
+.security-info h4 {
+    color: var(--text-color);
+    margin-bottom: 0.25rem;
+}
+
+.security-info p {
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.security-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--finance-secondary);
+}
+
+/* Compliance Certifications */
+.compliance-certifications {
+    margin-top: 2rem;
+}
+
+.certification-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.certification-item {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.certification-item img {
+    height: 40px;
+    width: auto;
+    margin-bottom: 0.5rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .accounting-platform {
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .accounting-platform {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .financial-dashboard,
+    .security-panel {
+        padding: 1.5rem;
+    }
+
+    .connector-grid,
+    .certification-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .entry-item {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+
+    .entry-details {
+        align-items: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .period-selector {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .period-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .connector-grid,
+    .certification-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .security-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .security-icon {
+        margin: 0 auto;
+    }
+}
+</style>
+      <!-- Call to Action Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-wrapper">
+            <div class="cta-content">
+                <div class="cta-badge">
+                    <i class="fas fa-rocket"></i>
+                    <span>Get Started Today</span>
+                </div>
+                <h2>Transform Your Financial Operations</h2>
+                <p>Join leading organizations in streamlining their payroll and financial processes</p>
+                
+                <div class="cta-actions">
+                    <button class="btn primary">
+                        <span>Request Demo</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button class="btn secondary">
+                        <i class="fas fa-calendar"></i>
+                        <span>Schedule Consultation</span>
+                    </button>
+                </div>
+
+                <div class="benefits-grid">
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="benefit-text">
+                            <h4>Quick Implementation</h4>
+                            <p>Go live within weeks, not months</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <div class="benefit-text">
+                            <h4>24/7 Support</h4>
+                            <p>Dedicated technical assistance</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="benefit-text">
+                            <h4>Data Security</h4>
+                            <p>Enterprise-grade protection</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="trust-indicators">
+                    <div class="customer-stats">
+                        <div class="stat">
+                            <h4>500+</h4>
+                            <p>Enterprise Clients</p>
+                        </div>
+                        <div class="stat">
+                            <h4>99.9%</h4>
+                            <p>Uptime SLA</p>
+                        </div>
+                        <div class="stat">
+                            <h4>$2B+</h4>
+                            <p>Processed Monthly</p>
+                        </div>
+                    </div>
+
+                    <div class="certification-badges">
+                        <img src="image/iso-certified.png" alt="ISO 27001 Certified">
+                        <img src="image/gdpr-compliant.png" alt="GDPR Compliant">
+                        <img src="image/soc2-certified.png" alt="SOC 2 Certified">
+                    </div>
+
+                    <div class="integration-partners">
+                        <span>Works with:</span>
+                        <div class="partner-logos">
+                            <img src="image/quickbooks-logo.png" alt="QuickBooks">
+                            <img src="image/sage-logo.png" alt="Sage">
+                            <img src="image/xero-logo.png" alt="Xero">
+                            <img src="image/adp-logo.png" alt="ADP">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="main-footer">
+    <!-- Footer content remains the same as main file -->
+</footer>
+      <style>
+        /* Call to Action Section Styles */
+.cta-section {
+    padding: 8rem 0;
+    background: linear-gradient(135deg, #f0f7ff 0%, #e8f0fe 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background: url('pattern-grid.svg');
+    opacity: 0.03;
+    pointer-events: none;
+}
+
+.cta-wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.cta-content {
+    text-align: center;
+}
+
+.cta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: rgba(30, 77, 140, 0.1);
+    color: var(--finance-primary);
+    border-radius: 20px;
+    margin-bottom: 1.5rem;
+}
+
+.cta-content h2 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    color: var(--finance-primary);
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+.cta-content p {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: var(--light-text);
+    margin-bottom: 2.5rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.cta-actions {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 4rem;
+}
+
+/* Benefits Grid */
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+
+.benefit-item {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+
+.benefit-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(30, 77, 140, 0.1);
+}
+
+.benefit-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(30, 77, 140, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--finance-primary);
+    font-size: 1.25rem;
+}
+
+.benefit-text h4 {
+    color: var(--text-color);
+    margin-bottom: 0.25rem;
+}
+
+.benefit-text p {
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+/* Trust Indicators */
+.trust-indicators {
+    padding-top: 3rem;
+    border-top: 1px solid rgba(30, 77, 140, 0.1);
+}
+
+.customer-stats {
+    display: flex;
+    justify-content: center;
+    gap: 4rem;
+    margin-bottom: 3rem;
+}
+
+.stat h4 {
+    font-size: 2rem;
+    color: var(--finance-primary);
+    margin-bottom: 0.5rem;
+}
+
+.stat p {
+    color: var(--light-text);
+    font-size: 0.875rem;
+}
+
+.certification-badges {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin-bottom: 3rem;
+}
+
+.certification-badges img {
+    height: 60px;
+    width: auto;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+}
+
+.certification-badges img:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+}
+
+.integration-partners {
+    text-align: center;
+}
+
+.integration-partners span {
+    display: block;
+    color: var(--light-text);
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.partner-logos {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 3rem;
+    flex-wrap: wrap;
+}
+
+.partner-logos img {
+    height: 30px;
+    width: auto;
+    opacity: 0.6;
+    transition: all 0.3s ease;
+    filter: grayscale(100%);
+}
+
+.partner-logos img:hover {
+    opacity: 1;
+    filter: none;
+    transform: translateY(-2px);
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+    .benefits-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .customer-stats {
+        gap: 2rem;
+    }
+
+    .certification-badges {
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .cta-section {
+        padding: 6rem 0;
+    }
+
+    .cta-actions {
+        flex-direction: column;
+        max-width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .benefits-grid {
+        grid-template-columns: 1fr;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .customer-stats {
+        flex-direction: column;
+        gap: 2rem;
+        text-align: center;
+    }
+
+    .certification-badges {
+        flex-wrap: wrap;
+    }
+
+    .certification-badges img {
+        height: 50px;
+    }
+
+    .partner-logos {
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .cta-section {
+        padding: 4rem 0;
+    }
+
+    .benefit-item {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.25rem;
+    }
+
+    .benefit-icon {
+        margin-bottom: 1rem;
+    }
+
+    .certification-badges img {
+        height: 40px;
+    }
+
+    .partner-logos img {
+        height: 25px;
+    }
+}
+
+/* Animation Classes */
+.cta-content {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.benefit-item {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.benefit-item:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.benefit-item:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Print Styles */
+@media print {
+    .cta-section {
+        background: none;
+        padding: 2rem 0;
+    }
+
+    .cta-actions,
+    .certification-badges,
+    .partner-logos {
+        display: none;
+    }
+}
+      </style>
+    </main>
+    <script>
+      // Document Ready Handler
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAll();
+    loadHeader();
+});
+
+// Initialize All Functions
+function initializeAll() {
+    initializeAnimations();
+    initializeCharts();
+    setupInteractions();
+    initializePayrollMetrics();
+    initializeIntegrationStatus();
+}
+
+// Header Loading Function
+async function loadHeader() {
+    const headerContainer = document.getElementById('header-container');
+    
+    try {
+        const response = await fetch('header.html');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const html = await response.text();
+        headerContainer.innerHTML = html;
+        initializeMobileMenu();
+    } catch (error) {
+        console.error('Error loading header:', error);
+        headerContainer.innerHTML = `
+            <header class="main-header">
+                <div class="container">
+                    <div class="header-content">
+                        <a href="/" class="logo">
+                            <span>Workwise Pro</span>
+                        </a>
+                        <nav class="main-nav">
+                            <ul class="nav-list">
+                                <li><a href="#home">Home</a></li>
+                                <li><a href="#contact">Contact</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </header>
+        `;
+    }
+}
+
+// Mobile Menu Initialization
+function initializeMobileMenu() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mainNav = document.getElementById('main-nav');
+    const menuOverlay = document.getElementById('menu-overlay');
+    
+    if (mobileMenu && mainNav) {
+        let isMenuOpen = false;
+
+        const toggleMenu = (show) => {
+            isMenuOpen = show;
+            mobileMenu.classList.toggle('active', show);
+            mainNav.classList.toggle('active', show);
+            menuOverlay?.classList.toggle('active', show);
+            document.body.style.overflow = show ? 'hidden' : '';
+        };
+
+        mobileMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMenu(!isMenuOpen);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
+                toggleMenu(false);
+            }
+        });
+    }
+}
+
+// Initialize Charts
+function initializeCharts() {
+    const chartDefaults = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: 'rgba(30, 77, 140, 0.9)',
+                titleFont: { size: 12 },
+                bodyFont: { size: 11 },
+                padding: 8,
+                cornerRadius: 4
+            }
+        }
+    };
+
+    // Payroll Processing Chart
+    const payrollCtx = document.getElementById('payrollChart')?.getContext('2d');
+    if (payrollCtx) {
+        new Chart(payrollCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    data: [65, 72, 78, 75, 82, 85],
+                    borderColor: '#1E4D8C',
+                    backgroundColor: 'rgba(30, 77, 140, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                ...chartDefaults,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            font: { size: 11 },
+                            callback: value => `${value}%`
+                        }
+                    },
+                    x: {
+                        ticks: { font: { size: 11 } }
+                    }
+                }
+            }
+        });
+    }
+
+    // Expense Chart
+    const expenseCtx = document.getElementById('expenseChart')?.getContext('2d');
+    if (expenseCtx) {
+        new Chart(expenseCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                datasets: [{
+                    data: [750000, 820000, 847000, 895000],
+                    backgroundColor: '#1E4D8C'
+                }]
+            },
+            options: {
+                ...chartDefaults,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            font: { size: 11 },
+                            callback: value => `$${value/1000}k`
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+// Initialize Payroll Metrics
+function initializePayrollMetrics() {
+    // Animate Progress Rings
+    document.querySelectorAll('.metric-ring').forEach(ring => {
+        const progress = ring.querySelector('.progress');
+        const value = progress.getAttribute('stroke-dasharray').split(',')[0];
+        
+        progress.style.strokeDasharray = '0, 100';
+        setTimeout(() => {
+            progress.style.strokeDasharray = `${value}, 100`;
+        }, 300);
+    });
+
+    // Animate Progress Bars
+    document.querySelectorAll('.progress-bar .progress').forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 300);
+    });
+
+    // Initialize Period Selectors
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const parent = btn.parentElement;
+            parent.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            updateMetrics(btn.textContent.toLowerCase());
+        });
+    });
+}
+
+// Update Metrics Based on Period
+function updateMetrics(period) {
+    // Example function to update metrics based on selected period
+    const metrics = {
+        month: { expenses: '$847,392', trend: '+12.5%' },
+        quarter: { expenses: '$2,562,000', trend: '+8.3%' },
+        year: { expenses: '$9,845,000', trend: '+15.2%' }
+    };
+
+    const data = metrics[period];
+    if (data) {
+        document.querySelector('.metric-value h4').textContent = data.expenses;
+        document.querySelector('.trend span').textContent = data.trend;
+    }
+}
+
+// Initialize Integration Status
+function initializeIntegrationStatus() {
+    // Monitor Integration Status
+    const connectors = document.querySelectorAll('.connector-card');
+    connectors.forEach(connector => {
+        connector.addEventListener('click', () => {
+            if (!connector.classList.contains('active')) {
+                showIntegrationModal(connector);
+            }
+        });
+    });
+
+    // Simulate Real-time Updates
+    setInterval(() => {
+        document.querySelectorAll('.sync-indicator.active').forEach(indicator => {
+            indicator.style.opacity = '0.5';
+            setTimeout(() => {
+                indicator.style.opacity = '1';
+            }, 500);
+        });
+    }, 3000);
+}
+
+// Show Integration Modal
+function showIntegrationModal(connector) {
+    const modalHTML = `
+        <div class="integration-modal">
+            <div class="modal-content">
+                <h3>Connect ${connector.querySelector('img').alt}</h3>
+                <p>Configure your integration settings to begin syncing data.</p>
+                <button class="btn primary">Configure Integration</button>
+                <button class="btn secondary modal-close">Cancel</button>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    const modal = document.querySelector('.integration-modal');
+    modal.querySelector('.modal-close').addEventListener('click', () => {
+        modal.remove();
+    });
+}
+
+// Animation Handler
+function initializeAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+                if (entry.target.classList.contains('progress-fill')) {
+                    const width = entry.target.dataset.progress;
+                    entry.target.style.width = width;
+                }
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll(
+        '.feature-card, .metric-card, .security-card, .benefit-item, .cta-content'
+    ).forEach(el => observer.observe(el));
+}
+
+// Setup Interactive Elements
+function setupInteractions() {
+    // Feature Cards
+    document.querySelectorAll('.feature-card, .security-card').forEach(card => {
+        card.addEventListener('mouseenter', () => card.classList.add('hover'));
+        card.addEventListener('mouseleave', () => card.classList.remove('hover'));
+    });
+
+    // Refresh Button
+    const refreshBtn = document.querySelector('.refresh-btn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+            refreshBtn.classList.add('spinning');
+            setTimeout(() => {
+                refreshBtn.classList.remove('spinning');
+            }, 1000);
+        });
+    }
+}
+
+// Watson Assistant Integration
+window.watsonAssistantChatOptions = {
+    integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
+    region: "au-syd",
+    serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
+    onLoad: async (instance) => { await instance.render(); }
+};
+
+setTimeout(() => {
+    const script = document.createElement('script');
+    script.src = `https://web-chat.global.assistant.watson.appdomain.cloud/versions/${
+        window.watsonAssistantChatOptions.clientVersion || 'latest'
+    }/WatsonAssistantChatEntry.js`;
+    document.head.appendChild(script);
+}, 0);
+    </script>
+</body>
+</html>
