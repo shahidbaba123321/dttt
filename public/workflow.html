@@ -1679,49 +1679,72 @@ function initializeMobileMenu() {
 }
 
 // Initialize Charts
+// Initialize Charts with Simplified Configuration
 function initializeCharts() {
-    // Productivity Chart
-    const productivityCtx = document.getElementById('productivityChart')?.getContext('2d');
-    if (productivityCtx) {
-        new Chart(productivityCtx, {
+    const chartConfig = {
+        productivity: {
+            id: 'productivityChart',
             type: 'line',
             data: {
                 labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
                 datasets: [
                     {
-                        label: 'Before Automation',
+                        label: 'Before',
                         data: [65, 59, 80, 81, 56],
                         borderColor: 'rgba(41, 98, 255, 0.5)',
                         tension: 0.4,
                         fill: false
                     },
                     {
-                        label: 'After Automation',
+                        label: 'After',
                         data: [85, 89, 95, 91, 86],
                         borderColor: '#2962ff',
                         tension: 0.4,
                         fill: false
                     }
                 ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100
-                    }
-                }
             }
-        });
-    }
+        },
+        process: {
+            id: 'processFlowChart',
+            type: 'bar',
+            data: {
+                labels: ['Creation', 'Assignment', 'Processing', 'Review', 'Complete'],
+                datasets: [{
+                    data: [95, 88, 92, 85, 90],
+                    backgroundColor: '#2962ff',
+                    borderRadius: 6
+                }]
+            }
+        }
+    };
 
+    const defaultOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100
+            }
+        }
+    };
+
+    // Create charts
+    Object.values(chartConfig).forEach(config => {
+        const ctx = document.getElementById(config.id)?.getContext('2d');
+        if (ctx) {
+            new Chart(ctx, {
+                type: config.type,
+                data: config.data,
+                options: defaultOptions
+            });
+        }
+    });
+}
     // Process Flow Chart
     const processCtx = document.getElementById('processFlowChart')?.getContext('2d');
     if (processCtx) {
