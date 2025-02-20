@@ -30,7 +30,31 @@
     --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     --gradient: linear-gradient(135deg, #f0f7ff 0%, #e9ecef 100%);
 }
+/* Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
 
+body {
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    padding-top: var(--header-height);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--mobile-padding);
+    width: 100%;
+}
 /* Hero Section Styles */
 .vendor-hero {
     background: var(--gradient);
