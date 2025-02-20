@@ -1590,7 +1590,7 @@ POST /api/v1/workflow/automate
 </style>
     </main>
     <script>
-      // Document Ready Handler
+     // Document Ready Handler
 document.addEventListener('DOMContentLoaded', function() {
     initializeAll();
     loadHeader();
@@ -1600,10 +1600,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeAll() {
     initializeAnimations();
     initializeCharts();
-    handleScrollEffects();
     setupInteractions();
-    initializeTabSystem();
-    initializeCodeCopy();
     initializeWorkflowMetrics();
 }
 
@@ -1617,12 +1614,9 @@ async function loadHeader() {
         
         const html = await response.text();
         headerContainer.innerHTML = html;
-
-        // Initialize mobile menu after header loads
         initializeMobileMenu();
     } catch (error) {
         console.error('Error loading header:', error);
-        // Fallback header
         headerContainer.innerHTML = `
             <header class="main-header">
                 <div class="container">
@@ -1648,22 +1642,17 @@ function initializeMobileMenu() {
     const mobileMenu = document.getElementById('mobile-menu');
     const mainNav = document.getElementById('main-nav');
     const menuOverlay = document.getElementById('menu-overlay');
-    const megaMenus = document.querySelectorAll('.mega-menu');
-
+    
     if (mobileMenu && mainNav) {
         let isMenuOpen = false;
 
-        function toggleMenu(show) {
+        const toggleMenu = (show) => {
             isMenuOpen = show;
             mobileMenu.classList.toggle('active', show);
             mainNav.classList.toggle('active', show);
-            menuOverlay.classList.toggle('active', show);
+            menuOverlay?.classList.toggle('active', show);
             document.body.style.overflow = show ? 'hidden' : '';
-
-            if (!show) {
-                megaMenus.forEach(menu => menu.classList.remove('active'));
-            }
-        }
+        };
 
         mobileMenu.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -1678,8 +1667,7 @@ function initializeMobileMenu() {
     }
 }
 
-// Initialize Charts
-// Initialize Charts with Simplified Configuration
+// Initialize Charts with Optimized Configuration
 function initializeCharts() {
     const chartConfig = {
         productivity: {
@@ -1733,7 +1721,6 @@ function initializeCharts() {
         }
     };
 
-    // Create charts
     Object.values(chartConfig).forEach(config => {
         const ctx = document.getElementById(config.id)?.getContext('2d');
         if (ctx) {
@@ -1745,179 +1732,109 @@ function initializeCharts() {
         }
     });
 }
-    // Process Flow Chart
-    const processCtx = document.getElementById('processFlowChart')?.getContext('2d');
-    if (processCtx) {
-        new Chart(processCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Task Creation', 'Assignment', 'Processing', 'Review', 'Completion'],
-                datasets: [{
-                    label: 'Process Efficiency',
-                    data: [95, 88, 92, 85, 90],
-                    backgroundColor: '#2962ff',
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
-            }
-        });
-    }
-}
 
-// Initialize Workflow Metrics
+// Initialize Workflow Metrics with Animation
 function initializeWorkflowMetrics() {
-    // Animate counters
-    const counters = document.querySelectorAll('.counter');
-    counters.forEach(counter => {
-        const target = parseInt(counter.textContent);
+    const animateCounter = (counter, target) => {
         let count = 0;
-        const speed = 2000 / target; // 2 seconds duration
+        const duration = 2000;
+        const increment = target / (duration / 16);
 
-        function updateCount() {
+        const updateCount = () => {
             if (count < target) {
-                count++;
-                counter.textContent = count;
+                count = Math.min(count + increment, target);
+                counter.textContent = Math.round(count);
                 requestAnimationFrame(updateCount);
             }
-        }
+        };
 
         updateCount();
+    };
+
+    // Initialize counters
+    document.querySelectorAll('.counter').forEach(counter => {
+        const target = parseInt(counter.textContent);
+        if (!isNaN(target)) {
+            animateCounter(counter, target);
+        }
     });
 
     // Initialize progress bars
-    const progressBars = document.querySelectorAll('.progress-bar .progress');
-    progressBars.forEach(bar => {
+    document.querySelectorAll('.progress-bar .progress').forEach(bar => {
         const width = bar.style.width;
         bar.style.width = '0';
-        setTimeout(() => {
-            bar.style.width = width;
-        }, 300);
+        setTimeout(() => bar.style.width = width, 300);
     });
 }
 
-// Tab System Initialization
-function initializeTabSystem() {
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const tabGroup = button.closest('.integration-tabs');
-            const allTabs = tabGroup.querySelectorAll('.tab-btn');
-            
-            allTabs.forEach(tab => tab.classList.remove('active'));
-            button.classList.add('active');
-            
-            // Handle content switching
-            const targetId = button.dataset.tab;
-            const contentContainer = document.querySelector(`[data-content="${targetId}"]`);
-            if (contentContainer) {
-                const allContent = document.querySelectorAll('[data-content]');
-                allContent.forEach(content => content.classList.remove('active'));
-                contentContainer.classList.add('active');
-            }
-        });
-    });
-}
-
-// Code Copy Functionality
-function initializeCodeCopy() {
-    const copyButtons = document.querySelectorAll('.copy-btn');
-    
-    copyButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const codeBlock = button.closest('.api-preview').querySelector('code');
-            navigator.clipboard.writeText(codeBlock.textContent.trim())
-                .then(() => {
-                    button.innerHTML = '<i class="fas fa-check"></i>';
-                    setTimeout(() => {
-                        button.innerHTML = '<i class="fas fa-copy"></i>';
-                    }, 2000);
-                })
-                .catch(err => {
-                    console.error('Failed to copy:', err);
-                    button.innerHTML = '<i class="fas fa-times"></i>';
-                    setTimeout(() => {
-                        button.innerHTML = '<i class="fas fa-copy"></i>';
-                    }, 2000);
-                });
-        });
-    });
-}
-
-// Animation Handler
-function initializeAnimations() {
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('animate-in');
-                if (entry.target.classList.contains('progress-fill')) {
-                    const width = entry.target.dataset.progress;
-                    entry.target.style.width = width;
-                }
-            }
-        });
-    }, observerOptions);
-
-    // Observe elements
-    document.querySelectorAll('.feature-card, .savings-card, .integration-showcase, .cta-content, .progress-fill')
-        .forEach(el => observer.observe(el));
-}
-
-// Scroll Effects Handler
-function handleScrollEffects() {
-    let lastScroll = 0;
-    const header = document.querySelector('.main-header');
-
-    window.addEventListener('scroll', () => {
-        const currentScroll = window.pageYOffset;
-        
-        if (currentScroll > lastScroll && currentScroll > 100) {
-            header?.classList.add('header-hidden');
-        } else {
-            header?.classList.remove('header-hidden');
-        }
-        
-        lastScroll = currentScroll;
-    });
-}
-
-// Interactive Elements Setup
+// Setup Interactive Elements
 function setupInteractions() {
-    // Feature card interactions
-    document.querySelectorAll('.feature-card, .savings-card').forEach(card => {
-        card.addEventListener('mouseenter', () => {
-            card.classList.add('hover');
-        });
-        
-        card.addEventListener('mouseleave', () => {
-            card.classList.remove('hover');
+    // Tab System
+    document.querySelectorAll('.tab-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const tabGroup = button.closest('.integration-tabs, .dashboard-tabs');
+            if (tabGroup) {
+                tabGroup.querySelectorAll('.tab-btn').forEach(tab => 
+                    tab.classList.remove('active'));
+                button.classList.add('active');
+            }
         });
     });
 
-    // View toggle interactions
-    const toggleButtons = document.querySelectorAll('.toggle-btn');
-    toggleButtons.forEach(button => {
+    // Code Copy Functionality
+    document.querySelectorAll('.copy-btn').forEach(button => {
         button.addEventListener('click', () => {
-            toggleButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
+            const codeBlock = button.closest('.api-preview')?.querySelector('code');
+            if (codeBlock) {
+                navigator.clipboard.writeText(codeBlock.textContent.trim())
+                    .then(() => {
+                        button.innerHTML = '<i class="fas fa-check"></i>';
+                        setTimeout(() => {
+                            button.innerHTML = '<i class="fas fa-copy"></i>';
+                        }, 2000);
+                    })
+                    .catch(() => {
+                        button.innerHTML = '<i class="fas fa-times"></i>';
+                        setTimeout(() => {
+                            button.innerHTML = '<i class="fas fa-copy"></i>';
+                        }, 2000);
+                    });
+            }
         });
+    });
+
+    // Card Hover Effects
+    document.querySelectorAll('.feature-card, .savings-card').forEach(card => {
+        card.addEventListener('mouseenter', () => card.classList.add('hover'));
+        card.addEventListener('mouseleave', () => card.classList.remove('hover'));
     });
 }
 
-// Watson Assistant Chat Integration
+// Animation Observer
+function initializeAnimations() {
+    const observer = new IntersectionObserver(
+        (entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-in');
+                    if (entry.target.classList.contains('progress-fill')) {
+                        entry.target.style.width = entry.target.dataset.progress;
+                    }
+                }
+            });
+        },
+        {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        }
+    );
+
+    document.querySelectorAll(
+        '.feature-card, .savings-card, .integration-showcase, .cta-content, .progress-fill'
+    ).forEach(el => observer.observe(el));
+}
+
+// Watson Assistant Integration
 window.watsonAssistantChatOptions = {
     integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
     region: "au-syd",
@@ -1925,13 +1842,13 @@ window.watsonAssistantChatOptions = {
     onLoad: async (instance) => { await instance.render(); }
 };
 
-setTimeout(function(){
-    const t = document.createElement('script');
-    t.src = "https://web-chat.global.assistant.watson.appdomain.cloud/versions/" + 
-        (window.watsonAssistantChatOptions.clientVersion || 'latest') + 
-        "/WatsonAssistantChatEntry.js";
-    document.head.appendChild(t);
-});
+setTimeout(() => {
+    const script = document.createElement('script');
+    script.src = `https://web-chat.global.assistant.watson.appdomain.cloud/versions/${
+        window.watsonAssistantChatOptions.clientVersion || 'latest'
+    }/WatsonAssistantChatEntry.js`;
+    document.head.appendChild(script);
+}, 0);
     </script>
 
 </body>
