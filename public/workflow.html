@@ -985,31 +985,38 @@ body {
 }
 
 .productivity-chart {
+    position: relative;
+    height: 250px; /* Reduced from default height */
     margin-bottom: 2rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 12px;
 }
 
 .chart-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .chart-header h4 {
     color: var(--text-color);
-    font-size: 1.1rem;
+    font-size: 1rem;
+    font-weight: 500;
 }
 
 .chart-legend {
     display: flex;
     gap: 1.5rem;
+    flex-wrap: wrap;
 }
 
 .legend-item {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.875rem;
+    font-size: 0.813rem;
     color: var(--light-text);
 }
 
@@ -1099,7 +1106,9 @@ body {
     .productivity-grid {
         gap: 2rem;
     }
-
+ .productivity-chart {
+        height: 220px;
+    }
     .time-savings {
         gap: 1rem;
     }
@@ -1109,7 +1118,9 @@ body {
     .productivity-grid {
         grid-template-columns: 1fr;
     }
-
+.productivity-chart {
+        height: 200px;
+    }
     .analytics-dashboard {
         padding: 1.5rem;
     }
@@ -1122,12 +1133,15 @@ body {
         text-align: center;
     }
 
+     .productivity-chart {
+        height: 180px;
+    }
+    
     .chart-header {
         flex-direction: column;
-        gap: 1rem;
-        text-align: center;
+        align-items: flex-start;
+        gap: 0.5rem;
     }
-
     .time-savings {
         grid-template-columns: 1fr;
     }
@@ -1161,10 +1175,17 @@ body {
         margin: 0 auto;
     }
 
+     .productivity-chart {
+        height: 160px;
+        padding: 0.75rem;
+    }
+
     .chart-legend {
-        flex-direction: column;
-        align-items: center;
-        gap: 0.5rem;
+        gap: 1rem;
+    }
+
+    .legend-item {
+        font-size: 0.75rem;
     }
 }
 
@@ -1590,7 +1611,7 @@ POST /api/v1/workflow/automate
 </style>
     </main>
     <script>
-     // Document Ready Handler
+    // Document Ready Handler
 document.addEventListener('DOMContentLoaded', function() {
     initializeAll();
     loadHeader();
@@ -1667,8 +1688,67 @@ function initializeMobileMenu() {
     }
 }
 
-// Initialize Charts with Optimized Configuration
+// Initialize Charts with Updated Configuration
 function initializeCharts() {
+    const defaultOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: 'rgba(26, 35, 126, 0.9)',
+                titleFont: { size: 12 },
+                bodyFont: { size: 11 },
+                padding: 8,
+                cornerRadius: 4
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                ticks: {
+                    font: { size: 11 },
+                    padding: 5
+                },
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.05)',
+                    drawBorder: false
+                }
+            },
+            x: {
+                ticks: {
+                    font: { size: 11 },
+                    padding: 5
+                },
+                grid: {
+                    display: false
+                }
+            }
+        },
+        elements: {
+            point: {
+                radius: 3,
+                hoverRadius: 4
+            },
+            line: {
+                borderWidth: 2,
+                tension: 0.4
+            },
+            bar: {
+                borderRadius: 4
+            }
+        },
+        layout: {
+            padding: {
+                left: 5,
+                right: 5,
+                top: 5,
+                bottom: 5
+            }
+        }
+    };
+
     const chartConfig = {
         productivity: {
             id: 'productivityChart',
@@ -1680,15 +1760,15 @@ function initializeCharts() {
                         label: 'Before',
                         data: [65, 59, 80, 81, 56],
                         borderColor: 'rgba(41, 98, 255, 0.5)',
-                        tension: 0.4,
-                        fill: false
+                        backgroundColor: 'rgba(41, 98, 255, 0.1)',
+                        fill: true
                     },
                     {
                         label: 'After',
                         data: [85, 89, 95, 91, 86],
                         borderColor: '#2962ff',
-                        tension: 0.4,
-                        fill: false
+                        backgroundColor: 'rgba(41, 98, 255, 0.2)',
+                        fill: true
                     }
                 ]
             }
@@ -1701,22 +1781,8 @@ function initializeCharts() {
                 datasets: [{
                     data: [95, 88, 92, 85, 90],
                     backgroundColor: '#2962ff',
-                    borderRadius: 6
+                    borderRadius: 4
                 }]
-            }
-        }
-    };
-
-    const defaultOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { display: false }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                max: 100
             }
         }
     };
@@ -1727,7 +1793,21 @@ function initializeCharts() {
             new Chart(ctx, {
                 type: config.type,
                 data: config.data,
-                options: defaultOptions
+                options: {
+                    ...defaultOptions,
+                    // Add any chart-specific options here if needed
+                    ...(config.type === 'bar' && {
+                        scales: {
+                            ...defaultOptions.scales,
+                            y: {
+                                ...defaultOptions.scales.y,
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    })
+                }
             });
         }
     });
@@ -1751,7 +1831,6 @@ function initializeWorkflowMetrics() {
         updateCount();
     };
 
-    // Initialize counters
     document.querySelectorAll('.counter').forEach(counter => {
         const target = parseInt(counter.textContent);
         if (!isNaN(target)) {
@@ -1759,7 +1838,6 @@ function initializeWorkflowMetrics() {
         }
     });
 
-    // Initialize progress bars
     document.querySelectorAll('.progress-bar .progress').forEach(bar => {
         const width = bar.style.width;
         bar.style.width = '0';
