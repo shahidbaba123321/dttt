@@ -302,107 +302,7 @@ body {
         text-align: center;
     }
 }
-        /* Invoicing Section Styles */
-.invoicing-section {
-    padding: var(--section-spacing) 0;
-    background: var(--gradient);
-    position: relative;
-}
-
-.invoicing-grid {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 3rem;
-    margin-top: 3rem;
-}
-
-.invoice-preview {
-    background: white;
-    padding: 2.5rem;
-    border-radius: 16px;
-    box-shadow: var(--box-shadow);
-}
-
-.invoice-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid rgba(41, 98, 255, 0.1);
-    margin-bottom: 2rem;
-}
-
-.company-info {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
-
-.company-info img {
-    height: 40px;
-    width: auto;
-}
-
-.company-info h3 {
-    color: #1a237e;
-    font-size: 1.25rem;
-}
-
-.status-badge {
-    padding: 0.5rem 1.25rem;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.status-badge.paid {
-    background: rgba(40, 167, 69, 0.1);
-    color: var(--success-color);
-}
-
-.status-badge.pending {
-    background: rgba(255, 193, 7, 0.1);
-    color: var(--warning-color);
-}
-
-.invoice-details {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-}
-
-.detail-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.detail-group span {
-    color: var(--light-text);
-    font-size: 0.875rem;
-}
-
-.detail-group strong {
-    color: var(--text-color);
-    font-size: 1.25rem;
-}
-
-.invoice-items {
-    margin-top: 2rem;
-}
-
-.item-row {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr;
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
-}
-
-.item-row.header {
-    background: rgba(41, 98, 255, 0.05);
-    font-weight: 500;
-}
+       
 
 /* Integration Section Styles */
 .integration-section {
@@ -542,12 +442,12 @@ body {
 
 /* Responsive Styles */
 @media (max-width: 1200px) {
-    .invoicing-grid,
+    
     .integration-grid {
         gap: 2rem;
     }
 
-    .invoice-preview,
+    
     .integration-showcase,
     .api-preview {
         padding: 2rem;
@@ -555,32 +455,19 @@ body {
 }
 
 @media (max-width: 992px) {
-    .invoicing-grid,
+    
     .integration-grid {
         grid-template-columns: 1fr;
     }
 
-    .invoice-details {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
+    
     .integration-logos {
         gap: 1.5rem;
     }
 }
 
 @media (max-width: 768px) {
-    .invoice-header {
-        flex-direction: column;
-        gap: 1rem;
-        text-align: center;
-    }
-
-    .invoice-details {
-        grid-template-columns: 1fr;
-        text-align: center;
-    }
-
+   
     .item-row {
         grid-template-columns: 1fr 1fr;
         gap: 0.5rem;
@@ -608,7 +495,7 @@ body {
 }
 
 @media (max-width: 480px) {
-    .invoice-preview,
+   
     .integration-showcase,
     .api-preview {
         padding: 1.25rem;
@@ -650,7 +537,7 @@ body {
     }
 }
 
-.invoice-preview,
+
 .integration-showcase,
 .api-preview,
 .cta-content {
@@ -659,11 +546,7 @@ body {
 
 /* Print Styles */
 @media print {
-    .invoice-preview {
-        box-shadow: none;
-        border: 1px solid #ddd;
-    }
-
+    
     .cta-section,
     .integration-section {
         display: none;
@@ -1435,6 +1318,380 @@ body {
         </div>
     </div>
 </section>
+
+        <style>
+            /* Enhanced Invoicing Section Styles */
+.invoicing-section {
+    padding: var(--section-spacing) 0;
+    background: var(--gradient);
+    position: relative;
+    overflow: hidden;
+}
+
+.invoicing-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at top right, rgba(41, 98, 255, 0.1), transparent 60%);
+    pointer-events: none;
+}
+
+.invoicing-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 3rem;
+    margin-top: 3rem;
+    position: relative;
+    z-index: 2;
+}
+
+/* Invoice Preview Card */
+.invoice-preview {
+    background: white;
+    border-radius: 20px;
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.invoice-card {
+    padding: 0;
+}
+
+.invoice-header {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-bottom: 1px solid rgba(41, 98, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.company-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.company-info img {
+    height: 40px;
+    width: auto;
+}
+
+.company-info h3 {
+    color: #1a237e;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.invoice-status {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.status-badge {
+    padding: 0.5rem 1.25rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.status-badge.paid {
+    background: rgba(40, 167, 69, 0.1);
+    color: var(--success-color);
+}
+
+.status-badge.paid::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success-color);
+}
+
+/* Invoice Body */
+.invoice-body {
+    padding: 2rem;
+}
+
+.invoice-details {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.detail-group {
+    background: #f8f9fa;
+    padding: 1.25rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.detail-group:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.detail-group span {
+    color: var(--light-text);
+    font-size: 0.875rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.detail-group strong {
+    color: #1a237e;
+    font-size: 1.25rem;
+    display: block;
+}
+
+/* Invoice Items Table */
+.invoice-items {
+    margin-top: 2rem;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.item-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    padding: 1rem 1.5rem;
+    align-items: center;
+}
+
+.item-row.header {
+    background: #f8f9fa;
+    font-weight: 500;
+    color: #1a237e;
+}
+
+.item-row:not(.header) {
+    border-top: 1px solid rgba(41, 98, 255, 0.1);
+}
+
+.item-row:not(.header):hover {
+    background: rgba(41, 98, 255, 0.02);
+}
+
+/* Invoice Features */
+.invoicing-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.feature-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(41, 98, 255, 0.1);
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(41, 98, 255, 0.1);
+}
+
+.feature-icon {
+    width: 56px;
+    height: 56px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.feature-icon i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.feature-card h3 {
+    color: #1a237e;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.feature-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.feature-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    color: var(--text-color);
+}
+
+.feature-list li i {
+    color: var(--primary-color);
+    font-size: 1rem;
+    width: 24px;
+    height: 24px;
+    background: rgba(41, 98, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Animation Classes */
+.invoice-preview, .feature-card {
+    opacity: 0;
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.feature-card {
+    animation-delay: 0.2s;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .invoicing-grid {
+        gap: 2rem;
+    }
+
+    .invoice-header,
+    .invoice-body {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .invoicing-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .invoice-details {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .item-row {
+        grid-template-columns: 2fr 1fr 1fr;
+    }
+
+    .item-row > *:last-child {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .invoice-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .company-info {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .invoice-details {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .item-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        padding: 1rem;
+    }
+
+    .item-row.header {
+        display: none;
+    }
+
+    .feature-card {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .invoice-preview {
+        border-radius: 12px;
+    }
+
+    .invoice-header,
+    .invoice-body {
+        padding: 1rem;
+    }
+
+    .status-badge {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .detail-group {
+        padding: 1rem;
+    }
+
+    .detail-group strong {
+        font-size: 1.1rem;
+    }
+
+    .feature-icon {
+        width: 48px;
+        height: 48px;
+    }
+
+    .feature-icon i {
+        font-size: 1.25rem;
+    }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) {
+    .feature-card:hover,
+    .detail-group:hover {
+        transform: none;
+        box-shadow: var(--box-shadow);
+    }
+}
+
+/* Print Styles */
+@media print {
+    .invoicing-section {
+        background: none;
+    }
+
+    .invoice-preview {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+
+    .feature-card {
+        display: none;
+    }
+}
+            </style>
 
 <!-- Integration Section -->
 <section class="integration-section">
