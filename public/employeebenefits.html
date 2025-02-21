@@ -1,0 +1,3263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Benefits Integration - Workwise Pro</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Root Variables - Including Wellness Theme Colors */
+:root {
+    --primary-color: #2962ff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --background-color: #f8f9fa;
+    --text-color: #333;
+    --light-text: #6c757d;
+    --wellness-primary: #4CAF50;
+    --wellness-secondary: #2E7D32;
+    --wellness-accent: #81C784;
+    --gradient-start: #F8FFF9;
+    --gradient-end: #E8F5E9;
+}
+    /* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    padding-top: var(--header-height);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--mobile-padding);
+    width: 100%;
+}
+
+
+/* Benefits Hero Section */
+.benefits-hero {
+    position: relative;
+    padding: calc(var(--header-height) + 6rem) 0 8rem;
+    overflow: hidden;
+}
+
+.hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.gradient-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+}
+
+.wellness-pattern {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0.05;
+    background-image: 
+        radial-gradient(circle at 2px 2px, var(--wellness-primary) 1px, transparent 0),
+        radial-gradient(circle at 2px 2px, var(--wellness-primary) 1px, transparent 0);
+    background-size: 40px 40px;
+    background-position: 0 0, 20px 20px;
+}
+
+/* Hero Content */
+.hero-content {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+/* Solution Badge */
+.solution-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    background: rgba(76, 175, 80, 0.1);
+    border-radius: 50px;
+    margin-bottom: 2rem;
+    color: var(--wellness-primary);
+}
+
+.solution-badge i {
+    font-size: 1.1rem;
+}
+
+/* Hero Text */
+.hero-text h1 {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    line-height: 1.2;
+    color: var(--wellness-secondary);
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+
+.hero-text p {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: var(--light-text);
+    margin-bottom: 2.5rem;
+    opacity: 0.9;
+}
+
+/* Hero Buttons */
+.hero-buttons {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn.primary {
+    background: linear-gradient(45deg, var(--wellness-primary), var(--wellness-accent));
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
+}
+
+.btn.secondary {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--wellness-primary);
+    border: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(76, 175, 80, 0.15);
+}
+
+/* Benefits Stats */
+.benefits-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 8px 32px rgba(76, 175, 80, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(76, 175, 80, 0.12);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(76, 175, 80, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--wellness-primary);
+    font-size: 1.25rem;
+}
+
+.stat-content h4 {
+    font-size: 1.75rem;
+    color: var(--wellness-secondary);
+    margin: 0 0 0.25rem;
+    font-weight: 700;
+}
+
+.stat-content p {
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+/* Benefits Preview */
+.benefits-preview {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(76, 175, 80, 0.1);
+    overflow: hidden;
+}
+
+.preview-header {
+    background: var(--wellness-primary);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.preview-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.preview-controls span {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.preview-title {
+    color: white;
+    font-size: 0.875rem;
+    margin-left: 1rem;
+}
+
+.preview-content {
+    padding: 1.5rem;
+}
+
+/* Benefits Overview */
+.benefits-overview {
+    padding: 1rem;
+}
+
+.overview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.coverage-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--wellness-primary);
+}
+
+.status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--wellness-primary);
+}
+
+.status.active {
+    animation: pulse 2s infinite;
+}
+
+/* Benefits Grid */
+.benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.benefit-tile {
+    background: #f8f9fa;
+    padding: 1.25rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.benefit-tile:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+}
+
+.tile-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    color: white;
+}
+
+.tile-icon.health {
+    background: var(--wellness-primary);
+}
+
+.tile-icon.dental {
+    background: var(--wellness-accent);
+}
+
+.tile-icon.vision {
+    background: var(--wellness-secondary);
+}
+
+.tile-info h4 {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+    color: var(--text-color);
+}
+
+.tile-info p {
+    font-size: 0.875rem;
+    color: var(--light-text);
+    margin: 0;
+}
+
+/* Animations */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .hero-content {
+        gap: 3rem;
+    }
+    
+    .benefits-grid {
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .hero-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .solution-badge {
+        margin: 0 auto 2rem;
+    }
+
+    .hero-buttons {
+        justify-content: center;
+    }
+
+    .benefits-stats {
+        max-width: 600px;
+        margin: 2rem auto 0;
+    }
+
+    .benefits-preview {
+        max-width: 700px;
+        margin: 2rem auto 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .benefits-hero {
+        padding: calc(var(--header-height) + 4rem) 0 6rem;
+    }
+
+    .hero-buttons {
+        flex-direction: column;
+        max-width: 300px;
+        margin: 2rem auto;
+    }
+
+    .benefits-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .benefits-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .benefit-tile {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .tile-icon {
+        margin-bottom: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .benefits-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        padding: 1rem;
+    }
+
+    .preview-content {
+        padding: 1rem;
+    }
+
+    .overview-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+}
+  </style>
+</head>
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+
+    <!-- Main Content -->
+    <main class="benefits-main">
+        <!-- Hero Section -->
+        <section class="benefits-hero">
+            <div class="hero-background">
+                <div class="gradient-overlay"></div>
+                <div class="wellness-pattern"></div>
+            </div>
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <div class="solution-badge">
+                            <i class="fas fa-heart-pulse"></i>
+                            <span>Employee Benefits</span>
+                        </div>
+                        <h1>Empower Your Team with Integrated Employee Benefits</h1>
+                        <p>Seamlessly connect with benefits providers, insurance platforms, and wellness programs to enhance employee satisfaction and well-being.</p>
+                        <div class="hero-buttons">
+                            <a href="#" class="btn primary">
+                                <span>Explore Our Solutions</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                            <a href="#" class="btn secondary">
+                                <i class="fas fa-play-circle"></i>
+                                <span>Watch Demo</span>
+                            </a>
+                        </div>
+                        <div class="benefits-stats">
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-smile"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h4>94%</h4>
+                                    <p>Employee Satisfaction</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h4>45%</h4>
+                                    <p>Increased Engagement</p>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <h4>100K+</h4>
+                                    <p>Employees Served</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-visual">
+                        <div class="benefits-preview">
+                            <div class="preview-header">
+                                <div class="preview-controls">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                                <div class="preview-title">Benefits Dashboard</div>
+                            </div>
+                            <div class="preview-content">
+                                <div class="benefits-overview">
+                                    <div class="overview-header">
+                                        <h3>Your Benefits at a Glance</h3>
+                                        <div class="coverage-indicator">
+                                            <span class="status active"></span>
+                                            Coverage Active
+                                        </div>
+                                    </div>
+                                    <div class="benefits-grid">
+                                        <div class="benefit-tile">
+                                            <div class="tile-icon health">
+                                                <i class="fas fa-heartbeat"></i>
+                                            </div>
+                                            <div class="tile-info">
+                                                <h4>Health Insurance</h4>
+                                                <p>Premium Plan</p>
+                                            </div>
+                                        </div>
+                                        <div class="benefit-tile">
+                                            <div class="tile-icon dental">
+                                                <i class="fas fa-tooth"></i>
+                                            </div>
+                                            <div class="tile-info">
+                                                <h4>Dental Coverage</h4>
+                                                <p>Family Plan</p>
+                                            </div>
+                                        </div>
+                                        <div class="benefit-tile">
+                                            <div class="tile-icon vision">
+                                                <i class="fas fa-eye"></i>
+                                            </div>
+                                            <div class="tile-info">
+                                                <h4>Vision Care</h4>
+                                                <p>Standard Plan</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Benefits Administration Section -->
+<section class="benefits-admin-section">
+    <div class="container">
+        <div class="section-header">
+            <div class="header-badge">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Benefits Administration</span>
+            </div>
+            <h2>Comprehensive Benefits Administration</h2>
+            <p>Simplify the management of employee benefits with automated enrollment and real-time updates</p>
+        </div>
+
+        <div class="enrollment-platform">
+            <div class="enrollment-dashboard">
+                <div class="dashboard-tabs">
+                    <button class="tab-btn active">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Enrollment</span>
+                    </button>
+                    <button class="tab-btn">
+                        <i class="fas fa-sync"></i>
+                        <span>Updates</span>
+                    </button>
+                    <button class="tab-btn">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Analytics</span>
+                    </button>
+                </div>
+
+                <div class="enrollment-interface">
+                    <div class="enrollment-header">
+                        <h3>Open Enrollment 2024</h3>
+                        <div class="enrollment-status">
+                            <span class="status-dot active"></span>
+                            Active Period: Oct 15 - Nov 30
+                        </div>
+                    </div>
+
+                    <div class="plan-comparison">
+                        <div class="comparison-header">
+                            <h4>Health Plan Comparison</h4>
+                            <div class="view-controls">
+                                <button class="view-btn active">Grid</button>
+                                <button class="view-btn">List</button>
+                            </div>
+                        </div>
+
+                        <div class="plans-grid">
+                            <div class="plan-card">
+                                <div class="plan-header">
+                                    <h5>Basic Plan</h5>
+                                    <span class="plan-price">$50/mo</span>
+                                </div>
+                                <div class="plan-features">
+                                    <ul>
+                                        <li>
+                                            <i class="fas fa-check"></i>
+                                            General Health Coverage
+                                        </li>
+                                        <li>
+                                            <i class="fas fa-check"></i>
+                                            Prescription Drug Plan
+                                        </li>
+                                        <li>
+                                            <i class="fas fa-check"></i>
+                                            Preventive Care
+                                        </li>
+                                    </ul>
+                                </div>
+                                <button class="select-btn">Select Plan</button>
+                            </div>
+
+                            <div class="plan-card recommended">
+                                <div class="plan-badge">Popular Choice</div>
+                                <div class="plan-header">
+                                    <h5>Premium Plan</h5>
+                                    <span class="plan-price">$85/mo</span>
+                                </div>
+                                <div class="plan-features">
+                                    <ul>
+                                        <li>
+                                            <i class="fas fa-check"></i>
+                                            Enhanced Health Coverage
+                                        </li>
+                                        <li>
+                                            <i class="fas fa-check"></i>
+                                            Extended Drug Coverage
+                                        </li>
+                                        <li>
+                                            <i class="fas fa-check"></i>
+                                            Specialist Visits
+                                        </li>
+                                        <li>
+                                            <i class="fas fa-check"></i>
+                                            Mental Health Support
+                                        </li>
+                                    </ul>
+                                </div>
+                                <button class="select-btn primary">Select Plan</button>
+                            </div>
+
+                            <div class="plan-card">
+                                <div class="plan-header">
+                                    <h5>Family Plan</h5>
+                                    <span class="plan-price">$120/mo</span>
+                                </div>
+                                <div class="plan-features">
+                                    <ul>
+                                        <li>
+                                            <i class="fas fa-check"></i>
+                                            Family Coverage
+                                        </li>
+                                        <li>
+                                            <i class="fas fa-check"></i>
+                                            Dental & Vision
+                                        </li>
+                                        <li>
+                                            <i class="fas fa-check"></i>
+                                            Family Counseling
+                                        </li>
+                                    </ul>
+                                </div>
+                                <button class="select-btn">Select Plan</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="enrollment-progress">
+                        <div class="progress-header">
+                            <h4>Enrollment Progress</h4>
+                            <span class="progress-status">75% Complete</span>
+                        </div>
+                        <div class="progress-steps">
+                            <div class="step completed">
+                                <div class="step-icon">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="step-content">
+                                    <h5>Personal Info</h5>
+                                    <p>Basic details verified</p>
+                                </div>
+                            </div>
+                            <div class="step completed">
+                                <div class="step-icon">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="step-content">
+                                    <h5>Plan Selection</h5>
+                                    <p>Health plan chosen</p>
+                                </div>
+                            </div>
+                            <div class="step active">
+                                <div class="step-icon">
+                                    <i class="fas fa-pen"></i>
+                                </div>
+                                <div class="step-content">
+                                    <h5>Dependents</h5>
+                                    <p>Add family members</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <div class="step-icon">
+                                    <i class="fas fa-file-signature"></i>
+                                </div>
+                                <div class="step-content">
+                                    <h5>Review & Submit</h5>
+                                    <p>Final confirmation</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-features">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-magic"></i>
+                    </div>
+                    <h3>Automated Enrollment</h3>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i>Smart Forms</li>
+                        <li><i class="fas fa-check"></i>Data Validation</li>
+                        <li><i class="fas fa-check"></i>Instant Processing</li>
+                        <li><i class="fas fa-check"></i>Status Tracking</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3>Real-Time Updates</h3>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i>Live Sync</li>
+                        <li><i class="fas fa-check"></i>Provider Integration</li>
+                        <li><i class="fas fa-check"></i>Change Tracking</li>
+                        <li><i class="fas fa-check"></i>Audit Trail</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<style>
+  /* Benefits Administration Section Styles */
+.benefits-admin-section {
+    padding: var(--section-spacing) 0;
+    background: white;
+    position: relative;
+}
+
+/* Enrollment Platform Layout */
+.enrollment-platform {
+    margin-top: 4rem;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 3rem;
+}
+
+/* Enrollment Dashboard */
+.enrollment-dashboard {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(76, 175, 80, 0.08);
+    overflow: hidden;
+}
+
+/* Dashboard Tabs */
+.dashboard-tabs {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid rgba(76, 175, 80, 0.1);
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    background: none;
+    color: var(--light-text);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.tab-btn i {
+    font-size: 1.1rem;
+}
+
+.tab-btn.active {
+    background: var(--wellness-primary);
+    color: white;
+}
+
+/* Enrollment Interface */
+.enrollment-interface {
+    padding: 2rem;
+}
+
+.enrollment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.enrollment-status {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--wellness-primary);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--wellness-primary);
+}
+
+.status-dot.active {
+    animation: pulse 2s infinite;
+}
+
+/* Plan Comparison */
+.plan-comparison {
+    margin-bottom: 2rem;
+}
+
+.comparison-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.view-controls {
+    display: flex;
+    gap: 0.5rem;
+    background: #f8f9fa;
+    padding: 0.25rem;
+    border-radius: 6px;
+}
+
+.view-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: none;
+    color: var(--light-text);
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.view-btn.active {
+    background: white;
+    color: var(--wellness-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Plans Grid */
+.plans-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.plan-card {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 16px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.plan-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(76, 175, 80, 0.1);
+}
+
+.plan-card.recommended {
+    background: white;
+    border: 2px solid var(--wellness-primary);
+    box-shadow: 0 8px 25px rgba(76, 175, 80, 0.1);
+}
+
+.plan-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--wellness-primary);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.plan-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.plan-header h5 {
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.plan-price {
+    font-size: 1.5rem;
+    color: var(--wellness-primary);
+    font-weight: 600;
+}
+
+.plan-features ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    color: var(--text-color);
+    font-size: 0.875rem;
+}
+
+.plan-features i {
+    color: var(--wellness-primary);
+    font-size: 0.875rem;
+}
+
+.select-btn {
+    width: 100%;
+    padding: 0.75rem;
+    margin-top: 1.5rem;
+    border: 1px solid var(--wellness-primary);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--wellness-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.select-btn.primary {
+    background: var(--wellness-primary);
+    color: white;
+}
+
+.select-btn:hover {
+    background: var(--wellness-primary);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Enrollment Progress */
+.enrollment-progress {
+    margin-top: 3rem;
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 16px;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.progress-status {
+    color: var(--wellness-primary);
+    font-size: 0.875rem;
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+}
+
+.progress-steps::before {
+    content: '';
+    position: absolute;
+    top: 24px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: rgba(76, 175, 80, 0.1);
+    z-index: 1;
+}
+
+.step {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    text-align: center;
+}
+
+.step-icon {
+    width: 48px;
+    height: 48px;
+    background: #f8f9fa;
+    border: 2px solid rgba(76, 175, 80, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    color: var(--light-text);
+    transition: all 0.3s ease;
+}
+
+.step.completed .step-icon {
+    background: var(--wellness-primary);
+    border-color: var(--wellness-primary);
+    color: white;
+}
+
+.step.active .step-icon {
+    border-color: var(--wellness-primary);
+    color: var(--wellness-primary);
+}
+
+.step-content h5 {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    color: var(--text-color);
+}
+
+.step-content p {
+    font-size: 0.75rem;
+    color: var(--light-text);
+    margin: 0;
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .enrollment-platform {
+        gap: 2rem;
+    }
+
+    .plans-grid {
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .enrollment-platform {
+        grid-template-columns: 1fr;
+    }
+
+    .plans-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .enrollment-interface {
+        padding: 1.5rem;
+    }
+
+    .enrollment-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .plans-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .progress-steps {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .progress-steps::before {
+        display: none;
+    }
+
+    .step {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        text-align: left;
+    }
+
+    .step-icon {
+        margin: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-tabs {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .tab-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .enrollment-interface {
+        padding: 1rem;
+    }
+
+    .plan-card {
+        padding: 1.25rem;
+    }
+}
+
+/* Animation Classes */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.plan-card {
+    opacity: 0;
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.plan-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.plan-card:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+<!-- Insurance Integration Section -->
+<section class="insurance-section">
+    <div class="container">
+        <div class="section-header">
+            <div class="header-badge">
+                <i class="fas fa-shield-alt"></i>
+                <span>Insurance Integration</span>
+            </div>
+            <h2>Integrated Insurance Platforms</h2>
+            <p>Connect seamlessly with leading insurance providers for comprehensive coverage management</p>
+        </div>
+
+        <div class="insurance-platform">
+            <div class="insurance-dashboard">
+                <div class="platform-navigation">
+                    <div class="nav-item active">
+                        <i class="fas fa-home"></i>
+                        <span>Overview</span>
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-file-contract"></i>
+                        <span>Policies</span>
+                        <span class="badge">3</span>
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Claims</span>
+                        <span class="badge">2</span>
+                    </div>
+                    <div class="nav-item">
+                        <i class="fas fa-history"></i>
+                        <span>History</span>
+                    </div>
+                </div>
+
+                <div class="platform-content">
+                    <div class="content-header">
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="user-details">
+                                <h4>John Smith</h4>
+                                <p>Policy ID: POL-2024-0123</p>
+                            </div>
+                        </div>
+                        <div class="coverage-status">
+                            <span class="status active">Coverage Active</span>
+                            <button class="action-btn">
+                                <i class="fas fa-download"></i>
+                                Download Card
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="insurance-overview">
+                        <div class="policy-cards">
+                            <div class="policy-card active">
+                                <div class="card-header">
+                                    <div class="provider-logo">
+                                        <img src="image/blue-cross-logo.png" alt="Blue Cross">
+                                    </div>
+                                    <div class="policy-type">Health Insurance</div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="coverage-details">
+                                        <div class="detail-item">
+                                            <span class="label">Plan Type</span>
+                                            <span class="value">PPO Premium</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="label">Coverage</span>
+                                            <span class="value">Family</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="label">Effective Date</span>
+                                            <span class="value">Jan 1, 2024</span>
+                                        </div>
+                                    </div>
+                                    <div class="quick-actions">
+                                        <button class="action-link">
+                                            <i class="fas fa-search"></i>
+                                            Find Provider
+                                        </button>
+                                        <button class="action-link">
+                                            <i class="fas fa-file-medical"></i>
+                                            View Benefits
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="claims-summary">
+                                <h4>Recent Claims</h4>
+                                <div class="claims-list">
+                                    <div class="claim-item">
+                                        <div class="claim-info">
+                                            <h5>Annual Physical</h5>
+                                            <p>Dr. Sarah Johnson</p>
+                                            <span class="date">Jan 15, 2024</span>
+                                        </div>
+                                        <div class="claim-status">
+                                            <span class="status processed">Processed</span>
+                                            <span class="amount">$150.00</span>
+                                        </div>
+                                    </div>
+                                    <div class="claim-item">
+                                        <div class="claim-info">
+                                            <h5>Prescription Refill</h5>
+                                            <p>City Pharmacy</p>
+                                            <span class="date">Jan 10, 2024</span>
+                                        </div>
+                                        <div class="claim-status">
+                                            <span class="status pending">Pending</span>
+                                            <span class="amount">$45.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="coverage-analytics">
+                            <div class="analytics-card">
+                                <h4>Coverage Utilization</h4>
+                                <div class="chart-container">
+                                    <canvas id="utilizationChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="analytics-card">
+                                <h4>Deductible Progress</h4>
+                                <div class="progress-container">
+                                    <div class="progress-ring">
+                                        <svg viewBox="0 0 36 36">
+                                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                            <path class="progress" stroke-dasharray="75, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                        </svg>
+                                        <div class="progress-text">
+                                            <span class="value">75%</span>
+                                            <span class="label">Complete</span>
+                                        </div>
+                                    </div>
+                                    <div class="progress-details">
+                                        <div class="detail">
+                                            <span>Met</span>
+                                            <strong>$1,500</strong>
+                                        </div>
+                                        <div class="detail">
+                                            <span>Remaining</span>
+                                            <strong>$500</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insurance-features">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-medical"></i>
+                    </div>
+                    <h3>Policy Management</h3>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i>Digital ID Cards</li>
+                        <li><i class="fas fa-check"></i>Coverage Details</li>
+                        <li><i class="fas fa-check"></i>Plan Updates</li>
+                        <li><i class="fas fa-check"></i>Document Storage</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <h3>Claims Processing</h3>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i>Online Submission</li>
+                        <li><i class="fas fa-check"></i>Status Tracking</li>
+                        <li><i class="fas fa-check"></i>Payment History</li>
+                        <li><i class="fas fa-check"></i>Appeals Management</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<style>
+  /* Insurance Section Styles */
+.insurance-section {
+    padding: var(--section-spacing) 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+/* Insurance Platform Layout */
+.insurance-platform {
+    margin-top: 4rem;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 3rem;
+}
+
+/* Insurance Dashboard */
+.insurance-dashboard {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(76, 175, 80, 0.08);
+    display: grid;
+    grid-template-columns: 240px 1fr;
+}
+
+/* Platform Navigation */
+.platform-navigation {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 12px;
+    color: var(--light-text);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 0.5rem;
+    position: relative;
+}
+
+.nav-item.active {
+    background: var(--wellness-primary);
+    color: white;
+}
+
+.nav-item:not(.active):hover {
+    background: rgba(76, 175, 80, 0.1);
+    color: var(--wellness-primary);
+}
+
+.badge {
+    position: absolute;
+    right: 1rem;
+    background: rgba(76, 175, 80, 0.2);
+    color: var(--wellness-primary);
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+}
+
+.nav-item.active .badge {
+    background: white;
+    color: var(--wellness-primary);
+}
+
+/* Platform Content */
+.platform-content {
+    padding: 2rem;
+}
+
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-avatar {
+    width: 48px;
+    height: 48px;
+    background: rgba(76, 175, 80, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--wellness-primary);
+}
+
+.user-details h4 {
+    margin-bottom: 0.25rem;
+    color: var(--text-color);
+}
+
+.user-details p {
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.coverage-status {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.status {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+}
+
+.status.active {
+    background: rgba(76, 175, 80, 0.1);
+    color: var(--wellness-primary);
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--wellness-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
+}
+
+/* Insurance Overview */
+.insurance-overview {
+    display: grid;
+    gap: 2rem;
+}
+
+/* Policy Cards */
+.policy-cards {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.policy-card {
+    background: #f8f9fa;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.policy-card.active {
+    border: 2px solid var(--wellness-primary);
+}
+
+.card-header {
+    padding: 1.5rem;
+    background: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.provider-logo img {
+    height: 32px;
+    width: auto;
+}
+
+.policy-type {
+    color: var(--wellness-primary);
+    font-weight: 500;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.coverage-details {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-item {
+    text-align: center;
+}
+
+.detail-item .label {
+    display: block;
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.detail-item .value {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.quick-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.action-link {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: white;
+    border: 1px solid rgba(76, 175, 80, 0.2);
+    border-radius: 8px;
+    color: var(--wellness-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.action-link:hover {
+    background: var(--wellness-primary);
+    color: white;
+}
+
+/* Claims Summary */
+.claims-summary {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+}
+
+.claims-list {
+    margin-top: 1rem;
+}
+
+.claim-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.claim-info h5 {
+    margin-bottom: 0.25rem;
+    color: var(--text-color);
+}
+
+.claim-info p {
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.claim-info .date {
+    font-size: 0.75rem;
+    color: var(--light-text);
+}
+
+.claim-status {
+    text-align: right;
+}
+
+.status.processed {
+    background: rgba(76, 175, 80, 0.1);
+    color: var(--wellness-primary);
+}
+
+.status.pending {
+    background: rgba(255, 193, 7, 0.1);
+    color: var(--warning-color);
+}
+
+.amount {
+    display: block;
+    color: var(--text-color);
+    font-weight: 500;
+    margin-top: 0.5rem;
+}
+
+/* Coverage Analytics */
+.coverage-analytics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.analytics-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+}
+
+.chart-container {
+    height: 200px;
+    margin-top: 1rem;
+}
+
+.progress-container {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.progress-ring {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.progress-ring svg {
+    transform: rotate(-90deg);
+}
+
+.progress-ring path {
+    fill: none;
+    stroke-width: 2.8;
+    stroke-linecap: round;
+}
+
+.progress-ring path:first-child {
+    stroke: rgba(76, 175, 80, 0.1);
+}
+
+.progress-ring path.progress {
+    stroke: var(--wellness-primary);
+    transition: stroke-dasharray 1s ease;
+}
+
+.progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.progress-text .value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--wellness-primary);
+}
+
+.progress-text .label {
+    font-size: 0.75rem;
+    color: var(--light-text);
+}
+
+.progress-details {
+    flex: 1;
+    display: grid;
+    gap: 1rem;
+}
+
+.detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.detail span {
+    color: var(--light-text);
+    font-size: 0.875rem;
+}
+
+.detail strong {
+    color: var(--text-color);
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .insurance-platform {
+        gap: 2rem;
+    }
+
+    .coverage-analytics {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 992px) {
+    .insurance-platform {
+        grid-template-columns: 1fr;
+    }
+
+    .insurance-dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .platform-navigation {
+        border-right: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        display: flex;
+        overflow-x: auto;
+        padding: 1rem;
+    }
+
+    .nav-item {
+        flex: 0 0 auto;
+        margin-bottom: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .content-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .coverage-status {
+        flex-direction: column;
+    }
+
+    .coverage-details {
+        grid-template-columns: 1fr;
+    }
+
+    .quick-actions {
+        flex-direction: column;
+    }
+
+    .claim-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .claim-status {
+        text-align: center;
+    }
+
+    .progress-container {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .platform-content {
+        padding: 1rem;
+    }
+
+    .card-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .analytics-card {
+        padding: 1rem;
+    }
+}
+</style>
+<!-- Wellness Program Section -->
+<section class="wellness-section">
+    <div class="container">
+        <div class="section-header">
+            <div class="header-badge">
+                <i class="fas fa-heart"></i>
+                <span>Wellness Programs</span>
+            </div>
+            <h2>Wellness Program Integration</h2>
+            <p>Promote employee well-being through integrated health and wellness initiatives</p>
+        </div>
+
+        <div class="wellness-platform">
+            <div class="wellness-dashboard">
+                <div class="wellness-header">
+                    <div class="wellness-profile">
+                        <div class="profile-stats">
+                            <div class="stat-circle">
+                                <svg viewBox="0 0 36 36">
+                                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    <path class="progress" stroke-dasharray="85, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                </svg>
+                                <div class="wellness-score">
+                                    <span>85</span>
+                                    <small>Wellness Score</small>
+                                </div>
+                            </div>
+                            <div class="profile-info">
+                                <h4>Great Progress!</h4>
+                                <p>You're in the top 20% of active participants</p>
+                            </div>
+                        </div>
+                        <div class="wellness-actions">
+                            <button class="action-btn">
+                                <i class="fas fa-plus"></i>
+                                Log Activity
+                            </button>
+                            <button class="action-btn secondary">
+                                <i class="fas fa-calendar"></i>
+                                Schedule Check-up
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="wellness-content">
+                    <div class="activity-tracking">
+                        <div class="tracking-header">
+                            <h3>Activity Overview</h3>
+                            <div class="period-selector">
+                                <button class="period-btn active">Week</button>
+                                <button class="period-btn">Month</button>
+                                <button class="period-btn">Year</button>
+                            </div>
+                        </div>
+                        <div class="activity-metrics">
+                            <div class="metric-card steps">
+                                <div class="metric-icon">
+                                    <i class="fas fa-shoe-prints"></i>
+                                </div>
+                                <div class="metric-data">
+                                    <span class="label">Daily Steps</span>
+                                    <h4>8,547</h4>
+                                    <div class="progress-bar">
+                                        <div class="progress" style="width: 85%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metric-card exercise">
+                                <div class="metric-icon">
+                                    <i class="fas fa-dumbbell"></i>
+                                </div>
+                                <div class="metric-data">
+                                    <span class="label">Exercise Minutes</span>
+                                    <h4>45</h4>
+                                    <div class="progress-bar">
+                                        <div class="progress" style="width: 75%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="metric-card sleep">
+                                <div class="metric-icon">
+                                    <i class="fas fa-moon"></i>
+                                </div>
+                                <div class="metric-data">
+                                    <span class="label">Sleep Hours</span>
+                                    <h4>7.5</h4>
+                                    <div class="progress-bar">
+                                        <div class="progress" style="width: 90%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="wellness-challenges">
+                        <div class="challenges-header">
+                            <h3>Active Challenges</h3>
+                            <button class="view-all">View All</button>
+                        </div>
+                        <div class="challenge-cards">
+                            <div class="challenge-card">
+                                <div class="challenge-banner">
+                                    <img src="image/steps-challenge.jpg" alt="10K Steps Challenge">
+                                    <span class="challenge-badge">Team Challenge</span>
+                                </div>
+                                <div class="challenge-content">
+                                    <h4>10K Steps Challenge</h4>
+                                    <p>Complete 10,000 steps daily for 30 days</p>
+                                    <div class="challenge-progress">
+                                        <div class="progress-bar">
+                                            <div class="progress" style="width: 65%"></div>
+                                        </div>
+                                        <span class="progress-text">19 days remaining</span>
+                                    </div>
+                                    <div class="challenge-participants">
+                                        <div class="participant-avatars">
+                                            <span class="avatar">JS</span>
+                                            <span class="avatar">MK</span>
+                                            <span class="avatar">AL</span>
+                                            <span class="avatar more">+5</span>
+                                        </div>
+                                        <button class="join-btn">Join Challenge</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="challenge-card">
+                                <div class="challenge-banner">
+                                    <img src="image/meditation-challenge.jpg" alt="Mindfulness Minutes">
+                                    <span class="challenge-badge">Personal Goal</span>
+                                </div>
+                                <div class="challenge-content">
+                                    <h4>Mindfulness Minutes</h4>
+                                    <p>Practice meditation for 10 minutes daily</p>
+                                    <div class="challenge-progress">
+                                        <div class="progress-bar">
+                                            <div class="progress" style="width: 45%"></div>
+                                        </div>
+                                        <span class="progress-text">25 days remaining</span>
+                                    </div>
+                                    <button class="track-btn">Track Progress</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="wellness-resources">
+                        <div class="resources-header">
+                            <h3>Wellness Resources</h3>
+                            <div class="resource-filters">
+                                <button class="filter-btn active">All</button>
+                                <button class="filter-btn">Physical</button>
+                                <button class="filter-btn">Mental</button>
+                                <button class="filter-btn">Nutrition</button>
+                            </div>
+                        </div>
+                        <div class="resource-grid">
+                            <div class="resource-card">
+                                <div class="resource-icon">
+                                    <i class="fas fa-video"></i>
+                                </div>
+                                <div class="resource-content">
+                                    <h4>Desk Exercises</h4>
+                                    <p>10-minute workout routine</p>
+                                    <span class="duration">15 mins</span>
+                                </div>
+                            </div>
+                            <div class="resource-card">
+                                <div class="resource-icon">
+                                    <i class="fas fa-book"></i>
+                                </div>
+                                <div class="resource-content">
+                                    <h4>Stress Management</h4>
+                                    <p>Guide to workplace wellness</p>
+                                    <span class="duration">20 mins read</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wellness-features">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <h3>Health Assessments</h3>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i>Personal Health Score</li>
+                        <li><i class="fas fa-check"></i>Risk Analysis</li>
+                        <li><i class="fas fa-check"></i>Custom Recommendations</li>
+                        <li><i class="fas fa-check"></i>Progress Tracking</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <h3>Wellness Challenges</h3>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i>Team Competitions</li>
+                        <li><i class="fas fa-check"></i>Achievement Rewards</li>
+                        <li><i class="fas fa-check"></i>Social Engagement</li>
+                        <li><i class="fas fa-check"></i>Progress Metrics</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<style>
+  /* Wellness Section Styles */
+.wellness-section {
+    padding: var(--section-spacing) 0;
+    background: var(--gradient);
+    position: relative;
+}
+
+/* Wellness Platform Layout */
+.wellness-platform {
+    margin-top: 4rem;
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 3rem;
+}
+
+/* Wellness Dashboard */
+.wellness-dashboard {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(76, 175, 80, 0.08);
+    overflow: hidden;
+}
+
+/* Wellness Header */
+.wellness-header {
+    background: linear-gradient(135deg, var(--wellness-primary), var(--wellness-accent));
+    padding: 2rem;
+    color: white;
+}
+
+.wellness-profile {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.profile-stats {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+/* Wellness Score Circle */
+.stat-circle {
+    position: relative;
+    width: 100px;
+    height: 100px;
+}
+
+.stat-circle svg {
+    transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
+}
+
+.stat-circle path {
+    fill: none;
+    stroke-width: 2.8;
+    stroke-linecap: round;
+}
+
+.stat-circle path:first-child {
+    stroke: rgba(255, 255, 255, 0.2);
+}
+
+.stat-circle path.progress {
+    stroke: white;
+    transition: stroke-dasharray 1s ease;
+}
+
+.wellness-score {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.wellness-score span {
+    font-size: 1.75rem;
+    font-weight: 600;
+    display: block;
+}
+
+.wellness-score small {
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.profile-info h4 {
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+}
+
+.profile-info p {
+    opacity: 0.8;
+    font-size: 0.875rem;
+}
+
+.wellness-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.action-btn:not(.secondary) {
+    background: white;
+    color: var(--wellness-primary);
+}
+
+.action-btn.secondary {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Wellness Content */
+.wellness-content {
+    padding: 2rem;
+}
+
+/* Activity Tracking */
+.tracking-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.period-selector {
+    display: flex;
+    gap: 0.5rem;
+    background: #f8f9fa;
+    padding: 0.25rem;
+    border-radius: 8px;
+}
+
+.period-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: none;
+    color: var(--light-text);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.period-btn.active {
+    background: white;
+    color: var(--wellness-primary);
+    box-shadow: var(--box-shadow);
+}
+
+/* Activity Metrics */
+.activity-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.metric-card {
+    background: #f8f9fa;
+    padding: 1.25rem;
+    border-radius: 16px;
+    display: flex;
+    gap: 1rem;
+}
+
+.metric-icon {
+    width: 48px;
+    height: 48px;
+    background: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--wellness-primary);
+    font-size: 1.25rem;
+}
+
+.metric-data {
+    flex: 1;
+}
+
+.metric-data .label {
+    font-size: 0.875rem;
+    color: var(--light-text);
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.metric-data h4 {
+    color: var(--text-color);
+    margin-bottom: 0.75rem;
+}
+
+.progress-bar {
+    height: 6px;
+    background: rgba(76, 175, 80, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-bar .progress {
+    height: 100%;
+    background: var(--wellness-primary);
+    border-radius: 3px;
+    transition: width 0.6s ease;
+}
+
+/* Wellness Challenges */
+.challenges-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.view-all {
+    color: var(--wellness-primary);
+    background: none;
+    border: none;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.challenge-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.challenge-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.challenge-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.challenge-banner {
+    position: relative;
+    height: 120px;
+    overflow: hidden;
+}
+
+.challenge-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.challenge-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(76, 175, 80, 0.9);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+}
+
+.challenge-content {
+    padding: 1.25rem;
+}
+
+.challenge-content h4 {
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.challenge-content p {
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+.challenge-progress {
+    margin-bottom: 1rem;
+}
+
+.progress-text {
+    display: block;
+    text-align: right;
+    font-size: 0.75rem;
+    color: var(--light-text);
+    margin-top: 0.5rem;
+}
+
+.challenge-participants {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.participant-avatars {
+    display: flex;
+    margin-right: -0.5rem;
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    background: var(--wellness-primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    margin-right: -0.75rem;
+    border: 2px solid white;
+}
+
+.avatar.more {
+    background: var(--light-text);
+}
+
+.join-btn, .track-btn {
+    padding: 0.5rem 1rem;
+    background: var(--wellness-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* Wellness Resources */
+.resources-header {
+    margin: 2rem 0 1.5rem;
+}
+
+.resource-filters {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+}
+
+.filter-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid rgba(76, 175, 80, 0.2);
+    border-radius: 20px;
+    background: none;
+    color: var(--light-text);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.filter-btn.active {
+    background: var(--wellness-primary);
+    color: white;
+    border-color: var(--wellness-primary);
+}
+
+.resource-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.resource-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.resource-card:hover {
+    transform: translateX(5px);
+    background: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .wellness-platform {
+        gap: 2rem;
+    }
+
+    .challenge-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 992px) {
+    .wellness-platform {
+        grid-template-columns: 1fr;
+    }
+
+    .activity-metrics {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .wellness-profile {
+        flex-direction: column;
+        gap: 2rem;
+        text-align: center;
+    }
+
+    .profile-stats {
+        flex-direction: column;
+    }
+
+    .wellness-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .activity-metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .resource-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .wellness-header {
+        padding: 1.5rem;
+    }
+
+    .wellness-content {
+        padding: 1rem;
+    }
+
+    .resource-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .filter-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+}
+</style>
+<!-- Call to Action Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-wrapper">
+            <div class="cta-content">
+                <div class="cta-badge">
+                    <i class="fas fa-star"></i>
+                    <span>Get Started Today</span>
+                </div>
+                <h2>Transform Your Workplace Wellness</h2>
+                <p>Join leading organizations in creating a healthier, more engaged workforce</p>
+                
+                <div class="cta-actions">
+                    <button class="btn primary">
+                        <span>Start Free Trial</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button class="btn secondary">
+                        <i class="fas fa-calendar"></i>
+                        <span>Schedule Demo</span>
+                    </button>
+                </div>
+
+                <div class="wellness-impact">
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <div class="impact-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="impact-text">
+                                <h4>35% Increase</h4>
+                                <p>in Employee Engagement</p>
+                            </div>
+                        </div>
+                        <div class="impact-card">
+                            <div class="impact-icon">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <div class="impact-text">
+                                <h4>45% Reduction</h4>
+                                <p>in Health-related Absences</p>
+                            </div>
+                        </div>
+                        <div class="impact-card">
+                            <div class="impact-icon">
+                                <i class="fas fa-smile"></i>
+                            </div>
+                            <div class="impact-text">
+                                <h4>92% Satisfaction</h4>
+                                <p>Among Program Participants</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-slider">
+                    <div class="testimonial-card">
+                        <div class="testimonial-content">
+                            <i class="fas fa-quote-left"></i>
+                            <p>"Implementing this wellness program has transformed our workplace culture. Our employees are more engaged, healthier, and happier than ever."</p>
+                        </div>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">
+                                <img src="image/testimonial-1.jpg" alt="Sarah Johnson">
+                            </div>
+                            <div class="author-info">
+                                <h5>Sarah Johnson</h5>
+                                <span>HR Director, Tech Solutions Inc.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="trust-indicators">
+                    <div class="certification-badges">
+                        <img src="image/wellness-certified.png" alt="Wellness Certified">
+                        <img src="image/hipaa-compliant.png" alt="HIPAA Compliant">
+                        <img src="image/iso-certified.png" alt="ISO 27001">
+                    </div>
+
+                    <div class="partner-logos">
+                        <span>Trusted by leading healthcare providers:</span>
+                        <div class="logo-grid">
+                            <img src="image/partner-1.png" alt="Healthcare Partner">
+                            <img src="image/partner-2.png" alt="Healthcare Partner">
+                            <img src="image/partner-3.png" alt="Healthcare Partner">
+                            <img src="image/partner-4.png" alt="Healthcare Partner">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="main-footer">
+    <!-- Footer content remains the same as main file -->
+</footer>
+<style>
+  /* Call to Action Section Styles */
+.cta-section {
+    padding: 8rem 0;
+    background: linear-gradient(135deg, #f0f7ff 0%, #e8f5e9 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background: url('pattern-dots.svg');
+    opacity: 0.05;
+    pointer-events: none;
+}
+
+.cta-wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.cta-content {
+    text-align: center;
+}
+
+.cta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    background: rgba(76, 175, 80, 0.1);
+    color: var(--wellness-primary);
+    border-radius: 50px;
+    margin-bottom: 1.5rem;
+}
+
+.cta-content h2 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    color: var(--wellness-secondary);
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+.cta-content p {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: var(--light-text);
+    margin-bottom: 2.5rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.cta-actions {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 4rem;
+}
+
+/* Wellness Impact Grid */
+.wellness-impact {
+    margin-bottom: 4rem;
+}
+
+.impact-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+.impact-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.impact-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(76, 175, 80, 0.1);
+}
+
+.impact-icon {
+    width: 56px;
+    height: 56px;
+    background: rgba(76, 175, 80, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--wellness-primary);
+    font-size: 1.5rem;
+}
+
+.impact-text h4 {
+    color: var(--wellness-secondary);
+    margin-bottom: 0.25rem;
+    font-size: 1.25rem;
+}
+
+.impact-text p {
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+/* Testimonial Slider */
+.testimonial-slider {
+    max-width: 800px;
+    margin: 0 auto 4rem;
+}
+
+.testimonial-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(76, 175, 80, 0.08);
+}
+
+.testimonial-content {
+    position: relative;
+    padding-left: 2rem;
+    margin-bottom: 2rem;
+}
+
+.testimonial-content i {
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--wellness-primary);
+    font-size: 1.5rem;
+    opacity: 0.5;
+}
+
+.testimonial-content p {
+    font-size: 1.125rem;
+    color: var(--text-color);
+    font-style: italic;
+    margin: 0;
+}
+
+.testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.author-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.author-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.author-info h5 {
+    color: var(--text-color);
+    margin-bottom: 0.25rem;
+}
+
+.author-info span {
+    color: var(--light-text);
+    font-size: 0.875rem;
+}
+
+/* Trust Indicators */
+.trust-indicators {
+    padding-top: 3rem;
+    border-top: 1px solid rgba(76, 175, 80, 0.1);
+}
+
+.certification-badges {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin-bottom: 3rem;
+}
+
+.certification-badges img {
+    height: 60px;
+    width: auto;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+}
+
+.certification-badges img:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+}
+
+.partner-logos {
+    text-align: center;
+}
+
+.partner-logos span {
+    display: block;
+    color: var(--light-text);
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.logo-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+    align-items: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.logo-grid img {
+    width: 100%;
+    height: auto;
+    max-height: 40px;
+    object-fit: contain;
+    opacity: 0.6;
+    transition: all 0.3s ease;
+    filter: grayscale(100%);
+}
+
+.logo-grid img:hover {
+    opacity: 1;
+    filter: none;
+    transform: translateY(-2px);
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+    .impact-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .logo-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .cta-section {
+        padding: 6rem 0;
+    }
+
+    .cta-actions {
+        flex-direction: column;
+        max-width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .impact-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .impact-card {
+        padding: 1.5rem;
+    }
+
+    .testimonial-card {
+        padding: 1.5rem;
+    }
+
+    .certification-badges {
+        flex-wrap: wrap;
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .cta-section {
+        padding: 4rem 0;
+    }
+
+    .impact-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.25rem;
+    }
+
+    .testimonial-content {
+        padding-left: 0;
+        text-align: center;
+    }
+
+    .testimonial-content i {
+        position: static;
+        display: block;
+        margin-bottom: 1rem;
+    }
+
+    .testimonial-author {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .certification-badges img {
+        height: 40px;
+    }
+
+    .logo-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+
+/* Animation Classes */
+.cta-content {
+    opacity: 0;
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.impact-card {
+    opacity: 0;
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.impact-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.impact-card:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+    </main>
+    <script>
+      // Document Ready Handler
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAll();
+    loadHeader();
+});
+
+// Initialize All Functions
+function initializeAll() {
+    initializeAnimations();
+    initializeCharts();
+    setupInteractions();
+    initializeWellnessMetrics();
+    initializeChallenges();
+}
+
+// Header Loading Function
+async function loadHeader() {
+    const headerContainer = document.getElementById('header-container');
+    
+    try {
+        const response = await fetch('header.html');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const html = await response.text();
+        headerContainer.innerHTML = html;
+        initializeMobileMenu();
+    } catch (error) {
+        console.error('Error loading header:', error);
+        headerContainer.innerHTML = `
+            <header class="main-header">
+                <div class="container">
+                    <div class="header-content">
+                        <a href="/" class="logo">
+                            <span>Workwise Pro</span>
+                        </a>
+                        <nav class="main-nav">
+                            <ul class="nav-list">
+                                <li><a href="#home">Home</a></li>
+                                <li><a href="#contact">Contact</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </header>
+        `;
+    }
+}
+
+// Mobile Menu Initialization
+function initializeMobileMenu() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mainNav = document.getElementById('main-nav');
+    const menuOverlay = document.getElementById('menu-overlay');
+    
+    if (mobileMenu && mainNav) {
+        let isMenuOpen = false;
+
+        const toggleMenu = (show) => {
+            isMenuOpen = show;
+            mobileMenu.classList.toggle('active', show);
+            mainNav.classList.toggle('active', show);
+            menuOverlay?.classList.toggle('active', show);
+            document.body.style.overflow = show ? 'hidden' : '';
+        };
+
+        mobileMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMenu(!isMenuOpen);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
+                toggleMenu(false);
+            }
+        });
+    }
+}
+
+// Initialize Charts
+function initializeCharts() {
+    const chartDefaults = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: 'rgba(76, 175, 80, 0.9)',
+                titleFont: { size: 12 },
+                bodyFont: { size: 11 },
+                padding: 8,
+                cornerRadius: 4
+            }
+        }
+    };
+
+    // Activity Chart
+    const activityCtx = document.getElementById('utilizationChart')?.getContext('2d');
+    if (activityCtx) {
+        new Chart(activityCtx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Activity Level',
+                    data: [65, 72, 86, 81, 84, 78, 80],
+                    borderColor: '#4CAF50',
+                    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                ...chartDefaults,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: value => `${value}%`
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+// Initialize Wellness Metrics
+function initializeWellnessMetrics() {
+    // Animate Progress Rings
+    document.querySelectorAll('.stat-circle path.progress').forEach(ring => {
+        const length = ring.getTotalLength();
+        ring.style.strokeDasharray = `${length} ${length}`;
+        ring.style.strokeDashoffset = length;
+
+        setTimeout(() => {
+            const progress = ring.getAttribute('stroke-dasharray').split(',')[0];
+            const offset = length - (length * progress / 100);
+            ring.style.strokeDashoffset = offset;
+        }, 300);
+    });
+
+    // Initialize Activity Metrics
+    document.querySelectorAll('.progress-bar .progress').forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0';
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 300);
+    });
+
+    // Period Selector Functionality
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const parent = btn.parentElement;
+            parent.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            updateMetrics(btn.textContent.toLowerCase());
+        });
+    });
+}
+
+// Initialize Challenges
+function initializeChallenges() {
+    // Challenge Join Button Functionality
+    document.querySelectorAll('.join-btn, .track-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const challenge = btn.closest('.challenge-card');
+            const isJoined = btn.classList.contains('joined');
+            
+            if (isJoined) {
+                btn.textContent = 'Join Challenge';
+                btn.classList.remove('joined');
+            } else {
+                btn.textContent = 'Joined ✓';
+                btn.classList.add('joined');
+                showNotification('Successfully joined the challenge!');
+            }
+        });
+    });
+
+    // Resource Filters
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const filters = btn.parentElement;
+            filters.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filterResources(btn.textContent.toLowerCase());
+        });
+    });
+}
+
+// Update Metrics Based on Period
+function updateMetrics(period) {
+    const metrics = {
+        week: { steps: '8,547', exercise: '45', sleep: '7.5' },
+        month: { steps: '9,123', exercise: '52', sleep: '7.8' },
+        year: { steps: '8,934', exercise: '48', sleep: '7.6' }
+    };
+
+    const data = metrics[period];
+    if (data) {
+        Object.entries(data).forEach(([key, value]) => {
+            const element = document.querySelector(`.metric-card.${key} h4`);
+            if (element) element.textContent = value;
+        });
+    }
+}
+
+// Filter Resources
+function filterResources(category) {
+    const resources = document.querySelectorAll('.resource-card');
+    resources.forEach(resource => {
+        const shouldShow = category === 'all' || resource.dataset.category === category;
+        resource.style.display = shouldShow ? 'flex' : 'none';
+    });
+}
+
+// Show Notification
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('show');
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 2000);
+    }, 100);
+}
+
+// Animation Handler
+function initializeAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+                if (entry.target.classList.contains('progress-fill')) {
+                    const width = entry.target.dataset.progress;
+                    entry.target.style.width = width;
+                }
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll(
+        '.feature-card, .challenge-card, .resource-card, .impact-card, .cta-content'
+    ).forEach(el => observer.observe(el));
+}
+
+// Setup Interactive Elements
+function setupInteractions() {
+    // Challenge Cards
+    document.querySelectorAll('.challenge-card').forEach(card => {
+        card.addEventListener('mouseenter', () => card.classList.add('hover'));
+        card.addEventListener('mouseleave', () => card.classList.remove('hover'));
+    });
+
+    // Resource Cards
+    document.querySelectorAll('.resource-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const resourceUrl = card.dataset.url;
+            if (resourceUrl) window.location.href = resourceUrl;
+        });
+    });
+}
+
+// Watson Assistant Integration
+window.watsonAssistantChatOptions = {
+    integrationID: "0d8f63ed-b096-4124-b9dc-da7feef326c6",
+    region: "au-syd",
+    serviceInstanceID: "0ba22484-af3d-464a-8bbf-eb6a296701bf",
+    onLoad: async (instance) => { await instance.render(); }
+};
+
+setTimeout(() => {
+    const script = document.createElement('script');
+    script.src = `https://web-chat.global.assistant.watson.appdomain.cloud/versions/${
+        window.watsonAssistantChatOptions.clientVersion || 'latest'
+    }/WatsonAssistantChatEntry.js`;
+    document.head.appendChild(script);
+}, 0);
+    </script>
+</body>
+</html>
