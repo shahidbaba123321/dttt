@@ -728,35 +728,130 @@ body {
                 </div>
             </div>
 
-            <div class="admin-features">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-magic"></i>
-                    </div>
-                    <h3>Automated Enrollment</h3>
-                    <ul class="feature-list">
-                        <li><i class="fas fa-check"></i>Smart Forms</li>
-                        <li><i class="fas fa-check"></i>Data Validation</li>
-                        <li><i class="fas fa-check"></i>Instant Processing</li>
-                        <li><i class="fas fa-check"></i>Status Tracking</li>
-                    </ul>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <h3>Real-Time Updates</h3>
-                    <ul class="feature-list">
-                        <li><i class="fas fa-check"></i>Live Sync</li>
-                        <li><i class="fas fa-check"></i>Provider Integration</li>
-                        <li><i class="fas fa-check"></i>Change Tracking</li>
-                        <li><i class="fas fa-check"></i>Audit Trail</li>
-                    </ul>
-                </div>
+            <!-- Updated Feature Cards HTML -->
+<div class="automation-features">
+    <div class="feature-card automated-enrollment">
+        <div class="feature-header">
+            <div class="feature-icon">
+                <i class="fas fa-magic"></i>
             </div>
+            <h3>Automated Enrollment</h3>
+        </div>
+        <div class="feature-content">
+            <ul class="feature-list">
+                <li class="feature-item">
+                    <div class="item-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="item-content">
+                        <h4>Smart Forms</h4>
+                        <p>Intelligent form filling with predictive inputs</p>
+                    </div>
+                    <div class="item-status">
+                        <span class="status-dot active"></span>
+                    </div>
+                </li>
+                <li class="feature-item">
+                    <div class="item-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="item-content">
+                        <h4>Data Validation</h4>
+                        <p>Real-time verification of all entries</p>
+                    </div>
+                    <div class="item-status">
+                        <span class="status-dot active"></span>
+                    </div>
+                </li>
+                <li class="feature-item">
+                    <div class="item-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="item-content">
+                        <h4>Instant Processing</h4>
+                        <p>Immediate enrollment confirmation</p>
+                    </div>
+                    <div class="item-status">
+                        <span class="status-dot active"></span>
+                    </div>
+                </li>
+                <li class="feature-item">
+                    <div class="item-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="item-content">
+                        <h4>Status Tracking</h4>
+                        <p>Monitor enrollment progress in real-time</p>
+                    </div>
+                    <div class="item-status">
+                        <span class="status-dot active"></span>
+                    </div>
+                </li>
+            </ul>
         </div>
     </div>
+
+    <div class="feature-card real-time-updates">
+        <div class="feature-header">
+            <div class="feature-icon">
+                <i class="fas fa-sync-alt"></i>
+            </div>
+            <h3>Real-Time Updates</h3>
+        </div>
+        <div class="feature-content">
+            <ul class="feature-list">
+                <li class="feature-item">
+                    <div class="item-icon">
+                        <i class="fas fa-broadcast-tower"></i>
+                    </div>
+                    <div class="item-content">
+                        <h4>Live Sync</h4>
+                        <p>Instant data synchronization across platforms</p>
+                    </div>
+                    <div class="item-status">
+                        <span class="status-indicator pulsing"></span>
+                    </div>
+                </li>
+                <li class="feature-item">
+                    <div class="item-icon">
+                        <i class="fas fa-plug"></i>
+                    </div>
+                    <div class="item-content">
+                        <h4>Provider Integration</h4>
+                        <p>Seamless connection with benefit providers</p>
+                    </div>
+                    <div class="item-status">
+                        <span class="status-indicator connected"></span>
+                    </div>
+                </li>
+                <li class="feature-item">
+                    <div class="item-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="item-content">
+                        <h4>Change Tracking</h4>
+                        <p>Complete history of all modifications</p>
+                    </div>
+                    <div class="item-status">
+                        <span class="status-indicator active"></span>
+                    </div>
+                </li>
+                <li class="feature-item">
+                    <div class="item-icon">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div class="item-content">
+                        <h4>Audit Trail</h4>
+                        <p>Detailed logging of all system activities</p>
+                    </div>
+                    <div class="item-status">
+                        <span class="status-indicator secure"></span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
 </section>
 <style>
   /* Benefits Administration Section Styles */
@@ -1169,6 +1264,273 @@ body {
     }
 }
 </style>
+            <style>
+                /* Enhanced Feature Cards Styles */
+.automation-features {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.feature-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+}
+
+.feature-header {
+    padding: 2rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.feature-icon {
+    width: 56px;
+    height: 56px;
+    background: var(--primary-color);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 15px rgba(41, 98, 255, 0.2);
+}
+
+.feature-header h3 {
+    color: var(--text-color);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.feature-content {
+    padding: 2rem;
+}
+
+.feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+    background: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transform: translateX(5px);
+}
+
+.item-icon {
+    width: 40px;
+    height: 40px;
+    background: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.item-content {
+    flex: 1;
+}
+
+.item-content h4 {
+    color: var(--text-color);
+    font-size: 1rem;
+    margin: 0 0 0.25rem;
+}
+
+.item-content p {
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.item-status {
+    display: flex;
+    align-items: center;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success-color);
+}
+
+.status-dot.active {
+    animation: pulse 2s infinite;
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    position: relative;
+}
+
+.status-indicator.pulsing {
+    background: var(--primary-color);
+    animation: pulse 2s infinite;
+}
+
+.status-indicator.connected {
+    background: var(--success-color);
+}
+
+.status-indicator.active {
+    background: var(--warning-color);
+}
+
+.status-indicator.secure {
+    background: var(--primary-color);
+}
+
+.status-indicator::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    opacity: 0.2;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.5; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+    .automation-features {
+        gap: 1.5rem;
+    }
+
+    .feature-header {
+        padding: 1.5rem;
+    }
+
+    .feature-content {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .automation-features {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .feature-item {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.5rem;
+    }
+
+    .item-icon {
+        margin-bottom: 1rem;
+    }
+
+    .item-status {
+        margin-top: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .feature-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.25rem;
+    }
+
+    .feature-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.25rem;
+    }
+
+    .feature-content {
+        padding: 1.25rem;
+    }
+}
+
+/* Animation Classes */
+.feature-card {
+    opacity: 0;
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.feature-item {
+    opacity: 0;
+    animation: fadeInRight 0.6s ease forwards;
+}
+
+.feature-item:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.feature-item:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.feature-item:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+                </style>
 <!-- Insurance Integration Section -->
 <section class="insurance-section">
     <div class="container">
