@@ -90,7 +90,7 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// Login endpoint
+// Updated Login endpoint
 app.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -116,17 +116,24 @@ app.post('/api/login', async (req, res) => {
             });
         }
 
-        // Generate token
+        // Generate token with user information
         const token = jwt.sign(
-            { userId: user._id, role: user.role },
+            { 
+                userId: user._id, 
+                email: user.email,
+                role: user.role 
+            },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
 
+        // Send response with user role and email
         res.json({ 
             success: true, 
             token,
-            role: user.role 
+            role: user.role,
+            email: user.email,
+            message: 'Login successful'
         });
 
     } catch (error) {
