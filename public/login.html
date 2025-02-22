@@ -53,26 +53,29 @@ body {
     width: 100%;
 }
 
-
 .login-section {
-    padding-top: 100px; /* Adjust based on header height */
-    min-height: calc(100vh - 100px);
+    flex: 1;
+    padding: 8rem 2rem 4rem;
     display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+    min-height: calc(100vh - 12rem);
 }
 
 .login-container {
-    width: 90%;
     max-width: 1200px;
-    margin: 2rem auto;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
     background: white;
     border-radius: 24px;
-    overflow: hidden;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    position: relative;
 }
-    
+
 .login-form {
     padding: 3rem;
 }
@@ -107,13 +110,13 @@ body {
 .form-group input,
 .form-group select {
     width: 100%;
-    padding: 1rem 2.5rem;
+    padding: 1rem;
+    padding-left: 3rem;
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 12px;
     font-size: 1rem;
     transition: all 0.3s ease;
     background: white;
-    box-sizing: border-box;
 }
 
 .form-group input:focus,
@@ -129,12 +132,6 @@ body {
     top: 50%;
     transform: translateY(-50%);
     color: var(--light-text);
-    pointer-events: none;
-}
-select {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
 }
 
 .custom-select {
@@ -146,10 +143,9 @@ select {
     right: 1rem;
     top: 50%;
     transform: translateY(-50%);
-    pointer-events: none;
     color: var(--light-text);
+    pointer-events: none;
 }
-
 
 .btn {
     width: 100%;
@@ -288,7 +284,7 @@ select {
 </head>
 <body>
     <!-- Header Container -->
-    <header class="main-header">
+     <header class="main-header">
         <div class="container">
             <div class="header-content">
                 <a href="/" class="logo">
@@ -296,8 +292,10 @@ select {
                 </a>
                 <nav class="main-nav">
                     <ul class="nav-list">
-                        <li><a href="index.html">Home</a></li>
+                        <li><a href="https://main.d1cfw592vg73f.amplifyapp.co">Home</a></li>
+                        
                         <li><a href="features.html">Features</a></li>
+                        
                         <li><a href="signup.html" class="nav-cta">Sign Up</a></li>
                     </ul>
                 </nav>
@@ -309,8 +307,8 @@ select {
             </div>
         </div>
     </header>
-    <style>
-        /* Header Styles */
+<style>
+    /* Header Styles */
 .main-header {
     position: fixed;
     top: 0;
@@ -419,8 +417,7 @@ select {
         padding: 0.5rem 0;
     }
 }
-    </style>
-
+</style>
     <!-- Login Section -->
     <section class="login-section">
         <div class="login-container">
@@ -647,7 +644,7 @@ select {
     transform: scale(1.2);
 }
 
-/* Fix password toggle button */
+/* Password Toggle Button */
 .password-toggle {
     position: absolute;
     right: 1rem;
@@ -658,7 +655,6 @@ select {
     color: var(--light-text);
     cursor: pointer;
     padding: 0.5rem;
-    z-index: 2;
 }
 
 .password-toggle:hover {
@@ -821,6 +817,7 @@ function initializeAll() {
     setupEventListeners();
 }
 
+// Header Loading Function
 // Mobile Menu Functionality
 document.addEventListener('DOMContentLoaded', function() {
     const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
@@ -856,6 +853,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+    
 // Slider Functionality
 function initializeSlider() {
     let currentSlideIndex = 0;
