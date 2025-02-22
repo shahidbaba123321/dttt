@@ -624,105 +624,68 @@ body {
 }
     /* Benefits Administration Section */
 .benefits-admin-section {
-    padding: var(--section-spacing) 0;
-    background: linear-gradient(to bottom, #F8FAFC, #FFFFFF);
-    position: relative;
+    padding: 4rem 0;
+    background: #FFFFFF;
 }
 
-/* Section Header */
 .section-header {
     text-align: center;
-    max-width: 800px;
-    margin: 0 auto 4rem;
+    margin-bottom: 4rem;
 }
 
-.header-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1.25rem;
-    background: rgba(59, 130, 246, 0.1);
-    color: var(--integration-primary);
-    border-radius: 50px;
-    margin-bottom: 1.5rem;
-    font-weight: 500;
-}
-    .header-badge i {
-    font-size: 1.1rem;
-}
-    
 .section-header h2 {
-    font-size: clamp(2rem, 4vw, 2.5rem);
-    color: var(--integration-secondary);
+    color: #1E40AF;
+    font-size: 2.5rem;
+    font-weight: 700;
     margin-bottom: 1rem;
-    line-height: 1.2;
 }
 
 .section-header p {
-    color: var(--light-text);
-    font-size: clamp(1rem, 2vw, 1.125rem);
-    max-width: 600px;
+    color: #64748B;
+    font-size: 1.125rem;
+    max-width: 700px;
     margin: 0 auto;
 }
 
-
-/* Enrollment Platform */
 .enrollment-platform {
     display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 3rem;
-    margin-top: 4rem;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
 }
 
 .enrollment-dashboard {
-    background: white;
-    border-radius: 24px;
-    box-shadow: 0 10px 40px rgba(59, 130, 246, 0.08);
-    overflow: hidden;
-    border: 1px solid rgba(59, 130, 246, 0.1);
+    background: #FFFFFF;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
-
-/* Dashboard Tabs */
-/* Dashboard Tabs */
 .dashboard-tabs {
     display: flex;
     gap: 0.5rem;
     padding: 1rem;
-    background: #F8FAFC;
-    border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+    border-bottom: 1px solid #E2E8F0;
 }
 
 .tab-btn {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.875rem 1.5rem;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
     border: none;
     background: none;
-    color: var(--light-text);
-    cursor: pointer;
-    border-radius: 12px;
-    transition: all 0.3s ease;
+    color: #64748B;
     font-weight: 500;
-}
-    .tab-btn i {
-    font-size: 1.1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .tab-btn.active {
-    background: var(--integration-primary);
-    color: white;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-}
-    
-.tab-btn:hover:not(.active) {
-    background: rgba(59, 130, 246, 0.1);
-    color: var(--integration-primary);
+    background: #3B82F6;
+    color: #FFFFFF;
 }
 
-/* Enrollment Interface */
-.enrollment-interface {
+.enrollment-content {
     padding: 2rem;
 }
 
@@ -734,44 +697,27 @@ body {
 }
 
 .enrollment-header h3 {
-    color: var(--integration-secondary);
+    color: #1E40AF;
     font-size: 1.5rem;
     font-weight: 600;
 }
 
-.enrollment-status {
+.active-period {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1.25rem;
-    background: rgba(16, 185, 129, 0.1);
-    color: var(--success-color);
-    border-radius: 50px;
-    font-weight: 500;
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--success-color);
-}
-
-.status-dot.active {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--success-color);
-    animation: pulse 2s infinite;
-}
-
-
-/* Plan Comparison */
-.plan-comparison {
-    background: #F8FAFC;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #ECFDF5;
+    color: #059669;
     border-radius: 20px;
-    padding: 2rem;
-    margin-bottom: 2.5rem;
+    font-size: 0.875rem;
+}
+
+.active-period .dot {
+    width: 8px;
+    height: 8px;
+    background: #059669;
+    border-radius: 50%;
 }
 
 .comparison-header {
@@ -780,346 +726,205 @@ body {
     align-items: center;
     margin-bottom: 2rem;
 }
+
 .comparison-header h4 {
-    color: var(--integration-secondary);
+    color: #1E40AF;
     font-size: 1.25rem;
     font-weight: 600;
 }
 
-.view-controls {
+.view-toggle {
     display: flex;
-    gap: 0.5rem;
-    background: white;
+    background: #F1F5F9;
     padding: 0.25rem;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08);
+    border-radius: 8px;
 }
 
-.view-btn {
-    padding: 0.5rem 1.25rem;
+.toggle-btn {
+    padding: 0.5rem 1rem;
     border: none;
     background: none;
-    color: var(--light-text);
-    cursor: pointer;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+    color: #64748B;
     font-weight: 500;
-}
-    
-.view-btn.active {
-    background: var(--integration-primary);
-    color: white;
+    border-radius: 6px;
+    cursor: pointer;
 }
 
-/* Plans Grid */
+.toggle-btn.active {
+    background: #FFFFFF;
+    color: #3B82F6;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
 .plans-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
 }
 
-
 .plan-card {
-    background: white;
-    border-radius: 16px;
-    padding: 2rem;
-    transition: all 0.3s ease;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 1.5rem;
     position: relative;
-    border: 1px solid rgba(59, 130, 246, 0.1);
-    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.05);
-}
-    .plan-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 30px rgba(59, 130, 246, 0.1);
+    transition: all 0.3s ease;
 }
 
-
-.plan-card.recommended {
-    border: 2px solid var(--integration-primary);
-    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.15);
+.plan-card.featured {
+    border-color: #3B82F6;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
 }
 
-.plan-card:hover:not(.recommended) {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 30px rgba(59, 130, 246, 0.1);
-}
-.plan-badge {
+.popular-tag {
     position: absolute;
     top: -12px;
     left: 50%;
     transform: translateX(-50%);
-    background: var(--integration-primary);
-    color: white;
-    padding: 0.5rem 1.25rem;
+    background: #3B82F6;
+    color: #FFFFFF;
+    padding: 0.5rem 1rem;
     border-radius: 20px;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 500;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 }
 
-.plan-header {
-    text-align: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid rgba(59, 130, 246, 0.1);
-}
-
-.plan-header h5 {
-    color: var(--integration-secondary);
+.plan-card h5 {
+    color: #1E40AF;
     font-size: 1.25rem;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.price {
+    color: #3B82F6;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem;
+}
+
+.features li {
+    color: #64748B;
+    padding: 0.5rem 0;
+    font-size: 0.875rem;
+}
+
+.select-btn {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #3B82F6;
+    border-radius: 8px;
+    background: transparent;
+    color: #3B82F6;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.select-btn.primary {
+    background: #3B82F6;
+    color: #FFFFFF;
+}
+
+.automated-features {
+    background: #F8FAFC;
+    border-radius: 16px;
+    padding: 2rem;
+}
+
+.feature-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.feature-header i {
+    color: #3B82F6;
+    font-size: 1.5rem;
+}
+
+.feature-header h3 {
+    color: #1E40AF;
+    font-size: 1.25rem;
     font-weight: 600;
 }
 
-.plan-price {
-    font-size: 2rem;
-    color: var(--integration-primary);
-    font-weight: 700;
-}
-
-.plan-features {
-    margin-bottom: 2rem;
-}
-
-.plan-features ul {
+.feature-list {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-.plan-features li {
+.feature-list li {
     display: flex;
-    align-items: center;
     gap: 1rem;
-    padding: 0.75rem 0;
-    color: var(--text-color);
-    font-size: 0.95rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid #E2E8F0;
 }
 
-.plan-features i {
-    color: var(--integration-primary);
-    font-size: 1rem;
+.feature-list li:last-child {
+    border-bottom: none;
 }
 
-.select-btn {
-    width: 100%;
-    padding: 1rem;
-    border: 1px solid var(--integration-primary);
-    border-radius: 12px;
-    background: transparent;
-    color: var(--integration-primary);
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.select-btn.primary {
-    background: var(--integration-primary);
-    color: white;
-}
-
-.select-btn:hover {
-    background: var(--integration-primary);
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-}
-
-/* Enrollment Progress */
-.enrollment-progress {
-    background: #F8FAFC;
-    border-radius: 20px;
-    padding: 2rem;
-    margin-top: 2.5rem;
-}
-
-.progress-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.progress-header h4 {
-    color: var(--integration-secondary);
+.feature-list i {
+    color: #3B82F6;
     font-size: 1.25rem;
-    font-weight: 600;
 }
 
-.progress-status {
-    color: var(--integration-primary);
-    font-weight: 500;
-}
-
-.progress-steps {
-    display: flex;
-    justify-content: space-between;
-    position: relative;
-    padding: 0 1rem;
-}
-
-.progress-steps::before {
-    content: '';
-    position: absolute;
-    top: 24px;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: rgba(59, 130, 246, 0.1);
-    z-index: 1;
-}
-
-.step {
-    position: relative;
-    z-index: 2;
-    text-align: center;
-    flex: 1;
-}
-
-.step-icon {
-    width: 48px;
-    height: 48px;
-    background: white;
-    border: 2px solid rgba(59, 130, 246, 0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1rem;
-    color: var(--light-text);
-    transition: all 0.3s ease;
-}
-
-.step.completed .step-icon {
-    background: var(--integration-primary);
-    border-color: var(--integration-primary);
-    color: white;
-}
-
-.step.active .step-icon {
-    border-color: var(--integration-primary);
-    color: var(--integration-primary);
-}
-
-.step-content h5 {
-    color: var(--integration-secondary);
-    font-size: 0.95rem;
+.feature-list h4 {
+    color: #1E40AF;
+    font-size: 1rem;
     margin-bottom: 0.25rem;
-    font-weight: 600;
 }
 
-.step-content p {
-    color: var(--light-text);
+.feature-list p {
+    color: #64748B;
     font-size: 0.875rem;
     margin: 0;
 }
-    
 
-/* Responsive Styles for Benefits Administration */
-@media (max-width: 1200px) {
-    .enrollment-platform {
-        gap: 2rem;
-    }
-
-    .plans-grid {
-        gap: 1rem;
-    }
-
-    .plan-card {
-        padding: 1.25rem;
-    }
-}
-
-@media (max-width: 992px) {
+@media (max-width: 1024px) {
     .enrollment-platform {
         grid-template-columns: 1fr;
     }
-
+    
     .plans-grid {
         grid-template-columns: repeat(2, 1fr);
-    }
-
-    .enrollment-dashboard {
-        max-width: 800px;
-        margin: 0 auto;
     }
 }
 
 @media (max-width: 768px) {
-     .dashboard-tabs {
-        overflow-x: auto;
-        padding: 0.75rem;
-    }
-
-    .tab-btn {
-        padding: 0.75rem 1rem;
-        white-space: nowrap;
-    }
-
-    .enrollment-header {
-        flex-direction: column;
-        gap: 1rem;
-        text-align: center;
-    }
-
-
-  .plans-grid {
+    .plans-grid {
         grid-template-columns: 1fr;
     }
-
-    .progress-steps {
+    
+    .enrollment-header {
         flex-direction: column;
-        gap: 2rem;
-    }
-
-    .progress-steps::before {
-        display: none;
-    }
-
-    .step {
-        display: flex;
-        align-items: center;
+        align-items: flex-start;
         gap: 1rem;
-        text-align: left;
-    }
-
-    .step-icon {
-        margin: 0;
-    }
-    .plan-card.recommended {
-        transform: none;
     }
 }
 
 @media (max-width: 480px) {
-    .section-header {
-        margin-bottom: 2rem;
+    .dashboard-tabs {
+        overflow-x: auto;
     }
-
-    .enrollment-interface {
+    
+    .enrollment-content {
         padding: 1rem;
     }
-
-    .plan-comparison,
-    .enrollment-progress {
-        padding: 1.25rem;
-    }
-
-
+    
     .comparison-header {
         flex-direction: column;
         gap: 1rem;
     }
-
-     .view-controls {
-        width: 100%;
-    }
-
-    .plan-card {
-        padding: 1.25rem;
-    }
-}
-    /* Animations */
+}    /* Animations */
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -2065,10 +1870,6 @@ body {
 <section class="benefits-admin-section">
     <div class="container">
         <div class="section-header">
-            <div class="header-badge">
-                <i class="fas fa-clipboard-list"></i>
-                <span>Benefits Administration</span>
-            </div>
             <h2>Comprehensive Benefits Administration</h2>
             <p>Simplify the management of employee benefits with automated enrollment and real-time updates</p>
         </div>
@@ -2090,11 +1891,11 @@ body {
                     </button>
                 </div>
 
-                <div class="enrollment-interface">
+                <div class="enrollment-content">
                     <div class="enrollment-header">
                         <h3>Open Enrollment 2024</h3>
-                        <div class="enrollment-status">
-                            <span class="status-dot active"></span>
+                        <div class="active-period">
+                            <span class="dot"></span>
                             Active Period: Oct 15 - Nov 30
                         </div>
                     </div>
@@ -2102,188 +1903,80 @@ body {
                     <div class="plan-comparison">
                         <div class="comparison-header">
                             <h4>Health Plan Comparison</h4>
-                            <div class="view-controls">
-                                <button class="view-btn active">Grid</button>
-                                <button class="view-btn">List</button>
+                            <div class="view-toggle">
+                                <button class="toggle-btn active">Grid</button>
+                                <button class="toggle-btn">List</button>
                             </div>
                         </div>
 
                         <div class="plans-grid">
                             <div class="plan-card">
-                                <div class="plan-header">
-                                    <h5>Basic Plan</h5>
-                                    <span class="plan-price">$50/mo</span>
-                                </div>
-                                <div class="plan-features">
-                                    <ul>
-                                        <li>
-                                            <i class="fas fa-check"></i>
-                                            General Health Coverage
-                                        </li>
-                                        <li>
-                                            <i class="fas fa-check"></i>
-                                            Prescription Drug Plan
-                                        </li>
-                                        <li>
-                                            <i class="fas fa-check"></i>
-                                            Preventive Care
-                                        </li>
-                                    </ul>
-                                </div>
+                                <h5>Basic Plan</h5>
+                                <div class="price">$50/mo</div>
+                                <ul class="features">
+                                    <li>General Health Coverage</li>
+                                    <li>Prescription Drug Plan</li>
+                                    <li>Preventive Care</li>
+                                </ul>
                                 <button class="select-btn">Select Plan</button>
                             </div>
 
-                            <div class="plan-card recommended">
-                                <div class="plan-badge">Popular Choice</div>
-                                <div class="plan-header">
-                                    <h5>Premium Plan</h5>
-                                    <span class="plan-price">$85/mo</span>
-                                </div>
-                                <div class="plan-features">
-                                    <ul>
-                                        <li>
-                                            <i class="fas fa-check"></i>
-                                            Enhanced Health Coverage
-                                        </li>
-                                        <li>
-                                            <i class="fas fa-check"></i>
-                                            Extended Drug Coverage
-                                        </li>
-                                        <li>
-                                            <i class="fas fa-check"></i>
-                                            Specialist Visits
-                                        </li>
-                                        <li>
-                                            <i class="fas fa-check"></i>
-                                            Mental Health Support
-                                        </li>
-                                    </ul>
-                                </div>
+                            <div class="plan-card featured">
+                                <div class="popular-tag">Popular Choice</div>
+                                <h5>Premium Plan</h5>
+                                <div class="price">$85/mo</div>
+                                <ul class="features">
+                                    <li>Enhanced Health Coverage</li>
+                                    <li>Extended Drug Coverage</li>
+                                    <li>Specialist Visits</li>
+                                    <li>Mental Health Support</li>
+                                </ul>
                                 <button class="select-btn primary">Select Plan</button>
                             </div>
 
                             <div class="plan-card">
-                                <div class="plan-header">
-                                    <h5>Family Plan</h5>
-                                    <span class="plan-price">$120/mo</span>
-                                </div>
-                                <div class="plan-features">
-                                    <ul>
-                                        <li>
-                                            <i class="fas fa-check"></i>
-                                            Family Coverage
-                                        </li>
-                                        <li>
-                                            <i class="fas fa-check"></i>
-                                            Dental & Vision
-                                        </li>
-                                        <li>
-                                            <i class="fas fa-check"></i>
-                                            Family Counseling
-                                        </li>
-                                    </ul>
-                                </div>
+                                <h5>Family Plan</h5>
+                                <div class="price">$120/mo</div>
+                                <ul class="features">
+                                    <li>Family Coverage</li>
+                                    <li>Dental & Vision</li>
+                                    <li>Family Counseling</li>
+                                </ul>
                                 <button class="select-btn">Select Plan</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="enrollment-progress">
-                        <div class="progress-header">
-                            <h4>Enrollment Progress</h4>
-                            <span class="progress-status">75% Complete</span>
-                        </div>
-                        <div class="progress-steps">
-                            <div class="step completed">
-                                <div class="step-icon">
-                                    <i class="fas fa-check"></i>
-                                </div>
-                                <div class="step-content">
-                                    <h5>Personal Info</h5>
-                                    <p>Basic details verified</p>
-                                </div>
-                            </div>
-                            <div class="step completed">
-                                <div class="step-icon">
-                                    <i class="fas fa-check"></i>
-                                </div>
-                                <div class="step-content">
-                                    <h5>Plan Selection</h5>
-                                    <p>Health plan chosen</p>
-                                </div>
-                            </div>
-                            <div class="step active">
-                                <div class="step-icon">
-                                    <i class="fas fa-pen"></i>
-                                </div>
-                                <div class="step-content">
-                                    <h5>Dependents</h5>
-                                    <p>Add family members</p>
-                                </div>
-                            </div>
-                            <div class="step">
-                                <div class="step-icon">
-                                    <i class="fas fa-file-signature"></i>
-                                </div>
-                                <div class="step-content">
-                                    <h5>Review & Submit</h5>
-                                    <p>Final confirmation</p>
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-                        <!-- Automation Features -->
-            <div class="automation-features">
-                <div class="feature-card automated-enrollment">
-                    <div class="feature-header">
-                        <div class="feature-icon">
-                            <i class="fas fa-magic"></i>
-                        </div>
-                        <h3>Automated Enrollment</h3>
-                    </div>
-                    <div class="feature-content">
-                        <ul class="feature-list">
-                            <li class="feature-item">
-                                <div class="item-icon">
-                                    <i class="fas fa-file-alt"></i>
-                                </div>
-                                <div class="item-content">
-                                    <h4>Smart Forms</h4>
-                                    <p>Intelligent form filling with predictive inputs</p>
-                                </div>
-                                <div class="item-status">
-                                    <span class="status-dot active"></span>
-                                </div>
-                            </li>
-                            <li class="feature-item">
-                                <div class="item-icon">
-                                    <i class="fas fa-shield-alt"></i>
-                                </div>
-                                <div class="item-content">
-                                    <h4>Data Validation</h4>
-                                    <p>Real-time verification of all entries</p>
-                                </div>
-                                <div class="item-status">
-                                    <span class="status-dot active"></span>
-                                </div>
-                            </li>
-                            <li class="feature-item">
-                                <div class="item-icon">
-                                    <i class="fas fa-bolt"></i>
-                                </div>
-                                <div class="item-content">
-                                    <h4>Instant Processing</h4>
-                                    <p>Immediate enrollment confirmation</p>
-                                </div>
-                                <div class="item-status">
-                                    <span class="status-dot active"></span>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
+
+            <div class="automated-features">
+                <div class="feature-header">
+                    <i class="fas fa-magic"></i>
+                    <h3>Automated Enrollment</h3>
                 </div>
+                <ul class="feature-list">
+                    <li>
+                        <i class="fas fa-file-alt"></i>
+                        <div>
+                            <h4>Smart Forms</h4>
+                            <p>Intelligent form filling with predictive inputs</p>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-shield-alt"></i>
+                        <div>
+                            <h4>Data Validation</h4>
+                            <p>Real-time verification of all entries</p>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-bolt"></i>
+                        <div>
+                            <h4>Instant Processing</h4>
+                            <p>Immediate enrollment confirmation</p>
+                        </div>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
