@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Admin Registration - Workwise Pro</title>
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+
         .container {
             max-width: 400px;
             margin: 50px auto;
@@ -13,19 +25,50 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
         .form-group {
             margin-bottom: 15px;
         }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
         .error-message {
-            color: red;
+            color: #dc3545;
             font-size: 14px;
             margin-top: 5px;
+            display: none;
         }
+
         .success-message {
-            color: green;
+            color: #28a745;
             font-size: 14px;
             margin-top: 5px;
+            display: none;
         }
+
         button {
             width: 100%;
             padding: 10px;
@@ -34,9 +77,17 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
         }
+
+        button:hover {
+            background: #0056b3;
+        }
+
         button:disabled {
             background: #cccccc;
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -46,22 +97,32 @@
         <form id="signup-form">
             <div class="form-group">
                 <label for="email">Email:</label>
-                <input type="email" id="email" required>
+                <input 
+                    type="email" 
+                    id="email" 
+                    required 
+                    placeholder="Enter your email"
+                >
             </div>
 
             <div class="form-group">
                 <label for="password">Password:</label>
-                <input type="password" id="password" required>
+                <input 
+                    type="password" 
+                    id="password" 
+                    required 
+                    placeholder="Enter your password"
+                >
             </div>
 
-            <div class="form-group">
-                <select id="role" style="display: none;">
-                    <option value="superadmin" selected>Super Admin</option>
-                </select>
-            </div>
+            <input 
+                type="hidden" 
+                id="role" 
+                value="superadmin"
+            >
 
-            <div id="errorMessage" class="error-message" style="display: none;"></div>
-            <div id="successMessage" class="success-message" style="display: none;"></div>
+            <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
 
             <button type="submit" id="submitButton">Create Super Admin Account</button>
         </form>
@@ -75,14 +136,16 @@
             const successMessage = document.getElementById('successMessage');
             const submitButton = document.getElementById('submitButton');
             
+            // Reset messages
             errorMessage.style.display = 'none';
             successMessage.style.display = 'none';
             submitButton.disabled = true;
 
+            // Get form data
             const formData = {
                 email: document.getElementById('email').value,
                 password: document.getElementById('password').value,
-                role: 'superadmin'
+                role: document.getElementById('role').value
             };
 
             try {
@@ -97,8 +160,10 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    successMessage.textContent = 'Registration successful!';
+                    successMessage.textContent = 'Registration successful! Redirecting to login...';
                     successMessage.style.display = 'block';
+                    
+                    // Redirect to login page after successful registration
                     setTimeout(() => {
                         window.location.href = '/login.html';
                     }, 2000);
@@ -111,6 +176,34 @@
                 errorMessage.style.display = 'block';
             } finally {
                 submitButton.disabled = false;
+            }
+        });
+
+        // Check if Super Admin exists when page loads
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'check@superadmin.com',
+                        password: 'check123',
+                        role: 'superadmin'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.message === 'Super Admin already exists') {
+                    document.querySelector('.container').innerHTML = `
+                        <h2>Access Denied</h2>
+                        <p style="text-align: center; color: #dc3545;">Super Admin account already exists.</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error checking Super Admin status:', error);
             }
         });
     </script>
