@@ -967,249 +967,372 @@ body {
 }
     /* Insurance Integration Section */
 .insurance-section {
-    padding: var(--section-spacing) 0;
-    background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
-    position: relative;
+    padding: 4rem 0;
+    background: #F8FAFC;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.section-header h2 {
+    color: #1E40AF;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.section-header p {
+    color: #3B82F6;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.section-header .subtitle {
+    color: #64748B;
+    font-size: 1.125rem;
+    display: block;
+    max-width: 700px;
+    margin: 0 auto;
 }
 
 .insurance-platform {
-    margin-top: 4rem;
-    display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .insurance-dashboard {
-    background: white;
-    border-radius: 24px;
-    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.08);
+    background: #FFFFFF;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     display: grid;
     grid-template-columns: 240px 1fr;
-    border: 1px solid rgba(59, 130, 246, 0.1);
 }
 
-/* Platform Navigation */
-.platform-navigation {
-    background: var(--background-color);
+.platform-nav {
     padding: 1.5rem;
-    border-right: 1px solid rgba(59, 130, 246, 0.1);
+    border-right: 1px solid #E2E8F0;
+    background: #F8FAFC;
 }
 
 .nav-item {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
     padding: 1rem;
-    border-radius: 12px;
-    color: var(--light-text);
+    color: #64748B;
+    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
     position: relative;
 }
 
 .nav-item.active {
-    background: var(--integration-primary);
-    color: white;
+    background: #3B82F6;
+    color: #FFFFFF;
 }
 
 .nav-item:not(.active):hover {
     background: rgba(59, 130, 246, 0.1);
-    color: var(--integration-primary);
+    color: #3B82F6;
 }
 
 .badge {
     position: absolute;
     right: 1rem;
-    background: rgba(59, 130, 246, 0.2);
-    color: var(--integration-primary);
+    background: rgba(59, 130, 246, 0.1);
+    color: #3B82F6;
     padding: 0.25rem 0.5rem;
     border-radius: 12px;
     font-size: 0.75rem;
 }
 
 .nav-item.active .badge {
-    background: white;
-    color: var(--integration-primary);
+    background: #FFFFFF;
+    color: #3B82F6;
 }
 
-/* Platform Content */
 .platform-content {
     padding: 2rem;
 }
 
-.content-header {
+.user-profile {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
 }
 
-.user-info {
+.profile-info {
     display: flex;
     align-items: center;
     gap: 1rem;
 }
 
-.user-avatar {
+.profile-avatar {
     width: 48px;
     height: 48px;
-    background: rgba(59, 130, 246, 0.1);
+    background: #F1F5F9;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--integration-primary);
+    color: #3B82F6;
 }
 
-.user-details h4 {
+.profile-info h4 {
+    color: #1E40AF;
+    font-size: 1.25rem;
     margin-bottom: 0.25rem;
-    color: var(--text-color);
 }
 
-.user-details p {
-    color: var(--light-text);
+.profile-info p {
+    color: #64748B;
     font-size: 0.875rem;
-    margin: 0;
 }
 
-/* Insurance Overview */
-.insurance-overview {
+.profile-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.status-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #ECFDF5;
+    color: #059669;
+    border-radius: 20px;
+    font-size: 0.875rem;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: #059669;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: #3B82F6;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background: #2563EB;
+}
+
+.coverage-details {
     display: grid;
     gap: 2rem;
 }
 
-.policy-cards {
-    display: grid;
-    gap: 1.5rem;
-}
-
 .policy-card {
-    background: var(--background-color);
-    border-radius: 16px;
-    overflow: hidden;
-    transition: all 0.3s ease;
+    background: #F8FAFC;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #E2E8F0;
 }
 
 .policy-card.active {
-    border: 2px solid var(--integration-primary);
+    border-color: #3B82F6;
 }
 
-.card-header {
-    padding: 1.5rem;
-    background: white;
+.policy-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+    margin-bottom: 1.5rem;
 }
 
-.provider-logo img {
-    height: 32px;
-    width: auto;
-}
-
-.policy-type {
-    color: var(--integration-primary);
+.provider-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #1E40AF;
     font-weight: 500;
 }
 
-.card-body {
-    padding: 1.5rem;
+.policy-status {
+    color: #3B82F6;
+    font-weight: 500;
 }
 
-/* Coverage Analytics */
-.coverage-analytics {
+.policy-info {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.info-item {
+    text-align: center;
+}
+
+.info-item .label {
+    display: block;
+    color: #64748B;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.info-item .value {
+    color: #1E40AF;
+    font-weight: 500;
+}
+
+.analytics-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
 }
 
 .analytics-card {
-    background: white;
+    background: #FFFFFF;
+    border-radius: 12px;
     padding: 1.5rem;
-    border-radius: 16px;
-    box-shadow: var(--box-shadow);
+    border: 1px solid #E2E8F0;
+}
+
+.analytics-card h4 {
+    color: #1E40AF;
+    font-size: 1.125rem;
+    margin-bottom: 1.5rem;
 }
 
 .chart-container {
     height: 200px;
-    margin-top: 1rem;
 }
 
-/* Enhanced Mobile Responsiveness */
-@media (max-width: 1200px) {
-    .insurance-platform {
-        gap: 2rem;
-    }
-
-    .coverage-analytics {
-        grid-template-columns: 1fr;
-    }
-
-    .platform-navigation {
-        width: 200px;
-    }
+.progress-ring-container {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
 }
 
-@media (max-width: 992px) {
-    .insurance-platform {
-        grid-template-columns: 1fr;
-    }
+.progress-ring {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
 
+.progress-ring svg {
+    transform: rotate(-90deg);
+}
+
+.progress-ring path {
+    fill: none;
+    stroke-width: 2.8;
+    stroke-linecap: round;
+}
+
+.progress-ring path:first-child {
+    stroke: #E2E8F0;
+}
+
+.progress-ring path.progress {
+    stroke: #3B82F6;
+    transition: stroke-dasharray 1s ease;
+}
+
+.progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.progress-text span {
+    display: block;
+    color: #1E40AF;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.progress-text small {
+    color: #64748B;
+    font-size: 0.75rem;
+}
+
+.progress-details {
+    flex: 1;
+}
+
+.detail {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background: #F8FAFC;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+}
+
+.detail span {
+    color: #64748B;
+    font-size: 0.875rem;
+}
+
+.detail strong {
+    color: #1E40AF;
+}
+
+@media (max-width: 1024px) {
     .insurance-dashboard {
         grid-template-columns: 1fr;
     }
 
-    .platform-navigation {
-        width: 100%;
+    .platform-nav {
         border-right: none;
-        border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+        border-bottom: 1px solid #E2E8F0;
         display: flex;
         overflow-x: auto;
         padding: 1rem;
-        -webkit-overflow-scrolling: touch;
     }
 
     .nav-item {
         flex: 0 0 auto;
-        margin-bottom: 0;
-        margin-right: 0.5rem;
     }
 
-    .badge {
-        position: static;
-        margin-left: 0.5rem;
+    .analytics-grid {
+        grid-template-columns: 1fr;
     }
 }
 
 @media (max-width: 768px) {
-    .content-header {
+    .user-profile {
         flex-direction: column;
+        align-items: flex-start;
         gap: 1rem;
-        text-align: center;
     }
 
-    .user-info {
+    .profile-actions {
+        width: 100%;
         flex-direction: column;
     }
 
-    .policy-cards {
+    .policy-info {
+        grid-template-columns: 1fr;
         gap: 1rem;
     }
 
-    .card-header {
-        flex-direction: column;
-        gap: 1rem;
-        text-align: center;
-    }
-
-    .coverage-analytics {
-        gap: 1rem;
-    }
-
-    .chart-container {
-        height: 180px;
+    .info-item {
+        text-align: left;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 }
 
@@ -1218,20 +1341,18 @@ body {
         padding: 1rem;
     }
 
-    .nav-item {
-        padding: 0.75rem;
-        font-size: 0.875rem;
-    }
-
-    .analytics-card {
-        padding: 1rem;
-    }
-
-    .chart-container {
-        height: 160px;
+    .progress-ring-container {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
     }
 }
 
+@keyframes pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+    100% { opacity: 1; transform: scale(1); }
+}
 /* Touch Device Optimizations */
 @media (hover: none) {
     .nav-item:active {
@@ -1275,75 +1396,92 @@ body {
 }
     /* Wellness Program Section */
 .wellness-section {
-    padding: var(--section-spacing) 0;
-    background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
-    position: relative;
+    padding: 4rem 0;
+    background: #F8FAFC;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.section-header h2 {
+    color: #1E40AF;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.section-header p {
+    color: #3B82F6;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.section-header .subtitle {
+    color: #64748B;
+    font-size: 1.125rem;
+    display: block;
+    max-width: 700px;
+    margin: 0 auto;
 }
 
 .wellness-platform {
-    margin-top: 4rem;
-    display: grid;
-    grid-template-columns: 1.5fr 1fr;
-    gap: 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-/* Wellness Dashboard */
 .wellness-dashboard {
-    background: white;
-    border-radius: 24px;
-    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.08);
+    background: #FFFFFF;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     overflow: hidden;
-    border: 1px solid rgba(59, 130, 246, 0.1);
 }
 
-/* Wellness Header */
 .wellness-header {
-    background: linear-gradient(135deg, var(--integration-primary), var(--integration-secondary));
+    background: linear-gradient(135deg, #3B82F6, #2563EB);
     padding: 2rem;
-    color: white;
-}
-
-.wellness-profile {
+    color: #FFFFFF;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.profile-stats {
+.wellness-score-card {
     display: flex;
     align-items: center;
     gap: 2rem;
 }
 
-/* Wellness Score Circle */
-.stat-circle {
+.score-ring {
     position: relative;
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
 }
 
-.stat-circle svg {
+.score-ring svg {
     transform: rotate(-90deg);
     width: 100%;
     height: 100%;
 }
 
-.stat-circle path {
+.score-ring path {
     fill: none;
     stroke-width: 2.8;
     stroke-linecap: round;
 }
 
-.stat-circle path:first-child {
+.score-ring path:first-child {
     stroke: rgba(255, 255, 255, 0.2);
 }
 
-.stat-circle path.progress {
-    stroke: white;
-    transition: stroke-dasharray 1.5s ease;
+.score-ring path.progress {
+    stroke: #FFFFFF;
+    transition: stroke-dasharray 1s ease;
 }
 
-.wellness-score {
+.score {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -1351,59 +1489,97 @@ body {
     text-align: center;
 }
 
-.wellness-score span {
-    font-size: 1.75rem;
-    font-weight: 600;
+.score span {
     display: block;
+    font-size: 2rem;
+    font-weight: 700;
     line-height: 1;
 }
 
-.wellness-score small {
+.score small {
     font-size: 0.75rem;
     opacity: 0.8;
-    margin-top: 0.25rem;
-    display: block;
 }
 
-/* Activity Tracking */
-.activity-tracking {
+.score-info h4 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.score-info p {
+    opacity: 0.8;
+    font-size: 1rem;
+}
+
+.wellness-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn.primary {
+    background: #FFFFFF;
+    color: #3B82F6;
+}
+
+.action-btn.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.wellness-content {
     padding: 2rem;
 }
 
-.tracking-header {
+.section-title {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.section-title h3 {
+    color: #1E40AF;
+    font-size: 1.25rem;
+    font-weight: 600;
 }
 
 .period-selector {
     display: flex;
-    gap: 0.5rem;
-    background: var(--background-color);
+    background: #F1F5F9;
     padding: 0.25rem;
-    border-radius: 12px;
+    border-radius: 8px;
 }
 
 .period-btn {
-    padding: 0.75rem 1.25rem;
+    padding: 0.5rem 1rem;
     border: none;
     background: none;
-    color: var(--light-text);
-    cursor: pointer;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+    color: #64748B;
     font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .period-btn.active {
-    background: var(--integration-primary);
-    color: white;
-    box-shadow: var(--box-shadow);
+    background: #FFFFFF;
+    color: #3B82F6;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-/* Activity Metrics */
-.activity-metrics {
+.metrics-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
@@ -1411,171 +1587,202 @@ body {
 }
 
 .metric-card {
-    background: var(--background-color);
+    background: #F8FAFC;
     padding: 1.5rem;
-    border-radius: 16px;
-    transition: all 0.3s ease;
-}
-
-.metric-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--box-shadow);
+    border-radius: 12px;
+    display: flex;
+    gap: 1rem;
 }
 
 .metric-icon {
     width: 48px;
     height: 48px;
-    background: white;
+    background: #FFFFFF;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--integration-primary);
+    color: #3B82F6;
     font-size: 1.25rem;
+}
+
+.metric-info {
+    flex: 1;
+}
+
+.metric-info .label {
+    display: block;
+    color: #64748B;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.metric-info h4 {
+    color: #1E40AF;
+    font-size: 1.5rem;
     margin-bottom: 1rem;
 }
 
-/* Wellness Challenges */
-.wellness-challenges {
-    padding: 0 2rem 2rem;
+.progress-bar {
+    height: 6px;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
 }
 
-.challenge-cards {
+.progress-bar .progress {
+    height: 100%;
+    background: #3B82F6;
+    border-radius: 3px;
+    transition: width 1s ease;
+}
+
+.challenge-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
 }
 
 .challenge-card {
-    background: white;
-    border-radius: 16px;
+    background: #FFFFFF;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: var(--box-shadow);
-    transition: all 0.3s ease;
+    border: 1px solid #E2E8F0;
 }
 
-.challenge-banner {
-    position: relative;
-    height: 120px;
-    overflow: hidden;
+.challenge-header {
+    padding: 1rem;
+    background: #F8FAFC;
+    border-bottom: 1px solid #E2E8F0;
 }
 
-.challenge-banner img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.challenge-badge {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: rgba(59, 130, 246, 0.9);
-    color: white;
+.challenge-tag {
+    display: inline-block;
     padding: 0.5rem 1rem;
+    background: rgba(59, 130, 246, 0.1);
+    color: #3B82F6;
     border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.challenge-content {
+    padding: 1.5rem;
+}
+
+.challenge-content h4 {
+    color: #1E40AF;
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.challenge-content p {
+    color: #64748B;
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+}
+
+.challenge-progress {
+    margin-bottom: 1.5rem;
+}
+
+.days-left {
+    display: block;
+    text-align: right;
+    color: #64748B;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+.challenge-participants {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.participant-avatars {
+    display: flex;
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    background: #3B82F6;
+    color: #FFFFFF;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 0.75rem;
-    backdrop-filter: blur(4px);
+    margin-right: -8px;
+    border: 2px solid #FFFFFF;
 }
 
-/* Enhanced Mobile Responsiveness */
-@media (max-width: 1200px) {
-    .wellness-platform {
-        gap: 2rem;
-    }
-
-    .activity-metrics {
-        gap: 1rem;
-    }
-
-    .challenge-cards {
-        gap: 1rem;
-    }
+.avatar.more {
+    background: #64748B;
 }
 
-@media (max-width: 992px) {
-    .wellness-platform {
-        grid-template-columns: 1fr;
-    }
+.join-btn, .track-btn {
+    padding: 0.75rem 1.25rem;
+    background: #3B82F6;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
 
-    .wellness-dashboard {
-        max-width: 800px;
-        margin: 0 auto;
-    }
+.join-btn:hover, .track-btn:hover {
+    background: #2563EB;
+}
 
-    .activity-metrics {
+@media (max-width: 1024px) {
+    .metrics-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .challenge-grid {
+        grid-template-columns: 1fr;
     }
 }
 
 @media (max-width: 768px) {
     .wellness-header {
-        padding: 1.5rem;
+        flex-direction: column;
+        gap: 2rem;
     }
 
-    .wellness-profile {
+    .wellness-score-card {
         flex-direction: column;
-        gap: 1.5rem;
         text-align: center;
     }
 
-    .profile-stats {
+    .wellness-actions {
+        width: 100%;
         flex-direction: column;
-        gap: 1.5rem;
     }
 
-    .period-selector {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        padding: 0.5rem;
-    }
-
-    .period-btn {
-        white-space: nowrap;
-    }
-
-    .activity-metrics {
-        grid-template-columns: 1fr;
-    }
-
-    .challenge-cards {
+    .metrics-grid {
         grid-template-columns: 1fr;
     }
 }
 
 @media (max-width: 480px) {
-    .wellness-header {
+    .wellness-content {
         padding: 1rem;
     }
 
-    .stat-circle {
-        width: 80px;
-        height: 80px;
-    }
-
-    .wellness-score span {
-        font-size: 1.5rem;
-    }
-
-    .activity-tracking {
-        padding: 1rem;
+    .period-selector {
+        overflow-x: auto;
     }
 
     .metric-card {
-        padding: 1rem;
-    }
-
-    .metric-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 1rem;
-    }
-
-    .wellness-challenges {
-        padding: 0 1rem 1rem;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
     }
 }
-
 /* Touch Device Optimizations */
 @media (hover: none) {
     .period-btn:active {
@@ -1986,17 +2193,14 @@ body {
 <section class="insurance-section">
     <div class="container">
         <div class="section-header">
-            <div class="header-badge">
-                <i class="fas fa-shield-alt"></i>
-                <span>Insurance Integration</span>
-            </div>
-            <h2>Integrated Insurance Platforms</h2>
-            <p>Connect seamlessly with leading insurance providers for comprehensive coverage management</p>
+            <h2>Insurance Integration</h2>
+            <p>Integrated Insurance Platforms</p>
+            <span class="subtitle">Connect seamlessly with leading insurance providers for comprehensive coverage management</span>
         </div>
 
         <div class="insurance-platform">
             <div class="insurance-dashboard">
-                <div class="platform-navigation">
+                <div class="platform-nav">
                     <div class="nav-item active">
                         <i class="fas fa-home"></i>
                         <span>Overview</span>
@@ -2018,18 +2222,21 @@ body {
                 </div>
 
                 <div class="platform-content">
-                    <div class="content-header">
-                        <div class="user-info">
-                            <div class="user-avatar">
+                    <div class="user-profile">
+                        <div class="profile-info">
+                            <div class="profile-avatar">
                                 <i class="fas fa-user"></i>
                             </div>
-                            <div class="user-details">
+                            <div>
                                 <h4>John Smith</h4>
                                 <p>Policy ID: POL-2024-0123</p>
                             </div>
                         </div>
-                        <div class="coverage-status">
-                            <span class="status active">Coverage Active</span>
+                        <div class="profile-actions">
+                            <div class="status-badge">
+                                <span class="status-dot"></span>
+                                Coverage Active
+                            </div>
                             <button class="action-btn">
                                 <i class="fas fa-download"></i>
                                 Download Card
@@ -2037,35 +2244,32 @@ body {
                         </div>
                     </div>
 
-                    <div class="insurance-overview">
-                        <div class="policy-cards">
-                            <div class="policy-card active">
-                                <div class="card-header">
-                                    <div class="provider-logo">
-                                        <i class="fas fa-building"></i>
-                                    </div>
-                                    <div class="policy-type">Health Insurance</div>
+                    <div class="coverage-details">
+                        <div class="policy-card active">
+                            <div class="policy-header">
+                                <div class="provider-info">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>Health Insurance</span>
                                 </div>
-                                <div class="card-body">
-                                    <div class="coverage-details">
-                                        <div class="detail-item">
-                                            <span class="label">Plan Type</span>
-                                            <span class="value">PPO Premium</span>
-                                        </div>
-                                        <div class="detail-item">
-                                            <span class="label">Coverage</span>
-                                            <span class="value">Family</span>
-                                        </div>
-                                        <div class="detail-item">
-                                            <span class="label">Effective Date</span>
-                                            <span class="value">Jan 1, 2024</span>
-                                        </div>
-                                    </div>
+                                <div class="policy-status">Premium</div>
+                            </div>
+                            <div class="policy-info">
+                                <div class="info-item">
+                                    <span class="label">Plan Type</span>
+                                    <span class="value">PPO Premium</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Coverage</span>
+                                    <span class="value">Family</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Effective Date</span>
+                                    <span class="value">Jan 1, 2024</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="coverage-analytics">
+                        <div class="analytics-grid">
                             <div class="analytics-card">
                                 <h4>Coverage Utilization</h4>
                                 <div class="chart-container">
@@ -2074,15 +2278,25 @@ body {
                             </div>
                             <div class="analytics-card">
                                 <h4>Deductible Progress</h4>
-                                <div class="progress-container">
+                                <div class="progress-ring-container">
                                     <div class="progress-ring">
                                         <svg viewBox="0 0 36 36">
                                             <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
                                             <path class="progress" stroke-dasharray="75, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
                                         </svg>
                                         <div class="progress-text">
-                                            <span class="value">75%</span>
-                                            <span class="label">Complete</span>
+                                            <span>75%</span>
+                                            <small>Complete</small>
+                                        </div>
+                                    </div>
+                                    <div class="progress-details">
+                                        <div class="detail">
+                                            <span>Met</span>
+                                            <strong>$1,500</strong>
+                                        </div>
+                                        <div class="detail">
+                                            <span>Remaining</span>
+                                            <strong>$500</strong>
                                         </div>
                                     </div>
                                 </div>
@@ -2091,54 +2305,53 @@ body {
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</section>
+        
             <!-- Wellness Program Section -->
 <section class="wellness-section">
     <div class="container">
         <div class="section-header">
-            <div class="header-badge">
-                <i class="fas fa-heart"></i>
-                <span>Wellness Programs</span>
-            </div>
-            <h2>Wellness Program Integration</h2>
-            <p>Promote employee well-being through integrated health and wellness initiatives</p>
+            <h2>Wellness Program</h2>
+            <p>Integrated Wellness Solutions</p>
+            <span class="subtitle">Promote employee well-being through integrated health and wellness initiatives</span>
         </div>
 
         <div class="wellness-platform">
             <div class="wellness-dashboard">
                 <div class="wellness-header">
-                    <div class="wellness-profile">
-                        <div class="profile-stats">
-                            <div class="stat-circle">
-                                <svg viewBox="0 0 36 36">
-                                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                    <path class="progress" stroke-dasharray="85, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                </svg>
-                                <div class="wellness-score">
-                                    <span>85</span>
-                                    <small>Wellness Score</small>
-                                </div>
-                            </div>
-                            <div class="profile-info">
-                                <h4>Great Progress!</h4>
-                                <p>You're in the top 20% of active participants</p>
+                    <div class="wellness-score-card">
+                        <div class="score-ring">
+                            <svg viewBox="0 0 36 36">
+                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <path class="progress" stroke-dasharray="85, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            </svg>
+                            <div class="score">
+                                <span>85</span>
+                                <small>Wellness Score</small>
                             </div>
                         </div>
-                        <div class="wellness-actions">
-                            <button class="action-btn">
-                                <i class="fas fa-plus"></i>
-                                Log Activity
-                            </button>
-                            <button class="action-btn secondary">
-                                <i class="fas fa-calendar"></i>
-                                Schedule Check-up
-                            </button>
+                        <div class="score-info">
+                            <h4>Great Progress!</h4>
+                            <p>You're in the top 20% of active participants</p>
                         </div>
+                    </div>
+                    <div class="wellness-actions">
+                        <button class="action-btn primary">
+                            <i class="fas fa-plus"></i>
+                            Log Activity
+                        </button>
+                        <button class="action-btn secondary">
+                            <i class="fas fa-calendar"></i>
+                            Schedule Check-up
+                        </button>
                     </div>
                 </div>
 
                 <div class="wellness-content">
                     <div class="activity-tracking">
-                        <div class="tracking-header">
+                        <div class="section-title">
                             <h3>Activity Overview</h3>
                             <div class="period-selector">
                                 <button class="period-btn active">Week</button>
@@ -2146,12 +2359,13 @@ body {
                                 <button class="period-btn">Year</button>
                             </div>
                         </div>
-                        <div class="activity-metrics">
-                            <div class="metric-card steps">
+
+                        <div class="metrics-grid">
+                            <div class="metric-card">
                                 <div class="metric-icon">
                                     <i class="fas fa-shoe-prints"></i>
                                 </div>
-                                <div class="metric-data">
+                                <div class="metric-info">
                                     <span class="label">Daily Steps</span>
                                     <h4>8,547</h4>
                                     <div class="progress-bar">
@@ -2159,11 +2373,12 @@ body {
                                     </div>
                                 </div>
                             </div>
-                            <div class="metric-card exercise">
+
+                            <div class="metric-card">
                                 <div class="metric-icon">
                                     <i class="fas fa-dumbbell"></i>
                                 </div>
-                                <div class="metric-data">
+                                <div class="metric-info">
                                     <span class="label">Exercise Minutes</span>
                                     <h4>45</h4>
                                     <div class="progress-bar">
@@ -2171,11 +2386,12 @@ body {
                                     </div>
                                 </div>
                             </div>
-                            <div class="metric-card sleep">
+
+                            <div class="metric-card">
                                 <div class="metric-icon">
                                     <i class="fas fa-moon"></i>
                                 </div>
-                                <div class="metric-data">
+                                <div class="metric-info">
                                     <span class="label">Sleep Hours</span>
                                     <h4>7.5</h4>
                                     <div class="progress-bar">
@@ -2187,14 +2403,15 @@ body {
                     </div>
 
                     <div class="wellness-challenges">
-                        <div class="challenges-header">
+                        <div class="section-title">
                             <h3>Active Challenges</h3>
                             <button class="view-all">View All</button>
                         </div>
-                        <div class="challenge-cards">
+
+                        <div class="challenge-grid">
                             <div class="challenge-card">
-                                <div class="challenge-banner">
-                                    <div class="challenge-badge">Team Challenge</div>
+                                <div class="challenge-header">
+                                    <span class="challenge-tag">Team Challenge</span>
                                 </div>
                                 <div class="challenge-content">
                                     <h4>10K Steps Challenge</h4>
@@ -2203,7 +2420,7 @@ body {
                                         <div class="progress-bar">
                                             <div class="progress" style="width: 65%"></div>
                                         </div>
-                                        <span class="progress-text">19 days remaining</span>
+                                        <span class="days-left">19 days remaining</span>
                                     </div>
                                     <div class="challenge-participants">
                                         <div class="participant-avatars">
@@ -2214,6 +2431,23 @@ body {
                                         </div>
                                         <button class="join-btn">Join Challenge</button>
                                     </div>
+                                </div>
+                            </div>
+
+                            <div class="challenge-card">
+                                <div class="challenge-header">
+                                    <span class="challenge-tag">Personal Goal</span>
+                                </div>
+                                <div class="challenge-content">
+                                    <h4>Mindfulness Minutes</h4>
+                                    <p>Practice meditation for 10 minutes daily</p>
+                                    <div class="challenge-progress">
+                                        <div class="progress-bar">
+                                            <div class="progress" style="width: 45%"></div>
+                                        </div>
+                                        <span class="days-left">25 days remaining</span>
+                                    </div>
+                                    <button class="track-btn">Track Progress</button>
                                 </div>
                             </div>
                         </div>
