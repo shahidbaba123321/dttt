@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="logstyles.css">
 </head>
 <body>
-    <!-- Signup Page -->
     <section class="signup">
         <div class="container">
             <h2>Sign Up</h2>
@@ -17,31 +16,50 @@
                 <select id="role">
                     <option value="admin">Admin</option>
                     <option value="user">User</option>
-                    <option value="user">Super Admin</option>
+                    <option value="superadmin">Super Admin</option>
                 </select>
                 <button type="submit" class="btn primary">Sign Up</button>
             </form>
             <p>Already have an account? <a href="login.html">Login</a></p>
         </div>
     </section>
+
     <script>
+        // Replace with your EC2 public IP
+        const API_URL = 'http://18.215.160.136:8080';
+
         document.getElementById('signup-form').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
+            try {
+                const formData = {
+                    email: document.getElementById('email').value,
+                    password: document.getElementById('password').value,
+                    role: document.getElementById('role').value
+                };
 
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const role = document.getElementById('role').value;
+                console.log('Sending registration data:', formData);
 
-            const response = await fetch('/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, role })
-            });
+                const response = await fetch(`${API_URL}/api/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
 
-            if (response.ok) {
-                alert('User registered successfully!');
-                window.location.href = 'login.html';
-            } else {
+                const data = await response.json();
+                console.log('Server response:', data);
+
+                if (response.ok) {
+                    alert('Registration successful!');
+                    window.location.href = 'login.html';
+                } else {
+                    alert(data.message || 'Registration failed');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
                 alert('Registration failed. Please try again.');
             }
         });
