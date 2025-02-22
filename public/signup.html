@@ -136,12 +136,10 @@
             const successMessage = document.getElementById('successMessage');
             const submitButton = document.getElementById('submitButton');
             
-            // Reset messages
             errorMessage.style.display = 'none';
             successMessage.style.display = 'none';
             submitButton.disabled = true;
 
-            // Get form data
             const formData = {
                 email: document.getElementById('email').value,
                 password: document.getElementById('password').value,
@@ -149,61 +147,33 @@
             };
 
             try {
-                const response = await fetch('/register', {
+                const response = await fetch('/api/signup', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify(formData)
                 });
 
-                const data = await response.json();
-
-                if (response.ok) {
-                    successMessage.textContent = 'Registration successful! Redirecting to login...';
-                    successMessage.style.display = 'block';
-                    
-                    // Redirect to login page after successful registration
-                    setTimeout(() => {
-                        window.location.href = '/login.html';
-                    }, 2000);
-                } else {
-                    throw new Error(data.message || 'Registration failed');
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Registration failed');
                 }
+
+                const data = await response.json();
+                successMessage.textContent = 'Registration successful! Redirecting to login...';
+                successMessage.style.display = 'block';
+                
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 2000);
 
             } catch (error) {
                 errorMessage.textContent = error.message || 'An error occurred during registration';
                 errorMessage.style.display = 'block';
             } finally {
                 submitButton.disabled = false;
-            }
-        });
-
-        // Check if Super Admin exists when page loads
-        window.addEventListener('DOMContentLoaded', async () => {
-            try {
-                const response = await fetch('/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        email: 'check@superadmin.com',
-                        password: 'check123',
-                        role: 'superadmin'
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.message === 'Super Admin already exists') {
-                    document.querySelector('.container').innerHTML = `
-                        <h2>Access Denied</h2>
-                        <p style="text-align: center; color: #dc3545;">Super Admin account already exists.</p>
-                    `;
-                }
-            } catch (error) {
-                console.error('Error checking Super Admin status:', error);
             }
         });
     </script>
