@@ -55,28 +55,24 @@ body {
 
 
 .login-section {
-    flex: 1;
-    padding: 8rem 2rem 4rem;
+    padding-top: 100px; /* Adjust based on header height */
+    min-height: calc(100vh - 100px);
     display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
-    min-height: calc(100vh - 12rem);
 }
 
 .login-container {
+    width: 90%;
     max-width: 1200px;
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
+    margin: 2rem auto;
     background: white;
     border-radius: 24px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    position: relative;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
-
+    
 .login-form {
     padding: 3rem;
 }
@@ -111,13 +107,13 @@ body {
 .form-group input,
 .form-group select {
     width: 100%;
-    padding: 1rem;
-    padding-left: 3rem;
+    padding: 1rem 2.5rem;
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 12px;
     font-size: 1rem;
     transition: all 0.3s ease;
     background: white;
+    box-sizing: border-box;
 }
 
 .form-group input:focus,
@@ -133,6 +129,12 @@ body {
     top: 50%;
     transform: translateY(-50%);
     color: var(--light-text);
+    pointer-events: none;
+}
+select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
 }
 
 .custom-select {
@@ -144,9 +146,10 @@ body {
     right: 1rem;
     top: 50%;
     transform: translateY(-50%);
-    color: var(--light-text);
     pointer-events: none;
+    color: var(--light-text);
 }
+
 
 .btn {
     width: 100%;
@@ -285,7 +288,138 @@ body {
 </head>
 <body>
     <!-- Header Container -->
-    <div id="header-container"></div>
+    <header class="main-header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <span>Workwise Pro</span>
+                </a>
+                <nav class="main-nav">
+                    <ul class="nav-list">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="features.html">Features</a></li>
+                        <li><a href="signup.html" class="nav-cta">Sign Up</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-btn">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+    <style>
+        /* Header Styles */
+.main-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.logo {
+    text-decoration: none;
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.main-nav .nav-list {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-list a {
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.nav-list a:hover {
+    color: var(--primary-color);
+}
+
+.nav-list .nav-cta {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+}
+
+.nav-list .nav-cta:hover {
+    background: var(--secondary-color);
+    color: white;
+}
+
+.mobile-menu-btn {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.mobile-menu-btn span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: var(--text-color);
+    transition: all 0.3s ease;
+}
+
+/* Mobile Menu Styles */
+@media (max-width: 768px) {
+    .mobile-menu-btn {
+        display: flex;
+    }
+
+    .main-nav {
+        position: fixed;
+        top: 70px;
+        left: 0;
+        right: 0;
+        background: white;
+        padding: 1rem;
+        transform: translateY(-100%);
+        transition: transform 0.3s ease;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .main-nav.active {
+        transform: translateY(0);
+    }
+
+    .nav-list {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .nav-list a {
+        display: block;
+        padding: 0.5rem 0;
+    }
+}
+    </style>
 
     <!-- Login Section -->
     <section class="login-section">
@@ -513,7 +647,7 @@ body {
     transform: scale(1.2);
 }
 
-/* Password Toggle Button */
+/* Fix password toggle button */
 .password-toggle {
     position: absolute;
     right: 1rem;
@@ -524,6 +658,7 @@ body {
     color: var(--light-text);
     cursor: pointer;
     padding: 0.5rem;
+    z-index: 2;
 }
 
 .password-toggle:hover {
@@ -686,67 +821,41 @@ function initializeAll() {
     setupEventListeners();
 }
 
-// Header Loading Function
-async function loadHeader() {
-    const headerContainer = document.getElementById('header-container');
+// Mobile Menu Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    const mainNav = document.querySelector('.main-nav');
     
-    try {
-        const response = await fetch('header.html');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    mobileMenuBtn.addEventListener('click', function() {
+        mainNav.classList.toggle('active');
+        this.classList.toggle('active');
         
-        const html = await response.text();
-        headerContainer.innerHTML = html;
-        initializeMobileMenu();
-    } catch (error) {
-        console.error('Error loading header:', error);
-        headerContainer.innerHTML = `
-            <header class="main-header">
-                <div class="container">
-                    <div class="header-content">
-                        <a href="/" class="logo">
-                            <span>Workwise Pro</span>
-                        </a>
-                        <nav class="main-nav">
-                            <ul class="nav-list">
-                                <li><a href="index.html">Home</a></li>
-                                <li><a href="signup.html">Sign Up</a></li>
-                            </ul>
-                        </nav>
-                    </div>
-                </div>
-            </header>
-        `;
-    }
-}
-// Mobile Menu Initialization
-function initializeMobileMenu() {
-    const mobileMenu = document.getElementById('mobile-menu');
-    const mainNav = document.getElementById('main-nav');
-    const menuOverlay = document.getElementById('menu-overlay');
-    
-    if (mobileMenu && mainNav) {
-        let isMenuOpen = false;
+        // Animate menu button
+        const spans = this.querySelectorAll('span');
+        if (this.classList.contains('active')) {
+            spans[0].style.transform = 'rotate(45deg) translate(6px, 6px)';
+            spans[1].style.opacity = '0';
+            spans[2].style.transform = 'rotate(-45deg) translate(6px, -6px)';
+        } else {
+            spans[0].style.transform = 'none';
+            spans[1].style.opacity = '1';
+            spans[2].style.transform = 'none';
+        }
+    });
 
-        const toggleMenu = (show) => {
-            isMenuOpen = show;
-            mobileMenu.classList.toggle('active', show);
-            mainNav.classList.toggle('active', show);
-            menuOverlay?.classList.toggle('active', show);
-            document.body.style.overflow = show ? 'hidden' : '';
-        };
-
-        mobileMenu.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleMenu(!isMenuOpen);
-        });
-
-        document.addEventListener('click', (e) => {
-            if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
-                toggleMenu(false);
-            }
-        });
-    }
-}
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.mobile-menu-btn') && !e.target.closest('.main-nav')) {
+            mainNav.classList.remove('active');
+            mobileMenuBtn.classList.remove('active');
+            
+            const spans = mobileMenuBtn.querySelectorAll('span');
+            spans[0].style.transform = 'none';
+            spans[1].style.opacity = '1';
+            spans[2].style.transform = 'none';
+        }
+    });
+});
 // Slider Functionality
 function initializeSlider() {
     let currentSlideIndex = 0;
