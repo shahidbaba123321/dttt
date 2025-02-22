@@ -95,6 +95,19 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Routes
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/signup', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'signup.html'));
+});
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// Health check endpoint
 app.get('/api/health', (req, res) => {
     res.status(200).json({ 
         status: 'healthy',
@@ -103,11 +116,12 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-app.post('/api/signup', async (req, res) => {
+// Registration endpoint
+app.post('/register', async (req, res) => {
     try {
         const { email, password, role } = req.body;
 
-        if (!email || !password || !role) {
+        if (!email || !password) {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
@@ -115,11 +129,9 @@ app.post('/api/signup', async (req, res) => {
         const users = database.collection('users');
 
         // Check if Super Admin exists
-        if (role === 'superadmin') {
-            const existingSuperAdmin = await users.findOne({ role: 'superadmin' });
-            if (existingSuperAdmin) {
-                return res.status(400).json({ message: 'Super Admin already exists' });
-            }
+        const existingSuperAdmin = await users.findOne({ role: 'superadmin' });
+        if (existingSuperAdmin) {
+            return res.status(400).json({ message: 'Super Admin already exists' });
         }
 
         // Check if email exists
@@ -135,7 +147,7 @@ app.post('/api/signup', async (req, res) => {
         const newUser = {
             email,
             password: hashedPassword,
-            role,
+            role: 'superadmin',
             createdAt: new Date(),
             status: 'active',
             lastLogin: null,
@@ -155,7 +167,8 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
-app.post('/api/login', async (req, res) => {
+// Login endpoint
+app.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
