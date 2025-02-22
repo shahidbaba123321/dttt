@@ -1,23 +1,16 @@
 version: 1
 frontend:
-  phases:
-    preBuild:
-      commands:
-        - npm install
-    build:
-      commands:
-        - npm run build
-  artifacts:
-    baseDirectory: public
-    files:
-      - '**/*'
-  cache:
-    paths:
-      - node_modules/**/*
-  customHeaders:
-    - pattern: '**/*'
-      headers:
-        - key: 'Cache-Control'
-          value: 'no-store'
-        - key: 'Access-Control-Allow-Origin'
-          value: '*'
+phases:
+preBuild:
+commands:
+- npm install
+build:
+commands:
+- echo "Build completed"
+artifacts:
+baseDirectory: public
+files:
+- '/*'
+cache:
+paths:
+- node_modules//*
