@@ -10,13 +10,11 @@
             margin: 0;
             padding: 0;
         }
-
         body {
             font-family: Arial, sans-serif;
             background-color: #f5f5f5;
             line-height: 1.6;
         }
-
         .container {
             max-width: 400px;
             margin: 50px auto;
@@ -25,50 +23,16 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-
-        h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 20px;
-        }
-
         .form-group {
             margin-bottom: 15px;
         }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #666;
-        }
-
         input {
             width: 100%;
             padding: 8px;
+            margin-bottom: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 14px;
         }
-
-        input:focus {
-            outline: none;
-            border-color: #007bff;
-        }
-
-        .error-message {
-            color: #dc3545;
-            font-size: 14px;
-            margin-top: 5px;
-            display: none;
-        }
-
-        .success-message {
-            color: #28a745;
-            font-size: 14px;
-            margin-top: 5px;
-            display: none;
-        }
-
         button {
             width: 100%;
             padding: 10px;
@@ -77,103 +41,77 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
+        }
+        .error-message {
+            color: red;
             margin-top: 10px;
+            display: none;
         }
-
-        button:hover {
-            background: #0056b3;
-        }
-
-        button:disabled {
-            background: #cccccc;
-            cursor: not-allowed;
+        .success-message {
+            color: green;
+            margin-top: 10px;
+            display: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Create Super Admin Account</h2>
-        <form id="signup-form">
+        <form id="signupForm">
             <div class="form-group">
-                <label for="email">Email:</label>
-                <input 
-                    type="email" 
-                    id="email" 
-                    required 
-                    placeholder="Enter your email"
-                >
+                <input type="email" id="email" placeholder="Email" required>
             </div>
-
             <div class="form-group">
-                <label for="password">Password:</label>
-                <input 
-                    type="password" 
-                    id="password" 
-                    required 
-                    placeholder="Enter your password"
-                >
+                <input type="password" id="password" placeholder="Password" required>
             </div>
-
-            <input 
-                type="hidden" 
-                id="role" 
-                value="superadmin"
-            >
-
             <div id="errorMessage" class="error-message"></div>
             <div id="successMessage" class="success-message"></div>
-
-            <button type="submit" id="submitButton">Create Super Admin Account</button>
+            <button type="submit">Sign Up</button>
         </form>
     </div>
 
     <script>
-        document.getElementById('signup-form').addEventListener('submit', async function(e) {
+        const form = document.getElementById('signupForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            const errorMessage = document.getElementById('errorMessage');
-            const successMessage = document.getElementById('successMessage');
-            const submitButton = document.getElementById('submitButton');
-            
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // Reset messages
             errorMessage.style.display = 'none';
             successMessage.style.display = 'none';
-            submitButton.disabled = true;
-
-            const formData = {
-                email: document.getElementById('email').value,
-                password: document.getElementById('password').value,
-                role: document.getElementById('role').value
-            };
 
             try {
-                const response = await fetch('/api/signup', {
+                const response = await fetch('/register', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        role: 'superadmin'
+                    })
                 });
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Registration failed');
-                }
-
                 const data = await response.json();
-                successMessage.textContent = 'Registration successful! Redirecting to login...';
-                successMessage.style.display = 'block';
-                
-                setTimeout(() => {
-                    window.location.href = '/login.html';
-                }, 2000);
 
+                if (response.ok) {
+                    successMessage.textContent = 'Registration successful!';
+                    successMessage.style.display = 'block';
+                    setTimeout(() => {
+                        window.location.href = '/login.html';
+                    }, 2000);
+                } else {
+                    throw new Error(data.message || 'Registration failed');
+                }
             } catch (error) {
-                errorMessage.textContent = error.message || 'An error occurred during registration';
+                errorMessage.textContent = error.message;
                 errorMessage.style.display = 'block';
-            } finally {
-                submitButton.disabled = false;
             }
         });
     </script>
