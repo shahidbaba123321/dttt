@@ -13,35 +13,36 @@ const nodemailer = require('nodemailer');
 
 const app = express();
 
-// Email configuration
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+// CORS configuration middleware
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
+
+    if (req.method === 'OPTIONS') {
+        res.sendStatus(200);
+    } else {
+        next();
     }
 });
 
-// Middleware
-app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
-}));
-
-app.use(helmet({
-    contentSecurityPolicy: false
-}));
-app.use(compression());
+// Basic middleware
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.urlencoded({ extended: true }));
+app.use(compression());
 app.use(morgan('dev'));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Security middleware
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false
+}));
 
 // Rate limiting
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-    message: { message: 'Too many requests, please try again later.' }
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // limit each IP to 100 requests per windowMs
 });
 app.use('/api/', limiter);
 
@@ -75,27 +76,17 @@ async function connectDB() {
 
 connectDB();
 
-// Authentication middleware
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-        return res.status(401).json({ message: 'No token provided' });
-    }
-
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) {
-            return res.status(403).json({ message: 'Invalid token' });
-        }
-        req.user = user;
-        next();
-    });
-};
-
 // Routes
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/signup', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'signup.html'));
+});
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 // Registration endpoint
@@ -105,18 +96,27 @@ app.post('/register', async (req, res) => {
 
         // Validate required fields
         if (!firstName || !lastName || !email || !designation || !role || !password) {
-            return res.status(400).json({ message: 'All fields are required' });
+            return res.status(400).json({ 
+                success: false,
+                message: 'All fields are required' 
+            });
         }
 
-        // Validate email format
+        // Email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return res.status(400).json({ message: 'Invalid email format' });
+            return res.status(400).json({ 
+                success: false,
+                message: 'Invalid email format' 
+            });
         }
 
-        // Validate password strength
-        if (password.length < 8) {
-            return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+        // Password validation
+        if (password.length < 6) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'Password must be at least 6 characters long' 
+            });
         }
 
         const database = client.db('infocraftorbis');
@@ -125,7 +125,10 @@ app.post('/register', async (req, res) => {
         // Check if email exists
         const existingUser = await users.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ message: 'Email already registered' });
+            return res.status(400).json({ 
+                success: false,
+                message: 'Email already registered' 
+            });
         }
 
         // Hash password
@@ -141,44 +144,28 @@ app.post('/register', async (req, res) => {
             password: hashedPassword,
             createdAt: new Date(),
             status: 'active',
-            lastLogin: null,
-            failedLoginAttempts: 0,
-            settings: {
-                emailNotifications: true,
-                twoFactorAuth: false
-            }
+            lastLogin: null
         };
 
         await users.insertOne(newUser);
 
-        // Send welcome email
-        try {
-            await transporter.sendMail({
-                from: process.env.EMAIL_USER,
-                to: email,
-                subject: 'Welcome to Workwise Pro',
-                html: `
-                    <h1>Welcome to Workwise Pro!</h1>
-                    <p>Dear ${firstName},</p>
-                    <p>Your account has been successfully created.</p>
-                    <p>Role: ${role}</p>
-                    <p>Designation: ${designation}</p>
-                    <p>You can now login to your account.</p>
-                `
-            });
-        } catch (emailError) {
-            console.error('Welcome email failed:', emailError);
-            // Don't return error to client, just log it
-        }
-
         res.status(201).json({ 
+            success: true,
             message: 'Registration successful',
-            email: email
+            data: {
+                email: email,
+                firstName: firstName,
+                lastName: lastName,
+                role: role
+            }
         });
 
     } catch (error) {
         console.error('Registration error:', error);
-        res.status(500).json({ message: 'Registration failed' });
+        res.status(500).json({ 
+            success: false,
+            message: 'Registration failed. Please try again.' 
+        });
     }
 });
 
@@ -188,7 +175,10 @@ app.post('/login', async (req, res) => {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return res.status(400).json({ message: 'Email and password are required' });
+            return res.status(400).json({ 
+                success: false,
+                message: 'Email and password are required' 
+            });
         }
 
         const database = client.db('infocraftorbis');
@@ -197,32 +187,25 @@ app.post('/login', async (req, res) => {
         const user = await users.findOne({ email });
 
         if (!user) {
-            return res.status(401).json({ message: 'Invalid credentials' });
+            return res.status(401).json({ 
+                success: false,
+                message: 'Invalid credentials' 
+            });
         }
 
         const isValidPassword = await bcrypt.compare(password, user.password);
 
         if (!isValidPassword) {
-            await users.updateOne(
-                { _id: user._id },
-                { $inc: { failedLoginAttempts: 1 } }
-            );
-
-            if (user.failedLoginAttempts >= 4) {
-                await users.updateOne(
-                    { _id: user._id },
-                    { $set: { status: 'locked' } }
-                );
-                return res.status(401).json({ message: 'Account locked due to too many failed attempts' });
-            }
-
-            return res.status(401).json({ message: 'Invalid credentials' });
+            return res.status(401).json({ 
+                success: false,
+                message: 'Invalid credentials' 
+            });
         }
 
         const token = jwt.sign(
             { 
-                userId: user._id, 
-                email: user.email, 
+                userId: user._id,
+                email: user.email,
                 role: user.role,
                 firstName: user.firstName,
                 lastName: user.lastName
@@ -231,42 +214,46 @@ app.post('/login', async (req, res) => {
             { expiresIn: '24h' }
         );
 
+        // Update last login
         await users.updateOne(
             { _id: user._id },
-            { 
-                $set: { 
-                    lastLogin: new Date(),
-                    failedLoginAttempts: 0
-                } 
-            }
+            { $set: { lastLogin: new Date() } }
         );
 
         res.json({ 
-            token,
-            user: {
-                email: user.email,
-                role: user.role,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                designation: user.designation
+            success: true,
+            message: 'Login successful',
+            data: {
+                token,
+                user: {
+                    email: user.email,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    role: user.role,
+                    designation: user.designation
+                }
             }
         });
 
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ message: 'Login failed' });
+        res.status(500).json({ 
+            success: false,
+            message: 'Login failed. Please try again.' 
+        });
     }
+});
+
+// Catch-all route for SPA
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('Application error:', {
-        message: err.message,
-        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
-        timestamp: new Date().toISOString()
-    });
-    
+    console.error('Application error:', err);
     res.status(500).json({ 
+        success: false,
         message: 'Internal server error',
         error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
