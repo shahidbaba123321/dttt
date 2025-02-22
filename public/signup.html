@@ -9,79 +9,150 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            font-family: 'Arial', sans-serif;
         }
+
         body {
-            font-family: Arial, sans-serif;
             background-color: #f5f5f5;
             line-height: 1.6;
-        }
-        .container {
-            max-width: 400px;
-            margin: 50px auto;
-            padding: 20px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
             color: #333;
         }
-        .form-group {
-            margin-bottom: 15px;
+
+        .container {
+            max-width: 450px;
+            margin: 40px auto;
+            padding: 25px;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
+
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
         label {
             display: block;
-            margin-bottom: 5px;
-            color: #666;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
         }
+
         input, select {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: 5px;
             font-size: 14px;
+            transition: border-color 0.3s ease;
         }
+
         input:focus, select:focus {
             outline: none;
-            border-color: #007bff;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52,152,219,0.2);
         }
+
+        select {
+            background-color: white;
+            cursor: pointer;
+        }
+
         button {
             width: 100%;
-            padding: 10px;
-            background: #007bff;
+            padding: 12px;
+            background: #3498db;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
         }
+
         button:hover {
-            background: #0056b3;
+            background: #2980b9;
         }
+
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+
         .error-message {
-            color: #dc3545;
+            color: #e74c3c;
             font-size: 14px;
             margin-top: 5px;
             display: none;
+            padding: 10px;
+            background-color: #fde8e8;
+            border-radius: 4px;
+            text-align: center;
         }
+
         .success-message {
-            color: #28a745;
+            color: #27ae60;
             font-size: 14px;
             margin-top: 5px;
             display: none;
+            padding: 10px;
+            background-color: #e8f8f0;
+            border-radius: 4px;
+            text-align: center;
         }
+
         .login-link {
             text-align: center;
-            margin-top: 15px;
+            margin-top: 20px;
+            color: #7f8c8d;
         }
+
         .login-link a {
-            color: #007bff;
+            color: #3498db;
             text-decoration: none;
+            font-weight: 500;
         }
+
         .login-link a:hover {
             text-decoration: underline;
+        }
+
+        .validation-error {
+            border-color: #e74c3c;
+        }
+
+        .field-error {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .loading:after {
+            content: '...';
+            animation: dots 1s steps(5, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60% { content: '...'; }
+            80% { content: '....'; }
+            100% { content: '.....'; }
         }
     </style>
 </head>
@@ -91,22 +162,50 @@
         <form id="signupForm">
             <div class="form-group">
                 <label for="firstName">First Name</label>
-                <input type="text" id="firstName" required placeholder="Enter your first name">
+                <input 
+                    type="text" 
+                    id="firstName" 
+                    required 
+                    placeholder="Enter your first name"
+                    minlength="2"
+                    maxlength="50"
+                >
+                <div id="firstNameError" class="field-error"></div>
             </div>
 
             <div class="form-group">
                 <label for="lastName">Last Name</label>
-                <input type="text" id="lastName" required placeholder="Enter your last name">
+                <input 
+                    type="text" 
+                    id="lastName" 
+                    required 
+                    placeholder="Enter your last name"
+                    minlength="2"
+                    maxlength="50"
+                >
+                <div id="lastNameError" class="field-error"></div>
             </div>
 
             <div class="form-group">
                 <label for="email">Email</label>
-                <input type="email" id="email" required placeholder="Enter your email">
+                <input 
+                    type="email" 
+                    id="email" 
+                    required 
+                    placeholder="Enter your email"
+                >
+                <div id="emailError" class="field-error"></div>
             </div>
 
             <div class="form-group">
                 <label for="designation">Designation</label>
-                <input type="text" id="designation" required placeholder="Enter your designation">
+                <input 
+                    type="text" 
+                    id="designation" 
+                    required 
+                    placeholder="Enter your designation"
+                >
+                <div id="designationError" class="field-error"></div>
             </div>
 
             <div class="form-group">
@@ -118,17 +217,26 @@
                     <option value="employee">Employee</option>
                     <option value="hr">HR</option>
                 </select>
+                <div id="roleError" class="field-error"></div>
             </div>
 
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" required placeholder="Enter your password">
+                <input 
+                    type="password" 
+                    id="password" 
+                    required 
+                    placeholder="Enter your password"
+                    minlength="6"
+                >
+                <div id="passwordError" class="field-error"></div>
             </div>
 
             <div id="errorMessage" class="error-message"></div>
             <div id="successMessage" class="success-message"></div>
+            <div id="loading" class="loading">Registering</div>
 
-            <button type="submit">Sign Up</button>
+            <button type="submit" id="submitButton">Sign Up</button>
 
             <div class="login-link">
                 Already have an account? <a href="/login.html">Login</a>
@@ -137,22 +245,109 @@
     </div>
 
     <script>
-        document.getElementById('signupForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        const form = document.getElementById('signupForm');
+        const submitButton = document.getElementById('submitButton');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const loading = document.getElementById('loading');
 
-            const errorMessage = document.getElementById('errorMessage');
-            const successMessage = document.getElementById('successMessage');
+        // Field validation functions
+        function validateField(field, errorDiv, validationFn) {
+            const value = field.value.trim();
+            const error = validationFn(value);
+            
+            if (error) {
+                field.classList.add('validation-error');
+                errorDiv.textContent = error;
+                errorDiv.style.display = 'block';
+                return false;
+            }
+            
+            field.classList.remove('validation-error');
+            errorDiv.style.display = 'none';
+            return true;
+        }
+
+        // Validation rules
+        const validations = {
+            firstName: (value) => {
+                if (!value) return 'First name is required';
+                if (value.length < 2) return 'First name must be at least 2 characters';
+                if (value.length > 50) return 'First name must be less than 50 characters';
+                if (!/^[a-zA-Z\s]*$/.test(value)) return 'First name can only contain letters';
+                return null;
+            },
+            lastName: (value) => {
+                if (!value) return 'Last name is required';
+                if (value.length < 2) return 'Last name must be at least 2 characters';
+                if (value.length > 50) return 'Last name must be less than 50 characters';
+                if (!/^[a-zA-Z\s]*$/.test(value)) return 'Last name can only contain letters';
+                return null;
+            },
+            email: (value) => {
+                if (!value) return 'Email is required';
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Invalid email format';
+                return null;
+            },
+            designation: (value) => {
+                if (!value) return 'Designation is required';
+                if (value.length < 2) return 'Designation must be at least 2 characters';
+                return null;
+            },
+            role: (value) => {
+                if (!value) return 'Role is required';
+                return null;
+            },
+            password: (value) => {
+                if (!value) return 'Password is required';
+                if (value.length < 6) return 'Password must be at least 6 characters';
+                return null;
+            }
+        };
+
+        // Add input event listeners for real-time validation
+        Object.keys(validations).forEach(fieldName => {
+            const field = document.getElementById(fieldName);
+            const errorDiv = document.getElementById(`${fieldName}Error`);
+            
+            field.addEventListener('input', () => {
+                validateField(field, errorDiv, validations[fieldName]);
+            });
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
             // Reset messages
             errorMessage.style.display = 'none';
             successMessage.style.display = 'none';
+            loading.style.display = 'none';
 
-            // Get form data
+            // Validate all fields
+            let isValid = true;
+            Object.keys(validations).forEach(fieldName => {
+                const field = document.getElementById(fieldName);
+                const errorDiv = document.getElementById(`${fieldName}Error`);
+                if (!validateField(field, errorDiv, validations[fieldName])) {
+                    isValid = false;
+                }
+            });
+
+            if (!isValid) {
+                errorMessage.textContent = 'Please fix the errors in the form';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            // Disable submit button and show loading
+            submitButton.disabled = true;
+            loading.style.display = 'block';
+
             const formData = {
-                firstName: document.getElementById('firstName').value,
-                lastName: document.getElementById('lastName').value,
-                email: document.getElementById('email').value,
-                designation: document.getElementById('designation').value,
+                firstName: document.getElementById('firstName').value.trim(),
+                lastName: document.getElementById('lastName').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                designation: document.getElementById('designation').value.trim(),
                 role: document.getElementById('role').value,
                 password: document.getElementById('password').value
             };
@@ -182,6 +377,9 @@
             } catch (error) {
                 errorMessage.textContent = error.message || 'An error occurred during registration';
                 errorMessage.style.display = 'block';
+            } finally {
+                submitButton.disabled = false;
+                loading.style.display = 'none';
             }
         });
     </script>
