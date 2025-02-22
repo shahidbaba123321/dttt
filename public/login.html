@@ -725,7 +725,35 @@ async function loadHeader() {
         `;
     }
 }
+// Mobile Menu Initialization
+function initializeMobileMenu() {
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mainNav = document.getElementById('main-nav');
+    const menuOverlay = document.getElementById('menu-overlay');
+    
+    if (mobileMenu && mainNav) {
+        let isMenuOpen = false;
 
+        const toggleMenu = (show) => {
+            isMenuOpen = show;
+            mobileMenu.classList.toggle('active', show);
+            mainNav.classList.toggle('active', show);
+            menuOverlay?.classList.toggle('active', show);
+            document.body.style.overflow = show ? 'hidden' : '';
+        };
+
+        mobileMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMenu(!isMenuOpen);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (isMenuOpen && !mainNav.contains(e.target) && !mobileMenu.contains(e.target)) {
+                toggleMenu(false);
+            }
+        });
+    }
+}
 // Slider Functionality
 function initializeSlider() {
     let currentSlideIndex = 0;
