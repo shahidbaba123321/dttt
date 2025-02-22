@@ -14,9 +14,6 @@ const crypto = require('crypto');
 
 const app = express();
 
-// Global variable to track Super Admin creation
-let superAdminCreated = false;
-
 // Email configuration
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -26,7 +23,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Enhanced CORS configuration
+// Middleware
 app.use(cors({
     origin: true,
     credentials: true,
@@ -34,13 +31,12 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 }));
 
-// Security middleware
 app.use(helmet({
     contentSecurityPolicy: false
 }));
 app.use(compression());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(morgan('dev'));
 
 // Rate limiting
@@ -69,12 +65,6 @@ async function connectDB() {
         
         const db = client.db('infocraftorbis');
         await db.collection('users').createIndex({ email: 1 }, { unique: true });
-        await db.collection('users').createIndex({ verificationToken: 1 });
-        await db.collection('users').createIndex({ resetPasswordToken: 1 });
-        
-        // Check if Super Admin exists
-        const superAdmin = await db.collection('users').findOne({ role: 'superadmin' });
-        superAdminCreated = !!superAdmin;
         
         console.log("Database indexes created");
         await db.command({ ping: 1 });
@@ -87,115 +77,115 @@ async function connectDB() {
 
 connectDB();
 
-// Super Admin creation endpoint
-app.post('/api/create-super-admin', async (req, res) => {
+// Routes
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/signup', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'signup.html'));
+});
+
+// Register endpoint
+app.post('/register', async (req, res) => {
     try {
-        if (superAdminCreated) {
-            return res.status(403).json({ message: 'Super Admin already exists' });
-        }
+        const { email, password, role } = req.body;
 
-        const { email, password, firstName, lastName } = req.body;
-
-        // Validate input
-        if (!email || !password || !firstName || !lastName) {
+        if (!email || !password || !role) {
             return res.status(400).json({ message: 'All fields are required' });
         }
 
         const database = client.db('infocraftorbis');
         const users = database.collection('users');
 
-        // Double-check if Super Admin exists
-        const existingSuperAdmin = await users.findOne({ role: 'superadmin' });
-        if (existingSuperAdmin) {
-            superAdminCreated = true;
-            return res.status(403).json({ message: 'Super Admin already exists' });
+        // Check if user exists
+        const existingUser = await users.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email already registered' });
         }
 
-        // Create Super Admin
+        // For Super Admin, check if one already exists
+        if (role === 'superadmin') {
+            const existingSuperAdmin = await users.findOne({ role: 'superadmin' });
+            if (existingSuperAdmin) {
+                return res.status(403).json({ message: 'Super Admin already exists' });
+            }
+        }
+
+        // Hash password
         const hashedPassword = await bcrypt.hash(password, 12);
-        const superAdmin = {
+
+        // Create user
+        const newUser = {
             email,
             password: hashedPassword,
-            role: 'superadmin',
-            firstName,
-            lastName,
+            role,
             createdAt: new Date(),
             status: 'active',
             lastLogin: null,
-            failedLoginAttempts: 0,
-            permissions: {
-                fullAccess: true,
-                systemConfig: true,
-                userManagement: true,
-                organizationManagement: true
-            }
+            failedLoginAttempts: 0
         };
 
-        await users.insertOne(superAdmin);
-        superAdminCreated = true;
+        await users.insertOne(newUser);
 
         res.status(201).json({ 
-            message: 'Super Admin created successfully',
+            message: 'User registered successfully',
             email: email
         });
 
     } catch (error) {
-        console.error('Super Admin creation error:', error);
-        res.status(500).json({ message: 'Failed to create Super Admin' });
+        console.error('Registration error:', error);
+        res.status(500).json({ message: 'Registration failed' });
     }
 });
 
-// Check Super Admin existence
-app.get('/api/check-super-admin', async (req, res) => {
+// Login endpoint
+app.post('/login', async (req, res) => {
     try {
-        const database = client.db('infocraftorbis');
-        const users = database.collection('users');
-        const superAdmin = await users.findOne({ role: 'superadmin' });
-        res.json({ exists: !!superAdmin });
-    } catch (error) {
-        res.status(500).json({ message: 'Error checking Super Admin status' });
-    }
-});
+        const { email, password } = req.body;
 
-// Super Admin Dashboard Data
-app.get('/api/super-admin/dashboard', authenticateToken, async (req, res) => {
-    try {
-        if (req.user.role !== 'superadmin') {
-            return res.status(403).json({ message: 'Access denied' });
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Email and password are required' });
         }
 
         const database = client.db('infocraftorbis');
         const users = database.collection('users');
-        const organizations = database.collection('organizations');
 
-        const dashboardData = {
-            totalUsers: await users.countDocuments(),
-            totalOrganizations: await organizations.countDocuments(),
-            recentUsers: await users.find().sort({ createdAt: -1 }).limit(5).toArray(),
-            systemHealth: {
-                status: 'healthy',
-                lastChecked: new Date(),
-                dbConnection: client.topology?.isConnected() ? 'connected' : 'disconnected'
+        const user = await users.findOne({ email });
+
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        const isValidPassword = await bcrypt.compare(password, user.password);
+
+        if (!isValidPassword) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        const token = jwt.sign(
+            { userId: user._id, email: user.email, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.json({ 
+            token,
+            user: {
+                email: user.email,
+                role: user.role
             }
-        };
+        });
 
-        res.json(dashboardData);
     } catch (error) {
-        console.error('Dashboard data error:', error);
-        res.status(500).json({ message: 'Failed to fetch dashboard data' });
+        console.error('Login error:', error);
+        res.status(500).json({ message: 'Login failed' });
     }
 });
 
-// [Previous code remains the same: Login, Register, Email verification, Password reset, etc.]
-
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('Application error:', {
-        message: err.message,
-        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
-        timestamp: new Date().toISOString()
-    });
-    
+    console.error('Application error:', err);
     res.status(500).json({ 
         message: 'Internal server error',
         error: process.env.NODE_ENV === 'development' ? err.message : undefined
@@ -206,9 +196,6 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 8080;
 const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV}`);
-    console.log(`MongoDB URI: ${uri ? 'Configured' : 'Missing'}`);
-    console.log(`JWT Secret: ${process.env.JWT_SECRET ? 'Configured' : 'Missing'}`);
 });
 
 // Graceful shutdown
@@ -216,7 +203,6 @@ process.on('SIGTERM', async () => {
     console.log('SIGTERM received. Shutting down gracefully...');
     try {
         await client.close();
-        console.log('MongoDB connection closed.');
         server.close(() => {
             console.log('Server closed.');
             process.exit(0);
@@ -225,16 +211,6 @@ process.on('SIGTERM', async () => {
         console.error('Error during shutdown:', err);
         process.exit(1);
     }
-});
-
-// Handle uncaught errors
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Rejection:', reason);
-});
-
-process.on('uncaughtException', (error) => {
-    console.error('Uncaught Exception:', error);
-    process.exit(1);
 });
 
 module.exports = app;
