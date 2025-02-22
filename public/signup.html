@@ -45,16 +45,6 @@
         <h2>Create Super Admin Account</h2>
         <form id="signup-form">
             <div class="form-group">
-                <label for="firstName">First Name:</label>
-                <input type="text" id="firstName" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="lastName">Last Name:</label>
-                <input type="text" id="lastName" required>
-            </div>
-
-            <div class="form-group">
                 <label for="email">Email:</label>
                 <input type="email" id="email" required>
             </div>
@@ -65,8 +55,9 @@
             </div>
 
             <div class="form-group">
-                <label for="confirmPassword">Confirm Password:</label>
-                <input type="password" id="confirmPassword" required>
+                <select id="role" style="display: none;">
+                    <option value="superadmin" selected>Super Admin</option>
+                </select>
             </div>
 
             <div id="errorMessage" class="error-message" style="display: none;"></div>
@@ -77,24 +68,6 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', async function() {
-            // Check if Super Admin exists
-            try {
-                const response = await fetch('/api/check-super-admin');
-                if (!response.ok) throw new Error('Network response was not ok');
-                const data = await response.json();
-                
-                if (data.exists) {
-                    document.querySelector('.container').innerHTML = `
-                        <h2>Access Denied</h2>
-                        <p>Super Admin account already exists.</p>
-                    `;
-                }
-            } catch (error) {
-                console.error('Error checking Super Admin status:', error);
-            }
-        });
-
         document.getElementById('signup-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -106,27 +79,14 @@
             successMessage.style.display = 'none';
             submitButton.disabled = true;
 
-            // Validate passwords match
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            if (password !== confirmPassword) {
-                errorMessage.textContent = 'Passwords do not match';
-                errorMessage.style.display = 'block';
-                submitButton.disabled = false;
-                return;
-            }
-
             const formData = {
-                firstName: document.getElementById('firstName').value,
-                lastName: document.getElementById('lastName').value,
                 email: document.getElementById('email').value,
-                password: password,
+                password: document.getElementById('password').value,
                 role: 'superadmin'
             };
 
             try {
-                const response = await fetch('/api/create-super-admin', {
+                const response = await fetch('/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -134,19 +94,17 @@
                     body: JSON.stringify(formData)
                 });
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Registration failed');
-                }
-
                 const data = await response.json();
-                successMessage.textContent = 'Super Admin account created successfully!';
-                successMessage.style.display = 'block';
-                
-                // Redirect to login page after successful registration
-                setTimeout(() => {
-                    window.location.href = '/login.html';
-                }, 2000);
+
+                if (response.ok) {
+                    successMessage.textContent = 'Registration successful!';
+                    successMessage.style.display = 'block';
+                    setTimeout(() => {
+                        window.location.href = '/login.html';
+                    }, 2000);
+                } else {
+                    throw new Error(data.message || 'Registration failed');
+                }
 
             } catch (error) {
                 errorMessage.textContent = error.message || 'An error occurred during registration';
