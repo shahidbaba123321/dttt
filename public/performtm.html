@@ -1,0 +1,2544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Management - Workwise Pro</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+    --primary-color: #4F46E5;
+    --secondary-color: #4338CA;
+    --accent-color: #818CF8;
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+    --danger-color: #EF4444;
+    --background-color: #F8FAFC;
+    --text-color: #1F2937;
+    --light-text: #64748B;
+    --gradient-start: #EEF2FF;
+    --gradient-end: #E0E7FF;
+    --box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    padding-top: var(--header-height);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--mobile-padding);
+    width: 100%;
+}
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+    padding: 8rem 0 6rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-pattern {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.1;
+    background-image: 
+        linear-gradient(45deg, var(--accent-color) 25%, transparent 25%),
+        linear-gradient(-45deg, var(--accent-color) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, var(--accent-color) 75%),
+        linear-gradient(-45deg, transparent 75%, var(--accent-color) 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+.hero-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.hero-badge {
+    background: rgba(79, 70, 229, 0.1);
+    color: var(--primary-color);
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    margin-bottom: 2rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.hero-badge i {
+    font-size: 1rem;
+}
+
+.hero-title {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    color: var(--primary-color);
+    font-weight: 700;
+    margin: 0 0 1.5rem;
+    line-height: 1.2;
+    max-width: 900px;
+}
+
+.hero-subtitle {
+    font-size: clamp(1.1rem, 2vw, 1.5rem);
+    color: var(--light-text);
+    max-width: 800px;
+    margin: 0 0 3rem;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.hero-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.hero-btn.primary {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+}
+
+.hero-btn.secondary {
+    background: white;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+}
+
+.hero-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+}
+
+.hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 4rem;
+    width: 100%;
+    max-width: 900px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: left;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--gradient-start);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    font-size: 1.5rem;
+}
+
+.stat-content h3 {
+    color: var(--primary-color);
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+}
+
+.stat-content p {
+    color: var(--light-text);
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+@media (max-width: 1024px) {
+    .hero-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 6rem 0 4rem;
+    }
+
+    .hero-buttons {
+        flex-direction: column;
+    }
+
+    .hero-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-content {
+        padding: 0 1rem;
+    }
+
+    .stat-card {
+        padding: 1.5rem;
+    }
+}
+</style>
+</head>
+<body>
+    <!-- Header Container -->
+    <div id="header-container"></div>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-pattern"></div>
+        <div class="hero-content">
+            <div class="hero-badge">
+                <i class="fas fa-chart-line"></i>
+                <span>Performance Management</span>
+            </div>
+            <h1 class="hero-title">Elevate Your Workforce with Integrated Talent Management</h1>
+            <p class="hero-subtitle">Seamlessly connect performance management systems to unlock your team's full potential.</p>
+            
+            <div class="hero-buttons">
+                <button class="hero-btn primary">
+                    Discover More
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <button class="hero-btn secondary">
+                    Watch Demo
+                    <i class="fas fa-play"></i>
+                </button>
+            </div>
+
+            <div class="hero-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>98%</h3>
+                        <p>Employee Engagement Rate</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>45%</h3>
+                        <p>Performance Improvement</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>250K+</h3>
+                        <p>Employees Managed</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Unified Talent Management Section -->
+<section class="unified-talent-section">
+    <div class="section-container">
+        <div class="section-header">
+            <div class="section-badge">
+                <i class="fas fa-users-cog"></i>
+                <span>Unified Platform</span>
+            </div>
+            <h2 class="section-title">Unified Talent and Performance Management</h2>
+            <p class="section-description">Integrate your HRMS with performance management systems to create a cohesive platform that fosters employee growth and organizational success.</p>
+        </div>
+
+        <div class="talent-dashboard">
+            <div class="dashboard-header">
+                <div class="header-tabs">
+                    <button class="tab-btn active">
+                        <i class="fas fa-chart-line"></i>
+                        Performance
+                    </button>
+                    <button class="tab-btn">
+                        <i class="fas fa-bullseye"></i>
+                        Goals
+                    </button>
+                    <button class="tab-btn">
+                        <i class="fas fa-comments"></i>
+                        Feedback
+                    </button>
+                </div>
+                <div class="header-actions">
+                    <button class="action-btn">
+                        <i class="fas fa-plus"></i>
+                        Add Review
+                    </button>
+                </div>
+            </div>
+
+            <div class="dashboard-content">
+                <div class="performance-overview">
+                    <div class="overview-card">
+                        <div class="card-header">
+                            <h3>Performance Metrics</h3>
+                            <div class="time-period">Q3 2023</div>
+                        </div>
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <div class="metric-label">Goals Achieved</div>
+                                <div class="metric-value">
+                                    <span class="number">87%</span>
+                                    <span class="trend positive">
+                                        <i class="fas fa-arrow-up"></i>
+                                        12%
+                                    </span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress" style="width: 87%"></div>
+                                </div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">Team Collaboration</div>
+                                <div class="metric-value">
+                                    <span class="number">92%</span>
+                                    <span class="trend positive">
+                                        <i class="fas fa-arrow-up"></i>
+                                        8%
+                                    </span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress" style="width: 92%"></div>
+                                </div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-label">Skills Development</div>
+                                <div class="metric-value">
+                                    <span class="number">78%</span>
+                                    <span class="trend positive">
+                                        <i class="fas fa-arrow-up"></i>
+                                        15%
+                                    </span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress" style="width: 78%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="overview-card">
+                        <div class="card-header">
+                            <h3>Recent Feedback</h3>
+                            <button class="view-all">View All</button>
+                        </div>
+                        <div class="feedback-list">
+                            <div class="feedback-item">
+                                <div class="feedback-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="feedback-content">
+                                    <div class="feedback-header">
+                                        <h4>Project Leadership</h4>
+                                        <span class="feedback-date">2 days ago</span>
+                                    </div>
+                                    <p>Excellent leadership shown in the recent product launch. Great team coordination and deadline management.</p>
+                                    <div class="feedback-rating">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="feedback-item">
+                                <div class="feedback-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="feedback-content">
+                                    <div class="feedback-header">
+                                        <h4>Team Collaboration</h4>
+                                        <span class="feedback-date">5 days ago</span>
+                                    </div>
+                                    <p>Strong communication skills and effective cross-team collaboration demonstrated in the Q3 initiative.</p>
+                                    <div class="feedback-rating">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="far fa-star"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="goals-alignment">
+                    <div class="goals-header">
+                        <h3>Goals Alignment</h3>
+                        <div class="alignment-score">
+                            <div class="score-ring">
+                                <svg viewBox="0 0 36 36">
+                                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                    <path class="progress" stroke-dasharray="85, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                </svg>
+                                <div class="score-text">85%</div>
+                            </div>
+                            <span>Alignment Score</span>
+                        </div>
+                    </div>
+                    <div class="goals-grid">
+                        <div class="goal-card">
+                            <div class="goal-status completed">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <h4>Increase Team Productivity</h4>
+                            <p>Implement new workflow optimization techniques</p>
+                            <div class="goal-progress">
+                                <div class="progress-bar">
+                                    <div class="progress" style="width: 100%"></div>
+                                </div>
+                                <span>Completed</span>
+                            </div>
+                        </div>
+                        <div class="goal-card">
+                            <div class="goal-status in-progress">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <h4>Skills Enhancement</h4>
+                            <p>Complete advanced certification program</p>
+                            <div class="goal-progress">
+                                <div class="progress-bar">
+                                    <div class="progress" style="width: 65%"></div>
+                                </div>
+                                <span>65% Complete</span>
+                            </div>
+                        </div>
+                        <div class="goal-card">
+                            <div class="goal-status upcoming">
+                                <i class="fas fa-hourglass-start"></i>
+                            </div>
+                            <h4>Client Satisfaction</h4>
+                            <p>Achieve 95% client satisfaction rate</p>
+                            <div class="goal-progress">
+                                <div class="progress-bar">
+                                    <div class="progress" style="width: 30%"></div>
+                                </div>
+                                <span>30% Complete</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Unified Talent Section Styles */
+.unified-talent-section {
+    padding: 6rem 0;
+    background: white;
+}
+
+.section-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.section-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: rgba(79, 70, 229, 0.1);
+    color: var(--primary-color);
+    border-radius: 50px;
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+}
+
+.section-badge i {
+    font-size: 1rem;
+}
+
+.section-title {
+    color: var(--primary-color);
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.section-description {
+    color: var(--light-text);
+    font-size: 1.125rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Talent Dashboard */
+.talent-dashboard {
+    background: var(--background-color);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--box-shadow);
+}
+
+.dashboard-header {
+    background: white;
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-tabs {
+    display: flex;
+    gap: 1rem;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    background: none;
+    color: var(--light-text);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.tab-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dashboard-content {
+    padding: 2rem;
+}
+
+.performance-overview {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.overview-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.card-header h3 {
+    color: var(--text-color);
+    font-size: 1.25rem;
+    margin: 0;
+}
+
+.metrics-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.metric-item {
+    padding: 1rem;
+    background: var(--background-color);
+    border-radius: 8px;
+}
+
+.metric-label {
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.metric-value {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.metric-value .number {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.trend {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.trend.positive {
+    color: var(--success-color);
+}
+
+.progress-bar {
+    height: 6px;
+    background: rgba(79, 70, 229, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-bar .progress {
+    height: 100%;
+    background: var(--primary-color);
+    border-radius: 3px;
+    transition: width 1s ease;
+}
+
+/* Feedback List */
+.feedback-list {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.feedback-item {
+    display: flex;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.feedback-avatar {
+    width: 40px;
+    height: 40px;
+    background: var(--background-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+}
+
+.feedback-content {
+    flex: 1;
+}
+
+.feedback-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.feedback-header h4 {
+    color: var(--text-color);
+    font-size: 1rem;
+    margin: 0;
+}
+
+.feedback-date {
+    color: var(--light-text);
+    font-size: 0.875rem;
+}
+
+.feedback-rating {
+    color: var(--warning-color);
+    margin-top: 0.5rem;
+}
+
+/* Goals Alignment */
+.goals-alignment {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.goals-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.alignment-score {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.score-ring {
+    position: relative;
+    width: 60px;
+    height: 60px;
+}
+
+.score-ring svg {
+    transform: rotate(-90deg);
+}
+
+.score-ring path {
+    fill: none;
+    stroke-width: 2.8;
+    stroke-linecap: round;
+}
+
+.score-ring path:first-child {
+    stroke: rgba(79, 70, 229, 0.1);
+}
+
+.score-ring path.progress {
+    stroke: var(--primary-color);
+}
+
+.score-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.goals-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.goal-card {
+    background: var(--background-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    position: relative;
+}
+
+.goal-status {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+}
+
+.goal-status.completed {
+    background: var(--success-color);
+    color: white;
+}
+
+.goal-status.in-progress {
+    background: var(--warning-color);
+    color: white;
+}
+
+.goal-status.upcoming {
+    background: var(--light-text);
+    color: white;
+}
+
+@media (max-width: 1024px) {
+    .performance-overview {
+        grid-template-columns: 1fr;
+    }
+
+    .goals-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .header-tabs {
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+
+    .goals-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .feedback-item {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .section-container {
+        padding: 0 1rem;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .header-tabs {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+<!-- Enhanced Employee Development Section -->
+<section class="employee-development-section">
+    <div class="section-container">
+        <div class="section-header">
+            <div class="section-badge">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Employee Development</span>
+            </div>
+            <h2 class="section-title">Enhanced Employee Development</h2>
+            <p class="section-description">Leverage integrated systems to identify skill gaps and provide targeted development opportunities.</p>
+        </div>
+
+        <div class="development-dashboard">
+            <div class="skills-assessment">
+                <div class="assessment-header">
+                    <h3>Skills Assessment Overview</h3>
+                    <div class="assessment-filters">
+                        <button class="filter-btn active">Technical</button>
+                        <button class="filter-btn">Leadership</button>
+                        <button class="filter-btn">Soft Skills</button>
+                    </div>
+                </div>
+
+                <div class="skills-matrix">
+                    <div class="skill-category">
+                        <div class="category-header">
+                            <h4>Technical Proficiency</h4>
+                            <span class="category-score">85%</span>
+                        </div>
+                        <div class="skills-list">
+                            <div class="skill-item">
+                                <div class="skill-info">
+                                    <span>Project Management</span>
+                                    <span>90%</span>
+                                </div>
+                                <div class="skill-progress">
+                                    <div class="progress" style="width: 90%"></div>
+                                </div>
+                            </div>
+                            <div class="skill-item">
+                                <div class="skill-info">
+                                    <span>Data Analysis</span>
+                                    <span>85%</span>
+                                </div>
+                                <div class="skill-progress">
+                                    <div class="progress" style="width: 85%"></div>
+                                </div>
+                            </div>
+                            <div class="skill-item">
+                                <div class="skill-info">
+                                    <span>Software Development</span>
+                                    <span>80%</span>
+                                </div>
+                                <div class="skill-progress">
+                                    <div class="progress" style="width: 80%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="development-recommendations">
+                        <h4>Recommended Training</h4>
+                        <div class="training-modules">
+                            <div class="training-card">
+                                <div class="training-icon">
+                                    <i class="fas fa-code"></i>
+                                </div>
+                                <div class="training-content">
+                                    <h5>Advanced Coding Practices</h5>
+                                    <p>Master modern development techniques</p>
+                                    <div class="training-meta">
+                                        <span><i class="fas fa-clock"></i> 8 weeks</span>
+                                        <span><i class="fas fa-users"></i> 120 enrolled</span>
+                                    </div>
+                                </div>
+                                <button class="enroll-btn">Enroll Now</button>
+                            </div>
+
+                            <div class="training-card">
+                                <div class="training-icon">
+                                    <i class="fas fa-chart-pie"></i>
+                                </div>
+                                <div class="training-content">
+                                    <h5>Data Analytics Masterclass</h5>
+                                    <p>Advanced data analysis and visualization</p>
+                                    <div class="training-meta">
+                                        <span><i class="fas fa-clock"></i> 6 weeks</span>
+                                        <span><i class="fas fa-users"></i> 85 enrolled</span>
+                                    </div>
+                                </div>
+                                <button class="enroll-btn">Enroll Now</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="career-progression">
+                <div class="progression-header">
+                    <h3>Career Development Path</h3>
+                    <button class="view-all-btn">View Full Path</button>
+                </div>
+                <div class="progression-timeline">
+                    <div class="timeline-item completed">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>Junior Developer</h4>
+                            <p>Completed core technical training</p>
+                            <span class="timeline-date">2021 - 2022</span>
+                        </div>
+                    </div>
+                    <div class="timeline-item current">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>Senior Developer</h4>
+                            <p>Leading technical initiatives</p>
+                            <span class="timeline-date">Current Position</span>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <h4>Technical Lead</h4>
+                            <p>Next career milestone</p>
+                            <div class="requirements">
+                                <span class="requirement-tag">Leadership Training</span>
+                                <span class="requirement-tag">Project Management</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.employee-development-section {
+    padding: 6rem 0;
+    background: var(--gradient-start);
+}
+
+.development-dashboard {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--box-shadow);
+}
+
+.skills-assessment {
+    padding: 2rem;
+}
+
+.assessment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.assessment-header h3 {
+    color: var(--text-color);
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.assessment-filters {
+    display: flex;
+    gap: 0.5rem;
+    background: var(--background-color);
+    padding: 0.25rem;
+    border-radius: 8px;
+}
+
+.filter-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: none;
+    color: var(--light-text);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.filter-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.skills-matrix {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 2rem;
+}
+
+.skill-category {
+    background: var(--background-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.category-header h4 {
+    color: var(--text-color);
+    margin: 0;
+}
+
+.category-score {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.skills-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.skill-item {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.skill-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+    font-size: 0.875rem;
+}
+
+.skill-progress {
+    height: 6px;
+    background: rgba(79, 70, 229, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.skill-progress .progress {
+    height: 100%;
+    background: var(--primary-color);
+    border-radius: 3px;
+    transition: width 1s ease;
+}
+
+.development-recommendations {
+    background: var(--background-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.development-recommendations h4 {
+    color: var(--text-color);
+    margin-bottom: 1.5rem;
+}
+
+.training-modules {
+    display: grid;
+    gap: 1rem;
+}
+
+.training-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1rem;
+    align-items: center;
+}
+
+.training-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--gradient-start);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    font-size: 1.25rem;
+}
+
+.training-content h5 {
+    color: var(--text-color);
+    margin: 0 0 0.5rem;
+}
+
+.training-content p {
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin: 0 0 0.5rem;
+}
+
+.training-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.75rem;
+    color: var(--light-text);
+}
+
+.training-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.enroll-btn {
+    padding: 0.5rem 1rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.career-progression {
+    padding: 2rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.progression-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.view-all-btn {
+    color: var(--primary-color);
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.progression-timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.progression-timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background: rgba(79, 70, 229, 0.1);
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 2rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -2rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid var(--light-text);
+}
+
+.timeline-item.completed .timeline-marker {
+    background: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.timeline-item.current .timeline-marker {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.timeline-content h4 {
+    color: var(--text-color);
+    margin: 0 0 0.5rem;
+}
+
+.timeline-content p {
+    color: var(--light-text);
+    margin: 0 0 0.5rem;
+}
+
+.timeline-date {
+    font-size: 0.875rem;
+    color: var(--light-text);
+}
+
+.requirements {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.requirement-tag {
+    padding: 0.25rem 0.75rem;
+    background: rgba(79, 70, 229, 0.1);
+    color: var(--primary-color);
+    border-radius: 20px;
+    font-size: 0.75rem;
+}
+
+@media (max-width: 1024px) {
+    .skills-matrix {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .assessment-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .training-card {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .training-icon {
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .skills-assessment {
+        padding: 1rem;
+    }
+
+    .assessment-filters {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .filter-btn {
+        white-space: nowrap;
+    }
+}
+</style>
+<!-- Data-Driven Decision Making Section -->
+<section class="analytics-section">
+    <div class="section-container">
+        <div class="section-header">
+            <div class="section-badge">
+                <i class="fas fa-chart-bar"></i>
+                <span>Analytics & Insights</span>
+            </div>
+            <h2 class="section-title">Data-Driven Decision Making</h2>
+            <p class="section-description">Utilize integrated analytics to gain insights into workforce performance, enabling strategic talent management decisions.</p>
+        </div>
+
+        <div class="analytics-dashboard">
+            <div class="dashboard-nav">
+                <div class="nav-item active">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Performance Trends</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-heart"></i>
+                    <span>Engagement Metrics</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-brain"></i>
+                    <span>Predictive Analysis</span>
+                </div>
+            </div>
+
+            <div class="analytics-content">
+                <div class="performance-metrics">
+                    <div class="metrics-header">
+                        <h3>Performance Analytics</h3>
+                        <div class="time-filter">
+                            <button class="time-btn active">3M</button>
+                            <button class="time-btn">6M</button>
+                            <button class="time-btn">1Y</button>
+                            <button class="time-btn">All</button>
+                        </div>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card highlight">
+                            <div class="metric-header">
+                                <h4>Overall Performance Score</h4>
+                                <div class="trend positive">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>12%</span>
+                                </div>
+                            </div>
+                            <div class="metric-value">92.8</div>
+                            <div class="metric-chart">
+                                <canvas id="performanceChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <h4>Team Productivity</h4>
+                                <div class="trend positive">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>8%</span>
+                                </div>
+                            </div>
+                            <div class="metric-value">87.5</div>
+                            <div class="metric-chart">
+                                <canvas id="productivityChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <h4>Goal Completion Rate</h4>
+                                <div class="trend positive">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span>15%</span>
+                                </div>
+                            </div>
+                            <div class="metric-value">94.2</div>
+                            <div class="metric-chart">
+                                <canvas id="goalCompletionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detailed-analysis">
+                        <div class="analysis-card">
+                            <div class="card-header">
+                                <h4>Performance Distribution</h4>
+                                <div class="card-actions">
+                                    <button class="action-btn">
+                                        <i class="fas fa-download"></i>
+                                        Export
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="distribution-chart">
+                                <canvas id="distributionChart"></canvas>
+                            </div>
+                            <div class="chart-legend">
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background: #4F46E5"></span>
+                                    <span>Exceptional</span>
+                                    <span class="legend-value">35%</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background: #818CF8"></span>
+                                    <span>Above Average</span>
+                                    <span class="legend-value">45%</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background: #C7D2FE"></span>
+                                    <span>Average</span>
+                                    <span class="legend-value">20%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="analysis-card">
+                            <div class="card-header">
+                                <h4>Predictive Insights</h4>
+                                <div class="insight-period">Next Quarter</div>
+                            </div>
+                            <div class="predictions-list">
+                                <div class="prediction-item">
+                                    <div class="prediction-icon">
+                                        <i class="fas fa-user-plus"></i>
+                                    </div>
+                                    <div class="prediction-content">
+                                        <h5>Hiring Needs</h5>
+                                        <p>Projected requirement of 12 new team members</p>
+                                        <div class="confidence-level">
+                                            <span>Confidence Level:</span>
+                                            <div class="confidence-bar">
+                                                <div class="confidence" style="width: 85%"></div>
+                                            </div>
+                                            <span>85%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="prediction-item">
+                                    <div class="prediction-icon">
+                                        <i class="fas fa-graduation-cap"></i>
+                                    </div>
+                                    <div class="prediction-content">
+                                        <h5>Skill Gap Analysis</h5>
+                                        <p>Critical skills needed: Cloud Architecture, AI/ML</p>
+                                        <div class="confidence-level">
+                                            <span>Confidence Level:</span>
+                                            <div class="confidence-bar">
+                                                <div class="confidence" style="width: 92%"></div>
+                                            </div>
+                                            <span>92%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.analytics-section {
+    padding: 6rem 0;
+    background: white;
+}
+
+.analytics-dashboard {
+    background: var(--background-color);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--box-shadow);
+}
+
+.dashboard-nav {
+    background: white;
+    padding: 1rem;
+    display: flex;
+    gap: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--light-text);
+}
+
+.nav-item.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.nav-item:hover:not(.active) {
+    background: rgba(79, 70, 229, 0.1);
+    color: var(--primary-color);
+}
+
+.analytics-content {
+    padding: 2rem;
+}
+
+.metrics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.time-filter {
+    display: flex;
+    background: white;
+    padding: 0.25rem;
+    border-radius: 8px;
+    box-shadow: var(--box-shadow);
+}
+
+.time-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: none;
+    color: var(--light-text);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.time-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.metric-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--box-shadow);
+}
+
+.metric-card.highlight {
+    border: 2px solid var(--primary-color);
+}
+
+.metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.metric-header h4 {
+    color: var(--text-color);
+    font-size: 1rem;
+    margin: 0;
+}
+
+.trend {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+}
+
+.trend.positive {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+}
+
+.metric-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.metric-chart {
+    height: 100px;
+}
+
+.detailed-analysis {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 1.5rem;
+}
+
+.analysis-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--box-shadow);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    background: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.distribution-chart {
+    height: 300px;
+    margin-bottom: 1.5rem;
+}
+
+.chart-legend {
+    display: grid;
+    gap: 1rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+.legend-value {
+    margin-left: auto;
+    font-weight: 500;
+}
+
+.predictions-list {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.prediction-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--background-color);
+    border-radius: 8px;
+}
+
+.prediction-icon {
+    width: 40px;
+    height: 40px;
+    background: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+}
+
+.prediction-content h5 {
+    color: var(--text-color);
+    margin: 0 0 0.5rem;
+}
+
+.prediction-content p {
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin: 0 0 1rem;
+}
+
+.confidence-level {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--light-text);
+}
+
+.confidence-bar {
+    flex: 1;
+    height: 4px;
+    background: rgba(79, 70, 229, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.confidence {
+    height: 100%;
+    background: var(--primary-color);
+    border-radius: 2px;
+}
+
+@media (max-width: 1200px) {
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .detailed-analysis {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-nav {
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+
+    .nav-item {
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .analytics-content {
+        padding: 1rem;
+    }
+
+    .metrics-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .time-filter {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .prediction-item {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+}
+</style>
+
+
+<!-- Streamlined Administrative Section -->
+<section class="admin-processes-section">
+    <div class="section-container">
+        <div class="section-header">
+            <div class="section-badge">
+                <i class="fas fa-cogs"></i>
+                <span>Administrative Excellence</span>
+            </div>
+            <h2 class="section-title">Streamlined Administrative Processes</h2>
+            <p class="section-description">Reduce administrative burdens through automation and integration, allowing HR teams to focus on strategic initiatives.</p>
+        </div>
+
+        <div class="admin-workflow">
+            <div class="workflow-cards">
+                <div class="workflow-card">
+                    <div class="workflow-icon">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <h3>Automated Appraisal Workflows</h3>
+                    <div class="workflow-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">85%</span>
+                            <span class="stat-label">Time Saved</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">3x</span>
+                            <span class="stat-label">Faster Processing</span>
+                        </div>
+                    </div>
+                    <div class="workflow-features">
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Automated Notifications</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Digital Sign-offs</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Progress Tracking</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="workflow-card">
+                    <div class="workflow-icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <h3>Compensation Management</h3>
+                    <div class="workflow-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">99%</span>
+                            <span class="stat-label">Accuracy Rate</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">2x</span>
+                            <span class="stat-label">Process Efficiency</span>
+                        </div>
+                    </div>
+                    <div class="workflow-features">
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Performance-based Adjustments</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Market Rate Analysis</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Budget Allocation</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="workflow-card">
+                    <div class="workflow-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Compliance & Reporting</h3>
+                    <div class="workflow-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">100%</span>
+                            <span class="stat-label">Compliance Rate</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">4x</span>
+                            <span class="stat-label">Faster Reporting</span>
+                        </div>
+                    </div>
+                    <div class="workflow-features">
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Automated Compliance Checks</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Real-time Monitoring</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-check"></i>
+                            <span>Audit Trail</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="process-automation">
+                <div class="automation-visual">
+                    <div class="process-flow">
+                        <div class="flow-step completed">
+                            <div class="step-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="step-content">
+                                <h4>Review Initiation</h4>
+                                <p>Automated scheduling and notifications</p>
+                            </div>
+                            <div class="step-status">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                        </div>
+                        <div class="flow-step active">
+                            <div class="step-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="step-content">
+                                <h4>360° Feedback</h4>
+                                <p>Multi-source feedback collection</p>
+                            </div>
+                            <div class="step-status">
+                                <div class="status-indicator"></div>
+                            </div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="step-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <div class="step-content">
+                                <h4>Performance Analysis</h4>
+                                <p>AI-powered performance insights</p>
+                            </div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="step-icon">
+                                <i class="fas fa-check-double"></i>
+                            </div>
+                            <div class="step-content">
+                                <h4>Review Completion</h4>
+                                <p>Digital sign-off and documentation</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<section class="cta-section">
+    <div class="section-container">
+        <div class="cta-content">
+            <h2>Transform Your Workforce Management Today</h2>
+            <p>Join leading organizations in creating a more efficient and engaged workforce through our integrated talent management solution.</p>
+            <div class="cta-buttons">
+                <button class="cta-btn primary">
+                    <span>Request Demo</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <button class="cta-btn secondary">
+                    <span>Contact Sales</span>
+                    <i class="fas fa-phone"></i>
+                </button>
+            </div>
+            <div class="trust-indicators">
+                <div class="trust-logos">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>ISO 27001 Certified</span>
+                    <i class="fas fa-lock"></i>
+                    <span>GDPR Compliant</span>
+                    <i class="fas fa-check-circle"></i>
+                    <span>SOC 2 Type II</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Admin Processes Section Styles */
+.admin-processes-section {
+    padding: 6rem 0;
+    background: var(--gradient-start);
+}
+
+.workflow-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+
+.workflow-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: var(--box-shadow);
+    transition: all 0.3s ease;
+}
+
+.workflow-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.workflow-icon {
+    width: 64px;
+    height: 64px;
+    background: var(--gradient-start);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.workflow-card h3 {
+    color: var(--text-color);
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.workflow-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    color: var(--light-text);
+    font-size: 0.875rem;
+}
+
+.workflow-features {
+    display: grid;
+    gap: 1rem;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-color);
+    font-size: 0.875rem;
+}
+
+.feature-item i {
+    color: var(--success-color);
+}
+
+.process-automation {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: var(--box-shadow);
+}
+
+.process-flow {
+    display: grid;
+    gap: 2rem;
+}
+
+.flow-step {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: var(--background-color);
+    border-radius: 12px;
+    position: relative;
+}
+
+.flow-step::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 2rem;
+    height: 2rem;
+    width: 2px;
+    background: var(--primary-color);
+}
+
+.flow-step:last-child::after {
+    display: none;
+}
+
+.step-icon {
+    width: 48px;
+    height: 48px;
+    background: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    font-size: 1.25rem;
+}
+
+.step-content h4 {
+    color: var(--text-color);
+    margin-bottom: 0.25rem;
+}
+
+.step-content p {
+    color: var(--light-text);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.step-status {
+    margin-left: auto;
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    animation: pulse 2s infinite;
+}
+
+/* CTA Section Styles */
+.cta-section {
+    padding: 6rem 0;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    text-align: center;
+}
+
+.cta-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.cta-content h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.cta-content p {
+    font-size: 1.125rem;
+    margin-bottom: 2.5rem;
+    opacity: 0.9;
+}
+
+.cta-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.cta-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.cta-btn.primary {
+    background: white;
+    color: var(--primary-color);
+    border: none;
+}
+
+.cta-btn.secondary {
+    background: transparent;
+    color: white;
+    border: 1px solid white;
+}
+
+.trust-indicators {
+    padding-top: 3rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.trust-logos {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    color: white;
+    opacity: 0.8;
+}
+
+.trust-logos i {
+    font-size: 1.25rem;
+}
+
+@media (max-width: 1200px) {
+    .workflow-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .workflow-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .cta-buttons {
+        flex-direction: column;
+        max-width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .trust-logos {
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .process-flow {
+        gap: 1rem;
+    }
+
+    .flow-step {
+        flex-direction: column;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .step-status {
+        margin: 1rem 0 0;
+    }
+}
+</style>
+<script>
+// Document Ready Handler
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAll();
+    loadHeader();
+});
+
+// Initialize All Functions
+function initializeAll() {
+    initializeCharts();
+    initializeAnimations();
+    setupEventListeners();
+    initializeWorkflowAnimations();
+}
+
+// Header Loading Function
+async function loadHeader() {
+    const headerContainer = document.getElementById('header-container');
+    
+    try {
+        const response = await fetch('header.html');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const html = await response.text();
+        headerContainer.innerHTML = html;
+        initializeMobileMenu();
+    } catch (error) {
+        console.error('Error loading header:', error);
+        headerContainer.innerHTML = `
+            <header class="main-header">
+                <div class="container">
+                    <div class="header-content">
+                        <a href="/" class="logo">
+                            <span>Workwise Pro</span>
+                        </a>
+                        <nav class="main-nav">
+                            <ul class="nav-list">
+                                <li><a href="#home">Home</a></li>
+                                <li><a href="#contact">Contact</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </header>
+        `;
+    }
+}
+
+// Mobile Menu Initialization
+function initializeMobileMenu() {
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    const mobileMenu = document.querySelector('.mobile-menu');
+    const overlay = document.querySelector('.menu-overlay');
+
+    if (mobileMenuBtn && mobileMenu) {
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        overlay?.addEventListener('click', closeMobileMenu);
+    }
+
+    function toggleMobileMenu() {
+        mobileMenu.classList.toggle('active');
+        overlay?.classList.toggle('active');
+        document.body.classList.toggle('menu-open');
+    }
+
+    function closeMobileMenu() {
+        mobileMenu.classList.remove('active');
+        overlay?.classList.remove('active');
+        document.body.classList.remove('menu-open');
+    }
+}
+
+// Initialize Charts
+function initializeCharts() {
+    // Performance Trends Chart
+    const performanceCtx = document.getElementById('performanceChart')?.getContext('2d');
+    if (performanceCtx) {
+        new Chart(performanceCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Performance Score',
+                    data: [88, 85, 90, 89, 93, 92.8],
+                    borderColor: '#4F46E5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 80,
+                        max: 100
+                    }
+                }
+            }
+        });
+    }
+
+    // Distribution Chart
+    const distributionCtx = document.getElementById('distributionChart')?.getContext('2d');
+    if (distributionCtx) {
+        new Chart(distributionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Exceptional', 'Above Average', 'Average'],
+                datasets: [{
+                    data: [35, 45, 20],
+                    backgroundColor: ['#4F46E5', '#818CF8', '#C7D2FE']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    // Productivity Chart
+    const productivityCtx = document.getElementById('productivityChart')?.getContext('2d');
+    if (productivityCtx) {
+        new Chart(productivityCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Productivity',
+                    data: [82, 87, 84, 86, 89, 87.5],
+                    borderColor: '#10B981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 75,
+                        max: 95
+                    }
+                }
+            }
+        });
+    }
+}
+
+// Initialize Animations
+function initializeAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+                if (entry.target.classList.contains('progress-bar')) {
+                    const progressBar = entry.target.querySelector('.progress');
+                    if (progressBar) {
+                        progressBar.style.width = progressBar.getAttribute('data-width') || '0%';
+                    }
+                }
+            }
+        });
+    }, observerOptions);
+
+    // Observe elements
+    document.querySelectorAll('.workflow-card, .metric-card, .feature-card, .stat-card, .progress-bar')
+        .forEach(el => observer.observe(el));
+}
+
+// Initialize Workflow Animations
+function initializeWorkflowAnimations() {
+    const workflowSteps = document.querySelectorAll('.flow-step');
+    let currentStep = 0;
+
+    function animateWorkflow() {
+        workflowSteps.forEach((step, index) => {
+            if (index === currentStep) {
+                step.classList.add('active');
+            } else {
+                step.classList.remove('active');
+            }
+        });
+
+        currentStep = (currentStep + 1) % workflowSteps.length;
+    }
+
+    // Animate workflow steps every 3 seconds
+    setInterval(animateWorkflow, 3000);
+}
+
+// Setup Event Listeners
+function setupEventListeners() {
+    // Tab Navigation
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const parent = this.closest('.dashboard-nav, .header-tabs');
+            parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Time Period Filters
+    document.querySelectorAll('.time-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const parent = this.closest('.time-filter');
+            parent.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            updateCharts(this.textContent);
+        });
+    });
+
+    // CTA Buttons
+    document.querySelectorAll('.cta-btn').forEach(btn => {
+        btn.addEventListener('click', handleCtaClick);
+    });
+}
+
+// Update Charts based on Time Period
+function updateCharts(period) {
+    // Add logic to update chart data based on selected time period
+    console.log(`Updating charts for period: ${period}`);
+}
+
+// Handle CTA Button Clicks
+function handleCtaClick(e) {
+    const action = e.currentTarget.querySelector('span').textContent;
+    console.log(`CTA clicked: ${action}`);
+    // Add your CTA handling logic here
+}
+
+// Utility Functions
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('show');
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 2000);
+    }, 100);
+}
+
+// Handle Scroll Events
+window.addEventListener('scroll', function() {
+    const header = document.querySelector('.main-header');
+    if (window.scrollY > 50) {
+        header?.classList.add('scrolled');
+    } else {
+        header?.classList.remove('scrolled');
+    }
+});
+
+// Handle Window Resize
+window.addEventListener('resize', function() {
+    const mobileMenu = document.querySelector('.mobile-menu');
+    const overlay = document.querySelector('.menu-overlay');
+    
+    if (window.innerWidth > 768) {
+        mobileMenu?.classList.remove('active');
+        overlay?.classList.remove('active');
+        document.body.classList.remove('menu-open');
+    }
+});
+
+// Export functions for potential reuse
+window.workwisePro = {
+    initializeAll,
+    showNotification,
+    updateCharts
+};
+</script>
+</body>
+</html>
