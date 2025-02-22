@@ -1,6 +1,6 @@
 version: 1
 applications:
-  - appRoot: /
+  - appRoot: .
     frontend:
       phases:
         preBuild:
@@ -11,21 +11,6 @@ applications:
             - echo "Build completed"
       artifacts:
         baseDirectory: public
-        files:
-          - '**/*'
-      cache:
-        paths:
-          - node_modules/**/*
-    backend:
-      phases:
-        preBuild:
-          commands:
-            - npm install
-        build:
-          commands:
-            - npm start
-      artifacts:
-        baseDirectory: /
         files:
           - '**/*'
       cache:
