@@ -10,7 +10,6 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const nodemailer = require('nodemailer');
-const crypto = require('crypto');
 
 const app = express();
 
@@ -99,40 +98,29 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.get('/signup', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'signup.html'));
-});
-
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-    res.status(200).json({ 
-        status: 'healthy',
-        timestamp: new Date(),
-        mongodb: client.topology?.isConnected() ? 'connected' : 'disconnected'
-    });
-});
-
 // Registration endpoint
 app.post('/register', async (req, res) => {
     try {
-        const { email, password, role } = req.body;
+        const { firstName, lastName, email, designation, role, password } = req.body;
 
-        if (!email || !password) {
+        // Validate required fields
+        if (!firstName || !lastName || !email || !designation || !role || !password) {
             return res.status(400).json({ message: 'All fields are required' });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: 'Invalid email format' });
+        }
+
+        // Validate password strength
+        if (password.length < 8) {
+            return res.status(400).json({ message: 'Password must be at least 8 characters long' });
         }
 
         const database = client.db('infocraftorbis');
         const users = database.collection('users');
-
-        // Check if Super Admin exists
-        const existingSuperAdmin = await users.findOne({ role: 'superadmin' });
-        if (existingSuperAdmin) {
-            return res.status(400).json({ message: 'Super Admin already exists' });
-        }
 
         // Check if email exists
         const existingUser = await users.findOne({ email });
@@ -145,16 +133,43 @@ app.post('/register', async (req, res) => {
 
         // Create user
         const newUser = {
+            firstName,
+            lastName,
             email,
+            designation,
+            role,
             password: hashedPassword,
-            role: 'superadmin',
             createdAt: new Date(),
             status: 'active',
             lastLogin: null,
-            failedLoginAttempts: 0
+            failedLoginAttempts: 0,
+            settings: {
+                emailNotifications: true,
+                twoFactorAuth: false
+            }
         };
 
         await users.insertOne(newUser);
+
+        // Send welcome email
+        try {
+            await transporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: 'Welcome to Workwise Pro',
+                html: `
+                    <h1>Welcome to Workwise Pro!</h1>
+                    <p>Dear ${firstName},</p>
+                    <p>Your account has been successfully created.</p>
+                    <p>Role: ${role}</p>
+                    <p>Designation: ${designation}</p>
+                    <p>You can now login to your account.</p>
+                `
+            });
+        } catch (emailError) {
+            console.error('Welcome email failed:', emailError);
+            // Don't return error to client, just log it
+        }
 
         res.status(201).json({ 
             message: 'Registration successful',
@@ -205,7 +220,13 @@ app.post('/login', async (req, res) => {
         }
 
         const token = jwt.sign(
-            { userId: user._id, email: user.email, role: user.role },
+            { 
+                userId: user._id, 
+                email: user.email, 
+                role: user.role,
+                firstName: user.firstName,
+                lastName: user.lastName
+            },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
@@ -224,7 +245,10 @@ app.post('/login', async (req, res) => {
             token,
             user: {
                 email: user.email,
-                role: user.role
+                role: user.role,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                designation: user.designation
             }
         });
 
@@ -232,11 +256,6 @@ app.post('/login', async (req, res) => {
         console.error('Login error:', error);
         res.status(500).json({ message: 'Login failed' });
     }
-});
-
-// Protected route example
-app.get('/api/protected', authenticateToken, (req, res) => {
-    res.json({ message: 'Protected data', user: req.user });
 });
 
 // Error handling middleware
