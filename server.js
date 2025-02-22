@@ -9,11 +9,11 @@ const app = express();
 
 // Enable CORS for all origins during development
 app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST'],
-    credentials: true
+    origin: 'https://main.d1cfw592vg73f.amplifyapp.com',
+    methods: ['GET', 'POST', 'OPTIONS'],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
 app.use(express.json());
 
 // MongoDB connection
