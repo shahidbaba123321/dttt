@@ -1066,8 +1066,31 @@ h1, h2, h3, h4, h5, h6 {
                     <i class="fas fa-th-large"></i> Customize Dashboard </button> 
                 <div class="notification-bell"> <i class="fas fa-bell"></i> <span class="badge">3</span> 
                 </div> 
-                <div class="user-profile"> 
-                    <img src="profile.png" alt="Admin"> <div class="user-info"> <span class="user-name">Super Admin</span> <span class="user-role">System Administrator</span> </div> </div> </div> </div> </div>
+                <!-- In your header section of superadmin.html -->
+<div class="user-profile" id="userProfileDropdown">
+    <div class="profile-info">
+        <img src="https://ui-avatars.com/api/?name=Admin" alt="Profile" class="profile-img">
+        <div class="user-info">
+            <span class="user-name" id="userName">Loading...</span>
+            <span class="user-role" id="userRole">Loading...</span>
+        </div>
+        <i class="fas fa-chevron-down"></i>
+    </div>
+    <div class="dropdown-menu" id="userDropdownMenu">
+        <a href="#" class="dropdown-item">
+            <i class="fas fa-user"></i>
+            My Account
+        </a>
+        <div class="dropdown-divider"></div>
+        <a href="#" class="dropdown-item" id="signOutBtn">
+            <i class="fas fa-sign-out-alt"></i>
+            Sign Out
+        </a>
+    </div>
+</div>
+            </div> 
+        </div> 
+    </div>
     <!-- Dashboard Content -->
     <div class="dashboard-container">
         <!-- Quick Stats Section -->
@@ -1231,78 +1254,93 @@ h1, h2, h3, h4, h5, h6 {
   
 
  <script>
-   document.addEventListener('DOMContentLoaded', function() {
-    checkAuthentication();
-    initializeUserProfile();
-    
+  // Add this at the beginning of your superadmin.html JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get('email');
+    const role = urlParams.get('role');
+    const token = urlParams.get('token');
+
+    // Check if we have the required parameters
+    if (!email || !role || !token) {
+        // No valid session data, redirect to login
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // Store in localStorage
+    localStorage.setItem('userEmail', email);
+    localStorage.setItem('userRole', role);
+    localStorage.setItem('token', token);
+
+    // Update the UI
+    document.getElementById('userName').textContent = email;
+    document.getElementById('userRole').textContent = role;
+
+    // Initialize dropdown functionality
+    initializeDropdown();
+
+    // Clean up URL parameters
+    window.history.replaceState({}, document.title, window.location.pathname);
+});
+
+function initializeDropdown() {
+    const userProfile = document.getElementById('userProfileDropdown');
+    const dropdownMenu = document.getElementById('userDropdownMenu');
+    const signOutBtn = document.getElementById('signOutBtn');
+
     // Toggle dropdown
-    const userProfile = document.querySelector('.user-profile');
     userProfile.addEventListener('click', function(e) {
-        this.classList.toggle('active');
         e.stopPropagation();
+        dropdownMenu.classList.toggle('show');
     });
 
     // Close dropdown when clicking outside
     document.addEventListener('click', function() {
-        userProfile.classList.remove('active');
+        dropdownMenu.classList.remove('show');
     });
 
-    // Sign out handler
-    document.getElementById('signOutBtn').addEventListener('click', function(e) {
+    // Sign out functionality
+    signOutBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        signOut();
+        // Clear localStorage
+        localStorage.clear();
+        // Redirect to login
+        window.location.href = 'login.html';
     });
-});
+}
 
-function checkAuthentication() {
+// Add this function to verify token periodically
+function verifyToken() {
     const token = localStorage.getItem('token');
     if (!token) {
         window.location.href = 'login.html';
         return;
     }
 
-    // Optional: Verify token validity with backend
-    verifyToken(token);
-}
-
-async function verifyToken(token) {
-    try {
-        const response = await fetch('https://18.215.160.136.nip.io/api/verify-token', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
+    fetch('https://18.215.160.136.nip.io/api/verify-token', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
         if (!response.ok) {
             throw new Error('Token invalid');
         }
-    } catch (error) {
+        return response.json();
+    })
+    .catch(error => {
         console.error('Token verification failed:', error);
-        signOut();
-    }
+        localStorage.clear();
+        window.location.href = 'login.html';
+    });
 }
 
-function initializeUserProfile() {
-    const userEmail = localStorage.getItem('userEmail');
-    const userRole = localStorage.getItem('userRole');
-    
-    if (userEmail && userRole) {
-        document.getElementById('userName').textContent = userEmail;
-        document.getElementById('userRole').textContent = userRole;
-    } else {
-        signOut();
-    }
-}
-
-function signOut() {
-    // Clear all localStorage items
-    localStorage.clear();
-    
-    // Redirect to login page
-    window.location.href = 'login.html';
-}
+// Check token every 5 minutes
+setInterval(verifyToken, 5 * 60 * 1000);
      // Dashboard Management System
 class DashboardManager {
     constructor() {
