@@ -260,31 +260,6 @@ h1, h2, h3, h4, h5, h6 {
     border: 2px solid var(--white);
 }
 
-.user-profile {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 8px;
-    transition: var(--transition);
-}
-
-.user-profile:hover {
-    background: var(--light-color);
-}
-
-.user-profile img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid rgba(0, 0, 0, 0.05);
-}
-
-.user-info {
-    display: none;
-}
 
 /* Dashboard Container */
 .dashboard-container {
@@ -906,35 +881,75 @@ h1, h2, h3, h4, h5, h6 {
 .mb-4 { margin-bottom: 1rem; }
 .mt-4 { margin-top: 1rem; }
 
-        .user-profile {
+   /* User Profile and Dropdown Styles */
+.user-profile {
     position: relative;
+    padding: 8px;
     cursor: pointer;
-}
-
-.user-profile .fa-chevron-down {
-    font-size: 0.875rem;
-    color: var(--dark-color);
-    opacity: 0.6;
+    border-radius: 8px;
     transition: var(--transition);
 }
 
-.user-profile.active .fa-chevron-down {
+.user-profile:hover {
+    background: var(--light-color);
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.profile-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 600;
+    color: var(--dark-color);
+    font-size: 0.875rem;
+}
+
+.user-role {
+    font-size: 0.75rem;
+    color: var(--dark-color);
+    opacity: 0.6;
+}
+
+.dropdown-icon {
+    font-size: 0.875rem;
+    color: var(--dark-color);
+    opacity: 0.6;
+    transition: transform 0.2s ease;
+}
+
+.user-profile.active .dropdown-icon {
     transform: rotate(180deg);
 }
 
 .dropdown-menu {
     position: absolute;
-    top: calc(100% + 0.5rem);
+    top: calc(100% + 8px);
     right: 0;
     background: var(--white);
     border-radius: 8px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    width: 200px;
-    padding: 0.5rem 0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    width: 220px;
+    padding: 8px 0;
     opacity: 0;
     visibility: hidden;
     transform: translateY(10px);
     transition: all 0.2s ease;
+    z-index: 1000;
 }
 
 .user-profile.active .dropdown-menu {
@@ -944,13 +959,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .dropdown-item {
-    padding: 0.75rem 1rem;
+    padding: 10px 16px;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 12px;
     color: var(--dark-color);
     text-decoration: none;
     transition: var(--transition);
+    font-size: 0.875rem;
 }
 
 .dropdown-item:hover {
@@ -958,10 +974,15 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--primary-color);
 }
 
+.dropdown-item i {
+    font-size: 1rem;
+    opacity: 0.7;
+}
+
 .dropdown-divider {
     height: 1px;
     background: rgba(0, 0, 0, 0.05);
-    margin: 0.5rem 0;
+    margin: 8px 0;
 }
       </style>
 </head>
@@ -1055,49 +1076,40 @@ h1, h2, h3, h4, h5, h6 {
 <div class="main-content">
     <!-- Header -->
     <div class="header">
-        <div class="header-left">
-            <button id="sidebar-toggle" class="menu-toggle">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div class="breadcrumb">
-                <h2>Dashboard</h2>
+       <!-- Inside header-right div in superadmin.html -->
+<div class="header-right">
+    <div class="header-actions">
+        <button class="btn btn-outline" id="customizeBtn">
+            <i class="fas fa-th-large"></i>
+            Customize Dashboard
+        </button>
+        <div class="notification-bell">
+            <i class="fas fa-bell"></i>
+            <span class="badge">3</span>
+        </div>
+        <div class="user-profile dropdown">
+            <div class="profile-info">
+                <img src="https://ui-avatars.com/api/?name=Admin&background=random" alt="Profile" class="profile-img">
+                <div class="user-info">
+                    <span class="user-name" id="userName">Loading...</span>
+                    <span class="user-role" id="userRole">Loading...</span>
+                </div>
+                <i class="fas fa-chevron-down dropdown-icon"></i>
+            </div>
+            <div class="dropdown-menu">
+                <a href="#" class="dropdown-item">
+                    <i class="fas fa-user"></i>
+                    My Account
+                </a>
+                <div class="dropdown-divider"></div>
+                <a href="#" class="dropdown-item" id="signOutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Sign Out
+                </a>
             </div>
         </div>
-        <div class="header-right">
-            <div class="header-actions">
-                <button class="btn btn-outline" id="customizeBtn">
-                    <i class="fas fa-th-large"></i>
-                    Customize Dashboard
-                </button>
-                <div class="notification-bell">
-                    <i class="fas fa-bell"></i>
-                    <span class="badge">3</span>
-                </div>
-                <div class="user-profile">
-                    <img src="profile.png" alt="Admin">
-                    <div class="user-profile dropdown">
-    <img src="profile.png" alt="Admin">
-    <div class="user-info">
-        <span class="user-name" id="userName">Loading...</span>
-        <span class="user-role" id="userRole">Loading...</span>
-    </div>
-    <i class="fas fa-chevron-down"></i>
-    
-    <div class="dropdown-menu">
-        <a href="#" class="dropdown-item">
-            <i class="fas fa-user"></i>
-            My Account
-        </a>
-        <div class="dropdown-divider"></div>
-        <a href="#" class="dropdown-item" id="signOutBtn">
-            <i class="fas fa-sign-out-alt"></i>
-            Sign Out
-        </a>
     </div>
 </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Dashboard Content -->
@@ -1263,27 +1275,11 @@ h1, h2, h3, h4, h5, h6 {
   
 
  <script>
-     document.addEventListener('DOMContentLoaded', function() {
+     // Session and User Profile Management
+document.addEventListener('DOMContentLoaded', function() {
     checkAuthentication();
     initializeUserProfile();
-    
-    // Toggle dropdown
-    const userProfile = document.querySelector('.user-profile');
-    userProfile.addEventListener('click', function(e) {
-        this.classList.toggle('active');
-        e.stopPropagation();
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function() {
-        userProfile.classList.remove('active');
-    });
-
-    // Sign out handler
-    document.getElementById('signOutBtn').addEventListener('click', function(e) {
-        e.preventDefault();
-        signOut();
-    });
+    initializeDropdown();
 });
 
 function checkAuthentication() {
@@ -1291,28 +1287,6 @@ function checkAuthentication() {
     if (!token) {
         window.location.href = 'login.html';
         return;
-    }
-
-    // Optional: Verify token validity with backend
-    verifyToken(token);
-}
-
-async function verifyToken(token) {
-    try {
-        const response = await fetch('https://18.215.160.136.nip.io/api/verify-token', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Token invalid');
-        }
-    } catch (error) {
-        console.error('Token verification failed:', error);
-        signOut();
     }
 }
 
@@ -1322,17 +1296,44 @@ function initializeUserProfile() {
     
     if (userEmail && userRole) {
         document.getElementById('userName').textContent = userEmail;
-        document.getElementById('userRole').textContent = userRole;
+        document.getElementById('userRole').textContent = userRole.charAt(0).toUpperCase() + userRole.slice(1);
     } else {
         signOut();
     }
 }
 
+function initializeDropdown() {
+    const userProfile = document.querySelector('.user-profile');
+    const dropdownMenu = document.querySelector('.dropdown-menu');
+    const signOutBtn = document.getElementById('signOutBtn');
+
+    // Toggle dropdown
+    userProfile.addEventListener('click', function(e) {
+        e.stopPropagation();
+        this.classList.toggle('active');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!userProfile.contains(e.target)) {
+            userProfile.classList.remove('active');
+        }
+    });
+
+    // Prevent dropdown from closing when clicking inside
+    dropdownMenu.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+
+    // Sign out functionality
+    signOutBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        signOut();
+    });
+}
+
 function signOut() {
-    // Clear all localStorage items
     localStorage.clear();
-    
-    // Redirect to login page
     window.location.href = 'login.html';
 }
      // Dashboard Management System
