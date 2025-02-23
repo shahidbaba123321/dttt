@@ -263,6 +263,12 @@ h1, h2, h3, h4, h5, h6 {
 .user-profile {
     position: relative;
     cursor: pointer;
+    padding: 8px;
+}
+        .profile-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .user-profile:hover {
@@ -278,7 +284,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .user-info {
-    display: none;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Dashboard Container */
@@ -719,9 +726,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .dropdown-menu.show {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
+    display: block;
 }
 
 .dropdown-item {
@@ -731,8 +736,6 @@ h1, h2, h3, h4, h5, h6 {
     gap: 12px;
     color: var(--dark-color);
     text-decoration: none;
-    transition: var(--transition);
-    font-size: 0.875rem;
 }
 
 .dropdown-item:hover {
@@ -1212,126 +1215,79 @@ h1, h2, h3, h4, h5, h6 {
  <script>
  // Initialize dashboard and user session
 document.addEventListener('DOMContentLoaded', function() {
-    // Get URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const email = urlParams.get('email');
-    const role = urlParams.get('role');
-    const token = urlParams.get('token');
-
-    console.log('URL Parameters:', { email, role, token }); // Debug log
-
-    // Check if we have the required parameters
-    if (!email || !role || !token) {
-        console.log('Missing parameters, checking localStorage...'); // Debug log
-        
-        // Try to get from localStorage as fallback
-        const storedEmail = localStorage.getItem('userEmail');
-        const storedRole = localStorage.getItem('userRole');
-        const storedToken = localStorage.getItem('token');
-
-        if (!storedEmail || !storedRole || !storedToken) {
-            console.log('No valid session found, redirecting to login...'); // Debug log
-            window.location.href = 'login.html';
-            return;
-        }
-    } else {
-        // Store parameters in localStorage
-        localStorage.setItem('userEmail', email);
-        localStorage.setItem('userRole', role);
-        localStorage.setItem('token', token);
-    }
-
-    // Update UI with user info
-    updateUserInfo();
-    initializeDropdown();
-
-    // Clean up URL parameters
-    window.history.replaceState({}, document.title, window.location.pathname);
-});
-
-// Update user info in the UI
-function updateUserInfo() {
-    const email = localStorage.getItem('userEmail');
-    const role = localStorage.getItem('userRole');
+    console.log('DOM Content Loaded');
     
-    console.log('Updating UI with:', { email, role }); // Debug log
+    // Debug: Log current URL and parameters
+    console.log('Current URL:', window.location.href);
+    const urlParams = new URLSearchParams(window.location.search);
+    console.log('URL Parameters:', {
+        email: urlParams.get('email'),
+        role: urlParams.get('role'),
+        token: urlParams.get('token')
+    });
 
+    // Debug: Log localStorage contents
+    console.log('localStorage contents:', {
+        email: localStorage.getItem('userEmail'),
+        role: localStorage.getItem('userRole'),
+        token: localStorage.getItem('token')
+    });
+
+    // Get user elements
     const userNameElement = document.getElementById('userName');
     const userRoleElement = document.getElementById('userRole');
-
-    if (userNameElement) userNameElement.textContent = email || 'Unknown User';
-    if (userRoleElement) userRoleElement.textContent = (role || 'Unknown Role').charAt(0).toUpperCase() + (role || 'Unknown Role').slice(1);
-}
-
-// Initialize dropdown functionality
-function initializeDropdown() {
     const userProfile = document.querySelector('.user-profile');
     const dropdownMenu = document.querySelector('.dropdown-menu');
-    const signOutBtn = document.getElementById('signOutBtn');
 
-    console.log('Initializing dropdown elements:', { userProfile, dropdownMenu, signOutBtn }); // Debug log
+    // Debug: Log elements
+    console.log('Elements found:', {
+        userNameElement,
+        userRoleElement,
+        userProfile,
+        dropdownMenu
+    });
 
-    if (userProfile && dropdownMenu) {
-        // Toggle dropdown
+    // Update user info
+    if (userNameElement && userRoleElement) {
+        const email = localStorage.getItem('userEmail');
+        const role = localStorage.getItem('userRole');
+        
+        userNameElement.textContent = email || 'No email found';
+        userRoleElement.textContent = role ? role.charAt(0).toUpperCase() + role.slice(1) : 'No role found';
+    }
+
+    // Setup dropdown toggle
+    if (userProfile) {
         userProfile.addEventListener('click', function(e) {
+            e.preventDefault();
             e.stopPropagation();
-            dropdownMenu.classList.toggle('show');
-            console.log('Dropdown toggled'); // Debug log
-        });
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!userProfile.contains(e.target)) {
-                dropdownMenu.classList.remove('show');
+            console.log('Profile clicked');
+            if (dropdownMenu) {
+                dropdownMenu.classList.toggle('show');
+                console.log('Dropdown toggled');
             }
         });
     }
 
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (dropdownMenu && dropdownMenu.classList.contains('show') && !userProfile.contains(e.target)) {
+            dropdownMenu.classList.remove('show');
+            console.log('Dropdown closed');
+        }
+    });
+
+    // Setup sign out
+    const signOutBtn = document.getElementById('signOutBtn');
     if (signOutBtn) {
-        // Sign out functionality
         signOutBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            console.log('Sign out clicked'); // Debug log
+            console.log('Sign out clicked');
             localStorage.clear();
             window.location.href = 'login.html';
         });
     }
-}
-
-// Verify token periodically
-function verifyToken() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        window.location.href = 'login.html';
-        return;
-    }
-
-    fetch('https://18.215.160.136.nip.io/api/verify-token', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Token invalid');
-        }
-        return response.json();
-    })
-    .catch(error => {
-        console.error('Token verification failed:', error);
-        localStorage.clear();
-        window.location.href = 'login.html';
-    });
-}
-
-// Check token every 5 minutes
-setInterval(verifyToken, 5 * 60 * 1000);
-
-// Initial token verification
-verifyToken();
-
+});
      
      // Dashboard Management System
 class DashboardManager {
