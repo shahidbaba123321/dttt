@@ -145,6 +145,79 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+    checkAuthentication();
+    initializeUserProfile();
+    
+    // Toggle dropdown
+    const userProfile = document.querySelector('.user-profile');
+    userProfile.addEventListener('click', function(e) {
+        this.classList.toggle('active');
+        e.stopPropagation();
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function() {
+        userProfile.classList.remove('active');
+    });
+
+    // Sign out handler
+    document.getElementById('signOutBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        signOut();
+    });
+});
+
+function checkAuthentication() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // Optional: Verify token validity with backend
+    verifyToken(token);
+}
+
+async function verifyToken(token) {
+    try {
+        const response = await fetch('https://18.215.160.136.nip.io/api/verify-token', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Token invalid');
+        }
+    } catch (error) {
+        console.error('Token verification failed:', error);
+        signOut();
+    }
+}
+
+function initializeUserProfile() {
+    const userEmail = localStorage.getItem('userEmail');
+    const userRole = localStorage.getItem('userRole');
+    
+    if (userEmail && userRole) {
+        document.getElementById('userName').textContent = userEmail;
+        document.getElementById('userRole').textContent = userRole;
+    } else {
+        signOut();
+    }
+}
+
+function signOut() {
+    // Clear all localStorage items
+    localStorage.clear();
+    
+    // Redirect to login page
+    window.location.href = 'login.html';
+}
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
