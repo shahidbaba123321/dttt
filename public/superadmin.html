@@ -261,13 +261,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .user-profile {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+    position: relative;
     cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 8px;
-    transition: var(--transition);
 }
 
 .user-profile:hover {
@@ -700,37 +695,44 @@ h1, h2, h3, h4, h5, h6 {
     position: relative;
 }
 
-.dropdown-menu {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: var(--white);
-    border-radius: 8px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    padding: 0.5rem 0;
-    min-width: 200px;
-    z-index: 1000;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(10px);
-    transition: all 0.2s ease;
-}
 
 .dropdown.active .dropdown-menu {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
 }
-        /* Dropdown Menu Items */
+
+        .dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--white);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    width: 220px;
+    padding: 8px 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.2s ease;
+    z-index: 1000;
+}
+
+.dropdown-menu.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
 .dropdown-item {
-    padding: 0.75rem 1rem;
+    padding: 10px 16px;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 12px;
     color: var(--dark-color);
     text-decoration: none;
     transition: var(--transition);
-    cursor: pointer;
+    font-size: 0.875rem;
 }
 
 .dropdown-item:hover {
@@ -738,10 +740,16 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--primary-color);
 }
 
+.dropdown-item i {
+    font-size: 1rem;
+    opacity: 0.7;
+    width: 16px;
+}
+
 .dropdown-divider {
     height: 1px;
     background: rgba(0, 0, 0, 0.05);
-    margin: 0.5rem 0;
+    margin: 8px 0;
 }
 
 /* Animations */
@@ -906,60 +914,9 @@ h1, h2, h3, h4, h5, h6 {
 .mb-4 { margin-bottom: 1rem; }
 .mt-4 { margin-top: 1rem; }
         /* Add only these new styles for the dropdown functionality */
-.user-profile {
-    position: relative;
-    cursor: pointer;
-}
 
-.dropdown-menu {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    background: var(--white);
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    width: 220px;
-    padding: 8px 0;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(10px);
-    transition: all 0.2s ease;
-    z-index: 1000;
-}
 
-.dropdown-menu.show {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
 
-.dropdown-item {
-    padding: 10px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: var(--dark-color);
-    text-decoration: none;
-    transition: var(--transition);
-    font-size: 0.875rem;
-}
-
-.dropdown-item:hover {
-    background: rgba(0, 0, 0, 0.02);
-    color: var(--primary-color);
-}
-
-.dropdown-item i {
-    font-size: 1rem;
-    opacity: 0.7;
-    width: 16px;
-}
-
-.dropdown-divider {
-    height: 1px;
-    background: rgba(0, 0, 0, 0.05);
-    margin: 8px 0;
-}
       </style>
 </head>
 <body>
@@ -1060,36 +1017,35 @@ h1, h2, h3, h4, h5, h6 {
                 <h2>Dashboard</h2> 
             </div> 
         </div> 
-        <div class="header-right"> 
-            <div class="header-actions"> 
-                <button class="btn btn-outline" id="customizeBtn"> 
-                    <i class="fas fa-th-large"></i> Customize Dashboard </button> 
-                <div class="notification-bell"> <i class="fas fa-bell"></i> <span class="badge">3</span> 
-                </div> 
-                <!-- In your header section of superadmin.html -->
-<div class="user-profile" id="userProfileDropdown">
-    <div class="profile-info">
-        <img src="https://ui-avatars.com/api/?name=Admin" alt="Profile" class="profile-img">
-        <div class="user-info">
-            <span class="user-name" id="userName"></span>
-            <span class="user-role" id="userRole"></span>
+        <div class="header-right">
+    <div class="header-actions">
+        <div class="notification-bell">
+            <i class="fas fa-bell"></i>
+            <span class="badge">3</span>
         </div>
-        <i class="fas fa-chevron-down"></i>
-    </div>
-    <div class="dropdown-menu" id="userDropdownMenu">
-        <a href="#" class="dropdown-item">
-            <i class="fas fa-user"></i>
-            My Account
-        </a>
-        <div class="dropdown-divider"></div>
-        <a href="#" class="dropdown-item" id="signOutBtn">
-            <i class="fas fa-sign-out-alt"></i>
-            Sign Out
-        </a>
+        <div class="user-profile">
+            <div class="profile-info">
+                <img src="https://ui-avatars.com/api/?name=Admin" alt="Profile" class="profile-img">
+                <div class="user-info">
+                    <span class="user-name" id="userName">Loading...</span>
+                    <span class="user-role" id="userRole">Loading...</span>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="dropdown-menu">
+                <a href="#" class="dropdown-item">
+                    <i class="fas fa-user"></i>
+                    My Account
+                </a>
+                <div class="dropdown-divider"></div>
+                <a href="#" class="dropdown-item" id="signOutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Sign Out
+                </a>
+            </div>
+        </div>
     </div>
 </div>
-            </div> 
-        </div> 
     </div>
     <!-- Dashboard Content -->
     <div class="dashboard-container">
@@ -1254,7 +1210,7 @@ h1, h2, h3, h4, h5, h6 {
   
 
  <script>
-  // Add this at the beginning of your superadmin.html JavaScript
+ // Initialize dashboard and user session
 document.addEventListener('DOMContentLoaded', function() {
     // Get URL parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -1262,56 +1218,87 @@ document.addEventListener('DOMContentLoaded', function() {
     const role = urlParams.get('role');
     const token = urlParams.get('token');
 
+    console.log('URL Parameters:', { email, role, token }); // Debug log
+
     // Check if we have the required parameters
     if (!email || !role || !token) {
-        // No valid session data, redirect to login
-        window.location.href = 'login.html';
-        return;
+        console.log('Missing parameters, checking localStorage...'); // Debug log
+        
+        // Try to get from localStorage as fallback
+        const storedEmail = localStorage.getItem('userEmail');
+        const storedRole = localStorage.getItem('userRole');
+        const storedToken = localStorage.getItem('token');
+
+        if (!storedEmail || !storedRole || !storedToken) {
+            console.log('No valid session found, redirecting to login...'); // Debug log
+            window.location.href = 'login.html';
+            return;
+        }
+    } else {
+        // Store parameters in localStorage
+        localStorage.setItem('userEmail', email);
+        localStorage.setItem('userRole', role);
+        localStorage.setItem('token', token);
     }
 
-    // Store in localStorage
-    localStorage.setItem('userEmail', email);
-    localStorage.setItem('userRole', role);
-    localStorage.setItem('token', token);
-
-    // Update the UI
-    document.getElementById('userName').textContent = email;
-    document.getElementById('userRole').textContent = role;
-
-    // Initialize dropdown functionality
+    // Update UI with user info
+    updateUserInfo();
     initializeDropdown();
 
     // Clean up URL parameters
     window.history.replaceState({}, document.title, window.location.pathname);
 });
 
-function initializeDropdown() {
-    const userProfile = document.getElementById('userProfileDropdown');
-    const dropdownMenu = document.getElementById('userDropdownMenu');
-    const signOutBtn = document.getElementById('signOutBtn');
+// Update user info in the UI
+function updateUserInfo() {
+    const email = localStorage.getItem('userEmail');
+    const role = localStorage.getItem('userRole');
+    
+    console.log('Updating UI with:', { email, role }); // Debug log
 
-    // Toggle dropdown
-    userProfile.addEventListener('click', function(e) {
-        e.stopPropagation();
-        dropdownMenu.classList.toggle('show');
-    });
+    const userNameElement = document.getElementById('userName');
+    const userRoleElement = document.getElementById('userRole');
 
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function() {
-        dropdownMenu.classList.remove('show');
-    });
-
-    // Sign out functionality
-    signOutBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        // Clear localStorage
-        localStorage.clear();
-        // Redirect to login
-        window.location.href = 'login.html';
-    });
+    if (userNameElement) userNameElement.textContent = email || 'Unknown User';
+    if (userRoleElement) userRoleElement.textContent = (role || 'Unknown Role').charAt(0).toUpperCase() + (role || 'Unknown Role').slice(1);
 }
 
-// Add this function to verify token periodically
+// Initialize dropdown functionality
+function initializeDropdown() {
+    const userProfile = document.querySelector('.user-profile');
+    const dropdownMenu = document.querySelector('.dropdown-menu');
+    const signOutBtn = document.getElementById('signOutBtn');
+
+    console.log('Initializing dropdown elements:', { userProfile, dropdownMenu, signOutBtn }); // Debug log
+
+    if (userProfile && dropdownMenu) {
+        // Toggle dropdown
+        userProfile.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('show');
+            console.log('Dropdown toggled'); // Debug log
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!userProfile.contains(e.target)) {
+                dropdownMenu.classList.remove('show');
+            }
+        });
+    }
+
+    if (signOutBtn) {
+        // Sign out functionality
+        signOutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Sign out clicked'); // Debug log
+            localStorage.clear();
+            window.location.href = 'login.html';
+        });
+    }
+}
+
+// Verify token periodically
 function verifyToken() {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -1341,6 +1328,11 @@ function verifyToken() {
 
 // Check token every 5 minutes
 setInterval(verifyToken, 5 * 60 * 1000);
+
+// Initial token verification
+verifyToken();
+
+     
      // Dashboard Management System
 class DashboardManager {
     constructor() {
