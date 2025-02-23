@@ -1,13 +1,13 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const app = express();
 
-// Enable CORS for all origins during development
+// Enable CORS for your Amplify domain
 app.use(cors({
     origin: 'https://main.d1cfw592vg73f.amplifyapp.com',
     methods: ['GET', 'POST', 'OPTIONS'],
@@ -90,7 +90,7 @@ app.post('/api/register', async (req, res) => {
     }
 });
 
-// Updated Login endpoint
+// Login endpoint
 app.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -116,7 +116,7 @@ app.post('/api/login', async (req, res) => {
             });
         }
 
-        // Generate token with user information
+        // Generate token
         const token = jwt.sign(
             { 
                 userId: user._id, 
@@ -127,7 +127,6 @@ app.post('/api/login', async (req, res) => {
             { expiresIn: '24h' }
         );
 
-        // Send response with user role and email
         res.json({ 
             success: true, 
             token,
@@ -145,82 +144,48 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-document.addEventListener('DOMContentLoaded', function() {
-    checkAuthentication();
-    initializeUserProfile();
-    
-    // Toggle dropdown
-    const userProfile = document.querySelector('.user-profile');
-    userProfile.addEventListener('click', function(e) {
-        this.classList.toggle('active');
-        e.stopPropagation();
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function() {
-        userProfile.classList.remove('active');
-    });
-
-    // Sign out handler
-    document.getElementById('signOutBtn').addEventListener('click', function(e) {
-        e.preventDefault();
-        signOut();
-    });
-});
-
-function checkAuthentication() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        window.location.href = 'login.html';
-        return;
-    }
-
-    // Optional: Verify token validity with backend
-    verifyToken(token);
-}
-
-async function verifyToken(token) {
+// Token verification endpoint
+app.post('/api/verify-token', async (req, res) => {
     try {
-        const response = await fetch('https://18.215.160.136.nip.io/api/verify-token', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+        const token = req.headers.authorization?.split(' ')[1];
+        
+        if (!token) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'No token provided' 
+            });
+        }
+
+        // Verify the token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        // Check if user still exists in database
+        const database = client.db('infocraftorbis');
+        const users = database.collection('users');
+        const user = await users.findOne({ _id: new ObjectId(decoded.userId) });
+
+        if (!user) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'User not found' 
+            });
+        }
+
+        res.json({ 
+            success: true, 
+            user: {
+                email: user.email,
+                role: user.role
             }
         });
 
-        if (!response.ok) {
-            throw new Error('Token invalid');
-        }
     } catch (error) {
-        console.error('Token verification failed:', error);
-        signOut();
+        console.error('Token verification error:', error);
+        res.status(401).json({ 
+            success: false, 
+            message: 'Invalid token' 
+        });
     }
-}
-
-function initializeUserProfile() {
-    const userEmail = localStorage.getItem('userEmail');
-    const userRole = localStorage.getItem('userRole');
-    
-    if (userEmail && userRole) {
-        document.getElementById('userName').textContent = userEmail;
-        document.getElementById('userRole').textContent = userRole;
-    } else {
-        signOut();
-    }
-}
-
-function signOut() {
-    // Clear all localStorage items
-    localStorage.clear();
-    
-    // Redirect to login page
-    window.location.href = 'login.html';
-}
-
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on port ${PORT}`);
 });
 
 // Error handling middleware
@@ -230,4 +195,9 @@ app.use((err, req, res, next) => {
         success: false, 
         message: 'Something broke!' 
     });
+});
+
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
 });
