@@ -1277,6 +1277,13 @@ h1, h2, h3, h4, h5, h6 {
  <script>
      // Session and User Profile Management
 document.addEventListener('DOMContentLoaded', function() {
+
+    // Debug: Check if we have the data
+            console.log('Stored Data:', {
+                token: localStorage.getItem('token'),
+                email: localStorage.getItem('userEmail'),
+                role: localStorage.getItem('userRole')
+            });
     checkAuthentication();
     initializeUserProfile();
     initializeDropdown();
@@ -1293,7 +1300,10 @@ function checkAuthentication() {
 function initializeUserProfile() {
     const userEmail = localStorage.getItem('userEmail');
     const userRole = localStorage.getItem('userRole');
-    
+
+
+    console.log('Initializing profile with:', { userEmail, userRole });
+            
     if (userEmail && userRole) {
         document.getElementById('userName').textContent = userEmail;
         document.getElementById('userRole').textContent = userRole.charAt(0).toUpperCase() + userRole.slice(1);
