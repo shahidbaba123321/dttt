@@ -882,106 +882,84 @@ h1, h2, h3, h4, h5, h6 {
 .mt-4 { margin-top: 1rem; }
 
    /* User Profile and Dropdown Styles */
+/* User Profile Dropdown Styles */
 .user-profile {
     position: relative;
-    padding: 8px;
     cursor: pointer;
+    padding: 5px 10px;
     border-radius: 8px;
-    transition: var(--transition);
-}
-
-.user-profile:hover {
-    background: var(--light-color);
 }
 
 .profile-info {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .profile-img {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid rgba(0, 0, 0, 0.05);
+    border: 2px solid #eee;
 }
 
 .user-info {
     display: flex;
     flex-direction: column;
+    margin-right: 10px;
 }
 
 .user-name {
     font-weight: 600;
     color: var(--dark-color);
-    font-size: 0.875rem;
+    font-size: 0.9rem;
 }
 
 .user-role {
     font-size: 0.75rem;
     color: var(--dark-color);
-    opacity: 0.6;
-}
-
-.dropdown-icon {
-    font-size: 0.875rem;
-    color: var(--dark-color);
-    opacity: 0.6;
-    transition: transform 0.2s ease;
-}
-
-.user-profile.active .dropdown-icon {
-    transform: rotate(180deg);
+    opacity: 0.7;
 }
 
 .dropdown-menu {
     position: absolute;
-    top: calc(100% + 8px);
+    top: calc(100% + 5px);
     right: 0;
-    background: var(--white);
+    background: white;
     border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    width: 220px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    min-width: 200px;
     padding: 8px 0;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(10px);
-    transition: all 0.2s ease;
+    display: none;
     z-index: 1000;
 }
 
-.user-profile.active .dropdown-menu {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
+.dropdown-menu.show {
+    display: block;
 }
 
 .dropdown-item {
-    padding: 10px 16px;
+    padding: 10px 20px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     color: var(--dark-color);
     text-decoration: none;
-    transition: var(--transition);
-    font-size: 0.875rem;
+    transition: background-color 0.2s;
 }
 
 .dropdown-item:hover {
-    background: rgba(0, 0, 0, 0.02);
-    color: var(--primary-color);
+    background-color: #f8f9fa;
 }
 
 .dropdown-item i {
-    font-size: 1rem;
+    width: 16px;
     opacity: 0.7;
 }
 
 .dropdown-divider {
     height: 1px;
-    background: rgba(0, 0, 0, 0.05);
+    background-color: #eee;
     margin: 8px 0;
 }
       </style>
@@ -1073,44 +1051,49 @@ h1, h2, h3, h4, h5, h6 {
     
   <!-- Inside the main-content div, after the header -->
 <!-- Main Content Area -->
-<div class="main-content">
+
     <!-- Header -->
-    <div class="header">
-       <!-- Inside header-right div in superadmin.html -->
-<div class="header-right">
-    <div class="header-actions">
-        <button class="btn btn-outline" id="customizeBtn">
-            <i class="fas fa-th-large"></i>
-            Customize Dashboard
+   <!-- Header Section -->
+<header class="header">
+    <div class="header-left">
+        <button id="sidebar-toggle" class="menu-toggle">
+            <i class="fas fa-bars"></i>
         </button>
-        <div class="notification-bell">
-            <i class="fas fa-bell"></i>
-            <span class="badge">3</span>
+        <div class="breadcrumb">
+            <h2>Dashboard</h2>
         </div>
-        <div class="user-profile dropdown">
-            <div class="profile-info">
-                <img src="https://ui-avatars.com/api/?name=Admin&background=random" alt="Profile" class="profile-img">
-                <div class="user-info">
-                    <span class="user-name" id="userName">Loading...</span>
-                    <span class="user-role" id="userRole">Loading...</span>
+    </div>
+    
+    <div class="header-right">
+        <div class="header-actions">
+            <div class="notification-bell">
+                <i class="fas fa-bell"></i>
+                <span class="badge">3</span>
+            </div>
+            <div class="user-profile" id="userProfileDropdown">
+                <div class="profile-info">
+                    <img src="https://ui-avatars.com/api/?name=Admin" alt="Profile" class="profile-img">
+                    <div class="user-info">
+                        <span class="user-name" id="userName">Loading...</span>
+                        <span class="user-role" id="userRole">Loading...</span>
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
                 </div>
-                <i class="fas fa-chevron-down dropdown-icon"></i>
-            </div>
-            <div class="dropdown-menu">
-                <a href="#" class="dropdown-item">
-                    <i class="fas fa-user"></i>
-                    My Account
-                </a>
-                <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item" id="signOutBtn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Sign Out
-                </a>
+                <div class="dropdown-menu" id="userDropdownMenu">
+                    <a href="#" class="dropdown-item">
+                        <i class="fas fa-user"></i>
+                        My Account
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item" id="signOutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Sign Out
+                    </a>
+                </div>
             </div>
         </div>
-    </div>
-</div>
-    </div>
+  
+</header>
 
     <!-- Dashboard Content -->
     <div class="dashboard-container">
@@ -1275,59 +1258,38 @@ h1, h2, h3, h4, h5, h6 {
   
 
  <script>
-     // Session and User Profile Management
+    // User Profile Dropdown Functionality
 document.addEventListener('DOMContentLoaded', function() {
-
-    // Debug: Check if we have the data
-            console.log('Stored Data:', {
-                token: localStorage.getItem('token'),
-                email: localStorage.getItem('userEmail'),
-                role: localStorage.getItem('userRole')
-            });
-    checkAuthentication();
-    initializeUserProfile();
-    initializeDropdown();
-});
-
-function checkAuthentication() {
+    // Check authentication
     const token = localStorage.getItem('token');
     if (!token) {
         window.location.href = 'login.html';
         return;
     }
-}
 
-function initializeUserProfile() {
+    // Initialize user info
     const userEmail = localStorage.getItem('userEmail');
     const userRole = localStorage.getItem('userRole');
-
-
-    console.log('Initializing profile with:', { userEmail, userRole });
-            
     if (userEmail && userRole) {
         document.getElementById('userName').textContent = userEmail;
-        document.getElementById('userRole').textContent = userRole.charAt(0).toUpperCase() + userRole.slice(1);
-    } else {
-        signOut();
+        document.getElementById('userRole').textContent = 
+            userRole.charAt(0).toUpperCase() + userRole.slice(1);
     }
-}
 
-function initializeDropdown() {
-    const userProfile = document.querySelector('.user-profile');
-    const dropdownMenu = document.querySelector('.dropdown-menu');
+    // Dropdown functionality
+    const userProfile = document.getElementById('userProfileDropdown');
+    const dropdownMenu = document.getElementById('userDropdownMenu');
     const signOutBtn = document.getElementById('signOutBtn');
 
     // Toggle dropdown
     userProfile.addEventListener('click', function(e) {
         e.stopPropagation();
-        this.classList.toggle('active');
+        dropdownMenu.classList.toggle('show');
     });
 
     // Close dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!userProfile.contains(e.target)) {
-            userProfile.classList.remove('active');
-        }
+    document.addEventListener('click', function() {
+        dropdownMenu.classList.remove('show');
     });
 
     // Prevent dropdown from closing when clicking inside
@@ -1338,14 +1300,10 @@ function initializeDropdown() {
     // Sign out functionality
     signOutBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        signOut();
+        localStorage.clear();
+        window.location.href = 'login.html';
     });
-}
-
-function signOut() {
-    localStorage.clear();
-    window.location.href = 'login.html';
-}
+});
      // Dashboard Management System
 class DashboardManager {
     constructor() {
