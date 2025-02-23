@@ -1049,50 +1049,25 @@ h1, h2, h3, h4, h5, h6 {
     
   <!-- Inside the main-content div, after the header -->
 <!-- Main Content Area -->
-
-    <!-- Header -->
-   <!-- Header Section -->
-<header class="header">
-    <div class="header-left">
-        <button id="sidebar-toggle" class="menu-toggle">
-            <i class="fas fa-bars"></i>
-        </button>
-        <div class="breadcrumb">
-            <h2>Dashboard</h2>
-        </div>
-    </div>
-    
-    <div class="header-right">
-        <div class="header-actions">
-            <div class="notification-bell">
-                <i class="fas fa-bell"></i>
-                <span class="badge">3</span>
-            </div>
-            <div class="user-profile" id="userProfileDropdown">
-                <div class="profile-info">
-                    <img src="https://ui-avatars.com/api/?name=Admin" alt="Profile" class="profile-img">
-                    <div class="user-info">
-                        <span class="user-name" id="userName">Loading...</span>
-                        <span class="user-role" id="userRole">Loading...</span>
-                    </div>
-                    <i class="fas fa-chevron-down"></i>
-                </div>
-                <div class="dropdown-menu" id="userDropdownMenu">
-                    <a href="#" class="dropdown-item">
-                        <i class="fas fa-user"></i>
-                        My Account
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <a href="#" class="dropdown-item" id="signOutBtn">
-                        <i class="fas fa-sign-out-alt"></i>
-                        Sign Out
-                    </a>
-                </div>
-            </div>
-        </div>
-  
-</header>
-
+<div class="main-content">
+    <!-- Header --> 
+    <div class="header">
+        <div class="header-left"> 
+            <button id="sidebar-toggle" class="menu-toggle"> 
+                <i class="fas fa-bars"></i>
+            </button> 
+            <div class="breadcrumb"> 
+                <h2>Dashboard</h2> 
+            </div> 
+        </div> 
+        <div class="header-right"> 
+            <div class="header-actions"> 
+                <button class="btn btn-outline" id="customizeBtn"> 
+                    <i class="fas fa-th-large"></i> Customize Dashboard </button> 
+                <div class="notification-bell"> <i class="fas fa-bell"></i> <span class="badge">3</span> 
+                </div> 
+                <div class="user-profile"> 
+                    <img src="profile.png" alt="Admin"> <div class="user-info"> <span class="user-name">Super Admin</span> <span class="user-role">System Administrator</span> </div> </div> </div> </div> </div>
     <!-- Dashboard Content -->
     <div class="dashboard-container">
         <!-- Quick Stats Section -->
