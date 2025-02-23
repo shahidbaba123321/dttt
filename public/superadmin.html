@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WorkWise Pro - Super Admin Dashboard</title>
@@ -192,7 +193,7 @@ h1, h2, h3, h4, h5, h6 {
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 24px;
 }
 
 .btn {
@@ -234,10 +235,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .notification-bell {
     position: relative;
-    padding: 0.5rem;
     cursor: pointer;
-    color: var(--dark-color);
-    transition: var(--transition);
 }
 
 .notification-bell:hover {
@@ -246,19 +244,19 @@ h1, h2, h3, h4, h5, h6 {
 
 .notification-bell .badge {
     position: absolute;
-    top: 0;
-    right: 0;
+    top: -5px;
+    right: -5px;
     background: var(--danger-color);
-    color: var(--white);
-    font-size: 0.75rem;
-    width: 18px;
-    height: 18px;
+    color: white;
+    font-size: 10px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid var(--white);
 }
+
 
 .user-profile {
     position: relative;
@@ -286,6 +284,7 @@ h1, h2, h3, h4, h5, h6 {
 .user-info {
     display: flex;
     flex-direction: column;
+    align-items: flex-end;
 }
 
 /* Dashboard Container */
@@ -363,7 +362,33 @@ h1, h2, h3, h4, h5, h6 {
 .stat-change.negative {
     color: var(--danger-color);
 }
+#userName {
+    font-weight: 600;
+    color: var(--dark-color);
+    font-size: 0.9rem;
+}
 
+#userRole {
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+}        
+.sign-out-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--danger-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.sign-out-btn:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
 /* Dashboard Grid */
 .dashboard-grid {
     display: grid;
@@ -1020,34 +1045,22 @@ h1, h2, h3, h4, h5, h6 {
                 <h2>Dashboard</h2> 
             </div> 
         </div> 
-        <div class="header-right">
+       <div class="header-right">
     <div class="header-actions">
         <div class="notification-bell">
             <i class="fas fa-bell"></i>
             <span class="badge">3</span>
         </div>
-        <div class="user-profile">
-            <div class="profile-info">
-                <img src="https://ui-avatars.com/api/?name=Admin" alt="Profile" class="profile-img">
-                <div class="user-info">
-                    <span class="user-name" id="userName">Loading...</span>
-                    <span class="user-role" id="userRole">Loading...</span>
-                </div>
-                <i class="fas fa-chevron-down"></i>
-            </div>
-            <div class="dropdown-menu">
-                <a href="#" class="dropdown-item">
-                    <i class="fas fa-user"></i>
-                    My Account
-                </a>
-                <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item" id="signOutBtn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Sign Out
-                </a>
-            </div>
+        <div class="user-info">
+            <span id="userName">Loading...</span>
+            <span id="userRole">Loading...</span>
         </div>
+        <button id="signOutBtn" class="sign-out-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            Sign Out
+        </button>
     </div>
+</div>
 </div>
     </div>
     <!-- Dashboard Content -->
@@ -1215,78 +1228,46 @@ h1, h2, h3, h4, h5, h6 {
  <script>
  // Initialize dashboard and user session
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM Content Loaded');
-    
-    // Debug: Log current URL and parameters
-    console.log('Current URL:', window.location.href);
+    // Get URL parameters
     const urlParams = new URLSearchParams(window.location.search);
-    console.log('URL Parameters:', {
-        email: urlParams.get('email'),
-        role: urlParams.get('role'),
-        token: urlParams.get('token')
-    });
-
-    // Debug: Log localStorage contents
-    console.log('localStorage contents:', {
-        email: localStorage.getItem('userEmail'),
-        role: localStorage.getItem('userRole'),
-        token: localStorage.getItem('token')
-    });
-
-    // Get user elements
-    const userNameElement = document.getElementById('userName');
-    const userRoleElement = document.getElementById('userRole');
-    const userProfile = document.querySelector('.user-profile');
-    const dropdownMenu = document.querySelector('.dropdown-menu');
-
-    // Debug: Log elements
-    console.log('Elements found:', {
-        userNameElement,
-        userRoleElement,
-        userProfile,
-        dropdownMenu
-    });
+    const email = urlParams.get('email');
+    const role = urlParams.get('role');
+    const token = urlParams.get('token');
 
     // Update user info
-    if (userNameElement && userRoleElement) {
-        const email = localStorage.getItem('userEmail');
-        const role = localStorage.getItem('userRole');
+    const userNameElement = document.getElementById('userName');
+    const userRoleElement = document.getElementById('userRole');
+
+    if (email && role) {
+        userNameElement.textContent = email;
+        userRoleElement.textContent = role.charAt(0).toUpperCase() + role.slice(1);
         
-        userNameElement.textContent = email || 'No email found';
-        userRoleElement.textContent = role ? role.charAt(0).toUpperCase() + role.slice(1) : 'No role found';
-    }
-
-    // Setup dropdown toggle
-    if (userProfile) {
-        userProfile.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('Profile clicked');
-            if (dropdownMenu) {
-                dropdownMenu.classList.toggle('show');
-                console.log('Dropdown toggled');
-            }
-        });
-    }
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-        if (dropdownMenu && dropdownMenu.classList.contains('show') && !userProfile.contains(e.target)) {
-            dropdownMenu.classList.remove('show');
-            console.log('Dropdown closed');
+        // Store in localStorage
+        localStorage.setItem('userEmail', email);
+        localStorage.setItem('userRole', role);
+        localStorage.setItem('token', token);
+    } else {
+        // Try to get from localStorage
+        const storedEmail = localStorage.getItem('userEmail');
+        const storedRole = localStorage.getItem('userRole');
+        
+        if (storedEmail && storedRole) {
+            userNameElement.textContent = storedEmail;
+            userRoleElement.textContent = storedRole.charAt(0).toUpperCase() + storedRole.slice(1);
+        } else {
+            // No valid session, redirect to login
+            window.location.href = 'login.html';
         }
+    }
+
+    // Sign out functionality
+    document.getElementById('signOutBtn').addEventListener('click', function() {
+        localStorage.clear();
+        window.location.href = 'login.html';
     });
 
-    // Setup sign out
-    const signOutBtn = document.getElementById('signOutBtn');
-    if (signOutBtn) {
-        signOutBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            console.log('Sign out clicked');
-            localStorage.clear();
-            window.location.href = 'login.html';
-        });
-    }
+    // Clean up URL parameters
+    window.history.replaceState({}, document.title, window.location.pathname);
 });
      
      // Dashboard Management System
