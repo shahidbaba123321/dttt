@@ -1276,8 +1276,7 @@ body {
 </div>
   
 </body>
-  // Add this before closing </body> tag
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
 
  <script>
      // Dashboard Management System
@@ -3282,6 +3281,2734 @@ const chartInteractionManager = new ChartInteractionManager();
 // Export Chart Interaction Manager
 export { chartInteractionManager };
 
-     
+// Chart Data Processing and Transformation Utilities
+class ChartDataProcessor {
+    constructor() {
+        this.processors = new Map();
+        this.transformers = new Map();
+        this.aggregators = new Map();
+        this.initializeProcessors();
+    }
+
+    // Initialize Data Processors
+    initializeProcessors() {
+        // Data Cleaning Processors
+        this.processors.set('clean', {
+            removeNulls: (data) => data.filter(item => item !== null && item !== undefined),
+            removeOutliers: (data, threshold = 2) => {
+                const mean = this.calculateMean(data);
+                const std = this.calculateStandardDeviation(data);
+                return data.filter(item => 
+                    Math.abs((item - mean) / std) <= threshold
+                );
+            },
+            fillMissingValues: (data, method = 'mean') => {
+                const value = method === 'mean' 
+                    ? this.calculateMean(data.filter(x => x !== null))
+                    : 0;
+                return data.map(item => item === null ? value : item);
+            }
+        });
+
+        // Data Transformation Processors
+        this.transformers.set('transform', {
+            normalize: (data) => {
+                const min = Math.min(...data);
+                const max = Math.max(...data);
+                return data.map(value => (value - min) / (max - min));
+            },
+            standardize: (data) => {
+                const mean = this.calculateMean(data);
+                const std = this.calculateStandardDeviation(data);
+                return data.map(value => (value - mean) / std);
+            },
+            logarithmic: (data) => {
+                return data.map(value => Math.log(Math.max(value, 1)));
+            }
+        });
+
+        // Data Aggregation Processors
+        this.aggregators.set('aggregate', {
+            sum: (data) => data.reduce((acc, val) => acc + val, 0),
+            average: (data) => this.calculateMean(data),
+            median: (data) => {
+                const sorted = [...data].sort((a, b) => a - b);
+                const mid = Math.floor(sorted.length / 2);
+                return sorted.length % 2 === 0 
+                    ? (sorted[mid - 1] + sorted[mid]) / 2 
+                    : sorted[mid];
+            }
+        });
+    }
+
+    // Data Processing Methods
+    processChartData(data, options = {}) {
+        const {
+            cleaning = [],
+            transformations = [],
+            aggregations = []
+        } = options;
+
+        let processedData = this.clone(data);
+
+        // Apply cleaning operations
+        if (cleaning.length > 0) {
+            processedData = this.applyCleaningOperations(processedData, cleaning);
+        }
+
+        // Apply transformations
+        if (transformations.length > 0) {
+            processedData = this.applyTransformations(processedData, transformations);
+        }
+
+        // Apply aggregations
+        if (aggregations.length > 0) {
+            processedData = this.applyAggregations(processedData, aggregations);
+        }
+
+        return processedData;
+    }
+
+    // Time Series Data Processing
+    processTimeSeriesData(data, options = {}) {
+        const {
+            interval = 'day',
+            aggregation = 'sum',
+            fillGaps = true
+        } = options;
+
+        // Group data by time interval
+        const groupedData = this.groupByTimeInterval(data, interval);
+
+        // Aggregate values within each group
+        const aggregatedData = this.aggregateGroups(groupedData, aggregation);
+
+        // Fill gaps if requested
+        return fillGaps ? this.fillTimeGaps(aggregatedData, interval) : aggregatedData;
+    }
+
+    // Data Transformation Methods
+    transformForChart(data, chartType) {
+        switch (chartType) {
+            case 'line':
+                return this.transformForLineChart(data);
+            case 'bar':
+                return this.transformForBarChart(data);
+            case 'pie':
+                return this.transformForPieChart(data);
+            case 'scatter':
+                return this.transformForScatterChart(data);
+            default:
+                return data;
+        }
+    }
+
+    // Specific Chart Type Transformations
+    transformForLineChart(data) {
+        return {
+            labels: data.map(item => item.x),
+            datasets: [{
+                data: data.map(item => item.y),
+                borderColor: this.generateColors(1)[0],
+                fill: false
+            }]
+        };
+    }
+
+    transformForBarChart(data) {
+        return {
+            labels: data.map(item => item.label),
+            datasets: [{
+                data: data.map(item => item.value),
+                backgroundColor: this.generateColors(data.length)
+            }]
+        };
+    }
+
+    transformForPieChart(data) {
+        return {
+            labels: data.map(item => item.label),
+            datasets: [{
+                data: data.map(item => item.value),
+                backgroundColor: this.generateColors(data.length)
+            }]
+        };
+    }
+
+    transformForScatterChart(data) {
+        return {
+            datasets: [{
+                data: data.map(item => ({
+                    x: item.x,
+                    y: item.y
+                })),
+                backgroundColor: this.generateColors(1)[0]
+            }]
+        };
+    }
+
+    // Data Analysis Methods
+    analyzeData(data) {
+        return {
+            summary: this.calculateSummaryStatistics(data),
+            distribution: this.analyzeDistribution(data),
+            trends: this.analyzeTrends(data)
+        };
+    }
+
+    calculateSummaryStatistics(data) {
+        const numericData = data.filter(item => typeof item === 'number');
+        return {
+            count: numericData.length,
+            mean: this.calculateMean(numericData),
+            median: this.calculateMedian(numericData),
+            std: this.calculateStandardDeviation(numericData),
+            min: Math.min(...numericData),
+            max: Math.max(...numericData)
+        };
+    }
+
+    analyzeDistribution(data) {
+        const frequencies = new Map();
+        data.forEach(value => {
+            frequencies.set(value, (frequencies.get(value) || 0) + 1);
+        });
+        return Array.from(frequencies.entries())
+            .map(([value, count]) => ({ value, count }));
+    }
+
+    analyzeTrends(data) {
+        if (data.length < 2) return null;
+
+        const changes = [];
+        for (let i = 1; i < data.length; i++) {
+            changes.push(data[i] - data[i - 1]);
+        }
+
+        return {
+            trend: this.calculateMean(changes) > 0 ? 'increasing' : 'decreasing',
+            changeRate: this.calculateMean(changes),
+            volatility: this.calculateStandardDeviation(changes)
+        };
+    }
+
+    // Utility Methods
+    calculateMean(data) {
+        return data.reduce((acc, val) => acc + val, 0) / data.length;
+    }
+
+    calculateMedian(data) {
+        const sorted = [...data].sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        return sorted.length % 2 === 0 
+            ? (sorted[mid - 1] + sorted[mid]) / 2 
+            : sorted[mid];
+    }
+
+    calculateStandardDeviation(data) {
+        const mean = this.calculateMean(data);
+        const squareDiffs = data.map(value => Math.pow(value - mean, 2));
+        return Math.sqrt(this.calculateMean(squareDiffs));
+    }
+
+    generateColors(count) {
+        const colors = [
+            '#4F46E5', '#10B981', '#F59E0B', '#EF4444', 
+            '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'
+        ];
+        return Array(count).fill().map((_, i) => colors[i % colors.length]);
+    }
+
+    groupByTimeInterval(data, interval) {
+        const groups = new Map();
+        data.forEach(item => {
+            const key = this.getTimeKey(item.timestamp, interval);
+            if (!groups.has(key)) {
+                groups.set(key, []);
+            }
+            groups.get(key).push(item.value);
+        });
+        return groups;
+    }
+
+    getTimeKey(timestamp, interval) {
+        const date = new Date(timestamp);
+        switch (interval) {
+            case 'hour':
+                return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}`;
+            case 'day':
+                return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+            case 'week':
+                const weekNumber = Math.ceil((date.getDate() + 1) / 7);
+                return `${date.getFullYear()}-${date.getMonth()}-W${weekNumber}`;
+            case 'month':
+                return `${date.getFullYear()}-${date.getMonth()}`;
+            default:
+                return timestamp;
+        }
+    }
+
+    fillTimeGaps(data, interval) {
+        const filled = new Map(data);
+        const start = Math.min(...Array.from(data.keys()));
+        const end = Math.max(...Array.from(data.keys()));
+        
+        let current = start;
+        while (current <= end) {
+            if (!filled.has(current)) {
+                filled.set(current, 0);
+            }
+            current = this.incrementTimeKey(current, interval);
+        }
+        
+        return new Map([...filled.entries()].sort());
+    }
+
+    incrementTimeKey(key, interval) {
+        const date = new Date(key);
+        switch (interval) {
+            case 'hour':
+                date.setHours(date.getHours() + 1);
+                break;
+            case 'day':
+                date.setDate(date.getDate() + 1);
+                break;
+            case 'week':
+                date.setDate(date.getDate() + 7);
+                break;
+            case 'month':
+                date.setMonth(date.getMonth() + 1);
+                break;
+        }
+        return this.getTimeKey(date, interval);
+    }
+
+    clone(data) {
+        return JSON.parse(JSON.stringify(data));
+    }
+}
+
+// Initialize Chart Data Processor
+const chartDataProcessor = new ChartDataProcessor();
+
+// Export Chart Data Processor
+export { chartDataProcessor };   
+
+// Real-time Chart Updates System
+class RealTimeChartManager {
+    constructor() {
+        this.activeCharts = new Map();
+        this.updateIntervals = new Map();
+        this.dataStreams = new Map();
+        this.websocketConnections = new Map();
+        this.initializeRealTimeSystem();
+    }
+
+    // Initialize Real-time System
+    initializeRealTimeSystem() {
+        this.setupWebSocketHandler();
+        this.setupDataStreamHandler();
+        this.setupUpdateHandler();
+    }
+
+    // WebSocket Connection Handler
+    setupWebSocketHandler() {
+        this.wsHandler = {
+            connect: (url, options = {}) => {
+                const ws = new WebSocket(url);
+                
+                ws.onopen = () => {
+                    console.log('WebSocket connection established');
+                    if (options.onConnect) options.onConnect();
+                };
+
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    if (options.onMessage) options.onMessage(data);
+                };
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    if (options.onError) options.onError(error);
+                };
+
+                ws.onclose = () => {
+                    console.log('WebSocket connection closed');
+                    if (options.onClose) options.onClose();
+                    // Attempt to reconnect
+                    setTimeout(() => this.reconnectWebSocket(url, options), 5000);
+                };
+
+                return ws;
+            }
+        };
+    }
+
+    // Real-time Chart Configuration
+    configureRealTimeChart(chartId, options = {}) {
+        const {
+            updateInterval = 1000,
+            maxDataPoints = 50,
+            dataSource,
+            aggregation = 'none',
+            animations = true
+        } = options;
+
+        const chartConfig = {
+            updateInterval,
+            maxDataPoints,
+            dataSource,
+            aggregation,
+            animations,
+            lastUpdate: Date.now()
+        };
+
+        this.activeCharts.set(chartId, chartConfig);
+        this.startRealTimeUpdates(chartId);
+    }
+
+    // Start Real-time Updates
+    startRealTimeUpdates(chartId) {
+        const config = this.activeCharts.get(chartId);
+        if (!config) return;
+
+        const updateInterval = setInterval(() => {
+            this.updateChart(chartId);
+        }, config.updateInterval);
+
+        this.updateIntervals.set(chartId, updateInterval);
+    }
+
+    // Update Chart with New Data
+    async updateChart(chartId) {
+        const chart = Chart.getChart(chartId);
+        const config = this.activeCharts.get(chartId);
+        if (!chart || !config) return;
+
+        try {
+            const newData = await this.fetchNewData(config.dataSource);
+            this.processAndUpdateChart(chart, newData, config);
+        } catch (error) {
+            console.error('Error updating chart:', error);
+            this.handleUpdateError(chartId, error);
+        }
+    }
+
+    // Process and Update Chart Data
+    processAndUpdateChart(chart, newData, config) {
+        const { maxDataPoints, aggregation, animations } = config;
+
+        // Process new data based on aggregation method
+        const processedData = this.aggregateData(newData, aggregation);
+
+        // Update datasets
+        chart.data.datasets.forEach((dataset, index) => {
+            // Add new data
+            dataset.data.push(...(processedData[index] || []));
+
+            // Remove old data if exceeding maxDataPoints
+            if (dataset.data.length > maxDataPoints) {
+                dataset.data.splice(0, dataset.data.length - maxDataPoints);
+            }
+        });
+
+        // Update labels if necessary
+        if (chart.data.labels) {
+            const newLabels = this.generateLabels(processedData);
+            chart.data.labels = this.updateLabels(chart.data.labels, newLabels, maxDataPoints);
+        }
+
+        // Update chart with animation options
+        chart.update(animations ? 'active' : 'none');
+    }
+
+    // WebSocket Data Streaming
+    setupDataStream(chartId, websocketUrl, options = {}) {
+        const ws = this.wsHandler.connect(websocketUrl, {
+            onMessage: (data) => {
+                this.handleStreamData(chartId, data);
+            },
+            ...options
+        });
+
+        this.websocketConnections.set(chartId, ws);
+    }
+
+    // Handle Streaming Data
+    handleStreamData(chartId, data) {
+        const chart = Chart.getChart(chartId);
+        const config = this.activeCharts.get(chartId);
+        if (!chart || !config) return;
+
+        // Process streaming data
+        const processedData = this.processStreamData(data, config);
+        
+        // Update chart with new data
+        this.updateChartWithStreamData(chart, processedData, config);
+    }
+
+    // Real-time Data Processing
+    processStreamData(data, config) {
+        const { aggregation } = config;
+
+        switch (aggregation) {
+            case 'sum':
+                return this.aggregateSum(data);
+            case 'average':
+                return this.aggregateAverage(data);
+            case 'max':
+                return this.aggregateMax(data);
+            case 'min':
+                return this.aggregateMin(data);
+            default:
+                return data;
+        }
+    }
+
+    // Update Chart with Stream Data
+    updateChartWithStreamData(chart, data, config) {
+        const { maxDataPoints, animations } = config;
+
+        // Update each dataset
+        chart.data.datasets.forEach((dataset, index) => {
+            // Add new data point
+            if (Array.isArray(data)) {
+                dataset.data.push(data[index]);
+            } else {
+                dataset.data.push(data);
+            }
+
+            // Remove oldest data point if exceeding maxDataPoints
+            if (dataset.data.length > maxDataPoints) {
+                dataset.data.shift();
+            }
+        });
+
+        // Update labels for time-series data
+        if (chart.data.labels) {
+            const newLabel = new Date().toLocaleTimeString();
+            chart.data.labels.push(newLabel);
+            if (chart.data.labels.length > maxDataPoints) {
+                chart.data.labels.shift();
+            }
+        }
+
+        // Update chart
+        chart.update(animations ? 'active' : 'none');
+    }
+
+    // Data Aggregation Methods
+    aggregateData(data, method) {
+        switch (method) {
+            case 'sum':
+                return data.reduce((acc, val) => acc + val, 0);
+            case 'average':
+                return data.reduce((acc, val) => acc + val, 0) / data.length;
+            case 'max':
+                return Math.max(...data);
+            case 'min':
+                return Math.min(...data);
+            default:
+                return data;
+        }
+    }
+
+    // Error Handling
+    handleUpdateError(chartId, error) {
+        const chart = Chart.getChart(chartId);
+        if (!chart) return;
+
+        // Add error indicator to chart
+        chart.options.plugins.tooltip.callbacks.footer = (tooltipItems) => {
+            return 'Last update failed';
+        };
+
+        // Update chart status
+        this.activeCharts.get(chartId).status = 'error';
+        
+        // Emit error event
+        this.emitChartEvent(chartId, 'error', error);
+    }
+
+    // Event Handling
+    emitChartEvent(chartId, eventType, data) {
+        const event = new CustomEvent(`chart:${eventType}`, {
+            detail: {
+                chartId,
+                data
+            }
+        });
+        window.dispatchEvent(event);
+    }
+
+    // Cleanup Methods
+    stopRealTimeUpdates(chartId) {
+        // Clear update interval
+        const interval = this.updateIntervals.get(chartId);
+        if (interval) {
+            clearInterval(interval);
+            this.updateIntervals.delete(chartId);
+        }
+
+        // Close WebSocket connection
+        const ws = this.websocketConnections.get(chartId);
+        if (ws) {
+            ws.close();
+            this.websocketConnections.delete(chartId);
+        }
+
+        // Remove chart configuration
+        this.activeCharts.delete(chartId);
+    }
+
+    // Utility Methods
+    generateLabels(data) {
+        return data.map(() => new Date().toLocaleTimeString());
+    }
+
+    updateLabels(currentLabels, newLabels, maxPoints) {
+        const updatedLabels = [...currentLabels, ...newLabels];
+        return updatedLabels.slice(-maxPoints);
+    }
+
+    reconnectWebSocket(url, options) {
+        console.log('Attempting to reconnect WebSocket...');
+        this.wsHandler.connect(url, options);
+    }
+}
+
+// Initialize Real-time Chart Manager
+const realTimeChartManager = new RealTimeChartManager();
+
+// Example Usage
+const initializeRealTimeChart = (chartId, options) => {
+    realTimeChartManager.configureRealTimeChart(chartId, {
+        updateInterval: 1000,
+        maxDataPoints: 50,
+        dataSource: 'api/real-time-data',
+        aggregation: 'average',
+        animations: true,
+        ...options
+    });
+};
+
+// Export Real-time Chart Manager
+export { realTimeChartManager, initializeRealTimeChart };     
+
+// Advanced Chart Customization System
+class ChartCustomizationManager {
+    constructor() {
+        this.themes = new Map();
+        this.customStyles = new Map();
+        this.animations = new Map();
+        this.gradients = new Map();
+        this.patterns = new Map();
+        this.initializeCustomizations();
+    }
+
+    // Initialize Default Customizations
+    initializeCustomizations() {
+        this.initializeThemes();
+        this.initializeAnimations();
+        this.initializePatterns();
+        this.initializeGradients();
+    }
+
+    // Theme Management
+    initializeThemes() {
+        // Corporate Theme
+        this.themes.set('corporate', {
+            colors: ['#2563EB', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
+            backgroundColor: '#FFFFFF',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: 13,
+            gridLines: {
+                color: 'rgba(0, 0, 0, 0.05)',
+                borderDash: []
+            },
+            tooltips: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: '#FFFFFF',
+                bodyColor: '#FFFFFF',
+                borderColor: 'rgba(255, 255, 255, 0.1)',
+                borderWidth: 1
+            }
+        });
+
+        // Dark Theme
+        this.themes.set('dark', {
+            colors: ['#818CF8', '#34D399', '#FBBF24', '#F87171', '#A78BFA'],
+            backgroundColor: '#1F2937',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: 13,
+            gridLines: {
+                color: 'rgba(255, 255, 255, 0.1)',
+                borderDash: []
+            },
+            tooltips: {
+                backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                titleColor: '#FFFFFF',
+                bodyColor: '#FFFFFF',
+                borderColor: 'rgba(255, 255, 255, 0.2)',
+                borderWidth: 1
+            }
+        });
+
+        // Modern Theme
+        this.themes.set('modern', {
+            colors: ['#06B6D4', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B'],
+            backgroundColor: '#F8FAFC',
+            fontFamily: 'Plus Jakarta Sans, sans-serif',
+            fontSize: 13,
+            gridLines: {
+                color: 'rgba(0, 0, 0, 0.03)',
+                borderDash: [5, 5]
+            },
+            tooltips: {
+                backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                titleColor: '#FFFFFF',
+                bodyColor: '#FFFFFF',
+                borderColor: 'rgba(255, 255, 255, 0.15)',
+                borderWidth: 0
+            }
+        });
+    }
+
+    // Apply Theme to Chart
+    applyTheme(chart, themeName) {
+        const theme = this.themes.get(themeName);
+        if (!theme) return;
+
+        chart.options = this.mergeDeep(chart.options, {
+            plugins: {
+                legend: {
+                    labels: {
+                        font: {
+                            family: theme.fontFamily,
+                            size: theme.fontSize
+                        },
+                        color: theme.backgroundColor === '#FFFFFF' ? '#1F2937' : '#FFFFFF'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: theme.tooltips.backgroundColor,
+                    titleColor: theme.tooltips.titleColor,
+                    bodyColor: theme.tooltips.bodyColor,
+                    borderColor: theme.tooltips.borderColor,
+                    borderWidth: theme.tooltips.borderWidth,
+                    padding: 12,
+                    cornerRadius: 6,
+                    titleFont: {
+                        family: theme.fontFamily,
+                        size: theme.fontSize + 1
+                    },
+                    bodyFont: {
+                        family: theme.fontFamily,
+                        size: theme.fontSize
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: theme.gridLines.color,
+                        borderDash: theme.gridLines.borderDash
+                    },
+                    ticks: {
+                        font: {
+                            family: theme.fontFamily,
+                            size: theme.fontSize
+                        },
+                        color: theme.backgroundColor === '#FFFFFF' ? '#1F2937' : '#FFFFFF'
+                    }
+                },
+                y: {
+                    grid: {
+                        color: theme.gridLines.color,
+                        borderDash: theme.gridLines.borderDash
+                    },
+                    ticks: {
+                        font: {
+                            family: theme.fontFamily,
+                            size: theme.fontSize
+                        },
+                        color: theme.backgroundColor === '#FFFFFF' ? '#1F2937' : '#FFFFFF'
+                    }
+                }
+            }
+        });
+
+        // Update dataset colors
+        chart.data.datasets.forEach((dataset, index) => {
+            dataset.backgroundColor = theme.colors[index % theme.colors.length];
+            if (chart.config.type === 'line') {
+                dataset.borderColor = theme.colors[index % theme.colors.length];
+            }
+        });
+
+        chart.update();
+    }
+
+    // Custom Gradient Backgrounds
+    createGradient(ctx, colors, direction = 'vertical') {
+        const gradient = direction === 'vertical' 
+            ? ctx.createLinearGradient(0, 0, 0, ctx.canvas.height)
+            : ctx.createLinearGradient(0, 0, ctx.canvas.width, 0);
+
+        colors.forEach((color, index) => {
+            gradient.addColorStop(index / (colors.length - 1), color);
+        });
+
+        return gradient;
+    }
+
+    // Custom Pattern Backgrounds
+    createPattern(type, colors) {
+        const patternCanvas = document.createElement('canvas');
+        const patternCtx = patternCanvas.getContext('2d');
+        
+        patternCanvas.width = 20;
+        patternCanvas.height = 20;
+
+        switch (type) {
+            case 'dots':
+                this.drawDotPattern(patternCtx, colors);
+                break;
+            case 'stripes':
+                this.drawStripePattern(patternCtx, colors);
+                break;
+            case 'grid':
+                this.drawGridPattern(patternCtx, colors);
+                break;
+            // Add more pattern types as needed
+        }
+
+        return patternCanvas;
+    }
+
+    // Custom Animations
+    addCustomAnimation(chart, type) {
+        const animations = {
+            fadeIn: {
+                duration: 1000,
+                easing: 'easeOutQuart',
+                from: 0,
+                to: 1
+            },
+            slideIn: {
+                duration: 1000,
+                easing: 'easeOutExpo',
+                from: {
+                    x: -100,
+                    opacity: 0
+                },
+                to: {
+                    x: 0,
+                    opacity: 1
+                }
+            },
+            growUp: {
+                duration: 1500,
+                easing: 'easeInOutQuart',
+                from: {
+                    y: 100,
+                    opacity: 0
+                },
+                to: {
+                    y: 0,
+                    opacity: 1
+                }
+            }
+        };
+
+        chart.options.animation = animations[type];
+        chart.update();
+    }
+
+    // Custom Styling Methods
+    applyCustomStyle(chart, style) {
+        const styles = {
+            modern: {
+                borderRadius: 8,
+                borderWidth: 0,
+                hoverOffset: 10
+            },
+            classic: {
+                borderRadius: 0,
+                borderWidth: 2,
+                hoverOffset: 5
+            },
+            minimal: {
+                borderRadius: 4,
+                borderWidth: 1,
+                hoverOffset: 7
+            }
+        };
+
+        chart.data.datasets.forEach(dataset => {
+            Object.assign(dataset, styles[style]);
+        });
+
+        chart.update();
+    }
+
+    // Legend Customization
+    customizeLegend(chart, options) {
+        chart.options.plugins.legend = {
+            ...chart.options.plugins.legend,
+            position: options.position || 'top',
+            align: options.align || 'center',
+            labels: {
+                usePointStyle: options.usePointStyle || false,
+                padding: options.padding || 20,
+                font: {
+                    family: options.fontFamily || 'Inter',
+                    size: options.fontSize || 12,
+                    weight: options.fontWeight || 'normal'
+                },
+                generateLabels: (chart) => {
+                    // Custom label generation logic
+                    return chart.data.labels.map((label, index) => ({
+                        text: label,
+                        fillStyle: chart.data.datasets[0].backgroundColor[index],
+                        strokeStyle: chart.data.datasets[0].backgroundColor[index],
+                        lineWidth: 0,
+                        hidden: false,
+                        index: index
+                    }));
+                }
+            },
+            onClick: (e, legendItem, legend) => {
+                // Custom click handler
+                const index = legendItem.index;
+                const ci = legend.chart;
+                
+                if (ci.isDatasetVisible(index)) {
+                    ci.hide(index);
+                    legendItem.hidden = true;
+                } else {
+                    ci.show(index);
+                    legendItem.hidden = false;
+                }
+            }
+        };
+
+        chart.update();
+    }
+
+    // Tooltip Customization
+    customizeTooltip(chart, options) {
+        chart.options.plugins.tooltip = {
+            ...chart.options.plugins.tooltip,
+            enabled: true,
+            mode: options.mode || 'index',
+            intersect: options.intersect || false,
+            backgroundColor: options.backgroundColor || 'rgba(0, 0, 0, 0.8)',
+            titleColor: options.titleColor || '#FFFFFF',
+            bodyColor: options.bodyColor || '#FFFFFF',
+            borderColor: options.borderColor || 'rgba(255, 255, 255, 0.1)',
+            borderWidth: options.borderWidth || 1,
+            padding: options.padding || 12,
+            cornerRadius: options.cornerRadius || 6,
+            usePointStyle: options.usePointStyle || true,
+            callbacks: {
+                title: (tooltipItems) => {
+                    // Custom title formatting
+                    return options.titleFormatter 
+                        ? options.titleFormatter(tooltipItems)
+                        : tooltipItems[0].label;
+                },
+                label: (context) => {
+                    // Custom label formatting
+                    return options.labelFormatter 
+                        ? options.labelFormatter(context)
+                        : `${context.dataset.label}: ${context.formattedValue}`;
+                }
+            }
+        };
+
+        chart.update();
+    }
+
+    // Utility Methods
+    mergeDeep(target, source) {
+        const isObject = (obj) => obj && typeof obj === 'object';
+        
+        if (!isObject(target) || !isObject(source)) {
+            return source;
+        }
+
+        Object.keys(source).forEach(key => {
+            const targetValue = target[key];
+            const sourceValue = source[key];
+
+            if (Array.isArray(targetValue) && Array.isArray(sourceValue)) {
+                target[key] = targetValue.concat(sourceValue);
+            } else if (isObject(targetValue) && isObject(sourceValue)) {
+                target[key] = this.mergeDeep(Object.assign({}, targetValue), sourceValue);
+            } else {
+                target[key] = sourceValue;
+            }
+        });
+
+        return target;
+    }
+}
+
+// Initialize Chart Customization Manager
+const chartCustomizer = new ChartCustomizationManager();
+
+// Export Chart Customization Manager
+export { chartCustomizer };
+
+ // Chart Export and Advanced Visualization System
+class ChartExportAndVisualizationManager {
+    constructor() {
+        this.exportFormats = new Map();
+        this.visualizationTechniques = new Map();
+        this.sharingOptions = new Map();
+        this.initializeSystem();
+    }
+
+    // Initialize Export and Visualization Systems
+    initializeSystem() {
+        this.initializeExportFormats();
+        this.initializeVisualizationTechniques();
+        this.initializeSharingOptions();
+    }
+
+    // Export Features
+    initializeExportFormats() {
+        this.exportFormats = {
+            // Image Export Options
+            image: {
+                png: {
+                    export: async (chart, options = {}) => {
+                        const canvas = chart.canvas;
+                        const dataUrl = canvas.toDataURL('image/png', options.quality || 1.0);
+                        if (options.download) {
+                            this.downloadFile(dataUrl, `${chart.id || 'chart'}.png`);
+                        }
+                        return dataUrl;
+                    }
+                },
+                jpeg: {
+                    export: async (chart, options = {}) => {
+                        const canvas = chart.canvas;
+                        const dataUrl = canvas.toDataURL('image/jpeg', options.quality || 0.9);
+                        if (options.download) {
+                            this.downloadFile(dataUrl, `${chart.id || 'chart'}.jpg`);
+                        }
+                        return dataUrl;
+                    }
+                },
+                svg: {
+                    export: async (chart, options = {}) => {
+                        const svgString = this.chartToSVG(chart);
+                        const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
+                        if (options.download) {
+                            this.downloadFile(dataUrl, `${chart.id || 'chart'}.svg`);
+                        }
+                        return dataUrl;
+                    }
+                }
+            },
+
+            // Data Export Options
+            data: {
+                csv: {
+                    export: async (chart, options = {}) => {
+                        const csvData = this.chartToCSV(chart);
+                        const dataUrl = `data:text/csv;charset=utf-8,${encodeURIComponent(csvData)}`;
+                        if (options.download) {
+                            this.downloadFile(dataUrl, `${chart.id || 'chart'}.csv`);
+                        }
+                        return csvData;
+                    }
+                },
+                excel: {
+                    export: async (chart, options = {}) => {
+                        const workbook = this.chartToExcel(chart);
+                        const buffer = await workbook.xlsx.writeBuffer();
+                        const blob = new Blob([buffer], { 
+                            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+                        });
+                        if (options.download) {
+                            this.downloadBlob(blob, `${chart.id || 'chart'}.xlsx`);
+                        }
+                        return blob;
+                    }
+                },
+                json: {
+                    export: async (chart, options = {}) => {
+                        const jsonData = this.chartToJSON(chart);
+                        if (options.download) {
+                            const blob = new Blob([JSON.stringify(jsonData, null, 2)], 
+                                { type: 'application/json' });
+                            this.downloadBlob(blob, `${chart.id || 'chart'}.json`);
+                        }
+                        return jsonData;
+                    }
+                }
+            },
+
+            // PDF Export Options
+            pdf: {
+                export: async (chart, options = {}) => {
+                    const pdf = await this.chartToPDF(chart, options);
+                    if (options.download) {
+                        pdf.save(`${chart.id || 'chart'}.pdf`);
+                    }
+                    return pdf;
+                }
+            }
+        };
+    }
+
+    // Advanced Visualization Techniques
+    initializeVisualizationTechniques() {
+        this.visualizationTechniques = {
+            // Advanced Chart Types
+            advancedTypes: {
+                // Sunburst Chart
+                sunburst: {
+                    create: (data, options) => {
+                        return this.createSunburstChart(data, options);
+                    }
+                },
+                // Sankey Diagram
+                sankey: {
+                    create: (data, options) => {
+                        return this.createSankeyDiagram(data, options);
+                    }
+                },
+                // Force Directed Graph
+                forceGraph: {
+                    create: (data, options) => {
+                        return this.createForceGraph(data, options);
+                    }
+                },
+                // Treemap
+                treemap: {
+                    create: (data, options) => {
+                        return this.createTreemap(data, options);
+                    }
+                },
+                // Heatmap
+                heatmap: {
+                    create: (data, options) => {
+                        return this.createHeatmap(data, options);
+                    }
+                }
+            },
+
+            // Data Visualization Enhancements
+            enhancements: {
+                // Trend Lines
+                trendLine: {
+                    add: (chart, type = 'linear') => {
+                        return this.addTrendLine(chart, type);
+                    }
+                },
+                // Moving Averages
+                movingAverage: {
+                    add: (chart, period = 7) => {
+                        return this.addMovingAverage(chart, period);
+                    }
+                },
+                // Confidence Intervals
+                confidenceInterval: {
+                    add: (chart, confidence = 0.95) => {
+                        return this.addConfidenceInterval(chart, confidence);
+                    }
+                }
+            },
+
+            // Interactive Features
+            interactivity: {
+                // Drill Down
+                drillDown: {
+                    enable: (chart, levels) => {
+                        return this.enableDrillDown(chart, levels);
+                    }
+                },
+                // Cross Filtering
+                crossFilter: {
+                    enable: (charts) => {
+                        return this.enableCrossFiltering(charts);
+                    }
+                },
+                // Brushing and Linking
+                brushing: {
+                    enable: (charts) => {
+                        return this.enableBrushing(charts);
+                    }
+                }
+            }
+        };
+    }
+
+    // Sharing Options
+    initializeSharingOptions() {
+        this.sharingOptions = {
+            // Embed Code Generation
+            embed: {
+                generate: (chart, options) => {
+                    return this.generateEmbedCode(chart, options);
+                }
+            },
+            // Share Link Generation
+            link: {
+                generate: (chart, options) => {
+                    return this.generateShareLink(chart, options);
+                }
+            },
+            // Social Media Sharing
+            social: {
+                share: (chart, platform, options) => {
+                    return this.shareToSocial(chart, platform, options);
+                }
+            }
+        };
+    }
+
+    // Advanced Visualization Implementation Methods
+    createSunburstChart(data, options) {
+        // Implementation for sunburst chart
+    }
+
+    createSankeyDiagram(data, options) {
+        // Implementation for sankey diagram
+    }
+
+    createForceGraph(data, options) {
+        // Implementation for force directed graph
+    }
+
+    createTreemap(data, options) {
+        // Implementation for treemap
+    }
+
+    createHeatmap(data, options) {
+        // Implementation for heatmap
+    }
+
+    // Enhancement Implementation Methods
+    addTrendLine(chart, type) {
+        // Implementation for trend line
+    }
+
+    addMovingAverage(chart, period) {
+        // Implementation for moving average
+    }
+
+    addConfidenceInterval(chart, confidence) {
+        // Implementation for confidence interval
+    }
+
+    // Export Implementation Methods
+    chartToSVG(chart) {
+        // Implementation for SVG conversion
+    }
+
+    chartToCSV(chart) {
+        // Implementation for CSV conversion
+    }
+
+    chartToExcel(chart) {
+        // Implementation for Excel conversion
+    }
+
+    chartToJSON(chart) {
+        // Implementation for JSON conversion
+    }
+
+    chartToPDF(chart, options) {
+        // Implementation for PDF conversion
+    }
+
+    // Utility Methods
+    downloadFile(dataUrl, filename) {
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    downloadBlob(blob, filename) {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    }
+
+    // Sharing Implementation Methods
+    generateEmbedCode(chart, options) {
+        // Implementation for embed code generation
+    }
+
+    generateShareLink(chart, options) {
+        // Implementation for share link generation
+    }
+
+    shareToSocial(chart, platform, options) {
+        // Implementation for social media sharing
+    }
+}
+
+// Initialize Export and Visualization Manager
+const chartExportManager = new ChartExportAndVisualizationManager();
+
+// Export Manager
+export { chartExportManager };    
+
+     // Performance Optimization and Advanced Visualization System
+class ChartOptimizationManager {
+    constructor() {
+        this.optimizationStrategies = new Map();
+        this.renderingQueue = new Map();
+        this.dataCache = new Map();
+        this.initializeOptimizations();
+    }
+
+    // Performance Optimization Strategies
+    initializeOptimizations() {
+        // Data Management Optimizations
+        this.optimizationStrategies.set('data', {
+            // Data Chunking
+            chunkData: (data, chunkSize = 1000) => {
+                return Array.from({ length: Math.ceil(data.length / chunkSize) }, (_, i) =>
+                    data.slice(i * chunkSize, (i + 1) * chunkSize)
+                );
+            },
+
+            // Data Decimation
+            decimateData: (data, factor) => {
+                return data.filter((_, index) => index % factor === 0);
+            },
+
+            // Data Aggregation
+            aggregateData: (data, interval) => {
+                const aggregated = {};
+                data.forEach(item => {
+                    const key = Math.floor(item.x / interval) * interval;
+                    if (!aggregated[key]) {
+                        aggregated[key] = { sum: 0, count: 0 };
+                    }
+                    aggregated[key].sum += item.y;
+                    aggregated[key].count++;
+                });
+
+                return Object.entries(aggregated).map(([x, { sum, count }]) => ({
+                    x: Number(x),
+                    y: sum / count
+                }));
+            }
+        });
+
+        // Rendering Optimizations
+        this.optimizationStrategies.set('rendering', {
+            // RAF Manager
+            requestAnimationFrameManager: () => {
+                let ticking = false;
+                return (callback) => {
+                    if (!ticking) {
+                        requestAnimationFrame(() => {
+                            callback();
+                            ticking = false;
+                        });
+                        ticking = true;
+                    }
+                };
+            },
+
+            // Canvas Layer Management
+            layerManager: (chart) => {
+                const layers = new Map();
+                const mainCanvas = chart.canvas;
+                
+                return {
+                    createLayer: (name) => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = mainCanvas.width;
+                        canvas.height = mainCanvas.height;
+                        layers.set(name, canvas);
+                        return canvas;
+                    },
+                    
+                    updateLayer: (name, drawCallback) => {
+                        const canvas = layers.get(name);
+                        if (canvas) {
+                            const ctx = canvas.getContext('2d');
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            drawCallback(ctx);
+                        }
+                    },
+                    
+                    composeLayers: () => {
+                        const ctx = mainCanvas.getContext('2d');
+                        ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+                        layers.forEach(canvas => {
+                            ctx.drawImage(canvas, 0, 0);
+                        });
+                    }
+                };
+            },
+
+            // WebGL Rendering
+            webglRenderer: (chart) => {
+                // WebGL initialization and rendering logic
+                const gl = chart.canvas.getContext('webgl');
+                // ... WebGL setup code ...
+                
+                return {
+                    render: (data) => {
+                        // WebGL rendering implementation
+                    }
+                };
+            }
+        });
+
+        // Memory Management
+        this.optimizationStrategies.set('memory', {
+            // Memory Pool
+            createMemoryPool: (initialSize = 1000) => {
+                const pool = new Array(initialSize);
+                let currentIndex = 0;
+
+                return {
+                    acquire: () => {
+                        if (currentIndex >= pool.length) {
+                            pool.length *= 2;
+                        }
+                        return pool[currentIndex++];
+                    },
+                    release: (index) => {
+                        currentIndex = Math.min(currentIndex - 1, index);
+                    },
+                    reset: () => {
+                        currentIndex = 0;
+                    }
+                };
+            },
+
+            // Garbage Collection Helper
+            gcHelper: () => {
+                let gcTimeout;
+                return {
+                    scheduleGC: () => {
+                        if (gcTimeout) clearTimeout(gcTimeout);
+                        gcTimeout = setTimeout(() => {
+                            if (global.gc) {
+                                global.gc();
+                            }
+                        }, 1000);
+                    }
+                };
+            }
+        });
+    }
+
+    // Performance Monitoring
+    monitorPerformance(chart) {
+        const metrics = {
+            fps: 0,
+            renderTime: 0,
+            memoryUsage: 0,
+            dataPoints: 0
+        };
+
+        let lastTime = performance.now();
+        let frames = 0;
+
+        const update = () => {
+            const now = performance.now();
+            frames++;
+
+            if (now - lastTime >= 1000) {
+                metrics.fps = frames;
+                frames = 0;
+                lastTime = now;
+
+                // Update other metrics
+                metrics.dataPoints = this.countDataPoints(chart);
+                metrics.memoryUsage = this.getMemoryUsage();
+
+                this.updatePerformanceDisplay(metrics);
+            }
+
+            requestAnimationFrame(update);
+        };
+
+        update();
+        return metrics;
+    }
+
+    // Optimization Implementation
+    optimizeChart(chart, options = {}) {
+        const {
+            dataOptimization = true,
+            renderingOptimization = true,
+            memoryOptimization = true
+        } = options;
+
+        if (dataOptimization) {
+            this.applyDataOptimizations(chart);
+        }
+
+        if (renderingOptimization) {
+            this.applyRenderingOptimizations(chart);
+        }
+
+        if (memoryOptimization) {
+            this.applyMemoryOptimizations(chart);
+        }
+
+        return chart;
+    }
+
+    // Data Optimization Implementation
+    applyDataOptimizations(chart) {
+        const dataPoints = this.countDataPoints(chart);
+
+        // Apply different strategies based on data size
+        if (dataPoints > 10000) {
+            // Use decimation for large datasets
+            chart.data.datasets.forEach(dataset => {
+                dataset.data = this.optimizationStrategies.get('data')
+                    .decimateData(dataset.data, Math.ceil(dataPoints / 10000));
+            });
+        } else if (dataPoints > 1000) {
+            // Use aggregation for medium datasets
+            chart.data.datasets.forEach(dataset => {
+                dataset.data = this.optimizationStrategies.get('data')
+                    .aggregateData(dataset.data, Math.ceil(dataPoints / 1000));
+            });
+        }
+
+        // Enable data chunking for updates
+        const chunkManager = this.optimizationStrategies.get('data').chunkData;
+        chart.options.plugins.streaming = {
+            ...chart.options.plugins.streaming,
+            onRefresh: (chart) => {
+                const newData = this.getNewData(); // Your data fetching logic
+                const chunks = chunkManager(newData);
+                chunks.forEach((chunk, i) => {
+                    setTimeout(() => {
+                        this.updateChartData(chart, chunk);
+                    }, i * 16); // Spread updates across frames
+                });
+            }
+        };
+    }
+
+    // Rendering Optimization Implementation
+    applyRenderingOptimizations(chart) {
+        // Create layer manager
+        const layerManager = this.optimizationStrategies.get('rendering')
+            .layerManager(chart);
+
+        // Create separate layers for different chart elements
+        const dataLayer = layerManager.createLayer('data');
+        const axisLayer = layerManager.createLayer('axis');
+        const overlayLayer = layerManager.createLayer('overlay');
+
+        // Override chart render function
+        const originalRender = chart.render;
+        chart.render = function() {
+            // Update layers
+            layerManager.updateLayer('axis', (ctx) => {
+                this.drawAxis(ctx);
+            });
+
+            layerManager.updateLayer('data', (ctx) => {
+                this.drawDatasets(ctx);
+            });
+
+            layerManager.updateLayer('overlay', (ctx) => {
+                this.drawOverlay(ctx);
+            });
+
+            // Compose final image
+            layerManager.composeLayers();
+        };
+
+        // Add RAF manager
+        const rafManager = this.optimizationStrategies.get('rendering')
+            .requestAnimationFrameManager();
+
+        chart.update = function(config) {
+            rafManager(() => {
+                originalRender.call(this, config);
+            });
+        };
+    }
+
+    // Memory Optimization Implementation
+    applyMemoryOptimizations(chart) {
+        // Create memory pool
+        const memoryPool = this.optimizationStrategies.get('memory')
+            .createMemoryPool();
+
+        // Create GC helper
+        const gcHelper = this.optimizationStrategies.get('memory')
+            .gcHelper();
+
+        // Override data update functions
+        const originalUpdate = chart.update;
+        chart.update = function(config) {
+            // Release old data
+            memoryPool.reset();
+
+            // Update chart
+            originalUpdate.call(this, config);
+
+            // Schedule GC
+            gcHelper.scheduleGC();
+        };
+    }
+
+    // Utility Methods
+    countDataPoints(chart) {
+        return chart.data.datasets.reduce((total, dataset) => 
+            total + dataset.data.length, 0);
+    }
+
+    getMemoryUsage() {
+        return performance.memory ? 
+            performance.memory.usedJSHeapSize : 
+            0;
+    }
+
+    updatePerformanceDisplay(metrics) {
+        // Implementation for updating performance metrics display
+    }
+}
+
+// Initialize Optimization Manager
+const chartOptimizationManager = new ChartOptimizationManager();
+
+// Export Manager
+export { chartOptimizationManager };
+
+     // Advanced Customization and Visualization Techniques
+class AdvancedVisualizationManager {
+    constructor() {
+        this.customVisuals = new Map();
+        this.templates = new Map();
+        this.effects = new Map();
+        this.initializeVisuals();
+    }
+
+    // Initialize Advanced Visualizations
+    initializeVisuals() {
+        this.initializeSunburstChart();
+        this.initializeHeatmap();
+        this.initializeTreemap();
+        this.initializeNetworkGraph();
+        this.initializeCustomEffects();
+    }
+
+    // Sunburst Chart Implementation
+    initializeSunburstChart() {
+        this.customVisuals.set('sunburst', {
+            create: (container, data, options = {}) => {
+                const width = options.width || 600;
+                const height = options.height || 600;
+                const radius = Math.min(width, height) / 2;
+
+                const svg = d3.select(container)
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height)
+                    .append('g')
+                    .attr('transform', `translate(${width / 2},${height / 2})`);
+
+                const partition = d3.partition()
+                    .size([2 * Math.PI, radius]);
+
+                const root = d3.hierarchy(data)
+                    .sum(d => d.value)
+                    .sort((a, b) => b.value - a.value);
+
+                const arc = d3.arc()
+                    .startAngle(d => d.x0)
+                    .endAngle(d => d.x1)
+                    .innerRadius(d => d.y0)
+                    .outerRadius(d => d.y1);
+
+                const color = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, data.children.length + 1));
+
+                const paths = svg.selectAll('path')
+                    .data(partition(root).descendants())
+                    .enter()
+                    .append('path')
+                    .attr('d', arc)
+                    .style('fill', d => color((d.children ? d : d.parent).data.name))
+                    .style('opacity', 0.8)
+                    .on('mouseover', this.handleSunburstHover)
+                    .on('mouseout', this.handleSunburstOut);
+
+                if (options.animation) {
+                    this.animateSunburst(paths);
+                }
+
+                return {
+                    update: (newData) => this.updateSunburst(svg, newData, options),
+                    destroy: () => svg.remove()
+                };
+            }
+        });
+    }
+
+    // Heatmap Implementation
+    initializeHeatmap() {
+        this.customVisuals.set('heatmap', {
+            create: (container, data, options = {}) => {
+                const margin = options.margin || { top: 20, right: 20, bottom: 30, left: 40 };
+                const width = options.width - margin.left - margin.right;
+                const height = options.height - margin.top - margin.bottom;
+
+                const svg = d3.select(container)
+                    .append('svg')
+                    .attr('width', width + margin.left + margin.right)
+                    .attr('height', height + margin.top + margin.bottom)
+                    .append('g')
+                    .attr('transform', `translate(${margin.left},${margin.top})`);
+
+                const x = d3.scaleBand()
+                    .range([0, width])
+                    .domain(data.map(d => d.x));
+
+                const y = d3.scaleBand()
+                    .range([height, 0])
+                    .domain(data.map(d => d.y));
+
+                const color = d3.scaleSequential()
+                    .interpolator(d3.interpolateInferno)
+                    .domain([0, d3.max(data, d => d.value)]);
+
+                const cells = svg.selectAll('rect')
+                    .data(data)
+                    .enter()
+                    .append('rect')
+                    .attr('x', d => x(d.x))
+                    .attr('y', d => y(d.y))
+                    .attr('width', x.bandwidth())
+                    .attr('height', y.bandwidth())
+                    .style('fill', d => color(d.value))
+                    .on('mouseover', this.handleHeatmapHover)
+                    .on('mouseout', this.handleHeatmapOut);
+
+                if (options.animation) {
+                    this.animateHeatmap(cells);
+                }
+
+                return {
+                    update: (newData) => this.updateHeatmap(svg, newData, options),
+                    destroy: () => svg.remove()
+                };
+            }
+        });
+    }
+
+    // Network Graph Implementation
+    initializeNetworkGraph() {
+        this.customVisuals.set('network', {
+            create: (container, data, options = {}) => {
+                const width = options.width || 800;
+                const height = options.height || 600;
+
+                const svg = d3.select(container)
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height);
+
+                const simulation = d3.forceSimulation(data.nodes)
+                    .force('link', d3.forceLink(data.links).id(d => d.id))
+                    .force('charge', d3.forceManyBody())
+                    .force('center', d3.forceCenter(width / 2, height / 2));
+
+                const link = svg.append('g')
+                    .selectAll('line')
+                    .data(data.links)
+                    .enter()
+                    .append('line')
+                    .style('stroke', '#999')
+                    .style('stroke-opacity', 0.6)
+                    .style('stroke-width', d => Math.sqrt(d.value));
+
+                const node = svg.append('g')
+                    .selectAll('circle')
+                    .data(data.nodes)
+                    .enter()
+                    .append('circle')
+                    .attr('r', 5)
+                    .style('fill', d => d.color || '#69b3a2')
+                    .call(this.dragBehavior(simulation));
+
+                simulation.on('tick', () => {
+                    link
+                        .attr('x1', d => d.source.x)
+                        .attr('y1', d => d.source.y)
+                        .attr('x2', d => d.target.x)
+                        .attr('y2', d => d.target.y);
+
+                    node
+                        .attr('cx', d => d.x)
+                        .attr('cy', d => d.y);
+                });
+
+                return {
+                    simulation,
+                    update: (newData) => this.updateNetwork(simulation, newData),
+                    destroy: () => {
+                        simulation.stop();
+                        svg.remove();
+                    }
+                };
+            }
+        });
+    }
+
+    // Custom Effects Implementation
+    initializeCustomEffects() {
+        this.effects.set('glow', {
+            apply: (element, options = {}) => {
+                const filter = element.append('defs')
+                    .append('filter')
+                    .attr('id', 'glow');
+
+                filter.append('feGaussianBlur')
+                    .attr('stdDeviation', options.strength || 3)
+                    .attr('result', 'coloredBlur');
+
+                const feMerge = filter.append('feMerge');
+                feMerge.append('feMergeNode')
+                    .attr('in', 'coloredBlur');
+                feMerge.append('feMergeNode')
+                    .attr('in', 'SourceGraphic');
+
+                element.style('filter', 'url(#glow)');
+            }
+        });
+
+        this.effects.set('gradient', {
+            apply: (element, options = {}) => {
+                const gradient = element.append('defs')
+                    .append('linearGradient')
+                    .attr('id', options.id || 'gradient')
+                    .attr('x1', '0%')
+                    .attr('y1', '0%')
+                    .attr('x2', '100%')
+                    .attr('y2', '100%');
+
+                gradient.append('stop')
+                    .attr('offset', '0%')
+                    .attr('style', `stop-color:${options.startColor || '#ff0000'}`);
+
+                gradient.append('stop')
+                    .attr('offset', '100%')
+                    .attr('style', `stop-color:${options.endColor || '#00ff00'}`);
+
+                element.style('fill', `url(#${options.id || 'gradient'})`);
+            }
+        });
+    }
+
+    // Animation Methods
+    animateSunburst(paths) {
+        paths.transition()
+            .duration(1000)
+            .attrTween('d', d => {
+                const interpolate = d3.interpolate(
+                    { x0: 0, x1: 0, y0: 0, y1: 0 },
+                    { x0: d.x0, x1: d.x1, y0: d.y0, y1: d.y1 }
+                );
+                return t => arc(interpolate(t));
+            });
+    }
+
+    animateHeatmap(cells) {
+        cells.style('opacity', 0)
+            .transition()
+            .duration(750)
+            .style('opacity', 1);
+    }
+
+    // Event Handlers
+    handleSunburstHover(event, d) {
+        d3.select(this)
+            .transition()
+            .duration(200)
+            .style('opacity', 1)
+            .style('transform', 'scale(1.05)');
+    }
+
+    handleSunburstOut(event, d) {
+        d3.select(this)
+            .transition()
+            .duration(200)
+            .style('opacity', 0.8)
+            .style('transform', 'scale(1)');
+    }
+
+    handleHeatmapHover(event, d) {
+        const tooltip = d3.select('body')
+            .append('div')
+            .attr('class', 'tooltip')
+            .style('position', 'absolute')
+            .style('background', 'white')
+            .style('padding', '5px')
+            .style('border', '1px solid #ddd')
+            .html(`Value: ${d.value}`);
+
+        tooltip
+            .style('left', (event.pageX + 10) + 'px')
+            .style('top', (event.pageY - 10) + 'px');
+    }
+
+    // Utility Methods
+    dragBehavior(simulation) {
+        return d3.drag()
+            .on('start', (event, d) => {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            })
+            .on('drag', (event, d) => {
+                d.fx = event.x;
+                d.fy = event.y;
+            })
+            .on('end', (event, d) => {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            });
+    }
+
+    // Update Methods
+    updateSunburst(svg, newData, options) {
+        // Implementation for updating sunburst chart
+    }
+
+    updateHeatmap(svg, newData, options) {
+        // Implementation for updating heatmap
+    }
+
+    updateNetwork(simulation, newData) {
+        // Implementation for updating network graph
+    }
+}
+
+// Initialize Advanced Visualization Manager
+const advancedVisualizationManager = new AdvancedVisualizationManager();
+
+// Export Manager
+export { advancedVisualizationManager };
+
+// Advanced Interactive Visualization System
+class InteractiveVisualizationManager {
+    constructor() {
+        this.interactionHandlers = new Map();
+        this.animationEffects = new Map();
+        this.dataProcessors = new Map();
+        this.visualEffects = new Map();
+        this.initializeSystem();
+    }
+
+    // Initialize System Components
+    initializeSystem() {
+        this.initializeInteractions();
+        this.initializeAnimations();
+        this.initializeDataProcessors();
+        this.initializeVisualEffects();
+    }
+
+    // Advanced Interaction Handlers
+    initializeInteractions() {
+        // Zoom and Pan Handler
+        this.interactionHandlers.set('zoomPan', {
+            initialize: (svg, options = {}) => {
+                const zoom = d3.zoom()
+                    .scaleExtent([options.minZoom || 0.5, options.maxZoom || 5])
+                    .on('zoom', (event) => {
+                        svg.select('.zoom-group')
+                            .attr('transform', event.transform);
+                    });
+
+                svg.call(zoom);
+                return zoom;
+            },
+
+            reset: (svg, zoom) => {
+                svg.transition()
+                    .duration(750)
+                    .call(zoom.transform, d3.zoomIdentity);
+            }
+        });
+
+        // Brush Selection Handler
+        this.interactionHandlers.set('brush', {
+            initialize: (svg, options = {}) => {
+                const brush = d3.brush()
+                    .extent([[0, 0], [options.width, options.height]])
+                    .on('brush', (event) => {
+                        this.handleBrushSelection(event, options.onBrush);
+                    })
+                    .on('end', (event) => {
+                        this.handleBrushEnd(event, options.onBrushEnd);
+                    });
+
+                svg.append('g')
+                    .attr('class', 'brush')
+                    .call(brush);
+
+                return brush;
+            }
+        });
+
+        // Tooltip System
+        this.interactionHandlers.set('tooltip', {
+            create: (container, options = {}) => {
+                const tooltip = d3.select(container)
+                    .append('div')
+                    .attr('class', 'visualization-tooltip')
+                    .style('position', 'absolute')
+                    .style('visibility', 'hidden')
+                    .style('background', options.background || 'rgba(0, 0, 0, 0.8)')
+                    .style('color', options.color || 'white')
+                    .style('padding', options.padding || '8px')
+                    .style('border-radius', options.borderRadius || '4px')
+                    .style('font-size', options.fontSize || '12px')
+                    .style('pointer-events', 'none')
+                    .style('z-index', '1000');
+
+                return {
+                    show: (html, event) => {
+                        tooltip
+                            .html(html)
+                            .style('visibility', 'visible')
+                            .style('left', `${event.pageX + 10}px`)
+                            .style('top', `${event.pageY - 10}px`);
+                    },
+                    hide: () => {
+                        tooltip.style('visibility', 'hidden');
+                    }
+                };
+            }
+        });
+
+        // Context Menu
+        this.interactionHandlers.set('contextMenu', {
+            create: (options = {}) => {
+                const menu = d3.select('body')
+                    .append('div')
+                    .attr('class', 'context-menu')
+                    .style('position', 'absolute')
+                    .style('visibility', 'hidden')
+                    .style('background', 'white')
+                    .style('border', '1px solid #ddd')
+                    .style('border-radius', '4px')
+                    .style('box-shadow', '0 2px 5px rgba(0,0,0,0.2)');
+
+                return {
+                    show: (items, event) => {
+                        menu.html('')
+                            .selectAll('div')
+                            .data(items)
+                            .enter()
+                            .append('div')
+                            .style('padding', '8px 12px')
+                            .style('cursor', 'pointer')
+                            .style('hover', 'background: #f5f5f5')
+                            .text(d => d.label)
+                            .on('click', (e, d) => {
+                                d.action();
+                                menu.style('visibility', 'hidden');
+                            });
+
+                        menu.style('visibility', 'visible')
+                            .style('left', `${event.pageX}px`)
+                            .style('top', `${event.pageY}px`);
+
+                        d3.select('body').on('click', () => {
+                            menu.style('visibility', 'hidden');
+                        });
+                    },
+                    hide: () => {
+                        menu.style('visibility', 'hidden');
+                    }
+                };
+            }
+        });
+    }
+
+    // Advanced Animation Effects
+    initializeAnimations() {
+        // Transition Effects
+        this.animationEffects.set('transitions', {
+            fadeIn: (element, duration = 750) => {
+                element
+                    .style('opacity', 0)
+                    .transition()
+                    .duration(duration)
+                    .style('opacity', 1);
+            },
+
+            slideIn: (element, direction = 'left', duration = 750) => {
+                const x = direction === 'left' ? -100 : 
+                         direction === 'right' ? 100 : 0;
+                const y = direction === 'top' ? -100 : 
+                         direction === 'bottom' ? 100 : 0;
+
+                element
+                    .style('transform', `translate(${x}px, ${y}px)`)
+                    .style('opacity', 0)
+                    .transition()
+                    .duration(duration)
+                    .style('transform', 'translate(0, 0)')
+                    .style('opacity', 1);
+            },
+
+            scale: (element, duration = 750) => {
+                element
+                    .style('transform', 'scale(0)')
+                    .transition()
+                    .duration(duration)
+                    .style('transform', 'scale(1)');
+            }
+        });
+
+        // Path Animations
+        this.animationEffects.set('paths', {
+            draw: (path, duration = 1000) => {
+                const length = path.node().getTotalLength();
+                path
+                    .attr('stroke-dasharray', length + ' ' + length)
+                    .attr('stroke-dashoffset', length)
+                    .transition()
+                    .duration(duration)
+                    .attr('stroke-dashoffset', 0);
+            },
+
+            dash: (path, duration = 1000) => {
+                path
+                    .attr('stroke-dasharray', '5,5')
+                    .attr('stroke-dashoffset', '0')
+                    .transition()
+                    .duration(duration)
+                    .attr('stroke-dashoffset', '20');
+            }
+        });
+
+        // Chart Animations
+        this.animationEffects.set('charts', {
+            barGrow: (bars, duration = 750) => {
+                bars
+                    .attr('y', d => d.y1)
+                    .attr('height', 0)
+                    .transition()
+                    .duration(duration)
+                    .attr('y', d => d.y0)
+                    .attr('height', d => d.y1 - d.y0);
+            },
+
+            pieSlice: (arcs, duration = 750) => {
+                arcs
+                    .transition()
+                    .duration(duration)
+                    .attrTween('d', function(d) {
+                        const interpolate = d3.interpolate(
+                            { startAngle: 0, endAngle: 0 },
+                            { startAngle: d.startAngle, endAngle: d.endAngle }
+                        );
+                        return t => arc(interpolate(t));
+                    });
+            }
+        });
+    }
+
+    // Data Processors
+    initializeDataProcessors() {
+        // Data Transformation
+        this.dataProcessors.set('transform', {
+            normalize: (data, field) => {
+                const max = d3.max(data, d => d[field]);
+                return data.map(d => ({
+                    ...d,
+                    [field]: d[field] / max
+                }));
+            },
+
+            aggregate: (data, groupBy, metric) => {
+                return d3.group(data, d => d[groupBy])
+                    .map((group, key) => ({
+                        key,
+                        value: d3.sum(group, d => d[metric])
+                    }));
+            },
+
+            pivot: (data, rows, cols, values) => {
+                const pivot = {};
+                data.forEach(d => {
+                    if (!pivot[d[rows]]) pivot[d[rows]] = {};
+                    pivot[d[rows]][d[cols]] = d[values];
+                });
+                return pivot;
+            }
+        });
+
+        // Data Filtering
+        this.dataProcessors.set('filter', {
+            range: (data, field, min, max) => {
+                return data.filter(d => d[field] >= min && d[field] <= max);
+            },
+
+            threshold: (data, field, threshold, comparison = '>') => {
+                const compare = {
+                    '>': (a, b) => a > b,
+                    '<': (a, b) => a < b,
+                    '>=': (a, b) => a >= b,
+                    '<=': (a, b) => a <= b,
+                    '=': (a, b) => a === b
+                };
+                return data.filter(d => compare[comparison](d[field], threshold));
+            }
+        });
+
+        // Data Analysis
+        this.dataProcessors.set('analyze', {
+            statistics: (data, field) => {
+                return {
+                    mean: d3.mean(data, d => d[field]),
+                    median: d3.median(data, d => d[field]),
+                    std: d3.deviation(data, d => d[field]),
+                    min: d3.min(data, d => d[field]),
+                    max: d3.max(data, d => d[field])
+                };
+            },
+
+            correlation: (data, field1, field2) => {
+                const x = data.map(d => d[field1]);
+                const y = data.map(d => d[field2]);
+                return d3.correlation(x, y);
+            }
+        });
+    }
+
+    // Visual Effects
+    initializeVisualEffects() {
+        // Gradients
+        this.visualEffects.set('gradients', {
+            linear: (defs, id, colors) => {
+                const gradient = defs.append('linearGradient')
+                    .attr('id', id)
+                    .attr('x1', '0%')
+                    .attr('y1', '0%')
+                    .attr('x2', '100%')
+                    .attr('y2', '0%');
+
+                colors.forEach((color, i) => {
+                    gradient.append('stop')
+                        .attr('offset', `${(i / (colors.length - 1)) * 100}%`)
+                        .attr('stop-color', color);
+                });
+
+                return gradient;
+            },
+
+            radial: (defs, id, colors) => {
+                const gradient = defs.append('radialGradient')
+                    .attr('id', id)
+                    .attr('cx', '50%')
+                    .attr('cy', '50%')
+                    .attr('r', '50%');
+
+                colors.forEach((color, i) => {
+                    gradient.append('stop')
+                        .attr('offset', `${(i / (colors.length - 1)) * 100}%`)
+                        .attr('stop-color', color);
+                });
+
+                return gradient;
+            }
+        });
+
+        // Patterns
+        this.visualEffects.set('patterns', {
+            stripes: (defs, id, color) => {
+                const pattern = defs.append('pattern')
+                    .attr('id', id)
+                    .attr('patternUnits', 'userSpaceOnUse')
+                    .attr('width', 10)
+                    .attr('height', 10);
+
+                pattern.append('path')
+                    .attr('d', 'M-1,1 l2,-2 M0,10 l10,-10 M9,11 l2,-2')
+                    .attr('stroke', color)
+                    .attr('stroke-width', 2);
+
+                return pattern;
+            },
+
+            dots: (defs, id, color) => {
+                const pattern = defs.append('pattern')
+                    .attr('id', id)
+                    .attr('patternUnits', 'userSpaceOnUse')
+                    .attr('width', 10)
+                    .attr('height', 10);
+
+                pattern.append('circle')
+                    .attr('cx', 5)
+                    .attr('cy', 5)
+                    .attr('r', 2)
+                    .attr('fill', color);
+
+                return pattern;
+            }
+        });
+
+        // Filters
+        this.visualEffects.set('filters', {
+            glow: (defs, id, color) => {
+                const filter = defs.append('filter')
+                    .attr('id', id);
+
+                filter.append('feGaussianBlur')
+                    .attr('stdDeviation', 3)
+                    .attr('result', 'coloredBlur');
+
+                const feMerge = filter.append('feMerge');
+                feMerge.append('feMergeNode')
+                    .attr('in', 'coloredBlur');
+                feMerge.append('feMergeNode')
+                    .attr('in', 'SourceGraphic');
+
+                return filter;
+            },
+
+            shadow: (defs, id) => {
+                const filter = defs.append('filter')
+                    .attr('id', id)
+                    .attr('x', '-50%')
+                    .attr('y', '-50%')
+                    .attr('width', '200%')
+                    .attr('height', '200%');
+
+                filter.append('feOffset')
+                    .attr('result', 'offOut')
+                    .attr('in', 'SourceAlpha')
+                    .attr('dx', 3)
+                    .attr('dy', 3);
+
+                filter.append('feGaussianBlur')
+                    .attr('result', 'blurOut')
+                    .attr('in', 'offOut')
+                    .attr('stdDeviation', 3);
+
+                filter.append('feBlend')
+                    .attr('in', 'SourceGraphic')
+                    .attr('in2', 'blurOut')
+                    .attr('mode', 'normal');
+
+                return filter;
+            }
+        });
+    }
+}
+
+// Initialize Interactive Visualization Manager
+const interactiveVisualizationManager = new InteractiveVisualizationManager();
+
+// Export Manager
+export { interactiveVisualizationManager };  
+     // Advanced Visualization Components and Analysis Tools
+class AdvancedVisualizationComponents {
+    constructor() {
+        this.customCharts = new Map();
+        this.analysisTools = new Map();
+        this.components = new Map();
+        this.initializeComponents();
+    }
+
+    // Initialize All Components
+    initializeComponents() {
+        this.initializeCustomCharts();
+        this.initializeAnalysisTools();
+        this.initializeComponents();
+    }
+
+    // Custom Chart Types
+    initializeCustomCharts() {
+        // Radar/Spider Chart
+        this.customCharts.set('radar', {
+            create: (container, data, options = {}) => {
+                const width = options.width || 600;
+                const height = options.height || 600;
+                const radius = Math.min(width, height) / 2;
+                const angleSlice = (Math.PI * 2) / data.axes.length;
+
+                const svg = d3.select(container)
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height)
+                    .append('g')
+                    .attr('transform', `translate(${width/2},${height/2})`);
+
+                // Scale for the radius
+                const rScale = d3.scaleLinear()
+                    .range([0, radius])
+                    .domain([0, d3.max(data.values, d => d3.max(d.values))]);
+
+                // Draw the circular grid
+                this.drawRadarGrid(svg, radius, data.axes.length, angleSlice);
+
+                // Draw the axes
+                this.drawRadarAxes(svg, data.axes, radius, angleSlice);
+
+                // Draw the path
+                this.drawRadarPath(svg, data.values, rScale, angleSlice);
+
+                return svg;
+            }
+        });
+
+        // Bubble Timeline
+        this.customCharts.set('bubbleTimeline', {
+            create: (container, data, options = {}) => {
+                const width = options.width || 800;
+                const height = options.height || 400;
+                const margin = options.margin || { top: 20, right: 20, bottom: 30, left: 40 };
+
+                const svg = d3.select(container)
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height);
+
+                const x = d3.scaleTime()
+                    .domain(d3.extent(data, d => d.date))
+                    .range([margin.left, width - margin.right]);
+
+                const y = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => d.value)])
+                    .range([height - margin.bottom, margin.top]);
+
+                const r = d3.scaleSqrt()
+                    .domain([0, d3.max(data, d => d.size)])
+                    .range([2, 20]);
+
+                this.drawBubbleTimelinePath(svg, data, x, y);
+                this.drawBubbleTimelineBubbles(svg, data, x, y, r);
+
+                return svg;
+            }
+        });
+
+        // Hierarchical Edge Bundling
+        this.customCharts.set('edgeBundling', {
+            create: (container, data, options = {}) => {
+                const width = options.width || 800;
+                const height = options.height || 800;
+                const radius = width / 2;
+
+                const svg = d3.select(container)
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height)
+                    .append('g')
+                    .attr('transform', `translate(${width/2},${height/2})`);
+
+                const cluster = d3.cluster()
+                    .size([360, radius - 60]);
+
+                const root = d3.hierarchy(data);
+                cluster(root);
+
+                this.drawEdgeBundlingLinks(svg, root, radius);
+                this.drawEdgeBundlingNodes(svg, root);
+
+                return svg;
+            }
+        });
+
+        // Stream Graph
+        this.customCharts.set('streamGraph', {
+            create: (container, data, options = {}) => {
+                const width = options.width || 800;
+                const height = options.height || 400;
+                const margin = options.margin || { top: 20, right: 20, bottom: 30, left: 40 };
+
+                const svg = d3.select(container)
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height);
+
+                const stack = d3.stack()
+                    .offset(d3.stackOffsetWiggle)
+                    .keys(data.columns);
+
+                const layers = stack(data);
+
+                const x = d3.scaleTime()
+                    .domain(d3.extent(data, d => d.date))
+                    .range([margin.left, width - margin.right]);
+
+                const y = d3.scaleLinear()
+                    .domain([d3.min(layers, l => d3.min(l, d => d[0])),
+                            d3.max(layers, l => d3.max(l, d => d[1]))])
+                    .range([height - margin.bottom, margin.top]);
+
+                const area = d3.area()
+                    .x(d => x(d.data.date))
+                    .y0(d => y(d[0]))
+                    .y1(d => y(d[1]))
+                    .curve(d3.curveBasis);
+
+                this.drawStreamGraphLayers(svg, layers, area);
+
+                return svg;
+            }
+        });
+    }
+
+    // Analysis Tools
+    initializeAnalysisTools() {
+        // Trend Analysis
+        this.analysisTools.set('trendAnalysis', {
+            analyze: (data, options = {}) => {
+                const xValues = data.map((d, i) => i);
+                const yValues = data.map(d => d.value);
+
+                // Linear regression
+                const regression = this.calculateLinearRegression(xValues, yValues);
+
+                // Moving average
+                const movingAvg = this.calculateMovingAverage(yValues, options.window || 5);
+
+                // Seasonality detection
+                const seasonality = this.detectSeasonality(yValues);
+
+                return {
+                    trend: regression,
+                    movingAverage: movingAvg,
+                    seasonality: seasonality
+                };
+            }
+        });
+
+        // Pattern Detection
+        this.analysisTools.set('patternDetection', {
+            analyze: (data, options = {}) => {
+                // Anomaly detection
+                const anomalies = this.detectAnomalies(data, options.threshold);
+
+                // Pattern matching
+                const patterns = this.findPatterns(data, options.patternLength);
+
+                // Cycle detection
+                const cycles = this.detectCycles(data);
+
+                return {
+                    anomalies,
+                    patterns,
+                    cycles
+                };
+            }
+        });
+
+        // Correlation Analysis
+        this.analysisTools.set('correlationAnalysis', {
+            analyze: (dataset, options = {}) => {
+                const correlations = new Map();
+                const variables = Object.keys(dataset[0]);
+
+                for (let i = 0; i < variables.length; i++) {
+                    for (let j = i + 1; j < variables.length; j++) {
+                        const var1 = variables[i];
+                        const var2 = variables[j];
+                        
+                        const correlation = this.calculateCorrelation(
+                            dataset.map(d => d[var1]),
+                            dataset.map(d => d[var2])
+                        );
+
+                        correlations.set(`${var1}-${var2}`, correlation);
+                    }
+                }
+
+                return correlations;
+            }
+        });
+    }
+
+    // Custom Components
+    initializeCustomComponents() {
+        // Custom Legend
+        this.components.set('legend', {
+            create: (container, data, options = {}) => {
+                const legend = d3.select(container)
+                    .append('div')
+                    .attr('class', 'custom-legend')
+                    .style('display', 'flex')
+                    .style('flex-direction', options.direction || 'horizontal')
+                    .style('gap', '10px')
+                    .style('padding', '10px');
+
+                const items = legend.selectAll('.legend-item')
+                    .data(data)
+                    .enter()
+                    .append('div')
+                    .attr('class', 'legend-item')
+                    .style('display', 'flex')
+                    .style('align-items', 'center')
+                    .style('gap', '5px')
+                    .style('cursor', 'pointer')
+                    .on('click', (event, d) => {
+                        if (options.onClick) options.onClick(d);
+                    });
+
+                items.append('div')
+                    .style('width', '12px')
+                    .style('height', '12px')
+                    .style('background-color', d => d.color)
+                    .style('border-radius', '2px');
+
+                items.append('span')
+                    .text(d => d.label);
+
+                return legend;
+            }
+        });
+
+        // Data Table
+        this.components.set('dataTable', {
+            create: (container, data, options = {}) => {
+                const table = d3.select(container)
+                    .append('table')
+                    .attr('class', 'data-table');
+
+                // Headers
+                const headers = table.append('thead')
+                    .append('tr')
+                    .selectAll('th')
+                    .data(options.columns)
+                    .enter()
+                    .append('th')
+                    .text(d => d.label)
+                    .style('cursor', 'pointer')
+                    .on('click', (event, d) => {
+                        if (options.onSort) options.onSort(d.key);
+                    });
+
+                // Rows
+                const rows = table.append('tbody')
+                    .selectAll('tr')
+                    .data(data)
+                    .enter()
+                    .append('tr');
+
+                // Cells
+                rows.selectAll('td')
+                    .data(d => options.columns.map(col => d[col.key]))
+                    .enter()
+                    .append('td')
+                    .text(d => d);
+
+                return table;
+            }
+        });
+
+        // Control Panel
+        this.components.set('controlPanel', {
+            create: (container, controls, options = {}) => {
+                const panel = d3.select(container)
+                    .append('div')
+                    .attr('class', 'control-panel')
+                    .style('padding', '15px')
+                    .style('background', '#f5f5f5')
+                    .style('border-radius', '8px');
+
+                controls.forEach(control => {
+                    const controlGroup = panel.append('div')
+                        .style('margin-bottom', '10px');
+
+                    controlGroup.append('label')
+                        .text(control.label);
+
+                    switch (control.type) {
+                        case 'select':
+                            this.createSelect(controlGroup, control);
+                            break;
+                        case 'range':
+                            this.createRange(controlGroup, control);
+                            break;
+                        case 'checkbox':
+                            this.createCheckbox(controlGroup, control);
+                            break;
+                        case 'radio':
+                            this.createRadio(controlGroup, control);
+                            break;
+                    }
+                });
+
+                return panel;
+            }
+        });
+    }
+
+    // Utility Methods
+    calculateLinearRegression(x, y) {
+        const n = x.length;
+        const xy = x.map((xi, i) => xi * y[i]);
+        const xx = x.map(xi => xi * xi);
+
+        const slope = (n * d3.sum(xy) - d3.sum(x) * d3.sum(y)) / 
+                     (n * d3.sum(xx) - d3.sum(x) * d3.sum(x));
+        const intercept = (d3.sum(y) - slope * d3.sum(x)) / n;
+
+        return { slope, intercept };
+    }
+
+    calculateMovingAverage(values, window) {
+        const result = [];
+        for (let i = 0; i < values.length - window + 1; i++) {
+            const windowValues = values.slice(i, i + window);
+            result.push(d3.mean(windowValues));
+        }
+        return result;
+    }
+
+    detectSeasonality(values) {
+        // Implementation of seasonality detection
+        // Using autocorrelation or other statistical methods
+    }
+
+    calculateCorrelation(x, y) {
+        const n = x.length;
+        const mean_x = d3.mean(x);
+        const mean_y = d3.mean(y);
+        const std_x = d3.deviation(x);
+        const std_y = d3.deviation(y);
+
+        const sum = x.reduce((acc, xi, i) => {
+            return acc + ((xi - mean_x) * (y[i] - mean_y)) / (std_x * std_y);
+        }, 0);
+
+        return sum / (n - 1);
+    }
+}
+
+// Initialize Advanced Visualization Components
+const advancedVisualizationComponents = new AdvancedVisualizationComponents();
+
+// Export Components
+export { advancedVisualizationComponents };
 </script>
 </html>
