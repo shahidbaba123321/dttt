@@ -824,6 +824,14 @@ function initializeAll() {
             localStorage.setItem('userRole', data.role);
             localStorage.setItem('userEmail', data.email);
 
+            // In login.html, after successful login
+console.log('Login response:', data);
+console.log('Stored data:', {
+    token: localStorage.getItem('token'),
+    email: localStorage.getItem('userEmail'),
+    role: localStorage.getItem('userRole')
+});
+
             showNotification('Login successful! Redirecting...', 'success');
 
             // Role-based redirection
@@ -897,7 +905,7 @@ function checkAuthStatus() {
         const role = localStorage.getItem('userRole');
         switch(role) {
             case 'superadmin':
-                window.location.href = 'sadmin.html';
+                window.location.href = 'superadmin.html';
                 break;
             case 'admin':
                 window.location.href = 'coadmin.html';
