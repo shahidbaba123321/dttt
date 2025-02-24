@@ -85,7 +85,7 @@ body {
 
 /* Sidebar Styles */
 .sidebar {
-    width: var(--sidebar-width);
+     width: 280px;
     background: var(--nav-background);
     height: 100vh;
     position: fixed;
@@ -94,10 +94,12 @@ body {
     overflow-y: auto;
     overflow-x: hidden;
     z-index: 1000;
-    transition: width var(--transition-normal);
-    color: var(--text-light);
+    transition: all var(--transition-normal);
 }
-
+.sidebar.collapsed {
+    width: 70px;
+}
+        
 /* Custom Scrollbar */
 .sidebar::-webkit-scrollbar {
     width: 5px;
@@ -141,6 +143,19 @@ body {
 .sidebar-logo i {
     font-size: 1.5rem;
 }
+        .sidebar.collapsed .sidebar-logo span,
+.sidebar.collapsed .nav-section-title,
+.sidebar.collapsed .nav-link span {
+    display: none;
+}
+        .sidebar.collapsed .nav-link {
+    padding: 0.75rem;
+    justify-content: center;
+}
+ .sidebar.collapsed .nav-link i {
+    margin: 0;
+}
+       
 
 /* Collapse Toggle */
 .collapse-toggle {
@@ -498,11 +513,12 @@ body {
 }
 
 .modal-content {
-    background: var(--surface-color);
+   background: var(--surface-color);
     border-radius: 0.75rem;
     width: 100%;
     max-width: 500px;
     box-shadow: var(--shadow-lg);
+    position: relative;
 }
 
 .modal-header {
@@ -517,6 +533,20 @@ body {
     color: var(--primary-color);
     font-size: 1.25rem;
 }
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    font-size: 1.25rem;
+    padding: 0.5rem;
+    transition: color var(--transition-normal);
+}
+
+.close-btn:hover {
+    color: var(--text-primary);
+}        
 
 /* Form Styles */
 .form-group {
@@ -967,6 +997,62 @@ function initializeUserMenu() {
     }
 }
 
+    // User Management Module
+const UserManagement = {
+    state: {
+        users: [],
+        currentUser: null,
+    },
+
+    init: function() {
+        this.loadUsers();
+        this.initializeEventListeners();
+    },
+
+    openAddUserModal: function() {
+        const modal = document.getElementById('userModal');
+        if (!modal) return;
+
+        // Reset form
+        const form = document.getElementById('userForm');
+        if (form) form.reset();
+
+        // Update modal title
+        const modalTitle = document.getElementById('modalTitle');
+        if (modalTitle) modalTitle.textContent = 'Add New User';
+
+        // Show modal
+        modal.classList.add('active');
+    },
+
+    closeUserModal: function() {
+        const modal = document.getElementById('userModal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    },
+
+    // Add modal styles
+    initializeEventListeners: function() {
+        // Close modal when clicking outside
+        const modal = document.getElementById('userModal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.closeUserModal();
+                }
+            });
+        }
+
+        // Handle escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closeUserModal();
+            }
+        });
+    }
+};    
+
 // Toggle Dropdown Menu
 function toggleDropdown(event) {
     event.stopPropagation();
@@ -975,25 +1061,26 @@ function toggleDropdown(event) {
 }
 
 // Toggle Sidebar
+// Toggle Sidebar
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     const mainContent = document.querySelector('.main-content');
-    const overlay = document.getElementById('overlay');
-    
-    sidebarState.isCollapsed = !sidebarState.isCollapsed;
+    const collapseBtn = document.querySelector('.collapse-toggle i');
     
     if (sidebar && mainContent) {
-        sidebar.classList.toggle('collapsed', sidebarState.isCollapsed);
-        mainContent.classList.toggle('expanded', sidebarState.isCollapsed);
+        sidebar.classList.toggle('collapsed');
         
-        if (sidebarState.isMobile) {
-            sidebar.classList.toggle('active');
-            if (overlay) {
-                overlay.classList.toggle('active');
-            }
+        // Update collapse button icon
+        if (collapseBtn) {
+            collapseBtn.className = sidebar.classList.contains('collapsed') 
+                ? 'fas fa-chevron-right' 
+                : 'fas fa-chevron-left';
         }
-        
-        localStorage.setItem('sidebarCollapsed', sidebarState.isCollapsed);
+
+        // Update main content margin
+        mainContent.style.marginLeft = sidebar.classList.contains('collapsed') 
+            ? `${70}px` 
+            : `${280}px`;
     }
 }
 
