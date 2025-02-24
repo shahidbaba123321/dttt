@@ -11,7 +11,8 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Primary Colors */
+     :root {
+    /* Primary Colors */
     --primary-color: #1a237e;     /* Darker blue from the nav */
     --primary-light: #534bae;
     --primary-dark: #121858;
@@ -64,7 +65,6 @@
     --transition-normal: 0.3s ease;
 }
 
-
 /* Base Styles */
 * {
     margin: 0;
@@ -93,9 +93,7 @@ body {
 /* Sidebar Styles */
 .sidebar {
     width: var(--sidebar-width);
-     background: var(--nav-background);
-    color: var(--text-light);
-    border-right: 1px solid var(--border-color);
+    background: var(--nav-background);
     height: 100vh;
     position: fixed;
     left: 0;
@@ -104,6 +102,7 @@ body {
     overflow-x: hidden;
     z-index: 1000;
     transition: width var(--transition-normal);
+    color: var(--text-light);
 }
 
 /* Custom Scrollbar */
@@ -112,16 +111,16 @@ body {
 }
 
 .sidebar::-webkit-scrollbar-track {
-    background: transparent;
+    background: var(--primary-dark);
 }
 
 .sidebar::-webkit-scrollbar-thumb {
-    background-color: var(--text-tertiary);
+    background-color: rgba(255, 255, 255, 0.2);
     border-radius: 20px;
 }
 
 .sidebar:hover::-webkit-scrollbar-thumb {
-    background-color: var(--text-secondary);
+    background-color: rgba(255, 255, 255, 0.3);
 }
 
 /* Sidebar Header */
@@ -152,7 +151,7 @@ body {
 
 /* Collapse Toggle */
 .collapse-toggle {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--hover-background);
     border: none;
     color: var(--text-light);
     padding: 0.5rem;
@@ -172,7 +171,7 @@ body {
 
 .nav-section-title {
     padding: 0.75rem 1.25rem;
-     color: var(--text-light);
+    color: var(--text-light);
     opacity: 0.6;
     font-size: 0.75rem;
     font-weight: 500;
@@ -193,11 +192,10 @@ body {
     display: flex;
     align-items: center;
     padding: 0.75rem 1.25rem;
-     color: var(--text-light);
+    color: var(--text-light);
     opacity: 0.8;
     text-decoration: none;
-       transition: var(--transition-normal);
-
+    transition: var(--transition-normal);
     border-radius: 0.5rem;
     margin: 0.25rem 0.75rem;
     position: relative;
@@ -208,7 +206,7 @@ body {
     font-size: 1.25rem;
     text-align: center;
     margin-right: 0.75rem;
-    color: var(--text-tertiary);
+    opacity: 0.8;
     transition: var(--transition-normal);
 }
 
@@ -218,52 +216,27 @@ body {
 }
 
 .nav-link:hover {
-    color: var(--primary-color);
     opacity: 1;
     background: var(--hover-background);
-}
-
-.nav-link:hover i {
-    color: var(--primary-color);
 }
 
 .nav-link.active {
-    color: var(--primary-color);
     opacity: 1;
     background: var(--hover-background);
     border-left: 3px solid var(--accent-blue);
-    font-weight: 500;
 }
 
 .nav-link.active i {
-    color: var(--primary-color);
-}
-
-/* Active Indicator */
-.nav-link::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    height: 0;
-    width: 3px;
-    background: var(--primary-gradient);
-    border-radius: 0 3px 3px 0;
-    opacity: 0;
-    transition: height var(--transition-normal);
-}
-
-.nav-link:hover::before,
-.nav-link.active::before {
-    height: 1.5rem;
     opacity: 1;
+    color: var(--accent-blue);
 }
+
         /* Main Content Area */
 .main-content {
     margin-left: var(--sidebar-width);
     flex: 1;
     transition: margin-left var(--transition-normal);
+    background-color: var(--background-color);
 }
 
 /* Header Styles */
@@ -277,6 +250,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
+    height: var(--header-height);
 }
 
 /* Sidebar Toggle Button */
@@ -371,6 +345,7 @@ body {
     font-size: 1.1rem;
     width: 1.5rem;
     text-align: center;
+    color: var(--text-tertiary);
 }
 
 /* Dashboard Content */
@@ -379,11 +354,11 @@ body {
 }
 
 .welcome-section {
-    background: var(--card-background);
-    border-radius: 8px;
+    background: var(--surface-color);
+    border-radius: 0.75rem;
     padding: 2rem;
     margin-bottom: 2rem;
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-md);
 }
 
 .welcome-section h1 {
@@ -497,6 +472,7 @@ body {
 @media (max-width: 1024px) {
     .sidebar {
         left: calc(-1 * var(--sidebar-width));
+        box-shadow: var(--shadow-lg);
     }
 
     .sidebar.active {
@@ -504,6 +480,10 @@ body {
     }
 
     .main-content {
+        margin-left: 0;
+    }
+
+    .main-content.expanded {
         margin-left: 0;
     }
 
@@ -549,6 +529,17 @@ body {
     .notification {
         width: calc(100% - 2rem);
         right: 1rem;
+    }
+
+    .dropdown-menu {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        border-radius: 1rem 1rem 0 0;
+        max-height: 80vh;
+        overflow-y: auto;
     }
 }
     </style>
