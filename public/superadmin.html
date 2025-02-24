@@ -131,36 +131,295 @@
             color: var(--light-text);
             line-height: 1.6;
         }
+
+      /* Sidebar and Layout Styles */
+.layout-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 280px;
+    background: white;
+    border-right: 1px solid rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.sidebar-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.nav-section {
+    padding: 1rem 0;
+}
+
+.nav-section-title {
+    padding: 0.5rem 1.5rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--light-text);
+    letter-spacing: 0.05em;
+}
+
+.nav-items {
+    list-style: none;
+}
+
+.nav-item {
+    padding: 0.25rem 1.5rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: var(--text-color);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+    background: var(--background-color);
+    color: var(--primary-color);
+}
+
+.nav-link.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.nav-link i {
+    width: 20px;
+    text-align: center;
+}
+
+.main-content {
+    flex: 1;
+    background: var(--background-color);
+}
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+    .sidebar {
+        position: fixed;
+        left: -280px;
+        height: 100vh;
+    }
+
+    .sidebar.active {
+        left: 0;
+    }
+
+    .sidebar-toggle {
+        display: block;
+    }
+
+    .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+    }
+
+    .overlay.active {
+        display: block;
+    }
+}
+
+/* Header Modifications */
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}  
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="logo">WorkWise Pro</div>
-        <div class="user-menu">
-            <span class="user-email" id="userEmail"></span>
-            <button class="menu-trigger" onclick="toggleDropdown()">
-                <i class="fas fa-user-circle"></i>
-                <i class="fas fa-chevron-down"></i>
-            </button>
-            <div class="dropdown-menu" id="dropdownMenu">
-                <a href="#" onclick="handleMyAccount()">
-                    <i class="fas fa-user"></i>
-                    My Account
-                </a>
-                <a href="#" onclick="handleSignOut()">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Sign Out
-                </a>
+    <div class="layout-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <i class="fas fa-briefcase"></i>
+                    WorkWise Pro
+                </div>
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-        </div>
-    </header>
 
-    <main class="dashboard-content">
-        <section class="welcome-section">
-            <h1>Welcome to Super Admin Dashboard</h1>
-            <p>Manage your organization's HR system with complete control and oversight.</p>
-        </section>
-    </main>
+            <!-- Main Navigation -->
+            <nav class="nav-section">
+                <ul class="nav-items">
+                    <li class="nav-item">
+                        <a href="#dashboard" class="nav-link active">
+                            <i class="fas fa-th-large"></i>
+                            Dashboard Overview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#companies" class="nav-link">
+                            <i class="fas fa-building"></i>
+                            Companies/Organizations
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- System Navigation -->
+            <div class="nav-section">
+                <div class="nav-section-title">System</div>
+                <ul class="nav-items">
+                    <li class="nav-item">
+                        <a href="#settings" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            System Settings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#pricing" class="nav-link">
+                            <i class="fas fa-tags"></i>
+                            Pricing & Plans
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#security" class="nav-link">
+                            <i class="fas fa-shield-alt"></i>
+                            Security Settings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Management Navigation -->
+            <div class="nav-section">
+                <div class="nav-section-title">Management</div>
+                <ul class="nav-items">
+                    <li class="nav-item">
+                        <a href="#modules" class="nav-link">
+                            <i class="fas fa-cube"></i>
+                            Modules Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#users" class="nav-link">
+                            <i class="fas fa-users"></i>
+                            User Management
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Tools Navigation -->
+            <div class="nav-section">
+                <div class="nav-section-title">Tools</div>
+                <ul class="nav-items">
+                    <li class="nav-item">
+                        <a href="#analytics" class="nav-link">
+                            <i class="fas fa-chart-bar"></i>
+                            Analytics & Reports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#backup" class="nav-link">
+                            <i class="fas fa-database"></i>
+                            Backup & Restore
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#audit" class="nav-link">
+                            <i class="fas fa-history"></i>
+                            Audit Logs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#api" class="nav-link">
+                            <i class="fas fa-code"></i>
+                            API Management
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Support Navigation -->
+            <div class="nav-section">
+                <div class="nav-section-title">Support</div>
+                <ul class="nav-items">
+                    <li class="nav-item">
+                        <a href="#support" class="nav-link">
+                            <i class="fas fa-headset"></i>
+                            Support Center
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <header class="header">
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="user-menu">
+                    <span class="user-email" id="userEmail"></span>
+                    <button class="menu-trigger" onclick="toggleDropdown()">
+                        <i class="fas fa-user-circle"></i>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <a href="#" onclick="handleMyAccount()">
+                            <i class="fas fa-user"></i>
+                            My Account
+                        </a>
+                        <a href="#" onclick="handleSignOut()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Sign Out
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <main class="dashboard-content">
+                <section class="welcome-section">
+                    <h1>Welcome to Super Admin Dashboard</h1>
+                    <p>Manage your organization's HR system with complete control and oversight.</p>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Overlay for mobile -->
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -236,6 +495,34 @@
             // Redirect to login page
             window.location.href = 'login.html';
         }
+
+        function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+
+// Add active class to current navigation item
+document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+        document.querySelector('.nav-link.active').classList.remove('active');
+        this.classList.add('active');
+    });
+});
+
+// Close sidebar when clicking outside on mobile
+document.addEventListener('click', function(e) {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const sidebarToggle = e.target.closest('.sidebar-toggle');
+    const sidebarElement = e.target.closest('.sidebar');
+    
+    if (!sidebarToggle && !sidebarElement && sidebar.classList.contains('active')) {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    }
+});
     </script>
 </body>
 </html>
