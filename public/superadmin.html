@@ -612,7 +612,7 @@ body {
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#users" class="nav-link" data-tooltip="User Management">
+                        <a href="#users" class="nav-link" data-tooltip="User Management" data-section="userManagement" onclick="loadUserManagement(event)">
                             <i class="fas fa-users"></i>
                             <span>User Management</span>
                         </a>
@@ -699,7 +699,234 @@ body {
             </main>
         </div>
     </div>
+ <!-- Add User Management Section -->
+    <section class="content-section" id="userManagementSection" style="display: none;">
+        <div class="module-header">
+            <div class="header-title">
+                <h1>User Management</h1>
+                <p>Manage internal users and their access permissions</p>
+            </div>
+            <button class="btn btn-primary" onclick="openAddUserModal()">
+                <i class="fas fa-plus"></i>
+                Add New User
+            </button>
+        </div>
 
+        <!-- Search and Filter Section -->
+        <div class="search-filter-section">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="userSearch" placeholder="Search users..." onkeyup="searchUsers()">
+            </div>
+            <div class="filter-controls">
+                <select id="departmentFilter" onchange="filterUsers()">
+                    <option value="">All Departments</option>
+                    <option value="HR">HR</option>
+                    <option value="Finance">Finance</option>
+                    <option value="IT">IT</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Support">Support</option>
+                    <option value="Sales">Sales</option>
+                </select>
+                <select id="statusFilter" onchange="filterUsers()">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+                <select id="roleFilter" onchange="filterUsers()">
+                    <option value="">All Roles</option>
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="user">User</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="users-table-container">
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Department</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>2FA</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <!-- Table content will be dynamically populated -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal" id="userModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">Add New User</h2>
+            <button class="close-btn" onclick="closeUserModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="userForm" onsubmit="handleUserSubmit(event)">
+            <div class="form-group">
+                <label for="userName">Full Name</label>
+                <input type="text" id="userName" required>
+            </div>
+            <div class="form-group">
+                <label for="userEmail">Email</label>
+                <input type="email" id="userEmail" required>
+            </div>
+            <div class="form-group">
+                <label for="userDepartment">Department</label>
+                <select id="userDepartment" required>
+                    <option value="HR">HR</option>
+                    <option value="Finance">Finance</option>
+                    <option value="IT">IT</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Support">Support</option>
+                    <option value="Sales">Sales</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="userRole">Role</label>
+                <select id="userRole" required>
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="user">User</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="require2FA">
+                    <span>Require 2FA</span>
+                </label>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save User</button>
+            </div>
+        </form>
+    </div>
+</div>
+    <style>
+        /* Content Section Styles */
+.content-section {
+    background: var(--surface-color);
+    border-radius: 0.75rem;
+    padding: 2rem;
+    margin-top: 2rem;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Module Header */
+.module-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header-title h1 {
+    color: var(--primary-color);
+    font-size: 1.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.header-title p {
+    color: var(--text-secondary);
+}
+
+/* Button Styles */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: var(--primary-gradient);
+    color: var(--text-light);
+    border: none;
+}
+
+.btn-secondary {
+    background: var(--surface-dark);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn i {
+    font-size: 1rem;
+}
+
+/* Search and Filter Styles */
+.search-filter-section {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.search-box {
+    flex: 1;
+    min-width: 300px;
+    position: relative;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.search-box i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+}
+
+/* Table Styles */
+.users-table-container {
+    overflow-x: auto;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.users-table th,
+.users-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.users-table th {
+    background: var(--surface-dark);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.users-table tbody tr:hover {
+    background: var(--surface-dark);
+}
+    </style>
     <!-- Overlay for mobile -->
     <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
@@ -707,145 +934,21 @@ body {
     <div id="notificationContainer"></div>
 
     <script>
-        // Global State Management
+      // Global State Management
 let sidebarState = {
     isCollapsed: false,
     isMobile: window.innerWidth <= 1024,
-    activeNavItem: null
+    activeNavItem: null,
+    currentSection: 'dashboard'
 };
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    initializeLogin();
     initializeSidebar();
     initializeUserMenu();
     checkAuthStatus();
     handleResponsiveness();
 });
-
-// Login Initialization and Validation
-function initializeLogin() {
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-
-        // Form Validation
-        function validateEmail(email) {
-            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return re.test(email);
-        }
-
-        function validatePassword(password) {
-            return password.length >= 6;
-        }
-
-        function showError(input, message) {
-            const formGroup = input.closest('.form-group');
-            formGroup.classList.add('error');
-            formGroup.classList.remove('success');
-            
-            let errorMessage = formGroup.querySelector('.error-message');
-            if (!errorMessage) {
-                errorMessage = document.createElement('div');
-                errorMessage.className = 'error-message';
-                formGroup.appendChild(errorMessage);
-            }
-            errorMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i>${message}`;
-        }
-
-        function showSuccess(input) {
-            const formGroup = input.closest('.form-group');
-            formGroup.classList.remove('error');
-            formGroup.classList.add('success');
-            
-            const errorMessage = formGroup.querySelector('.error-message');
-            if (errorMessage) {
-                errorMessage.remove();
-            }
-        }
-
-        // Real-time validation
-        if (emailInput) {
-            emailInput.addEventListener('blur', () => {
-                if (!validateEmail(emailInput.value)) {
-                    showError(emailInput, 'Please enter a valid email address');
-                } else {
-                    showSuccess(emailInput);
-                }
-            });
-        }
-
-        if (passwordInput) {
-            passwordInput.addEventListener('blur', () => {
-                if (!validatePassword(passwordInput.value)) {
-                    showError(passwordInput, 'Password must be at least 6 characters');
-                } else {
-                    showSuccess(passwordInput);
-                }
-            });
-        }
-
-        // Form Submission
-        loginForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            if (!validateEmail(emailInput.value) || !validatePassword(passwordInput.value)) {
-                showNotification('Please correct the errors before submitting', 'error');
-                return;
-            }
-
-            const submitButton = this.querySelector('button[type="submit"]');
-            submitButton.classList.add('loading');
-            submitButton.disabled = true;
-
-            try {
-                const response = await fetch('https://18.215.160.136.nip.io/api/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        email: emailInput.value,
-                        password: passwordInput.value
-                    })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.message || 'Login failed');
-                }
-
-                // Store auth data
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('userRole', data.role);
-                localStorage.setItem('userEmail', data.email);
-
-                showNotification('Login successful! Redirecting...', 'success');
-
-                // Role-based redirection
-                setTimeout(() => {
-                    if (data.role === 'superadmin') {
-                        const encodedEmail = encodeURIComponent(data.email);
-                        const encodedRole = encodeURIComponent(data.role);
-                        window.location.href = `superadmin.html?email=${encodedEmail}&role=${encodedRole}&token=${data.token}`;
-                    } else if (data.role === 'admin') {
-                        window.location.href = 'admin.html';
-                    } else {
-                        window.location.href = 'dashboard.html';
-                    }
-                }, 1500);
-
-            } catch (error) {
-                showNotification(error.message || 'Login failed', 'error');
-            } finally {
-                submitButton.classList.remove('loading');
-                submitButton.disabled = false;
-            }
-        });
-    }
-}
 
 // Sidebar Initialization
 function initializeSidebar() {
@@ -862,7 +965,18 @@ function initializeSidebar() {
         if (tooltipText) {
             item.setAttribute('data-tooltip', tooltipText);
         }
-        item.addEventListener('click', (e) => handleNavItemClick(e, item));
+        
+        // Add click handler for navigation
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleNavItemClick(e, item);
+            
+            // Handle section loading if data-section attribute exists
+            const sectionName = item.getAttribute('data-section');
+            if (sectionName) {
+                loadSection(sectionName);
+            }
+        });
     });
 }
 
@@ -872,13 +986,30 @@ function initializeUserMenu() {
     const dropdownMenu = document.getElementById('dropdownMenu');
 
     if (menuTrigger && dropdownMenu) {
+        // Toggle dropdown on menu trigger click
         menuTrigger.addEventListener('click', function(e) {
             e.stopPropagation();
-            dropdownMenu.classList.toggle('active');
+            toggleDropdown();
         });
 
+        // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
-            if (!dropdownMenu.contains(e.target) && !menuTrigger.contains(e.target)) {
+            const dropdown = document.getElementById('dropdownMenu');
+            if (dropdown && dropdown.classList.contains('active')) {
+                if (!dropdown.contains(e.target) && !e.target.matches('.menu-trigger, .menu-trigger *')) {
+                    dropdown.classList.remove('active');
+                }
+            }
+        });
+
+        // Prevent dropdown from closing when clicking inside it
+        dropdownMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        // Close dropdown on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && dropdownMenu.classList.contains('active')) {
                 dropdownMenu.classList.remove('active');
             }
         });
@@ -888,6 +1019,16 @@ function initializeUserMenu() {
 // Toggle Dropdown Menu
 function toggleDropdown() {
     const dropdownMenu = document.getElementById('dropdownMenu');
+    const allDropdowns = document.querySelectorAll('.dropdown-menu');
+    
+    // Close all other dropdowns first
+    allDropdowns.forEach(dropdown => {
+        if (dropdown !== dropdownMenu) {
+            dropdown.classList.remove('active');
+        }
+    });
+
+    // Toggle the clicked dropdown
     if (dropdownMenu) {
         dropdownMenu.classList.toggle('active');
     }
@@ -907,31 +1048,13 @@ function toggleSidebar() {
         
         if (sidebarState.isMobile) {
             sidebar.classList.toggle('active');
-            overlay.classList.toggle('active');
+            if (overlay) {
+                overlay.classList.toggle('active');
+            }
         }
         
         localStorage.setItem('sidebarCollapsed', sidebarState.isCollapsed);
     }
-}
-
-// Notification System
-function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-        <span>${message}</span>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.classList.add('show');
-        setTimeout(() => {
-            notification.classList.remove('show');
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
-    }, 100);
 }
 
 // Authentication Check
@@ -1048,68 +1171,514 @@ function handleNavItemClick(e, item) {
         }
     }
 }
-        // User Menu Initialization
-function initializeUserMenu() {
-    const menuTrigger = document.querySelector('.menu-trigger');
-    const dropdownMenu = document.getElementById('dropdownMenu');
 
-    if (menuTrigger && dropdownMenu) {
-        // Toggle dropdown on menu trigger click
-        menuTrigger.addEventListener('click', function(e) {
-            e.stopPropagation();
-            toggleDropdown();
-        });
+// Notification System
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('show');
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }, 100);
+}
+        // User Management Module Namespace
+const UserManagement = {
+    // State management
+    state: {
+        users: [],
+        currentUser: null,
+        filters: {
+            search: '',
+            department: '',
+            status: '',
+            role: ''
+        }
+    },
 
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            const dropdown = document.getElementById('dropdownMenu');
-            if (dropdown && dropdown.classList.contains('active')) {
-                if (!dropdown.contains(e.target) && !e.target.matches('.menu-trigger, .menu-trigger *')) {
-                    dropdown.classList.remove('active');
+    // Initialize module
+    init: function() {
+        this.loadUsers();
+        this.initializeEventListeners();
+    },
+
+    // Load users from API
+    loadUsers: async function() {
+        try {
+            // Show loading state
+            const tbody = document.getElementById('usersTableBody');
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="loading-state">
+                            <i class="fas fa-spinner fa-spin"></i> Loading users...
+                        </td>
+                    </tr>
+                `;
+            }
+
+            const response = await fetch('https://18.215.160.136.nip.io/api/users', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
+            });
+            
+            if (!response.ok) throw new Error('Failed to load users');
+            
+            this.state.users = await response.json();
+            this.renderUsers();
+        } catch (error) {
+            showNotification('Failed to load users: ' + error.message, 'error');
+            const tbody = document.getElementById('usersTableBody');
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="error-state">
+                            <i class="fas fa-exclamation-circle"></i> Failed to load users
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+    },
+
+    // Render users table
+    renderUsers: function() {
+        const tbody = document.getElementById('usersTableBody');
+        if (!tbody) return;
+
+        const filteredUsers = this.getFilteredUsers();
+        
+        if (filteredUsers.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <i class="fas fa-users-slash"></i>
+                        <p>No users found</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = filteredUsers.map(user => `
+            <tr>
+                <td>
+                    <div class="user-info">
+                        <div class="user-avatar" style="background-color: ${this.getAvatarColor(user.name)}">
+                            ${this.getInitials(user.name)}
+                        </div>
+                        <div class="user-details">
+                            <div class="user-name">${user.name}</div>
+                            <div class="user-id">#${user.id}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>${user.email}</td>
+                <td>
+                    <span class="department-badge department-${user.department.toLowerCase()}">
+                        ${user.department}
+                    </span>
+                </td>
+                <td>
+                    <span class="role-badge role-${user.role.toLowerCase()}">
+                        ${user.role}
+                    </span>
+                </td>
+                <td>
+                    <span class="status-badge status-${user.status.toLowerCase()}">
+                        <i class="fas fa-${user.status === 'active' ? 'check-circle' : 'times-circle'}"></i>
+                        ${user.status}
+                    </span>
+                </td>
+                <td>
+                    <span class="2fa-status ${user.requires2FA ? 'enabled' : 'disabled'}">
+                        <i class="fas fa-${user.requires2FA ? 'shield-alt' : 'shield'}"></i>
+                        ${user.requires2FA ? 'Enabled' : 'Disabled'}
+                    </span>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <button 
+                            onclick="UserManagement.editUser('${user.id}')" 
+                            class="btn-icon"
+                            title="Edit User"
+                        >
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button 
+                            onclick="UserManagement.toggleUserStatus('${user.id}')" 
+                            class="btn-icon ${user.status === 'active' ? 'danger' : 'success'}"
+                            title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User"
+                        >
+                            <i class="fas fa-${user.status === 'active' ? 'ban' : 'check'}"></i>
+                        </button>
+                        <button 
+                            onclick="UserManagement.resetUserPassword('${user.id}')" 
+                            class="btn-icon warning"
+                            title="Reset Password"
+                        >
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <div class="action-menu-trigger">
+                            <button class="btn-icon" onclick="UserManagement.toggleActionMenu(event, '${user.id}')">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div class="action-menu" id="actionMenu_${user.id}">
+                                <a href="#" onclick="UserManagement.viewUserDetails('${user.id}')">
+                                    <i class="fas fa-eye"></i> View Details
+                                </a>
+                                <a href="#" onclick="UserManagement.viewUserLogs('${user.id}')">
+                                    <i class="fas fa-history"></i> Activity Logs
+                                </a>
+                                <a href="#" onclick="UserManagement.manage2FA('${user.id}')">
+                                    <i class="fas fa-shield-alt"></i> Manage 2FA
+                                </a>
+                                <div class="menu-divider"></div>
+                                <a href="#" class="danger" onclick="UserManagement.deleteUser('${user.id}')">
+                                    <i class="fas fa-trash-alt"></i> Delete User
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    },
+
+    // Filter users based on search and filter criteria
+    getFilteredUsers: function() {
+        return this.state.users.filter(user => {
+            const searchTerm = this.state.filters.search.toLowerCase();
+            const matchesSearch = user.name.toLowerCase().includes(searchTerm) ||
+                                user.email.toLowerCase().includes(searchTerm) ||
+                                user.id.toLowerCase().includes(searchTerm);
+            
+            const matchesDepartment = !this.state.filters.department || 
+                                    user.department === this.state.filters.department;
+            
+            const matchesStatus = !this.state.filters.status || 
+                                user.status === this.state.filters.status;
+            
+            const matchesRole = !this.state.filters.role || 
+                              user.role === this.state.filters.role;
+
+            return matchesSearch && matchesDepartment && matchesStatus && matchesRole;
+        });
+    },
+
+    // Initialize event listeners
+    initializeEventListeners: function() {
+        // Search input with debounce
+        const searchInput = document.getElementById('userSearch');
+        if (searchInput) {
+            let debounceTimer;
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    this.state.filters.search = e.target.value;
+                    this.renderUsers();
+                }, 300);
+            });
+        }
+
+        // Filter selects
+        ['department', 'status', 'role'].forEach(filterType => {
+            const select = document.getElementById(`${filterType}Filter`);
+            if (select) {
+                select.addEventListener('change', (e) => {
+                    this.state.filters[filterType] = e.target.value;
+                    this.renderUsers();
+                });
             }
         });
 
-        // Prevent dropdown from closing when clicking inside it
-        dropdownMenu.addEventListener('click', function(e) {
-            e.stopPropagation();
+        // Close action menus when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.action-menu-trigger')) {
+                document.querySelectorAll('.action-menu').forEach(menu => {
+                    menu.classList.remove('active');
+                });
+            }
         });
-    }
-}
+    },
 
-// Toggle Dropdown Menu
-function toggleDropdown() {
-    const dropdownMenu = document.getElementById('dropdownMenu');
-    const allDropdowns = document.querySelectorAll('.dropdown-menu');
+    // Modal handling
+    openAddUserModal: function() {
+        const modal = document.getElementById('userModal');
+        const form = document.getElementById('userForm');
+        
+        if (modal && form) {
+            form.reset();
+            this.state.currentUser = null;
+            document.getElementById('modalTitle').textContent = 'Add New User';
+            modal.classList.add('active');
+        }
+    },
+
+    closeUserModal: function() {
+        const modal = document.getElementById('userModal');
+        if (modal) {
+            modal.classList.remove('active');
+            this.state.currentUser = null;
+        }
+    },
+
+        // Form submission handler
+    handleUserSubmit: async function(event) {
+        event.preventDefault();
+        
+        const submitButton = event.target.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        
+        const formData = {
+            name: document.getElementById('userName').value,
+            email: document.getElementById('userEmail').value,
+            department: document.getElementById('userDepartment').value,
+            role: document.getElementById('userRole').value,
+            requires2FA: document.getElementById('require2FA').checked
+        };
+
+        try {
+            const url = this.state.currentUser 
+                ? `https://18.215.160.136.nip.io/api/users/${this.state.currentUser.id}`
+                : 'https://18.215.160.136.nip.io/api/users';
+
+            const response = await fetch(url, {
+                method: this.state.currentUser ? 'PUT' : 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to save user');
+            }
+
+            showNotification(
+                `User successfully ${this.state.currentUser ? 'updated' : 'added'}`,
+                'success'
+            );
+            
+            this.closeUserModal();
+            this.loadUsers();
+        } catch (error) {
+            showNotification(error.message, 'error');
+        } finally {
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Save User';
+        }
+    },
+
+    // User actions
+    editUser: async function(userId) {
+        try {
+            const user = this.state.users.find(u => u.id === userId);
+            if (!user) throw new Error('User not found');
+
+            this.state.currentUser = user;
+            
+            // Populate form
+            document.getElementById('userName').value = user.name;
+            document.getElementById('userEmail').value = user.email;
+            document.getElementById('userDepartment').value = user.department;
+            document.getElementById('userRole').value = user.role;
+            document.getElementById('require2FA').checked = user.requires2FA;
+            
+            // Update modal title and open
+            document.getElementById('modalTitle').textContent = 'Edit User';
+            document.getElementById('userModal').classList.add('active');
+        } catch (error) {
+            showNotification(error.message, 'error');
+        }
+    },
+
+    toggleUserStatus: async function(userId) {
+        try {
+            const user = this.state.users.find(u => u.id === userId);
+            const newStatus = user.status === 'active' ? 'inactive' : 'active';
+            
+            const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (!response.ok) throw new Error('Failed to update user status');
+
+            showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
+            this.loadUsers();
+        } catch (error) {
+            showNotification(error.message, 'error');
+        }
+    },
+
+    resetUserPassword: async function(userId) {
+        if (!confirm('Are you sure you want to reset this user\'s password? They will receive an email with reset instructions.')) return;
+
+        try {
+            const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/reset-password`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to initiate password reset');
+
+            showNotification('Password reset email sent successfully', 'success');
+        } catch (error) {
+            showNotification(error.message, 'error');
+        }
+    },
+
+    deleteUser: async function(userId) {
+        if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+
+        try {
+            const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to delete user');
+
+            showNotification('User deleted successfully', 'success');
+            this.loadUsers();
+        } catch (error) {
+            showNotification(error.message, 'error');
+        }
+    },
+
+    manage2FA: async function(userId) {
+        try {
+            const user = this.state.users.find(u => u.id === userId);
+            const action = user.requires2FA ? 'disable' : 'enable';
+            
+            const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/2fa/${action}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+
+            if (!response.ok) throw new Error(`Failed to ${action} 2FA`);
+
+            showNotification(`2FA ${action}d successfully`, 'success');
+            this.loadUsers();
+        } catch (error) {
+            showNotification(error.message, 'error');
+        }
+    },
+
+    viewUserDetails: function(userId) {
+        // Implement user details view
+        console.log('View user details:', userId);
+    },
+
+    viewUserLogs: function(userId) {
+        // Implement user logs view
+        console.log('View user logs:', userId);
+    },
+
+    toggleActionMenu: function(event, userId) {
+        event.stopPropagation();
+        const menu = document.getElementById(`actionMenu_${userId}`);
+        
+        // Close all other menus first
+        document.querySelectorAll('.action-menu').forEach(m => {
+            if (m !== menu) m.classList.remove('active');
+        });
+        
+        menu.classList.toggle('active');
+    },
+
+    // Utility functions
+    getInitials: function(name) {
+        return name
+            .split(' ')
+            .map(word => word[0])
+            .join('')
+            .toUpperCase();
+    },
+
+    getAvatarColor: function(name) {
+        const colors = [
+            '#4f46e5', '#7c3aed', '#db2777', '#ea580c', '#16a34a',
+            '#2563eb', '#9333ea', '#e11d48', '#d97706', '#15803d'
+        ];
+        
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) {
+            hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        
+        return colors[Math.abs(hash) % colors.length];
+    }
+};
+
+// Function to load User Management section
+function loadUserManagement(event) {
+    event.preventDefault();
     
-    // Close all other dropdowns first
-    allDropdowns.forEach(dropdown => {
-        if (dropdown !== dropdownMenu) {
-            dropdown.classList.remove('active');
-        }
-    });
-
-    // Toggle the clicked dropdown
-    if (dropdownMenu) {
-        dropdownMenu.classList.toggle('active');
+    // Hide welcome section and show user management
+    const welcomeSection = document.querySelector('.welcome-section');
+    const userManagementSection = document.getElementById('userManagementSection');
+    
+    if (welcomeSection) welcomeSection.style.display = 'none';
+    if (userManagementSection) {
+        userManagementSection.style.display = 'block';
+        UserManagement.init(); // Initialize the module
     }
+
+    // Update active navigation
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    event.currentTarget.classList.add('active');
 }
 
-// Add this to your existing DOMContentLoaded event listener
-document.addEventListener('DOMContentLoaded', function() {
-    initializeSidebar();
-    initializeUserMenu(); // Make sure this is called
-    checkAuthStatus();
-    handleResponsiveness();
-
-    // Close dropdown when pressing Escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            const activeDropdowns = document.querySelectorAll('.dropdown-menu.active');
-            activeDropdowns.forEach(dropdown => dropdown.classList.remove('active'));
-        }
+// Add section loading handler to your existing code
+function loadSection(sectionName) {
+    // Hide all sections
+    document.querySelectorAll('.content-section').forEach(section => {
+        section.style.display = 'none';
     });
-});
+
+    // Show welcome section for dashboard, otherwise load specific section
+    if (sectionName === 'dashboard') {
+        const welcomeSection = document.querySelector('.welcome-section');
+        if (welcomeSection) welcomeSection.style.display = 'block';
+    } else {
+        const section = document.getElementById(`${sectionName}Section`);
+        if (section) {
+            section.style.display = 'block';
+            if (sectionName === 'userManagement') {
+                UserManagement.init();
+            }
+        }
+    }
+
+    sidebarState.currentSection = sectionName;
+}
     </script>
 </body>
 </html>
