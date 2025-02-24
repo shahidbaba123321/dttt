@@ -793,6 +793,109 @@ body {
 .empty-state p {
     font-size: 1rem;
 } 
+
+/* Detailed Notification Styles */
+.notification.detailed {
+    width: 400px;
+    max-width: 90vw;
+    padding: 0;
+    background: var(--surface-color);
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+}
+
+.notification.detailed .notification-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--primary-color);
+    color: var(--text-light);
+    border-radius: 8px 8px 0 0;
+}
+
+.notification.detailed .notification-header i {
+    font-size: 1.25rem;
+}
+
+.notification.detailed .notification-body {
+    padding: 1rem;
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+.notification.detailed .notification-body strong {
+    color: var(--primary-color);
+}
+
+.notification.detailed.show {
+    transform: translateX(0);
+}      
+        /* Password Input Group */
+.password-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-group input {
+    flex: 1;
+    padding-right: 2.5rem;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.toggle-password:hover {
+    color: var(--primary-color);
+}
+
+/* Warning Message */
+.warning-message {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.warning-message i {
+    color: var(--danger-color);
+    font-size: 1.5rem;
+}
+
+.user-details {
+    padding: 1rem;
+    background: var(--surface-dark);
+    border-radius: 0.5rem;
+}
+
+.user-details p {
+    margin-bottom: 0.5rem;
+}
+
+.user-details strong {
+    color: var(--primary-color);
+}
+
+/* Danger Button */
+.btn-danger {
+    background: var(--danger-color);
+    color: var(--text-light);
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
     </style>
 </head>
 <body>
@@ -1723,54 +1826,59 @@ const UserManagement = {
                 </td>
                 <td>
                     <div class="action-buttons">
-                        <button onclick="UserManagement.editUser('${user._id}')" class="btn-icon" title="Edit User">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="UserManagement.toggleUserStatus('${user._id}')" 
-                                class="btn-icon ${user.status === 'active' ? 'danger' : 'success'}"
-                                title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User">
-                            <i class="fas fa-${user.status === 'active' ? 'ban' : 'check'}"></i>
-                        </button>
-                        <button onclick="UserManagement.resetUserPassword('${user._id}')" 
-                                class="btn-icon warning" title="Reset Password">
-                            <i class="fas fa-key"></i>
-                        </button>
-                        <button onclick="UserManagement.deleteUser('${user._id}')" 
-                                class="btn-icon danger" title="Delete User">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
+    <button onclick="UserManagement.editUser('${user._id}')" class="btn-icon" title="Edit User">
+        <i class="fas fa-edit"></i>
+    </button>
+    <button onclick="UserManagement.toggleUserStatus('${user._id}')" 
+            class="btn-icon ${user.status === 'active' ? 'danger' : 'success'}"
+            title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User">
+        <i class="fas fa-${user.status === 'active' ? 'ban' : 'check'}"></i>
+    </button>
+    <button onclick="UserManagement.changeUserPassword('${user._id}')" 
+            class="btn-icon warning" title="Change Password">
+        <i class="fas fa-key"></i>
+    </button>
+    <button onclick="UserManagement.toggle2FA('${user._id}')"
+            class="btn-icon ${user.requires2FA ? 'success' : 'warning'}"
+            title="${user.requires2FA ? 'Disable' : 'Enable'} 2FA">
+        <i class="fas fa-shield-alt"></i>
+    </button>
+    <button onclick="UserManagement.deleteUser('${user._id}')" 
+            class="btn-icon danger" title="Delete User">
+        <i class="fas fa-trash-alt"></i>
+    </button>
+</div>
                 </td>
             </tr>
         `).join('');
     },
 
-    handleUserSubmit: async function(event) {
-        event.preventDefault();
+  handleUserSubmit: async function(event) {
+    event.preventDefault();
+    
+    // Get form elements
+    const form = event.target;
+    const nameInput = form.querySelector('#userName');
+    const emailInput = form.querySelector('#userEmail');
+    const departmentInput = form.querySelector('#userDepartment');
+    const roleInput = form.querySelector('#userRole');
+    const require2FAInput = form.querySelector('#require2FA');
+    const submitButton = form.querySelector('button[type="submit"]');
+
+    try {
+        // Check if all required fields exist
+        const requiredFields = [
+            { field: nameInput, label: 'Name' },
+            { field: emailInput, label: 'Email' },
+            { field: departmentInput, label: 'Department' },
+            { field: roleInput, label: 'Role' }
+        ];
         
-        // Get form elements
-        const form = event.target;
-        const nameInput = form.querySelector('#userName');
-        const emailInput = form.querySelector('#userEmail');
-        const departmentInput = form.querySelector('#userDepartment');
-        const roleInput = form.querySelector('#userRole');
-        const require2FAInput = form.querySelector('#require2FA');
-        const submitButton = form.querySelector('button[type="submit"]');
-
-        try {
-            // Check if all required fields exist
-            const requiredFields = [
-                { field: nameInput, label: 'Name' },
-                { field: emailInput, label: 'Email' },
-                { field: departmentInput, label: 'Department' },
-                { field: roleInput, label: 'Role' }
-            ];
-
-            for (const { field, label } of requiredFields) {
-                if (!field) {
-                    throw new Error(`${label} field not found`);
-                }
+             for (const { field, label } of requiredFields) {
+            if (!field) {
+                throw new Error(`${label} field not found`);
             }
+        }
 
             // Validate all required fields
             let isValid = true;
@@ -1818,22 +1926,57 @@ const UserManagement = {
 
             const data = await response.json();
 
-            if (!response.ok) {
-                throw new Error(data.message || 'Failed to save user');
+           if (!response.ok) {
+            // Handle specific error cases
+            if (response.status === 400 && data.message.includes('already exists')) {
+                this.showFieldError(emailInput, 'This email is already registered');
+                throw new Error('Email address is already in use');
             }
-
+            throw new Error(data.message || 'Failed to save user');
+        }
             // Handle successful response
-            if (!this.state.currentUser && data.temporaryPassword) {
-                showNotification(
-                    `User created successfully. Temporary password: ${data.temporaryPassword}`,
-                    'success'
-                );
-            } else {
-                showNotification(
-                    `User ${this.state.currentUser ? 'updated' : 'created'} successfully`,
-                    'success'
-                );
-            }
+         if (!this.state.currentUser) {
+            // New user creation success
+            const successMessage = `
+                User created successfully!
+                <br><br>
+                <strong>Name:</strong> ${formData.name}
+                <br>
+                <strong>Email:</strong> ${formData.email}
+                <br>
+                <strong>Department:</strong> ${formData.department}
+                <br>
+                <strong>Role:</strong> ${formData.role}
+                <br>
+                <strong>Temporary Password:</strong> ${data.temporaryPassword}
+            `;
+            
+            // Show detailed notification
+            const notification = document.createElement('div');
+            notification.className = 'notification success detailed';
+            notification.innerHTML = `
+                <div class="notification-header">
+                    <i class="fas fa-check-circle"></i>
+                    <span>User Created Successfully</span>
+                </div>
+                <div class="notification-body">
+                    ${successMessage}
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.classList.add('show');
+                // Keep this notification visible longer
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => notification.remove(), 300);
+                }, 10000); // Show for 10 seconds
+            }, 100);
+        } else {
+            // User update success
+            showNotification(`User updated successfully`, 'success');
+        }
             
             closeUserModal();
             this.loadUsers();
@@ -1884,9 +2027,16 @@ const UserManagement = {
     toggleUserStatus: async function(userId) {
         try {
             const user = this.state.users.find(u => u._id === userId);
+            
             if (!user) throw new Error('User not found');
 
             const newStatus = user.status === 'active' ? 'inactive' : 'active';
+            const confirmMessage = newStatus === 'inactive' 
+            ? `Are you sure you want to deactivate ${user.name}?` 
+            : `Are you sure you want to activate ${user.name}?`;
+
+        if (!confirm(confirmMessage)) return;
+            
             const token = localStorage.getItem('token');
             
             const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/status`, {
@@ -1911,55 +2061,172 @@ const UserManagement = {
         }
     },
 
-    resetUserPassword: async function(userId) {
-        if (!confirm('Are you sure you want to reset this user\'s password?')) return;
+   changeUserPassword: async function(userId) {
+    try {
+        const user = this.state.users.find(u => u._id === userId);
+        if (!user) throw new Error('User not found');
 
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/reset-password`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+        // Create and show password change modal
+        const modalHtml = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Change Password for ${user.name}</h2>
+                    <button class="close-btn" onclick="this.closest('.modal').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="changePasswordForm">
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <div class="password-input-group">
+                            <input type="password" id="newPassword" required minlength="6">
+                            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('newPassword')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <div class="password-input-group">
+                            <input type="password" id="confirmPassword" required minlength="6">
+                            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('confirmPassword')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Change Password</button>
+                    </div>
+                </form>
+            </div>
+        `;
 
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Failed to reset password');
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.innerHTML = modalHtml;
+        document.body.appendChild(modal);
 
-            showNotification(
-                `Password reset successful. New temporary password: ${data.temporaryPassword}`,
-                'success'
-            );
-        } catch (error) {
-            console.error('Error resetting password:', error);
-            showNotification(error.message, 'error');
-        }
-    },
-
-    deleteUser: async function(userId) {
-        if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
-
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to delete user');
+        // Handle form submission
+        const form = modal.querySelector('#changePasswordForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                showNotification('Passwords do not match', 'error');
+                return;
             }
 
-            showNotification('User deleted successfully', 'success');
-            this.loadUsers();
-        } catch (error) {
-            console.error('Error deleting user:', error);
-            showNotification(error.message, 'error');
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Changing Password...';
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/password`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ password: newPassword })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to change password');
+                }
+
+                showNotification('Password changed successfully', 'success');
+                modal.remove();
+            } catch (error) {
+                showNotification(error.message, 'error');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Change Password';
+            }
+        });
+    } catch (error) {
+        console.error('Error changing password:', error);
+        showNotification(error.message, 'error');
+    }
+},
+
+   deleteUser: async function(userId) {
+    try {
+        const user = this.state.users.find(u => u._id === userId);
+        if (!user) throw new Error('User not found');
+
+        // Show confirmation modal
+        const modalHtml = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Delete User</h2>
+                    <button class="close-btn" onclick="this.closest('.modal').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="warning-message">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Are you sure you want to delete the following user? This action cannot be undone.</p>
+                    </div>
+                    <div class="user-details">
+                        <p><strong>Name:</strong> ${user.name}</p>
+                        <p><strong>Email:</strong> ${user.email}</p>
+                        <p><strong>Department:</strong> ${user.department}</p>
+                        <p><strong>Role:</strong> ${user.role}</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                    <button class="btn btn-danger" onclick="UserManagement.confirmDeleteUser('${userId}', this)">
+                        Delete User
+                    </button>
+                </div>
+            </div>
+        `;
+
+        const modal = document.createElement('div');
+        modal.className = 'modal active';
+        modal.innerHTML = modalHtml;
+        document.body.appendChild(modal);
+    } catch (error) {
+        console.error('Error preparing delete:', error);
+        showNotification(error.message, 'error');
+    }
+},
+confirmDeleteUser: async function(userId, button) {
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to delete user');
         }
-    },
+
+        showNotification('User deleted successfully', 'success');
+        button.closest('.modal').remove();
+        this.loadUsers();
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        showNotification(error.message, 'error');
+        button.disabled = false;
+        button.innerHTML = 'Delete User';
+    }
+},
 
     getInitials: function(name) {
         if (!name) return '??';
@@ -2010,7 +2277,56 @@ function loadSection(sectionName) {
 
     sidebarState.currentSection = sectionName;
 }
+        
+toggle2FA: async function(userId) {
+    try {
+        const user = this.state.users.find(u => u._id === userId);
+        if (!user) throw new Error('User not found');
 
+        const newState = !user.requires2FA;
+        const token = localStorage.getItem('token');
+        
+        const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/2fa`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ requires2FA: newState })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to update 2FA status');
+        }
+
+        showNotification(
+            `Two-factor authentication ${newState ? 'enabled' : 'disabled'} successfully`,
+            'success'
+        );
+        this.loadUsers();
+    } catch (error) {
+        console.error('Error toggling 2FA:', error);
+        showNotification(error.message, 'error');
+    }
+}        
+
+function togglePasswordVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = input.nextElementSibling.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+        
 // Initialize everything when the page loads
 window.addEventListener('load', function() {
     const currentSection = new URLSearchParams(window.location.search).get('section');
