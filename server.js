@@ -187,6 +187,303 @@ app.post('/api/verify-token', async (req, res) => {
         });
     }
 });
+// User Management Routes
+app.post('/api/users', async (req, res) => {
+    try {
+        const { name, email, department, role, requires2FA } = req.body;
+
+        // Basic validation
+        if (!name || !email || !department || !role) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'All required fields must be provided' 
+            });
+        }
+
+        const database = client.db('infocraftorbis');
+        const users = database.collection('users');
+
+        // Check if user already exists
+        const existingUser = await users.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'User with this email already exists' 
+            });
+        }
+
+        // Generate temporary password
+        const tempPassword = Math.random().toString(36).slice(-8);
+        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+        // Create user document
+        const newUser = {
+            name,
+            email,
+            department,
+            role,
+            requires2FA: requires2FA || false,
+            password: hashedPassword,
+            status: 'active',
+            createdAt: new Date(),
+            lastLogin: null,
+            passwordResetRequired: true
+        };
+
+        const result = await users.insertOne(newUser);
+
+        res.status(201).json({
+            success: true,
+            message: 'User created successfully',
+            userId: result.insertedId,
+            temporaryPassword: tempPassword // Only for development, remove in production
+        });
+
+    } catch (error) {
+        console.error('Error creating user:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error creating user' 
+        });
+    }
+});
+
+// Get all users
+app.get('/api/users', async (req, res) => {
+    try {
+        const database = client.db('infocraftorbis');
+        const users = database.collection('users');
+
+        const usersList = await users.find({}, {
+            projection: {
+                password: 0 // Exclude password from results
+            }
+        }).toArray();
+
+        res.json(usersList);
+
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching users' 
+        });
+    }
+});
+
+// Update user
+app.put('/api/users/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { name, email, department, role, requires2FA } = req.body;
+
+        const database = client.db('infocraftorbis');
+        const users = database.collection('users');
+
+        // Check if email is being changed and if it's already in use
+        if (email) {
+            const existingUser = await users.findOne({ 
+                email, 
+                _id: { $ne: new ObjectId(userId) }
+            });
+            
+            if (existingUser) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Email already in use' 
+                });
+            }
+        }
+
+        const result = await users.updateOne(
+            { _id: new ObjectId(userId) },
+            {
+                $set: {
+                    name,
+                    email,
+                    department,
+                    role,
+                    requires2FA,
+                    updatedAt: new Date()
+                }
+            }
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'User not found' 
+            });
+        }
+
+        res.json({ 
+            success: true, 
+            message: 'User updated successfully' 
+        });
+
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error updating user' 
+        });
+    }
+});
+
+// Toggle user status (active/inactive)
+app.put('/api/users/:userId/status', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { status } = req.body;
+
+        const database = client.db('infocraftorbis');
+        const users = database.collection('users');
+
+        const result = await users.updateOne(
+            { _id: new ObjectId(userId) },
+            {
+                $set: {
+                    status,
+                    updatedAt: new Date()
+                }
+            }
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'User not found' 
+            });
+        }
+
+        res.json({ 
+            success: true, 
+            message: `User ${status === 'active' ? 'activated' : 'deactivated'} successfully` 
+        });
+
+    } catch (error) {
+        console.error('Error updating user status:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error updating user status' 
+        });
+    }
+});
+
+// Reset user password
+app.post('/api/users/:userId/reset-password', async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const database = client.db('infocraftorbis');
+        const users = database.collection('users');
+
+        // Generate new temporary password
+        const tempPassword = Math.random().toString(36).slice(-8);
+        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+        const result = await users.updateOne(
+            { _id: new ObjectId(userId) },
+            {
+                $set: {
+                    password: hashedPassword,
+                    passwordResetRequired: true,
+                    updatedAt: new Date()
+                }
+            }
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'User not found' 
+            });
+        }
+
+        res.json({ 
+            success: true, 
+            message: 'Password reset successful',
+            temporaryPassword: tempPassword // Only for development, remove in production
+        });
+
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error resetting password' 
+        });
+    }
+});
+
+// Toggle 2FA requirement
+app.put('/api/users/:userId/2fa/:action', async (req, res) => {
+    try {
+        const { userId, action } = req.params;
+
+        const database = client.db('infocraftorbis');
+        const users = database.collection('users');
+
+        const result = await users.updateOne(
+            { _id: new ObjectId(userId) },
+            {
+                $set: {
+                    requires2FA: action === 'enable',
+                    updatedAt: new Date()
+                }
+            }
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'User not found' 
+            });
+        }
+
+        res.json({ 
+            success: true, 
+            message: `2FA ${action}d successfully` 
+        });
+
+    } catch (error) {
+        console.error('Error updating 2FA status:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error updating 2FA status' 
+        });
+    }
+});
+
+// Delete user
+app.delete('/api/users/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const database = client.db('infocraftorbis');
+        const users = database.collection('users');
+
+        const result = await users.deleteOne({ _id: new ObjectId(userId) });
+
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'User not found' 
+            });
+        }
+
+        res.json({ 
+            success: true, 
+            message: 'User deleted successfully' 
+        });
+
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error deleting user' 
+        });
+    }
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -196,6 +493,7 @@ app.use((err, req, res, next) => {
         message: 'Something broke!' 
     });
 });
+
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, '0.0.0.0', () => {
