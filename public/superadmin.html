@@ -1097,7 +1097,7 @@ body {
 }
 </style>
     <script>
-      // Global State Management
+     // Global State Management
 let sidebarState = {
     isCollapsed: false,
     isMobile: window.innerWidth <= 1024,
@@ -1353,7 +1353,7 @@ function showNotification(message, type = 'success') {
         }, 3000);
     }, 100);
 }
-// Modal Functions
+        // Modal Functions
 function openAddUserModal() {
     const modal = document.getElementById('userModal');
     if (!modal) return;
@@ -1362,6 +1362,15 @@ function openAddUserModal() {
     const form = document.getElementById('userForm');
     if (form) {
         form.reset();
+        // Clear any existing error states
+        const formInputs = form.querySelectorAll('input, select');
+        formInputs.forEach(input => {
+            input.classList.remove('error');
+            const errorMessage = input.parentElement.querySelector('.error-message');
+            if (errorMessage) {
+                errorMessage.remove();
+            }
+        });
         UserManagement.state.currentUser = null;
     }
 
@@ -1444,6 +1453,12 @@ const UserManagement = {
         const form = document.getElementById('userForm');
         if (form) {
             form.addEventListener('submit', (e) => this.handleUserSubmit(e));
+
+            // Add validation on blur for required fields
+            const requiredFields = form.querySelectorAll('input[required], select[required]');
+            requiredFields.forEach(field => {
+                field.addEventListener('blur', () => this.validateField(field));
+            });
         }
 
         // Modal close on outside click
@@ -1465,29 +1480,34 @@ const UserManagement = {
                 }
             }
         });
-
-        // Input validation on blur
-        const formInputs = document.querySelectorAll('#userForm input[required], #userForm select[required]');
-        formInputs.forEach(input => {
-            input.addEventListener('blur', () => this.validateField(input));
-        });
     },
 
     validateField: function(field) {
+        if (!field) {
+            console.error('Field not found for validation');
+            return false;
+        }
+
+        // Remove existing error message if any
         const errorMessage = field.parentElement.querySelector('.error-message');
         if (errorMessage) {
             errorMessage.remove();
         }
         field.classList.remove('error');
 
-        if (!field.value.trim()) {
+        // Get field value and trim if it's a string
+        const value = typeof field.value === 'string' ? field.value.trim() : field.value;
+
+        // Check for empty value
+        if (!value) {
             this.showFieldError(field, 'This field is required');
             return false;
         }
 
+        // Email validation
         if (field.type === 'email') {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(field.value)) {
+            if (!emailRegex.test(value)) {
                 this.showFieldError(field, 'Please enter a valid email address');
                 return false;
             }
@@ -1497,6 +1517,8 @@ const UserManagement = {
     },
 
     showFieldError: function(field, message) {
+        if (!field || !field.parentElement) return;
+        
         field.classList.add('error');
         const errorDiv = document.createElement('div');
         errorDiv.className = 'error-message';
@@ -1566,8 +1588,7 @@ const UserManagement = {
             `;
         }
     },
-
-       // Continuing the UserManagement object...
+    // Continuing the UserManagement object...
     getFilteredUsers: function() {
         if (!Array.isArray(this.state.users)) {
             return [];
@@ -1677,12 +1698,21 @@ const UserManagement = {
     handleUserSubmit: async function(event) {
         event.preventDefault();
         
-        const submitButton = event.target.querySelector('button[type="submit"]');
+        const form = event.target;
+        const submitButton = form.querySelector('button[type="submit"]');
+        
+        // Get form elements
         const nameInput = document.getElementById('userName');
         const emailInput = document.getElementById('userEmail');
         const departmentInput = document.getElementById('userDepartment');
         const roleInput = document.getElementById('userRole');
         const require2FAInput = document.getElementById('require2FA');
+
+        // Check if all required elements exist
+        if (!nameInput || !emailInput || !departmentInput || !roleInput) {
+            showNotification('Form elements not found', 'error');
+            return;
+        }
 
         // Validate all required fields
         const requiredFields = [nameInput, emailInput, departmentInput, roleInput];
@@ -1699,20 +1729,20 @@ const UserManagement = {
             return;
         }
 
-        const formData = {
-            name: nameInput.value.trim(),
-            email: emailInput.value.trim(),
-            department: departmentInput.value,
-            role: roleInput.value,
-            requires2FA: require2FAInput.checked
-        };
-
         try {
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
             const token = localStorage.getItem('token');
             if (!token) throw new Error('No authentication token found');
+
+            const formData = {
+                name: nameInput.value.trim(),
+                email: emailInput.value.trim(),
+                department: departmentInput.value,
+                role: roleInput.value,
+                requires2FA: require2FAInput ? require2FAInput.checked : false
+            };
 
             const url = this.state.currentUser 
                 ? `https://18.215.160.136.nip.io/api/users/${this.state.currentUser._id}`
@@ -1733,6 +1763,7 @@ const UserManagement = {
                 throw new Error(data.message || 'Failed to save user');
             }
 
+            // Handle successful response
             if (!this.state.currentUser && data.temporaryPassword) {
                 showNotification(
                     `User created successfully. Temporary password: ${data.temporaryPassword}`,
@@ -1752,8 +1783,10 @@ const UserManagement = {
             console.error('Error saving user:', error);
             showNotification(error.message, 'error');
         } finally {
-            submitButton.disabled = false;
-            submitButton.innerHTML = 'Save User';
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Save User';
+            }
         }
     },
 
@@ -1765,15 +1798,24 @@ const UserManagement = {
             this.state.currentUser = user;
             
             // Populate form
-            document.getElementById('userName').value = user.name || '';
-            document.getElementById('userEmail').value = user.email || '';
-            document.getElementById('userDepartment').value = user.department || '';
-            document.getElementById('userRole').value = user.role || '';
-            document.getElementById('require2FA').checked = user.requires2FA || false;
+            const nameInput = document.getElementById('userName');
+            const emailInput = document.getElementById('userEmail');
+            const departmentInput = document.getElementById('userDepartment');
+            const roleInput = document.getElementById('userRole');
+            const require2FAInput = document.getElementById('require2FA');
+
+            if (nameInput) nameInput.value = user.name || '';
+            if (emailInput) emailInput.value = user.email || '';
+            if (departmentInput) departmentInput.value = user.department || '';
+            if (roleInput) roleInput.value = user.role || '';
+            if (require2FAInput) require2FAInput.checked = user.requires2FA || false;
             
             // Update modal title and open
-            document.getElementById('modalTitle').textContent = 'Edit User';
-            document.getElementById('userModal').classList.add('active');
+            const modalTitle = document.getElementById('modalTitle');
+            if (modalTitle) modalTitle.textContent = 'Edit User';
+            
+            const modal = document.getElementById('userModal');
+            if (modal) modal.classList.add('active');
         } catch (error) {
             console.error('Error editing user:', error);
             showNotification(error.message, 'error');
@@ -1861,11 +1903,12 @@ const UserManagement = {
     },
 
     getInitials: function(name) {
+        if (!name) return '??';
         return name
             .split(' ')
             .map(word => word[0])
             .join('')
-            .toUpperCase() || '??';
+            .toUpperCase();
     },
 
     getAvatarColor: function(name) {
@@ -1915,8 +1958,8 @@ window.addEventListener('load', function() {
     if (currentSection) {
         loadSection(currentSection);
     }
-}); 
-        
+});
+    
     </script>
 </body>
 </html>
