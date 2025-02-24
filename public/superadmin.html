@@ -1053,6 +1053,68 @@ function handleNavItemClick(e, item) {
         }
     }
 }
+        // User Menu Initialization
+function initializeUserMenu() {
+    const menuTrigger = document.querySelector('.menu-trigger');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+
+    if (menuTrigger && dropdownMenu) {
+        // Toggle dropdown on menu trigger click
+        menuTrigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleDropdown();
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('dropdownMenu');
+            if (dropdown && dropdown.classList.contains('active')) {
+                if (!dropdown.contains(e.target) && !e.target.matches('.menu-trigger, .menu-trigger *')) {
+                    dropdown.classList.remove('active');
+                }
+            }
+        });
+
+        // Prevent dropdown from closing when clicking inside it
+        dropdownMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+}
+
+// Toggle Dropdown Menu
+function toggleDropdown() {
+    const dropdownMenu = document.getElementById('dropdownMenu');
+    const allDropdowns = document.querySelectorAll('.dropdown-menu');
+    
+    // Close all other dropdowns first
+    allDropdowns.forEach(dropdown => {
+        if (dropdown !== dropdownMenu) {
+            dropdown.classList.remove('active');
+        }
+    });
+
+    // Toggle the clicked dropdown
+    if (dropdownMenu) {
+        dropdownMenu.classList.toggle('active');
+    }
+}
+
+// Add this to your existing DOMContentLoaded event listener
+document.addEventListener('DOMContentLoaded', function() {
+    initializeSidebar();
+    initializeUserMenu(); // Make sure this is called
+    checkAuthStatus();
+    handleResponsiveness();
+
+    // Close dropdown when pressing Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const activeDropdowns = document.querySelectorAll('.dropdown-menu.active');
+            activeDropdowns.forEach(dropdown => dropdown.classList.remove('active'));
+        }
+    });
+});
     </script>
 </body>
 </html>
