@@ -1097,7 +1097,7 @@ body {
 }
 </style>
     <script>
-    // Global State Management
+  // Global State Management
 let sidebarState = {
     isCollapsed: false,
     isMobile: window.innerWidth <= 1024,
@@ -1183,6 +1183,27 @@ function initializeUserMenu() {
             menuTrigger.classList.remove('active');
         }
     });
+}
+
+// Load User Management Section
+function loadUserManagement(event) {
+    event.preventDefault();
+    
+    // Hide welcome section and show user management
+    const welcomeSection = document.querySelector('.welcome-section');
+    const userManagementSection = document.getElementById('userManagementSection');
+    
+    if (welcomeSection) welcomeSection.style.display = 'none';
+    if (userManagementSection) {
+        userManagementSection.style.display = 'block';
+        UserManagement.init(); // Initialize the module
+    }
+
+    // Update active navigation
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    event.currentTarget.classList.add('active');
 }
 
 // Toggle Sidebar
@@ -1353,7 +1374,7 @@ function showNotification(message, type = 'success') {
         }, 3000);
     }, 100);
 }
-// Modal Functions
+        // Modal Functions
 function openAddUserModal() {
     const modal = document.getElementById('userModal');
     if (!modal) return;
@@ -1498,11 +1519,22 @@ const UserManagement = {
         // Remove existing error message
         this.clearFieldError(field);
 
-        const value = field.value.trim();
+        // Get field value safely
+        let value = '';
+        if (field.type === 'checkbox') {
+            value = field.checked;
+        } else if (field.value !== undefined) {
+            value = typeof field.value === 'string' ? field.value.trim() : field.value;
+        }
+
+        // Skip validation for non-required checkboxes
+        if (field.type === 'checkbox' && !field.required) {
+            return true;
+        }
 
         // Check for empty value
-        if (!value) {
-            this.showFieldError(field, 'This field is required');
+        if (value === '' || value === undefined || value === null) {
+            this.showFieldError(field, `${field.labels?.[0]?.textContent || 'This field'} is required`);
             return false;
         }
 
@@ -1606,7 +1638,7 @@ const UserManagement = {
             `;
         }
     },
-        // Continuing the UserManagement object...
+    // Continuing the UserManagement object...
     getFilteredUsers: function() {
         if (!Array.isArray(this.state.users)) {
             return [];
@@ -1717,15 +1749,16 @@ const UserManagement = {
         event.preventDefault();
         
         // Get form elements
-        const nameInput = document.getElementById('userName');
-        const emailInput = document.getElementById('userEmail');
-        const departmentInput = document.getElementById('userDepartment');
-        const roleInput = document.getElementById('userRole');
-        const require2FAInput = document.getElementById('require2FA');
-        const submitButton = event.target.querySelector('button[type="submit"]');
+        const form = event.target;
+        const nameInput = form.querySelector('#userName');
+        const emailInput = form.querySelector('#userEmail');
+        const departmentInput = form.querySelector('#userDepartment');
+        const roleInput = form.querySelector('#userRole');
+        const require2FAInput = form.querySelector('#require2FA');
+        const submitButton = form.querySelector('button[type="submit"]');
 
         try {
-            // Validate all required fields
+            // Check if all required fields exist
             const requiredFields = [
                 { field: nameInput, label: 'Name' },
                 { field: emailInput, label: 'Email' },
@@ -1733,11 +1766,15 @@ const UserManagement = {
                 { field: roleInput, label: 'Role' }
             ];
 
-            let isValid = true;
             for (const { field, label } of requiredFields) {
                 if (!field) {
                     throw new Error(`${label} field not found`);
                 }
+            }
+
+            // Validate all required fields
+            let isValid = true;
+            for (const { field } of requiredFields) {
                 if (!this.validateField(field)) {
                     isValid = false;
                 }
@@ -1981,6 +2018,7 @@ window.addEventListener('load', function() {
         loadSection(currentSection);
     }
 });
+   
     </script>
 </body>
 </html>
