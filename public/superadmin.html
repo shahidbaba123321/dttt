@@ -1097,7 +1097,7 @@ body {
 }
 </style>
     <script>
-     // Global State Management
+    // Global State Management
 let sidebarState = {
     isCollapsed: false,
     isMobile: window.innerWidth <= 1024,
@@ -1353,7 +1353,7 @@ function showNotification(message, type = 'success') {
         }, 3000);
     }, 100);
 }
-        // Modal Functions
+// Modal Functions
 function openAddUserModal() {
     const modal = document.getElementById('userModal');
     if (!modal) return;
@@ -1454,10 +1454,17 @@ const UserManagement = {
         if (form) {
             form.addEventListener('submit', (e) => this.handleUserSubmit(e));
 
-            // Add validation on blur for required fields
+            // Add real-time validation for required fields
             const requiredFields = form.querySelectorAll('input[required], select[required]');
             requiredFields.forEach(field => {
-                field.addEventListener('blur', () => this.validateField(field));
+                field.addEventListener('blur', () => {
+                    this.validateField(field);
+                });
+
+                // Clear error when user starts typing
+                field.addEventListener('input', () => {
+                    this.clearFieldError(field);
+                });
             });
         }
 
@@ -1488,15 +1495,10 @@ const UserManagement = {
             return false;
         }
 
-        // Remove existing error message if any
-        const errorMessage = field.parentElement.querySelector('.error-message');
-        if (errorMessage) {
-            errorMessage.remove();
-        }
-        field.classList.remove('error');
+        // Remove existing error message
+        this.clearFieldError(field);
 
-        // Get field value and trim if it's a string
-        const value = typeof field.value === 'string' ? field.value.trim() : field.value;
+        const value = field.value.trim();
 
         // Check for empty value
         if (!value) {
@@ -1513,6 +1515,12 @@ const UserManagement = {
             }
         }
 
+        // Select validation
+        if (field.tagName.toLowerCase() === 'select' && value === '') {
+            this.showFieldError(field, 'Please select an option');
+            return false;
+        }
+
         return true;
     },
 
@@ -1524,6 +1532,16 @@ const UserManagement = {
         errorDiv.className = 'error-message';
         errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i>${message}`;
         field.parentElement.appendChild(errorDiv);
+    },
+
+    clearFieldError: function(field) {
+        if (!field || !field.parentElement) return;
+        
+        field.classList.remove('error');
+        const errorMessage = field.parentElement.querySelector('.error-message');
+        if (errorMessage) {
+            errorMessage.remove();
+        }
     },
 
     loadUsers: async function() {
@@ -1588,7 +1606,7 @@ const UserManagement = {
             `;
         }
     },
-    // Continuing the UserManagement object...
+        // Continuing the UserManagement object...
     getFilteredUsers: function() {
         if (!Array.isArray(this.state.users)) {
             return [];
@@ -1698,44 +1716,47 @@ const UserManagement = {
     handleUserSubmit: async function(event) {
         event.preventDefault();
         
-        const form = event.target;
-        const submitButton = form.querySelector('button[type="submit"]');
-        
         // Get form elements
         const nameInput = document.getElementById('userName');
         const emailInput = document.getElementById('userEmail');
         const departmentInput = document.getElementById('userDepartment');
         const roleInput = document.getElementById('userRole');
         const require2FAInput = document.getElementById('require2FA');
-
-        // Check if all required elements exist
-        if (!nameInput || !emailInput || !departmentInput || !roleInput) {
-            showNotification('Form elements not found', 'error');
-            return;
-        }
-
-        // Validate all required fields
-        const requiredFields = [nameInput, emailInput, departmentInput, roleInput];
-        let isValid = true;
-
-        requiredFields.forEach(field => {
-            if (!this.validateField(field)) {
-                isValid = false;
-            }
-        });
-
-        if (!isValid) {
-            showNotification('Please fill in all required fields correctly', 'error');
-            return;
-        }
+        const submitButton = event.target.querySelector('button[type="submit"]');
 
         try {
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            // Validate all required fields
+            const requiredFields = [
+                { field: nameInput, label: 'Name' },
+                { field: emailInput, label: 'Email' },
+                { field: departmentInput, label: 'Department' },
+                { field: roleInput, label: 'Role' }
+            ];
+
+            let isValid = true;
+            for (const { field, label } of requiredFields) {
+                if (!field) {
+                    throw new Error(`${label} field not found`);
+                }
+                if (!this.validateField(field)) {
+                    isValid = false;
+                }
+            }
+
+            if (!isValid) {
+                throw new Error('Please fill in all required fields correctly');
+            }
+
+            // Disable submit button and show loading state
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            }
 
             const token = localStorage.getItem('token');
             if (!token) throw new Error('No authentication token found');
 
+            // Prepare form data
             const formData = {
                 name: nameInput.value.trim(),
                 email: emailInput.value.trim(),
@@ -1744,6 +1765,7 @@ const UserManagement = {
                 requires2FA: require2FAInput ? require2FAInput.checked : false
             };
 
+            // Make API request
             const url = this.state.currentUser 
                 ? `https://18.215.160.136.nip.io/api/users/${this.state.currentUser._id}`
                 : 'https://18.215.160.136.nip.io/api/users';
@@ -1959,7 +1981,6 @@ window.addEventListener('load', function() {
         loadSection(currentSection);
     }
 });
-    
     </script>
 </body>
 </html>
