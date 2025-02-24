@@ -308,9 +308,18 @@ body {
     transition: all var(--transition-normal);
 }
 
-.menu-trigger:hover {
+.menu-trigger:hover,
+.menu-trigger.active {
     background: var(--surface-dark);
     color: var(--primary-color);
+}
+        .menu-trigger i {
+    font-size: 1.25rem;
+    transition: transform var(--transition-normal);
+}
+
+.menu-trigger.active i:last-child {
+    transform: rotate(180deg);
 }
 
 .dropdown-menu {
@@ -321,15 +330,20 @@ body {
     border-radius: 0.5rem;
     box-shadow: var(--shadow-lg);
     min-width: 200px;
-    display: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all var(--transition-normal);
     border: 1px solid var(--border-color);
     z-index: 1000;
 }
 
 .dropdown-menu.active {
-    display: block;
-    animation: dropdownFadeIn 0.2s ease;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
 }
+
 
 .dropdown-menu a {
     display: flex;
@@ -346,6 +360,10 @@ body {
     color: var(--primary-color);
 }
 
+        .dropdown-menu a i {
+    width: 1.25rem;
+    text-align: center;
+}
 /* Dashboard Content */
 .dashboard-content {
     flex: 1;
@@ -776,24 +794,24 @@ body {
                     <i class="fas fa-bars"></i>
                 </button>
                 <div class="user-menu">
-                    <span class="user-email" id="userEmail"></span>
-                    <div class="dropdown">
-                        <button class="menu-trigger" onclick="toggleDropdown(event)">
-                            <i class="fas fa-user-circle"></i>
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
-                        <div class="dropdown-menu" id="dropdownMenu">
-                            <a href="#" onclick="handleMyAccount()">
-                                <i class="fas fa-user"></i>
-                                My Account
-                            </a>
-                            <a href="#" onclick="handleSignOut()">
-                                <i class="fas fa-sign-out-alt"></i>
-                                Sign Out
-                            </a>
-                        </div>
-                    </div>
-                </div>
+    <span class="user-email" id="userEmail"></span>
+    <div class="dropdown">
+        <button type="button" class="menu-trigger" id="userMenuTrigger">
+            <i class="fas fa-user-circle"></i>
+            <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="dropdown-menu" id="dropdownMenu">
+            <a href="#" onclick="handleMyAccount()">
+                <i class="fas fa-user"></i>
+                My Account
+            </a>
+            <a href="#" onclick="handleSignOut()">
+                <i class="fas fa-sign-out-alt"></i>
+                Sign Out
+            </a>
+        </div>
+    </div>
+</div>
             </header>
 
             <div class="dashboard-content">
@@ -971,31 +989,52 @@ function initializeSidebar() {
 
 // User Menu Initialization
 function initializeUserMenu() {
-    const menuTrigger = document.querySelector('.menu-trigger');
+    const menuTrigger = document.getElementById('userMenuTrigger');
     const dropdownMenu = document.getElementById('dropdownMenu');
 
-    if (menuTrigger && dropdownMenu) {
-        // Toggle dropdown on menu trigger click
-        menuTrigger.addEventListener('click', function(e) {
+    if (!menuTrigger || !dropdownMenu) return;
+
+    // Toggle dropdown on button click
+    menuTrigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropdownMenu.classList.toggle('active');
+        
+        // Add active class to trigger for styling
+        this.classList.toggle('active');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        const isClickInside = menuTrigger.contains(e.target) || dropdownMenu.contains(e.target);
+        
+        if (!isClickInside && dropdownMenu.classList.contains('active')) {
+            dropdownMenu.classList.remove('active');
+            menuTrigger.classList.remove('active');
+        }
+    });
+
+    // Close dropdown on ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && dropdownMenu.classList.contains('active')) {
+            dropdownMenu.classList.remove('active');
+            menuTrigger.classList.remove('active');
+        }
+    });
+
+    // Prevent dropdown links from immediately closing
+    dropdownMenu.addEventListener('click', function(e) {
+        if (e.target.tagName === 'A') {
             e.stopPropagation();
-            toggleDropdown(e);
-        });
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!dropdownMenu.contains(e.target) && !e.target.matches('.menu-trigger, .menu-trigger *')) {
+            setTimeout(() => {
                 dropdownMenu.classList.remove('active');
-            }
-        });
-
-        // Close dropdown on ESC key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                dropdownMenu.classList.remove('active');
-            }
-        });
-    }
+                menuTrigger.classList.remove('active');
+            }, 100);
+        }
+    });
 }
+
+
 
     // User Management Module
 const UserManagement = {
@@ -1053,12 +1092,6 @@ const UserManagement = {
     }
 };    
 
-// Toggle Dropdown Menu
-function toggleDropdown(event) {
-    event.stopPropagation();
-    const dropdownMenu = document.getElementById('dropdownMenu');
-    dropdownMenu.classList.toggle('active');
-}
 
 // Toggle Sidebar
 // Toggle Sidebar
