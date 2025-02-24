@@ -943,10 +943,10 @@ body {
                             <h1>User Management</h1>
                             <p>Manage internal users and their access permissions</p>
                         </div>
-                        <button class="btn btn-primary" onclick="UserManagement.openAddUserModal()">
-                            <i class="fas fa-plus"></i>
-                            Add New User
-                        </button>
+                        <button class="btn btn-primary" onclick="openAddUserModal()">
+    <i class="fas fa-plus"></i>
+    Add New User
+</button>
                     </div>
 
                     <div class="search-filter-section">
@@ -1002,56 +1002,56 @@ body {
     </div>
 
     <!-- User Modal -->
-    <div class="modal" id="userModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modalTitle">Add New User</h2>
-                <button class="close-btn" onclick="UserManagement.closeUserModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <form id="userForm" onsubmit="UserManagement.handleUserSubmit(event)">
-                <div class="form-group">
-                    <label for="userName">Full Name</label>
-                    <input type="text" id="userName" required>
-                </div>
-                <div class="form-group">
-                    <label for="userEmail">Email</label>
-                    <input type="email" id="userEmail" required>
-                </div>
-                <div class="form-group">
-                    <label for="userDepartment">Department</label>
-                    <select id="userDepartment" required>
-                        <option value="HR">HR</option>
-                        <option value="Finance">Finance</option>
-                        <option value="IT">IT</option>
-                        <option value="Admin">Admin</option>
-                        <option value="Support">Support</option>
-                        <option value="Sales">Sales</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="userRole">Role</label>
-                    <select id="userRole" required>
-                        <option value="admin">Admin</option>
-                        <option value="manager">Manager</option>
-                        <option value="user">User</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="require2FA">
-                        <span>Require 2FA</span>
-                    </label>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="UserManagement.closeUserModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save User</button>
-                </div>
-            </form>
+    <!-- Update your modal form -->
+<div class="modal" id="userModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">Add New User</h2>
+            <button type="button" class="close-btn" onclick="closeUserModal()">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
+        <form id="userForm">
+            <div class="form-group">
+                <label for="userName">Full Name</label>
+                <input type="text" id="userName" required>
+            </div>
+            <div class="form-group">
+                <label for="userEmail">Email</label>
+                <input type="email" id="userEmail" required>
+            </div>
+            <div class="form-group">
+                <label for="userDepartment">Department</label>
+                <select id="userDepartment" required>
+                    <option value="HR">HR</option>
+                    <option value="Finance">Finance</option>
+                    <option value="IT">IT</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Support">Support</option>
+                    <option value="Sales">Sales</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="userRole">Role</label>
+                <select id="userRole" required>
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="user">User</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="require2FA">
+                    <span>Require 2FA</span>
+                </label>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save User</button>
+            </div>
+        </form>
     </div>
-
+</div>
     <!-- Overlay for mobile -->
     <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
@@ -1070,6 +1070,11 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeUserMenu();
     checkAuthStatus();
     handleResponsiveness();
+
+     const userManagementSection = document.getElementById('userManagementSection');
+    if (userManagementSection && userManagementSection.style.display !== 'none') {
+        UserManagement.init();
+    }
 });
 
 // Sidebar Initialization
@@ -1148,7 +1153,34 @@ function initializeUserMenu() {
         }
     });
 }
+// Standalone modal functions
+function openAddUserModal() {
+    const modal = document.getElementById('userModal');
+    if (!modal) return;
 
+    // Reset form
+    const form = document.getElementById('userForm');
+    if (form) {
+        form.reset();
+        // Reset any hidden fields or state
+        UserManagement.state.currentUser = null;
+    }
+
+    // Update modal title
+    const modalTitle = document.getElementById('modalTitle');
+    if (modalTitle) modalTitle.textContent = 'Add New User';
+
+    // Show modal
+    modal.classList.add('active');
+}
+
+function closeUserModal() {
+    const modal = document.getElementById('userModal');
+    if (modal) {
+        modal.classList.remove('active');
+        UserManagement.state.currentUser = null;
+    }
+}
 
 
    // Update the UserManagement object with these methods
@@ -1164,10 +1196,61 @@ const UserManagement = {
         }
     },
 
-    init: function() {
-        this.loadUsers();
-        this.initializeEventListeners();
+   init: async function() {
+        await this.loadUsers();
+        this.setupEventListeners();
     },
+
+    setupEventListeners: function() {
+        // Search input with debounce
+        const searchInput = document.getElementById('userSearch');
+        if (searchInput) {
+            let debounceTimer;
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    this.state.filters.search = e.target.value;
+                    this.renderUsers();
+                }, 300);
+            });
+        }
+
+        // Filter selects
+        ['department', 'status', 'role'].forEach(filterType => {
+            const select = document.getElementById(`${filterType}Filter`);
+            if (select) {
+                select.addEventListener('change', (e) => {
+                    this.state.filters[filterType] = e.target.value;
+                    this.renderUsers();
+                });
+            }
+        });
+
+        // Form submission
+        const form = document.getElementById('userForm');
+        if (form) {
+            form.addEventListener('submit', (e) => this.handleUserSubmit(e));
+        }
+
+        // Modal close on outside click
+        const modal = document.getElementById('userModal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeUserModal();
+                }
+            });
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeUserModal();
+            }
+        });
+    },
+
+    
 
     // Load users from API
     loadUsers: async function() {
