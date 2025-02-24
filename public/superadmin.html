@@ -233,10 +233,12 @@ body {
 
         /* Main Content Area */
 .main-content {
-    margin-left: var(--sidebar-width);
     flex: 1;
+    margin-left: var(--sidebar-width);
     transition: margin-left var(--transition-normal);
-    background-color: var(--background-color);
+    min-height: 100vh;
+    background: var(--background-color);
+    position: relative;
 }
 
 /* Header Styles */
@@ -351,6 +353,8 @@ body {
 /* Dashboard Content */
 .dashboard-content {
     padding: 2rem;
+    height: 100%;
+    overflow-y: auto;
 }
 
 .welcome-section {
@@ -358,7 +362,7 @@ body {
     border-radius: 0.75rem;
     padding: 2rem;
     margin-bottom: 2rem;
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-sm);
 }
 
 .welcome-section h1 {
@@ -484,7 +488,7 @@ body {
     }
 
     .main-content.expanded {
-        margin-left: 0;
+    margin-left: var(--sidebar-collapsed-width);
     }
 
     .sidebar-toggle {
@@ -819,9 +823,8 @@ body {
 .content-section {
     background: var(--surface-color);
     border-radius: 0.75rem;
-    padding: 2rem;
-    margin-top: 2rem;
     box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
 }
 
 /* Module Header */
@@ -872,10 +875,14 @@ body {
 
 /* Search and Filter Styles */
 .search-filter-section {
+       background: var(--surface-color);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    margin-bottom: 1.5rem;
     display: flex;
     gap: 1rem;
-    margin-bottom: 2rem;
     flex-wrap: wrap;
+
 }
 
 .search-box {
@@ -902,7 +909,9 @@ body {
 
 /* Table Styles */
 .users-table-container {
-    overflow-x: auto;
+background: var(--surface-color);
+    border-radius: 0.75rem;
+    overflow: hidden;
 }
 
 .users-table {
@@ -926,6 +935,12 @@ body {
 .users-table tbody tr:hover {
     background: var(--surface-dark);
 }
+        /* User Management Section Specific Styles */
+#userManagementSection {
+    padding: 2rem;
+}
+
+        
     </style>
     <!-- Overlay for mobile -->
     <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
@@ -1639,41 +1654,43 @@ const UserManagement = {
 function loadUserManagement(event) {
     event.preventDefault();
     
-    // Hide welcome section and show user management
-    const welcomeSection = document.querySelector('.welcome-section');
-    const userManagementSection = document.getElementById('userManagementSection');
-    
-    if (welcomeSection) welcomeSection.style.display = 'none';
-    if (userManagementSection) {
-        userManagementSection.style.display = 'block';
-        UserManagement.init(); // Initialize the module
-    }
-
     // Update active navigation
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
     });
     event.currentTarget.classList.add('active');
+    
+    // Show user management section while keeping welcome section
+    const userManagementSection = document.getElementById('userManagementSection');
+    if (userManagementSection) {
+        // Hide all other content sections except welcome
+        document.querySelectorAll('.content-section').forEach(section => {
+            if (section !== userManagementSection) {
+                section.style.display = 'none';
+            }
+        });
+        
+        userManagementSection.style.display = 'block';
+        UserManagement.init(); // Initialize the module
+    }
 }
 
-// Add section loading handler to your existing code
+
+// Update the loadSection function
 function loadSection(sectionName) {
-    // Hide all sections
+    // Hide all content sections except welcome
     document.querySelectorAll('.content-section').forEach(section => {
-        section.style.display = 'none';
+        if (!section.classList.contains('welcome-section')) {
+            section.style.display = 'none';
+        }
     });
 
-    // Show welcome section for dashboard, otherwise load specific section
-    if (sectionName === 'dashboard') {
-        const welcomeSection = document.querySelector('.welcome-section');
-        if (welcomeSection) welcomeSection.style.display = 'block';
-    } else {
-        const section = document.getElementById(`${sectionName}Section`);
-        if (section) {
-            section.style.display = 'block';
-            if (sectionName === 'userManagement') {
-                UserManagement.init();
-            }
+    // Load specific section
+    const section = document.getElementById(`${sectionName}Section`);
+    if (section) {
+        section.style.display = 'block';
+        if (sectionName === 'userManagement') {
+            UserManagement.init();
         }
     }
 
