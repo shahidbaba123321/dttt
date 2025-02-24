@@ -10,8 +10,9 @@
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-     :root {
+        :root {
     /* Primary Colors */
     --primary-color: #1a237e;     /* Darker blue from the nav */
     --primary-light: #534bae;
@@ -35,11 +36,6 @@
     --text-tertiary: #9ca3af;     /* Subtle text */
     --text-light: #ffffff;        /* Light text for dark backgrounds */
     
-    /* Accent Colors */
-    --accent-blue: #2196f3;       /* Bright blue for highlights */
-    --accent-purple: #673ab7;     /* Purple accent */
-    --accent-indigo: #3f51b5;     /* Indigo accent */
-    
     /* Status Colors */
     --success-color: #4caf50;     /* Green */
     --warning-color: #ff9800;     /* Orange */
@@ -56,9 +52,7 @@
     /* Component Specific */
     --sidebar-width: 280px;
     --sidebar-collapsed-width: 70px;
-    --header-height: 60px;
-    --card-background: #ffffff;
-    --hover-background: rgba(255, 255, 255, 0.1);
+    --header-height: 70px;
     
     /* Transitions */
     --transition-fast: 0.2s ease;
@@ -87,7 +81,6 @@ body {
 .layout-container {
     display: flex;
     min-height: 100vh;
-    position: relative;
 }
 
 /* Sidebar Styles */
@@ -151,7 +144,7 @@ body {
 
 /* Collapse Toggle */
 .collapse-toggle {
-    background: var(--hover-background);
+    background: rgba(255, 255, 255, 0.1);
     border: none;
     color: var(--text-light);
     padding: 0.5rem;
@@ -217,42 +210,45 @@ body {
 
 .nav-link:hover {
     opacity: 1;
-    background: var(--hover-background);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .nav-link.active {
     opacity: 1;
-    background: var(--hover-background);
-    border-left: 3px solid var(--accent-blue);
+    background: rgba(255, 255, 255, 0.1);
+    font-weight: 500;
 }
 
 .nav-link.active i {
     opacity: 1;
-    color: var(--accent-blue);
 }
 
-        /* Main Content Area */
+/* Main Content */
 .main-content {
     flex: 1;
     margin-left: var(--sidebar-width);
     transition: margin-left var(--transition-normal);
+    display: flex;
+    flex-direction: column;
     min-height: 100vh;
-    background: var(--background-color);
-    position: relative;
 }
 
-/* Header Styles */
+.main-content.expanded {
+    margin-left: var(--sidebar-collapsed-width);
+}
+
+/* Header */
 .header {
+    height: var(--header-height);
     background: var(--surface-color);
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--border-color);
+    padding: 0 1.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
     z-index: 100;
-    height: var(--header-height);
 }
 
 /* Sidebar Toggle Button */
@@ -264,16 +260,10 @@ body {
     cursor: pointer;
     padding: 0.5rem;
     font-size: 1.25rem;
-    transition: color var(--transition-normal);
 }
 
-.sidebar-toggle:hover {
-    color: var(--primary-color);
-}
-
-/* User Menu Styles */
+/* User Menu */
 .user-menu {
-    position: relative;
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -285,18 +275,22 @@ body {
     font-weight: 500;
 }
 
+/* Dropdown */
+.dropdown {
+    position: relative;
+}
+
 .menu-trigger {
     background: none;
     border: none;
-    cursor: pointer;
+    padding: 0.5rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem;
+    cursor: pointer;
     color: var(--text-secondary);
-    font-family: inherit;
-    transition: var(--transition-normal);
     border-radius: 0.375rem;
+    transition: all var(--transition-normal);
 }
 
 .menu-trigger:hover {
@@ -304,11 +298,6 @@ body {
     color: var(--primary-color);
 }
 
-.menu-trigger i {
-    font-size: 1.25rem;
-}
-
-/* Dropdown Menu */
 .dropdown-menu {
     position: absolute;
     top: calc(100% + 0.5rem);
@@ -318,9 +307,8 @@ body {
     box-shadow: var(--shadow-lg);
     min-width: 200px;
     display: none;
-    z-index: 1000;
     border: 1px solid var(--border-color);
-    overflow: hidden;
+    z-index: 1000;
 }
 
 .dropdown-menu.active {
@@ -335,7 +323,7 @@ body {
     padding: 0.75rem 1rem;
     color: var(--text-secondary);
     text-decoration: none;
-    transition: var(--transition-normal);
+    transition: all var(--transition-normal);
 }
 
 .dropdown-menu a:hover {
@@ -343,20 +331,15 @@ body {
     color: var(--primary-color);
 }
 
-.dropdown-menu i {
-    font-size: 1.1rem;
-    width: 1.5rem;
-    text-align: center;
-    color: var(--text-tertiary);
-}
-
 /* Dashboard Content */
 .dashboard-content {
+    flex: 1;
     padding: 2rem;
-    height: 100%;
+    background: var(--background-color);
     overflow-y: auto;
 }
 
+/* Welcome Section */
 .welcome-section {
     background: var(--surface-color);
     border-radius: 0.75rem;
@@ -369,462 +352,19 @@ body {
     color: var(--primary-color);
     font-size: 1.875rem;
     margin-bottom: 1rem;
-    font-weight: 600;
 }
 
 .welcome-section p {
     color: var(--text-secondary);
-    font-size: 1.1rem;
 }
 
-/* Collapsed Sidebar States */
-.sidebar.collapsed {
-    width: var(--sidebar-collapsed-width);
-}
-
-.sidebar.collapsed .sidebar-logo span {
-    display: none;
-}
-
-.sidebar.collapsed .nav-section-title {
-    display: none;
-}
-
-.sidebar.collapsed .nav-link {
-    padding: 0.75rem;
-    justify-content: center;
-}
-
-.sidebar.collapsed .nav-link span {
-    display: none;
-}
-
-.sidebar.collapsed .nav-link i {
-    margin: 0;
-}
-
-/* Tooltip for Collapsed Sidebar */
-.sidebar.collapsed .nav-link:hover:after {
-    content: attr(data-tooltip);
-    position: absolute;
-    left: calc(100% + 1rem);
-    top: 50%;
-    transform: translateY(-50%);
-    background: var(--secondary-color);
-    color: var(--text-light);
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    white-space: nowrap;
-    box-shadow: var(--shadow-lg);
-    z-index: 1000;
-}
-
-/* Notification Styles */
-.notification {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    padding: 1rem 1.5rem;
-    border-radius: 0.5rem;
-    background: var(--surface-color);
-    box-shadow: var(--shadow-lg);
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    transform: translateX(150%);
-    transition: transform var(--transition-normal);
-    z-index: 1100;
-}
-
-.notification.show {
-    transform: translateX(0);
-}
-
-.notification.success {
-    border-left: 4px solid var(--success-color);
-}
-
-.notification.error {
-    border-left: 4px solid var(--danger-color);
-}
-
-/* Animations */
-@keyframes dropdownFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Responsive Design */
-@media (max-width: 1024px) {
-    .sidebar {
-        left: calc(-1 * var(--sidebar-width));
-        box-shadow: var(--shadow-lg);
-    }
-
-    .sidebar.active {
-        left: 0;
-    }
-
-    .main-content {
-        margin-left: 0;
-    }
-
-    .main-content.expanded {
-    margin-left: var(--sidebar-collapsed-width);
-    }
-
-    .sidebar-toggle {
-        display: block;
-    }
-
-    .overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(15, 23, 42, 0.3);
-        backdrop-filter: blur(4px);
-        z-index: 999;
-        transition: var(--transition-normal);
-    }
-
-    .overlay.active {
-        display: block;
-    }
-}
-
-@media (max-width: 640px) {
-    .user-email {
-        display: none;
-    }
-
-    .dashboard-content {
-        padding: 1rem;
-    }
-
-    .welcome-section {
-        padding: 1.5rem;
-    }
-
-    .welcome-section h1 {
-        font-size: 1.5rem;
-    }
-
-    .notification {
-        width: calc(100% - 2rem);
-        right: 1rem;
-    }
-
-    .dropdown-menu {
-        position: fixed;
-        top: auto;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        border-radius: 1rem 1rem 0 0;
-        max-height: 80vh;
-        overflow-y: auto;
-    }
-}
-    </style>
-</head>
-<body>
-    <div class="layout-container">
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <a href="#" class="sidebar-logo">
-                    <i class="fas fa-briefcase"></i>
-                    <span>WorkWise Pro</span>
-                </a>
-                <button class="collapse-toggle" onclick="toggleSidebar()">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-            </div>
-
-            <!-- Main Navigation -->
-            <nav class="nav-section">
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="#dashboard" class="nav-link active" data-tooltip="Dashboard Overview">
-                            <i class="fas fa-th-large"></i>
-                            <span>Dashboard Overview</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#companies" class="nav-link" data-tooltip="Companies/Organizations">
-                            <i class="fas fa-building"></i>
-                            <span>Companies/Organizations</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-
-            <!-- System Navigation -->
-            <div class="nav-section">
-                <div class="nav-section-title">System</div>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="#settings" class="nav-link" data-tooltip="System Settings">
-                            <i class="fas fa-cog"></i>
-                            <span>System Settings</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#pricing" class="nav-link" data-tooltip="Pricing & Plans">
-                            <i class="fas fa-tags"></i>
-                            <span>Pricing & Plans</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#security" class="nav-link" data-tooltip="Security Settings">
-                            <i class="fas fa-shield-alt"></i>
-                            <span>Security Settings</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- Management Navigation -->
-            <div class="nav-section">
-                <div class="nav-section-title">Management</div>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="#modules" class="nav-link" data-tooltip="Modules Management">
-                            <i class="fas fa-cube"></i>
-                            <span>Modules Management</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#users" class="nav-link" data-tooltip="User Management" data-section="userManagement" onclick="loadUserManagement(event)">
-                            <i class="fas fa-users"></i>
-                            <span>User Management</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- Tools Navigation -->
-            <div class="nav-section">
-                <div class="nav-section-title">Tools</div>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="#analytics" class="nav-link" data-tooltip="Analytics & Reports">
-                            <i class="fas fa-chart-bar"></i>
-                            <span>Analytics & Reports</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#backup" class="nav-link" data-tooltip="Backup & Restore">
-                            <i class="fas fa-database"></i>
-                            <span>Backup & Restore</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#audit" class="nav-link" data-tooltip="Audit Logs">
-                            <i class="fas fa-history"></i>
-                            <span>Audit Logs</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#api" class="nav-link" data-tooltip="API Management">
-                            <i class="fas fa-code"></i>
-                            <span>API Management</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- Support Navigation -->
-            <div class="nav-section">
-                <div class="nav-section-title">Support</div>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="#support" class="nav-link" data-tooltip="Support Center">
-                            <i class="fas fa-headset"></i>
-                            <span>Support Center</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <div class="main-content">
-            <header class="header">
-                <button class="sidebar-toggle" onclick="toggleSidebar()">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div class="user-menu">
-                    <span class="user-email" id="userEmail"></span>
-                    <button class="menu-trigger" onclick="toggleDropdown()">
-                        <i class="fas fa-user-circle"></i>
-                        <i class="fas fa-chevron-down"></i>
-                    </button>
-                    <div class="dropdown-menu" id="dropdownMenu">
-                        <a href="#" onclick="handleMyAccount()">
-                            <i class="fas fa-user"></i>
-                            My Account
-                        </a>
-                        <a href="#" onclick="handleSignOut()">
-                            <i class="fas fa-sign-out-alt"></i>
-                            Sign Out
-                        </a>
-                    </div>
-                </div>
-            </header>
-
-            <main class="dashboard-content">
-                <section class="welcome-section">
-                    <h1>Welcome to Super Admin Dashboard</h1>
-                    <p>Manage your organization's HR system with complete control and oversight.</p>
-                </section>
-                <!-- Additional dashboard content will go here -->
-            </main>
-        </div>
-    </div>
- <!-- Add User Management Section -->
-    <section class="content-section" id="userManagementSection" style="display: none;">
-        <div class="module-header">
-            <div class="header-title">
-                <h1>User Management</h1>
-                <p>Manage internal users and their access permissions</p>
-            </div>
-            <button class="btn btn-primary" onclick="openAddUserModal()">
-                <i class="fas fa-plus"></i>
-                Add New User
-            </button>
-        </div>
-
-        <!-- Search and Filter Section -->
-        <div class="search-filter-section">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" id="userSearch" placeholder="Search users..." onkeyup="searchUsers()">
-            </div>
-            <div class="filter-controls">
-                <select id="departmentFilter" onchange="filterUsers()">
-                    <option value="">All Departments</option>
-                    <option value="HR">HR</option>
-                    <option value="Finance">Finance</option>
-                    <option value="IT">IT</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Support">Support</option>
-                    <option value="Sales">Sales</option>
-                </select>
-                <select id="statusFilter" onchange="filterUsers()">
-                    <option value="">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                </select>
-                <select id="roleFilter" onchange="filterUsers()">
-                    <option value="">All Roles</option>
-                    <option value="admin">Admin</option>
-                    <option value="manager">Manager</option>
-                    <option value="user">User</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Users Table -->
-        <div class="users-table-container">
-            <table class="users-table">
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Email</th>
-                        <th>Department</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>2FA</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="usersTableBody">
-                    <!-- Table content will be dynamically populated -->
-                </tbody>
-            </table>
-        </div>
-    </section>
-</div>
-
-<!-- Add User Modal -->
-<div class="modal" id="userModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 id="modalTitle">Add New User</h2>
-            <button class="close-btn" onclick="closeUserModal()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <form id="userForm" onsubmit="handleUserSubmit(event)">
-            <div class="form-group">
-                <label for="userName">Full Name</label>
-                <input type="text" id="userName" required>
-            </div>
-            <div class="form-group">
-                <label for="userEmail">Email</label>
-                <input type="email" id="userEmail" required>
-            </div>
-            <div class="form-group">
-                <label for="userDepartment">Department</label>
-                <select id="userDepartment" required>
-                    <option value="HR">HR</option>
-                    <option value="Finance">Finance</option>
-                    <option value="IT">IT</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Support">Support</option>
-                    <option value="Sales">Sales</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="userRole">Role</label>
-                <select id="userRole" required>
-                    <option value="admin">Admin</option>
-                    <option value="manager">Manager</option>
-                    <option value="user">User</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="require2FA">
-                    <span>Require 2FA</span>
-                </label>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save User</button>
-            </div>
-        </form>
-    </div>
-</div>
-    <style>
-        /* Content Section Styles */
+/* Content Section */
 .content-section {
     background: var(--surface-color);
     border-radius: 0.75rem;
-    box-shadow: var(--shadow-sm);
+    padding: 2rem;
     margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
 }
 
 /* Module Header */
@@ -854,7 +394,7 @@ body {
     align-items: center;
     gap: 0.5rem;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all var(--transition-normal);
 }
 
 .btn-primary {
@@ -869,20 +409,12 @@ body {
     border: 1px solid var(--border-color);
 }
 
-.btn i {
-    font-size: 1rem;
-}
-
-/* Search and Filter Styles */
+/* Search and Filter Section */
 .search-filter-section {
-       background: var(--surface-color);
-    padding: 1.5rem;
-    border-radius: 0.75rem;
-    margin-bottom: 1.5rem;
     display: flex;
     gap: 1rem;
+    margin-bottom: 2rem;
     flex-wrap: wrap;
-
 }
 
 .search-box {
@@ -907,11 +439,22 @@ body {
     color: var(--text-tertiary);
 }
 
+.filter-controls {
+    display: flex;
+    gap: 1rem;
+}
+
+.filter-controls select {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    color: var(--text-primary);
+    background: var(--surface-color);
+}
+
 /* Table Styles */
 .users-table-container {
-background: var(--surface-color);
-    border-radius: 0.75rem;
-    overflow: hidden;
+    overflow-x: auto;
 }
 
 .users-table {
@@ -935,21 +478,422 @@ background: var(--surface-color);
 .users-table tbody tr:hover {
     background: var(--surface-dark);
 }
-        /* User Management Section Specific Styles */
-#userManagementSection {
-    padding: 2rem;
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1100;
+    align-items: center;
+    justify-content: center;
 }
 
-        
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--surface-color);
+    border-radius: 0.75rem;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    color: var(--primary-color);
+    font-size: 1.25rem;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 1.5rem;
+    padding: 0 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.modal-footer {
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+/* Animations */
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+    .sidebar {
+        left: calc(-1 * var(--sidebar-width));
+    }
+
+    .sidebar.active {
+        left: 0;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .sidebar-toggle {
+        display: block;
+    }
+
+    .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
+
+    .overlay.active {
+        display: block;
+    }
+}
+
+@media (max-width: 640px) {
+    .user-email {
+        display: none;
+    }
+
+    .dashboard-content {
+        padding: 1rem;
+    }
+
+    .search-filter-section {
+        flex-direction: column;
+    }
+
+    .filter-controls {
+        flex-wrap: wrap;
+    }
+
+    .filter-controls select {
+        flex: 1;
+        min-width: 150px;
+    }
+}
     </style>
+</head>
+<body>
+    <div class="layout-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="sidebar-logo">
+                    <i class="fas fa-briefcase"></i>
+                    <span>WorkWise Pro</span>
+                </a>
+                <button class="collapse-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </div>
+
+            <!-- Main Navigation -->
+            <nav class="nav-section">
+                <ul class="nav-items">
+                    <li class="nav-item">
+                        <a href="#dashboard" class="nav-link active" data-section="dashboard">
+                            <i class="fas fa-th-large"></i>
+                            <span>Dashboard Overview</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#companies" class="nav-link" data-section="companies">
+                            <i class="fas fa-building"></i>
+                            <span>Companies/Organizations</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- System Navigation -->
+            <div class="nav-section">
+                <div class="nav-section-title">System</div>
+                <ul class="nav-items">
+                    <li class="nav-item">
+                        <a href="#settings" class="nav-link" data-section="settings">
+                            <i class="fas fa-cog"></i>
+                            <span>System Settings</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#pricing" class="nav-link" data-section="pricing">
+                            <i class="fas fa-tags"></i>
+                            <span>Pricing & Plans</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#security" class="nav-link" data-section="security">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Security Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Management Navigation -->
+            <div class="nav-section">
+                <div class="nav-section-title">Management</div>
+                <ul class="nav-items">
+                    <li class="nav-item">
+                        <a href="#modules" class="nav-link" data-section="modules">
+                            <i class="fas fa-cube"></i>
+                            <span>Modules Management</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="userManagement" onclick="loadUserManagement(event)">
+                            <i class="fas fa-users"></i>
+                            <span>User Management</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Tools Navigation -->
+            <div class="nav-section">
+                <div class="nav-section-title">Tools</div>
+                <ul class="nav-items">
+                    <li class="nav-item">
+                        <a href="#analytics" class="nav-link" data-section="analytics">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Analytics & Reports</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#backup" class="nav-link" data-section="backup">
+                            <i class="fas fa-database"></i>
+                            <span>Backup & Restore</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#audit" class="nav-link" data-section="audit">
+                            <i class="fas fa-history"></i>
+                            <span>Audit Logs</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#api" class="nav-link" data-section="api">
+                            <i class="fas fa-code"></i>
+                            <span>API Management</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Support Navigation -->
+            <div class="nav-section">
+                <div class="nav-section-title">Support</div>
+                <ul class="nav-items">
+                    <li class="nav-item">
+                        <a href="#support" class="nav-link" data-section="support">
+                            <i class="fas fa-headset"></i>
+                            <span>Support Center</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <header class="header">
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="user-menu">
+                    <span class="user-email" id="userEmail"></span>
+                    <div class="dropdown">
+                        <button class="menu-trigger" onclick="toggleDropdown(event)">
+                            <i class="fas fa-user-circle"></i>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu" id="dropdownMenu">
+                            <a href="#" onclick="handleMyAccount()">
+                                <i class="fas fa-user"></i>
+                                My Account
+                            </a>
+                            <a href="#" onclick="handleSignOut()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Sign Out
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-content">
+                <!-- Welcome Section -->
+                <section class="welcome-section">
+                    <h1>Welcome to Super Admin Dashboard</h1>
+                    <p>Manage your organization's HR system with complete control and oversight.</p>
+                </section>
+
+                <!-- User Management Section -->
+                <section class="content-section" id="userManagementSection" style="display: none;">
+                    <div class="module-header">
+                        <div class="header-title">
+                            <h1>User Management</h1>
+                            <p>Manage internal users and their access permissions</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="UserManagement.openAddUserModal()">
+                            <i class="fas fa-plus"></i>
+                            Add New User
+                        </button>
+                    </div>
+
+                    <div class="search-filter-section">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="userSearch" placeholder="Search users...">
+                        </div>
+                        <div class="filter-controls">
+                            <select id="departmentFilter">
+                                <option value="">All Departments</option>
+                                <option value="HR">HR</option>
+                                <option value="Finance">Finance</option>
+                                <option value="IT">IT</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Support">Support</option>
+                                <option value="Sales">Sales</option>
+                            </select>
+                            <select id="statusFilter">
+                                <option value="">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                            <select id="roleFilter">
+                                <option value="">All Roles</option>
+                                <option value="admin">Admin</option>
+                                <option value="manager">Manager</option>
+                                <option value="user">User</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="users-table-container">
+                        <table class="users-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Email</th>
+                                    <th>Department</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>2FA</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <!-- Table content will be dynamically populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Modal -->
+    <div class="modal" id="userModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New User</h2>
+                <button class="close-btn" onclick="UserManagement.closeUserModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="userForm" onsubmit="UserManagement.handleUserSubmit(event)">
+                <div class="form-group">
+                    <label for="userName">Full Name</label>
+                    <input type="text" id="userName" required>
+                </div>
+                <div class="form-group">
+                    <label for="userEmail">Email</label>
+                    <input type="email" id="userEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="userDepartment">Department</label>
+                    <select id="userDepartment" required>
+                        <option value="HR">HR</option>
+                        <option value="Finance">Finance</option>
+                        <option value="IT">IT</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Support">Support</option>
+                        <option value="Sales">Sales</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="userRole">Role</label>
+                    <select id="userRole" required>
+                        <option value="admin">Admin</option>
+                        <option value="manager">Manager</option>
+                        <option value="user">User</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="require2FA">
+                        <span>Require 2FA</span>
+                    </label>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="UserManagement.closeUserModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Overlay for mobile -->
     <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
-    <!-- Notification Container -->
-    <div id="notificationContainer"></div>
-
     <script>
-      // Global State Management
+        // Global State Management
 let sidebarState = {
     isCollapsed: false,
     isMobile: window.innerWidth <= 1024,
@@ -1004,27 +948,19 @@ function initializeUserMenu() {
         // Toggle dropdown on menu trigger click
         menuTrigger.addEventListener('click', function(e) {
             e.stopPropagation();
-            toggleDropdown();
+            toggleDropdown(e);
         });
 
         // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
-            const dropdown = document.getElementById('dropdownMenu');
-            if (dropdown && dropdown.classList.contains('active')) {
-                if (!dropdown.contains(e.target) && !e.target.matches('.menu-trigger, .menu-trigger *')) {
-                    dropdown.classList.remove('active');
-                }
+            if (!dropdownMenu.contains(e.target) && !e.target.matches('.menu-trigger, .menu-trigger *')) {
+                dropdownMenu.classList.remove('active');
             }
-        });
-
-        // Prevent dropdown from closing when clicking inside it
-        dropdownMenu.addEventListener('click', function(e) {
-            e.stopPropagation();
         });
 
         // Close dropdown on ESC key
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && dropdownMenu.classList.contains('active')) {
+            if (e.key === 'Escape') {
                 dropdownMenu.classList.remove('active');
             }
         });
@@ -1032,21 +968,10 @@ function initializeUserMenu() {
 }
 
 // Toggle Dropdown Menu
-function toggleDropdown() {
+function toggleDropdown(event) {
+    event.stopPropagation();
     const dropdownMenu = document.getElementById('dropdownMenu');
-    const allDropdowns = document.querySelectorAll('.dropdown-menu');
-    
-    // Close all other dropdowns first
-    allDropdowns.forEach(dropdown => {
-        if (dropdown !== dropdownMenu) {
-            dropdown.classList.remove('active');
-        }
-    });
-
-    // Toggle the clicked dropdown
-    if (dropdownMenu) {
-        dropdownMenu.classList.toggle('active');
-    }
+    dropdownMenu.classList.toggle('active');
 }
 
 // Toggle Sidebar
@@ -1170,9 +1095,9 @@ function updateSidebarState() {
 function handleNavItemClick(e, item) {
     e.preventDefault();
     
-    if (sidebarState.activeNavItem) {
-        sidebarState.activeNavItem.classList.remove('active');
-    }
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
     
     item.classList.add('active');
     sidebarState.activeNavItem = item;
@@ -1185,6 +1110,44 @@ function handleNavItemClick(e, item) {
             overlay.classList.remove('active');
         }
     }
+}
+
+// Load Section Content
+function loadSection(sectionName) {
+    // Hide all sections
+    document.querySelectorAll('.content-section').forEach(section => {
+        section.style.display = 'none';
+    });
+
+    // Show welcome section for dashboard, otherwise load specific section
+    const welcomeSection = document.querySelector('.welcome-section');
+    if (sectionName === 'dashboard') {
+        if (welcomeSection) welcomeSection.style.display = 'block';
+    } else {
+        if (welcomeSection) welcomeSection.style.display = 'none';
+        
+        const section = document.getElementById(`${sectionName}Section`);
+        if (section) {
+            section.style.display = 'block';
+            if (sectionName === 'userManagement') {
+                UserManagement.init();
+            }
+        }
+    }
+
+    sidebarState.currentSection = sectionName;
+}
+
+// Load User Management Section
+function loadUserManagement(event) {
+    event.preventDefault();
+    loadSection('userManagement');
+    
+    // Update active navigation
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    event.currentTarget.classList.add('active');
 }
 
 // Notification System
@@ -1206,496 +1169,14 @@ function showNotification(message, type = 'success') {
         }, 3000);
     }, 100);
 }
-        // User Management Module Namespace
-const UserManagement = {
-    // State management
-    state: {
-        users: [],
-        currentUser: null,
-        filters: {
-            search: '',
-            department: '',
-            status: '',
-            role: ''
-        }
-    },
 
-    // Initialize module
-    init: function() {
-        this.loadUsers();
-        this.initializeEventListeners();
-    },
-
-    // Load users from API
-    loadUsers: async function() {
-        try {
-            // Show loading state
-            const tbody = document.getElementById('usersTableBody');
-            if (tbody) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="loading-state">
-                            <i class="fas fa-spinner fa-spin"></i> Loading users...
-                        </td>
-                    </tr>
-                `;
-            }
-
-            const response = await fetch('https://18.215.160.136.nip.io/api/users', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            
-            if (!response.ok) throw new Error('Failed to load users');
-            
-            this.state.users = await response.json();
-            this.renderUsers();
-        } catch (error) {
-            showNotification('Failed to load users: ' + error.message, 'error');
-            const tbody = document.getElementById('usersTableBody');
-            if (tbody) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="error-state">
-                            <i class="fas fa-exclamation-circle"></i> Failed to load users
-                        </td>
-                    </tr>
-                `;
-            }
-        }
-    },
-
-    // Render users table
-    renderUsers: function() {
-        const tbody = document.getElementById('usersTableBody');
-        if (!tbody) return;
-
-        const filteredUsers = this.getFilteredUsers();
-        
-        if (filteredUsers.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="empty-state">
-                        <i class="fas fa-users-slash"></i>
-                        <p>No users found</p>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        tbody.innerHTML = filteredUsers.map(user => `
-            <tr>
-                <td>
-                    <div class="user-info">
-                        <div class="user-avatar" style="background-color: ${this.getAvatarColor(user.name)}">
-                            ${this.getInitials(user.name)}
-                        </div>
-                        <div class="user-details">
-                            <div class="user-name">${user.name}</div>
-                            <div class="user-id">#${user.id}</div>
-                        </div>
-                    </div>
-                </td>
-                <td>${user.email}</td>
-                <td>
-                    <span class="department-badge department-${user.department.toLowerCase()}">
-                        ${user.department}
-                    </span>
-                </td>
-                <td>
-                    <span class="role-badge role-${user.role.toLowerCase()}">
-                        ${user.role}
-                    </span>
-                </td>
-                <td>
-                    <span class="status-badge status-${user.status.toLowerCase()}">
-                        <i class="fas fa-${user.status === 'active' ? 'check-circle' : 'times-circle'}"></i>
-                        ${user.status}
-                    </span>
-                </td>
-                <td>
-                    <span class="2fa-status ${user.requires2FA ? 'enabled' : 'disabled'}">
-                        <i class="fas fa-${user.requires2FA ? 'shield-alt' : 'shield'}"></i>
-                        ${user.requires2FA ? 'Enabled' : 'Disabled'}
-                    </span>
-                </td>
-                <td>
-                    <div class="action-buttons">
-                        <button 
-                            onclick="UserManagement.editUser('${user.id}')" 
-                            class="btn-icon"
-                            title="Edit User"
-                        >
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button 
-                            onclick="UserManagement.toggleUserStatus('${user.id}')" 
-                            class="btn-icon ${user.status === 'active' ? 'danger' : 'success'}"
-                            title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User"
-                        >
-                            <i class="fas fa-${user.status === 'active' ? 'ban' : 'check'}"></i>
-                        </button>
-                        <button 
-                            onclick="UserManagement.resetUserPassword('${user.id}')" 
-                            class="btn-icon warning"
-                            title="Reset Password"
-                        >
-                            <i class="fas fa-key"></i>
-                        </button>
-                        <div class="action-menu-trigger">
-                            <button class="btn-icon" onclick="UserManagement.toggleActionMenu(event, '${user.id}')">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <div class="action-menu" id="actionMenu_${user.id}">
-                                <a href="#" onclick="UserManagement.viewUserDetails('${user.id}')">
-                                    <i class="fas fa-eye"></i> View Details
-                                </a>
-                                <a href="#" onclick="UserManagement.viewUserLogs('${user.id}')">
-                                    <i class="fas fa-history"></i> Activity Logs
-                                </a>
-                                <a href="#" onclick="UserManagement.manage2FA('${user.id}')">
-                                    <i class="fas fa-shield-alt"></i> Manage 2FA
-                                </a>
-                                <div class="menu-divider"></div>
-                                <a href="#" class="danger" onclick="UserManagement.deleteUser('${user.id}')">
-                                    <i class="fas fa-trash-alt"></i> Delete User
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-    },
-
-    // Filter users based on search and filter criteria
-    getFilteredUsers: function() {
-        return this.state.users.filter(user => {
-            const searchTerm = this.state.filters.search.toLowerCase();
-            const matchesSearch = user.name.toLowerCase().includes(searchTerm) ||
-                                user.email.toLowerCase().includes(searchTerm) ||
-                                user.id.toLowerCase().includes(searchTerm);
-            
-            const matchesDepartment = !this.state.filters.department || 
-                                    user.department === this.state.filters.department;
-            
-            const matchesStatus = !this.state.filters.status || 
-                                user.status === this.state.filters.status;
-            
-            const matchesRole = !this.state.filters.role || 
-                              user.role === this.state.filters.role;
-
-            return matchesSearch && matchesDepartment && matchesStatus && matchesRole;
-        });
-    },
-
-    // Initialize event listeners
-    initializeEventListeners: function() {
-        // Search input with debounce
-        const searchInput = document.getElementById('userSearch');
-        if (searchInput) {
-            let debounceTimer;
-            searchInput.addEventListener('input', (e) => {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
-                    this.state.filters.search = e.target.value;
-                    this.renderUsers();
-                }, 300);
-            });
-        }
-
-        // Filter selects
-        ['department', 'status', 'role'].forEach(filterType => {
-            const select = document.getElementById(`${filterType}Filter`);
-            if (select) {
-                select.addEventListener('change', (e) => {
-                    this.state.filters[filterType] = e.target.value;
-                    this.renderUsers();
-                });
-            }
-        });
-
-        // Close action menus when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.action-menu-trigger')) {
-                document.querySelectorAll('.action-menu').forEach(menu => {
-                    menu.classList.remove('active');
-                });
-            }
-        });
-    },
-
-    // Modal handling
-    openAddUserModal: function() {
-        const modal = document.getElementById('userModal');
-        const form = document.getElementById('userForm');
-        
-        if (modal && form) {
-            form.reset();
-            this.state.currentUser = null;
-            document.getElementById('modalTitle').textContent = 'Add New User';
-            modal.classList.add('active');
-        }
-    },
-
-    closeUserModal: function() {
-        const modal = document.getElementById('userModal');
-        if (modal) {
-            modal.classList.remove('active');
-            this.state.currentUser = null;
-        }
-    },
-
-        // Form submission handler
-    handleUserSubmit: async function(event) {
-        event.preventDefault();
-        
-        const submitButton = event.target.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-        
-        const formData = {
-            name: document.getElementById('userName').value,
-            email: document.getElementById('userEmail').value,
-            department: document.getElementById('userDepartment').value,
-            role: document.getElementById('userRole').value,
-            requires2FA: document.getElementById('require2FA').checked
-        };
-
-        try {
-            const url = this.state.currentUser 
-                ? `https://18.215.160.136.nip.io/api/users/${this.state.currentUser.id}`
-                : 'https://18.215.160.136.nip.io/api/users';
-
-            const response = await fetch(url, {
-                method: this.state.currentUser ? 'PUT' : 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify(formData)
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to save user');
-            }
-
-            showNotification(
-                `User successfully ${this.state.currentUser ? 'updated' : 'added'}`,
-                'success'
-            );
-            
-            this.closeUserModal();
-            this.loadUsers();
-        } catch (error) {
-            showNotification(error.message, 'error');
-        } finally {
-            submitButton.disabled = false;
-            submitButton.innerHTML = 'Save User';
-        }
-    },
-
-    // User actions
-    editUser: async function(userId) {
-        try {
-            const user = this.state.users.find(u => u.id === userId);
-            if (!user) throw new Error('User not found');
-
-            this.state.currentUser = user;
-            
-            // Populate form
-            document.getElementById('userName').value = user.name;
-            document.getElementById('userEmail').value = user.email;
-            document.getElementById('userDepartment').value = user.department;
-            document.getElementById('userRole').value = user.role;
-            document.getElementById('require2FA').checked = user.requires2FA;
-            
-            // Update modal title and open
-            document.getElementById('modalTitle').textContent = 'Edit User';
-            document.getElementById('userModal').classList.add('active');
-        } catch (error) {
-            showNotification(error.message, 'error');
-        }
-    },
-
-    toggleUserStatus: async function(userId) {
-        try {
-            const user = this.state.users.find(u => u.id === userId);
-            const newStatus = user.status === 'active' ? 'inactive' : 'active';
-            
-            const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
-                body: JSON.stringify({ status: newStatus })
-            });
-
-            if (!response.ok) throw new Error('Failed to update user status');
-
-            showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
-            this.loadUsers();
-        } catch (error) {
-            showNotification(error.message, 'error');
-        }
-    },
-
-    resetUserPassword: async function(userId) {
-        if (!confirm('Are you sure you want to reset this user\'s password? They will receive an email with reset instructions.')) return;
-
-        try {
-            const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/reset-password`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-
-            if (!response.ok) throw new Error('Failed to initiate password reset');
-
-            showNotification('Password reset email sent successfully', 'success');
-        } catch (error) {
-            showNotification(error.message, 'error');
-        }
-    },
-
-    deleteUser: async function(userId) {
-        if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
-
-        try {
-            const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-
-            if (!response.ok) throw new Error('Failed to delete user');
-
-            showNotification('User deleted successfully', 'success');
-            this.loadUsers();
-        } catch (error) {
-            showNotification(error.message, 'error');
-        }
-    },
-
-    manage2FA: async function(userId) {
-        try {
-            const user = this.state.users.find(u => u.id === userId);
-            const action = user.requires2FA ? 'disable' : 'enable';
-            
-            const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/2fa/${action}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-
-            if (!response.ok) throw new Error(`Failed to ${action} 2FA`);
-
-            showNotification(`2FA ${action}d successfully`, 'success');
-            this.loadUsers();
-        } catch (error) {
-            showNotification(error.message, 'error');
-        }
-    },
-
-    viewUserDetails: function(userId) {
-        // Implement user details view
-        console.log('View user details:', userId);
-    },
-
-    viewUserLogs: function(userId) {
-        // Implement user logs view
-        console.log('View user logs:', userId);
-    },
-
-    toggleActionMenu: function(event, userId) {
-        event.stopPropagation();
-        const menu = document.getElementById(`actionMenu_${userId}`);
-        
-        // Close all other menus first
-        document.querySelectorAll('.action-menu').forEach(m => {
-            if (m !== menu) m.classList.remove('active');
-        });
-        
-        menu.classList.toggle('active');
-    },
-
-    // Utility functions
-    getInitials: function(name) {
-        return name
-            .split(' ')
-            .map(word => word[0])
-            .join('')
-            .toUpperCase();
-    },
-
-    getAvatarColor: function(name) {
-        const colors = [
-            '#4f46e5', '#7c3aed', '#db2777', '#ea580c', '#16a34a',
-            '#2563eb', '#9333ea', '#e11d48', '#d97706', '#15803d'
-        ];
-        
-        let hash = 0;
-        for (let i = 0; i < name.length; i++) {
-            hash = name.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        
-        return colors[Math.abs(hash) % colors.length];
+// Initialize everything when the page loads
+window.addEventListener('load', function() {
+    const currentSection = new URLSearchParams(window.location.search).get('section');
+    if (currentSection) {
+        loadSection(currentSection);
     }
-};
-
-// Function to load User Management section
-function loadUserManagement(event) {
-    event.preventDefault();
-    
-    // Update active navigation
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.classList.remove('active');
-    });
-    event.currentTarget.classList.add('active');
-    
-    // Show user management section while keeping welcome section
-    const userManagementSection = document.getElementById('userManagementSection');
-    if (userManagementSection) {
-        // Hide all other content sections except welcome
-        document.querySelectorAll('.content-section').forEach(section => {
-            if (section !== userManagementSection) {
-                section.style.display = 'none';
-            }
-        });
-        
-        userManagementSection.style.display = 'block';
-        UserManagement.init(); // Initialize the module
-    }
-}
-
-
-// Update the loadSection function
-function loadSection(sectionName) {
-    // Hide all content sections except welcome
-    document.querySelectorAll('.content-section').forEach(section => {
-        if (!section.classList.contains('welcome-section')) {
-            section.style.display = 'none';
-        }
-    });
-
-    // Load specific section
-    const section = document.getElementById(`${sectionName}Section`);
-    if (section) {
-        section.style.display = 'block';
-        if (sectionName === 'userManagement') {
-            UserManagement.init();
-        }
-    }
-
-    sidebarState.currentSection = sectionName;
-}
+});
     </script>
 </body>
 </html>
