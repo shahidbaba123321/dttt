@@ -10,9 +10,8 @@
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <style>
-     :root {
+        :root {
     /* Premium Color Palette */
     --primary-color: #4f46e5;
     --primary-dark: #4338ca;
@@ -83,26 +82,25 @@ body {
 .layout-container {
     display: flex;
     min-height: 100vh;
-    transition: var(--transition-normal);
+    position: relative;
 }
 
 /* Sidebar Styles */
 .sidebar {
     width: var(--sidebar-width);
-    transition: width var(--transition-normal);
     background: var(--surface-color);
     border-right: 1px solid var(--border-color);
-    position: fixed;
     height: 100vh;
+    position: fixed;
     left: 0;
     top: 0;
-    z-index: 1000;
-    overflow-x: hidden;
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--text-tertiary) transparent;
+    overflow-x: hidden;
+    z-index: 1000;
+    transition: width var(--transition-normal);
 }
 
+/* Custom Scrollbar */
 .sidebar::-webkit-scrollbar {
     width: 5px;
 }
@@ -120,18 +118,13 @@ body {
     background-color: var(--text-secondary);
 }
 
-.sidebar.collapsed {
-    width: var(--sidebar-collapsed-width);
-}
-
 /* Sidebar Header */
 .sidebar-header {
+    padding: 1.25rem;
+    background: var(--primary-gradient);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.25rem;
-    background: var(--primary-gradient);
-    color: var(--text-light);
     position: sticky;
     top: 0;
     z-index: 10;
@@ -142,20 +135,16 @@ body {
     align-items: center;
     gap: 0.75rem;
     color: var(--text-light);
-    font-weight: 600;
     text-decoration: none;
-    transition: var(--transition-normal);
+    font-weight: 600;
+    font-size: 1.25rem;
 }
 
 .sidebar-logo i {
     font-size: 1.5rem;
 }
 
-.sidebar.collapsed .sidebar-logo span {
-    display: none;
-}
-
-/* Collapse Toggle Button */
+/* Collapse Toggle */
 .collapse-toggle {
     background: rgba(255, 255, 255, 0.1);
     border: none;
@@ -164,18 +153,10 @@ body {
     border-radius: 0.375rem;
     cursor: pointer;
     transition: var(--transition-normal);
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .collapse-toggle:hover {
     background: rgba(255, 255, 255, 0.2);
-}
-
-.collapse-toggle i {
-    font-size: 1rem;
-    transition: transform var(--transition-normal);
 }
 
 /* Navigation Sections */
@@ -184,29 +165,23 @@ body {
 }
 
 .nav-section-title {
+    padding: 0.75rem 1.25rem;
     color: var(--text-tertiary);
     font-size: 0.75rem;
     font-weight: 500;
-    letter-spacing: 0.05em;
-    padding: 0.75rem 1.25rem;
     text-transform: uppercase;
-    transition: var(--transition-normal);
+    letter-spacing: 0.05em;
 }
 
-.sidebar.collapsed .nav-section-title {
-    display: none;
-}
-
-/* Navigation Items */
 .nav-items {
     list-style: none;
 }
 
 .nav-item {
     position: relative;
-    animation: fadeIn 0.3s ease forwards;
 }
 
+/* Navigation Links */
 .nav-link {
     display: flex;
     align-items: center;
@@ -217,85 +192,74 @@ body {
     border-radius: 0.5rem;
     margin: 0.25rem 0.75rem;
     position: relative;
-    overflow: hidden;
-}
-
-.nav-link:before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 0.25rem;
-    background: var(--primary-gradient);
-    border-radius: 0 0.25rem 0.25rem 0;
-    opacity: 0;
-    transition: var(--transition-normal);
-}
-
-.nav-link:hover,
-.nav-link.active {
-    color: var(--primary-color);
-    background: linear-gradient(to right, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.01));
-}
-
-.nav-link.active:before {
-    opacity: 1;
 }
 
 .nav-link i {
     min-width: 1.5rem;
-    text-align: center;
     font-size: 1.25rem;
+    text-align: center;
+    margin-right: 0.75rem;
+    color: var(--text-tertiary);
     transition: var(--transition-normal);
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
 }
 
 .nav-link span {
-    margin-left: 0.75rem;
-    transition: var(--transition-normal);
     white-space: nowrap;
+    transition: var(--transition-normal);
 }
 
-/* Collapsed Navigation States */
-.sidebar.collapsed .nav-link {
-    padding: 0.75rem;
-    justify-content: center;
+.nav-link:hover {
+    color: var(--primary-color);
+    background: linear-gradient(
+        to right,
+        rgba(99, 102, 241, 0.1),
+        rgba(99, 102, 241, 0.01)
+    );
 }
 
-.sidebar.collapsed .nav-link span {
-    display: none;
+.nav-link:hover i {
+    color: var(--primary-color);
 }
 
-/* Tooltip for Collapsed State */
-.sidebar.collapsed .nav-link:hover:after {
-    content: attr(data-tooltip);
+.nav-link.active {
+    color: var(--primary-color);
+    background: linear-gradient(
+        to right,
+        rgba(99, 102, 241, 0.1),
+        rgba(99, 102, 241, 0.01)
+    );
+    font-weight: 500;
+}
+
+.nav-link.active i {
+    color: var(--primary-color);
+}
+
+/* Active Indicator */
+.nav-link::before {
+    content: '';
     position: absolute;
-    left: 100%;
+    left: 0;
     top: 50%;
     transform: translateY(-50%);
-    background: var(--secondary-color);
-    color: var(--text-light);
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    white-space: nowrap;
-    margin-left: 0.75rem;
-    box-shadow: var(--shadow-lg);
-    z-index: 1000;
+    height: 0;
+    width: 3px;
+    background: var(--primary-gradient);
+    border-radius: 0 3px 3px 0;
+    opacity: 0;
+    transition: height var(--transition-normal);
 }
 
-/* Main Content */
+.nav-link:hover::before,
+.nav-link.active::before {
+    height: 1.5rem;
+    opacity: 1;
+}
+        /* Main Content Area */
 .main-content {
     margin-left: var(--sidebar-width);
     flex: 1;
     transition: margin-left var(--transition-normal);
-}
-
-.main-content.expanded {
-    margin-left: var(--sidebar-collapsed-width);
 }
 
 /* Header Styles */
@@ -311,6 +275,22 @@ body {
     z-index: 100;
 }
 
+/* Sidebar Toggle Button */
+.sidebar-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.5rem;
+    font-size: 1.25rem;
+    transition: color var(--transition-normal);
+}
+
+.sidebar-toggle:hover {
+    color: var(--primary-color);
+}
+
 /* User Menu Styles */
 .user-menu {
     position: relative;
@@ -322,6 +302,7 @@ body {
 .user-email {
     color: var(--text-secondary);
     font-size: 0.875rem;
+    font-weight: 500;
 }
 
 .menu-trigger {
@@ -331,34 +312,40 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: var(--text-secondary);
     padding: 0.5rem;
-    border-radius: 0.375rem;
+    color: var(--text-secondary);
+    font-family: inherit;
     transition: var(--transition-normal);
+    border-radius: 0.375rem;
 }
 
 .menu-trigger:hover {
-    color: var(--primary-color);
     background: var(--surface-dark);
+    color: var(--primary-color);
 }
 
+.menu-trigger i {
+    font-size: 1.25rem;
+}
+
+/* Dropdown Menu */
 .dropdown-menu {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 0.5rem);
     right: 0;
     background: var(--surface-color);
     border-radius: 0.5rem;
     box-shadow: var(--shadow-lg);
-    padding: 0.5rem 0;
     min-width: 200px;
     display: none;
     z-index: 1000;
     border: 1px solid var(--border-color);
+    overflow: hidden;
 }
 
 .dropdown-menu.active {
     display: block;
-    animation: fadeIn 0.2s ease;
+    animation: dropdownFadeIn 0.2s ease;
 }
 
 .dropdown-menu a {
@@ -374,6 +361,12 @@ body {
 .dropdown-menu a:hover {
     background: var(--surface-dark);
     color: var(--primary-color);
+}
+
+.dropdown-menu i {
+    font-size: 1.1rem;
+    width: 1.5rem;
+    text-align: center;
 }
 
 /* Dashboard Content */
@@ -393,13 +386,98 @@ body {
     color: var(--primary-color);
     font-size: 1.875rem;
     margin-bottom: 1rem;
+    font-weight: 600;
 }
 
 .welcome-section p {
     color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+/* Collapsed Sidebar States */
+.sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+.sidebar.collapsed .sidebar-logo span {
+    display: none;
+}
+
+.sidebar.collapsed .nav-section-title {
+    display: none;
+}
+
+.sidebar.collapsed .nav-link {
+    padding: 0.75rem;
+    justify-content: center;
+}
+
+.sidebar.collapsed .nav-link span {
+    display: none;
+}
+
+.sidebar.collapsed .nav-link i {
+    margin: 0;
+}
+
+/* Tooltip for Collapsed Sidebar */
+.sidebar.collapsed .nav-link:hover:after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: calc(100% + 1rem);
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--secondary-color);
+    color: var(--text-light);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+}
+
+/* Notification Styles */
+.notification {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    background: var(--surface-color);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transform: translateX(150%);
+    transition: transform var(--transition-normal);
+    z-index: 1100;
+}
+
+.notification.show {
+    transform: translateX(0);
+}
+
+.notification.success {
+    border-left: 4px solid var(--success-color);
+}
+
+.notification.error {
+    border-left: 4px solid var(--danger-color);
 }
 
 /* Animations */
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -414,9 +492,7 @@ body {
 /* Responsive Design */
 @media (max-width: 1024px) {
     .sidebar {
-        position: fixed;
         left: calc(-1 * var(--sidebar-width));
-        box-shadow: var(--shadow-lg);
     }
 
     .sidebar.active {
@@ -427,8 +503,8 @@ body {
         margin-left: 0;
     }
 
-    .main-content.expanded {
-        margin-left: 0;
+    .sidebar-toggle {
+        display: block;
     }
 
     .overlay {
@@ -465,6 +541,11 @@ body {
     .welcome-section h1 {
         font-size: 1.5rem;
     }
+
+    .notification {
+        width: calc(100% - 2rem);
+        right: 1rem;
+    }
 }
     </style>
 </head>
@@ -472,29 +553,29 @@ body {
     <div class="layout-container">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
-           <div class="sidebar-header">
-    <a href="#" class="sidebar-logo">
-        <i class="fas fa-briefcase"></i>
-        <span>WorkWise Pro</span>
-    </a>
-    <button class="collapse-toggle" onclick="toggleSidebar()">
-        <i class="fas fa-chevron-left"></i>
-    </button>
-</div>
+            <div class="sidebar-header">
+                <a href="#" class="sidebar-logo">
+                    <i class="fas fa-briefcase"></i>
+                    <span>WorkWise Pro</span>
+                </a>
+                <button class="collapse-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </div>
 
             <!-- Main Navigation -->
             <nav class="nav-section">
                 <ul class="nav-items">
                     <li class="nav-item">
-                        <a href="#dashboard" class="nav-link active">
+                        <a href="#dashboard" class="nav-link active" data-tooltip="Dashboard Overview">
                             <i class="fas fa-th-large"></i>
-                            Dashboard Overview
+                            <span>Dashboard Overview</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#companies" class="nav-link">
+                        <a href="#companies" class="nav-link" data-tooltip="Companies/Organizations">
                             <i class="fas fa-building"></i>
-                            Companies/Organizations
+                            <span>Companies/Organizations</span>
                         </a>
                     </li>
                 </ul>
@@ -505,21 +586,21 @@ body {
                 <div class="nav-section-title">System</div>
                 <ul class="nav-items">
                     <li class="nav-item">
-                        <a href="#settings" class="nav-link">
+                        <a href="#settings" class="nav-link" data-tooltip="System Settings">
                             <i class="fas fa-cog"></i>
-                            System Settings
+                            <span>System Settings</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#pricing" class="nav-link">
+                        <a href="#pricing" class="nav-link" data-tooltip="Pricing & Plans">
                             <i class="fas fa-tags"></i>
-                            Pricing & Plans
+                            <span>Pricing & Plans</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#security" class="nav-link">
+                        <a href="#security" class="nav-link" data-tooltip="Security Settings">
                             <i class="fas fa-shield-alt"></i>
-                            Security Settings
+                            <span>Security Settings</span>
                         </a>
                     </li>
                 </ul>
@@ -530,15 +611,15 @@ body {
                 <div class="nav-section-title">Management</div>
                 <ul class="nav-items">
                     <li class="nav-item">
-                        <a href="#modules" class="nav-link">
+                        <a href="#modules" class="nav-link" data-tooltip="Modules Management">
                             <i class="fas fa-cube"></i>
-                            Modules Management
+                            <span>Modules Management</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#users" class="nav-link">
+                        <a href="#users" class="nav-link" data-tooltip="User Management">
                             <i class="fas fa-users"></i>
-                            User Management
+                            <span>User Management</span>
                         </a>
                     </li>
                 </ul>
@@ -549,27 +630,27 @@ body {
                 <div class="nav-section-title">Tools</div>
                 <ul class="nav-items">
                     <li class="nav-item">
-                        <a href="#analytics" class="nav-link">
+                        <a href="#analytics" class="nav-link" data-tooltip="Analytics & Reports">
                             <i class="fas fa-chart-bar"></i>
-                            Analytics & Reports
+                            <span>Analytics & Reports</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#backup" class="nav-link">
+                        <a href="#backup" class="nav-link" data-tooltip="Backup & Restore">
                             <i class="fas fa-database"></i>
-                            Backup & Restore
+                            <span>Backup & Restore</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#audit" class="nav-link">
+                        <a href="#audit" class="nav-link" data-tooltip="Audit Logs">
                             <i class="fas fa-history"></i>
-                            Audit Logs
+                            <span>Audit Logs</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#api" class="nav-link">
+                        <a href="#api" class="nav-link" data-tooltip="API Management">
                             <i class="fas fa-code"></i>
-                            API Management
+                            <span>API Management</span>
                         </a>
                     </li>
                 </ul>
@@ -580,9 +661,9 @@ body {
                 <div class="nav-section-title">Support</div>
                 <ul class="nav-items">
                     <li class="nav-item">
-                        <a href="#support" class="nav-link">
+                        <a href="#support" class="nav-link" data-tooltip="Support Center">
                             <i class="fas fa-headset"></i>
-                            Support Center
+                            <span>Support Center</span>
                         </a>
                     </li>
                 </ul>
@@ -619,6 +700,7 @@ body {
                     <h1>Welcome to Super Admin Dashboard</h1>
                     <p>Manage your organization's HR system with complete control and oversight.</p>
                 </section>
+                <!-- Additional dashboard content will go here -->
             </main>
         </div>
     </div>
@@ -626,22 +708,24 @@ body {
     <!-- Overlay for mobile -->
     <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
+    <!-- Notification Container -->
+    <div id="notificationContainer"></div>
+
     <script>
-     // DOM Elements and State Management
+        // Global State Management
 let sidebarState = {
     isCollapsed: false,
     isMobile: window.innerWidth <= 1024,
     activeNavItem: null
 };
 
+// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize all components
     initializeLogin();
     initializeSidebar();
     initializeUserMenu();
     checkAuthStatus();
     handleResponsiveness();
-    initializeSlider();
 });
 
 // Login Initialization and Validation
@@ -733,7 +817,6 @@ function initializeLogin() {
                 });
 
                 const data = await response.json();
-                console.log('Login response:', data);
 
                 if (!response.ok) {
                     throw new Error(data.message || 'Login failed');
@@ -788,26 +871,51 @@ function initializeSidebar() {
     });
 }
 
+// User Menu Initialization
+function initializeUserMenu() {
+    const menuTrigger = document.querySelector('.menu-trigger');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+
+    if (menuTrigger && dropdownMenu) {
+        menuTrigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('active');
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!dropdownMenu.contains(e.target) && !menuTrigger.contains(e.target)) {
+                dropdownMenu.classList.remove('active');
+            }
+        });
+    }
+}
+
+// Toggle Dropdown Menu
+function toggleDropdown() {
+    const dropdownMenu = document.getElementById('dropdownMenu');
+    if (dropdownMenu) {
+        dropdownMenu.classList.toggle('active');
+    }
+}
+
 // Toggle Sidebar
 function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     const mainContent = document.querySelector('.main-content');
-    const collapseBtn = document.querySelector('.collapse-toggle i');
-    const overlay = document.querySelector('.overlay');
-
-    if (!sidebar || !mainContent || !collapseBtn) return;
-
+    const overlay = document.getElementById('overlay');
+    
     sidebarState.isCollapsed = !sidebarState.isCollapsed;
-
-    sidebar.classList.toggle('collapsed', sidebarState.isCollapsed);
-    mainContent.classList.toggle('expanded', sidebarState.isCollapsed);
-    collapseBtn.className = sidebarState.isCollapsed ? 'fas fa-chevron-right' : 'fas fa-chevron-left';
-
-    localStorage.setItem('sidebarCollapsed', sidebarState.isCollapsed);
-
-    if (sidebarState.isMobile && overlay) {
-        overlay.classList.toggle('active', !sidebarState.isCollapsed);
-        sidebar.classList.toggle('active', !sidebarState.isCollapsed);
+    
+    if (sidebar && mainContent) {
+        sidebar.classList.toggle('collapsed', sidebarState.isCollapsed);
+        mainContent.classList.toggle('expanded', sidebarState.isCollapsed);
+        
+        if (sidebarState.isMobile) {
+            sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+        
+        localStorage.setItem('sidebarCollapsed', sidebarState.isCollapsed);
     }
 }
 
@@ -829,62 +937,6 @@ function showNotification(message, type = 'success') {
             setTimeout(() => notification.remove(), 300);
         }, 3000);
     }, 100);
-}
-
-// Password Toggle
-function togglePassword() {
-    const passwordInput = document.getElementById('password');
-    const toggleButton = document.querySelector('.password-toggle i');
-    
-    if (passwordInput && toggleButton) {
-        if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-            toggleButton.classList.remove('fa-eye');
-            toggleButton.classList.add('fa-eye-slash');
-        } else {
-            passwordInput.type = 'password';
-            toggleButton.classList.remove('fa-eye-slash');
-            toggleButton.classList.add('fa-eye');
-        }
-    }
-}
-
-// Social Login Handler
-function socialLogin(provider) {
-    showNotification(`${provider} login is not implemented yet`, 'error');
-}
-
-// Slider Functionality
-function initializeSlider() {
-    const slides = document.querySelectorAll('.slide');
-    const dots = document.querySelectorAll('.dot');
-    if (slides.length === 0 || dots.length === 0) return;
-
-    let currentSlide = 0;
-
-    function showSlide(n) {
-        slides.forEach(slide => slide.classList.remove('active'));
-        dots.forEach(dot => dot.classList.remove('active'));
-        
-        slides[n].classList.add('active');
-        dots[n].classList.add('active');
-    }
-
-    function nextSlide() {
-        currentSlide = (currentSlide + 1) % slides.length;
-        showSlide(currentSlide);
-    }
-
-    // Auto-advance slides
-    setInterval(nextSlide, 5000);
-
-    // Click handlers for dots
-    dots.forEach((dot, index) => {
-        dot.addEventListener('click', () => {
-            currentSlide = index;
-            showSlide(currentSlide);
-        });
-    });
 }
 
 // Authentication Check
@@ -927,18 +979,19 @@ async function verifyToken(token) {
     }
 }
 
-// User Menu Handlers
-function handleMyAccount() {
-    console.log('My Account clicked');
-    // Implement account management functionality
-}
-
+// Handle Sign Out
 function handleSignOut() {
     localStorage.removeItem('token');
     localStorage.removeItem('userRole');
     localStorage.removeItem('userEmail');
     localStorage.removeItem('sidebarCollapsed');
     window.location.href = 'login.html';
+}
+
+// Handle My Account
+function handleMyAccount() {
+    console.log('My Account clicked');
+    // Implement account management functionality
 }
 
 // Responsive Design Handler
@@ -948,7 +1001,7 @@ function handleResponsiveness() {
     function handleMobileChange(e) {
         sidebarState.isMobile = e.matches;
         const sidebar = document.querySelector('.sidebar');
-        const overlay = document.querySelector('.overlay');
+        const overlay = document.getElementById('overlay');
         
         if (!e.matches && sidebar && overlay) {
             sidebar.classList.remove('active');
@@ -973,12 +1026,10 @@ function handleResponsiveness() {
 function updateSidebarState() {
     const sidebar = document.querySelector('.sidebar');
     const mainContent = document.querySelector('.main-content');
-    const collapseBtn = document.querySelector('.collapse-toggle i');
-
-    if (sidebar && mainContent && collapseBtn) {
+    
+    if (sidebar && mainContent) {
         sidebar.classList.toggle('collapsed', sidebarState.isCollapsed);
         mainContent.classList.toggle('expanded', sidebarState.isCollapsed);
-        collapseBtn.className = sidebarState.isCollapsed ? 'fas fa-chevron-right' : 'fas fa-chevron-left';
     }
 }
 
@@ -995,7 +1046,7 @@ function handleNavItemClick(e, item) {
 
     if (sidebarState.isMobile) {
         const sidebar = document.querySelector('.sidebar');
-        const overlay = document.querySelector('.overlay');
+        const overlay = document.getElementById('overlay');
         if (sidebar && overlay) {
             sidebar.classList.remove('active');
             overlay.classList.remove('active');
