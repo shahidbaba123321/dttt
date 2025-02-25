@@ -581,115 +581,124 @@
 
             // Edit User
     editUser: async function(userId) {
-        try {
-            const user = this.state.users.find(u => u._id === userId);
-            if (!user) throw new Error('User not found');
+    try {
+        const user = this.state.users.find(u => u._id === userId);
+        if (!user) throw new Error('User not found');
 
-            const modalHtml = `
-                <div class="modal active">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h2>Edit User: ${user.name}</h2>
-                            <button class="close-btn" onclick="this.closest('.modal').remove()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <form id="editUserForm">
-                            <div class="form-group">
-                                <label for="editName">Full Name *</label>
-                                <input type="text" id="editName" value="${user.name}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editEmail">Email *</label>
-                                <input type="email" id="editEmail" value="${user.email}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editDepartment">Department *</label>
-                                <select id="editDepartment" required>
-                                    <option value="HR" ${user.department === 'HR' ? 'selected' : ''}>HR</option>
-                                    <option value="Finance" ${user.department === 'Finance' ? 'selected' : ''}>Finance</option>
-                                    <option value="IT" ${user.department === 'IT' ? 'selected' : ''}>IT</option>
-                                    <option value="Admin" ${user.department === 'Admin' ? 'selected' : ''}>Admin</option>
-                                    <option value="Support" ${user.department === 'Support' ? 'selected' : ''}>Support</option>
-                                    <option value="Sales" ${user.department === 'Sales' ? 'selected' : ''}>Sales</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="editRole">Role *</label>
-                                <select id="editRole" required>
-                                    <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
-                                    <option value="manager" ${user.role === 'manager' ? 'selected' : ''}>Manager</option>
-                                    <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="editRequire2FA" ${user.requires2FA ? 'checked' : ''}>
-                                    <span>Require 2FA</span>
-                                </label>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Save Changes</button>
-                            </div>
-                        </form>
+        const modalHtml = `
+            <div class="modal active">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Edit User: ${user.name}</h2>
+                        <button class="close-btn" onclick="this.closest('.modal').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
+                    <form id="editUserForm">
+                        <div class="form-group">
+                            <label for="editName">Full Name *</label>
+                            <input type="text" id="editName" value="${user.name || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editEmail">Email *</label>
+                            <input type="email" id="editEmail" value="${user.email || ''}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editDepartment">Department *</label>
+                            <select id="editDepartment" required>
+                                <option value="HR" ${user.department === 'HR' ? 'selected' : ''}>HR</option>
+                                <option value="Finance" ${user.department === 'Finance' ? 'selected' : ''}>Finance</option>
+                                <option value="IT" ${user.department === 'IT' ? 'selected' : ''}>IT</option>
+                                <option value="Admin" ${user.department === 'Admin' ? 'selected' : ''}>Admin</option>
+                                <option value="Support" ${user.department === 'Support' ? 'selected' : ''}>Support</option>
+                                <option value="Sales" ${user.department === 'Sales' ? 'selected' : ''}>Sales</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editRole">Role *</label>
+                            <select id="editRole" required>
+                                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                                <option value="manager" ${user.role === 'manager' ? 'selected' : ''}>Manager</option>
+                                <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="editRequire2FA" ${user.requires2FA ? 'checked' : ''}>
+                                <span>Require 2FA</span>
+                            </label>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
                 </div>
-            `;
+            </div>
+        `;
 
-            const modalContainer = document.createElement('div');
-            modalContainer.innerHTML = modalHtml;
-            document.body.appendChild(modalContainer.firstElementChild);
+        // Create and append modal
+        const modalContainer = document.createElement('div');
+        modalContainer.innerHTML = modalHtml;
+        const modalElement = modalContainer.firstElementChild;
+        document.body.appendChild(modalElement);
 
-            const form = document.getElementById('editUserForm');
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const submitButton = form.querySelector('button[type="submit"]');
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        const form = document.getElementById('editUserForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
-                try {
-                    const token = localStorage.getItem('token');
-                    const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify({
-                            name: document.getElementById('editName').value,
-                            email: document.getElementById('editEmail').value,
-                            department: document.getElementById('editDepartment').value,
-                            role: document.getElementById('editRole').value,
-                            requires2FA: document.getElementById('editRequire2FA').checked
-                        })
-                    });
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        name: document.getElementById('editName').value,
+                        email: document.getElementById('editEmail').value,
+                        department: document.getElementById('editDepartment').value,
+                        role: document.getElementById('editRole').value,
+                        requires2FA: document.getElementById('editRequire2FA').checked
+                    })
+                });
 
-                    if (!response.ok) {
-                        const error = await response.json();
-                        throw new Error(error.message || 'Failed to update user');
-                    }
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to update user');
+                }
 
-                    if (typeof showNotification === 'function') {
-                        showNotification('User updated successfully', 'success');
-                    }
-                    modalContainer.firstElementChild.remove();
-                    this.loadUsers();
-                } catch (error) {
-                    if (typeof showNotification === 'function') {
-                        showNotification(error.message, 'error');
-                    }
-                } finally {
+                if (typeof showNotification === 'function') {
+                    showNotification('User updated successfully', 'success');
+                }
+
+                // Ensure modal exists before removing
+                if (modalElement && modalElement.parentNode) {
+                    modalElement.remove();
+                }
+
+                this.loadUsers();
+            } catch (error) {
+                if (typeof showNotification === 'function') {
+                    showNotification(error.message, 'error');
+                }
+            } finally {
+                if (submitButton) {
                     submitButton.disabled = false;
                     submitButton.innerHTML = 'Save Changes';
                 }
-            });
-        } catch (error) {
-            console.error('Error editing user:', error);
-            if (typeof showNotification === 'function') {
-                showNotification(error.message, 'error');
             }
+        });
+    } catch (error) {
+        console.error('Error editing user:', error);
+        if (typeof showNotification === 'function') {
+            showNotification(error.message, 'error');
         }
+    }
     },
 
     // Delete User
