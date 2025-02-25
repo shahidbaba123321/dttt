@@ -7,13 +7,43 @@ require('dotenv').config();
 
 const app = express();
 
-// Updated CORS configuration to include all necessary methods
+// Token verification middleware
+const verifyToken = async (req, res, next) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        
+        if (!token) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'No token provided' 
+            });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (error) {
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Invalid token' 
+        });
+    }
+};
+
+// Updated CORS configuration
 app.use(cors({
     origin: 'https://main.d1cfw592vg73f.amplifyapp.com',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept', 'X-Requested-With'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization']
+    maxAge: 86400,
+    preflightContinue: false,
+    optionsSuccessStatus: 204
 }));
+
+// Handle OPTIONS requests
+app.options('*', cors());
 
 app.use(express.json());
 
@@ -190,7 +220,9 @@ app.post('/api/verify-token', async (req, res) => {
 });
 
 // User Management Routes
-app.post('/api/users', async (req, res) => {
+
+// Create new user
+app.post('/api/users', verifyToken, async (req, res) => {
     try {
         const { name, email, department, role, requires2FA } = req.body;
 
@@ -251,7 +283,7 @@ app.post('/api/users', async (req, res) => {
 });
 
 // Get all users
-app.get('/api/users', async (req, res) => {
+app.get('/api/users', verifyToken, async (req, res) => {
     try {
         const database = client.db('infocraftorbis');
         const users = database.collection('users');
@@ -274,7 +306,7 @@ app.get('/api/users', async (req, res) => {
 });
 
 // Update user
-app.put('/api/users/:userId', async (req, res) => {
+app.put('/api/users/:userId', verifyToken, async (req, res) => {
     try {
         const { userId } = req.params;
         const { name, email, department, role, requires2FA } = req.body;
@@ -333,7 +365,7 @@ app.put('/api/users/:userId', async (req, res) => {
 });
 
 // Toggle user status
-app.put('/api/users/:userId/status', async (req, res) => {
+app.put('/api/users/:userId/status', verifyToken, async (req, res) => {
     try {
         const { userId } = req.params;
         const { status } = req.body;
@@ -373,7 +405,7 @@ app.put('/api/users/:userId/status', async (req, res) => {
 });
 
 // Reset user password
-app.post('/api/users/:userId/reset-password', async (req, res) => {
+app.post('/api/users/:userId/reset-password', verifyToken, async (req, res) => {
     try {
         const { userId } = req.params;
 
@@ -418,7 +450,7 @@ app.post('/api/users/:userId/reset-password', async (req, res) => {
 });
 
 // Toggle 2FA requirement
-app.put('/api/users/:userId/2fa', async (req, res) => {
+app.put('/api/users/:userId/2fa', verifyToken, async (req, res) => {
     try {
         const { userId } = req.params;
         const { requires2FA } = req.body;
@@ -458,7 +490,7 @@ app.put('/api/users/:userId/2fa', async (req, res) => {
 });
 
 // Delete user
-app.delete('/api/users/:userId', async (req, res) => {
+app.delete('/api/users/:userId', [cors(), verifyToken], async (req, res) => {
     try {
         const { userId } = req.params;
 
