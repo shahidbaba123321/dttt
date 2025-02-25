@@ -13,889 +13,891 @@
 
     <style>
         :root {
-    /* Primary Colors */
-    --primary-color: #1a237e;     /* Darker blue from the nav */
-    --primary-light: #534bae;
-    --primary-dark: #121858;
-    --primary-gradient: linear-gradient(135deg, #1a237e 0%, #534bae 100%);
-    
-    /* Secondary Colors */
-    --secondary-color: #283593;
-    --secondary-light: #5f5fc4;
-    --secondary-dark: #001064;
-    
-    /* Background Colors */
-    --background-color: #f8f9fc;  /* Light gray background */
-    --surface-color: #ffffff;
-    --surface-dark: #f1f5f9;
-    --nav-background: #1a237e;    /* Dark blue nav background */
-    
-    /* Text Colors */
-    --text-primary: #2c3345;      /* Main text color */
-    --text-secondary: #6b7280;    /* Secondary text */
-    --text-tertiary: #9ca3af;     /* Subtle text */
-    --text-light: #ffffff;        /* Light text for dark backgrounds */
-    
-    /* Status Colors */
-    --success-color: #4caf50;     /* Green */
-    --warning-color: #ff9800;     /* Orange */
-    --danger-color: #f44336;      /* Red */
-    --info-color: #2196f3;        /* Blue */
-    
-    /* Border & Shadow */
-    --border-color: #e2e8f0;
-    --border-light: #f1f5f9;
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    
-    /* Component Specific */
-    --sidebar-width: 280px;
-    --sidebar-collapsed-width: 70px;
-    --header-height: 70px;
-    
-    /* Transitions */
-    --transition-fast: 0.2s ease;
-    --transition-normal: 0.3s ease;
-}
+            /* Primary Colors */
+            --primary-color: #1a237e;     
+            --primary-light: #534bae;
+            --primary-dark: #121858;
+            --primary-gradient: linear-gradient(135deg, #1a237e 0%, #534bae 100%);
+            
+            /* Secondary Colors */
+            --secondary-color: #283593;
+            --secondary-light: #5f5fc4;
+            --secondary-dark: #001064;
+            
+            /* Background Colors */
+            --background-color: #f8f9fc;  
+            --surface-color: #ffffff;
+            --surface-dark: #f1f5f9;
+            --nav-background: #1a237e;    
+            
+            /* Text Colors */
+            --text-primary: #2c3345;      
+            --text-secondary: #6b7280;    
+            --text-tertiary: #9ca3af;     
+            --text-light: #ffffff;        
+            
+            /* Status Colors */
+            --success-color: #4caf50;     
+            --warning-color: #ff9800;     
+            --danger-color: #f44336;      
+            --info-color: #2196f3;        
+            
+            /* Border & Shadow */
+            --border-color: #e2e8f0;
+            --border-light: #f1f5f9;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            
+            /* Component Specific */
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 70px;
+            --header-height: 70px;
+            
+            /* Transitions */
+            --transition-fast: 0.2s ease;
+            --transition-normal: 0.3s ease;
+        }
 
-/* Base Styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-}
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-body {
-    font-family: 'Poppins', sans-serif;
-    line-height: 1.6;
-    color: var(--text-primary);
-    background-color: var(--background-color);
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: var(--background-color);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
 
-/* Layout Structure */
-.layout-container {
-    display: flex;
-    min-height: 100vh;
-}
+        /* Layout Structure */
+        .layout-container {
+            display: flex;
+            min-height: 100vh;
+        }
 
-/* Sidebar Styles */
-.sidebar {
-     width: 280px;
-    background: var(--nav-background);
-    height: 100vh;
-    position: fixed;
-    left: 0;
-    top: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-    z-index: 1000;
-    transition: all var(--transition-normal);
-}
-.sidebar.collapsed {
-    width: 70px;
-}
-        
-/* Custom Scrollbar */
-.sidebar::-webkit-scrollbar {
-    width: 5px;
-}
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: var(--nav-background);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 1000;
+            transition: all var(--transition-normal);
+        }
 
-.sidebar::-webkit-scrollbar-track {
-    background: var(--primary-dark);
-}
+        .sidebar.collapsed {
+            width: 70px;
+        }
+                /* Custom Scrollbar */
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
 
-.sidebar::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-}
+        .sidebar::-webkit-scrollbar-track {
+            background: var(--primary-dark);
+        }
 
-.sidebar:hover::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.3);
-}
+        .sidebar::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+        }
 
-/* Sidebar Header */
-.sidebar-header {
-    padding: 1.25rem;
-    background: var(--primary-dark);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
+        .sidebar:hover::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
 
-.sidebar-logo {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    color: var(--text-light);
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 1.25rem;
-}
+        /* Sidebar Header */
+        .sidebar-header {
+            padding: 1.25rem;
+            background: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
 
-.sidebar-logo i {
-    font-size: 1.5rem;
-}
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        .sidebar-logo i {
+            font-size: 1.5rem;
+        }
+
         .sidebar.collapsed .sidebar-logo span,
-.sidebar.collapsed .nav-section-title,
-.sidebar.collapsed .nav-link span {
-    display: none;
-}
+        .sidebar.collapsed .nav-section-title,
+        .sidebar.collapsed .nav-link span {
+            display: none;
+        }
+
         .sidebar.collapsed .nav-link {
-    padding: 0.75rem;
-    justify-content: center;
-}
- .sidebar.collapsed .nav-link i {
-    margin: 0;
-}
-       
+            padding: 0.75rem;
+            justify-content: center;
+        }
 
-/* Collapse Toggle */
-.collapse-toggle {
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: var(--text-light);
-    padding: 0.5rem;
-    border-radius: 0.375rem;
-    cursor: pointer;
-    transition: var(--transition-normal);
-}
+        .sidebar.collapsed .nav-link i {
+            margin: 0;
+        }
 
-.collapse-toggle:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
+        /* Collapse Toggle */
+        .collapse-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--text-light);
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: var(--transition-normal);
+        }
 
-/* Navigation Sections */
-.nav-section {
-    padding: 0.75rem 0;
-}
+        .collapse-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
 
-.nav-section-title {
-    padding: 0.75rem 1.25rem;
-    color: var(--text-light);
-    opacity: 0.6;
-    font-size: 0.75rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
+        /* Navigation Sections */
+        .nav-section {
+            padding: 0.75rem 0;
+        }
 
-.nav-items {
-    list-style: none;
-}
+        .nav-section-title {
+            padding: 0.75rem 1.25rem;
+            color: var(--text-light);
+            opacity: 0.6;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
 
-.nav-item {
-    position: relative;
-}
+        .nav-items {
+            list-style: none;
+        }
 
-/* Navigation Links */
-.nav-link {
-    display: flex;
-    align-items: center;
-    padding: 0.75rem 1.25rem;
-    color: var(--text-light);
-    opacity: 0.8;
-    text-decoration: none;
-    transition: var(--transition-normal);
-    border-radius: 0.5rem;
-    margin: 0.25rem 0.75rem;
-    position: relative;
-}
+        .nav-item {
+            position: relative;
+        }
 
-.nav-link i {
-    min-width: 1.5rem;
-    font-size: 1.25rem;
-    text-align: center;
-    margin-right: 0.75rem;
-    opacity: 0.8;
-    transition: var(--transition-normal);
-}
+        /* Navigation Links */
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.25rem;
+            color: var(--text-light);
+            opacity: 0.8;
+            text-decoration: none;
+            transition: var(--transition-normal);
+            border-radius: 0.5rem;
+            margin: 0.25rem 0.75rem;
+            position: relative;
+        }
 
-.nav-link span {
-    white-space: nowrap;
-    transition: var(--transition-normal);
-}
+        .nav-link i {
+            min-width: 1.5rem;
+            font-size: 1.25rem;
+            text-align: center;
+            margin-right: 0.75rem;
+            opacity: 0.8;
+            transition: var(--transition-normal);
+        }
 
-.nav-link:hover {
-    opacity: 1;
-    background: rgba(255, 255, 255, 0.1);
-}
+        .nav-link span {
+            white-space: nowrap;
+            transition: var(--transition-normal);
+        }
 
-.nav-link.active {
-    opacity: 1;
-    background: rgba(255, 255, 255, 0.1);
-    font-weight: 500;
-}
+        .nav-link:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.1);
+        }
 
-.nav-link.active i {
-    opacity: 1;
-}
+        .nav-link.active {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+        }
 
-/* Main Content */
-.main-content {
-    flex: 1;
-    margin-left: var(--sidebar-width);
-    transition: margin-left var(--transition-normal);
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
+        .nav-link.active i {
+            opacity: 1;
+        }
 
-.main-content.expanded {
-    margin-left: var(--sidebar-collapsed-width);
-}
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            transition: margin-left var(--transition-normal);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
 
-/* Header */
-.header {
-    height: var(--header-height);
-    background: var(--surface-color);
-    padding: 0 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border-color);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
+        .main-content.expanded {
+            margin-left: var(--sidebar-collapsed-width);
+        }
 
-/* Sidebar Toggle Button */
-.sidebar-toggle {
-    display: none;
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-    padding: 0.5rem;
-    font-size: 1.25rem;
-}
+        /* Header */
+        .header {
+            height: var(--header-height);
+            background: var(--surface-color);
+            padding: 0 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
 
-/* User Menu */
-.user-menu {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
+        /* Sidebar Toggle Button */
+        .sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.5rem;
+            font-size: 1.25rem;
+        }
 
-.user-email {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    font-weight: 500;
-}
+        /* User Menu */
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
 
-/* Dropdown */
-.dropdown {
-    position: relative;
-}
+        .user-email {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+                /* Dropdown */
+        .dropdown {
+            position: relative;
+        }
 
-.menu-trigger {
-    background: none;
-    border: none;
-    padding: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    color: var(--text-secondary);
-    border-radius: 0.375rem;
-    transition: all var(--transition-normal);
-}
+        .menu-trigger {
+            background: none;
+            border: none;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            border-radius: 0.375rem;
+            transition: all var(--transition-normal);
+        }
 
-.menu-trigger:hover,
-.menu-trigger.active {
-    background: var(--surface-dark);
-    color: var(--primary-color);
-}
+        .menu-trigger:hover,
+        .menu-trigger.active {
+            background: var(--surface-dark);
+            color: var(--primary-color);
+        }
+
         .menu-trigger i {
-    font-size: 1.25rem;
-    transition: transform var(--transition-normal);
-}
+            font-size: 1.25rem;
+            transition: transform var(--transition-normal);
+        }
 
-.menu-trigger.active i:last-child {
-    transform: rotate(180deg);
-}
+        .menu-trigger.active i:last-child {
+            transform: rotate(180deg);
+        }
 
-.dropdown-menu {
-    position: absolute;
-    top: calc(100% + 0.5rem);
-    right: 0;
-    background: var(--surface-color);
-    border-radius: 0.5rem;
-    box-shadow: var(--shadow-lg);
-    min-width: 200px;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: all var(--transition-normal);
-    border: 1px solid var(--border-color);
-    z-index: 1000;
-}
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            background: var(--surface-color);
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow-lg);
+            min-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all var(--transition-normal);
+            border: 1px solid var(--border-color);
+            z-index: 1000;
+        }
 
-.dropdown-menu.active {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
+        .dropdown-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
 
+        .dropdown-menu a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all var(--transition-normal);
+        }
 
-.dropdown-menu a {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    color: var(--text-secondary);
-    text-decoration: none;
-    transition: all var(--transition-normal);
-}
-
-.dropdown-menu a:hover {
-    background: var(--surface-dark);
-    color: var(--primary-color);
-}
+        .dropdown-menu a:hover {
+            background: var(--surface-dark);
+            color: var(--primary-color);
+        }
 
         .dropdown-menu a i {
-    width: 1.25rem;
-    text-align: center;
-}
-/* Dashboard Content */
-.dashboard-content {
-    flex: 1;
-    padding: 2rem;
-    background: var(--background-color);
-    overflow-y: auto;
-}
-
-/* Welcome Section */
-.welcome-section {
-    background: var(--surface-color);
-    border-radius: 0.75rem;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    box-shadow: var(--shadow-sm);
-}
-
-.welcome-section h1 {
-    color: var(--primary-color);
-    font-size: 1.875rem;
-    margin-bottom: 1rem;
-}
-
-.welcome-section p {
-    color: var(--text-secondary);
-}
-
-/* Content Section */
-.content-section {
-    background: var(--surface-color);
-    border-radius: 0.75rem;
-    padding: 2rem;
-    margin-bottom: 2rem;
-    box-shadow: var(--shadow-sm);
-}
-
-/* Module Header */
-.module-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.header-title h1 {
-    color: var(--primary-color);
-    font-size: 1.875rem;
-    margin-bottom: 0.5rem;
-}
-
-.header-title p {
-    color: var(--text-secondary);
-}
-
-/* Button Styles */
-.btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    transition: all var(--transition-normal);
-}
-
-.btn-primary {
-    background: var(--primary-gradient);
-    color: var(--text-light);
-    border: none;
-}
-
-.btn-secondary {
-    background: var(--surface-dark);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-}
-
-/* Search and Filter Section */
-.search-filter-section {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-}
-
-.search-box {
-    flex: 1;
-    min-width: 300px;
-    position: relative;
-}
-
-.search-box input {
-    width: 100%;
-    padding: 0.75rem 1rem 0.75rem 2.5rem;
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-}
-
-.search-box i {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-tertiary);
-}
-
-.filter-controls {
-    display: flex;
-    gap: 1rem;
-}
-
-.filter-controls select {
-    padding: 0.75rem;
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    color: var(--text-primary);
-    background: var(--surface-color);
-}
-
-/* Table Styles */
-.users-table-container {
-    overflow-x: auto;
-}
-
-.users-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.users-table th,
-.users-table td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.users-table th {
-    background: var(--surface-dark);
-    color: var(--text-primary);
-    font-weight: 600;
-}
-
-.users-table tbody tr:hover {
-    background: var(--surface-dark);
-}
-
-/* Modal Styles */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1100;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal.active {
-    display: flex;
-}
-
-.modal-content {
-   background: var(--surface-color);
-    border-radius: 0.75rem;
-    width: 100%;
-    max-width: 500px;
-    box-shadow: var(--shadow-lg);
-    position: relative;
-}
-
-.modal-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-header h2 {
-    color: var(--primary-color);
-    font-size: 1.25rem;
-}
-
-.close-btn {
-    background: none;
-    border: none;
-    color: var(--text-tertiary);
-    cursor: pointer;
-    font-size: 1.25rem;
-    padding: 0.5rem;
-    transition: color var(--transition-normal);
-}
-
-.close-btn:hover {
-    color: var(--text-primary);
-}        
-
-/* Form Styles */
-.form-group {
-    margin-bottom: 1.5rem;
-    padding: 0 1.5rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: var(--text-primary);
-    font-weight: 500;
-}
-
-.form-group input,
-.form-group select {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-}
-
-.modal-footer {
-    padding: 1.5rem;
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-}
-
-/* Animations */
-@keyframes dropdownFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Responsive Styles */
-@media (max-width: 1024px) {
-    .sidebar {
-        left: calc(-1 * var(--sidebar-width));
-    }
-
-    .sidebar.active {
-        left: 0;
-    }
-
-    .main-content {
-        margin-left: 0;
-    }
-
-    .sidebar-toggle {
-        display: block;
-    }
-
-    .overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 999;
-    }
-
-    .overlay.active {
-        display: block;
-    }
-}
-
-@media (max-width: 640px) {
-    .user-email {
-        display: none;
-    }
-
-    .dashboard-content {
-        padding: 1rem;
-    }
-
-    .search-filter-section {
-        flex-direction: column;
-    }
-
-    .filter-controls {
-        flex-wrap: wrap;
-    }
-
-    .filter-controls select {
-        flex: 1;
-        min-width: 150px;
-    }
-}
-        /* Add these to your existing CSS */
-
-/* User Table Styles */
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 600;
-    font-size: 1rem;
-}
-
-.user-details {
-    display: flex;
-    flex-direction: column;
-}
-
-.user-name {
-    font-weight: 500;
-    color: var(--text-primary);
-}
-
-.user-id {
-    font-size: 0.875rem;
-    color: var(--text-tertiary);
-}
-
-/* Badge Styles */
-.department-badge,
-.role-badge,
-.status-badge,
-.2fa-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.department-badge {
-    background: var(--primary-color);
-    color: white;
-}
-
-.role-badge {
-    background: var(--accent-purple);
-    color: white;
-}
-
-.status-badge.status-active {
-    background: rgba(16, 185, 129, 0.1);
-    color: var(--success-color);
-}
-
-.status-badge.status-inactive {
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--danger-color);
-}
-
-.2fa-badge.enabled {
-    background: rgba(79, 70, 229, 0.1);
-    color: var(--primary-color);
-}
-
-.2fa-badge.disabled {
-    background: rgba(100, 116, 139, 0.1);
-    color: var(--text-secondary);
-}
-
-/* Action Buttons */
-.action-buttons {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.btn-icon {
-    padding: 0.5rem;
-    border: none;
-    border-radius: 0.375rem;
-    background: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all var(--transition-normal);
-}
-
-.btn-icon:hover {
-    background: var(--surface-dark);
-    color: var(--primary-color);
-}
-
-.btn-icon.danger:hover {
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--danger-color);
-}
-
-.btn-icon.success:hover {
-    background: rgba(16, 185, 129, 0.1);
-    color: var(--success-color);
-}
-
-.btn-icon.warning:hover {
-    background: rgba(245, 158, 11, 0.1);
-    color: var(--warning-color);
-}
-       .empty-state {
-    text-align: center;
-    padding: 2rem !important;
-    color: var(--text-tertiary);
-}
-
-.empty-state i {
-    font-size: 2rem;
-    margin-bottom: 1rem;
-}
-
-.empty-state p {
-    font-size: 1rem;
-} 
-
-/* Detailed Notification Styles */
-.notification.detailed {
-    width: 400px;
-    max-width: 90vw;
-    padding: 0;
-    background: var(--surface-color);
-    border-radius: 8px;
-    box-shadow: var(--shadow-lg);
-}
-
-.notification.detailed .notification-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem;
-    background: var(--primary-color);
-    color: var(--text-light);
-    border-radius: 8px 8px 0 0;
-}
-
-.notification.detailed .notification-header i {
-    font-size: 1.25rem;
-}
-
-.notification.detailed .notification-body {
-    padding: 1rem;
-    color: var(--text-primary);
-    line-height: 1.6;
-}
-
-.notification.detailed .notification-body strong {
-    color: var(--primary-color);
-}
-
-.notification.detailed.show {
-    transform: translateX(0);
-}      
+            width: 1.25rem;
+            text-align: center;
+        }
+
+        /* Dashboard Content */
+        .dashboard-content {
+            flex: 1;
+            padding: 2rem;
+            background: var(--background-color);
+            overflow-y: auto;
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            background: var(--surface-color);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .welcome-section h1 {
+            color: var(--primary-color);
+            font-size: 1.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-section p {
+            color: var(--text-secondary);
+        }
+
+        /* Content Section */
+        .content-section {
+            background: var(--surface-color);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Module Header */
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .header-title h1 {
+            color: var(--primary-color);
+            font-size: 1.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-title p {
+            color: var(--text-secondary);
+        }
+
+        /* Button Styles */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: var(--text-light);
+            border: none;
+        }
+
+        .btn-secondary {
+            background: var(--surface-dark);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Search and Filter Section */
+        .search-filter-section {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-tertiary);
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .filter-controls select {
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            color: var(--text-primary);
+            background: var(--surface-color);
+        }
+                /* Table Styles */
+        .users-table-container {
+            overflow-x: auto;
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .users-table th,
+        .users-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .users-table th {
+            background: var(--surface-dark);
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .users-table tbody tr:hover {
+            background: var(--surface-dark);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--surface-color);
+            border-radius: 0.75rem;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            color: var(--primary-color);
+            font-size: 1.25rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            font-size: 1.25rem;
+            padding: 0.5rem;
+            transition: color var(--transition-normal);
+        }
+
+        .close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+            padding: 0 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        /* Animations */
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* User Table Styles */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .user-id {
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+        }
+
+        /* Badge Styles */
+        .department-badge,
+        .role-badge,
+        .status-badge,
+        .2fa-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .department-badge {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .role-badge {
+            background: var(--accent-purple);
+            color: white;
+        }
+
+        .status-badge.status-active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-badge.status-inactive {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+
+        .2fa-badge.enabled {
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary-color);
+        }
+
+        .2fa-badge.disabled {
+            background: rgba(100, 116, 139, 0.1);
+            color: var(--text-secondary);
+        }
+                /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-icon {
+            padding: 0.5rem;
+            border: none;
+            border-radius: 0.375rem;
+            background: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+        }
+
+        .btn-icon:hover {
+            background: var(--surface-dark);
+            color: var(--primary-color);
+        }
+
+        .btn-icon.danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+
+        .btn-icon.success:hover {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .btn-icon.warning:hover {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem !important;
+            color: var(--text-tertiary);
+        }
+
+        .empty-state i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state p {
+            font-size: 1rem;
+        }
+
+        /* Detailed Notification Styles */
+        .notification.detailed {
+            width: 400px;
+            max-width: 90vw;
+            padding: 0;
+            background: var(--surface-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .notification.detailed .notification-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--primary-color);
+            color: var(--text-light);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .notification.detailed .notification-header i {
+            font-size: 1.25rem;
+        }
+
+        .notification.detailed .notification-body {
+            padding: 1rem;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .notification.detailed .notification-body strong {
+            color: var(--primary-color);
+        }
+
+        .notification.detailed.show {
+            transform: translateX(0);
+        }
+
         /* Password Input Group */
-.password-input-group {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
+        .password-input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
 
-.password-input-group input {
-    flex: 1;
-    padding-right: 2.5rem;
-}
+        .password-input-group input {
+            flex: 1;
+            padding-right: 2.5rem;
+        }
 
-.toggle-password {
-    position: absolute;
-    right: 0.5rem;
-    background: none;
-    border: none;
-    color: var(--text-tertiary);
-    cursor: pointer;
-    padding: 0.5rem;
-}
+        .toggle-password {
+            position: absolute;
+            right: 0.5rem;
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            padding: 0.5rem;
+        }
 
-.toggle-password:hover {
-    color: var(--primary-color);
-}
+        .toggle-password:hover {
+            color: var(--primary-color);
+        }
 
-/* Warning Message */
-.warning-message {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background: rgba(239, 68, 68, 0.1);
-    border-radius: 0.5rem;
-    margin-bottom: 1rem;
-}
+        /* Warning Message */
+        .warning-message {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
 
-.warning-message i {
-    color: var(--danger-color);
-    font-size: 1.5rem;
-}
+        .warning-message i {
+            color: var(--danger-color);
+            font-size: 1.5rem;
+        }
 
-.user-details {
-    padding: 1rem;
-    background: var(--surface-dark);
-    border-radius: 0.5rem;
-}
+        /* Form Validation Styles */
+        .form-group input.error,
+        .form-group select.error {
+            border-color: var(--danger-color);
+            background-color: rgba(239, 68, 68, 0.05);
+        }
 
-.user-details p {
-    margin-bottom: 0.5rem;
-}
+        .form-group input.error:focus,
+        .form-group select.error:focus {
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
 
-.user-details strong {
-    color: var(--primary-color);
-}
+        .form-group .error-message {
+            color: var(--danger-color);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
 
-/* Danger Button */
-.btn-danger {
-    background: var(--danger-color);
-    color: var(--text-light);
-}
+        .form-group .error-message i {
+            font-size: 1rem;
+        }
 
-.btn-danger:hover {
-    background: #dc2626;
-}
+        /* Responsive Styles */
+        @media (max-width: 1024px) {
+            .sidebar {
+                left: calc(-1 * var(--sidebar-width));
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .sidebar-toggle {
+                display: block;
+            }
+
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .user-email {
+                display: none;
+            }
+
+            .dashboard-content {
+                padding: 1rem;
+            }
+
+            .search-filter-section {
+                flex-direction: column;
+            }
+
+            .filter-controls {
+                flex-wrap: wrap;
+            }
+
+            .filter-controls select {
+                flex: 1;
+                min-width: 150px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1026,1316 +1028,376 @@ body {
                     <i class="fas fa-bars"></i>
                 </button>
                 <div class="user-menu">
-    <span class="user-email" id="userEmail"></span>
-    <div class="dropdown">
-        <button type="button" class="menu-trigger" id="userMenuTrigger">
-            <i class="fas fa-user-circle"></i>
-            <i class="fas fa-chevron-down"></i>
-        </button>
-        <div class="dropdown-menu" id="dropdownMenu">
-            <a href="#" onclick="handleMyAccount()">
-                <i class="fas fa-user"></i>
-                My Account
-            </a>
-            <a href="#" onclick="handleSignOut()">
-                <i class="fas fa-sign-out-alt"></i>
-                Sign Out
-            </a>
-        </div>
-    </div>
-</div>
+                    <span class="user-email" id="userEmail"></span>
+                    <div class="dropdown">
+                        <button type="button" class="menu-trigger" id="userMenuTrigger">
+                            <i class="fas fa-user-circle"></i>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu" id="dropdownMenu">
+                            <a href="#" onclick="handleMyAccount()">
+                                <i class="fas fa-user"></i>
+                                My Account
+                            </a>
+                            <a href="#" onclick="handleSignOut()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Sign Out
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </header>
 
-            <div class="dashboard-content">
+            <div id="moduleContainer" class="dashboard-content">
                 <!-- Welcome Section -->
                 <section class="welcome-section">
                     <h1>Welcome to Super Admin Dashboard</h1>
                     <p>Manage your organization's HR system with complete control and oversight.</p>
                 </section>
-
-                <!-- User Management Section -->
-                <section class="content-section" id="userManagementSection" style="display: none;">
-                    <div class="module-header">
-                        <div class="header-title">
-                            <h1>User Management</h1>
-                            <p>Manage internal users and their access permissions</p>
-                        </div>
-                        <button class="btn btn-primary" onclick="openAddUserModal()">
-    <i class="fas fa-plus"></i>
-    Add New User
-</button>
-                    </div>
-
-                    <div class="search-filter-section">
-                        <div class="search-box">
-                            <i class="fas fa-search"></i>
-                            <input type="text" id="userSearch" placeholder="Search users...">
-                        </div>
-                        <div class="filter-controls">
-                            <select id="departmentFilter">
-                                <option value="">All Departments</option>
-                                <option value="HR">HR</option>
-                                <option value="Finance">Finance</option>
-                                <option value="IT">IT</option>
-                                <option value="Admin">Admin</option>
-                                <option value="Support">Support</option>
-                                <option value="Sales">Sales</option>
-                            </select>
-                            <select id="statusFilter">
-                                <option value="">All Status</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                            <select id="roleFilter">
-                                <option value="">All Roles</option>
-                                <option value="admin">Admin</option>
-                                <option value="manager">Manager</option>
-                                <option value="user">User</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="users-table-container">
-                        <table class="users-table">
-                            <thead>
-                                <tr>
-                                    <th>User</th>
-                                    <th>Email</th>
-                                    <th>Department</th>
-                                    <th>Role</th>
-                                    <th>Status</th>
-                                    <th>2FA</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="usersTableBody">
-                                <!-- Table content will be dynamically populated -->
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
             </div>
         </div>
     </div>
 
-    <!-- User Modal -->
-    <!-- Update your modal form -->
-<div class="modal" id="userModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 id="modalTitle">Add New User</h2>
-            <button type="button" class="close-btn" onclick="closeUserModal()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-       <form id="userForm" onsubmit="UserManagement.handleUserSubmit(event)">
-    <div class="form-group">
-        <label for="userName">Full Name *</label>
-        <input type="text" id="userName" required>
-    </div>
-    <div class="form-group">
-        <label for="userEmail">Email *</label>
-        <input type="email" id="userEmail" required>
-    </div>
-    <div class="form-group">
-        <label for="userDepartment">Department *</label>
-        <select id="userDepartment" required>
-            <option value="">Select Department</option>
-            <option value="HR">HR</option>
-            <option value="Finance">Finance</option>
-            <option value="IT">IT</option>
-            <option value="Admin">Admin</option>
-            <option value="Support">Support</option>
-            <option value="Sales">Sales</option>
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="userRole">Role *</label>
-        <select id="userRole" required>
-            <option value="">Select Role</option>
-            <option value="admin">Admin</option>
-            <option value="manager">Manager</option>
-            <option value="user">User</option>
-        </select>
-    </div>
-    <div class="form-group">
-        <label class="checkbox-label">
-            <input type="checkbox" id="require2FA">
-            <span>Require 2FA</span>
-        </label>
-    </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Cancel</button>
-        <button type="submit" class="btn btn-primary">Save User</button>
-    </div>
-</form>
-    </div>
-</div>
     <!-- Overlay for mobile -->
     <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-<style>
-    /* Form Validation Styles */
-.form-group input.error,
-.form-group select.error {
-    border-color: var(--danger-color);
-    background-color: rgba(239, 68, 68, 0.05);
-}
 
-.form-group input.error:focus,
-.form-group select.error:focus {
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
-}
+        <script>
+        // Global State Management
+        let sidebarState = {
+            isCollapsed: false,
+            isMobile: window.innerWidth <= 1024,
+            activeNavItem: null,
+            currentSection: 'dashboard'
+        };
 
-.form-group .error-message {
-    color: var(--danger-color);
-    font-size: 0.875rem;
-    margin-top: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.form-group .error-message i {
-    font-size: 1rem;
-}
-</style>
-    <script>
-  // Global State Management
-let sidebarState = {
-    isCollapsed: false,
-    isMobile: window.innerWidth <= 1024,
-    activeNavItem: null,
-    currentSection: 'dashboard'
-};
-
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    initializeSidebar();
-    initializeUserMenu();
-    checkAuthStatus();
-    handleResponsiveness();
-
-    // Initialize UserManagement if we're on the right section
-    const userManagementSection = document.getElementById('userManagementSection');
-    if (userManagementSection && userManagementSection.style.display !== 'none') {
-        UserManagement.init();
-    }
-});
-
-// Sidebar Initialization
-function initializeSidebar() {
-    const savedState = localStorage.getItem('sidebarCollapsed');
-    if (savedState !== null) {
-        sidebarState.isCollapsed = JSON.parse(savedState);
-        updateSidebarState();
-    }
-
-    const navItems = document.querySelectorAll('.nav-link');
-    navItems.forEach((item, index) => {
-        item.style.setProperty('--item-index', index);
-        const tooltipText = item.querySelector('span')?.textContent;
-        if (tooltipText) {
-            item.setAttribute('data-tooltip', tooltipText);
-        }
-        
-        // Add click handler for navigation
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            handleNavItemClick(e, item);
-            
-            // Handle section loading if data-section attribute exists
-            const sectionName = item.getAttribute('data-section');
-            if (sectionName) {
-                loadSection(sectionName);
-            }
-        });
-    });
-}
-
-// User Menu Initialization
-function initializeUserMenu() {
-    const menuTrigger = document.getElementById('userMenuTrigger');
-    const dropdownMenu = document.getElementById('dropdownMenu');
-
-    if (!menuTrigger || !dropdownMenu) return;
-
-    // Toggle dropdown on button click
-    menuTrigger.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        dropdownMenu.classList.toggle('active');
-        
-        // Add active class to trigger for styling
-        this.classList.toggle('active');
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(e) {
-        const isClickInside = menuTrigger.contains(e.target) || dropdownMenu.contains(e.target);
-        
-        if (!isClickInside && dropdownMenu.classList.contains('active')) {
-            dropdownMenu.classList.remove('active');
-            menuTrigger.classList.remove('active');
-        }
-    });
-
-    // Close dropdown on ESC key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && dropdownMenu.classList.contains('active')) {
-            dropdownMenu.classList.remove('active');
-            menuTrigger.classList.remove('active');
-        }
-    });
-}
-
-// Load User Management Section
-function loadUserManagement(event) {
-    event.preventDefault();
-    
-    // Hide welcome section and show user management
-    const welcomeSection = document.querySelector('.welcome-section');
-    const userManagementSection = document.getElementById('userManagementSection');
-    
-    if (welcomeSection) welcomeSection.style.display = 'none';
-    if (userManagementSection) {
-        userManagementSection.style.display = 'block';
-        UserManagement.init(); // Initialize the module
-    }
-
-    // Update active navigation
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.classList.remove('active');
-    });
-    event.currentTarget.classList.add('active');
-}
-
-// Toggle Password Visibility
-function togglePasswordVisibility(inputId) {
-    const input = document.getElementById(inputId);
-    const icon = input.nextElementSibling.querySelector('i');
-    
-    if (input.type === 'password') {
-        input.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-    } else {
-        input.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
-    }
-}
-
-// Toggle Sidebar
-function toggleSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    const mainContent = document.querySelector('.main-content');
-    const collapseBtn = document.querySelector('.collapse-toggle i');
-    
-    if (sidebar && mainContent) {
-        sidebar.classList.toggle('collapsed');
-        
-        // Update collapse button icon
-        if (collapseBtn) {
-            collapseBtn.className = sidebar.classList.contains('collapsed') 
-                ? 'fas fa-chevron-right' 
-                : 'fas fa-chevron-left';
-        }
-
-        // Update main content margin
-        mainContent.style.marginLeft = sidebar.classList.contains('collapsed') 
-            ? `${70}px` 
-            : `${280}px`;
-
-        // Save state
-        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-    }
-}
-
-// Authentication Check
-function checkAuthStatus() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    const email = urlParams.get('email');
-    const role = urlParams.get('role');
-
-    if (!token || role !== 'superadmin') {
-        window.location.href = 'login.html';
-        return;
-    }
-
-    // Store token in localStorage
-    localStorage.setItem('token', token);
-    localStorage.setItem('userRole', role);
-    localStorage.setItem('userEmail', email);
-
-    const userEmailElement = document.getElementById('userEmail');
-    if (userEmailElement) {
-        userEmailElement.textContent = email;
-    }
-
-    verifyToken(token);
-}
-
-// Token Verification
-async function verifyToken(token) {
-    try {
-        const response = await fetch('https://18.215.160.136.nip.io/api/verify-token', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSidebar();
+            initializeUserMenu();
+            checkAuthStatus();
+            handleResponsiveness();
         });
 
-        if (!response.ok) {
-            throw new Error('Token verification failed');
-        }
-
-    } catch (error) {
-        console.error('Token verification error:', error);
-        localStorage.clear();
-        window.location.href = 'login.html';
-    }
-}
-
-// Handle Sign Out
-function handleSignOut() {
-    localStorage.clear();
-    window.location.href = 'login.html';
-}
-
-// Handle My Account
-function handleMyAccount() {
-    console.log('My Account clicked');
-    showNotification('Account management coming soon', 'info');
-}
-
-// Responsive Design Handler
-function handleResponsiveness() {
-    const mediaQuery = window.matchMedia('(max-width: 1024px)');
-    
-    function handleMobileChange(e) {
-        sidebarState.isMobile = e.matches;
-        const sidebar = document.querySelector('.sidebar');
-        const overlay = document.getElementById('overlay');
-        
-        if (!e.matches && sidebar && overlay) {
-            sidebar.classList.remove('active');
-            overlay.classList.remove('active');
-            updateSidebarState();
-        }
-    }
-
-    mediaQuery.addListener(handleMobileChange);
-    handleMobileChange(mediaQuery);
-
-    let resizeTimer;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-            handleMobileChange(mediaQuery);
-        }, 250);
-    });
-}
-
-// Update Sidebar State
-function updateSidebarState() {
-    const sidebar = document.querySelector('.sidebar');
-    const mainContent = document.querySelector('.main-content');
-    
-    if (sidebar && mainContent) {
-        sidebar.classList.toggle('collapsed', sidebarState.isCollapsed);
-        mainContent.style.marginLeft = sidebarState.isCollapsed 
-            ? `${70}px` 
-            : `${280}px`;
-    }
-}
-
-// Handle Navigation Item Click
-function handleNavItemClick(e, item) {
-    e.preventDefault();
-    
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.classList.remove('active');
-    });
-    
-    item.classList.add('active');
-    sidebarState.activeNavItem = item;
-
-    if (sidebarState.isMobile) {
-        const sidebar = document.querySelector('.sidebar');
-        const overlay = document.getElementById('overlay');
-        if (sidebar && overlay) {
-            sidebar.classList.remove('active');
-            overlay.classList.remove('active');
-        }
-    }
-}
-
-// Notification System
-function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : 
-                         type === 'error' ? 'exclamation-circle' :
-                         type === 'info' ? 'info-circle' : 'bell'}"></i>
-        <span>${message}</span>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.classList.add('show');
-        setTimeout(() => {
-            notification.classList.remove('show');
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
-    }, 100);
-}
-// Modal Functions
-function openAddUserModal() {
-    const modal = document.getElementById('userModal');
-    if (!modal) return;
-
-    // Reset form
-    const form = document.getElementById('userForm');
-    if (form) {
-        form.reset();
-        // Clear any existing error states
-        const formInputs = form.querySelectorAll('input, select');
-        formInputs.forEach(input => {
-            input.classList.remove('error');
-            const errorMessage = input.parentElement.querySelector('.error-message');
-            if (errorMessage) {
-                errorMessage.remove();
+        // Sidebar Initialization
+        function initializeSidebar() {
+            const savedState = localStorage.getItem('sidebarCollapsed');
+            if (savedState !== null) {
+                sidebarState.isCollapsed = JSON.parse(savedState);
+                updateSidebarState();
             }
-        });
-        UserManagement.state.currentUser = null;
-    }
 
-    // Update modal title
-    const modalTitle = document.getElementById('modalTitle');
-    if (modalTitle) modalTitle.textContent = 'Add New User';
-
-    // Show modal
-    modal.classList.add('active');
-}
-
-function closeUserModal() {
-    const modal = document.getElementById('userModal');
-    if (modal) {
-        modal.classList.remove('active');
-        UserManagement.state.currentUser = null;
-
-        // Clear any error states
-        const formInputs = modal.querySelectorAll('input, select');
-        formInputs.forEach(input => {
-            input.classList.remove('error');
-            const errorMessage = input.parentElement.querySelector('.error-message');
-            if (errorMessage) {
-                errorMessage.remove();
-            }
-        });
-    }
-}
-
-// User Management Module
-const UserManagement = {
-    state: {
-        users: [],
-        currentUser: null,
-        filters: {
-            search: '',
-            department: '',
-            status: '',
-            role: ''
-        },
-        loading: false
-    },
-
-    init: async function() {
-        try {
-            await this.loadUsers();
-            this.setupEventListeners();
-        } catch (error) {
-            console.error('Failed to initialize User Management:', error);
-            showNotification('Failed to initialize User Management', 'error');
-        }
-    },
-
-    setupEventListeners: function() {
-        // Search input with debounce
-        const searchInput = document.getElementById('userSearch');
-        if (searchInput) {
-            let debounceTimer;
-            searchInput.addEventListener('input', (e) => {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
-                    this.state.filters.search = e.target.value;
-                    this.renderUsers();
-                }, 300);
-            });
-        }
-
-        // Filter selects
-        ['department', 'status', 'role'].forEach(filterType => {
-            const select = document.getElementById(`${filterType}Filter`);
-            if (select) {
-                select.addEventListener('change', (e) => {
-                    this.state.filters[filterType] = e.target.value;
-                    this.renderUsers();
-                });
-            }
-        });
-
-        // Form submission
-        const form = document.getElementById('userForm');
-        if (form) {
-            form.addEventListener('submit', (e) => this.handleUserSubmit(e));
-
-            // Add real-time validation for required fields
-            const requiredFields = form.querySelectorAll('input[required], select[required]');
-            requiredFields.forEach(field => {
-                field.addEventListener('blur', () => {
-                    this.validateField(field);
-                });
-
-                // Clear error when user starts typing
-                field.addEventListener('input', () => {
-                    this.clearFieldError(field);
-                });
-            });
-        }
-
-        // Modal close on outside click
-        const modal = document.getElementById('userModal');
-        if (modal) {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    closeUserModal();
+            const navItems = document.querySelectorAll('.nav-link');
+            navItems.forEach((item, index) => {
+                item.style.setProperty('--item-index', index);
+                const tooltipText = item.querySelector('span')?.textContent;
+                if (tooltipText) {
+                    item.setAttribute('data-tooltip', tooltipText);
                 }
-            });
-        }
-
-        // Close modal on escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                const modal = document.getElementById('userModal');
-                if (modal && modal.classList.contains('active')) {
-                    closeUserModal();
-                }
-            }
-        });
-    },
-
-    validateField: function(field) {
-        if (!field) {
-            console.error('Field not found for validation');
-            return false;
-        }
-
-        // Remove existing error message
-        this.clearFieldError(field);
-
-        // Get field value safely
-        let value = '';
-        if (field.type === 'checkbox') {
-            value = field.checked;
-        } else if (field.value !== undefined) {
-            value = typeof field.value === 'string' ? field.value.trim() : field.value;
-        }
-
-        // Skip validation for non-required checkboxes
-        if (field.type === 'checkbox' && !field.required) {
-            return true;
-        }
-
-        // Check for empty value
-        if (value === '' || value === undefined || value === null) {
-            this.showFieldError(field, `${field.labels?.[0]?.textContent || 'This field'} is required`);
-            return false;
-        }
-
-        // Email validation
-        if (field.type === 'email') {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(value)) {
-                this.showFieldError(field, 'Please enter a valid email address');
-                return false;
-            }
-        }
-
-        // Select validation
-        if (field.tagName.toLowerCase() === 'select' && value === '') {
-            this.showFieldError(field, 'Please select an option');
-            return false;
-        }
-
-        return true;
-    },
-
-    showFieldError: function(field, message) {
-        if (!field || !field.parentElement) return;
-        
-        field.classList.add('error');
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'error-message';
-        errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i>${message}`;
-        field.parentElement.appendChild(errorDiv);
-    },
-
-    clearFieldError: function(field) {
-        if (!field || !field.parentElement) return;
-        
-        field.classList.remove('error');
-        const errorMessage = field.parentElement.querySelector('.error-message');
-        if (errorMessage) {
-            errorMessage.remove();
-        }
-    },
-
-    loadUsers: async function() {
-        try {
-            this.state.loading = true;
-            this.renderLoadingState();
-
-            const token = localStorage.getItem('token');
-            if (!token) {
-                throw new Error('No authentication token found');
-            }
-
-            const response = await fetch('https://18.215.160.136.nip.io/api/users', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to load users');
-            }
-            
-            this.state.users = await response.json();
-            this.renderUsers();
-        } catch (error) {
-            console.error('Error loading users:', error);
-            showNotification('Failed to load users: ' + error.message, 'error');
-            this.state.users = [];
-            this.renderErrorState(error.message);
-        } finally {
-            this.state.loading = false;
-        }
-    },
-
-    renderLoadingState: function() {
-        const tbody = document.getElementById('usersTableBody');
-        if (tbody) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="loading-state">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <p>Loading users...</p>
-                    </td>
-                </tr>
-            `;
-        }
-    },
-
-    renderErrorState: function(message) {
-        const tbody = document.getElementById('usersTableBody');
-        if (tbody) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="error-state">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <p>${message || 'Error loading users'}</p>
-                    </td>
-                </tr>
-            `;
-        }
-    },
-
-      // Continuing the UserManagement object...
-    getFilteredUsers: function() {
-        if (!Array.isArray(this.state.users)) {
-            return [];
-        }
-
-        return this.state.users.filter(user => {
-            const searchTerm = (this.state.filters.search || '').toLowerCase();
-            const matchesSearch = (user.name?.toLowerCase() || '').includes(searchTerm) ||
-                                (user.email?.toLowerCase() || '').includes(searchTerm);
-            
-            const matchesDepartment = !this.state.filters.department || 
-                                    user.department === this.state.filters.department;
-            
-            const matchesStatus = !this.state.filters.status || 
-                                user.status === this.state.filters.status;
-            
-            const matchesRole = !this.state.filters.role || 
-                              user.role === this.state.filters.role;
-
-            return matchesSearch && matchesDepartment && matchesStatus && matchesRole;
-        });
-    },
-
-    renderUsers: function() {
-        const tbody = document.getElementById('usersTableBody');
-        if (!tbody) return;
-
-        const filteredUsers = this.getFilteredUsers();
-        
-        if (this.state.loading) {
-            this.renderLoadingState();
-            return;
-        }
-
-        if (!filteredUsers || filteredUsers.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="empty-state">
-                        <i class="fas fa-users-slash"></i>
-                        <p>No users found</p>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        tbody.innerHTML = filteredUsers.map(user => `
-            <tr>
-                <td>
-                    <div class="user-info">
-                        <div class="user-avatar" style="background-color: ${this.getAvatarColor(user.name || '')}">
-                            ${this.getInitials(user.name || '')}
-                        </div>
-                        <div class="user-details">
-                            <div class="user-name">${user.name || 'N/A'}</div>
-                            <div class="user-id">${user.email || 'N/A'}</div>
-                        </div>
-                    </div>
-                </td>
-                <td>${user.email || 'N/A'}</td>
-                <td>
-                    <span class="department-badge department-${(user.department || 'unknown').toLowerCase()}">
-                        ${user.department || 'Unknown'}
-                    </span>
-                </td>
-                <td>
-                    <span class="role-badge role-${(user.role || 'unknown').toLowerCase()}">
-                        ${user.role || 'Unknown'}
-                    </span>
-                </td>
-                <td>
-                    <span class="status-badge status-${(user.status || 'inactive').toLowerCase()}">
-                        <i class="fas fa-${user.status === 'active' ? 'check-circle' : 'times-circle'}"></i>
-                        ${user.status || 'Inactive'}
-                    </span>
-                </td>
-                <td>
-                    <span class="2fa-badge ${user.requires2FA ? 'enabled' : 'disabled'}">
-                        <i class="fas fa-${user.requires2FA ? 'shield-alt' : 'shield'}"></i>
-                        ${user.requires2FA ? 'Enabled' : 'Disabled'}
-                    </span>
-                </td>
-                <td>
-                    <div class="action-buttons">
-                        <button onclick="UserManagement.editUser('${user._id}')" class="btn-icon" title="Edit User">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="UserManagement.toggleUserStatus('${user._id}')" 
-                                class="btn-icon ${user.status === 'active' ? 'danger' : 'success'}"
-                                title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User">
-                            <i class="fas fa-${user.status === 'active' ? 'ban' : 'check'}"></i>
-                        </button>
-                        <button onclick="UserManagement.changeUserPassword('${user._id}')" 
-                                class="btn-icon warning" title="Change Password">
-                            <i class="fas fa-key"></i>
-                        </button>
-                        <button onclick="UserManagement.toggle2FA('${user._id}')"
-                                class="btn-icon ${user.requires2FA ? 'success' : 'warning'}"
-                                title="${user.requires2FA ? 'Disable' : 'Enable'} 2FA">
-                            <i class="fas fa-shield-alt"></i>
-                        </button>
-                        <button onclick="UserManagement.deleteUser('${user._id}')" 
-                                class="btn-icon danger" title="Delete User">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-    },
-
-    handleUserSubmit: async function(event) {
-        event.preventDefault();
-        
-        // Get form elements
-        const form = event.target;
-        const nameInput = form.querySelector('#userName');
-        const emailInput = form.querySelector('#userEmail');
-        const departmentInput = form.querySelector('#userDepartment');
-        const roleInput = form.querySelector('#userRole');
-        const require2FAInput = form.querySelector('#require2FA');
-        const submitButton = form.querySelector('button[type="submit"]');
-
-        try {
-            // Check if all required fields exist
-            const requiredFields = [
-                { field: nameInput, label: 'Name' },
-                { field: emailInput, label: 'Email' },
-                { field: departmentInput, label: 'Department' },
-                { field: roleInput, label: 'Role' }
-            ];
-
-            for (const { field, label } of requiredFields) {
-                if (!field) {
-                    throw new Error(`${label} field not found`);
-                }
-            }
-
-            // Validate all required fields
-            let isValid = true;
-            for (const { field } of requiredFields) {
-                if (!this.validateField(field)) {
-                    isValid = false;
-                }
-            }
-
-            if (!isValid) {
-                throw new Error('Please fill in all required fields correctly');
-            }
-
-            // Disable submit button and show loading state
-            if (submitButton) {
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-            }
-
-            const token = localStorage.getItem('token');
-            if (!token) throw new Error('No authentication token found');
-
-            // Prepare form data
-            const formData = {
-                name: nameInput.value.trim(),
-                email: emailInput.value.trim(),
-                department: departmentInput.value,
-                role: roleInput.value,
-                requires2FA: require2FAInput ? require2FAInput.checked : false
-            };
-
-            // Make API request
-            const url = this.state.currentUser 
-                ? `https://18.215.160.136.nip.io/api/users/${this.state.currentUser._id}`
-                : 'https://18.215.160.136.nip.io/api/users';
-
-            const response = await fetch(url, {
-                method: this.state.currentUser ? 'PUT' : 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(formData)
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                // Handle specific error cases
-                if (response.status === 400 && data.message.includes('already exists')) {
-                    this.showFieldError(emailInput, 'This email is already registered');
-                    throw new Error('Email address is already in use');
-                }
-                throw new Error(data.message || 'Failed to save user');
-            }
-
-            // Handle successful response
-            if (!this.state.currentUser && data.temporaryPassword) {
-                // Show detailed success message for new user
-                const successMessage = `
-                    User created successfully!
-                    <br><br>
-                    <strong>Name:</strong> ${formData.name}
-                    <br>
-                    <strong>Email:</strong> ${formData.email}
-                    <br>
-                    <strong>Department:</strong> ${formData.department}
-                    <br>
-                    <strong>Role:</strong> ${formData.role}
-                    <br>
-                    <strong>Temporary Password:</strong> ${data.temporaryPassword}
-                `;
                 
-                const notification = document.createElement('div');
-                notification.className = 'notification success detailed';
-                notification.innerHTML = `
-                    <div class="notification-header">
-                        <i class="fas fa-check-circle"></i>
-                        <span>User Created Successfully</span>
-                    </div>
-                    <div class="notification-body">
-                        ${successMessage}
-                    </div>
-                `;
-                
-                document.body.appendChild(notification);
-                setTimeout(() => {
-                    notification.classList.add('show');
-                    setTimeout(() => {
-                        notification.classList.remove('show');
-                        setTimeout(() => notification.remove(), 300);
-                    }, 10000);
-                }, 100);
-            } else {
-                showNotification(`User ${this.state.currentUser ? 'updated' : 'created'} successfully`, 'success');
-            }
-            
-            closeUserModal();
-            this.loadUsers();
-
-        } catch (error) {
-            console.error('Error saving user:', error);
-            showNotification(error.message, 'error');
-        } finally {
-            if (submitButton) {
-                submitButton.disabled = false;
-                submitButton.innerHTML = 'Save User';
-            }
-        }
-    },
-
-          // Continuing the UserManagement object...
-    editUser: async function(userId) {
-        try {
-            const user = this.state.users.find(u => u._id === userId);
-            if (!user) throw new Error('User not found');
-
-            this.state.currentUser = user;
-            
-            // Populate form
-            const nameInput = document.getElementById('userName');
-            const emailInput = document.getElementById('userEmail');
-            const departmentInput = document.getElementById('userDepartment');
-            const roleInput = document.getElementById('userRole');
-            const require2FAInput = document.getElementById('require2FA');
-
-            if (nameInput) nameInput.value = user.name || '';
-            if (emailInput) emailInput.value = user.email || '';
-            if (departmentInput) departmentInput.value = user.department || '';
-            if (roleInput) roleInput.value = user.role || '';
-            if (require2FAInput) require2FAInput.checked = user.requires2FA || false;
-            
-            // Update modal title and open
-            const modalTitle = document.getElementById('modalTitle');
-            if (modalTitle) modalTitle.textContent = 'Edit User';
-            
-            const modal = document.getElementById('userModal');
-            if (modal) modal.classList.add('active');
-        } catch (error) {
-            console.error('Error editing user:', error);
-            showNotification(error.message, 'error');
-        }
-    },
-
-    toggleUserStatus: async function(userId) {
-        try {
-            const user = this.state.users.find(u => u._id === userId);
-            if (!user) throw new Error('User not found');
-
-            const newStatus = user.status === 'active' ? 'inactive' : 'active';
-            const confirmMessage = newStatus === 'inactive' 
-                ? `Are you sure you want to deactivate ${user.name}?` 
-                : `Are you sure you want to activate ${user.name}?`;
-
-            if (!confirm(confirmMessage)) return;
-
-            const token = localStorage.getItem('token');
-            const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ status: newStatus })
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to update user status');
-            }
-
-            showNotification(
-                `User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`,
-                'success'
-            );
-            this.loadUsers();
-        } catch (error) {
-            console.error('Error toggling user status:', error);
-            showNotification(error.message, 'error');
-        }
-    },
-
-    changeUserPassword: async function(userId) {
-        try {
-            const user = this.state.users.find(u => u._id === userId);
-            if (!user) throw new Error('User not found');
-
-            // Create and show password change modal
-            const modalHtml = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>Change Password for ${user.name}</h2>
-                        <button class="close-btn" onclick="this.closest('.modal').remove()">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <form id="changePasswordForm">
-                        <div class="form-group">
-                            <label for="newPassword">New Password</label>
-                            <div class="password-input-group">
-                                <input type="password" id="newPassword" required minlength="6">
-                                <button type="button" class="toggle-password" onclick="togglePasswordVisibility('newPassword')">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="confirmPassword">Confirm Password</label>
-                            <div class="password-input-group">
-                                <input type="password" id="confirmPassword" required minlength="6">
-                                <button type="button" class="toggle-password" onclick="togglePasswordVisibility('confirmPassword')">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Change Password</button>
-                        </div>
-                    </form>
-                </div>
-            `;
-
-            const modal = document.createElement('div');
-            modal.className = 'modal active';
-            modal.innerHTML = modalHtml;
-            document.body.appendChild(modal);
-
-            // Handle form submission
-            const form = modal.querySelector('#changePasswordForm');
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const newPassword = document.getElementById('newPassword').value;
-                const confirmPassword = document.getElementById('confirmPassword').value;
-                
-                if (newPassword !== confirmPassword) {
-                    showNotification('Passwords do not match', 'error');
-                    return;
-                }
-
-                const submitButton = form.querySelector('button[type="submit"]');
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Changing Password...';
-
-                try {
-                    const token = localStorage.getItem('token');
-                    const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/password`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify({ password: newPassword })
-                    });
-
-                    if (!response.ok) {
-                        const error = await response.json();
-                        throw new Error(error.message || 'Failed to change password');
+                // Add click handler for navigation
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    handleNavItemClick(e, item);
+                    
+                    // Handle section loading if data-section attribute exists
+                    const sectionName = item.getAttribute('data-section');
+                    if (sectionName) {
+                        loadSection(sectionName);
                     }
-
-                    showNotification('Password changed successfully', 'success');
-                    modal.remove();
-                } catch (error) {
-                    showNotification(error.message, 'error');
-                } finally {
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = 'Change Password';
-                }
+                });
             });
-        } catch (error) {
-            console.error('Error changing password:', error);
-            showNotification(error.message, 'error');
         }
-    },
 
-    deleteUser: async function(userId) {
-        try {
-            const user = this.state.users.find(u => u._id === userId);
-            if (!user) throw new Error('User not found');
+        // User Menu Initialization
+        function initializeUserMenu() {
+            const menuTrigger = document.getElementById('userMenuTrigger');
+            const dropdownMenu = document.getElementById('dropdownMenu');
 
-            // Show confirmation modal
-            const modalHtml = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>Delete User</h2>
-                        <button class="close-btn" onclick="this.closest('.modal').remove()">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="warning-message">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <p>Are you sure you want to delete the following user? This action cannot be undone.</p>
-                        </div>
-                        <div class="user-details">
-                            <p><strong>Name:</strong> ${user.name}</p>
-                            <p><strong>Email:</strong> ${user.email}</p>
-                            <p><strong>Department:</strong> ${user.department}</p>
-                            <p><strong>Role:</strong> ${user.role}</p>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
-                        <button class="btn btn-danger" onclick="UserManagement.confirmDeleteUser('${userId}', this)">
-                            Delete User
-                        </button>
-                    </div>
-                </div>
-            `;
+            if (!menuTrigger || !dropdownMenu) return;
 
-            const modal = document.createElement('div');
-            modal.className = 'modal active';
-            modal.innerHTML = modalHtml;
-            document.body.appendChild(modal);
-        } catch (error) {
-            console.error('Error preparing delete:', error);
-            showNotification(error.message, 'error');
-        }
-    },
+            // Toggle dropdown on button click
+            menuTrigger.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('active');
+                
+                // Add active class to trigger for styling
+                this.classList.toggle('active');
+            });
 
-    confirmDeleteUser: async function(userId, button) {
-        button.disabled = true;
-        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
-
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                const isClickInside = menuTrigger.contains(e.target) || dropdownMenu.contains(e.target);
+                
+                if (!isClickInside && dropdownMenu.classList.contains('active')) {
+                    dropdownMenu.classList.remove('active');
+                    menuTrigger.classList.remove('active');
                 }
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to delete user');
-            }
-
-            showNotification('User deleted successfully', 'success');
-            button.closest('.modal').remove();
-            this.loadUsers();
-        } catch (error) {
-            console.error('Error deleting user:', error);
-            showNotification(error.message, 'error');
-            button.disabled = false;
-            button.innerHTML = 'Delete User';
+            // Close dropdown on ESC key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && dropdownMenu.classList.contains('active')) {
+                    dropdownMenu.classList.remove('active');
+                    menuTrigger.classList.remove('active');
+                }
+            });
         }
-    },
 
-    toggle2FA: async function(userId) {
-        try {
-            const user = this.state.users.find(u => u._id === userId);
-            if (!user) throw new Error('User not found');
-
-            const newState = !user.requires2FA;
-            const token = localStorage.getItem('token');
+        // Toggle Sidebar
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            const collapseBtn = document.querySelector('.collapse-toggle i');
             
-            const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/2fa`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ requires2FA: newState })
+            if (sidebar && mainContent) {
+                sidebar.classList.toggle('collapsed');
+                
+                // Update collapse button icon
+                if (collapseBtn) {
+                    collapseBtn.className = sidebar.classList.contains('collapsed') 
+                        ? 'fas fa-chevron-right' 
+                        : 'fas fa-chevron-left';
+                }
+
+                // Update main content margin
+                mainContent.style.marginLeft = sidebar.classList.contains('collapsed') 
+                    ? `${70}px` 
+                    : `${280}px`;
+
+                // Save state
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            }
+        }
+
+        // Authentication Check
+        function checkAuthStatus() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            const email = urlParams.get('email');
+            const role = urlParams.get('role');
+
+            if (!token || role !== 'superadmin') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Store token in localStorage
+            localStorage.setItem('token', token);
+            localStorage.setItem('userRole', role);
+            localStorage.setItem('userEmail', email);
+
+            const userEmailElement = document.getElementById('userEmail');
+            if (userEmailElement) {
+                userEmailElement.textContent = email;
+            }
+
+            verifyToken(token);
+        }
+
+        // Token Verification
+        async function verifyToken(token) {
+            try {
+                const response = await fetch('https://18.215.160.136.nip.io/api/verify-token', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Token verification failed');
+                }
+
+            } catch (error) {
+                console.error('Token verification error:', error);
+                localStorage.clear();
+                window.location.href = 'login.html';
+            }
+        }
+                    // Handle Sign Out
+        function handleSignOut() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        // Handle My Account
+        function handleMyAccount() {
+            console.log('My Account clicked');
+            showNotification('Account management coming soon', 'info');
+        }
+
+        // Handle Navigation Item Click
+        function handleNavItemClick(e, item) {
+            e.preventDefault();
+            
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            item.classList.add('active');
+            sidebarState.activeNavItem = item;
+
+            if (sidebarState.isMobile) {
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.getElementById('overlay');
+                if (sidebar && overlay) {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
+            }
+        }
+
+        // Responsive Design Handler
+        function handleResponsiveness() {
+            const mediaQuery = window.matchMedia('(max-width: 1024px)');
+            
+            function handleMobileChange(e) {
+                sidebarState.isMobile = e.matches;
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.getElementById('overlay');
+                
+                if (!e.matches && sidebar && overlay) {
+                    sidebar.classList.remove('active');
+                    overlay.classList.remove('active');
+                    updateSidebarState();
+                }
+            }
+
+            mediaQuery.addListener(handleMobileChange);
+            handleMobileChange(mediaQuery);
+
+            let resizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    handleMobileChange(mediaQuery);
+                }, 250);
+            });
+        }
+
+        // Update Sidebar State
+        function updateSidebarState() {
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            
+            if (sidebar && mainContent) {
+                sidebar.classList.toggle('collapsed', sidebarState.isCollapsed);
+                mainContent.style.marginLeft = sidebarState.isCollapsed 
+                    ? `${70}px` 
+                    : `${280}px`;
+            }
+        }
+
+        // Notification System
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                                 type === 'error' ? 'exclamation-circle' :
+                                 type === 'info' ? 'info-circle' : 'bell'}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => notification.remove(), 300);
+                }, 3000);
+            }, 100);
+        }
+
+        // Module Loader
+        const ModuleLoader = {
+            async loadModule(moduleName) {
+                try {
+                    const response = await fetch(`/sidebar_modules/${moduleName}.html`);
+                    if (!response.ok) throw new Error('Module not found');
+                    
+                    const moduleContent = await response.text();
+                    const moduleContainer = document.getElementById('moduleContainer');
+                    
+                    // Hide welcome section
+                    const welcomeSection = document.querySelector('.welcome-section');
+                    if (welcomeSection) {
+                        welcomeSection.style.display = 'none';
+                    }
+                    
+                    // Insert the new module content
+                    moduleContainer.innerHTML = moduleContent;
+                    
+                    // Execute any scripts in the loaded content
+                    const scripts = moduleContainer.getElementsByTagName('script');
+                    Array.from(scripts).forEach(script => {
+                        const newScript = document.createElement('script');
+                        Array.from(script.attributes).forEach(attr => {
+                            newScript.setAttribute(attr.name, attr.value);
+                        });
+                        newScript.textContent = script.textContent;
+                        script.parentNode.replaceChild(newScript, script);
+                    });
+                } catch (error) {
+                    console.error('Error loading module:', error);
+                    showNotification('Failed to load module', 'error');
+                }
+            }
+        };
+
+        // Load Section Content
+        function loadSection(sectionName) {
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('data-section') === sectionName) {
+                    link.classList.add('active');
+                }
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to update 2FA status');
+            if (sectionName === 'dashboard') {
+                const welcomeSection = document.querySelector('.welcome-section');
+                if (welcomeSection) {
+                    welcomeSection.style.display = 'block';
+                }
+                document.getElementById('moduleContainer').innerHTML = '';
+            } else {
+                ModuleLoader.loadModule(sectionName);
             }
 
-            showNotification(
-                `Two-factor authentication ${newState ? 'enabled' : 'disabled'} successfully`,
-                'success'
-            );
-            this.loadUsers();
-        } catch (error) {
-            console.error('Error toggling 2FA:', error);
-            showNotification(error.message, 'error');
+            sidebarState.currentSection = sectionName;
         }
-    },
 
-    getInitials: function(name) {
-        if (!name) return '??';
-        return name
-            .split(' ')
-            .map(word => word[0])
-            .join('')
-            .toUpperCase();
-    },
-
-    getAvatarColor: function(name) {
-        const colors = [
-            '#4f46e5', '#7c3aed', '#db2777', '#ea580c', '#16a34a',
-            '#2563eb', '#9333ea', '#e11d48', '#d97706', '#15803d'
-        ];
-        
-        let hash = 0;
-        for (let i = 0; i < name.length; i++) {
-            hash = name.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        
-        return colors[Math.abs(hash) % colors.length];
-    }
-};
-
-// Load Section Content
-function loadSection(sectionName) {
-    // Hide all sections
-    document.querySelectorAll('.content-section').forEach(section => {
-        section.style.display = 'none';
-    });
-
-    // Show welcome section for dashboard, otherwise load specific section
-    const welcomeSection = document.querySelector('.welcome-section');
-    if (sectionName === 'dashboard') {
-        if (welcomeSection) welcomeSection.style.display = 'block';
-    } else {
-        if (welcomeSection) welcomeSection.style.display = 'none';
-        
-        const section = document.getElementById(`${sectionName}Section`);
-        if (section) {
-            section.style.display = 'block';
-            if (sectionName === 'userManagement') {
-                UserManagement.init();
+        // Load User Management Section
+        function loadUserManagement(event) {
+            event.preventDefault();
+            
+            // Hide welcome section and show user management
+            const welcomeSection = document.querySelector('.welcome-section');
+            const userManagementSection = document.getElementById('userManagementSection');
+            
+            if (welcomeSection) welcomeSection.style.display = 'none';
+            if (userManagementSection) {
+                userManagementSection.style.display = 'block';
+                UserManagement.init(); // Initialize the module
             }
+
+            // Update active navigation
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
         }
-    }
 
-    sidebarState.currentSection = sectionName;
-}
-
-// Initialize everything when the page loads
-window.addEventListener('load', function() {
-    const currentSection = new URLSearchParams(window.location.search).get('section');
-    if (currentSection) {
-        loadSection(currentSection);
-    }
-}); 
+        // Initialize everything when the page loads
+        window.addEventListener('load', function() {
+            const currentSection = new URLSearchParams(window.location.search).get('section');
+            if (currentSection) {
+                loadSection(currentSection);
+            }
+        });
     </script>
 </body>
 </html>
