@@ -1254,7 +1254,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link" data-section="userManagement" onclick="loadUserManagement(event)">
+                        <a href="#" class="nav-link" data-section="userManagement">
                             <i class="fas fa-users"></i>
                             <span>User Management</span>
                         </a>
@@ -1488,24 +1488,42 @@
     }
 
     // Setup Navigation Handlers
-    function setupNavigationHandlers() {
-        console.log('Setting up navigation handlers...');
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', async (e) => {
-                e.preventDefault();
-                const sectionName = link.getAttribute('data-section');
-                console.log('Nav link clicked:', sectionName);
-                
-                if (sectionName) {
-                    try {
-                        await loadSection(sectionName);
-                    } catch (error) {
-                        console.error('Error handling navigation:', error);
+   // Setup Navigation Handlers
+function setupNavigationHandlers() {
+    console.log('Setting up navigation handlers...');
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const sectionName = link.getAttribute('data-section');
+            console.log('Nav link clicked:', sectionName);
+            
+            // Remove active class from all links
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            // Add active class to clicked link
+            link.classList.add('active');
+            
+            if (sectionName) {
+                try {
+                    // Show loading state
+                    const moduleContainer = document.getElementById('moduleContainer');
+                    if (moduleContainer) {
+                        moduleContainer.innerHTML = `
+                            <div class="loading-state">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Loading ${sectionName}...</p>
+                            </div>
+                        `;
                     }
+
+                    await loadSection(sectionName);
+                } catch (error) {
+                    console.error('Error handling navigation:', error);
+                    showNotification('Failed to load section: ' + error.message, 'error');
                 }
-            });
+            }
         });
-    }
+    });
+}
 
     // User Menu Initialization
     function initializeUserMenu() {
