@@ -1317,7 +1317,7 @@
     async loadModule(moduleName) {
         try {
             // Update this URL to match your Amplify/GitHub structure
-            const response = await fetch(`/sidebar_modules/${moduleName}.html`);
+            const response = await fetch(`sidebar_modules/${moduleName}.html`);
             if (!response.ok) throw new Error('Module not found');
             
             const moduleContent = await response.text();
