@@ -61,7 +61,6 @@
 
 <script>
 (function() {
-    // Define UserManagement as a global object
     window.UserManagement = {
         // State Management
         state: {
@@ -180,7 +179,6 @@
                 `;
             }
         },
-
                 // Filtering Function
         getFilteredUsers: function() {
             if (!Array.isArray(this.state.users)) {
@@ -315,15 +313,14 @@
             }
             
             return colors[Math.abs(hash) % colors.length];
-        }
-    };
-            // User Action Functions
+        },
+
+                // User Action Functions
         editUser: async function(userId) {
             try {
                 const user = this.state.users.find(u => u._id === userId);
                 if (!user) throw new Error('User not found');
 
-                // Create and show edit modal
                 const modalHtml = `
                     <div class="modal active">
                         <div class="modal-content">
@@ -376,12 +373,10 @@
                     </div>
                 `;
 
-                // Add modal to DOM
                 const modalContainer = document.createElement('div');
                 modalContainer.innerHTML = modalHtml;
                 document.body.appendChild(modalContainer.firstElementChild);
 
-                // Handle form submission
                 const form = document.getElementById('editUserForm');
                 form.addEventListener('submit', async (e) => {
                     e.preventDefault();
@@ -456,7 +451,7 @@
                 showNotification(error.message, 'error');
             }
         },
-            toggleUserStatus: async function(userId) {
+                toggleUserStatus: async function(userId) {
             try {
                 const user = this.state.users.find(u => u._id === userId);
                 if (!user) throw new Error('User not found');
@@ -559,12 +554,10 @@
                     </div>
                 `;
 
-                // Add modal to DOM
                 const modalContainer = document.createElement('div');
                 modalContainer.innerHTML = modalHtml;
                 document.body.appendChild(modalContainer.firstElementChild);
 
-                // Handle form submission
                 const form = document.getElementById('changePasswordForm');
                 form.addEventListener('submit', async (e) => {
                     e.preventDefault();
@@ -624,6 +617,7 @@
                 icon.className = 'fas fa-eye';
             }
         }
+    };
 
     // Initialize when the module is loaded
     if (document.readyState === 'complete') {
