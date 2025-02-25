@@ -1314,39 +1314,40 @@
 
         // Module Loader
         const ModuleLoader = {
-            async loadModule(moduleName) {
-                try {
-                    const response = await fetch(`/sidebar_modules/${moduleName}.html`);
-                    if (!response.ok) throw new Error('Module not found');
-                    
-                    const moduleContent = await response.text();
-                    const moduleContainer = document.getElementById('moduleContainer');
-                    
-                    // Hide welcome section
-                    const welcomeSection = document.querySelector('.welcome-section');
-                    if (welcomeSection) {
-                        welcomeSection.style.display = 'none';
-                    }
-                    
-                    // Insert the new module content
-                    moduleContainer.innerHTML = moduleContent;
-                    
-                    // Execute any scripts in the loaded content
-                    const scripts = moduleContainer.getElementsByTagName('script');
-                    Array.from(scripts).forEach(script => {
-                        const newScript = document.createElement('script');
-                        Array.from(script.attributes).forEach(attr => {
-                            newScript.setAttribute(attr.name, attr.value);
-                        });
-                        newScript.textContent = script.textContent;
-                        script.parentNode.replaceChild(newScript, script);
-                    });
-                } catch (error) {
-                    console.error('Error loading module:', error);
-                    showNotification('Failed to load module', 'error');
-                }
+    async loadModule(moduleName) {
+        try {
+            // Update this URL to match your Amplify/GitHub structure
+            const response = await fetch(`/sidebar_modules/${moduleName}.html`);
+            if (!response.ok) throw new Error('Module not found');
+            
+            const moduleContent = await response.text();
+            const moduleContainer = document.getElementById('moduleContainer');
+            
+            // Hide welcome section
+            const welcomeSection = document.querySelector('.welcome-section');
+            if (welcomeSection) {
+                welcomeSection.style.display = 'none';
             }
-        };
+            
+            // Insert the new module content
+            moduleContainer.innerHTML = moduleContent;
+            
+            // Execute any scripts in the loaded content
+            const scripts = moduleContainer.getElementsByTagName('script');
+            Array.from(scripts).forEach(script => {
+                const newScript = document.createElement('script');
+                Array.from(script.attributes).forEach(attr => {
+                    newScript.setAttribute(attr.name, attr.value);
+                });
+                newScript.textContent = script.textContent;
+                script.parentNode.replaceChild(newScript, script);
+            });
+        } catch (error) {
+            console.error('Error loading module:', error);
+            showNotification('Failed to load module', 'error');
+        }
+    }
+};
 
         // Load Section Content
         function loadSection(sectionName) {
