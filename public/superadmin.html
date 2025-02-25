@@ -1390,11 +1390,12 @@
     });
 
     // Module Loader with Fixed Path
- const ModuleLoader = {
+// In superadmin.html, replace the existing ModuleLoader with this:
+const ModuleLoader = {
     baseUrl: window.location.origin,
     currentModule: null,
 
-    async loadModule(moduleName) {
+    loadModule: async function(moduleName) {
         try {
             console.log('Starting module load for:', moduleName);
             
@@ -1422,32 +1423,15 @@
                 welcomeSection.style.display = 'none';
             }
 
-            // Create temporary container
-            const temp = document.createElement('div');
-            temp.innerHTML = moduleContent;
+            // Clear existing content
+            moduleContainer.innerHTML = '';
 
-            // Extract scripts
-            const scripts = Array.from(temp.getElementsByTagName('script'));
-            const scriptContents = scripts.map(script => {
-                const content = script.innerHTML;
-                script.remove();
-                return content;
-            });
+            // Add new content
+            moduleContainer.innerHTML = moduleContent;
 
-            // Add HTML content
-            moduleContainer.innerHTML = temp.innerHTML;
-
-            // Execute scripts
-            scriptContents.forEach(scriptContent => {
-                const script = document.createElement('script');
-                script.type = 'text/javascript';
-                script.text = scriptContent;
-                document.body.appendChild(script);
-            });
-
-            // Initialize if needed
-            if (window[moduleName] && typeof window[moduleName].init === 'function') {
-                await window[moduleName].init();
+            // Initialize module if available
+            if (window.UserManagement && typeof window.UserManagement.init === 'function') {
+                await window.UserManagement.init();
             }
 
             console.log('Module loaded successfully:', moduleName);
@@ -1455,6 +1439,12 @@
         } catch (error) {
             console.error('Module loading error:', error);
             throw error;
+        }
+    },
+
+    onModuleLoaded: function(moduleName, moduleInstance) {
+        if (moduleInstance && typeof moduleInstance.init === 'function') {
+            moduleInstance.init();
         }
     }
 };
