@@ -1390,7 +1390,7 @@
     });
 
     // Module Loader with Fixed Path
-  const ModuleLoader = {
+ const ModuleLoader = {
     baseUrl: window.location.origin,
     currentModule: null,
 
@@ -1422,53 +1422,42 @@
                 welcomeSection.style.display = 'none';
             }
 
-            // Clear existing content and current module
-            moduleContainer.innerHTML = '';
-            this.currentModule = null;
-
             // Create temporary container
             const temp = document.createElement('div');
             temp.innerHTML = moduleContent;
 
-            // Process scripts before adding content
-            const scripts = temp.getElementsByTagName('script');
-            const scriptContent = [];
-            
-            // Collect all script content
-            Array.from(scripts).forEach(script => {
-                if (script.src) {
-                    scriptContent.push({ type: 'src', content: script.src });
-                } else {
-                    scriptContent.push({ type: 'inline', content: script.textContent });
-                }
+            // Extract scripts
+            const scripts = Array.from(temp.getElementsByTagName('script'));
+            const scriptContents = scripts.map(script => {
+                const content = script.innerHTML;
                 script.remove();
+                return content;
             });
 
             // Add HTML content
             moduleContainer.innerHTML = temp.innerHTML;
 
-            // Execute scripts in order
-            for (const script of scriptContent) {
-                if (script.type === 'src') {
-                    await this.loadExternalScript(script.content);
-                } else {
-                    await this.executeScript(script.content);
-                }
-            }
+            // Execute scripts
+            scriptContents.forEach(scriptContent => {
+                const script = document.createElement('script');
+                script.type = 'text/javascript';
+                script.text = scriptContent;
+                document.body.appendChild(script);
+            });
 
-            // Initialize module if it has an init function
+            // Initialize if needed
             if (window[moduleName] && typeof window[moduleName].init === 'function') {
                 await window[moduleName].init();
             }
 
-            this.currentModule = moduleName;
             console.log('Module loaded successfully:', moduleName);
 
         } catch (error) {
             console.error('Module loading error:', error);
             throw error;
         }
-    },
+    }
+};
 
     loadExternalScript(src) {
         return new Promise((resolve, reject) => {
