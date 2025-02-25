@@ -1062,271 +1062,74 @@
     <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
         <script>
-        // Global State Management
-        let sidebarState = {
-            isCollapsed: false,
-            isMobile: window.innerWidth <= 1024,
-            activeNavItem: null,
-            currentSection: 'dashboard'
-        };
+       <script>
+// Global error handlers
+window.addEventListener('error', function(e) {
+    console.error('Global error:', {
+        message: e.error.message,
+        stack: e.error.stack,
+        filename: e.filename,
+        lineno: e.lineno,
+        colno: e.colno
+    });
+});
 
-        // Initialize when DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeSidebar();
-            initializeUserMenu();
-            checkAuthStatus();
-            handleResponsiveness();
-        });
+window.addEventListener('unhandledrejection', function(e) {
+    console.error('Unhandled promise rejection:', {
+        reason: e.reason,
+        promise: e.promise
+    });
+});
 
-        // Sidebar Initialization
-        function initializeSidebar() {
-            const savedState = localStorage.getItem('sidebarCollapsed');
-            if (savedState !== null) {
-                sidebarState.isCollapsed = JSON.parse(savedState);
-                updateSidebarState();
-            }
+// Global State Management
+let sidebarState = {
+    isCollapsed: false,
+    isMobile: window.innerWidth <= 1024,
+    activeNavItem: null,
+    currentSection: 'dashboard'
+};
 
-            const navItems = document.querySelectorAll('.nav-link');
-            navItems.forEach((item, index) => {
-                item.style.setProperty('--item-index', index);
-                const tooltipText = item.querySelector('span')?.textContent;
-                if (tooltipText) {
-                    item.setAttribute('data-tooltip', tooltipText);
-                }
-                
-                // Add click handler for navigation
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    handleNavItemClick(e, item);
-                    
-                    // Handle section loading if data-section attribute exists
-                    const sectionName = item.getAttribute('data-section');
-                    if (sectionName) {
-                        loadSection(sectionName);
-                    }
-                });
-            });
-        }
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing application...');
+    initializeSidebar();
+    initializeUserMenu();
+    checkAuthStatus();
+    handleResponsiveness();
+    setupNavigationHandlers();
+});
 
-        // User Menu Initialization
-        function initializeUserMenu() {
-            const menuTrigger = document.getElementById('userMenuTrigger');
-            const dropdownMenu = document.getElementById('dropdownMenu');
-
-            if (!menuTrigger || !dropdownMenu) return;
-
-            // Toggle dropdown on button click
-            menuTrigger.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                dropdownMenu.classList.toggle('active');
-                
-                // Add active class to trigger for styling
-                this.classList.toggle('active');
-            });
-
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function(e) {
-                const isClickInside = menuTrigger.contains(e.target) || dropdownMenu.contains(e.target);
-                
-                if (!isClickInside && dropdownMenu.classList.contains('active')) {
-                    dropdownMenu.classList.remove('active');
-                    menuTrigger.classList.remove('active');
-                }
-            });
-
-            // Close dropdown on ESC key
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && dropdownMenu.classList.contains('active')) {
-                    dropdownMenu.classList.remove('active');
-                    menuTrigger.classList.remove('active');
-                }
-            });
-        }
-
-        // Toggle Sidebar
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            const mainContent = document.querySelector('.main-content');
-            const collapseBtn = document.querySelector('.collapse-toggle i');
-            
-            if (sidebar && mainContent) {
-                sidebar.classList.toggle('collapsed');
-                
-                // Update collapse button icon
-                if (collapseBtn) {
-                    collapseBtn.className = sidebar.classList.contains('collapsed') 
-                        ? 'fas fa-chevron-right' 
-                        : 'fas fa-chevron-left';
-                }
-
-                // Update main content margin
-                mainContent.style.marginLeft = sidebar.classList.contains('collapsed') 
-                    ? `${70}px` 
-                    : `${280}px`;
-
-                // Save state
-                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-            }
-        }
-
-        // Authentication Check
-        function checkAuthStatus() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const token = urlParams.get('token');
-            const email = urlParams.get('email');
-            const role = urlParams.get('role');
-
-            if (!token || role !== 'superadmin') {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            // Store token in localStorage
-            localStorage.setItem('token', token);
-            localStorage.setItem('userRole', role);
-            localStorage.setItem('userEmail', email);
-
-            const userEmailElement = document.getElementById('userEmail');
-            if (userEmailElement) {
-                userEmailElement.textContent = email;
-            }
-
-            verifyToken(token);
-        }
-
-        // Token Verification
-        async function verifyToken(token) {
-            try {
-                const response = await fetch('https://18.215.160.136.nip.io/api/verify-token', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Token verification failed');
-                }
-
-            } catch (error) {
-                console.error('Token verification error:', error);
-                localStorage.clear();
-                window.location.href = 'login.html';
-            }
-        }
-                    // Handle Sign Out
-        function handleSignOut() {
-            localStorage.clear();
-            window.location.href = 'login.html';
-        }
-
-        // Handle My Account
-        function handleMyAccount() {
-            console.log('My Account clicked');
-            showNotification('Account management coming soon', 'info');
-        }
-
-        // Handle Navigation Item Click
-        function handleNavItemClick(e, item) {
-            e.preventDefault();
-            
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-            });
-            
-            item.classList.add('active');
-            sidebarState.activeNavItem = item;
-
-            if (sidebarState.isMobile) {
-                const sidebar = document.querySelector('.sidebar');
-                const overlay = document.getElementById('overlay');
-                if (sidebar && overlay) {
-                    sidebar.classList.remove('active');
-                    overlay.classList.remove('active');
-                }
-            }
-        }
-
-        // Responsive Design Handler
-        function handleResponsiveness() {
-            const mediaQuery = window.matchMedia('(max-width: 1024px)');
-            
-            function handleMobileChange(e) {
-                sidebarState.isMobile = e.matches;
-                const sidebar = document.querySelector('.sidebar');
-                const overlay = document.getElementById('overlay');
-                
-                if (!e.matches && sidebar && overlay) {
-                    sidebar.classList.remove('active');
-                    overlay.classList.remove('active');
-                    updateSidebarState();
-                }
-            }
-
-            mediaQuery.addListener(handleMobileChange);
-            handleMobileChange(mediaQuery);
-
-            let resizeTimer;
-            window.addEventListener('resize', () => {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(() => {
-                    handleMobileChange(mediaQuery);
-                }, 250);
-            });
-        }
-
-        // Update Sidebar State
-        function updateSidebarState() {
-            const sidebar = document.querySelector('.sidebar');
-            const mainContent = document.querySelector('.main-content');
-            
-            if (sidebar && mainContent) {
-                sidebar.classList.toggle('collapsed', sidebarState.isCollapsed);
-                mainContent.style.marginLeft = sidebarState.isCollapsed 
-                    ? `${70}px` 
-                    : `${280}px`;
-            }
-        }
-
-        // Notification System
-        function showNotification(message, type = 'success') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : 
-                                 type === 'error' ? 'exclamation-circle' :
-                                 type === 'info' ? 'info-circle' : 'bell'}"></i>
-                <span>${message}</span>
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.classList.add('show');
-                setTimeout(() => {
-                    notification.classList.remove('show');
-                    setTimeout(() => notification.remove(), 300);
-                }, 3000);
-            }, 100);
-        }
-
-        // Module Loader
-      const ModuleLoader = {
+// Module Loader
+const ModuleLoader = {
     async loadModule(moduleName) {
         try {
-            // Use the full Amplify URL
-            const moduleUrl = `${window.location.origin}/modules/${moduleName}.html`;
-            console.log('Loading module from:', moduleUrl); // For debugging
+            console.log('Starting module load for:', moduleName);
+            
+            // Log the current URL for debugging
+            console.log('Current URL:', window.location.href);
+            
+            // Construct the module URL
+            const moduleUrl = new URL(`modules/${moduleName}.html`, window.location.origin);
+            console.log('Attempting to load module from:', moduleUrl.href);
 
-            const response = await fetch(moduleUrl);
+            const response = await fetch(moduleUrl.href);
+            console.log('Fetch response:', {
+                status: response.status,
+                statusText: response.statusText,
+                url: response.url
+            });
+
             if (!response.ok) {
                 throw new Error(`Module not found (Status: ${response.status})`);
             }
             
             const moduleContent = await response.text();
+            console.log('Module content loaded, length:', moduleContent.length);
+
             const moduleContainer = document.getElementById('moduleContainer');
+            if (!moduleContainer) {
+                throw new Error('Module container not found');
+            }
             
             // Hide welcome section
             const welcomeSection = document.querySelector('.welcome-section');
@@ -1339,75 +1142,302 @@
             
             // Execute any scripts in the loaded content
             const scripts = moduleContainer.getElementsByTagName('script');
-            Array.from(scripts).forEach(script => {
-                const newScript = document.createElement('script');
-                Array.from(script.attributes).forEach(attr => {
-                    newScript.setAttribute(attr.name, attr.value);
-                });
-                newScript.textContent = script.textContent;
-                script.parentNode.replaceChild(newScript, script);
+            console.log('Found scripts to execute:', scripts.length);
+            
+            Array.from(scripts).forEach((script, index) => {
+                try {
+                    const newScript = document.createElement('script');
+                    Array.from(script.attributes).forEach(attr => {
+                        newScript.setAttribute(attr.name, attr.value);
+                    });
+                    newScript.textContent = script.textContent;
+                    script.parentNode.replaceChild(newScript, script);
+                    console.log(`Executed script ${index + 1} successfully`);
+                } catch (scriptError) {
+                    console.error(`Error executing script ${index + 1}:`, scriptError);
+                }
             });
+
         } catch (error) {
-            console.error('Error loading module:', error);
+            console.error('Module loading error:', {
+                error: error,
+                message: error.message,
+                stack: error.stack,
+                moduleName: moduleName
+            });
             showNotification(`Failed to load module: ${error.message}`, 'error');
+            throw error;
         }
     }
 };
 
-        // Load Section Content
-        function loadSection(sectionName) {
-    // Update active navigation item
+// Sidebar Initialization
+function initializeSidebar() {
+    console.log('Initializing sidebar...');
+    const savedState = localStorage.getItem('sidebarCollapsed');
+    if (savedState !== null) {
+        sidebarState.isCollapsed = JSON.parse(savedState);
+        updateSidebarState();
+    }
+
+    const navItems = document.querySelectorAll('.nav-link');
+    navItems.forEach((item, index) => {
+        item.style.setProperty('--item-index', index);
+        const tooltipText = item.querySelector('span')?.textContent;
+        if (tooltipText) {
+            item.setAttribute('data-tooltip', tooltipText);
+        }
+    });
+}
+
+// Setup Navigation Handlers
+function setupNavigationHandlers() {
+    console.log('Setting up navigation handlers...');
     document.querySelectorAll('.nav-link').forEach(link => {
-        link.classList.remove('active');
-        if (link.getAttribute('data-section') === sectionName) {
-            link.classList.add('active');
+        link.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const sectionName = link.getAttribute('data-section');
+            console.log('Nav link clicked:', sectionName);
+            
+            if (sectionName) {
+                try {
+                    await loadSection(sectionName);
+                } catch (error) {
+                    console.error('Error handling navigation:', error);
+                }
+            }
+        });
+    });
+}
+
+// User Menu Initialization
+function initializeUserMenu() {
+    console.log('Initializing user menu...');
+    const menuTrigger = document.getElementById('userMenuTrigger');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+
+    if (!menuTrigger || !dropdownMenu) {
+        console.error('User menu elements not found');
+        return;
+    }
+
+    menuTrigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropdownMenu.classList.toggle('active');
+        this.classList.toggle('active');
+    });
+
+    document.addEventListener('click', function(e) {
+        const isClickInside = menuTrigger.contains(e.target) || dropdownMenu.contains(e.target);
+        if (!isClickInside && dropdownMenu.classList.contains('active')) {
+            dropdownMenu.classList.remove('active');
+            menuTrigger.classList.remove('active');
         }
     });
 
-    if (sectionName === 'dashboard') {
-        // Show welcome section for dashboard
-        const welcomeSection = document.querySelector('.welcome-section');
-        if (welcomeSection) {
-            welcomeSection.style.display = 'block';
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && dropdownMenu.classList.contains('active')) {
+            dropdownMenu.classList.remove('active');
+            menuTrigger.classList.remove('active');
         }
-        const moduleContainer = document.getElementById('moduleContainer');
-        if (moduleContainer) {
-            moduleContainer.innerHTML = '';
+    });
+}
+
+// Load Section Content
+async function loadSection(sectionName) {
+    console.log('Loading section:', sectionName);
+    
+    try {
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('data-section') === sectionName) {
+                link.classList.add('active');
+            }
+        });
+
+        if (sectionName === 'dashboard') {
+            console.log('Loading dashboard section');
+            const welcomeSection = document.querySelector('.welcome-section');
+            if (welcomeSection) {
+                welcomeSection.style.display = 'block';
+            }
+            const moduleContainer = document.getElementById('moduleContainer');
+            if (moduleContainer) {
+                moduleContainer.innerHTML = '';
+            }
+        } else {
+            console.log('Loading module section:', sectionName);
+            await ModuleLoader.loadModule(sectionName);
         }
-    } else {
-        console.log('Loading module:', sectionName); // For debugging
-        ModuleLoader.loadModule(sectionName);
+    } catch (error) {
+        console.error('Error in loadSection:', error);
+        showNotification('Failed to load section: ' + error.message, 'error');
     }
 }
 
-        // Load User Management Section
-        function loadUserManagement(event) {
-            event.preventDefault();
-            
-            // Hide welcome section and show user management
-            const welcomeSection = document.querySelector('.welcome-section');
-            const userManagementSection = document.getElementById('userManagementSection');
-            
-            if (welcomeSection) welcomeSection.style.display = 'none';
-            if (userManagementSection) {
-                userManagementSection.style.display = 'block';
-                UserManagement.init(); // Initialize the module
-            }
-
-            // Update active navigation
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-            });
-            event.currentTarget.classList.add('active');
+// Toggle Sidebar
+function toggleSidebar() {
+    console.log('Toggling sidebar...');
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+    const collapseBtn = document.querySelector('.collapse-toggle i');
+    
+    if (sidebar && mainContent) {
+        sidebar.classList.toggle('collapsed');
+        
+        if (collapseBtn) {
+            collapseBtn.className = sidebar.classList.contains('collapsed') 
+                ? 'fas fa-chevron-right' 
+                : 'fas fa-chevron-left';
         }
 
-        // Initialize everything when the page loads
-        window.addEventListener('load', function() {
-            const currentSection = new URLSearchParams(window.location.search).get('section');
-            if (currentSection) {
-                loadSection(currentSection);
+        mainContent.style.marginLeft = sidebar.classList.contains('collapsed') 
+            ? `${70}px` 
+            : `${280}px`;
+
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+    }
+}
+
+// Authentication Check
+function checkAuthStatus() {
+    console.log('Checking authentication status...');
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const email = urlParams.get('email');
+    const role = urlParams.get('role');
+
+    if (!token || role !== 'superadmin') {
+        console.log('Authentication failed, redirecting to login...');
+        window.location.href = 'login.html';
+        return;
+    }
+
+    localStorage.setItem('token', token);
+    localStorage.setItem('userRole', role);
+    localStorage.setItem('userEmail', email);
+
+    const userEmailElement = document.getElementById('userEmail');
+    if (userEmailElement) {
+        userEmailElement.textContent = email;
+    }
+
+    verifyToken(token);
+}
+
+// Token Verification
+async function verifyToken(token) {
+    try {
+        console.log('Verifying token...');
+        const response = await fetch('https://18.215.160.136.nip.io/api/verify-token', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
         });
+
+        if (!response.ok) {
+            throw new Error('Token verification failed');
+        }
+
+        console.log('Token verified successfully');
+    } catch (error) {
+        console.error('Token verification error:', error);
+        localStorage.clear();
+        window.location.href = 'login.html';
+    }
+}
+
+// Handle Sign Out
+function handleSignOut() {
+    console.log('Signing out...');
+    localStorage.clear();
+    window.location.href = 'login.html';
+}
+
+// Handle My Account
+function handleMyAccount() {
+    console.log('My Account clicked');
+    showNotification('Account management coming soon', 'info');
+}
+
+// Responsive Design Handler
+function handleResponsiveness() {
+    console.log('Setting up responsive handlers...');
+    const mediaQuery = window.matchMedia('(max-width: 1024px)');
+    
+    function handleMobileChange(e) {
+        sidebarState.isMobile = e.matches;
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('overlay');
+        
+        if (!e.matches && sidebar && overlay) {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+            updateSidebarState();
+        }
+    }
+
+    mediaQuery.addListener(handleMobileChange);
+    handleMobileChange(mediaQuery);
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            handleMobileChange(mediaQuery);
+        }, 250);
+    });
+}
+
+// Update Sidebar State
+function updateSidebarState() {
+    console.log('Updating sidebar state...');
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+    
+    if (sidebar && mainContent) {
+        sidebar.classList.toggle('collapsed', sidebarState.isCollapsed);
+        mainContent.style.marginLeft = sidebarState.isCollapsed 
+            ? `${70}px` 
+            : `${280}px`;
+    }
+}
+
+// Notification System
+function showNotification(message, type = 'success') {
+    console.log('Showing notification:', { message, type });
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                         type === 'error' ? 'exclamation-circle' :
+                         type === 'info' ? 'info-circle' : 'bell'}"></i>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('show');
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }, 100);
+}
+
+// Initialize everything when the page loads
+window.addEventListener('load', function() {
+    console.log('Page loaded, checking for section parameter...');
+    const currentSection = new URLSearchParams(window.location.search).get('section');
+    if (currentSection) {
+        loadSection(currentSection);
+    }
+});
+</script>
     </script>
 </body>
 </html>
