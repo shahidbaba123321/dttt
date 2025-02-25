@@ -401,15 +401,32 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // Validate all required fields
-            const name = document.getElementById('userName').value.trim();
-            const email = document.getElementById('userEmail').value.trim();
-            const department = document.getElementById('userDepartment').value;
-            const role = document.getElementById('userRole').value;
-            const requires2FA = document.getElementById('require2FA').checked;
+            // Get form elements and validate
+            const nameInput = document.getElementById('userName');
+            const emailInput = document.getElementById('userEmail');
+            const departmentInput = document.getElementById('userDepartment');
+            const roleInput = document.getElementById('userRole');
+            const require2FAInput = document.getElementById('require2FA');
 
-            // Check if required fields are filled
-            if (!name || !email || !department || !role) {
+            // Check if all elements exist
+            if (!nameInput || !emailInput || !departmentInput || !roleInput || !require2FAInput) {
+                if (typeof showNotification === 'function') {
+                    showNotification('Form elements not found', 'error');
+                }
+                return;
+            }
+
+            // Get values
+            const formData = {
+                name: nameInput.value.trim(),
+                email: emailInput.value.trim(),
+                department: departmentInput.value,
+                role: roleInput.value,
+                requires2FA: require2FAInput.checked
+            };
+
+            // Validate required fields
+            if (!formData.name || !formData.email || !formData.department || !formData.role) {
                 if (typeof showNotification === 'function') {
                     showNotification('Please fill in all required fields', 'error');
                 }
@@ -428,13 +445,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({
-                        name,
-                        email,
-                        department,
-                        role,
-                        requires2FA
-                    })
+                    body: JSON.stringify(formData)
                 });
 
                 const data = await response.json();
@@ -448,13 +459,13 @@
                     const successMessage = `
                         User created successfully!
                         <br><br>
-                        <strong>Name:</strong> ${name}
+                        <strong>Name:</strong> ${formData.name}
                         <br>
-                        <strong>Email:</strong> ${email}
+                        <strong>Email:</strong> ${formData.email}
                         <br>
-                        <strong>Department:</strong> ${department}
+                        <strong>Department:</strong> ${formData.department}
                         <br>
-                        <strong>Role:</strong> ${role}
+                        <strong>Role:</strong> ${formData.role}
                         <br>
                         <strong>Temporary Password:</strong> ${data.temporaryPassword}
                     `;
@@ -486,7 +497,6 @@
             showNotification(error.message, 'error');
         }
     }
-
     },
 
             // Edit User
