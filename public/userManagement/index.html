@@ -339,7 +339,9 @@
            // Add User Modal
   openAddUserModal: function() {
     try {
-        const modalHtml = `
+        // First, create and append the modal
+        const modalContainer = document.createElement('div');
+        modalContainer.innerHTML = `
             <div class="modal active">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -392,41 +394,29 @@
                 </div>
             </div>
         `;
-
-        const modalContainer = document.createElement('div');
-        modalContainer.innerHTML = modalHtml;
         document.body.appendChild(modalContainer.firstElementChild);
 
+        // Then set up the form submission handler
         const form = document.getElementById('addUserForm');
+        if (!form) {
+            throw new Error('Form not found');
+        }
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // Get form elements and validate
-            const nameInput = document.getElementById('userName');
-            const emailInput = document.getElementById('userEmail');
-            const departmentInput = document.getElementById('userDepartment');
-            const roleInput = document.getElementById('userRole');
-            const require2FAInput = document.getElementById('require2FA');
-
-            // Check if all elements exist
-            if (!nameInput || !emailInput || !departmentInput || !roleInput || !require2FAInput) {
-                if (typeof showNotification === 'function') {
-                    showNotification('Form elements not found', 'error');
-                }
-                return;
-            }
-
-            // Get values
-            const formData = {
-                name: nameInput.value.trim(),
-                email: emailInput.value.trim(),
-                department: departmentInput.value,
-                role: roleInput.value,
-                requires2FA: require2FAInput.checked
+            // Get form data using FormData API
+            const formData = new FormData(form);
+            const userData = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                department: formData.get('department'),
+                role: formData.get('role'),
+                requires2FA: formData.get('requires2FA') === 'on'
             };
 
             // Validate required fields
-            if (!formData.name || !formData.email || !formData.department || !formData.role) {
+            if (!userData.name || !userData.email || !userData.department || !userData.role) {
                 if (typeof showNotification === 'function') {
                     showNotification('Please fill in all required fields', 'error');
                 }
@@ -445,7 +435,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify(userData)
                 });
 
                 const data = await response.json();
@@ -459,13 +449,13 @@
                     const successMessage = `
                         User created successfully!
                         <br><br>
-                        <strong>Name:</strong> ${formData.name}
+                        <strong>Name:</strong> ${userData.name}
                         <br>
-                        <strong>Email:</strong> ${formData.email}
+                        <strong>Email:</strong> ${userData.email}
                         <br>
-                        <strong>Department:</strong> ${formData.department}
+                        <strong>Department:</strong> ${userData.department}
                         <br>
-                        <strong>Role:</strong> ${formData.role}
+                        <strong>Role:</strong> ${userData.role}
                         <br>
                         <strong>Temporary Password:</strong> ${data.temporaryPassword}
                     `;
@@ -479,7 +469,9 @@
                     }
                 }
 
-                modalContainer.firstElementChild.remove();
+                // Close modal and refresh user list
+                const modal = document.querySelector('.modal.active');
+                if (modal) modal.remove();
                 this.loadUsers();
             } catch (error) {
                 console.error('Error adding user:', error);
