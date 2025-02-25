@@ -1390,7 +1390,6 @@
     });
 
     // Module Loader with Fixed Path
-// In superadmin.html, replace the existing ModuleLoader with this:
 const ModuleLoader = {
     baseUrl: window.location.origin,
     currentModule: null,
@@ -1426,8 +1425,25 @@ const ModuleLoader = {
             // Clear existing content
             moduleContainer.innerHTML = '';
 
-            // Add new content
-            moduleContainer.innerHTML = moduleContent;
+            // Create temporary container
+            const temp = document.createElement('div');
+            temp.innerHTML = moduleContent;
+
+            // Extract scripts
+            const scripts = Array.from(temp.getElementsByTagName('script'));
+            const scriptContents = scripts.map(script => {
+                const content = script.innerHTML;
+                script.remove();
+                return content;
+            });
+
+            // Add HTML content
+            moduleContainer.innerHTML = temp.innerHTML;
+
+            // Execute scripts
+            for (const scriptContent of scriptContents) {
+                await this.executeScript(scriptContent);
+            }
 
             // Initialize module if available
             if (window.UserManagement && typeof window.UserManagement.init === 'function') {
@@ -1446,9 +1462,31 @@ const ModuleLoader = {
         if (moduleInstance && typeof moduleInstance.init === 'function') {
             moduleInstance.init();
         }
+    },
+
+    loadExternalScript: function(src) {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.body.appendChild(script);
+        });
+    },
+
+    executeScript: function(content) {
+        return new Promise((resolve, reject) => {
+            try {
+                const script = document.createElement('script');
+                script.textContent = content;
+                document.body.appendChild(script);
+                resolve();
+            } catch (error) {
+                reject(error);
+            }
+        });
     }
 };
-
     loadExternalScript(src) {
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
