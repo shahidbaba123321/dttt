@@ -647,6 +647,132 @@ const UserManagementModule = {
         }
     }
 };
+openAddUserModal: function() {
+    try {
+        const modalHtml = `
+            <div class="modal active">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Add New User</h2>
+                        <button class="close-btn" onclick="this.closest('.modal').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="addUserForm">
+                        <div class="form-group">
+                            <label for="userName">Full Name *</label>
+                            <input type="text" id="userName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="userEmail">Email *</label>
+                            <input type="email" id="userEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="userDepartment">Department *</label>
+                            <select id="userDepartment" required>
+                                <option value="">Select Department</option>
+                                <option value="HR">HR</option>
+                                <option value="Finance">Finance</option>
+                                <option value="IT">IT</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Support">Support</option>
+                                <option value="Sales">Sales</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="userRole">Role *</label>
+                            <select id="userRole" required>
+                                <option value="">Select Role</option>
+                                <option value="admin">Admin</option>
+                                <option value="manager">Manager</option>
+                                <option value="user">User</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="require2FA">
+                                <span>Require 2FA</span>
+                            </label>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add User</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        const modalContainer = document.createElement('div');
+        modalContainer.innerHTML = modalHtml;
+        document.body.appendChild(modalContainer.firstElementChild);
+
+        const form = document.getElementById('addUserForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding User...';
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('https://18.215.160.136.nip.io/api/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        name: document.getElementById('userName').value,
+                        email: document.getElementById('userEmail').value,
+                        department: document.getElementById('userDepartment').value,
+                        role: document.getElementById('userRole').value,
+                        requires2FA: document.getElementById('require2FA').checked
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to add user');
+                }
+
+                const data = await response.json();
+                
+                // Show success message with temporary password
+                if (data.temporaryPassword) {
+                    const successMessage = `
+                        User created successfully!
+                        <br><br>
+                        <strong>Name:</strong> ${document.getElementById('userName').value}
+                        <br>
+                        <strong>Email:</strong> ${document.getElementById('userEmail').value}
+                        <br>
+                        <strong>Department:</strong> ${document.getElementById('userDepartment').value}
+                        <br>
+                        <strong>Role:</strong> ${document.getElementById('userRole').value}
+                        <br>
+                        <strong>Temporary Password:</strong> ${data.temporaryPassword}
+                    `;
+                    
+                    showNotification(successMessage, 'success');
+                } else {
+                    showNotification('User added successfully', 'success');
+                }
+
+                modalContainer.firstElementChild.remove();
+                this.loadUsers();
+            } catch (error) {
+                showNotification(error.message, 'error');
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Add User';
+            }
+        });
+    } catch (error) {
+        console.error('Error opening add user modal:', error);
+        showNotification(error.message, 'error');
+    }
+}    
 
 // Assign to window.UserManagement
 if (!window.UserManagement) {
