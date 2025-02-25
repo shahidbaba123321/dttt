@@ -1313,12 +1313,17 @@
         }
 
         // Module Loader
-        const ModuleLoader = {
+      const ModuleLoader = {
     async loadModule(moduleName) {
         try {
-            // Update this URL to match your Amplify/GitHub structure
-            const response = await fetch(`/sidebar_modules/${moduleName}.html`);
-            if (!response.ok) throw new Error('Module not found');
+            // Use the full Amplify URL
+            const moduleUrl = `${window.location.origin}/modules/${moduleName}.html`;
+            console.log('Loading module from:', moduleUrl); // For debugging
+
+            const response = await fetch(moduleUrl);
+            if (!response.ok) {
+                throw new Error(`Module not found (Status: ${response.status})`);
+            }
             
             const moduleContent = await response.text();
             const moduleContainer = document.getElementById('moduleContainer');
@@ -1344,32 +1349,36 @@
             });
         } catch (error) {
             console.error('Error loading module:', error);
-            showNotification('Failed to load module', 'error');
+            showNotification(`Failed to load module: ${error.message}`, 'error');
         }
     }
 };
 
         // Load Section Content
         function loadSection(sectionName) {
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.classList.remove('active');
-                if (link.getAttribute('data-section') === sectionName) {
-                    link.classList.add('active');
-                }
-            });
-
-            if (sectionName === 'dashboard') {
-                const welcomeSection = document.querySelector('.welcome-section');
-                if (welcomeSection) {
-                    welcomeSection.style.display = 'block';
-                }
-                document.getElementById('moduleContainer').innerHTML = '';
-            } else {
-                ModuleLoader.loadModule(sectionName);
-            }
-
-            sidebarState.currentSection = sectionName;
+    // Update active navigation item
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('data-section') === sectionName) {
+            link.classList.add('active');
         }
+    });
+
+    if (sectionName === 'dashboard') {
+        // Show welcome section for dashboard
+        const welcomeSection = document.querySelector('.welcome-section');
+        if (welcomeSection) {
+            welcomeSection.style.display = 'block';
+        }
+        const moduleContainer = document.getElementById('moduleContainer');
+        if (moduleContainer) {
+            moduleContainer.innerHTML = '';
+        }
+    } else {
+        console.log('Loading module:', sectionName); // For debugging
+        ModuleLoader.loadModule(sectionName);
+    }
+}
 
         // Load User Management Section
         function loadUserManagement(event) {
