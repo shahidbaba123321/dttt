@@ -1062,7 +1062,11 @@
     <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
         <script>
-       
+       // Error Boundaries
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+    showNotification('An error occurred while loading the module', 'error');
+});
 // Global error handlers
 window.addEventListener('error', function(e) {
     console.error('Global error:', {
@@ -1101,71 +1105,79 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Module Loader
 const ModuleLoader = {
+    baseUrl: window.location.origin,
+
     async loadModule(moduleName) {
         try {
             console.log('Starting module load for:', moduleName);
             
-            // Log the current URL for debugging
-            console.log('Current URL:', window.location.href);
+            // Construct module path
+            const modulePath = `/modules/${moduleName}/index.html`;
+            const fullUrl = this.baseUrl + modulePath;
             
-            // Construct the module URL
-            const moduleUrl = new URL(`modules/${moduleName}.html`, window.location.origin);
-            console.log('Attempting to load module from:', moduleUrl.href);
+            console.log('Loading module from:', fullUrl);
 
-            const response = await fetch(moduleUrl.href);
-            console.log('Fetch response:', {
-                status: response.status,
-                statusText: response.statusText,
-                url: response.url
-            });
-
+            const response = await fetch(fullUrl);
+            
             if (!response.ok) {
+                console.error('Module load failed:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    url: fullUrl
+                });
                 throw new Error(`Module not found (Status: ${response.status})`);
             }
-            
-            const moduleContent = await response.text();
-            console.log('Module content loaded, length:', moduleContent.length);
 
+            const moduleContent = await response.text();
+            
+            // Get the module container
             const moduleContainer = document.getElementById('moduleContainer');
             if (!moduleContainer) {
                 throw new Error('Module container not found');
             }
-            
+
             // Hide welcome section
             const welcomeSection = document.querySelector('.welcome-section');
             if (welcomeSection) {
                 welcomeSection.style.display = 'none';
             }
-            
-            // Insert the new module content
+
+            // Clear existing content
+            moduleContainer.innerHTML = '';
+
+            // Insert new content
             moduleContainer.innerHTML = moduleContent;
-            
-            // Execute any scripts in the loaded content
+
+            // Handle scripts
             const scripts = moduleContainer.getElementsByTagName('script');
-            console.log('Found scripts to execute:', scripts.length);
-            
-            Array.from(scripts).forEach((script, index) => {
-                try {
-                    const newScript = document.createElement('script');
-                    Array.from(script.attributes).forEach(attr => {
-                        newScript.setAttribute(attr.name, attr.value);
-                    });
-                    newScript.textContent = script.textContent;
-                    script.parentNode.replaceChild(newScript, script);
-                    console.log(`Executed script ${index + 1} successfully`);
-                } catch (scriptError) {
-                    console.error(`Error executing script ${index + 1}:`, scriptError);
+            for (let oldScript of scripts) {
+                const newScript = document.createElement('script');
+                
+                // Copy all attributes
+                Array.from(oldScript.attributes).forEach(attr => {
+                    newScript.setAttribute(attr.name, attr.value);
+                });
+
+                // Handle both inline and src scripts
+                if (oldScript.src) {
+                    newScript.src = oldScript.src;
+                } else {
+                    newScript.textContent = oldScript.textContent;
                 }
-            });
+
+                // Replace old script with new one
+                oldScript.parentNode.replaceChild(newScript, oldScript);
+            }
+
+            console.log('Module loaded successfully:', moduleName);
 
         } catch (error) {
             console.error('Module loading error:', {
-                error: error,
+                name: error.name,
                 message: error.message,
                 stack: error.stack,
                 moduleName: moduleName
             });
-            showNotification(`Failed to load module: ${error.message}`, 'error');
             throw error;
         }
     }
@@ -1249,6 +1261,7 @@ async function loadSection(sectionName) {
     console.log('Loading section:', sectionName);
     
     try {
+        // Update active navigation state
         document.querySelectorAll('.nav-link').forEach(link => {
             link.classList.remove('active');
             if (link.getAttribute('data-section') === sectionName) {
@@ -1256,23 +1269,34 @@ async function loadSection(sectionName) {
             }
         });
 
+        // Handle dashboard separately
         if (sectionName === 'dashboard') {
-            console.log('Loading dashboard section');
             const welcomeSection = document.querySelector('.welcome-section');
-            if (welcomeSection) {
-                welcomeSection.style.display = 'block';
-            }
             const moduleContainer = document.getElementById('moduleContainer');
-            if (moduleContainer) {
-                moduleContainer.innerHTML = '';
-            }
-        } else {
-            console.log('Loading module section:', sectionName);
-            await ModuleLoader.loadModule(sectionName);
+            
+            if (welcomeSection) welcomeSection.style.display = 'block';
+            if (moduleContainer) moduleContainer.innerHTML = '';
+            
+            return;
         }
+
+        // Load module content
+        await ModuleLoader.loadModule(sectionName);
+
     } catch (error) {
-        console.error('Error in loadSection:', error);
-        showNotification('Failed to load section: ' + error.message, 'error');
+        console.error('Section loading error:', {
+            section: sectionName,
+            error: error.message
+        });
+        
+        showNotification(
+            `Failed to load section: ${error.message}`, 
+            'error'
+        );
+        
+        // Show welcome section as fallback
+        const welcomeSection = document.querySelector('.welcome-section');
+        if (welcomeSection) welcomeSection.style.display = 'block';
     }
 }
 
