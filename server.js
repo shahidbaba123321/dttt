@@ -3,12 +3,11 @@ const cors = require('cors');
 const { MongoClient, ObjectId } = require('mongodb');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const path = require('path'); // Add path module
 require('dotenv').config();
 
 const app = express();
 
-// Updated CORS configuration
+// Updated CORS configuration to include all necessary methods
 app.use(cors({
     origin: 'https://main.d1cfw592vg73f.amplifyapp.com',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -17,32 +16,6 @@ app.use(cors({
 }));
 
 app.use(express.json());
-
-// Add static file serving
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Add module routing
-app.get('/sidebar_modules/:module', (req, res) => {
-    const filePath = path.join(__dirname, 'public/sidebar_modules', `${req.params.module}.html`);
-    console.log('Attempting to load module:', filePath);
-    
-    res.sendFile(filePath, (err) => {
-        if (err) {
-            console.error('Error serving module file:', err);
-            res.status(404).send('Module not found');
-        }
-    });
-});
-
-// Handle module not found
-app.use((req, res, next) => {
-    if (req.path.startsWith('/sidebar_modules/') && !req.path.endsWith('.html')) {
-        const modulePath = req.path + '.html';
-        res.redirect(modulePath);
-    } else {
-        next();
-    }
-});
 
 // MongoDB connection
 const uri = process.env.MONGODB_URI;
