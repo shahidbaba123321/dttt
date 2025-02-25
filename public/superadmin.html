@@ -1390,53 +1390,55 @@
     });
 
     // Module Loader with Fixed Path
-    const ModuleLoader = {
-        baseUrl: window.location.origin,
+   const ModuleLoader = {
+    baseUrl: window.location.origin,
 
-        async loadModule(moduleName) {
-            try {
-                console.log('Starting module load for:', moduleName);
-                
-                // Fixed module path construction
-                const modulePath = `/${moduleName}/index.html`;
-                const fullUrl = this.baseUrl + modulePath;
-                
-                console.log('Loading module from:', fullUrl);
+    async loadModule(moduleName) {
+        try {
+            console.log('Starting module load for:', moduleName);
+            
+            // Construct module path
+            const modulePath = `/${moduleName}/index.html`;
+            const fullUrl = this.baseUrl + modulePath;
+            
+            console.log('Loading module from:', fullUrl);
 
-                const response = await fetch(fullUrl);
-                
-                if (!response.ok) {
-                    console.error('Module load failed:', {
-                        status: response.status,
-                        statusText: response.statusText,
-                        url: fullUrl
-                    });
-                    throw new Error(`Module not found (Status: ${response.status})`);
-                }
+            const response = await fetch(fullUrl);
+            
+            if (!response.ok) {
+                console.error('Module load failed:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    url: fullUrl
+                });
+                throw new Error(`Module not found (Status: ${response.status})`);
+            }
 
-                const moduleContent = await response.text();
-                
-                // Get the module container
-                const moduleContainer = document.getElementById('moduleContainer');
-                if (!moduleContainer) {
-                    throw new Error('Module container not found');
-                }
+            const moduleContent = await response.text();
+            
+            // Get the module container
+            const moduleContainer = document.getElementById('moduleContainer');
+            if (!moduleContainer) {
+                throw new Error('Module container not found');
+            }
 
-                // Hide welcome section
-                const welcomeSection = document.querySelector('.welcome-section');
-                if (welcomeSection) {
-                    welcomeSection.style.display = 'none';
-                }
+            // Hide welcome section
+            const welcomeSection = document.querySelector('.welcome-section');
+            if (welcomeSection) {
+                welcomeSection.style.display = 'none';
+            }
 
-                // Clear existing content
-                moduleContainer.innerHTML = '';
+            // Clear existing content
+            moduleContainer.innerHTML = '';
 
-                // Insert new content
-                moduleContainer.innerHTML = moduleContent;
+            // Create a temporary container
+            const tempContainer = document.createElement('div');
+            tempContainer.innerHTML = moduleContent;
 
-                // Handle scripts
-                const scripts = moduleContainer.getElementsByTagName('script');
-                for (let oldScript of scripts) {
+            // Handle scripts properly
+            const scripts = tempContainer.getElementsByTagName('script');
+            const scriptPromises = Array.from(scripts).map(oldScript => {
+                return new Promise((resolve, reject) => {
                     const newScript = document.createElement('script');
                     
                     // Copy all attributes
@@ -1447,27 +1449,38 @@
                     // Handle both inline and src scripts
                     if (oldScript.src) {
                         newScript.src = oldScript.src;
+                        newScript.onload = resolve;
+                        newScript.onerror = reject;
                     } else {
                         newScript.textContent = oldScript.textContent;
+                        resolve();
                     }
 
-                    // Replace old script with new one
-                    oldScript.parentNode.replaceChild(newScript, oldScript);
-                }
-
-                console.log('Module loaded successfully:', moduleName);
-
-            } catch (error) {
-                console.error('Module loading error:', {
-                    name: error.name,
-                    message: error.message,
-                    stack: error.stack,
-                    moduleName: moduleName
+                    // Remove old script and add new one
+                    oldScript.parentNode.removeChild(oldScript);
+                    tempContainer.appendChild(newScript);
                 });
-                throw error;
-            }
+            });
+
+            // Wait for all scripts to load
+            await Promise.all(scriptPromises);
+
+            // Update the module container
+            moduleContainer.innerHTML = tempContainer.innerHTML;
+
+            console.log('Module loaded successfully:', moduleName);
+
+        } catch (error) {
+            console.error('Module loading error:', {
+                name: error.name,
+                message: error.message,
+                stack: error.stack,
+                moduleName: moduleName
+            });
+            throw error;
         }
-    };
+    }
+};
              // Sidebar Initialization
     function initializeSidebar() {
         console.log('Initializing sidebar...');
