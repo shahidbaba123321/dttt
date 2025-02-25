@@ -43,7 +43,7 @@ app.use(cors({
 }));
 
 // Handle OPTIONS requests
-app.options('*', cors());
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 
@@ -490,9 +490,19 @@ app.put('/api/users/:userId/2fa', verifyToken, async (req, res) => {
 });
 
 // Delete user
-app.delete('/api/users/:userId', [cors(), verifyToken], async (req, res) => {
+// Delete user
+app.delete('/api/users/:userId', cors(corsOptions), async (req, res) => {
     try {
         const { userId } = req.params;
+        
+        // Add token verification
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'No token provided' 
+            });
+        }
 
         const database = client.db('infocraftorbis');
         const users = database.collection('users');
