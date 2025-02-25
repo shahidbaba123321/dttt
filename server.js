@@ -3,18 +3,46 @@ const cors = require('cors');
 const { MongoClient, ObjectId } = require('mongodb');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const path = require('path'); // Add path module
 require('dotenv').config();
 
 const app = express();
 
-// Enable CORS for your Amplify domain
+// Updated CORS configuration
 app.use(cors({
     origin: 'https://main.d1cfw592vg73f.amplifyapp.com',
-    methods: ['GET', 'POST', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json());
+
+// Add static file serving
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Add module routing
+app.get('/sidebar_modules/:module', (req, res) => {
+    const filePath = path.join(__dirname, 'public/sidebar_modules', `${req.params.module}.html`);
+    console.log('Attempting to load module:', filePath);
+    
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            console.error('Error serving module file:', err);
+            res.status(404).send('Module not found');
+        }
+    });
+});
+
+// Handle module not found
+app.use((req, res, next) => {
+    if (req.path.startsWith('/sidebar_modules/') && !req.path.endsWith('.html')) {
+        const modulePath = req.path + '.html';
+        res.redirect(modulePath);
+    } else {
+        next();
+    }
+});
 
 // MongoDB connection
 const uri = process.env.MONGODB_URI;
@@ -187,6 +215,7 @@ app.post('/api/verify-token', async (req, res) => {
         });
     }
 });
+
 // User Management Routes
 app.post('/api/users', async (req, res) => {
     try {
@@ -236,7 +265,7 @@ app.post('/api/users', async (req, res) => {
             success: true,
             message: 'User created successfully',
             userId: result.insertedId,
-            temporaryPassword: tempPassword // Only for development, remove in production
+            temporaryPassword: tempPassword
         });
 
     } catch (error) {
@@ -256,7 +285,7 @@ app.get('/api/users', async (req, res) => {
 
         const usersList = await users.find({}, {
             projection: {
-                password: 0 // Exclude password from results
+                password: 0
             }
         }).toArray();
 
@@ -330,7 +359,7 @@ app.put('/api/users/:userId', async (req, res) => {
     }
 });
 
-// Toggle user status (active/inactive)
+// Toggle user status
 app.put('/api/users/:userId/status', async (req, res) => {
     try {
         const { userId } = req.params;
@@ -403,7 +432,7 @@ app.post('/api/users/:userId/reset-password', async (req, res) => {
         res.json({ 
             success: true, 
             message: 'Password reset successful',
-            temporaryPassword: tempPassword // Only for development, remove in production
+            temporaryPassword: tempPassword
         });
 
     } catch (error) {
@@ -416,9 +445,10 @@ app.post('/api/users/:userId/reset-password', async (req, res) => {
 });
 
 // Toggle 2FA requirement
-app.put('/api/users/:userId/2fa/:action', async (req, res) => {
+app.put('/api/users/:userId/2fa', async (req, res) => {
     try {
-        const { userId, action } = req.params;
+        const { userId } = req.params;
+        const { requires2FA } = req.body;
 
         const database = client.db('infocraftorbis');
         const users = database.collection('users');
@@ -427,7 +457,7 @@ app.put('/api/users/:userId/2fa/:action', async (req, res) => {
             { _id: new ObjectId(userId) },
             {
                 $set: {
-                    requires2FA: action === 'enable',
+                    requires2FA,
                     updatedAt: new Date()
                 }
             }
@@ -442,7 +472,7 @@ app.put('/api/users/:userId/2fa/:action', async (req, res) => {
 
         res.json({ 
             success: true, 
-            message: `2FA ${action}d successfully` 
+            message: `2FA ${requires2FA ? 'enabled' : 'disabled'} successfully` 
         });
 
     } catch (error) {
@@ -493,7 +523,6 @@ app.use((err, req, res, next) => {
         message: 'Something broke!' 
     });
 });
-
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, '0.0.0.0', () => {
