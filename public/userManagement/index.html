@@ -62,9 +62,32 @@
 </section>
 </div>
 <style>
+   /* In superadmin.html - Update sidebar styles */
+body > .layout-container > .sidebar {
+    width: var(--sidebar-width);
+    background: var(--nav-background);
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 1000;
+    transition: all var(--transition-normal);
+    box-shadow: 4px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+body > .layout-container > .sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+    box-shadow: none;
+}
 /* User Management Module Base */
 .user-management-module {
     width: 100%;
+    position: relative;
+    z-index: 1; /* Lower than sidebar */
+   contain: content;
+    isolation: isolate;
 }
 
 /* Content Section */
@@ -655,7 +678,7 @@
     box-shadow: var(--shadow-lg);
     transform: translateX(120%);
     transition: transform var(--transition-normal);
-    z-index: 9999;
+    z-index: 1200;
     overflow: hidden;
 }
 
