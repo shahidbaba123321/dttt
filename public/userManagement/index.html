@@ -1809,46 +1809,45 @@ const canManage2FA = window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMIS
         return currentLevel < targetLevel;
     },
        // Toggle User Status with RBAC
-    toggleUserStatus: async function(userId) {
-        try {
-            // Check edit permission
-            if (!window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.USERS.EDIT)) {
-            throw new Error('Permission denied: Cannot modify user status');
+    // In your UserManagementModule
+toggleUserStatus: async function(userId) {
+    try {
+        const user = this.state.users.find(u => u._id === userId);
+        if (!user) throw new Error('User not found');
+
+        // Get the new status
+        const newStatus = user.status === 'active' ? 'inactive' : 'active';
+        
+        // Get token
+        const token = localStorage.getItem('token');
+        if (!token) throw new Error('No authentication token found');
+
+        // Make the API call
+        const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to update user status');
         }
 
-            const user = this.state.users.find(u => u._id === userId);
-            if (!user) throw new Error('User not found');
+        // Show success notification
+        showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
+        
+        // Reload users list
+        await this.loadUsers();
 
-            // Check if user can manage this role's status
-            if (!this.canManageRole(window.RBAC.manager.getCurrentRole(), user.role.toUpperCase())) {
-                throw new Error('Permission denied: Cannot modify status for users with this role');
-            }
-
-            const newStatus = user.status === 'active' ? 'inactive' : 'active';
-            const token = localStorage.getItem('token');
-
-            const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ status: newStatus })
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to update user status');
-            }
-
-            showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
-            this.loadUsers();
-        } catch (error) {
-            console.error('Error toggling user status:', error);
-            showNotification(error.message, 'error');
-        }
-    },
-
+    } catch (error) {
+        console.error('Error toggling user status:', error);
+        showNotification(error.message, 'error');
+    }
+},
     // Toggle 2FA with RBAC
     toggle2FA: async function(userId) {
         try {
