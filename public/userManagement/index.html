@@ -1128,14 +1128,13 @@ const UserManagementModule = {
     },
 
     // Initialize the module
-   // In your UserManagementModule
-init: async function() {
+ init: async function() {
     try {
         console.log('Initializing User Management module...');
         
-        // Check if RBAC is available
-        if (!window.RBAC || !window.RBAC.manager) {
-            throw new Error('RBAC system not initialized');
+        // Wait for RBAC initialization if not already done
+        if (!window.RBAC.initialized) {
+            await window.RBAC.manager.initialize();
         }
 
         // Check view permission
