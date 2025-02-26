@@ -1137,8 +1137,16 @@ const UserManagementModule = {
             await window.RBAC.manager.initialize();
         }
 
+        // Debug logs
+        console.log('RBAC initialized:', window.RBAC.initialized);
+        console.log('Current role:', window.RBAC.manager.getCurrentRole());
+        console.log('Checking view permission...');
+
         // Check view permission
-        if (!window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.USERS.VIEW)) {
+        const hasViewPermission = window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.USERS.VIEW);
+        console.log('Has view permission:', hasViewPermission);
+
+        if (!hasViewPermission) {
             throw new Error('Permission denied: Cannot view users');
         }
 
@@ -1151,7 +1159,6 @@ const UserManagementModule = {
         }
     }
 },
-
     // Setup Event Listeners
     setupEventListeners: function() {
         // Search input with debounce
