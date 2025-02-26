@@ -2018,6 +2018,84 @@ body {
             }, 3000);
         }, 100);
     }
+     // Update the toggleUserStatus function
+async function toggleUserStatus(userId) {
+    try {
+        // Get the user to be modified
+        const user = window.UserManagement.state.users.find(u => u._id === userId);
+        if (!user) throw new Error('User not found');
+
+        // Get current user's role
+        const currentUserRole = window.RBAC.manager.getCurrentRole();
+        
+        // Super Admin can modify anyone's status
+        if (currentUserRole === 'SUPER_ADMIN') {
+            // Proceed with status change
+            const newStatus = user.status === 'active' ? 'inactive' : 'active';
+            await updateUserStatus(userId, newStatus);
+            return;
+        }
+
+        // Check if current user has permission to modify user status
+        if (!window.RBAC.manager.hasPermission('users:edit')) {
+            throw new Error('Permission denied: Cannot modify user status');
+        }
+
+        // Check role hierarchy
+        const canManageRole = window.RBAC.HIERARCHY.canManageRole(currentUserRole, user.role.toUpperCase());
+        if (!canManageRole) {
+            throw new Error('Permission denied: Cannot modify status for users with this role');
+        }
+
+        // If all checks pass, proceed with the status change
+        const newStatus = user.status === 'active' ? 'inactive' : 'active';
+        await updateUserStatus(userId, newStatus);
+
+    } catch (error) {
+        console.error('Error toggling user status:', error);
+        showNotification(error.message, 'error');
+    }
+}
+
+// Helper function to update user status
+async function updateUserStatus(userId, newStatus) {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/status`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: newStatus })
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update user status');
+    }
+
+    showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
+    await window.UserManagement.loadUsers();
+}
+
+// Update RBAC role hierarchy checks
+window.RBAC.HIERARCHY.canManageRole = function(currentRole, targetRole) {
+    // Super Admin can manage all roles
+    if (currentRole === 'SUPER_ADMIN') return true;
+
+    const hierarchy = {
+        'SUPER_ADMIN': 0,
+        'ADMIN': 1,
+        'MANAGER': 2,
+        'USER': 3
+    };
+
+    const currentLevel = hierarchy[currentRole] || 999;
+    const targetLevel = hierarchy[targetRole] || 999;
+
+    // Can only manage roles of lower level
+    return currentLevel < targetLevel;
+};
 
     // Initialize everything when the page loads
     window.addEventListener('load', function() {
