@@ -113,11 +113,12 @@ body {
     overflow-x: hidden;
     z-index: 1000;
     transition: all var(--transition-normal);
-    box-shadow: var(--shadow-lg);
+    box-shadow: 4px 0 8px rgba(0, 0, 0, 0.1); /* Shadow when expanded */
 }
 
 .sidebar.collapsed {
     width: var(--sidebar-collapsed-width);
+    box-shadow: none; /* Remove shadow when collapsed */
 }
 
 /* Custom Scrollbar */
@@ -870,17 +871,18 @@ body {
     .header-title h1 {
         font-size: 1.5rem;
     }
+    
 }
 
 @media (max-width: 1024px) {
-    .sidebar {
+   .sidebar {
         left: calc(-1 * var(--sidebar-width));
         box-shadow: none;
     }
 
     .sidebar.active {
         left: 0;
-        box-shadow: var(--shadow-lg);
+        box-shadow: 4px 0 8px rgba(0, 0, 0, 0.1);
     }
 
     .main-content {
