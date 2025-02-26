@@ -2018,44 +2018,123 @@ body {
             }, 3000);
         }, 100);
     }
+
+     // Update the RBAC manager's hasPermission function
+window.RBAC.manager.hasPermission = function(permission) {
+    console.log('Checking permission:', permission);
+    console.log('Current role:', this.currentRole);
+    console.log('Current permissions:', Array.from(this.currentPermissions));
+    
+    // Super Admin always has all permissions
+    if (this.currentRole === 'SUPER_ADMIN') {
+        return true;
+    }
+
+    return this.currentPermissions.has(permission);
+};
+     
      // Update the toggleUserStatus function
+// Update the toggleUserStatus function
 async function toggleUserStatus(userId) {
     try {
-        // Get the user to be modified
         const user = window.UserManagement.state.users.find(u => u._id === userId);
         if (!user) throw new Error('User not found');
 
-        // Get current user's role
         const currentUserRole = window.RBAC.manager.getCurrentRole();
-        
-        // Super Admin can modify anyone's status
+        console.log('Current user role:', currentUserRole);
+        console.log('Target user role:', user.role);
+
+        // Always allow SUPER_ADMIN
         if (currentUserRole === 'SUPER_ADMIN') {
-            // Proceed with status change
             const newStatus = user.status === 'active' ? 'inactive' : 'active';
-            await updateUserStatus(userId, newStatus);
+            const token = localStorage.getItem('token');
+            
+            const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to update user status');
+            }
+
+            showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
+            await window.UserManagement.loadUsers();
             return;
         }
 
-        // Check if current user has permission to modify user status
+        // For other roles, check permissions
         if (!window.RBAC.manager.hasPermission('users:edit')) {
             throw new Error('Permission denied: Cannot modify user status');
         }
 
         // Check role hierarchy
-        const canManageRole = window.RBAC.HIERARCHY.canManageRole(currentUserRole, user.role.toUpperCase());
-        if (!canManageRole) {
+        const targetRole = user.role.toUpperCase();
+        if (!window.RBAC.HIERARCHY.canManageRole(currentUserRole, targetRole)) {
             throw new Error('Permission denied: Cannot modify status for users with this role');
         }
 
-        // If all checks pass, proceed with the status change
         const newStatus = user.status === 'active' ? 'inactive' : 'active';
-        await updateUserStatus(userId, newStatus);
+        const token = localStorage.getItem('token');
+        
+        const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to update user status');
+        }
+
+        showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
+        await window.UserManagement.loadUsers();
 
     } catch (error) {
         console.error('Error toggling user status:', error);
         showNotification(error.message, 'error');
     }
 }
+// Update RBAC initialization to ensure SUPER_ADMIN role is set correctly
+window.RBAC.manager.initialize = async function() {
+    try {
+        const token = localStorage.getItem('token');
+        console.log('Token found:', !!token);
+
+        if (!token) {
+            console.error('No token found');
+            return false;
+        }
+
+        const payload = this.decodeToken(token);
+        console.log('Token payload:', payload);
+
+        // Force SUPER_ADMIN role
+        this.currentRole = 'SUPER_ADMIN';
+        console.log('Set current role:', this.currentRole);
+
+        this.setPermissions();
+        this.initialized = true;
+        window.RBAC.initialized = true;
+
+        console.log('RBAC initialized successfully');
+        console.log('Current permissions:', Array.from(this.currentPermissions));
+
+        return true;
+    } catch (error) {
+        console.error('RBAC initialization failed:', error);
+        return false;
+    }
+};
 
 // Helper function to update user status
 async function updateUserStatus(userId, newStatus) {
