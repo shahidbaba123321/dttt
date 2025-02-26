@@ -1191,10 +1191,9 @@ init: async function() {
     loadUsers: async function() {
         try {
             // Check view permission again (in case of state changes)
-            if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.VIEW)) {
-                throw new Error('Permission denied: Cannot view users');
-            }
-
+            if (!window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.USERS.VIEW)) {
+            throw new Error('Permission denied: Cannot view users');
+        }
             this.state.loading = true;
             this.renderLoadingState();
 
@@ -1240,6 +1239,7 @@ init: async function() {
     },
      // Render States
     renderLoadingState: function() {
+       
         const tbody = document.getElementById('usersTableBody');
         if (tbody) {
             tbody.innerHTML = `
@@ -1301,17 +1301,17 @@ init: async function() {
         }
 
         // Check view permission
-        if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.VIEW)) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="permission-denied">
-                        <i class="fas fa-lock"></i>
-                        <p>You don't have permission to view users</p>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
+    if (!window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.USERS.VIEW)) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="permission-denied">
+                    <i class="fas fa-lock"></i>
+                    <p>You don't have permission to view users</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
 
         const filteredUsers = this.getFilteredUsers();
         console.log('Filtered users:', filteredUsers);
@@ -1330,11 +1330,12 @@ init: async function() {
         }
 
         // Get permissions for UI elements
-        const canEdit = rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.EDIT);
-        const canDelete = rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.DELETE);
-        const canManageRoles = rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.MANAGE_ROLES);
-        const canManage2FA = rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.SECURITY.MANAGE_2FA);
-
+       // Get permissions for UI elements
+const canEdit = window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.USERS.EDIT);
+const canDelete = window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.USERS.DELETE);
+const canManageRoles = window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.USERS.MANAGE_ROLES);
+const canManage2FA = window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.SECURITY.MANAGE_2FA);
+        
         console.log('Rendering user table...');
         tbody.innerHTML = filteredUsers.map(user => `
             <tr>
@@ -1444,9 +1445,9 @@ init: async function() {
     openAddUserModal: async function() {
         try {
             // Check create permission
-            if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.CREATE)) {
-                throw new Error('Permission denied: Cannot create users');
-            }
+            if (!window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.USERS.CREATE)) {
+            throw new Error('Permission denied: Cannot create users');
+        }
 
             const modalContainer = document.createElement('div');
             modalContainer.innerHTML = `
@@ -1485,7 +1486,7 @@ init: async function() {
                                     ${this.generateRoleOptions()}
                                 </select>
                             </div>
-                            ${rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.SECURITY.MANAGE_2FA) ? `
+                            ${window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.SECURITY.MANAGE_2FA) ? `
                                 <div class="form-group">
                                     <label class="checkbox-label">
                                         <input type="checkbox" id="require2FA" name="requires2FA">
@@ -1531,7 +1532,7 @@ init: async function() {
 
                 try {
                     // Check if user can assign the selected role
-                    if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.MANAGE_ROLES)) {
+                    if (!window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.USERS.MANAGE_ROLES)) {
                         if (userData.role !== 'USER') {
                             throw new Error('Permission denied: Cannot assign this role');
                         }
@@ -1591,8 +1592,8 @@ init: async function() {
 
     // Generate role options based on user permissions
     generateRoleOptions: function() {
-        const currentUserRole = rbacManager.getCurrentRole();
-        const availableRoles = Object.entries(RBAC_CONFIG.ROLES)
+        const currentUserRole = window.RBAC.manager.getCurrentRole();
+const availableRoles = Object.entries(window.RBAC.CONFIG.ROLES)
             .filter(([roleKey, role]) => {
                 // Filter roles based on hierarchy
                 const roleHierarchy = {
@@ -1620,16 +1621,15 @@ init: async function() {
     editUser: async function(userId) {
         try {
             // Check edit permission
-            if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.EDIT)) {
-                throw new Error('Permission denied: Cannot edit users');
-            }
-
+            if (!window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.USERS.EDIT)) {
+            throw new Error('Permission denied: Cannot edit users');
+        }
             const user = this.state.users.find(u => u._id === userId);
             if (!user) throw new Error('User not found');
 
             // Check if current user can manage the user's role
-            const canManageRole = rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.MANAGE_ROLES);
-            const canManage2FA = rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.SECURITY.MANAGE_2FA);
+           const canManageRole = window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.USERS.MANAGE_ROLES);
+const canManage2FA = window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.SECURITY.MANAGE_2FA);
 
             const modalHtml = `
                 <div class="modal active">
@@ -1755,15 +1755,15 @@ init: async function() {
     deleteUser: async function(userId) {
         try {
             // Check delete permission
-            if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.DELETE)) {
-                throw new Error('Permission denied: Cannot delete users');
-            }
+           if (!window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.USERS.DELETE)) {
+            throw new Error('Permission denied: Cannot delete users');
+        }
 
             const user = this.state.users.find(u => u._id === userId);
             if (!user) throw new Error('User not found');
 
             // Check if user can delete based on role hierarchy
-            const currentUserRole = rbacManager.getCurrentRole();
+            const currentUserRole = window.RBAC.manager.getCurrentRole();
             const targetUserRole = user.role.toUpperCase();
             if (!this.canManageRole(currentUserRole, targetUserRole)) {
                 throw new Error('Permission denied: Cannot delete users with this role');
@@ -1812,15 +1812,15 @@ init: async function() {
     toggleUserStatus: async function(userId) {
         try {
             // Check edit permission
-            if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.EDIT)) {
-                throw new Error('Permission denied: Cannot modify user status');
-            }
+            if (!window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.USERS.EDIT)) {
+            throw new Error('Permission denied: Cannot modify user status');
+        }
 
             const user = this.state.users.find(u => u._id === userId);
             if (!user) throw new Error('User not found');
 
             // Check if user can manage this role's status
-            if (!this.canManageRole(rbacManager.getCurrentRole(), user.role.toUpperCase())) {
+            if (!this.canManageRole(window.RBAC.manager.getCurrentRole(), user.role.toUpperCase())) {
                 throw new Error('Permission denied: Cannot modify status for users with this role');
             }
 
@@ -1853,9 +1853,9 @@ init: async function() {
     toggle2FA: async function(userId) {
         try {
             // Check 2FA management permission
-            if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.SECURITY.MANAGE_2FA)) {
-                throw new Error('Permission denied: Cannot manage 2FA settings');
-            }
+             if (!window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.SECURITY.MANAGE_2FA)) {
+            throw new Error('Permission denied: Cannot manage 2FA settings');
+        }
 
             const user = this.state.users.find(u => u._id === userId);
             if (!user) throw new Error('User not found');
@@ -1887,7 +1887,7 @@ init: async function() {
     changeUserPassword: async function(userId) {
         try {
             // Check edit permission
-            if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.EDIT)) {
+            if (!window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.USERS.EDIT)) {
                 throw new Error('Permission denied: Cannot change user passwords');
             }
 
@@ -2028,7 +2028,7 @@ if (typeof ModuleLoader !== 'undefined' && ModuleLoader.onModuleLoaded) {
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         // Initialize RBAC first
-        await rbacManager.initialize();
+        await window.RBAC.manager.initialize();
         
         // Then initialize the User Management module
         if (window.UserManagement && typeof window.UserManagement.init === 'function') {
