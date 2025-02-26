@@ -2128,6 +2128,224 @@ window.addEventListener('load', async function() {
         handleAuthError(error);
     }
 });
+        // Sidebar and UI Functions
+function toggleSidebar() {
+    console.log('Toggling sidebar...');
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+    const collapseBtn = document.querySelector('.collapse-toggle i');
+    const overlay = document.getElementById('overlay');
+    
+    if (sidebar && mainContent) {
+        sidebar.classList.toggle('collapsed');
+        if (overlay) {
+            overlay.classList.toggle('active');
+        }
+        
+        if (collapseBtn) {
+            collapseBtn.className = sidebar.classList.contains('collapsed') 
+                ? 'fas fa-chevron-right' 
+                : 'fas fa-chevron-left';
+        }
+
+        mainContent.style.marginLeft = sidebar.classList.contains('collapsed') 
+            ? `${70}px` 
+            : `${280}px`;
+
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+    }
+}
+
+function handleSignOut() {
+    console.log('Signing out...');
+    // Clear RBAC state
+    window.RBAC.manager.currentPermissions.clear();
+    window.RBAC.initialized = false;
+    
+    localStorage.clear();
+    window.location.href = 'login.html';
+}
+
+function handleMyAccount() {
+    console.log('My Account clicked');
+    // Check if user has permission to view account settings
+    if (window.RBAC.manager.hasPermission('users:view')) {
+        showNotification('Account management coming soon', 'info');
+    } else {
+        showNotification('Access denied: Insufficient permissions', 'error');
+    }
+}
+
+function handleResponsiveness() {
+    console.log('Setting up responsive handlers...');
+    const mediaQuery = window.matchMedia('(max-width: 1024px)');
+    
+    function handleMobileChange(e) {
+        sidebarState.isMobile = e.matches;
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('overlay');
+        
+        if (!e.matches && sidebar && overlay) {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+            updateSidebarState();
+        }
+    }
+
+    mediaQuery.addListener(handleMobileChange);
+    handleMobileChange(mediaQuery);
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            handleMobileChange(mediaQuery);
+        }, 250);
+    });
+}
+
+function updateSidebarState() {
+    console.log('Updating sidebar state...');
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+    
+    if (sidebar && mainContent) {
+        sidebar.classList.toggle('collapsed', sidebarState.isCollapsed);
+        mainContent.style.marginLeft = sidebarState.isCollapsed 
+            ? `${70}px` 
+            : `${280}px`;
+    }
+}
+
+// Initialize Sidebar
+function initializeSidebar() {
+    console.log('Initializing sidebar...');
+    const savedState = localStorage.getItem('sidebarCollapsed');
+    if (savedState !== null) {
+        sidebarState.isCollapsed = JSON.parse(savedState);
+        updateSidebarState();
+    }
+
+    const navItems = document.querySelectorAll('.nav-link');
+    navItems.forEach((item, index) => {
+        item.style.setProperty('--item-index', index);
+        const tooltipText = item.querySelector('span')?.textContent;
+        if (tooltipText) {
+            item.setAttribute('data-tooltip', tooltipText);
+        }
+    });
+
+    // Add RBAC check for navigation items
+    updateNavigationVisibility();
+}
+
+// Initialize User Menu
+function initializeUserMenu() {
+    console.log('Initializing user menu...');
+    const menuTrigger = document.getElementById('userMenuTrigger');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+
+    if (!menuTrigger || !dropdownMenu) {
+        console.error('User menu elements not found');
+        return;
+    }
+
+    // Update user email display
+    const userEmail = localStorage.getItem('userEmail');
+    const userEmailElement = document.getElementById('userEmail');
+    if (userEmailElement && userEmail) {
+        userEmailElement.textContent = userEmail;
+    }
+
+    menuTrigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropdownMenu.classList.toggle('active');
+        this.classList.toggle('active');
+    });
+
+    document.addEventListener('click', function(e) {
+        const isClickInside = menuTrigger.contains(e.target) || dropdownMenu.contains(e.target);
+        if (!isClickInside && dropdownMenu.classList.contains('active')) {
+            dropdownMenu.classList.remove('active');
+            menuTrigger.classList.remove('active');
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && dropdownMenu.classList.contains('active')) {
+            dropdownMenu.classList.remove('active');
+            menuTrigger.classList.remove('active');
+        }
+    });
+}
+
+// Global State Management
+let sidebarState = {
+    isCollapsed: false,
+    isMobile: window.innerWidth <= 1024,
+    activeNavItem: null,
+    currentSection: 'dashboard'
+};
+
+// Error Boundaries
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+    showNotification('An error occurred while loading the module', 'error');
+});
+
+// Global error handlers
+window.addEventListener('error', function(e) {
+    console.error('Global error:', {
+        message: e.error.message,
+        stack: e.error.stack,
+        filename: e.filename,
+        lineno: e.lineno,
+        colno: e.colno
+    });
+});
+
+// Notification System
+function showNotification(message, type = 'success') {
+    console.log('Showing notification:', { message, type });
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                         type === 'error' ? 'exclamation-circle' :
+                         type === 'info' ? 'info-circle' : 'bell'}"></i>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('show');
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }, 100);
+}
+
+// Initialize everything when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing application...');
+    initializeSidebar();
+    initializeUserMenu();
+    checkAuthStatus();
+    handleResponsiveness();
+    setupNavigationHandlers();
+});
+
+// Initialize everything when the page loads
+window.addEventListener('load', function() {
+    console.log('Page loaded, checking for section parameter...');
+    const currentSection = new URLSearchParams(window.location.search).get('section');
+    if (currentSection) {
+        loadSection(currentSection);
+    }
+});
     </script>
 </body>
 </html>
