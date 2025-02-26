@@ -1,3 +1,7 @@
+
+<script src="../js/rbac/rbac-config.js"></script>
+<script src="../js/rbac/rbac-manager.js"></script>
+<script src="../js/rbac/rbac-utils.js"></script>
 <div class="user-management-module">
    
 <section class="content-section" id="userManagementSection">
@@ -1090,8 +1094,7 @@
 </style>
 
 <script>
- // index.html JavaScript - Part 1
-
+// Main JavaScript for User Management
 const UserManagementModule = {
     // State Management
     state: {
@@ -1103,19 +1106,31 @@ const UserManagementModule = {
             status: '',
             role: ''
         },
-        loading: false
+        loading: false,
+        rbacInitialized: false
     },
 
     // Initialize the module
     init: async function() {
         try {
             console.log('Initializing User Management module...');
+            
+            // Initialize RBAC
+            await rbacManager.initialize();
+            this.state.rbacInitialized = true;
+            
+            // Check view permission
+            if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.VIEW)) {
+                throw new Error('Permission denied: Cannot view users');
+            }
+
             await this.loadUsers();
             this.setupEventListeners();
+            RBACUtils.updateUIBasedOnPermissions();
         } catch (error) {
             console.error('Failed to initialize User Management:', error);
             if (typeof showNotification === 'function') {
-                showNotification('Failed to initialize User Management', 'error');
+                showNotification('Failed to initialize User Management: ' + error.message, 'error');
             }
         }
     },
@@ -1150,6 +1165,11 @@ const UserManagementModule = {
     // Load Users
     loadUsers: async function() {
         try {
+            // Check view permission again (in case of state changes)
+            if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.VIEW)) {
+                throw new Error('Permission denied: Cannot view users');
+            }
+
             this.state.loading = true;
             this.renderLoadingState();
 
@@ -1193,8 +1213,7 @@ const UserManagementModule = {
             }
         }
     },
-
-    // Render States
+     // Render States
     renderLoadingState: function() {
         const tbody = document.getElementById('usersTableBody');
         if (tbody) {
@@ -1247,12 +1266,25 @@ const UserManagementModule = {
         });
     },
 
-        // Main Render Function
+    // Main Render Function with RBAC
     renderUsers: function() {
         console.log('Rendering users...');
         const tbody = document.getElementById('usersTableBody');
         if (!tbody) {
             console.error('Table body element not found');
+            return;
+        }
+
+        // Check view permission
+        if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.VIEW)) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="permission-denied">
+                        <i class="fas fa-lock"></i>
+                        <p>You don't have permission to view users</p>
+                    </td>
+                </tr>
+            `;
             return;
         }
 
@@ -1271,6 +1303,12 @@ const UserManagementModule = {
             `;
             return;
         }
+
+        // Get permissions for UI elements
+        const canEdit = rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.EDIT);
+        const canDelete = rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.DELETE);
+        const canManageRoles = rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.MANAGE_ROLES);
+        const canManage2FA = rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.SECURITY.MANAGE_2FA);
 
         console.log('Rendering user table...');
         tbody.innerHTML = filteredUsers.map(user => `
@@ -1311,36 +1349,50 @@ const UserManagementModule = {
                 </td>
                 <td>
                     <div class="action-buttons">
-                        <button onclick="window.UserManagement.editUser('${user._id}')" 
-                                class="btn-icon" title="Edit User">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="window.UserManagement.toggleUserStatus('${user._id}')" 
-                                class="btn-icon ${user.status === 'active' ? 'danger' : 'success'}"
-                                title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User">
-                            <i class="fas fa-${user.status === 'active' ? 'ban' : 'check'}"></i>
-                        </button>
-                        <button onclick="window.UserManagement.changeUserPassword('${user._id}')" 
-                                class="btn-icon warning" title="Change Password">
-                            <i class="fas fa-key"></i>
-                        </button>
-                        <button onclick="window.UserManagement.toggle2FA('${user._id}')"
-                                class="btn-icon ${user.requires2FA ? 'success' : 'warning'}"
-                                title="${user.requires2FA ? 'Disable' : 'Enable'} 2FA">
-                            <i class="fas fa-shield-alt"></i>
-                        </button>
-                        <button onclick="window.UserManagement.deleteUser('${user._id}')" 
-                                class="btn-icon danger" title="Delete User">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
+                        ${canEdit ? `
+                            <button onclick="window.UserManagement.editUser('${user._id}')" 
+                                    class="btn-icon" title="Edit User">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        ` : ''}
+                        
+                        ${canManageRoles ? `
+                            <button onclick="window.UserManagement.toggleUserStatus('${user._id}')" 
+                                    class="btn-icon ${user.status === 'active' ? 'danger' : 'success'}"
+                                    title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User">
+                                <i class="fas fa-${user.status === 'active' ? 'ban' : 'check'}"></i>
+                            </button>
+                        ` : ''}
+                        
+                        ${canEdit ? `
+                            <button onclick="window.UserManagement.changeUserPassword('${user._id}')" 
+                                    class="btn-icon warning" title="Change Password">
+                                <i class="fas fa-key"></i>
+                            </button>
+                        ` : ''}
+                        
+                        ${canManage2FA ? `
+                            <button onclick="window.UserManagement.toggle2FA('${user._id}')"
+                                    class="btn-icon ${user.requires2FA ? 'success' : 'warning'}"
+                                    title="${user.requires2FA ? 'Disable' : 'Enable'} 2FA">
+                                <i class="fas fa-shield-alt"></i>
+                            </button>
+                        ` : ''}
+                        
+                        ${canDelete ? `
+                            <button onclick="window.UserManagement.deleteUser('${user._id}')" 
+                                    class="btn-icon danger" title="Delete User">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        ` : ''}
                     </div>
                 </td>
             </tr>
         `).join('');
+        
         console.log('Render complete');
     },
-
-    // Utility Functions
+       // Utility Functions
     getInitials: function(name) {
         return name
             .split(' ')
@@ -1363,9 +1415,14 @@ const UserManagementModule = {
         return colors[Math.abs(hash) % colors.length];
     },
 
-    // Add User Modal
-    openAddUserModal: function() {
+    // Add User Modal with RBAC
+    openAddUserModal: async function() {
         try {
+            // Check create permission
+            if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.CREATE)) {
+                throw new Error('Permission denied: Cannot create users');
+            }
+
             const modalContainer = document.createElement('div');
             modalContainer.innerHTML = `
                 <div class="modal active">
@@ -1400,18 +1457,17 @@ const UserManagementModule = {
                             <div class="form-group">
                                 <label for="userRole">Role *</label>
                                 <select id="userRole" name="role" required>
-                                    <option value="">Select Role</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="manager">Manager</option>
-                                    <option value="user">User</option>
+                                    ${this.generateRoleOptions()}
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="require2FA" name="requires2FA">
-                                    <span>Require 2FA</span>
-                                </label>
-                            </div>
+                            ${rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.SECURITY.MANAGE_2FA) ? `
+                                <div class="form-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="require2FA" name="requires2FA">
+                                        <span>Require 2FA</span>
+                                    </label>
+                                </div>
+                            ` : ''}
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
                                 <button type="submit" class="btn btn-primary">Add User</button>
@@ -1422,7 +1478,6 @@ const UserManagementModule = {
             `;
             document.body.appendChild(modalContainer.firstElementChild);
 
-            // Setup form submission handler
             const form = document.getElementById('addUserForm');
             if (!form) {
                 throw new Error('Form not found');
@@ -1450,6 +1505,13 @@ const UserManagementModule = {
                 submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding User...';
 
                 try {
+                    // Check if user can assign the selected role
+                    if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.MANAGE_ROLES)) {
+                        if (userData.role !== 'USER') {
+                            throw new Error('Permission denied: Cannot assign this role');
+                        }
+                    }
+
                     const token = localStorage.getItem('token');
                     const response = await fetch('https://18.215.160.136.nip.io/api/users', {
                         method: 'POST',
@@ -1502,11 +1564,47 @@ const UserManagementModule = {
         }
     },
 
-        // Edit User
+    // Generate role options based on user permissions
+    generateRoleOptions: function() {
+        const currentUserRole = rbacManager.getCurrentRole();
+        const availableRoles = Object.entries(RBAC_CONFIG.ROLES)
+            .filter(([roleKey, role]) => {
+                // Filter roles based on hierarchy
+                const roleHierarchy = {
+                    'SUPER_ADMIN': 0,
+                    'ADMIN': 1,
+                    'MANAGER': 2,
+                    'USER': 3
+                };
+                
+                const currentUserLevel = roleHierarchy[currentUserRole] || 3;
+                const roleLevel = roleHierarchy[roleKey] || 3;
+                
+                return roleLevel > currentUserLevel;
+            })
+            .map(([roleKey, role]) => `
+                <option value="${roleKey.toLowerCase()}">${role.name}</option>
+            `).join('');
+
+        return `
+            <option value="">Select Role</option>
+            ${availableRoles}
+        `;
+    },
+       // Edit User with RBAC
     editUser: async function(userId) {
         try {
+            // Check edit permission
+            if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.EDIT)) {
+                throw new Error('Permission denied: Cannot edit users');
+            }
+
             const user = this.state.users.find(u => u._id === userId);
             if (!user) throw new Error('User not found');
+
+            // Check if current user can manage the user's role
+            const canManageRole = rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.MANAGE_ROLES);
+            const canManage2FA = rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.SECURITY.MANAGE_2FA);
 
             const modalHtml = `
                 <div class="modal active">
@@ -1537,20 +1635,22 @@ const UserManagementModule = {
                                     <option value="Sales" ${user.department === 'Sales' ? 'selected' : ''}>Sales</option>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label for="editRole">Role *</label>
-                                <select id="editRole" required>
-                                    <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
-                                    <option value="manager" ${user.role === 'manager' ? 'selected' : ''}>Manager</option>
-                                    <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="editRequire2FA" ${user.requires2FA ? 'checked' : ''}>
-                                    <span>Require 2FA</span>
-                                </label>
-                            </div>
+                            ${canManageRole ? `
+                                <div class="form-group">
+                                    <label for="editRole">Role *</label>
+                                    <select id="editRole" required>
+                                        ${this.generateRoleOptions()}
+                                    </select>
+                                </div>
+                            ` : ''}
+                            ${canManage2FA ? `
+                                <div class="form-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="editRequire2FA" ${user.requires2FA ? 'checked' : ''}>
+                                        <span>Require 2FA</span>
+                                    </label>
+                                </div>
+                            ` : ''}
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
                                 <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -1574,6 +1674,20 @@ const UserManagementModule = {
                 submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
                 try {
+                    const updatedData = {
+                        name: document.getElementById('editName').value,
+                        email: document.getElementById('editEmail').value,
+                        department: document.getElementById('editDepartment').value
+                    };
+
+                    if (canManageRole) {
+                        updatedData.role = document.getElementById('editRole').value;
+                    }
+
+                    if (canManage2FA) {
+                        updatedData.requires2FA = document.getElementById('editRequire2FA').checked;
+                    }
+
                     const token = localStorage.getItem('token');
                     const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}`, {
                         method: 'PUT',
@@ -1581,13 +1695,7 @@ const UserManagementModule = {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${token}`
                         },
-                        body: JSON.stringify({
-                            name: document.getElementById('editName').value,
-                            email: document.getElementById('editEmail').value,
-                            department: document.getElementById('editDepartment').value,
-                            role: document.getElementById('editRole').value,
-                            requires2FA: document.getElementById('editRequire2FA').checked
-                        })
+                        body: JSON.stringify(updatedData)
                     });
 
                     if (!response.ok) {
@@ -1618,11 +1726,23 @@ const UserManagementModule = {
         }
     },
 
-    // Delete User
+    // Delete User with RBAC
     deleteUser: async function(userId) {
         try {
+            // Check delete permission
+            if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.DELETE)) {
+                throw new Error('Permission denied: Cannot delete users');
+            }
+
             const user = this.state.users.find(u => u._id === userId);
             if (!user) throw new Error('User not found');
+
+            // Check if user can delete based on role hierarchy
+            const currentUserRole = rbacManager.getCurrentRole();
+            const targetUserRole = user.role.toUpperCase();
+            if (!this.canManageRole(currentUserRole, targetUserRole)) {
+                throw new Error('Permission denied: Cannot delete users with this role');
+            }
 
             if (!confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) {
                 return;
@@ -1649,11 +1769,35 @@ const UserManagementModule = {
         }
     },
 
-    // Toggle User Status
+    // Helper function to check role hierarchy
+    canManageRole: function(currentRole, targetRole) {
+        const roleHierarchy = {
+            'SUPER_ADMIN': 0,
+            'ADMIN': 1,
+            'MANAGER': 2,
+            'USER': 3
+        };
+
+        const currentLevel = roleHierarchy[currentRole] || 3;
+        const targetLevel = roleHierarchy[targetRole] || 3;
+
+        return currentLevel < targetLevel;
+    },
+       // Toggle User Status with RBAC
     toggleUserStatus: async function(userId) {
         try {
+            // Check edit permission
+            if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.EDIT)) {
+                throw new Error('Permission denied: Cannot modify user status');
+            }
+
             const user = this.state.users.find(u => u._id === userId);
             if (!user) throw new Error('User not found');
+
+            // Check if user can manage this role's status
+            if (!this.canManageRole(rbacManager.getCurrentRole(), user.role.toUpperCase())) {
+                throw new Error('Permission denied: Cannot modify status for users with this role');
+            }
 
             const newStatus = user.status === 'active' ? 'inactive' : 'active';
             const token = localStorage.getItem('token');
@@ -1679,9 +1823,15 @@ const UserManagementModule = {
             showNotification(error.message, 'error');
         }
     },
-    // Toggle 2FA
+
+    // Toggle 2FA with RBAC
     toggle2FA: async function(userId) {
         try {
+            // Check 2FA management permission
+            if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.SECURITY.MANAGE_2FA)) {
+                throw new Error('Permission denied: Cannot manage 2FA settings');
+            }
+
             const user = this.state.users.find(u => u._id === userId);
             if (!user) throw new Error('User not found');
 
@@ -1708,9 +1858,14 @@ const UserManagementModule = {
         }
     },
 
-    // Change User Password
+    // Change User Password with RBAC
     changeUserPassword: async function(userId) {
         try {
+            // Check edit permission
+            if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.EDIT)) {
+                throw new Error('Permission denied: Cannot change user passwords');
+            }
+
             const user = this.state.users.find(u => u._id === userId);
             if (!user) throw new Error('User not found');
 
@@ -1845,12 +2000,20 @@ if (typeof ModuleLoader !== 'undefined' && ModuleLoader.onModuleLoaded) {
 }
 
 // Initialize when document is ready
-document.addEventListener('DOMContentLoaded', () => {
-    if (window.UserManagement && typeof window.UserManagement.init === 'function') {
-        window.UserManagement.init().catch(error => {
-            console.error('Failed to initialize User Management:', error);
-        });
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // Initialize RBAC first
+        await rbacManager.initialize();
+        
+        // Then initialize the User Management module
+        if (window.UserManagement && typeof window.UserManagement.init === 'function') {
+            await window.UserManagement.init();
+        }
+    } catch (error) {
+        console.error('Failed to initialize:', error);
+        if (typeof showNotification === 'function') {
+            showNotification('Failed to initialize system', 'error');
+        }
     }
 });
- 
 </script>
