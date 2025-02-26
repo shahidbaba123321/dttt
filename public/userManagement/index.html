@@ -1128,29 +1128,32 @@ const UserManagementModule = {
     },
 
     // Initialize the module
- init: async function() {
+init: async function() {
     try {
         console.log('Starting User Management initialization...');
         
-        // Force RBAC initialization if needed
+        // Ensure RBAC is initialized
         if (!window.RBAC || !window.RBAC.initialized) {
             console.log('RBAC not initialized, initializing now...');
-            await window.RBAC.manager.initialize();
+            if (window.RBAC && window.RBAC.manager) {
+                await window.RBAC.manager.initialize();
+            } else {
+                throw new Error('RBAC system not available');
+            }
         }
 
-        console.log('RBAC status:', {
+        console.log('RBAC Status:', {
             initialized: window.RBAC.initialized,
             currentRole: window.RBAC.manager.getCurrentRole(),
-            hasViewPermission: window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.USERS.VIEW)
+            permissions: Array.from(window.RBAC.manager.currentPermissions)
         });
 
-        // Proceed with user management initialization
         await this.loadUsers();
         this.setupEventListeners();
         
         console.log('User Management initialization complete');
     } catch (error) {
-        console.error('User Management initialization failed:', error);
+        console.error('Failed to initialize User Management:', error);
         if (typeof showNotification === 'function') {
             showNotification('Failed to initialize User Management: ' + error.message, 'error');
         }
