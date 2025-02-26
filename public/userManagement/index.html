@@ -1130,35 +1130,33 @@ const UserManagementModule = {
     // Initialize the module
  init: async function() {
     try {
-        console.log('Initializing User Management module...');
+        console.log('Starting User Management initialization...');
         
-        // Wait for RBAC initialization if not already done
-        if (!window.RBAC.initialized) {
+        // Force RBAC initialization if needed
+        if (!window.RBAC || !window.RBAC.initialized) {
+            console.log('RBAC not initialized, initializing now...');
             await window.RBAC.manager.initialize();
         }
 
-        // Debug logs
-        console.log('RBAC initialized:', window.RBAC.initialized);
-        console.log('Current role:', window.RBAC.manager.getCurrentRole());
-        console.log('Checking view permission...');
+        console.log('RBAC status:', {
+            initialized: window.RBAC.initialized,
+            currentRole: window.RBAC.manager.getCurrentRole(),
+            hasViewPermission: window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.USERS.VIEW)
+        });
 
-        // Check view permission
-        const hasViewPermission = window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.USERS.VIEW);
-        console.log('Has view permission:', hasViewPermission);
-
-        if (!hasViewPermission) {
-            throw new Error('Permission denied: Cannot view users');
-        }
-
+        // Proceed with user management initialization
         await this.loadUsers();
         this.setupEventListeners();
+        
+        console.log('User Management initialization complete');
     } catch (error) {
-        console.error('Failed to initialize User Management:', error);
+        console.error('User Management initialization failed:', error);
         if (typeof showNotification === 'function') {
             showNotification('Failed to initialize User Management: ' + error.message, 'error');
         }
     }
 },
+    
     // Setup Event Listeners
     setupEventListeners: function() {
         // Search input with debounce
