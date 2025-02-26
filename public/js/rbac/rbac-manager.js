@@ -1,10 +1,10 @@
 // public/js/rbac/rbac-manager.js
-class RBACManager {
-    constructor() {
-        this.currentRole = null;
-        this.currentPermissions = new Set();
-        this.initialized = false;
-    }
+window.RBAC = window.RBAC || {};
+
+window.RBAC.manager = {
+    currentRole: null,
+    currentPermissions: new Set(),
+    initialized: false,
 
     async initialize() {
         try {
@@ -21,7 +21,7 @@ class RBACManager {
             console.error('RBAC initialization failed:', error);
             return false;
         }
-    }
+    },
 
     decodeToken(token) {
         try {
@@ -32,16 +32,16 @@ class RBACManager {
             console.error('Token decode failed:', error);
             return {};
         }
-    }
+    },
 
     setPermissions() {
-        const roleConfig = RBAC_CONFIG.ROLES[this.currentRole];
+        const roleConfig = window.RBAC.CONFIG.ROLES[this.currentRole];
         if (!roleConfig) return;
 
         this.currentPermissions.clear();
         
         if (roleConfig.permissions.includes('*')) {
-            Object.values(RBAC_CONFIG.PERMISSIONS).forEach(group => {
+            Object.values(window.RBAC.CONFIG.PERMISSIONS).forEach(group => {
                 Object.values(group).forEach(permission => {
                     this.currentPermissions.add(permission);
                 });
@@ -51,26 +51,23 @@ class RBACManager {
                 this.currentPermissions.add(permission);
             });
         }
-    }
+    },
 
     hasPermission(permission) {
         if (!this.initialized) return true;
         if (this.currentRole === 'SUPER_ADMIN') return true;
         return this.currentPermissions.has(permission);
-    }
+    },
 
     hasAnyPermission(permissions) {
         return permissions.some(permission => this.hasPermission(permission));
-    }
+    },
 
     hasAllPermissions(permissions) {
         return permissions.every(permission => this.hasPermission(permission));
-    }
+    },
 
     getCurrentRole() {
         return this.currentRole;
     }
-}
-
-// Create singleton instance
-const rbacManager = new RBACManager();
+};
