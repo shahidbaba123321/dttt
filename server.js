@@ -405,16 +405,25 @@ app.put('/api/users/:userId/status', verifyToken, async (req, res) => {
 });
 
 // Reset user password
+// Reset user password
 app.post('/api/users/:userId/reset-password', verifyToken, async (req, res) => {
     try {
         const { userId } = req.params;
+        const { password } = req.body;
+
+        // Validate password
+        if (!password || password.length < 6) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Password must be at least 6 characters long' 
+            });
+        }
 
         const database = client.db('infocraftorbis');
         const users = database.collection('users');
 
-        // Generate new temporary password
-        const tempPassword = Math.random().toString(36).slice(-8);
-        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+        // Hash the new password
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         const result = await users.updateOne(
             { _id: new ObjectId(userId) },
@@ -436,8 +445,7 @@ app.post('/api/users/:userId/reset-password', verifyToken, async (req, res) => {
 
         res.json({ 
             success: true, 
-            message: 'Password reset successful',
-            temporaryPassword: tempPassword
+            message: 'Password reset successful'
         });
 
     } catch (error) {
