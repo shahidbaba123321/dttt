@@ -1,7 +1,24 @@
 
+<!-- In your index.html, add these script tags before your main user management script -->
+<script>
+    // Ensure window.RBAC namespace exists
+    window.RBAC = window.RBAC || {};
+</script>
 <script src="../js/rbac/rbac-config.js"></script>
 <script src="../js/rbac/rbac-manager.js"></script>
 <script src="../js/rbac/rbac-utils.js"></script>
+<script>
+    // Initialize RBAC system
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            // Initialize RBAC
+            await window.RBAC.manager.initialize();
+            console.log('RBAC initialized successfully');
+        } catch (error) {
+            console.error('RBAC initialization failed:', error);
+        }
+    });
+</script>
 <div class="user-management-module">
    
 <section class="content-section" id="userManagementSection">
@@ -1111,29 +1128,30 @@ const UserManagementModule = {
     },
 
     // Initialize the module
-    init: async function() {
-        try {
-            console.log('Initializing User Management module...');
-            
-            // Initialize RBAC
-            await rbacManager.initialize();
-            this.state.rbacInitialized = true;
-            
-            // Check view permission
-            if (!rbacManager.hasPermission(RBAC_CONFIG.PERMISSIONS.USERS.VIEW)) {
-                throw new Error('Permission denied: Cannot view users');
-            }
-
-            await this.loadUsers();
-            this.setupEventListeners();
-            RBACUtils.updateUIBasedOnPermissions();
-        } catch (error) {
-            console.error('Failed to initialize User Management:', error);
-            if (typeof showNotification === 'function') {
-                showNotification('Failed to initialize User Management: ' + error.message, 'error');
-            }
+   // In your UserManagementModule
+init: async function() {
+    try {
+        console.log('Initializing User Management module...');
+        
+        // Check if RBAC is available
+        if (!window.RBAC || !window.RBAC.manager) {
+            throw new Error('RBAC system not initialized');
         }
-    },
+
+        // Check view permission
+        if (!window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMISSIONS.USERS.VIEW)) {
+            throw new Error('Permission denied: Cannot view users');
+        }
+
+        await this.loadUsers();
+        this.setupEventListeners();
+    } catch (error) {
+        console.error('Failed to initialize User Management:', error);
+        if (typeof showNotification === 'function') {
+            showNotification('Failed to initialize User Management: ' + error.message, 'error');
+        }
+    }
+},
 
     // Setup Event Listeners
     setupEventListeners: function() {
