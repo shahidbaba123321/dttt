@@ -30,8 +30,8 @@ const verifyToken = async (req, res, next) => {
     }
 };
 
-// Updated CORS configuration
-app.use(cors({
+// Define CORS options
+const corsOptions = {
     origin: 'https://main.d1cfw592vg73f.amplifyapp.com',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept', 'X-Requested-With'],
@@ -40,12 +40,16 @@ app.use(cors({
     maxAge: 86400,
     preflightContinue: false,
     optionsSuccessStatus: 204
-}));
+};
+
+// Apply CORS configuration
+app.use(cors(corsOptions));
 
 // Handle OPTIONS requests
 app.options('*', cors(corsOptions));
 
 app.use(express.json());
+
 
 // MongoDB connection
 const uri = process.env.MONGODB_URI;
