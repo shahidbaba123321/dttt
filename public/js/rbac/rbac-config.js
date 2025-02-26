@@ -1,5 +1,7 @@
 // public/js/rbac/rbac-config.js
-const RBAC_CONFIG = {
+window.RBAC = window.RBAC || {};
+
+window.RBAC.CONFIG = {
     PERMISSIONS: {
         USERS: {
             VIEW: 'users:view',
@@ -11,10 +13,6 @@ const RBAC_CONFIG = {
         SECURITY: {
             MANAGE_2FA: 'security:manage-2fa',
             MANAGE_SETTINGS: 'security:manage-settings'
-        },
-        SYSTEM: {
-            VIEW_SETTINGS: 'system:view-settings',
-            MANAGE_SETTINGS: 'system:manage-settings'
         }
     },
 
@@ -32,8 +30,7 @@ const RBAC_CONFIG = {
                 'users:create',
                 'users:edit',
                 'users:manage-roles',
-                'security:manage-2fa',
-                'system:view-settings'
+                'security:manage-2fa'
             ]
         },
         MANAGER: {
@@ -42,16 +39,14 @@ const RBAC_CONFIG = {
             permissions: [
                 'users:view',
                 'users:create',
-                'users:edit',
-                'system:view-settings'
+                'users:edit'
             ]
         },
         USER: {
             name: 'User',
             description: 'Basic user access',
             permissions: [
-                'users:view',
-                'system:view-settings'
+                'users:view'
             ]
         }
     }
