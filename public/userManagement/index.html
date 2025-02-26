@@ -1388,7 +1388,7 @@
     },
 
     // Change User Password
-    changeUserPassword: async function(userId) {
+   changeUserPassword: async function(userId) {
     try {
         const user = this.state.users.find(u => u._id === userId);
         if (!user) throw new Error('User not found');
@@ -1452,12 +1452,19 @@
                 return;
             }
 
+            if (newPassword.length < 6) {
+                showNotification('Password must be at least 6 characters long', 'error');
+                return;
+            }
+
             const submitButton = form.querySelector('button[type="submit"]');
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Changing Password...';
 
             try {
                 const token = localStorage.getItem('token');
+                console.log('Sending password reset request for user:', userId); // Debug log
+
                 const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/reset-password`, {
                     method: 'POST',
                     headers: {
@@ -1467,31 +1474,23 @@
                     body: JSON.stringify({ password: newPassword })
                 });
 
+                console.log('Password reset response:', response); // Debug log
+
+                const data = await response.json();
+                console.log('Password reset data:', data); // Debug log
+
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Failed to change password');
+                    throw new Error(data.message || 'Failed to change password');
                 }
 
-                // Success notification with improved styling
-                const successMessage = `
-                    <div class="password-change-success">
-                        <div class="success-header">
-                            <i class="fas fa-check-circle"></i>
-                            Password Changed Successfully
-                        </div>
-                        <div class="success-body">
-                            Password has been updated for user: ${user.name}
-                        </div>
-                    </div>
-                `;
-                
-                showNotification(successMessage, 'success');
+                showNotification('Password changed successfully', 'success');
                 
                 // Make sure modal exists before trying to remove it
                 if (modalElement && modalElement.parentNode) {
                     modalElement.remove();
                 }
             } catch (error) {
+                console.error('Error changing password:', error);
                 showNotification(error.message, 'error');
             } finally {
                 if (submitButton) {
@@ -1504,6 +1503,7 @@
         console.error('Error changing password:', error);
         showNotification(error.message, 'error');
     }
+
     },
 
     // Toggle Password Visibility
