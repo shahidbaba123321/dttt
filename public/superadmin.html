@@ -1312,6 +1312,142 @@ body {
     <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
     <script>
+        // Initialize RBAC namespace
+    window.RBAC = {
+        initialized: false,
+        CONFIG: {
+            PERMISSIONS: {
+                USERS: {
+                    VIEW: 'users:view',
+                    CREATE: 'users:create',
+                    EDIT: 'users:edit',
+                    DELETE: 'users:delete',
+                    MANAGE_ROLES: 'users:manage-roles'
+                },
+                SECURITY: {
+                    MANAGE_2FA: 'security:manage-2fa',
+                    MANAGE_SETTINGS: 'security:manage-settings'
+                }
+            },
+            ROLES: {
+                SUPER_ADMIN: {
+                    name: 'Super Admin',
+                    description: 'Full system access',
+                    permissions: ['*']
+                },
+                ADMIN: {
+                    name: 'Admin',
+                    description: 'Administrative access',
+                    permissions: [
+                        'users:view',
+                        'users:create',
+                        'users:edit',
+                        'users:manage-roles',
+                        'security:manage-2fa'
+                    ]
+                },
+                MANAGER: {
+                    name: 'Manager',
+                    description: 'Department management',
+                    permissions: [
+                        'users:view',
+                        'users:create',
+                        'users:edit'
+                    ]
+                },
+                USER: {
+                    name: 'User',
+                    description: 'Basic user access',
+                    permissions: [
+                        'users:view'
+                    ]
+                }
+            }
+        },
+        manager: {
+            currentRole: null,
+            currentPermissions: new Set(),
+            initialized: false,
+
+            async initialize() {
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) return false;
+
+                    const payload = this.decodeToken(token);
+                    this.currentRole = payload.role?.toUpperCase() || 'USER';
+                    this.setPermissions();
+                    this.initialized = true;
+                    window.RBAC.initialized = true;
+
+                    console.log('RBAC initialized with role:', this.currentRole);
+                    return true;
+                } catch (error) {
+                    console.error('RBAC initialization failed:', error);
+                    return false;
+                }
+            },
+
+            decodeToken(token) {
+                try {
+                    const base64Url = token.split('.')[1];
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    return JSON.parse(window.atob(base64));
+                } catch (error) {
+                    console.error('Token decode failed:', error);
+                    return {};
+                }
+            },
+
+            setPermissions() {
+                const roleConfig = window.RBAC.CONFIG.ROLES[this.currentRole];
+                if (!roleConfig) return;
+
+                this.currentPermissions.clear();
+                
+                if (roleConfig.permissions.includes('*')) {
+                    Object.values(window.RBAC.CONFIG.PERMISSIONS).forEach(group => {
+                        Object.values(group).forEach(permission => {
+                            this.currentPermissions.add(permission);
+                        });
+                    });
+                } else {
+                    roleConfig.permissions.forEach(permission => {
+                        this.currentPermissions.add(permission);
+                    });
+                }
+            },
+
+            hasPermission(permission) {
+                if (!this.initialized) return true;
+                if (this.currentRole === 'SUPER_ADMIN') return true;
+                return this.currentPermissions.has(permission);
+            },
+
+            hasAnyPermission(permissions) {
+                return permissions.some(permission => this.hasPermission(permission));
+            },
+
+            hasAllPermissions(permissions) {
+                return permissions.every(permission => this.hasPermission(permission));
+            },
+
+            getCurrentRole() {
+                return this.currentRole;
+            }
+        }
+    };
+
+    // Initialize RBAC when the page loads
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            await window.RBAC.manager.initialize();
+            console.log('RBAC system initialized successfully');
+        } catch (error) {
+            console.error('Failed to initialize RBAC:', error);
+        }
+    });
+        
         // Error Boundaries
         window.addEventListener('unhandledrejection', function(event) {
             console.error('Unhandled promise rejection:', event.reason);
@@ -1406,6 +1542,16 @@ body {
                     }
 
                     console.log('Module loaded successfully:', moduleName);
+
+                     // Ensure RBAC is initialized first
+        if (!window.RBAC.initialized) {
+            await window.RBAC.manager.initialize();
+        }
+
+        // Now load the module
+        if (window.UserManagement && typeof window.UserManagement.init === 'function') {
+            await window.UserManagement.init();
+        }
 
                 } catch (error) {
                     console.error('Module loading error:', error);
