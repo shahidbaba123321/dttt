@@ -113,7 +113,10 @@ body {
     overflow-x: hidden;
     z-index: 1000;
     transition: all var(--transition-normal);
-    box-shadow: 4px 0 8px rgba(0, 0, 0, 0.1); /* Shadow when expanded */
+    box-shadow: none; /* Remove default shadow */
+}
+.sidebar.collapsed + .main-content::before {
+    opacity: 0;
 }
 
 .sidebar.collapsed {
@@ -310,13 +313,27 @@ body {
 
 /* Main Content */
 .main-content {
-    flex: 1;
+   flex: 1;
     margin-left: var(--sidebar-width);
     transition: margin-left var(--transition-normal);
     display: flex;
     flex-direction: column;
     min-height: 100vh;
     background-color: var(--background-color);
+    position: relative;
+}
+/* Add pseudo-element for shadow */
+.main-content::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100vh;
+    box-shadow: -4px 0 8px rgba(0, 0, 0, 0.1);
+    opacity: 1;
+    transition: opacity var(--transition-normal);
+    pointer-events: none;
 }
 
 .main-content.expanded {
@@ -877,16 +894,17 @@ body {
 @media (max-width: 1024px) {
    .sidebar {
         left: calc(-1 * var(--sidebar-width));
-        box-shadow: none;
     }
 
     .sidebar.active {
         left: 0;
-        box-shadow: 4px 0 8px rgba(0, 0, 0, 0.1);
     }
 
     .main-content {
         margin-left: 0 !important;
+    }
+    .main-content::before {
+        display: none;
     }
 
     .sidebar-toggle {
