@@ -1567,151 +1567,108 @@ let sidebarState = {
 };
 
 // Enhanced ModuleLoader with improved error handling and script execution
- const ModuleLoader = {
-            baseUrl: window.location.origin,
-            currentModule: null,
-            loadedScripts: new Set(),
+const ModuleLoader = {
+    baseUrl: window.location.origin,
+    currentModule: null,
 
-            loadModule: async function(moduleName) {
-                try {
-                    console.log('Starting module load for:', moduleName);
+    loadModule: async function(moduleName) {
+        try {
+            console.log('Starting module load for:', moduleName);
 
-                    if (!this.checkModuleAccess(moduleName)) {
-                        throw new Error('Access denied: Insufficient permissions');
-                    }
-
-                    const modulePath = `/${moduleName}/index.html`;
-                    const response = await fetch(modulePath);
-                    
-                    if (!response.ok) {
-                        throw new Error(`Module not found (Status: ${response.status})`);
-                    }
-
-                    const moduleContent = await response.text();
-                    const moduleContainer = document.getElementById('moduleContainer');
-                    
-                    // Parse the HTML content
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(moduleContent, 'text/html');
-
-                    // Hide welcome section
-                    const welcomeSection = document.querySelector('.welcome-section');
-                    if (welcomeSection) {
-                        welcomeSection.style.display = 'none';
-                    }
-
-                    // Extract scripts before setting innerHTML
-                    const scripts = Array.from(doc.getElementsByTagName('script'));
-                    scripts.forEach(script => script.remove());
-
-                    // Set the HTML content
-                    moduleContainer.innerHTML = doc.body.innerHTML;
-
-                    // Load and execute scripts
-                    for (const script of scripts) {
-                        if (script.src) {
-                            const scriptPath = new URL(script.src).pathname;
-                            if (!this.loadedScripts.has(scriptPath)) {
-                                await this.loadExternalScript(script.src);
-                                this.loadedScripts.add(scriptPath);
-                            }
-                        }
-                    }
-
-                    // Initialize module
-                    if (window[`${moduleName}Module`] && typeof window[`${moduleName}Module`].init === 'function') {
-                        await window[`${moduleName}Module`].init();
-                    }
-
-                    console.log('Module loaded successfully:', moduleName);
-
-                } catch (error) {
-                    console.error('Module loading error:', error);
-                    this.handleModuleError(error, moduleName);
-                    throw error;
-                }
-            },
-
-    loadExternalScript: function(src) {
-                return new Promise((resolve, reject) => {
-                    try {
-                        const script = document.createElement('script');
-                        script.type = 'text/javascript';
-                        script.src = src;
-                        script.async = true;
-
-                        script.onload = () => {
-                            console.log('Script loaded:', src);
-                            resolve();
-                        };
-                        script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
-
-                        document.head.appendChild(script);
-                    } catch (error) {
-                        reject(error);
-                    }
-                });
-            },
-     
-    executeInlineScript: function(content) {
-        return new Promise((resolve, reject) => {
-            try {
-                // Create a clean script element
-                const script = document.createElement('script');
-                script.type = 'text/javascript';
-                
-                // Create a safe wrapper for the content
-                const safeContent = `
-                    try {
-                        ${content}
-                    } catch (error) {
-                        console.error('Script execution error:', error);
-                    }
-                `;
-                
-                script.textContent = safeContent;
-                
-                // Add to document and remove immediately after execution
-                document.head.appendChild(script);
-                document.head.removeChild(script);
-                
-                resolve();
-            } catch (error) {
-                console.error('Script execution error:', error);
-                reject(error);
+            if (!this.checkModuleAccess(moduleName)) {
+                throw new Error('Access denied: Insufficient permissions');
             }
-        });
+
+            const modulePath = `/${moduleName}/index.html`;
+            const response = await fetch(modulePath);
+            
+            if (!response.ok) {
+                throw new Error(`Module not found (Status: ${response.status})`);
+            }
+
+            const moduleContent = await response.text();
+            const moduleContainer = document.getElementById('moduleContainer');
+            
+            if (!moduleContainer) {
+                throw new Error('Module container not found');
+            }
+
+            // Create a temporary container
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = moduleContent;
+
+            // Extract scripts
+            const scripts = Array.from(tempDiv.getElementsByTagName('script'));
+            const scriptContents = scripts.map(script => script.innerHTML);
+            
+            // Remove scripts from the content
+            scripts.forEach(script => script.remove());
+
+            // Hide welcome section
+            const welcomeSection = document.querySelector('.welcome-section');
+            if (welcomeSection) {
+                welcomeSection.style.display = 'none';
+            }
+
+            // Set HTML content
+            moduleContainer.innerHTML = tempDiv.innerHTML;
+
+            // Execute scripts in sequence
+            for (const scriptContent of scriptContents) {
+                if (scriptContent.trim()) {
+                    try {
+                        // Create a new function from the script content
+                        const executeScript = new Function(scriptContent);
+                        executeScript.call(window);
+                    } catch (error) {
+                        console.error('Error executing script:', error);
+                    }
+                }
+            }
+
+            // Initialize module if available
+            if (window.UserManagement && typeof window.UserManagement.init === 'function') {
+                await window.UserManagement.init();
+            }
+
+            console.log('Module loaded successfully:', moduleName);
+
+        } catch (error) {
+            console.error('Module loading error:', error);
+            this.handleModuleError(error, moduleName);
+            throw error;
+        }
     },
 
-     handleModuleError: function(error, moduleName) {
-                const moduleContainer = document.getElementById('moduleContainer');
-                if (moduleContainer) {
-                    moduleContainer.innerHTML = `
-                        <div class="error-state">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <p>Failed to load ${moduleName}: ${error.message}</p>
-                            <button onclick="ModuleLoader.loadModule('${moduleName}')" class="btn btn-secondary">
-                                <i class="fas fa-sync"></i> Retry
-                            </button>
-                        </div>
-                    `;
-                }
-                showNotification(`Failed to load module: ${error.message}`, 'error');
-            },
+    handleModuleError: function(error, moduleName) {
+        const moduleContainer = document.getElementById('moduleContainer');
+        if (moduleContainer) {
+            moduleContainer.innerHTML = `
+                <div class="error-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Failed to load ${moduleName}: ${error.message}</p>
+                    <button onclick="ModuleLoader.loadModule('${moduleName}')" class="btn btn-secondary">
+                        <i class="fas fa-sync"></i> Retry
+                    </button>
+                </div>
+            `;
+        }
+        showNotification(`Failed to load module: ${error.message}`, 'error');
+    },
 
-      checkModuleAccess: function(moduleName) {
-                const modulePermissions = {
-                    'userManagement': 'users:view',
-                    'security': 'security:manage-settings',
-                    'settings': 'system:view-settings'
-                };
-
-                const requiredPermission = modulePermissions[moduleName];
-                if (!requiredPermission) return true;
-
-                return window.RBAC.manager.hasPermission(requiredPermission);
-            }
+    checkModuleAccess: function(moduleName) {
+        const modulePermissions = {
+            'userManagement': 'users:view',
+            'security': 'security:manage-settings',
+            'settings': 'system:view-settings'
         };
+
+        const requiredPermission = modulePermissions[moduleName];
+        if (!requiredPermission) return true;
+
+        return window.RBAC.manager.hasPermission(requiredPermission);
+    }
+};
      
      // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
