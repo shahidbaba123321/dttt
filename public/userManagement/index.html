@@ -1293,6 +1293,7 @@
 </style>
 
 <script>
+    <script>
     // Initialize the module immediately
     (function() {
         // UserManagement Module
@@ -1316,15 +1317,22 @@
                 loading: false,
                 selectedRole: null,
                 auditLogs: [],
-                permissions: new Map()
+                permissions: new Map(),
+                initialized: false
             },
 
-            // Initialize the module
+            // Core Functions
             init: function() {
                 return new Promise((resolve, reject) => {
                     try {
                         console.log('Initializing User Management module...');
                         
+                        // Add necessary styles
+                        this.addStyles();
+
+                        // Initialize state
+                        this.state.currentUser = this.getCurrentUserFromToken();
+
                         // Setup event listeners
                         this.setupEventListeners();
                         
@@ -1332,6 +1340,7 @@
                         this.loadUsers()
                             .then(() => {
                                 console.log('User Management module initialized');
+                                this.state.initialized = true;
                                 resolve();
                             })
                             .catch(error => {
@@ -1346,216 +1355,28 @@
                 });
             },
 
-            // Load Users
-           loadUsers: function() {
-    return new Promise((resolve, reject) => {
-        this.state.loading = true;
-        this.renderLoadingState();
+            getCurrentUserFromToken: function() {
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) return null;
 
-        const token = localStorage.getItem('token');
-        if (!token) {
-            this.state.loading = false;
-            reject(new Error('No authentication token found'));
-            return;
-        }
+                    const base64Url = token.split('.')[1];
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join(''));
 
-        const queryParams = new URLSearchParams({
-            page: this.state.pagination.page.toString(),
-            limit: this.state.pagination.limit.toString(),
-            search: this.state.filters.search || '',
-            department: this.state.filters.department || '',
-            role: this.state.filters.role || '',
-            status: this.state.filters.status || ''
-        });
-
-        fetch(`https://18.215.160.136.nip.io/api/users?${queryParams}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to load users');
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Log the response data for debugging
-            console.log('API Response:', data);
-
-            // Check if data is in the expected format
-            if (data && data.users) {
-                this.state.users = data.users;
-            } else if (Array.isArray(data)) {
-                this.state.users = data;
-            } else {
-                this.state.users = [];
-                console.warn('Unexpected data format:', data);
-            }
-
-            // Update pagination if available
-            if (data.pagination) {
-                this.state.pagination = {
-                    ...this.state.pagination,
-                    ...data.pagination
-                };
-            }
-
-            this.renderUsers();
-            resolve();
-        })
-        .catch(error => {
-            console.error('Error loading users:', error);
-            this.showNotification('Failed to load users: ' + error.message, 'error');
-            this.renderErrorState(error.message);
-            reject(error);
-        })
-        .finally(() => {
-            this.state.loading = false;
-        });
-    });
-},
-
-                        // Render Users
-          renderUsers: function() {
-    const tbody = document.getElementById('usersTableBody');
-    if (!tbody) {
-        console.error('Users table body not found');
-        return;
-    }
-
-    if (this.state.loading) {
-        this.renderLoadingState();
-        return;
-    }
-
-    // Log the current state for debugging
-    console.log('Current users state:', this.state.users);
-
-    if (!Array.isArray(this.state.users) || this.state.users.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="empty-state">
-                    <i class="fas fa-users-slash"></i>
-                    <p>No users found</p>
-                </td>
-            </tr>
-        `;
-        return;
-    }
-
-    try {
-        tbody.innerHTML = this.state.users.map(user => {
-            if (!user) {
-                console.warn('Invalid user object found');
-                return '';
-            }
-
-            const name = user.name || 'Unknown User';
-            const email = user.email || 'No Email';
-            const department = user.department || 'Unassigned';
-            const role = user.role || 'No Role';
-            const status = user.status || 'inactive';
-            const requires2FA = !!user.requires2FA;
-
-            return `
-                <tr data-user-id="${user._id || ''}">
-                    <td>
-                        <div class="user-info">
-                            <div class="user-avatar" style="background-color: ${this.getAvatarColor(name)}">
-                                ${this.getInitials(name)}
-                            </div>
-                            <div class="user-details">
-                                <div class="user-name">${this.escapeHtml(name)}</div>
-                                <div class="user-id">${this.escapeHtml(email)}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td>${this.escapeHtml(email)}</td>
-                    <td>
-                        <span class="department-badge department-${department.toLowerCase()}">
-                            ${this.escapeHtml(department)}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="role-badge role-${role.toLowerCase()}">
-                            ${this.escapeHtml(role)}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="status-badge status-${status.toLowerCase()}">
-                            <i class="fas fa-${status === 'active' ? 'check-circle' : 'times-circle'}"></i>
-                            ${status}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="2fa-badge ${requires2FA ? 'enabled' : 'disabled'}">
-                            <i class="fas fa-shield-alt"></i>
-                            ${requires2FA ? 'Enabled' : 'Disabled'}
-                        </span>
-                    </td>
-                    <td>
-                        <div class="action-buttons">
-                            ${this.renderActionButtons(user)}
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    } catch (error) {
-        console.error('Error rendering users:', error);
-        this.renderErrorState('Error rendering user list');
-    }
-},
-
-            renderActionButtons: function(user) {
-                const buttons = [];
-
-                if (window.RBAC.manager.hasPermission('EDIT_USERS')) {
-                    buttons.push(`
-                        <button onclick="UserManagement.editUser('${user._id}')" 
-                                class="btn-icon" title="Edit User">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                    `);
+                    const userData = JSON.parse(jsonPayload);
+                    console.log('Parsed user data from token:', userData);
+                    
+                    return {
+                        ...userData,
+                        role: userData.role?.toLowerCase() // Normalize role to lowercase
+                    };
+                } catch (error) {
+                    console.error('Error parsing token:', error);
+                    return null;
                 }
-
-                if (window.RBAC.manager.hasPermission('MANAGE_USER_STATUS')) {
-                    buttons.push(`
-                        <button onclick="UserManagement.toggleUserStatus('${user._id}')" 
-                                class="btn-icon ${user.status === 'active' ? 'danger' : 'success'}"
-                                title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User">
-                            <i class="fas fa-${user.status === 'active' ? 'ban' : 'check'}"></i>
-                        </button>
-                    `);
-                }
-
-                if (window.RBAC.manager.hasPermission('MANAGE_USER_SECURITY')) {
-                    buttons.push(`
-                        <button onclick="UserManagement.changeUserPassword('${user._id}')" 
-                                class="btn-icon warning" title="Change Password">
-                            <i class="fas fa-key"></i>
-                        </button>
-                        <button onclick="UserManagement.toggle2FA('${user._id}')"
-                                class="btn-icon ${user.requires2FA ? 'success' : 'warning'}"
-                                title="${user.requires2FA ? 'Disable' : 'Enable'} 2FA">
-                            <i class="fas fa-shield-alt"></i>
-                        </button>
-                    `);
-                }
-
-                if (window.RBAC.manager.hasPermission('DELETE_USERS')) {
-                    buttons.push(`
-                        <button onclick="UserManagement.deleteUser('${user._id}')" 
-                                class="btn-icon danger" title="Delete User">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    `);
-                }
-
-                return buttons.join('');
             },
 
             setupEventListeners: function() {
@@ -1589,9 +1410,304 @@
                     }
                 });
             },
+
+            addStyles: function() {
+                if (!document.getElementById('user-management-styles')) {
+                    const style = document.createElement('style');
+                    style.id = 'user-management-styles';
+                    style.textContent = `
+                        .notification {
+                            position: fixed;
+                            top: 20px;
+                            right: 20px;
+                            min-width: 300px;
+                            max-width: 400px;
+                            background: var(--surface-color);
+                            border-radius: var(--card-radius);
+                            box-shadow: var(--shadow-lg);
+                            z-index: 1000;
+                            overflow: hidden;
+                        }
+
+                        .notification-content {
+                            display: flex;
+                            align-items: center;
+                            padding: 15px;
+                        }
+
+                        .notification-icon {
+                            margin-right: 15px;
+                            font-size: 20px;
+                        }
+
+                        .notification-message {
+                            flex-grow: 1;
+                            font-size: 14px;
+                        }
+
+                        .notification-close {
+                            background: none;
+                            border: none;
+                            color: var(--text-secondary);
+                            cursor: pointer;
+                            padding: 5px;
+                        }
+
+                        .notification-progress {
+                            height: 3px;
+                            background: var(--primary-color);
+                            width: 100%;
+                        }
+
+                        @keyframes notification-progress {
+                            from { width: 100%; }
+                            to { width: 0%; }
+                        }
+
+                        .tooltip {
+                            position: fixed;
+                            background: rgba(0, 0, 0, 0.8);
+                            color: white;
+                            padding: 5px 10px;
+                            border-radius: 4px;
+                            font-size: 12px;
+                            z-index: 1000;
+                            pointer-events: none;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+            },
+                        // Data Loading Functions
+            loadUsers: function() {
+                return new Promise((resolve, reject) => {
+                    this.state.loading = true;
+                    this.renderLoadingState();
+
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        this.state.loading = false;
+                        reject(new Error('No authentication token found'));
+                        return;
+                    }
+
+                    const queryParams = new URLSearchParams({
+                        page: (this.state.pagination.page || 1).toString(),
+                        limit: (this.state.pagination.limit || 10).toString(),
+                        search: this.state.filters.search || '',
+                        department: this.state.filters.department || '',
+                        role: this.state.filters.role || '',
+                        status: this.state.filters.status || ''
+                    });
+
+                    fetch(`https://18.215.160.136.nip.io/api/users?${queryParams}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to load users');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('API Response:', data);
+
+                        if (data && data.users) {
+                            this.state.users = data.users;
+                        } else if (Array.isArray(data)) {
+                            this.state.users = data;
+                        } else {
+                            this.state.users = [];
+                            console.warn('Unexpected data format:', data);
+                        }
+
+                        if (data.pagination) {
+                            this.state.pagination = {
+                                ...this.state.pagination,
+                                ...data.pagination
+                            };
+                        }
+
+                        this.renderUsers();
+                        if (document.getElementById('pagination')) {
+                            this.renderPagination();
+                        }
+                        resolve();
+                    })
+                    .catch(error => {
+                        console.error('Error loading users:', error);
+                        this.showNotification('Failed to load users: ' + error.message, 'error');
+                        this.renderErrorState(error.message);
+                        reject(error);
+                    })
+                    .finally(() => {
+                        this.state.loading = false;
+                    });
+                });
+            },
+
+            refreshData: async function() {
+                try {
+                    this.state.loading = true;
+                    await Promise.all([
+                        this.loadUsers(),
+                        this.hasPermission('VIEW_DELETED_USERS') && this.loadDeletedUsers(),
+                        this.hasPermission('VIEW_AUDIT_LOGS') && this.loadAuditLogs()
+                    ]);
+                } catch (error) {
+                    this.handleApiError(error);
+                } finally {
+                    this.state.loading = false;
+                }
+            },
+
+            // Rendering Functions
+            renderUsers: function() {
+                const tbody = document.getElementById('usersTableBody');
+                if (!tbody) {
+                    console.error('Users table body not found');
+                    return;
+                }
+
+                if (this.state.loading) {
+                    this.renderLoadingState();
+                    return;
+                }
+
+                console.log('Current users state:', this.state.users);
+
+                if (!Array.isArray(this.state.users) || this.state.users.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <i class="fas fa-users-slash"></i>
+                                <p>No users found</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                try {
+                    tbody.innerHTML = this.state.users.map(user => {
+                        if (!user) {
+                            console.warn('Invalid user object found');
+                            return '';
+                        }
+
+                        const name = user.name || 'Unknown User';
+                        const email = user.email || 'No Email';
+                        const department = user.department || 'Unassigned';
+                        const role = user.role || 'No Role';
+                        const status = user.status || 'inactive';
+                        const requires2FA = !!user.requires2FA;
+
+                        return `
+                            <tr data-user-id="${user._id || ''}">
+                                <td>
+                                    <div class="user-info">
+                                        <div class="user-avatar" style="background-color: ${this.getAvatarColor(name)}">
+                                            ${this.getInitials(name)}
+                                        </div>
+                                        <div class="user-details">
+                                            <div class="user-name">${this.escapeHtml(name)}</div>
+                                            <div class="user-id">${this.escapeHtml(email)}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>${this.escapeHtml(email)}</td>
+                                <td>
+                                    <span class="department-badge department-${department.toLowerCase()}">
+                                        ${this.escapeHtml(department)}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="role-badge role-${role.toLowerCase()}">
+                                        ${this.escapeHtml(role)}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge status-${status.toLowerCase()}">
+                                        <i class="fas fa-${status === 'active' ? 'check-circle' : 'times-circle'}"></i>
+                                        ${status}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="2fa-badge ${requires2FA ? 'enabled' : 'disabled'}">
+                                        <i class="fas fa-shield-alt"></i>
+                                        ${requires2FA ? 'Enabled' : 'Disabled'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        ${this.renderActionButtons(user)}
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    this.attachTableEventListeners();
+                } catch (error) {
+                    console.error('Error rendering users:', error);
+                    this.renderErrorState('Error rendering user list');
+                }
+            },
+
+            renderActionButtons: function(user) {
+                const buttons = [];
+
+                if (this.hasPermission('EDIT_USERS')) {
+                    buttons.push(`
+                        <button onclick="UserManagement.editUser('${user._id}')" 
+                                class="btn-icon" title="Edit User">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    `);
+                }
+
+                if (this.hasPermission('MANAGE_USER_STATUS')) {
+                    buttons.push(`
+                        <button onclick="UserManagement.toggleUserStatus('${user._id}')" 
+                                class="btn-icon ${user.status === 'active' ? 'danger' : 'success'}"
+                                title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User">
+                            <i class="fas fa-${user.status === 'active' ? 'ban' : 'check'}"></i>
+                        </button>
+                    `);
+                }
+
+                if (this.hasPermission('MANAGE_USER_SECURITY')) {
+                    buttons.push(`
+                        <button onclick="UserManagement.changeUserPassword('${user._id}')" 
+                                class="btn-icon warning" title="Change Password">
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <button onclick="UserManagement.toggle2FA('${user._id}')"
+                                class="btn-icon ${user.requires2FA ? 'success' : 'warning'}"
+                                title="${user.requires2FA ? 'Disable' : 'Enable'} 2FA">
+                            <i class="fas fa-shield-alt"></i>
+                        </button>
+                    `);
+                }
+
+                if (this.hasPermission('DELETE_USERS')) {
+                    buttons.push(`
+                        <button onclick="UserManagement.deleteUser('${user._id}')" 
+                                class="btn-icon danger" title="Delete User">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    `);
+                }
+
+                return buttons.join('');
+            },
                         // User Management Functions
             openAddUserModal: function() {
-                if (!window.RBAC.manager.hasPermission('CREATE_USERS')) {
+                if (!this.hasPermission('CREATE_USERS')) {
                     this.showNotification('You do not have permission to create users', 'error');
                     return;
                 }
@@ -1711,6 +1827,120 @@
                 };
             },
 
+            editUser: function(userId) {
+                if (!this.hasPermission('EDIT_USERS')) {
+                    this.showNotification('You do not have permission to edit users', 'error');
+                    return;
+                }
+
+                const user = this.state.users.find(u => u._id === userId);
+                if (!user) {
+                    this.showNotification('User not found', 'error');
+                    return;
+                }
+
+                const modalContainer = document.createElement('div');
+                modalContainer.innerHTML = `
+                    <div class="modal active">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2>Edit User: ${this.escapeHtml(user.name)}</h2>
+                                <button class="close-btn" onclick="this.closest('.modal').remove()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <form id="editUserForm">
+                                <div class="form-group">
+                                    <label for="editName">Full Name *</label>
+                                    <input type="text" id="editName" name="name" value="${this.escapeHtml(user.name)}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="editEmail">Email *</label>
+                                    <input type="email" id="editEmail" name="email" value="${this.escapeHtml(user.email)}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="editDepartment">Department *</label>
+                                    <select id="editDepartment" name="department" required>
+                                        <option value="HR" ${user.department === 'HR' ? 'selected' : ''}>HR</option>
+                                        <option value="Finance" ${user.department === 'Finance' ? 'selected' : ''}>Finance</option>
+                                        <option value="IT" ${user.department === 'IT' ? 'selected' : ''}>IT</option>
+                                        <option value="Admin" ${user.department === 'Admin' ? 'selected' : ''}>Admin</option>
+                                        <option value="Support" ${user.department === 'Support' ? 'selected' : ''}>Support</option>
+                                        <option value="Sales" ${user.department === 'Sales' ? 'selected' : ''}>Sales</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="editRole">Role *</label>
+                                    <select id="editRole" name="role" required>
+                                        ${this.generateRoleOptions(user.role)}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="editRequire2FA" name="requires2FA" ${user.requires2FA ? 'checked' : ''}>
+                                        <span>Require 2FA</span>
+                                    </label>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modalContainer.firstElementChild);
+                this.setupEditUserForm(userId);
+            },
+                        setupEditUserForm: function(userId) {
+                const form = document.getElementById('editUserForm');
+                if (!form) return;
+
+                form.onsubmit = (e) => {
+                    e.preventDefault();
+                    const submitButton = form.querySelector('button[type="submit"]');
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+                    const formData = new FormData(form);
+                    const userData = {
+                        name: formData.get('name'),
+                        email: formData.get('email'),
+                        department: formData.get('department'),
+                        role: formData.get('role'),
+                        requires2FA: formData.get('requires2FA') === 'on'
+                    };
+
+                    const token = localStorage.getItem('token');
+                    fetch(`https://18.215.160.136.nip.io/api/users/${userId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(userData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || 'Failed to update user');
+                        }
+                        this.showNotification('User updated successfully', 'success');
+                        form.closest('.modal').remove();
+                        this.loadUsers();
+                    })
+                    .catch(error => {
+                        console.error('Error updating user:', error);
+                        this.showNotification(error.message, 'error');
+                    })
+                    .finally(() => {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = 'Save Changes';
+                    });
+                };
+            },
+
             deleteUser: function(userId) {
                 const user = this.state.users.find(u => u._id === userId);
                 if (!user) {
@@ -1801,488 +2031,348 @@
                 });
             },
 
-            // Add these functions inside UserManagementModule
-editUser: function(userId) {
-    if (!window.RBAC.manager.hasPermission('EDIT_USERS')) {
-        this.showNotification('You do not have permission to edit users', 'error');
-        return;
-    }
-
-    const user = this.state.users.find(u => u._id === userId);
-    if (!user) {
-        this.showNotification('User not found', 'error');
-        return;
-    }
-
-    const modalContainer = document.createElement('div');
-    modalContainer.innerHTML = `
-        <div class="modal active">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Edit User: ${this.escapeHtml(user.name)}</h2>
-                    <button class="close-btn" onclick="this.closest('.modal').remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <form id="editUserForm">
-                    <div class="form-group">
-                        <label for="editName">Full Name *</label>
-                        <input type="text" id="editName" name="name" value="${this.escapeHtml(user.name)}" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="editEmail">Email *</label>
-                        <input type="email" id="editEmail" name="email" value="${this.escapeHtml(user.email)}" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="editDepartment">Department *</label>
-                        <select id="editDepartment" name="department" required>
-                            <option value="HR" ${user.department === 'HR' ? 'selected' : ''}>HR</option>
-                            <option value="Finance" ${user.department === 'Finance' ? 'selected' : ''}>Finance</option>
-                            <option value="IT" ${user.department === 'IT' ? 'selected' : ''}>IT</option>
-                            <option value="Admin" ${user.department === 'Admin' ? 'selected' : ''}>Admin</option>
-                            <option value="Support" ${user.department === 'Support' ? 'selected' : ''}>Support</option>
-                            <option value="Sales" ${user.department === 'Sales' ? 'selected' : ''}>Sales</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="editRole">Role *</label>
-                        <select id="editRole" name="role" required>
-                            ${this.generateRoleOptions(user.role)}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="editRequire2FA" name="requires2FA" ${user.requires2FA ? 'checked' : ''}>
-                            <span>Require 2FA</span>
-                        </label>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(modalContainer.firstElementChild);
-    this.setupEditUserForm(userId);
-},
-
-            setupEditUserForm: function(userId) {
-    const form = document.getElementById('editUserForm');
-    if (!form) return;
-
-    form.onsubmit = (e) => {
-        e.preventDefault();
-        const submitButton = form.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-
-        const formData = new FormData(form);
-        const userData = {
-            name: formData.get('name'),
-            email: formData.get('email'),
-            department: formData.get('department'),
-            role: formData.get('role'),
-            requires2FA: formData.get('requires2FA') === 'on'
-        };
-
-        const token = localStorage.getItem('token');
-        fetch(`https://18.215.160.136.nip.io/api/users/${userId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(userData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (!data.success) {
-                throw new Error(data.message || 'Failed to update user');
-            }
-            this.showNotification('User updated successfully', 'success');
-            form.closest('.modal').remove();
-            this.loadUsers();
-        })
-        .catch(error => {
-            console.error('Error updating user:', error);
-            this.showNotification(error.message, 'error');
-        })
-        .finally(() => {
-            submitButton.disabled = false;
-            submitButton.innerHTML = 'Save Changes';
-        });
-    };
-},
             toggleUserStatus: function(userId) {
-    if (!window.RBAC.manager.hasPermission('MANAGE_USER_STATUS')) {
-        this.showNotification('You do not have permission to manage user status', 'error');
-        return;
-    }
-
-    const user = this.state.users.find(u => u._id === userId);
-    if (!user) {
-        this.showNotification('User not found', 'error');
-        return;
-    }
-
-    const newStatus = user.status === 'active' ? 'inactive' : 'active';
-    const token = localStorage.getItem('token');
-
-    fetch(`https://18.215.160.136.nip.io/api/users/${userId}/status`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: newStatus })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (!data.success) {
-            throw new Error(data.message || 'Failed to update user status');
-        }
-        this.showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
-        this.loadUsers();
-    })
-    .catch(error => {
-        console.error('Error toggling user status:', error);
-        this.showNotification(error.message, 'error');
-    });
-},
-
-            changeUserPassword: function(userId) {
-    if (!window.RBAC.manager.hasPermission('MANAGE_USER_SECURITY')) {
-        this.showNotification('You do not have permission to change passwords', 'error');
-        return;
-    }
-
-    const user = this.state.users.find(u => u._id === userId);
-    if (!user) {
-        this.showNotification('User not found', 'error');
-        return;
-    }
-
-    const modalContainer = document.createElement('div');
-    modalContainer.innerHTML = `
-        <div class="modal active">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Change Password: ${this.escapeHtml(user.name)}</h2>
-                    <button class="close-btn" onclick="this.closest('.modal').remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <form id="changePasswordForm">
-                    <div class="form-group">
-                        <label for="newPassword">New Password</label>
-                        <input type="password" id="newPassword" name="password" required minlength="8">
-                    </div>
-                    <div class="form-group">
-                        <label for="confirmPassword">Confirm Password</label>
-                        <input type="password" id="confirmPassword" required minlength="8">
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Change Password</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(modalContainer.firstElementChild);
-    this.setupChangePasswordForm(userId);
-},
-
-            setupChangePasswordForm: function(userId) {
-    const form = document.getElementById('changePasswordForm');
-    if (!form) return;
-
-    form.onsubmit = (e) => {
-        e.preventDefault();
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-
-        if (newPassword !== confirmPassword) {
-            this.showNotification('Passwords do not match', 'error');
-            return;
-        }
-
-        const submitButton = form.querySelector('button[type="submit"]');
-        submitButton.disabled = true;
-        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Changing Password...';
-
-        const token = localStorage.getItem('token');
-        fetch(`https://18.215.160.136.nip.io/api/users/${userId}/reset-password`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ password: newPassword })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (!data.success) {
-                throw new Error(data.message || 'Failed to change password');
-            }
-            this.showNotification('Password changed successfully', 'success');
-            form.closest('.modal').remove();
-        })
-        .catch(error => {
-            console.error('Error changing password:', error);
-            this.showNotification(error.message, 'error');
-        })
-        .finally(() => {
-            submitButton.disabled = false;
-            submitButton.innerHTML = 'Change Password';
-        });
-    };
-},
-toggle2FA: function(userId) {
-    if (!window.RBAC.manager.hasPermission('MANAGE_USER_SECURITY')) {
-        this.showNotification('You do not have permission to manage 2FA', 'error');
-        return;
-    }
-
-    const user = this.state.users.find(u => u._id === userId);
-    if (!user) {
-        this.showNotification('User not found', 'error');
-        return;
-    }
-
-    const token = localStorage.getItem('token');
-    fetch(`https://18.215.160.136.nip.io/api/users/${userId}/2fa`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ requires2FA: !user.requires2FA })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (!data.success) {
-            throw new Error(data.message || 'Failed to update 2FA status');
-        }
-        this.showNotification(`2FA ${!user.requires2FA ? 'enabled' : 'disabled'} successfully`, 'success');
-        this.loadUsers();
-    })
-    .catch(error => {
-        console.error('Error toggling 2FA:', error);
-        this.showNotification(error.message, 'error');
-    });
-},
-
-            // Add these additional functions to UserManagementModule
-generateRoleOptions: function(selectedRole = '') {
-    const roles = [
-        { id: 'admin', name: 'Admin' },
-        { id: 'manager', name: 'Manager' },
-        { id: 'user', name: 'User' }
-    ];
-
-    return `
-        <option value="">Select Role</option>
-        ${roles.map(role => `
-            <option value="${role.id}" ${selectedRole === role.id ? 'selected' : ''}>
-                ${role.name}
-            </option>
-        `).join('')}
-    `;
-},
-
-            updateRolePermissions: function() {
-    if (!this.state.selectedRole || this.state.selectedRole === 'SUPER_ADMIN') {
-        return;
-    }
-
-    const permissions = Array.from(
-        document.querySelectorAll('#permissionsList input[type="checkbox"]:checked')
-    ).map(cb => cb.value);
-
-    const token = localStorage.getItem('token');
-    return fetch(`https://18.215.160.136.nip.io/api/roles/${this.state.selectedRole}/permissions`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ permissions })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (!data.success) {
-            throw new Error(data.message || 'Failed to update permissions');
-        }
-        this.showNotification('Permissions updated successfully', 'success');
-    })
-    .catch(error => {
-        console.error('Error updating permissions:', error);
-        this.showNotification(error.message, 'error');
-        this.renderPermissionsList(); // Revert changes on error
-    });
-},
-
-
-
-
-                        // Role Management Functions
-            openRoleManagement: function() {
-                if (!window.RBAC.manager.hasPermission('MANAGE_ROLES')) {
-                    this.showNotification('You do not have permission to manage roles', 'error');
+                if (!this.hasPermission('MANAGE_USER_STATUS')) {
+                    this.showNotification('You do not have permission to manage user status', 'error');
                     return;
                 }
 
-                const template = document.getElementById('roleManagementModal');
-                if (!template) {
-                    this.showNotification('Role management template not found', 'error');
+                const user = this.state.users.find(u => u._id === userId);
+                if (!user) {
+                    this.showNotification('User not found', 'error');
                     return;
                 }
 
-                const modalContent = template.content.cloneNode(true);
-                document.body.appendChild(modalContent);
+                const newStatus = user.status === 'active' ? 'inactive' : 'active';
+                const token = localStorage.getItem('token');
 
-                this.initializeRoleManagement();
-            },
-
-            initializeRoleManagement: function() {
-                const rolesList = document.getElementById('rolesList');
-                const permissionsList = document.getElementById('permissionsList');
-
-                if (!rolesList || !permissionsList) return;
-
-                // Populate roles list
-                rolesList.innerHTML = this.renderRolesList();
-
-                // Setup role click handlers
-                const roleItems = document.querySelectorAll('.role-item');
-                roleItems.forEach(item => {
-                    item.addEventListener('click', () => {
-                        const roleKey = item.dataset.role;
-                        this.selectRole(roleKey);
-                    });
+                fetch(`https://18.215.160.136.nip.io/api/users/${userId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to update user status');
+                    }
+                    this.showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
+                    this.loadUsers();
+                })
+                .catch(error => {
+                    console.error('Error toggling user status:', error);
+                    this.showNotification(error.message, 'error');
                 });
-
-                // Select first role by default
-                if (roleItems.length > 0) {
-                    this.selectRole(roleItems[0].dataset.role);
-                }
             },
+                        changeUserPassword: function(userId) {
+                if (!this.hasPermission('MANAGE_USER_SECURITY')) {
+                    this.showNotification('You do not have permission to change passwords', 'error');
+                    return;
+                }
 
-            renderRolesList: function() {
-                const roles = [
-                    { id: 'SUPER_ADMIN', name: 'Super Admin', description: 'Full system access' },
-                    { id: 'ADMIN', name: 'Administrator', description: 'System administration' },
-                    { id: 'MANAGER', name: 'Manager', description: 'Department management' },
-                    { id: 'USER', name: 'User', description: 'Basic user access' }
-                ];
+                const user = this.state.users.find(u => u._id === userId);
+                if (!user) {
+                    this.showNotification('User not found', 'error');
+                    return;
+                }
 
-                return roles.map(role => `
-                    <div class="role-item ${this.state.selectedRole === role.id ? 'active' : ''}" 
-                         data-role="${role.id}">
-                        <div class="role-info">
-                            <h4>${this.escapeHtml(role.name)}</h4>
-                            <p>${this.escapeHtml(role.description)}</p>
+                const modalContainer = document.createElement('div');
+                modalContainer.innerHTML = `
+                    <div class="modal active">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2>Change Password: ${this.escapeHtml(user.name)}</h2>
+                                <button class="close-btn" onclick="this.closest('.modal').remove()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <form id="changePasswordForm">
+                                <div class="form-group">
+                                    <label for="newPassword">New Password</label>
+                                    <input type="password" id="newPassword" name="password" required minlength="8">
+                                </div>
+                                <div class="form-group">
+                                    <label for="confirmPassword">Confirm Password</label>
+                                    <input type="password" id="confirmPassword" required minlength="8">
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Change Password</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
-                `).join('');
+                `;
+
+                document.body.appendChild(modalContainer.firstElementChild);
+                this.setupChangePasswordForm(userId);
             },
 
-            selectRole: function(roleKey) {
-                this.state.selectedRole = roleKey;
-                
-                document.querySelectorAll('.role-item').forEach(item => {
-                    item.classList.toggle('active', item.dataset.role === roleKey);
-                });
+            setupChangePasswordForm: function(userId) {
+                const form = document.getElementById('changePasswordForm');
+                if (!form) return;
 
-                this.renderPermissionsList();
-            },
+                form.onsubmit = (e) => {
+                    e.preventDefault();
+                    const newPassword = document.getElementById('newPassword').value;
+                    const confirmPassword = document.getElementById('confirmPassword').value;
 
-            renderPermissionsList: function() {
-                const permissionsList = document.getElementById('permissionsList');
-                if (!permissionsList) return;
+                    if (newPassword !== confirmPassword) {
+                        this.showNotification('Passwords do not match', 'error');
+                        return;
+                    }
 
-                const permissionGroups = {
-                    'User Management': ['CREATE_USERS', 'EDIT_USERS', 'DELETE_USERS', 'VIEW_USERS'],
-                    'Role Management': ['MANAGE_ROLES', 'ASSIGN_ROLES'],
-                    'Security': ['MANAGE_2FA', 'RESET_PASSWORDS', 'VIEW_AUDIT_LOGS'],
-                    'System': ['ACCESS_ADMIN_PANEL', 'MANAGE_SETTINGS']
-                };
+                    const submitButton = form.querySelector('button[type="submit"]');
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Changing Password...';
 
-                permissionsList.innerHTML = Object.entries(permissionGroups).map(([groupName, permissions]) => `
-                    <div class="permission-group">
-                        <h4>${this.escapeHtml(groupName)}</h4>
-                        ${permissions.map(permission => `
-                            <div class="permission-item">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" 
-                                           value="${permission}"
-                                           ${window.RBAC.manager.hasPermission(permission) ? 'checked' : ''}
-                                           ${this.state.selectedRole === 'SUPER_ADMIN' ? 'disabled' : ''}>
-                                    <span>${this.formatPermissionName(permission)}</span>
-                                </label>
-                            </div>
-                        `).join('')}
-                    </div>
-                `).join('');
-
-                this.setupPermissionHandlers();
-            },
-
-            setupPermissionHandlers: function() {
-                const checkboxes = document.querySelectorAll('.permission-item input[type="checkbox"]');
-                checkboxes.forEach(checkbox => {
-                    checkbox.addEventListener('change', e => {
-                        if (this.state.selectedRole === 'SUPER_ADMIN') {
-                            e.preventDefault();
-                            return;
+                    const token = localStorage.getItem('token');
+                    fetch(`https://18.215.160.136.nip.io/api/users/${userId}/reset-password`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ password: newPassword })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            throw new Error(data.message || 'Failed to change password');
                         }
-
-                        this.updateRolePermissions();
+                        this.showNotification('Password changed successfully', 'success');
+                        form.closest('.modal').remove();
+                    })
+                    .catch(error => {
+                        console.error('Error changing password:', error);
+                        this.showNotification(error.message, 'error');
+                    })
+                    .finally(() => {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = 'Change Password';
                     });
+                };
+            },
+
+            toggle2FA: function(userId) {
+                if (!this.hasPermission('MANAGE_USER_SECURITY')) {
+                    this.showNotification('You do not have permission to manage 2FA', 'error');
+                    return;
+                }
+
+                const user = this.state.users.find(u => u._id === userId);
+                if (!user) {
+                    this.showNotification('User not found', 'error');
+                    return;
+                }
+
+                const token = localStorage.getItem('token');
+                fetch(`https://18.215.160.136.nip.io/api/users/${userId}/2fa`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ requires2FA: !user.requires2FA })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to update 2FA status');
+                    }
+                    this.showNotification(`2FA ${!user.requires2FA ? 'enabled' : 'disabled'} successfully`, 'success');
+                    this.loadUsers();
+                })
+                .catch(error => {
+                    console.error('Error toggling 2FA:', error);
+                    this.showNotification(error.message, 'error');
                 });
             },
 
             // Utility Functions
-            generateRoleOptions: function() {
-                const roles = [
-                    { id: 'admin', name: 'Admin' },
-                    { id: 'manager', name: 'Manager' },
-                    { id: 'user', name: 'User' }
-                ];
-
-                return `
-                    <option value="">Select Role</option>
-                    ${roles.map(role => `
-                        <option value="${role.id}">${role.name}</option>
-                    `).join('')}
+            showNotification: function(message, type = 'info', duration = 5000) {
+                const notificationId = 'notification-' + Date.now();
+                const notification = document.createElement('div');
+                notification.id = notificationId;
+                notification.className = `notification notification-${type} ${type}`;
+                
+                notification.innerHTML = `
+                    <div class="notification-content">
+                        <div class="notification-icon">
+                            <i class="fas fa-${this.getNotificationIcon(type)}"></i>
+                        </div>
+                        <div class="notification-message">
+                            ${message}
+                        </div>
+                        <button class="notification-close" onclick="this.parentElement.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="notification-progress"></div>
                 `;
+
+                // Remove existing notifications of the same type
+                document.querySelectorAll(`.notification.${type}`).forEach(n => n.remove());
+
+                document.body.appendChild(notification);
+
+                const progress = notification.querySelector('.notification-progress');
+                progress.style.animation = `notification-progress ${duration}ms linear`;
+
+                setTimeout(() => {
+                    notification.classList.add('notification-hiding');
+                    setTimeout(() => {
+                        if (document.getElementById(notificationId)) {
+                            document.getElementById(notificationId).remove();
+                        }
+                    }, 300);
+                }, duration);
             },
 
-            formatPermissionName: function(permission) {
-                return permission
-                    .split('_')
-                    .map(word => word.charAt(0) + word.slice(1).toLowerCase())
-                    .join(' ');
+            getNotificationIcon: function(type) {
+                const icons = {
+                    success: 'check-circle',
+                    error: 'exclamation-circle',
+                    warning: 'exclamation-triangle',
+                    info: 'info-circle'
+                };
+                return icons[type] || icons.info;
+            },
+                        // Additional Utility Functions
+            renderLoadingState: function() {
+                const tbody = document.getElementById('usersTableBody');
+                if (tbody) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="loading-state">
+                                <div class="loading-spinner">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </div>
+                                <p>Loading users...</p>
+                            </td>
+                        </tr>
+                    `;
+                }
+            },
+
+            renderErrorState: function(message) {
+                const tbody = document.getElementById('usersTableBody');
+                if (tbody) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" class="error-state">
+                                <div class="error-icon">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                </div>
+                                <p>${this.escapeHtml(message || 'Error loading users')}</p>
+                                <button class="btn btn-secondary" onclick="UserManagement.retryLoad()">
+                                    <i class="fas fa-sync"></i> Retry
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            },
+
+            retryLoad: function() {
+                this.loadUsers();
+            },
+
+            attachTableEventListeners: function() {
+                const tbody = document.getElementById('usersTableBody');
+                if (!tbody) return;
+
+                // Row hover effects
+                tbody.querySelectorAll('tr').forEach(row => {
+                    row.addEventListener('mouseenter', () => {
+                        row.classList.add('hover');
+                    });
+                    row.addEventListener('mouseleave', () => {
+                        row.classList.remove('hover');
+                    });
+                });
+
+                // Action button tooltips
+                tbody.querySelectorAll('.btn-icon').forEach(button => {
+                    button.addEventListener('mouseenter', (e) => {
+                        const tooltip = document.createElement('div');
+                        tooltip.className = 'tooltip';
+                        tooltip.textContent = button.getAttribute('title');
+                        document.body.appendChild(tooltip);
+
+                        const rect = button.getBoundingClientRect();
+                        tooltip.style.top = `${rect.top - tooltip.offsetHeight - 5}px`;
+                        tooltip.style.left = `${rect.left + (button.offsetWidth - tooltip.offsetWidth) / 2}px`;
+
+                        button.addEventListener('mouseleave', () => tooltip.remove());
+                    });
+                });
+            },
+
+            cleanup: function() {
+                // Remove event listeners
+                const searchInput = document.getElementById('userSearch');
+                if (searchInput) {
+                    searchInput.removeEventListener('input', this.handleSearch);
+                }
+
+                ['department', 'status', 'role'].forEach(filterType => {
+                    const select = document.getElementById(`${filterType}Filter`);
+                    if (select) {
+                        select.removeEventListener('change', this.handleFilter);
+                    }
+                });
+
+                // Clear any open modals
+                document.querySelectorAll('.modal.active').forEach(modal => modal.remove());
+
+                // Clear tooltips
+                document.querySelectorAll('.tooltip').forEach(tooltip => tooltip.remove());
+
+                // Reset state
+                this.state = {
+                    users: [],
+                    deletedUsers: [],
+                    currentUser: null,
+                    filters: {
+                        search: '',
+                        department: '',
+                        status: '',
+                        role: ''
+                    },
+                    pagination: {
+                        page: 1,
+                        limit: 10,
+                        total: 0
+                    },
+                    loading: false,
+                    selectedRole: null,
+                    auditLogs: [],
+                    permissions: new Map(),
+                    initialized: false
+                };
+            },
+
+            escapeHtml: function(str) {
+                if (!str) return '';
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
             },
 
             getAvatarColor: function(name) {
                 if (!name) return '#4f46e5';
-
                 const colors = [
                     '#4f46e5', '#7c3aed', '#db2777', '#ea580c', '#16a34a',
                     '#2563eb', '#9333ea', '#e11d48', '#d97706', '#15803d'
                 ];
-                
                 let hash = 0;
                 for (let i = 0; i < name.length; i++) {
                     hash = name.charCodeAt(i) + ((hash << 5) - hash);
                 }
-                
                 return colors[Math.abs(hash) % colors.length];
             },
 
@@ -2296,464 +2386,42 @@ generateRoleOptions: function(selectedRole = '') {
                     .slice(0, 2);
             },
 
-            escapeHtml: function(str) {
-                if (!str) return '';
-                const div = document.createElement('div');
-                div.textContent = str;
-                return div.innerHTML;
-            },
-
-                        // Notification System
-            showNotification: function(message, type = 'info', duration = 5000) {
-            const notificationId = 'notification-' + Date.now();
-            const notification = document.createElement('div');
-            notification.id = notificationId;
-            notification.className = `notification notification-${type} ${type}`;
-            
-            notification.innerHTML = `
-                <div class="notification-content">
-                    <div class="notification-icon">
-                        <i class="fas fa-${this.getNotificationIcon(type)}"></i>
-                    </div>
-                    <div class="notification-message">
-                        ${message}
-                    </div>
-                    <button class="notification-close" onclick="this.parentElement.parentElement.remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="notification-progress"></div>
-            `;
-
-            // Remove existing notifications of the same type
-            document.querySelectorAll(`.notification.${type}`).forEach(n => n.remove());
-
-            document.body.appendChild(notification);
-
-            const progress = notification.querySelector('.notification-progress');
-            progress.style.animation = `notification-progress ${duration}ms linear`;
-
-            setTimeout(() => {
-                notification.classList.add('notification-hiding');
-                setTimeout(() => {
-                    if (document.getElementById(notificationId)) {
-                        document.getElementById(notificationId).remove();
+            handleApiError: function(error) {
+                console.error('API Error:', error);
+                let message = 'An unexpected error occurred';
+                if (error.response) {
+                    try {
+                        const errorData = error.response.json();
+                        message = errorData.message || message;
+                    } catch (e) {
+                        console.error('Error parsing error response:', e);
                     }
-                }, 300);
-            }, duration);
-        },
-
-            // Permission handling
-        hasPermission: function(permission) {
-            // Check if user is superadmin first
-            if (this.state.currentUser?.role?.toLowerCase() === 'superadmin') {
-                return true;
-            }
-
-            // Convert permission format if needed
-            const oldFormatMap = {
-                'CREATE_USERS': 'users:create',
-                'EDIT_USERS': 'users:edit',
-                'DELETE_USERS': 'users:delete',
-                'VIEW_USERS': 'users:view',
-                'MANAGE_ROLES': 'users:manage-roles',
-                'MANAGE_USER_STATUS': 'users:manage-status',
-                'MANAGE_USER_SECURITY': 'users:manage-security',
-                'VIEW_AUDIT_LOGS': 'audit:view',
-                'VIEW_DELETED_USERS': 'users:view-deleted'
-            };
-
-            const permissionToCheck = oldFormatMap[permission] || permission;
-            return window.RBAC.manager.hasPermission(permissionToCheck);
-        },
-
-              // Module initialization and cleanup
-        initializeModule: function() {
-            return new Promise((resolve, reject) => {
-                try {
-                    // Add necessary styles
-                    this.addStyles();
-
-                    // Initialize state
-                    this.state.currentUser = this.getCurrentUserFromToken();
-
-                    // Setup event listeners
-                    this.setupEventListeners();
-
-                    // Load initial data
-                    this.loadUsers()
-                        .then(() => {
-                            console.log('User Management module initialized successfully');
-                            resolve();
-                        })
-                        .catch(error => {
-                            console.error('Error loading initial data:', error);
-                            reject(error);
-                        });
-
-                } catch (error) {
-                    console.error('Error initializing module:', error);
-                    reject(error);
+                } else if (error.message) {
+                    message = error.message;
                 }
-            });
-        },
-
-            addStyles: function() {
-            if (!document.getElementById('user-management-styles')) {
-                const style = document.createElement('style');
-                style.id = 'user-management-styles';
-                style.textContent = `
-                    .notification {
-                        position: fixed;
-                        top: 20px;
-                        right: 20px;
-                        min-width: 300px;
-                        max-width: 400px;
-                        background: var(--surface-color);
-                        border-radius: var(--card-radius);
-                        box-shadow: var(--shadow-lg);
-                        z-index: 1000;
-                        overflow: hidden;
-                    }
-
-                    .notification-content {
-                        display: flex;
-                        align-items: center;
-                        padding: 15px;
-                    }
-
-                    .notification-icon {
-                        margin-right: 15px;
-                        font-size: 20px;
-                    }
-
-                    .notification-message {
-                        flex-grow: 1;
-                        font-size: 14px;
-                    }
-
-                    .notification-close {
-                        background: none;
-                        border: none;
-                        color: var(--text-secondary);
-                        cursor: pointer;
-                        padding: 5px;
-                    }
-
-                    .notification-progress {
-                        height: 3px;
-                        background: var(--primary-color);
-                        width: 100%;
-                    }
-
-                    @keyframes notification-progress {
-                        from { width: 100%; }
-                        to { width: 0%; }
-                    }
-
-                    .tooltip {
-                        position: fixed;
-                        background: rgba(0, 0, 0, 0.8);
-                        color: white;
-                        padding: 5px 10px;
-                        border-radius: 4px;
-                        font-size: 12px;
-                        z-index: 1000;
-                        pointer-events: none;
-                    }
-                `;
-                document.head.appendChild(style);
+                this.showNotification(message, 'error');
             }
-        }
-    };
+        };
 
-            
-// Initialize the module
-    window.UserManagement = UserManagementModule;
+        // Initialize the module
+        window.UserManagement = UserManagementModule;
 
-
-            getNotificationIcon: function(type) {
-                const icons = {
-                    success: 'check-circle',
-                    error: 'exclamation-circle',
-                    warning: 'exclamation-triangle',
-                    info: 'info-circle'
-                };
-                return icons[type] || icons.info;
-            },
-
-            // Loading States
-            renderLoadingState: function() {
-    const tbody = document.getElementById('usersTableBody');
-    if (tbody) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="loading-state">
-                    <div class="loading-spinner">
-                        <i class="fas fa-spinner fa-spin"></i>
-                    </div>
-                    <p>Loading users...</p>
-                </td>
-            </tr>
-        `;
-    }
-},
-            renderErrorState: function(message) {
-    const tbody = document.getElementById('usersTableBody');
-    if (tbody) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="error-state">
-                    <div class="error-icon">
-                        <i class="fas fa-exclamation-circle"></i>
-                    </div>
-                    <p>${this.escapeHtml(message || 'Error loading users')}</p>
-                    <button class="btn btn-secondary" onclick="UserManagement.retryLoad()">
-                        <i class="fas fa-sync"></i> Retry
-                    </button>
-                </td>
-            </tr>
-        `;
-    }
-},
-            retryLoad: function() {
-    this.loadUsers();
-},
-            showConfirmationDialog: function(message, type = 'warning') {
-    return new Promise((resolve) => {
-        const dialog = document.createElement('div');
-        dialog.className = 'modal active confirmation-dialog';
-        dialog.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Confirmation Required</h2>
-                    <button class="close-btn" onclick="this.closest('.modal').remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="confirmation-icon ${type}">
-                        <i class="fas fa-${type === 'warning' ? 'exclamation-triangle' : 'question-circle'}"></i>
-                    </div>
-                    <p class="confirmation-message">${message}</p>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
-                        Cancel
-                    </button>
-                    <button class="btn btn-${type === 'warning' ? 'danger' : 'primary'}" 
-                            onclick="this.closest('.modal').dataset.confirmed = 'true'; this.closest('.modal').remove()">
-                        Confirm
-                    </button>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(dialog);
-
-        dialog.addEventListener('remove', () => {
-            resolve(dialog.dataset.confirmed === 'true');
-        });
-    });
-},
-            
-validateForm: function(formData, rules) {
-    const errors = {};
-    
-    for (const [field, value] of formData.entries()) {
-        if (rules[field]) {
-            const fieldRules = rules[field];
-            
-            if (fieldRules.required && !value) {
-                errors[field] = `${field} is required`;
-            }
-            
-            if (fieldRules.minLength && value.length < fieldRules.minLength) {
-                errors[field] = `${field} must be at least ${fieldRules.minLength} characters`;
-            }
-            
-            if (fieldRules.email && !this.isValidEmail(value)) {
-                errors[field] = `Invalid email address`;
-            }
-            
-            if (fieldRules.pattern && !fieldRules.pattern.test(value)) {
-                errors[field] = fieldRules.message || `Invalid ${field} format`;
-            }
-        }
-    }
-
-    return Object.keys(errors).length === 0 ? null : errors;
-},
-
-isValidEmail: function(email) {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return emailRegex.test(email);
-},
-
-handleApiError: function(error) {
-    console.error('API Error:', error);
-    
-    let message = 'An unexpected error occurred';
-    
-    if (error.response) {
-        try {
-            const errorData = error.response.json();
-            message = errorData.message || message;
-        } catch (e) {
-            console.error('Error parsing error response:', e);
-        }
-    } else if (error.message) {
-        message = error.message;
-    }
-
-    this.showNotification(message, 'error');
-},
-
-refreshData: async function() {
-    try {
-        this.state.loading = true;
-        await Promise.all([
-            this.loadUsers(),
-            this.hasPermission('VIEW_DELETED_USERS') && this.loadDeletedUsers(),
-            this.hasPermission('VIEW_AUDIT_LOGS') && this.loadAuditLogs()
-        ]);
-    } catch (error) {
-        this.handleApiError(error);
-    } finally {
-        this.state.loading = false;
-    }
-},
-
-attachTableEventListeners: function() {
-    const tbody = document.getElementById('usersTableBody');
-    if (!tbody) return;
-
-    // Row hover effects
-    tbody.querySelectorAll('tr').forEach(row => {
-        row.addEventListener('mouseenter', () => {
-            row.classList.add('hover');
-        });
-        row.addEventListener('mouseleave', () => {
-            row.classList.remove('hover');
-        });
-    });
-
-    // Action button tooltips
-    tbody.querySelectorAll('.btn-icon').forEach(button => {
-        button.addEventListener('mouseenter', (e) => {
-            const tooltip = document.createElement('div');
-            tooltip.className = 'tooltip';
-            tooltip.textContent = button.getAttribute('title');
-            document.body.appendChild(tooltip);
-
-            const rect = button.getBoundingClientRect();
-            tooltip.style.top = `${rect.top - tooltip.offsetHeight - 5}px`;
-            tooltip.style.left = `${rect.left + (button.offsetWidth - tooltip.offsetWidth) / 2}px`;
-
-            button.addEventListener('mouseleave', () => tooltip.remove());
-        });
-    });
-},
-
-cleanup: function() {
-    // Remove event listeners
-    const searchInput = document.getElementById('userSearch');
-    if (searchInput) {
-        searchInput.removeEventListener('input', this.handleSearch);
-    }
-
-    ['department', 'status', 'role'].forEach(filterType => {
-        const select = document.getElementById(`${filterType}Filter`);
-        if (select) {
-            select.removeEventListener('change', this.handleFilter);
-        }
-    });
-
-    // Clear any open modals
-    document.querySelectorAll('.modal.active').forEach(modal => modal.remove());
-
-    // Clear tooltips
-    document.querySelectorAll('.tooltip').forEach(tooltip => tooltip.remove());
-
-    // Reset state
-    this.state = {
-        users: [],
-        deletedUsers: [],
-        currentUser: null,
-        filters: {
-            search: '',
-            department: '',
-            status: '',
-            role: ''
-        },
-        pagination: {
-            page: 1,
-            limit: 10,
-            total: 0
-        },
-        loading: false,
-        selectedRole: null,
-        auditLogs: [],
-        permissions: new Map(),
-        initialized: false
-    };
-}
-    // Additional utility functions
-        formatDate: function(date) {
-            if (!date) return 'N/A';
-            return new Date(date).toLocaleString();
-        },
-
-        formatBytes: function(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        },
-
-        debounce: function(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        },
-
-        handleSearch: function(event) {
-            this.state.filters.search = event.target.value;
-            this.loadUsers(true);
-        },
-
-        handleFilter: function(event) {
-            const filterType = event.target.id.replace('Filter', '').toLowerCase();
-            this.state.filters[filterType] = event.target.value;
-            this.loadUsers(true);
-        },
-
-            
-       
-   
         // Create initialization function
-        function initializeUserManagement() {
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                window.UserManagement.initializeModule()
+        const initializeUserManagement = function() {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    window.UserManagement.init()
+                        .catch(function(error) {
+                            console.error('Failed to initialize UserManagement:', error);
+                        });
+                });
+            } else {
+                window.UserManagement.init()
                     .catch(function(error) {
                         console.error('Failed to initialize UserManagement:', error);
                     });
-            });
-        } else {
-            window.UserManagement.initializeModule()
-                .catch(function(error) {
-                    console.error('Failed to initialize UserManagement:', error);
-                });
-        }
-    }
+            }
+        };
 
         // Handle errors globally
         window.addEventListener('error', function(event) {
@@ -2767,4 +2435,5 @@ cleanup: function() {
         // Initialize the module
         initializeUserManagement();
     })();
+
 </script>
