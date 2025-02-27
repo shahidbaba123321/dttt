@@ -2097,6 +2097,70 @@ function showNotification(message, type = 'success', duration = 5000) {
     const progress = notification.querySelector('.notification-progress');
     progress.style.animation = `notification-progress ${duration}ms linear`;
 }
+     // Sidebar State Management
+function updateSidebarState() {
+    console.log('Updating sidebar state...');
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+    const collapseBtn = document.querySelector('.collapse-toggle i');
+    
+    if (sidebar && mainContent) {
+        if (sidebarState.isCollapsed) {
+            sidebar.classList.add('collapsed');
+            mainContent.style.marginLeft = `${70}px`;
+            if (collapseBtn) {
+                collapseBtn.className = 'fas fa-chevron-right';
+            }
+        } else {
+            sidebar.classList.remove('collapsed');
+            mainContent.style.marginLeft = `${280}px`;
+            if (collapseBtn) {
+                collapseBtn.className = 'fas fa-chevron-left';
+            }
+        }
+
+        // Handle mobile state
+        if (sidebarState.isMobile) {
+            mainContent.style.marginLeft = '0';
+            if (sidebar.classList.contains('active')) {
+                document.getElementById('overlay')?.classList.add('active');
+            }
+        }
+
+        // Save state to localStorage
+        localStorage.setItem('sidebarCollapsed', sidebarState.isCollapsed);
+    }
+}
+
+// Update handleResponsiveness function to use the new updateSidebarState
+function handleResponsiveness() {
+    console.log('Setting up responsive handlers...');
+    const mediaQuery = window.matchMedia('(max-width: 1024px)');
+    
+    function handleMobileChange(e) {
+        sidebarState.isMobile = e.matches;
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('overlay');
+        
+        if (!e.matches && sidebar && overlay) {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+            updateSidebarState();
+        }
+    }
+
+    mediaQuery.addListener(handleMobileChange);
+    handleMobileChange(mediaQuery);
+
+    // Debounced resize handler
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            handleMobileChange(mediaQuery);
+        }, 250);
+    });
+}
 
 // Initialize everything when the page loads
 window.addEventListener('load', function() {
