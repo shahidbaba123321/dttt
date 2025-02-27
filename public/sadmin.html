@@ -1593,16 +1593,25 @@ async function initializeUserManagement() {
 
 // Event Listeners
 function setupEventListeners() {
-    document.getElementById('userSearch').addEventListener('keyup', debounceSearch);
-    
-    // Close filter menu when clicking outside
+    const userSearch = document.getElementById('userSearch');
+    if (userSearch) {
+        userSearch.addEventListener('keyup', wrapActionWithErrorHandler(
+            debounceSearch,
+            'Error performing search'
+        ));
+    }
+
+/ Add other event listeners as needed
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.filter-dropdown')) {
-            document.getElementById('filterMenu').classList.remove('active');
+            const filterMenu = document.getElementById('filterMenu');
+            if (filterMenu) {
+                filterMenu.classList.remove('active');
+            }
         }
     });
-}
-
+}    
+    
 // Debounce Search
 let searchTimeout;
 function debounceSearch() {
@@ -1644,13 +1653,13 @@ function updateUsersTable(users) {
     const tbody = document.getElementById('usersTableBody');
     tbody.innerHTML = users.map(user => `
         <tr>
-            <td>${user.name}</td>
-            <td>${user.email}</td>
-            <td>${user.department}</td>
-            <td>${formatRole(user.role)}</td>
+            <td>${escapeHtml(user.name || '')}</td>
+            <td>${escapeHtml(user.email || '')}</td>
+            <td>${escapeHtml(user.department || '')}</td>
+            <td>${escapeHtml(formatRole(user.role || ''))}</td>
             <td>
                 <span class="user-status ${user.status === 'active' ? 'status-active' : 'status-inactive'}">
-                    ${user.status}
+                    ${escapeHtml(user.status || '')}
                 </span>
             </td>
             <td>
@@ -1663,13 +1672,15 @@ function updateUsersTable(users) {
                     <button class="action-button" onclick="editUser('${user._id}')" title="Edit">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="action-button" onclick="toggleUserStatus('${user._id}', '${user.status}')" title="${user.status === 'active' ? 'Deactivate' : 'Activate'}">
+                    <button class="action-button" onclick="toggleUserStatus('${user._id}', '${user.status}')" 
+                            title="${user.status === 'active' ? 'Deactivate' : 'Activate'}">
                         <i class="fas fa-${user.status === 'active' ? 'ban' : 'check-circle'}"></i>
                     </button>
                     <button class="action-button" onclick="openResetPasswordModal('${user._id}')" title="Reset Password">
                         <i class="fas fa-key"></i>
                     </button>
-                    <button class="action-button" onclick="toggle2FA('${user._id}', ${user.requires2FA})" title="${user.requires2FA ? 'Disable 2FA' : 'Enable 2FA'}">
+                    <button class="action-button" onclick="toggle2FA('${user._id}', ${user.requires2FA})" 
+                            title="${user.requires2FA ? 'Disable 2FA' : 'Enable 2FA'}">
                         <i class="fas fa-shield-alt"></i>
                     </button>
                     <button class="action-button" onclick="openDeleteModal('${user._id}')" title="Delete">
@@ -1788,6 +1799,7 @@ function closeUserModal() {
 // Save User
 async function saveUser() {
     try {
+        // Get form values
         const userData = {
             name: document.getElementById('userName').value,
             email: document.getElementById('userEmail').value,
@@ -1795,6 +1807,19 @@ async function saveUser() {
             role: document.getElementById('userRole').value,
             requires2FA: document.getElementById('requires2FA').value === 'true'
         };
+
+        // Validate required fields
+        if (!userData.name || !userData.email || !userData.department || !userData.role) {
+            showNotification('Please fill in all required fields', 'error');
+            return;
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(userData.email)) {
+            showNotification('Please enter a valid email address', 'error');
+            return;
+        }
 
         const endpoint = selectedUserId ? 
             `/users/${selectedUserId}` : 
@@ -1804,20 +1829,27 @@ async function saveUser() {
 
         const response = await makeAuthenticatedRequest(endpoint, {
             method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify(userData)
         });
 
-        if (!response.ok) throw new Error('Failed to save user');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to save user');
+        }
 
         showNotification(
             selectedUserId ? 'User updated successfully' : 'User created successfully',
             'success'
         );
+
         closeUserModal();
-        loadUsers();
+        loadUsers(); // Refresh the users list
     } catch (error) {
         console.error('Error saving user:', error);
-        showNotification('Failed to save user', 'error');
+        showNotification(error.message || 'Failed to save user', 'error');
     }
 }
 
@@ -1893,7 +1925,34 @@ async function toggle2FA(userId, current2FAStatus) {
         showNotification('Failed to update 2FA status', 'error');
     }
 }
+        
+function editUser(userId) {
+    try {
+        const user = usersData.find(u => u._id === userId);
+        if (!user) {
+            showNotification('User not found', 'error');
+            return;
+        }
 
+        selectedUserId = userId;
+        document.getElementById('modalTitle').textContent = 'Edit User';
+        
+        // Populate form fields
+        document.getElementById('userName').value = user.name || '';
+        document.getElementById('userEmail').value = user.email || '';
+        document.getElementById('userDepartment').value = user.department || '';
+        document.getElementById('userRole').value = user.role || '';
+        document.getElementById('requires2FA').value = (user.requires2FA || false).toString();
+
+        // Show modal
+        document.getElementById('userModal').classList.add('active');
+    } catch (error) {
+        console.error('Error editing user:', error);
+        showNotification('Failed to load user data', 'error');
+    }
+}
+
+        
 // Password Reset Functions
 function openResetPasswordModal(userId) {
     selectedUserId = userId;
@@ -1940,6 +1999,27 @@ function formatRole(role) {
         .join(' ');
 }
 
+// Add this security utility function
+function escapeHtml(unsafe) {
+    if (typeof unsafe !== 'string') return '';
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+        // Add error handling wrapper for action buttons
+function wrapActionWithErrorHandler(action, errorMessage) {
+    return async (...args) => {
+        try {
+            await action(...args);
+        } catch (error) {
+            console.error(error);
+            showNotification(errorMessage, 'error');
+        }
+    };
+}
 
     </script>
 </body>
