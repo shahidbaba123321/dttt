@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperAdmin Dashboard - WorkWise Pro</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #4F46E5;
+            --secondary-color: #4338CA;
+            --accent-color: #818CF8;
+            --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --danger-color: #EF4444;
+            --background-color: #F8FAFC;
+            --text-color: #1F2937;
+            --light-text: #64748B;
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            --gradient-start: #EEF2FF;
+            --gradient-end: #E0E7FF;
+            --box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Layout */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sidebar-menu {
+            padding: 1rem 0;
+        }
+
+        .menu-section {
+            margin-bottom: 1rem;
+        }
+
+        .menu-section-title {
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            color: var(--light-text);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .menu-item {
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .menu-item:hover {
+            background: var(--gradient-start);
+            color: var(--primary-color);
+        }
+
+        .menu-item.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .menu-item i {
+            width: 1.5rem;
+            text-align: center;
+        }
+
+        .submenu {
+            padding-left: 1rem;
+            display: none;
+        }
+
+        .submenu.active {
+            display: block;
+        }
+
+        .submenu .menu-item {
+            padding-left: 2.5rem;
+        }
+
+        /* Header Styles */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        .header {
+            height: var(--header-height);
+            background: white;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: var(--sidebar-width);
+            z-index: 999;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .toggle-sidebar {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-color);
+            font-size: 1.25rem;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-menu {
+            position: relative;
+        }
+
+        .user-trigger {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .user-trigger:hover {
+            background: var(--gradient-start);
+        }
+
+        .user-avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: none;
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: var(--box-shadow);
+            min-width: 200px;
+            padding: 0.5rem 0;
+            display: none;
+            z-index: 1000;
+        }
+
+        .user-dropdown.active {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dropdown-item:hover {
+            background: var(--gradient-start);
+            color: var(--primary-color);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: rgba(0, 0, 0, 0.1);
+            margin: 0.5rem 0;
+        }
+
+        /* Content Area */
+        .content {
+            padding: calc(var(--header-height) + 2rem) 2rem 2rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .header {
+                left: 0;
+            }
+
+            .toggle-sidebar {
+                display: block;
+            }
+
+            .user-info {
+                display: none;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .user-info {
+                display: block;
+            }
+        }
+
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            background: white;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--danger-color);
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="#" class="logo">
+                <i class="fas fa-briefcase"></i>
+                WorkWise Pro
+            </a>
+            <button class="toggle-sidebar" id="closeSidebar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <nav class="sidebar-menu">
+            <div class="menu-section">
+                <a href="#dashboard" class="menu-item active" data-section="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard Overview</span>
+                </a>
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-section-title">Management</div>
+                <a href="#companies" class="menu-item" data-section="companies">
+                    <i class="fas fa-building"></i>
+                    <span>Companies/Organizations</span>
+                </a>
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-section-title">System</div>
+                <div class="menu-item" onclick="toggleSubmenu('systemSettings')">
+                    <i class="fas fa-cogs"></i>
+                    <span>System Settings</span>
+                    <i class="fas fa-chevron-down ml-auto"></i>
+                </div>
+                <div class="submenu" id="systemSettings">
+                    <a href="#general-settings" class="menu-item">
+                        <i class="fas fa-sliders-h"></i>
+                        <span>General Settings</span>
+                    </a>
+                    <a href="#pricing-plans" class="menu-item">
+                        <i class="fas fa-tags"></i>
+                        <span>Pricing & Plans</span>
+                    </a>
+                    <a href="#security-settings" class="menu-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Security Settings</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-section-title">Management</div>
+                <div class="menu-item" onclick="toggleSubmenu('moduleManagement')">
+                    <i class="fas fa-cubes"></i>
+                    <span>Modules Management</span>
+                    <i class="fas fa-chevron-down ml-auto"></i>
+                </div>
+                <div class="submenu" id="moduleManagement">
+                    <a href="#modules-list" class="menu-item">
+                        <i class="fas fa-list"></i>
+                        <span>Modules List</span>
+                    </a>
+                    <a href="#module-settings" class="menu-item">
+                        <i class="fas fa-wrench"></i>
+                        <span>Module Settings</span>
+                    </a>
+                </div>
+
+                <div class="menu-item" onclick="toggleSubmenu('userManagement')">
+                    <i class="fas fa-users"></i>
+                    <span>User Management</span>
+                    <i class="fas fa-chevron-down ml-auto"></i>
+                </div>
+                <div class="submenu" id="userManagement">
+                    <a href="#users-list" class="menu-item">
+                        <i class="fas fa-user-friends"></i>
+                        <span>Users List</span>
+                    </a>
+                    <a href="#roles-permissions" class="menu-item">
+                        <i class="fas fa-user-lock"></i>
+                        <span>Roles & Permissions</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-section-title">Tools</div>
+                <a href="#analytics" class="menu-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics & Reports</span>
+                </a>
+                <a href="#backup" class="menu-item">
+                    <i class="fas fa-database"></i>
+                    <span>Backup & Restore</span>
+                </a>
+                <a href="#audit-logs" class="menu-item">
+                    <i class="fas fa-history"></i>
+                    <span>Audit Logs</span>
+                </a>
+                <a href="#api-management" class="menu-item">
+                    <i class="fas fa-code"></i>
+                    <span>API Management</span>
+                </a>
+            </div>
+
+            <div class="menu-section">
+                <div class="menu-section-title">Support</div>
+                <a href="#support-center" class="menu-item">
+                    <i class="fas fa-headset"></i>
+                    <span>Support Center</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="header">
+            <div class="header-left">
+                <button class="toggle-sidebar" id="toggleSidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2 id="pageTitle">Dashboard Overview</h2>
+            </div>
+
+            <div class="header-right">
+                <div class="user-menu">
+                    <div class="user-trigger" onclick="toggleUserMenu()">
+                        <div class="user-avatar" id="userAvatar">
+                            <!-- Will be set by JS -->
+                        </div>
+                        <div class="user-info">
+                            <div id="userName">Loading...</div>
+                            <div id="userRole" style="font-size: 0.8rem; color: var(--light-text)">
+                                SuperAdmin
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="#my-account" class="dropdown-item" onclick="openMyAccount()">
+                            <i class="fas fa-user"></i>
+                            <span>My Account</span>
+                        </a>
+                        <a href="#settings" class="dropdown-item">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" onclick="handleLogout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Sign Out</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="content" id="mainContent">
+            <!-- Content will be dynamically loaded here -->
+            <div id="dashboardSection" class="content-section active">
+                <!-- Dashboard content will be loaded here -->
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Notification Template -->
+<div class="notification" id="notification">
+    <i class="fas fa-info-circle"></i>
+    <span id="notificationMessage"></span>
+</div>
+<script>
+// Global Variables
+let currentUser = null;
+const API_BASE_URL = 'https://18.215.160.136.nip.io/api';
+
+// Initialize Dashboard
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        await checkAuthentication();
+        initializeDashboard();
+        loadUserInfo();
+        loadInitialContent();
+    } catch (error) {
+        console.error('Dashboard initialization error:', error);
+        redirectToLogin();
+    }
+});
+
+// Authentication Check
+async function checkAuthentication() {
+    const token = getToken();
+    if (!token) {
+        throw new Error('No authentication token found');
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/verify-token`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Token verification failed');
+        }
+
+        const data = await response.json();
+        if (data.user.role.toLowerCase() !== 'superadmin') {
+            throw new Error('Unauthorized access');
+        }
+
+        currentUser = data.user;
+    } catch (error) {
+        console.error('Authentication check failed:', error);
+        throw error;
+    }
+}
+
+// Token Management
+function getToken() {
+    return localStorage.getItem('token');
+}
+
+function getQueryParams() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+        email: params.get('email'),
+        role: params.get('role'),
+        token: params.get('token')
+    };
+}
+
+// User Information
+async function loadUserInfo() {
+    const params = getQueryParams();
+    if (params.email && params.role) {
+        const userInitial = params.email.charAt(0).toUpperCase();
+        document.getElementById('userAvatar').textContent = userInitial;
+        document.getElementById('userName').textContent = params.email;
+        document.getElementById('userRole').textContent = params.role;
+    }
+}
+
+// Dashboard Initialization
+function initializeDashboard() {
+    initializeSidebar();
+    initializeEventListeners();
+}
+
+function initializeSidebar() {
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            if (!this.hasAttribute('onclick')) {
+                e.preventDefault();
+                activateMenuItem(this);
+                loadSectionContent(this.getAttribute('data-section'));
+            }
+        });
+    });
+}
+
+function initializeEventListeners() {
+    // Sidebar Toggle
+    document.getElementById('toggleSidebar').addEventListener('click', () => {
+        document.querySelector('.sidebar').classList.toggle('active');
+    });
+
+    document.getElementById('closeSidebar').addEventListener('click', () => {
+        document.querySelector('.sidebar').classList.remove('active');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.user-menu')) {
+            document.getElementById('userDropdown').classList.remove('active');
+        }
+    });
+}
+
+// Menu Management
+function toggleSubmenu(submenuId) {
+    const submenu = document.getElementById(submenuId);
+    submenu.classList.toggle('active');
+}
+
+function activateMenuItem(item) {
+    document.querySelectorAll('.menu-item').forEach(menuItem => {
+        menuItem.classList.remove('active');
+    });
+    item.classList.add('active');
+}
+
+// Content Loading
+async function loadSectionContent(section) {
+    const contentArea = document.getElementById('mainContent');
+    const pageTitle = document.getElementById('pageTitle');
+    
+    try {
+        showLoading(contentArea);
+        
+        // Update page title
+        pageTitle.textContent = section.charAt(0).toUpperCase() + section.slice(1);
+
+        switch (section) {
+            case 'dashboard':
+                await loadDashboardContent(contentArea);
+                break;
+            case 'companies':
+                await loadCompaniesContent(contentArea);
+                break;
+            // Add other section handlers
+            default:
+                contentArea.innerHTML = `<h2>Section ${section} is under development</h2>`;
+        }
+    } catch (error) {
+        console.error(`Error loading ${section} content:`, error);
+        showError(contentArea, 'Failed to load content');
+    } finally {
+        hideLoading(contentArea);
+    }
+}
+
+// Content Section Loaders
+async function loadDashboardContent(container) {
+    try {
+        // Fetch dashboard statistics
+        const [usersStats, companiesStats, auditLogs] = await Promise.all([
+            fetchUserStatistics(),
+            fetchCompanyStatistics(),
+            fetchRecentAuditLogs()
+        ]);
+
+        container.innerHTML = `
+            <div class="dashboard-grid">
+                <div class="stats-card">
+                    <h3>Users Overview</h3>
+                    <div class="stats-content">
+                        <div class="stat-item">
+                            <span class="stat-value">${usersStats.total}</span>
+                            <span class="stat-label">Total Users</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">${usersStats.active}</span>
+                            <span class="stat-label">Active Users</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-card">
+                    <h3>Companies Overview</h3>
+                    <div class="stats-content">
+                        <div class="stat-item">
+                            <span class="stat-value">${companiesStats.total}</span>
+                            <span class="stat-label">Total Companies</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">${companiesStats.active}</span>
+                            <span class="stat-label">Active Companies</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recent-activity">
+                    <h3>Recent Activity</h3>
+                    <div class="activity-list">
+                        ${auditLogs.map(log => `
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fas ${getActivityIcon(log.action)}"></i>
+                                </div>
+                                <div class="activity-details">
+                                    <div class="activity-title">${formatActivityTitle(log)}</div>
+                                    <div class="activity-time">${formatTimestamp(log.timestamp)}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error loading dashboard content:', error);
+        throw error;
+    }
+}
+
+// API Calls
+async function fetchUserStatistics() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/statistics`, {
+            headers: {
+                'Authorization': `Bearer ${getToken()}`
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch user statistics');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching user statistics:', error);
+        return { total: 0, active: 0 };
+    }
+}
+
+async function fetchCompanyStatistics() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/companies/statistics`, {
+            headers: {
+                'Authorization': `Bearer ${getToken()}`
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch company statistics');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching company statistics:', error);
+        return { total: 0, active: 0 };
+    }
+}
+
+async function fetchRecentAuditLogs() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/audit-logs?limit=5`, {
+            headers: {
+                'Authorization': `Bearer ${getToken()}`
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch audit logs');
+        const data = await response.json();
+        return data.logs;
+    } catch (error) {
+        console.error('Error fetching audit logs:', error);
+        return [];
+    }
+}
+
+// Utility Functions
+function showLoading(container) {
+    container.innerHTML = `
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>Loading content...</p>
+        </div>
+    `;
+}
+
+function hideLoading(container) {
+    const loadingElement = container.querySelector('.loading-container');
+    if (loadingElement) {
+        loadingElement.remove();
+    }
+}
+
+function showError(container, message) {
+    container.innerHTML = `
+        <div class="error-container">
+            <i class="fas fa-exclamation-circle"></i>
+            <p>${message}</p>
+        </div>
+    `;
+}
+
+function showNotification(message, type = 'success') {
+    const notification = document.getElementById('notification');
+    const messageElement = document.getElementById('notificationMessage');
+    
+    notification.className = `notification ${type}`;
+    messageElement.textContent = message;
+    notification.classList.add('show');
+
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, 3000);
+}
+
+function formatTimestamp(timestamp) {
+    return new Date(timestamp).toLocaleString();
+}
+
+function getActivityIcon(action) {
+    const icons = {
+        'USER_CREATED': 'fa-user-plus',
+        'USER_UPDATED': 'fa-user-edit',
+        'USER_DELETED': 'fa-user-minus',
+        'USER_LOGIN': 'fa-sign-in-alt',
+        'default': 'fa-info-circle'
+    };
+    return icons[action] || icons.default;
+}
+
+function formatActivityTitle(log) {
+    return `${log.action.replace(/_/g, ' ')} by ${log.performedByUser.email}`;
+}
+
+// User Menu Functions
+function toggleUserMenu() {
+    document.getElementById('userDropdown').classList.toggle('active');
+}
+
+function openMyAccount() {
+    // Implement My Account page navigation
+    window.location.href = 'my-account.html';
+}
+
+async function handleLogout() {
+    try {
+        // Clear local storage
+        localStorage.removeItem('token');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userEmail');
+
+        // Redirect to login page
+        window.location.href = 'login.html';
+    } catch (error) {
+        console.error('Logout error:', error);
+        showNotification('Error during logout', 'error');
+    }
+}
+
+function redirectToLogin() {
+    window.location.href = 'login.html';
+}
+
+// Additional styles for dashboard content
+const additionalStyles = document.createElement('style');
+additionalStyles.textContent = `
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .stats-card {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        box-shadow: var(--box-shadow);
+    }
+
+    .stats-content {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 1rem;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        display: block;
+    }
+
+    .stat-label {
+        color: var(--light-text);
+        font-size: 0.875rem;
+    }
+
+    .recent-activity {
+        grid-column: 1 / -1;
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        box-shadow: var(--box-shadow);
+    }
+
+    .activity-list {
+        margin-top: 1rem;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .activity-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        background: var(--gradient-start);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-color);
+    }
+
+    .activity-details {
+        flex: 1;
+    }
+
+    .activity-title {
+        font-weight: 500;
+    }
+
+    .activity-time {
+        font-size: 0.875rem;
+        color: var(--light-text);
+    }
+
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 200px;
+        gap: 1rem;
+    }
+
+    .error-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 200px;
+        gap: 1rem;
+        color: var(--danger-color);
+    }
+`;
+document.head.appendChild(additionalStyles);
+</script>
+</body>
+</html>
