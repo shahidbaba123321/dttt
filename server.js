@@ -28,24 +28,16 @@ const verifyToken = async (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
 
-        // Check if user still exists and is active
-        const database = client.db('infocraftorbis');
-        const users = database.collection('users');
-        const user = await users.findOne({ 
-            _id: new ObjectId(decoded.userId),
-            status: 'active'
-        });
-
-        if (!user) {
-            return res.status(401).json({ 
-                success: false, 
-                message: 'User not found or inactive' 
-            });
+        // Check if user is superadmin
+        if (decoded.role.toLowerCase() === 'superadmin') {
+            req.isAdmin = true;
+            next();
+            return;
         }
 
+        // For non-admin routes
         next();
     } catch (error) {
-        logError('Token Verification', error);
         return res.status(401).json({ 
             success: false, 
             message: 'Invalid token' 
@@ -55,21 +47,33 @@ const verifyToken = async (req, res, next) => {
 
 // Admin role verification middleware
 const verifyAdmin = (req, res, next) => {
-    if (req.user.role !== 'SUPER_ADMIN') {
-        return res.status(403).json({
+    if (req.user && (req.user.role.toLowerCase() === 'superadmin' || req.user.role.toLowerCase() === 'admin')) {
+        next();
+    } else {
+        res.status(403).json({
             success: false,
             message: 'Admin access required'
         });
     }
-    next();
 };
 
 // Define CORS options
 const corsOptions = {
     origin: 'https://main.d1cfw592vg73f.amplifyapp.com',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept', 'X-Requested-With'],
-    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    allowedHeaders: [
+        'Content-Type', 
+        'Authorization', 
+        'Origin', 
+        'Accept', 
+        'X-Requested-With',
+        'X-User-Role' // Add the new custom header
+    ],
+    exposedHeaders: [
+        'Content-Range', 
+        'X-Content-Range',
+        'X-User-Role' // Expose the custom header in responses
+    ],
     credentials: true,
     maxAge: 86400,
     preflightContinue: false,
@@ -78,8 +82,25 @@ const corsOptions = {
 
 // Apply CORS configuration
 app.use(cors(corsOptions));
+
+// Handle preflight requests
 app.options('*', cors(corsOptions));
+
+// Parse JSON bodies
 app.use(express.json());
+
+// Add security headers
+app.use((req, res, next) => {
+    // Basic security headers
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    
+    // Allow the custom header to be read by the client
+    res.setHeader('Access-Control-Expose-Headers', 'X-User-Role');
+    next();
+});
 
 // MongoDB connection with enhanced error handling
 const uri = process.env.MONGODB_URI;
