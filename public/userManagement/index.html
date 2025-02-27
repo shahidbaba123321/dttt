@@ -90,31 +90,33 @@
     </section>
 
     <!-- Role Management Modal Template -->
-    <template id="roleManagementModal">
-        <div class="modal role-management-modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Role Management</h2>
-                    <button class="close-btn" onclick="this.closest('.modal').remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="roles-section">
-                        <div class="roles-list" id="rolesList">
-                            <!-- Roles will be dynamically populated -->
-                        </div>
+   <!-- Change your template tag to this -->
+<template id="roleManagementModal" style="display: none;">
+    <div class="modal role-management-modal active">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Role Management</h2>
+                <button class="close-btn" onclick="this.closest('.modal').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="roles-section">
+                    <h3>Roles</h3>
+                    <div class="roles-list" id="rolesList">
+                        <!-- Roles will be dynamically populated -->
                     </div>
-                    <div class="permissions-section">
-                        <h3>Role Permissions</h3>
-                        <div class="permissions-list" id="permissionsList">
-                            <!-- Permissions will be dynamically populated -->
-                        </div>
+                </div>
+                <div class="permissions-section">
+                    <h3>Permissions</h3>
+                    <div class="permissions-list" id="permissionsList">
+                        <!-- Permissions will be dynamically populated -->
                     </div>
                 </div>
             </div>
         </div>
-    </template>
+    </div>
+</template>
 </div>
 
 <style>
@@ -2007,23 +2009,32 @@ const UserManagementModule = {
     },
 
     // Open Role Management Modal
-    openRoleManagement: function() {
-        try {
-            const template = document.getElementById('roleManagementModal');
-            if (!template) {
-                throw new Error('Role management modal template not found');
-            }
+   // In openRoleManagement function
+openRoleManagement: function() {
+    try {
+        console.log('Opening role management modal...');
+        const template = document.getElementById('roleManagementModal');
+        console.log('Template found:', template); // Check if template exists
 
-            const modalContent = template.content.cloneNode(true);
-            document.body.appendChild(modalContent);
-
-            // Initialize role management UI
-            this.initializeRoleManagement();
-        } catch (error) {
-            console.error('Error opening role management:', error);
-            showNotification(error.message, 'error');
+        if (!template) {
+            throw new Error('Role management modal template not found');
         }
-    },
+
+        console.log('Cloning template...');
+        const modalContent = template.content.cloneNode(true);
+        console.log('Modal content cloned:', modalContent);
+
+        console.log('Appending to body...');
+        document.body.appendChild(modalContent);
+        console.log('Modal appended to body');
+
+        // Initialize role management UI
+        this.initializeRoleManagement();
+    } catch (error) {
+        console.error('Error opening role management:', error);
+        showNotification(error.message, 'error');
+    }
+},
 
     // Initialize Role Management
     initializeRoleManagement: function() {
@@ -2206,4 +2217,3 @@ if (typeof ModuleLoader !== 'undefined' && ModuleLoader.onModuleLoaded) {
     ModuleLoader.onModuleLoaded('userManagement', UserManagementModule);
 }
     </script>
-</script>
