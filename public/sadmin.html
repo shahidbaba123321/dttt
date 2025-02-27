@@ -1166,36 +1166,41 @@ async function loadSectionContent(section) {
     try {
         // Hide all sections first
         document.querySelectorAll('.content-section').forEach(section => {
-            section.style.display = 'none';
+            if (section) section.style.display = 'none';
         });
 
         // Update page title
         const pageTitle = document.getElementById('pageTitle');
-        pageTitle.textContent = section.charAt(0).toUpperCase() + section.slice(1).replace('-', ' ');
+        if (pageTitle) {
+            pageTitle.textContent = section.charAt(0).toUpperCase() + section.slice(1).replace('-', ' ');
+        }
 
         switch (section) {
             case 'dashboard':
                 const dashboardSection = document.getElementById('dashboardSection');
-                dashboardSection.style.display = 'block';
-                await loadDashboardContent(dashboardSection);
+                if (dashboardSection) {
+                    dashboardSection.style.display = 'block';
+                    await loadDashboardContent(dashboardSection);
+                }
                 break;
 
             case 'users-list':
                 const usersSection = document.getElementById('usersListSection');
-                if (!usersSection) {
-                    throw new Error('Users list section not found in DOM');
+                if (usersSection) {
+                    usersSection.style.display = 'block';
+                    await initializeUserManagement();
                 }
-                usersSection.style.display = 'block';
-                await initializeUserManagement();
                 break;
 
             default:
                 const mainContent = document.getElementById('mainContent');
-                mainContent.innerHTML = `
-                    <div class="content-section" style="display: block">
-                        <h2>Section ${section} is under development</h2>
-                    </div>
-                `;
+                if (mainContent) {
+                    mainContent.innerHTML = `
+                        <div class="content-section" style="display: block">
+                            <h2>Section ${escapeHtml(section)} is under development</h2>
+                        </div>
+                    `;
+                }
                 break;
         }
     } catch (error) {
@@ -1203,7 +1208,6 @@ async function loadSectionContent(section) {
         showNotification(`Failed to load ${section} section. Please try again.`, 'error');
     }
 }
-
 // Content Section Loaders
 async function loadDashboardContent(container) {
     try {
@@ -1557,6 +1561,38 @@ additionalStyles.textContent = `
         text-align: center;
         color: var(--danger-color);
     }
+     .loading-message {
+        text-align: center;
+        padding: 2rem;
+        color: var(--light-text);
+    }
+
+    .error-message {
+        text-align: center;
+        padding: 2rem;
+        color: var(--danger-color);
+    }
+
+    .no-data-message {
+        text-align: center;
+        padding: 2rem;
+        color: var(--light-text);
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 2rem;
+        height: 2rem;
+        border: 2px solid rgba(0, 0, 0, 0.1);
+        border-left-color: var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
     
 `;
 document.head.appendChild(additionalStyles);
@@ -1577,12 +1613,6 @@ let usersData = [];
 // Initialize User Management
 async function initializeUserManagement() {
     try {
-        // Check if users table exists
-        const usersTableBody = document.getElementById('usersTableBody');
-        if (!usersTableBody) {
-            throw new Error('Users table not found in DOM');
-        }
-
         await loadUsers();
         setupEventListeners();
     } catch (error) {
@@ -1591,17 +1621,14 @@ async function initializeUserManagement() {
     }
 }
 
-// Event Listeners
+
+// Setup Event Listeners
 function setupEventListeners() {
     const userSearch = document.getElementById('userSearch');
     if (userSearch) {
-        userSearch.addEventListener('keyup', wrapActionWithErrorHandler(
-            debounceSearch,
-            'Error performing search'
-        ));
+        userSearch.addEventListener('keyup', debounceSearch);
     }
 
-/ Add other event listeners as needed
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.filter-dropdown')) {
             const filterMenu = document.getElementById('filterMenu');
@@ -1610,18 +1637,33 @@ function setupEventListeners() {
             }
         }
     });
-}    
+}
     
 // Debounce Search
 let searchTimeout;
 function debounceSearch() {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
-        currentFilters.search = document.getElementById('userSearch').value;
+        const searchValue = document.getElementById('userSearch').value;
+        currentFilters.search = searchValue;
+        currentPage = 1;
         loadUsers();
     }, 300);
 }
-
+// Loading Indicators
+function showLoading(element) {
+    if (element) {
+        element.innerHTML = `
+            <tr>
+                <td colspan="7" class="loading-message">
+                    <div class="loading-spinner"></div>
+                    Loading...
+                </td>
+            </tr>
+        `;
+    }
+}
+        
 // Load Users
 async function loadUsers() {
     try {
@@ -1630,7 +1672,10 @@ async function loadUsers() {
         const queryParams = new URLSearchParams({
             page: currentPage,
             limit: 10,
-            ...currentFilters
+            ...(currentFilters.search && { search: currentFilters.search }),
+            ...(currentFilters.department && { department: currentFilters.department }),
+            ...(currentFilters.role && { role: currentFilters.role }),
+            ...(currentFilters.status && { status: currentFilters.status })
         });
 
         const response = await makeAuthenticatedRequest(`/users?${queryParams}`);
@@ -1645,12 +1690,35 @@ async function loadUsers() {
     } catch (error) {
         console.error('Error loading users:', error);
         showNotification('Failed to load users', 'error');
+        document.getElementById('usersTableBody').innerHTML = `
+            <tr>
+                <td colspan="7" class="error-message">
+                    Failed to load users. Please try again.
+                </td>
+            </tr>
+        `;
+    } finally {
+        hideLoading(document.getElementById('usersTableBody'));
     }
 }
 
 // Update Users Table
+// Update Users Table
 function updateUsersTable(users) {
     const tbody = document.getElementById('usersTableBody');
+    if (!tbody) return;
+
+    if (!users || users.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="no-data-message">
+                    No users found
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
     tbody.innerHTML = users.map(user => `
         <tr>
             <td>${escapeHtml(user.name || '')}</td>
