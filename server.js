@@ -119,6 +119,8 @@ async function connectDB(retries = 5) {
             console.log("Connected to MongoDB Atlas");
             
             // Initialize collections
+            const audit_logs = database.collection('audit_logs');
+
             const database = client.db('infocraftorbis');
             const collections = {
                 users: database.collection('users'),
@@ -157,6 +159,89 @@ connectDB()
 app.get('/', (req, res) => {
     res.json({ message: 'Server is running!' });
 });
+
+// Get audit logs endpoint
+app.get('/api/audit-logs', verifyToken, async (req, res) => {
+    try {
+        // Verify admin access
+        if (!req.user || !['superadmin', 'admin'].includes(req.user.role.toLowerCase())) {
+            return res.status(403).json({
+                success: false,
+                message: 'Admin access required'
+            });
+        }
+
+        const database = client.db('infocraftorbis');
+        const audit_logs = database.collection('audit_logs');
+
+        // Add pagination
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 50;
+        const skip = (page - 1) * limit;
+
+        // Get total count
+        const total = await audit_logs.countDocuments();
+
+        // Get logs with pagination
+        const logs = await audit_logs
+            .find({})
+            .sort({ timestamp: -1 })
+            .skip(skip)
+            .limit(limit)
+            .toArray();
+
+        // Populate user details for each log
+        const populatedLogs = await Promise.all(logs.map(async (log) => {
+            let performedBy = null;
+            if (log.performedBy) {
+                performedBy = await database.collection('users').findOne(
+                    { _id: new ObjectId(log.performedBy) },
+                    { projection: { name: 1, email: 1 } }
+                );
+            }
+
+            return {
+                ...log,
+                performedByUser: performedBy || { name: 'System', email: 'system' }
+            };
+        }));
+
+        res.json({
+            success: true,
+            logs: populatedLogs,
+            pagination: {
+                page,
+                limit,
+                total,
+                pages: Math.ceil(total / limit)
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching audit logs:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching audit logs'
+        });
+    }
+});
+
+// Create audit log function
+const createAuditLog = async (action, performedBy, targetUser = null, details = {}) => {
+    try {
+        const auditLog = {
+            action,
+            performedBy: performedBy ? new ObjectId(performedBy) : null,
+            targetUser: targetUser ? new ObjectId(targetUser) : null,
+            details,
+            timestamp: new Date()
+        };
+
+        await audit_logs.insertOne(auditLog);
+    } catch (error) {
+        console.error('Error creating audit log:', error);
+    }
+};
 
 // Registration endpoint with enhanced validation and error handling
 app.post('/api/register', async (req, res) => {
