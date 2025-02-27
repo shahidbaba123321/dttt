@@ -1294,58 +1294,55 @@
         },
 
         // Enhanced Module Initialization
-        init: async function() {
+     init: async function() {
+    try {
+        console.log('Initializing Enhanced User Management module...');
+        
+        if (!window.UserManagement) {
+            window.UserManagement = this;
+        }
+
+        // Initialize RBAC
+        if (!window.RBAC.initialized) {
+            await window.RBAC.manager.initialize();
+        }
+
+        // Get current user info from token
+        this.state.currentUser = this.getCurrentUserFromToken();
+
+        // Setup event listeners
+        this.setupEventListeners();
+        
+        // Load initial data with error handling
+        try {
+            await this.loadUsers();
+        } catch (error) {
+            console.error('Error loading users:', error);
+            this.showNotification('Error loading users: ' + error.message, 'error');
+        }
+
+        // Only load these if user has admin access
+        if (this.isAdmin()) {
             try {
-                console.log('Initializing Enhanced User Management module...');
-                
-                // Ensure we're attached to window
-                if (!window.UserManagement) {
-                    window.UserManagement = this;
-                }
-
-                // Initialize RBAC
-                if (!window.RBAC.initialized) {
-                    await window.RBAC.manager.initialize();
-                }
-
-                // Get current user info from token
-                this.state.currentUser = this.getCurrentUserFromToken();
-
-                // Setup event listeners
-                this.setupEventListeners();
-                
-                // Load initial data with error handling
-                try {
-                    await this.loadUsers();
-                } catch (error) {
-                    console.error('Error loading users:', error);
-                    this.showNotification('Error loading users: ' + error.message, 'error');
-                }
-
-                try {
-                    if (this.hasPermission('VIEW_DELETED_USERS')) {
-                        await this.loadDeletedUsers();
-                    }
-                } catch (error) {
-                    console.error('Error loading deleted users:', error);
-                }
-
-                try {
-                    if (this.hasPermission('VIEW_AUDIT_LOGS')) {
-                        await this.loadAuditLogs();
-                    }
-                } catch (error) {
-                    console.error('Error loading audit logs:', error);
-                }
-
-                this.state.initialized = true;
-                console.log('User Management module initialized');
+                await this.loadDeletedUsers();
             } catch (error) {
-                console.error('Failed to initialize User Management:', error);
-                this.showNotification('Failed to initialize User Management: ' + error.message, 'error');
+                console.error('Error loading deleted users:', error);
             }
-        },
 
+            try {
+                await this.loadAuditLogs();
+            } catch (error) {
+                console.error('Error loading audit logs:', error);
+            }
+        }
+
+        this.state.initialized = true;
+        console.log('User Management module initialized');
+    } catch (error) {
+        console.error('Failed to initialize User Management:', error);
+        this.showNotification('Failed to initialize User Management: ' + error.message, 'error');
+    }
+},
         // Get current user info from token
         getCurrentUserFromToken: function() {
             try {
@@ -1449,58 +1446,56 @@
 
         // Enhanced User Management Functions
         loadUsers: async function(resetPage = false) {
-            try {
-                this.state.loading = true;
-                this.renderLoadingState();
+    try {
+        this.state.loading = true;
+        this.renderLoadingState();
 
-                if (resetPage) {
-                    this.state.pagination.page = 1;
-                }
+        if (resetPage) {
+            this.state.pagination.page = 1;
+        }
 
-                const queryParams = new URLSearchParams({
-                    page: this.state.pagination.page.toString(),
-                    limit: this.state.pagination.limit.toString(),
-                    search: this.state.filters.search || '',
-                    department: this.state.filters.department || '',
-                    role: this.state.filters.role || '',
-                    status: this.state.filters.status || ''
-                });
+        const queryParams = new URLSearchParams({
+            page: (this.state.pagination.page || 1).toString(),
+            limit: (this.state.pagination.limit || 10).toString(),
+            search: this.state.filters.search || '',
+            department: this.state.filters.department || '',
+            role: this.state.filters.role || '',
+            status: this.state.filters.status || ''
+        });
 
-                const response = await this.makeAuthenticatedRequest(
-                    `/api/users?${queryParams}`
-                );
+        const response = await this.makeAuthenticatedRequest(
+            `/api/users?${queryParams}`
+        );
 
-                const data = await response.json();
+        const data = await response.json();
 
-                // Ensure data is in the correct format
-                if (!data || typeof data !== 'object') {
-                    throw new Error('Invalid response format from server');
-                }
+        // Ensure data is in the correct format
+        if (!data || typeof data !== 'object') {
+            throw new Error('Invalid response format from server');
+        }
 
-                this.state.users = Array.isArray(data) ? data : (data.users || []);
-                
-                // Handle pagination data if available
-                if (data.pagination) {
-                    this.state.pagination = data.pagination;
-                } else {
-                    this.state.pagination = {
-                        page: 1,
-                        limit: 10,
-                        total: this.state.users.length
-                    };
-                }
+        this.state.users = Array.isArray(data) ? data : (data.users || []);
+        
+        // Handle pagination data
+        this.state.pagination = {
+            page: parseInt(data.pagination?.page || 1),
+            limit: parseInt(data.pagination?.limit || 10),
+            total: parseInt(data.pagination?.total || this.state.users.length)
+        };
 
-                this.renderUsers();
-                this.renderPagination();
+        this.renderUsers();
+        if (document.getElementById('pagination')) {
+            this.renderPagination();
+        }
 
-            } catch (error) {
-                console.error('Error loading users:', error);
-                this.showNotification('Failed to load users: ' + error.message, 'error');
-                this.renderErrorState(error.message);
-            } finally {
-                this.state.loading = false;
-            }
-        },
+    } catch (error) {
+        console.error('Error loading users:', error);
+        this.showNotification('Failed to load users: ' + error.message, 'error');
+        this.renderErrorState(error.message);
+    } finally {
+        this.state.loading = false;
+    }
+},
 
         loadDeletedUsers: async function() {
             if (!this.hasPermission('VIEW_DELETED_USERS')) return;
@@ -2047,6 +2042,49 @@
             `).join('');
         },
 
+        renderPagination: function() {
+    const paginationContainer = document.getElementById('pagination');
+    if (!paginationContainer) return;
+
+    const { page, pages, total } = this.state.pagination;
+    
+    paginationContainer.innerHTML = `
+        <div class="pagination-info">
+            Showing ${Math.min((page - 1) * this.state.pagination.limit + 1, total)} to 
+            ${Math.min(page * this.state.pagination.limit, total)} of ${total} entries
+        </div>
+        <div class="pagination-controls">
+            ${this.renderPaginationControls(page, pages)}
+        </div>
+    `;
+},
+renderPaginationControls: function(currentPage, totalPages) {
+    if (!currentPage || !totalPages) return '';
+    
+    return `
+        <button class="btn-page" 
+                ${currentPage === 1 ? 'disabled' : ''}
+                onclick="UserManagement.changePage(1)">
+            <i class="fas fa-angle-double-left"></i>
+        </button>
+        <button class="btn-page" 
+                ${currentPage === 1 ? 'disabled' : ''}
+                onclick="UserManagement.changePage(${currentPage - 1})">
+            <i class="fas fa-angle-left"></i>
+        </button>
+        ${this.renderPageNumbers(currentPage, totalPages)}
+        <button class="btn-page" 
+                ${currentPage === totalPages ? 'disabled' : ''}
+                onclick="UserManagement.changePage(${currentPage + 1})">
+            <i class="fas fa-angle-right"></i>
+        </button>
+        <button class="btn-page" 
+                ${currentPage === totalPages ? 'disabled' : ''}
+                onclick="UserManagement.changePage(${totalPages})">
+            <i class="fas fa-angle-double-right"></i>
+        </button>
+    `;
+},
         renderPermissionsList: function() {
             const permissionGroups = {
                 'User Management': ['CREATE_USERS', 'EDIT_USERS', 'DELETE_USERS', 'VIEW_USERS'],
@@ -2133,29 +2171,34 @@
             `;
         },
 
-        hasPermission: function(permission) {
-            // Convert new permission format to old format if necessary
-            const oldFormatMap = {
-                'CREATE_USERS': 'users:create',
-                'EDIT_USERS': 'users:edit',
-                'DELETE_USERS': 'users:delete',
-                'VIEW_USERS': 'users:view',
-                'MANAGE_ROLES': 'users:manage-roles',
-                'MANAGE_2FA': 'security:manage-2fa',
-                'VIEW_AUDIT_LOGS': 'security:view-audit-logs'
-            };
+       hasPermission: function(permission) {
+    // Check if user is SUPER_ADMIN first
+    if (this.state.currentUser?.role === 'SUPER_ADMIN' || 
+        this.state.currentUser?.role === 'superadmin') {
+        return true;
+    }
 
-            const permissionToCheck = oldFormatMap[permission] || permission;
-            
-            // Check if user has SUPER_ADMIN role
-            if (this.state.currentUser?.role === 'SUPER_ADMIN') {
-                return true;
-            }
+    // Convert new permission format to old format if necessary
+    const oldFormatMap = {
+        'CREATE_USERS': 'users:create',
+        'EDIT_USERS': 'users:edit',
+        'DELETE_USERS': 'users:delete',
+        'VIEW_USERS': 'users:view',
+        'MANAGE_ROLES': 'users:manage-roles',
+        'MANAGE_2FA': 'security:manage-2fa',
+        'VIEW_AUDIT_LOGS': 'security:view-audit-logs',
+        'VIEW_DELETED_USERS': 'users:view-deleted'
+    };
 
-            // Check actual permissions
-            return window.RBAC.manager.hasPermission(permissionToCheck);
-        },
-
+    const permissionToCheck = oldFormatMap[permission] || permission;
+    return window.RBAC.manager.hasPermission(permissionToCheck);
+},
+      isAdmin: function() {
+    return this.state.currentUser?.role === 'SUPER_ADMIN' || 
+           this.state.currentUser?.role === 'superadmin' ||
+           this.state.currentUser?.role === 'ADMIN' ||
+           this.state.currentUser?.role === 'admin';
+},  
         formatPermissionName: function(permission) {
             return permission
                 .split('_')
