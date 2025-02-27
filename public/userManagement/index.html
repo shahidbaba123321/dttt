@@ -1527,15 +1527,25 @@
         }
     }
 },
-        loadAuditLogs: async function() {
+loadAuditLogs: async function() {
     if (!this.isAdmin()) {
         console.log('User is not admin, skipping audit logs load');
         return;
     }
 
     try {
-        const response = await this.makeAuthenticatedRequest('/api/audit-logs');
+        const queryParams = new URLSearchParams({
+            page: '1',
+            limit: '50'
+        });
+
+        const response = await this.makeAuthenticatedRequest(`/api/audit-logs?${queryParams}`);
         const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to load audit logs');
+        }
+
         this.state.auditLogs = data.logs || [];
         
         if (this.isAuditLogsTabActive()) {
@@ -1545,11 +1555,99 @@
         console.error('Error loading audit logs:', error);
         // Don't show error notification for permission issues
         if (!error.message.includes('Admin access required')) {
-            this.showNotification('Failed to load audit logs', 'error');
+            this.showNotification('Failed to load audit logs: ' + error.message, 'error');
         }
     }
-        },
+},
+        renderAuditLogs: function() {
+    const container = document.getElementById('auditLogsTable');
+    if (!container) return;
 
+    if (!Array.isArray(this.state.auditLogs) || this.state.auditLogs.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-history"></i>
+                <p>No audit logs found</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = `
+        <table class="audit-logs-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Action</th>
+                    <th>Performed By</th>
+                    <th>Target User</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${this.state.auditLogs.map(log => `
+                    <tr>
+                        <td>${new Date(log.timestamp).toLocaleString()}</td>
+                        <td>
+                            <span class="audit-action ${log.action.toLowerCase()}">
+                                ${this.formatAuditAction(log.action)}
+                            </span>
+                        </td>
+                        <td>${this.escapeHtml(log.performedByUser?.name || 'System')}</td>
+                        <td>${this.escapeHtml(log.targetUser || 'N/A')}</td>
+                        <td>
+                            <button onclick="UserManagement.showAuditDetails('${log._id}')"
+                                    class="btn-icon" title="View Details">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+},
+        
+
+      formatAuditAction: function(action) {
+    return action
+        .split('_')
+        .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+        .join(' ');
+},
+showAuditDetails: function(logId) {
+    const log = this.state.auditLogs.find(l => l._id === logId);
+    if (!log) return;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Audit Log Details</h2>
+                <button class="close-btn" onclick="this.closest('.modal').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="audit-details">
+                    <p><strong>Action:</strong> ${this.formatAuditAction(log.action)}</p>
+                    <p><strong>Timestamp:</strong> ${new Date(log.timestamp).toLocaleString()}</p>
+                    <p><strong>Performed By:</strong> ${this.escapeHtml(log.performedByUser?.name || 'System')}</p>
+                    <p><strong>Target User:</strong> ${this.escapeHtml(log.targetUser || 'N/A')}</p>
+                    <div class="details-section">
+                        <h3>Additional Details</h3>
+                        <pre>${JSON.stringify(log.details, null, 2)}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+},
+        
+        
         deleteUser: async function(userId) {
             try {
                 const user = this.state.users.find(u => u._id === userId);
