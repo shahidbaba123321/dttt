@@ -1150,17 +1150,11 @@
 
   
 
-        // Handle errors globally
-        window.addEventListener('error', function(event) {
-            console.error('Global error:', event);
-        });
-
-        window.addEventListener('unhandledrejection', function(event) {
-            console.error('Unhandled promise rejection:', event.reason);
-        });
-
-        // Initialize the module
-        initializeUserManagement();
+       // Initialize
+        if (document.getElementById('userManagementSection')) {
+            window.UserManagement.init().catch(error => {
+                console.error('Failed to initialize UserManagement:', error);
+            });
+        }
     })();
-
 </script>
