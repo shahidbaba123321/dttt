@@ -19,26 +19,29 @@
     });
 </script>
 <div class="user-management-module">
+    <script>
+        // Ensure UserManagement is available globally
+        window.UserManagement = window.UserManagement || {};
+    </script>
+
     <section class="content-section" id="userManagementSection">
-        <!-- Module Header -->
         <div class="module-header">
             <div class="header-title">
                 <h1>User Management</h1>
                 <p>Manage internal users and their access permissions</p>
             </div>
             <div class="header-actions">
-                <button class="btn btn-primary" onclick="window.UserManagement.openAddUserModal()">
+                <button class="btn btn-primary" onclick="UserManagement.openAddUserModal()">
                     <i class="fas fa-plus"></i>
                     Add New User
                 </button>
-                <button class="btn btn-secondary" onclick="window.UserManagement.openRoleManagement()">
+                <button class="btn btn-secondary" onclick="UserManagement.openRoleManagement()">
                     <i class="fas fa-user-shield"></i>
                     Manage Roles
                 </button>
             </div>
         </div>
 
-        <!-- Search and Filters -->
         <div class="search-filter-section">
             <div class="search-box">
                 <i class="fas fa-search"></i>
@@ -68,7 +71,6 @@
             </div>
         </div>
 
-        <!-- Users Table -->
         <div class="users-table-container">
             <table class="users-table">
                 <thead>
@@ -90,39 +92,36 @@
     </section>
 
     <!-- Role Management Modal Template -->
-   <!-- Change your template tag to this -->
-<template id="roleManagementModal" style="display: none;">
-    <div class="modal role-management-modal active">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Role Management</h2>
-                <button class="close-btn" onclick="this.closest('.modal').remove()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="roles-section">
-                    <h3>Roles</h3>
-                    <div class="roles-list" id="rolesList">
-                        <!-- Roles will be dynamically populated -->
-                    </div>
+    <template id="roleManagementModal">
+        <div class="modal role-management-modal active">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Role Management</h2>
+                    <button class="close-btn" onclick="this.closest('.modal').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-                <div class="permissions-section">
-                    <h3>Permissions</h3>
-                    <div class="permissions-list" id="permissionsList">
-                        <!-- Permissions will be dynamically populated -->
+                <div class="modal-body">
+                    <div class="roles-section">
+                        <h3>Roles</h3>
+                        <div class="roles-list" id="rolesList">
+                            <!-- Roles will be dynamically populated -->
+                        </div>
+                    </div>
+                    <div class="permissions-section">
+                        <h3>Permissions</h3>
+                        <div class="permissions-list" id="permissionsList">
+                            <!-- Permissions will be dynamically populated -->
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</template>
+    </template>
 </div>
 
 <style>
-/* Existing styles remain unchanged */
-
-/* Additional styles for RBAC UI */
+/* Existing styles */
 .header-actions {
     display: flex;
     gap: 1rem;
@@ -132,21 +131,34 @@
     background: var(--surface-dark);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
+    padding: 0.625rem 1rem;
+    border-radius: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 .btn-secondary:hover {
     background: var(--surface-color);
+    transform: translateY(-1px);
 }
 
+.btn-secondary i {
+    font-size: 0.875rem;
+}
+
+/* Role Management Modal Styles */
 .role-management-modal .modal-content {
     max-width: 800px;
-    max-height: 80vh;
+    width: 90%;
 }
 
 .role-management-modal .modal-body {
     display: grid;
     grid-template-columns: 300px 1fr;
-    gap: 1.5rem;
+    gap: 2rem;
     padding: 1.5rem;
 }
 
@@ -159,6 +171,7 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    margin-top: 1rem;
 }
 
 .role-item {
@@ -175,13 +188,25 @@
 
 .role-item.active {
     background: var(--primary-light);
-    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+}
+
+.role-info h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+}
+
+.role-info p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
 }
 
 .permissions-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1rem;
+    margin-top: 1rem;
 }
 
 .permission-group {
@@ -191,17 +216,14 @@
 }
 
 .permission-group h4 {
-    margin-bottom: 0.5rem;
+    margin: 0 0 1rem 0;
     color: var(--text-secondary);
     font-size: 0.875rem;
     text-transform: uppercase;
 }
 
 .permission-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.25rem 0;
+    margin: 0.5rem 0;
 }
 
 .permission-item label {
@@ -209,8 +231,10 @@
     align-items: center;
     gap: 0.5rem;
     cursor: pointer;
-    user-select: none;
-    font-size: 0.875rem;
+}
+
+.permission-item input[type="checkbox"] {
+    cursor: pointer;
 }
 </style>
 <style>
@@ -1242,993 +1266,1022 @@
 </style>
 
 <script>
-// Part 1: Core Module Setup and Initialization
-const UserManagementModule = {
-    // State Management
-    state: {
-        users: [],
-        currentUser: null,
-        filters: {
-            search: '',
-            department: '',
-            status: '',
-            role: ''
+// Initialize the module immediately
+(function() {
+    // Utility function to ensure module is initialized
+    function ensureInitialized() {
+        if (!window.UserManagement) {
+            throw new Error('UserManagement module not initialized');
+        }
+    }
+
+    const UserManagementModule = {
+        // State Management
+        state: {
+            users: [],
+            currentUser: null,
+            filters: {
+                search: '',
+                department: '',
+                status: '',
+                role: ''
+            },
+            loading: false,
+            selectedRole: null
         },
-        loading: false,
-        selectedRole: null
-    },
 
-    // Initialize the module
-    init: async function() {
-        try {
-            console.log('Initializing User Management module...');
-            
-            // Ensure RBAC is initialized
-            if (!window.RBAC.initialized) {
-                await window.RBAC.manager.initialize();
+        // Initialize the module
+        init: async function() {
+            try {
+                console.log('Initializing User Management module...');
+                
+                // Ensure we're attached to window
+                if (!window.UserManagement) {
+                    window.UserManagement = this;
+                }
+
+                // Initialize RBAC
+                if (!window.RBAC.initialized) {
+                    await window.RBAC.manager.initialize();
+                }
+
+                await this.loadUsers();
+                this.setupEventListeners();
+                console.log('User Management module initialized');
+            } catch (error) {
+                console.error('Failed to initialize User Management:', error);
+                if (typeof showNotification === 'function') {
+                    showNotification('Failed to initialize User Management: ' + error.message, 'error');
+                }
             }
+        },
 
-            await this.loadUsers();
-            this.setupEventListeners();
-            console.log('User Management module initialized');
-        } catch (error) {
-            console.error('Failed to initialize User Management:', error);
-            if (typeof showNotification === 'function') {
-                showNotification('Failed to initialize User Management: ' + error.message, 'error');
-            }
-        }
-    },
-
-    // Setup Event Listeners
-    setupEventListeners: function() {
-        // Search input with debounce
-        const searchInput = document.getElementById('userSearch');
-        if (searchInput) {
-            let debounceTimer;
-            searchInput.addEventListener('input', (e) => {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
-                    this.state.filters.search = e.target.value;
-                    this.renderUsers();
-                }, 300);
-            });
-        }
-
-        // Filter selects
-        ['department', 'status', 'role'].forEach(filterType => {
-            const select = document.getElementById(`${filterType}Filter`);
-            if (select) {
-                select.addEventListener('change', (e) => {
-                    this.state.filters[filterType] = e.target.value;
-                    this.renderUsers();
+        // Setup Event Listeners
+        setupEventListeners: function() {
+            // Search input with debounce
+            const searchInput = document.getElementById('userSearch');
+            if (searchInput) {
+                let debounceTimer;
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        this.state.filters.search = e.target.value;
+                        this.renderUsers();
+                    }, 300);
                 });
             }
-        });
-    },
 
-    // Load Users
-    loadUsers: async function() {
-        try {
-            this.state.loading = true;
-            this.renderLoadingState();
-
-            const token = localStorage.getItem('token');
-            console.log('Using token:', token);
-
-            if (!token) {
-                throw new Error('No authentication token found');
-            }
-
-            console.log('Fetching users from API...');
-            const response = await fetch('https://18.215.160.136.nip.io/api/users', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            console.log('API Response:', response);
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to load users');
-            }
-            
-            const users = await response.json();
-            console.log('Received users:', users);
-
-            this.state.loading = false;
-            this.state.users = users;
-            this.renderUsers();
-        } catch (error) {
-            console.error('Error loading users:', error);
-            this.state.loading = false;
-            this.state.users = [];
-            this.renderErrorState(error.message);
-
-            if (typeof showNotification === 'function') {
-                showNotification('Failed to load users: ' + error.message, 'error');
-            }
-        }
-    },
-
-    // Render States
-    renderLoadingState: function() {
-        const tbody = document.getElementById('usersTableBody');
-        if (tbody) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="loading-state">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <p>Loading users...</p>
-                    </td>
-                </tr>
-            `;
-        }
-    },
-
-    renderErrorState: function(message) {
-        const tbody = document.getElementById('usersTableBody');
-        if (tbody) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="error-state">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <p>${message || 'Error loading users'}</p>
-                    </td>
-                </tr>
-            `;
-        }
-    },
-
-    // Filtering Function
-    getFilteredUsers: function() {
-        if (!Array.isArray(this.state.users)) {
-            return [];
-        }
-
-        return this.state.users.filter(user => {
-            const searchTerm = (this.state.filters.search || '').toLowerCase();
-            const matchesSearch = (user.name?.toLowerCase() || '').includes(searchTerm) ||
-                                (user.email?.toLowerCase() || '').includes(searchTerm);
-            
-            const matchesDepartment = !this.state.filters.department || 
-                                    user.department === this.state.filters.department;
-            
-            const matchesStatus = !this.state.filters.status || 
-                                user.status === this.state.filters.status;
-            
-            const matchesRole = !this.state.filters.role || 
-                              user.role === this.state.filters.role;
-
-            return matchesSearch && matchesDepartment && matchesStatus && matchesRole;
-        });
-    },
-        // Main Render Function
-    renderUsers: function() {
-        console.log('Rendering users...');
-        const tbody = document.getElementById('usersTableBody');
-        if (!tbody) {
-            console.error('Table body element not found');
-            return;
-        }
-
-        const filteredUsers = this.getFilteredUsers();
-        console.log('Filtered users:', filteredUsers);
-        
-        if (!filteredUsers || filteredUsers.length === 0) {
-            console.log('No users to display');
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="empty-state">
-                        <i class="fas fa-users-slash"></i>
-                        <p>No users found</p>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        console.log('Rendering user table...');
-        tbody.innerHTML = filteredUsers.map(user => `
-            <tr>
-                <td>
-                    <div class="user-info">
-                        <div class="user-avatar" style="background-color: ${this.getAvatarColor(user.name || '')}">
-                            ${this.getInitials(user.name || '')}
-                        </div>
-                        <div class="user-details">
-                            <div class="user-name">${user.name || 'N/A'}</div>
-                            <div class="user-id">${user.email || 'N/A'}</div>
-                        </div>
-                    </div>
-                </td>
-                <td>${user.email || 'N/A'}</td>
-                <td>
-                    <span class="department-badge department-${(user.department || 'unknown').toLowerCase()}">
-                        ${user.department || 'Unknown'}
-                    </span>
-                </td>
-                <td>
-                    <span class="role-badge role-${(user.role || 'unknown').toLowerCase()}">
-                        ${user.role || 'Unknown'}
-                    </span>
-                </td>
-                <td>
-                    <span class="status-badge status-${(user.status || 'inactive').toLowerCase()}">
-                        <i class="fas fa-${user.status === 'active' ? 'check-circle' : 'times-circle'}"></i>
-                        ${user.status || 'Inactive'}
-                    </span>
-                </td>
-                <td>
-                    <span class="2fa-badge ${user.requires2FA ? 'enabled' : 'disabled'}">
-                        <i class="fas fa-${user.requires2FA ? 'shield-alt' : 'shield'}"></i>
-                        ${user.requires2FA ? 'Enabled' : 'Disabled'}
-                    </span>
-                </td>
-                <td>
-                    <div class="action-buttons">
-                        <button onclick="window.UserManagement.editUser('${user._id}')" 
-                                class="btn-icon" title="Edit User">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="window.UserManagement.toggleUserStatus('${user._id}')" 
-                                class="btn-icon ${user.status === 'active' ? 'danger' : 'success'}"
-                                title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User">
-                            <i class="fas fa-${user.status === 'active' ? 'ban' : 'check'}"></i>
-                        </button>
-                        <button onclick="window.UserManagement.changeUserPassword('${user._id}')" 
-                                class="btn-icon warning" title="Change Password">
-                            <i class="fas fa-key"></i>
-                        </button>
-                        <button onclick="window.UserManagement.toggle2FA('${user._id}')"
-                                class="btn-icon ${user.requires2FA ? 'success' : 'warning'}"
-                                title="${user.requires2FA ? 'Disable' : 'Enable'} 2FA">
-                            <i class="fas fa-shield-alt"></i>
-                        </button>
-                        <button onclick="window.UserManagement.deleteUser('${user._id}')" 
-                                class="btn-icon danger" title="Delete User">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-        
-        console.log('Render complete');
-    },
-
-    // Utility Functions
-    getInitials: function(name) {
-        return name
-            .split(' ')
-            .map(word => word[0])
-            .join('')
-            .toUpperCase();
-    },
-
-    getAvatarColor: function(name) {
-        const colors = [
-            '#4f46e5', '#7c3aed', '#db2777', '#ea580c', '#16a34a',
-            '#2563eb', '#9333ea', '#e11d48', '#d97706', '#15803d'
-        ];
-        
-        let hash = 0;
-        for (let i = 0; i < name.length; i++) {
-            hash = name.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        
-        return colors[Math.abs(hash) % colors.length];
-    },
-
-    // Generate role options for select inputs
-    generateRoleOptions: function() {
-        const roles = [
-            { id: 'admin', name: 'Admin' },
-            { id: 'manager', name: 'Manager' },
-            { id: 'user', name: 'User' }
-        ];
-
-        return `
-            <option value="">Select Role</option>
-            ${roles.map(role => `
-                <option value="${role.id}">${role.name}</option>
-            `).join('')}
-        `;
-    },
-
-    // Add User Modal
-    openAddUserModal: function() {
-        try {
-            const modalContainer = document.createElement('div');
-            modalContainer.innerHTML = `
-                <div class="modal active">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h2>Add New User</h2>
-                            <button class="close-btn" onclick="this.closest('.modal').remove()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <form id="addUserForm">
-                            <div class="form-group">
-                                <label for="userName">Full Name *</label>
-                                <input type="text" id="userName" name="name" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="userEmail">Email *</label>
-                                <input type="email" id="userEmail" name="email" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="userDepartment">Department *</label>
-                                <select id="userDepartment" name="department" required>
-                                    <option value="">Select Department</option>
-                                    <option value="HR">HR</option>
-                                    <option value="Finance">Finance</option>
-                                    <option value="IT">IT</option>
-                                    <option value="Admin">Admin</option>
-                                    <option value="Support">Support</option>
-                                    <option value="Sales">Sales</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="userRole">Role *</label>
-                                <select id="userRole" name="role" required>
-                                    ${this.generateRoleOptions()}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="require2FA" name="requires2FA">
-                                    <span>Require 2FA</span>
-                                </label>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Add User</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modalContainer.firstElementChild);
-
-            const form = document.getElementById('addUserForm');
-            if (!form) {
-                throw new Error('Form not found');
-            }
-
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                const formData = new FormData(form);
-                const userData = {
-                    name: formData.get('name'),
-                    email: formData.get('email'),
-                    department: formData.get('department'),
-                    role: formData.get('role'),
-                    requires2FA: formData.get('requires2FA') === 'on'
-                };
-
-                if (!userData.name || !userData.email || !userData.department || !userData.role) {
-                    showNotification('Please fill in all required fields', 'error');
-                    return;
-                }
-
-                const submitButton = form.querySelector('button[type="submit"]');
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding User...';
-
-                try {
-                    const token = localStorage.getItem('token');
-                    const response = await fetch('https://18.215.160.136.nip.io/api/users', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify(userData)
+            // Filter selects
+            ['department', 'status', 'role'].forEach(filterType => {
+                const select = document.getElementById(`${filterType}Filter`);
+                if (select) {
+                    select.addEventListener('change', (e) => {
+                        this.state.filters[filterType] = e.target.value;
+                        this.renderUsers();
                     });
-
-                    const data = await response.json();
-
-                    if (!response.ok) {
-                        throw new Error(data.message || 'Failed to add user');
-                    }
-
-                    if (data.temporaryPassword) {
-                        const successMessage = `
-                            User created successfully!
-                            <br><br>
-                            <strong>Name:</strong> ${userData.name}
-                            <br>
-                            <strong>Email:</strong> ${userData.email}
-                            <br>
-                            <strong>Department:</strong> ${userData.department}
-                            <br>
-                            <strong>Role:</strong> ${userData.role}
-                            <br>
-                            <strong>Temporary Password:</strong> ${data.temporaryPassword}
-                        `;
-                        showNotification(successMessage, 'success');
-                    } else {
-                        showNotification('User added successfully', 'success');
-                    }
-
-                    const modal = document.querySelector('.modal.active');
-                    if (modal) modal.remove();
-                    this.loadUsers();
-                } catch (error) {
-                    console.error('Error adding user:', error);
-                    showNotification(error.message, 'error');
-                } finally {
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = 'Add User';
                 }
             });
-        } catch (error) {
-            console.error('Error opening add user modal:', error);
-            showNotification(error.message, 'error');
-        }
-    },
+        },
 
-        // Edit User
-    editUser: async function(userId) {
-        try {
-            const user = this.state.users.find(u => u._id === userId);
-            if (!user) throw new Error('User not found');
+        // Load Users
+        loadUsers: async function() {
+            try {
+                ensureInitialized();
+                this.state.loading = true;
+                this.renderLoadingState();
 
-            const modalHtml = `
-                <div class="modal active">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h2>Edit User: ${user.name}</h2>
-                            <button class="close-btn" onclick="this.closest('.modal').remove()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <form id="editUserForm">
-                            <div class="form-group">
-                                <label for="editName">Full Name *</label>
-                                <input type="text" id="editName" value="${user.name || ''}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editEmail">Email *</label>
-                                <input type="email" id="editEmail" value="${user.email || ''}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="editDepartment">Department *</label>
-                                <select id="editDepartment" required>
-                                    <option value="HR" ${user.department === 'HR' ? 'selected' : ''}>HR</option>
-                                    <option value="Finance" ${user.department === 'Finance' ? 'selected' : ''}>Finance</option>
-                                    <option value="IT" ${user.department === 'IT' ? 'selected' : ''}>IT</option>
-                                    <option value="Admin" ${user.department === 'Admin' ? 'selected' : ''}>Admin</option>
-                                    <option value="Support" ${user.department === 'Support' ? 'selected' : ''}>Support</option>
-                                    <option value="Sales" ${user.department === 'Sales' ? 'selected' : ''}>Sales</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="editRole">Role *</label>
-                                <select id="editRole" required>
-                                    ${this.generateRoleOptions()}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="editRequire2FA" ${user.requires2FA ? 'checked' : ''}>
-                                    <span>Require 2FA</span>
-                                </label>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Save Changes</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            `;
+                const token = localStorage.getItem('token');
+                console.log('Using token:', token);
 
-            // Create and append modal
-            const modalContainer = document.createElement('div');
-            modalContainer.innerHTML = modalHtml;
-            const modalElement = modalContainer.firstElementChild;
-            document.body.appendChild(modalElement);
+                if (!token) {
+                    throw new Error('No authentication token found');
+                }
 
-            // Set current role
-            const roleSelect = document.getElementById('editRole');
-            if (roleSelect) {
-                roleSelect.value = user.role.toLowerCase();
+                console.log('Fetching users from API...');
+                const response = await fetch('https://18.215.160.136.nip.io/api/users', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('API Response:', response);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to load users');
+                }
+                
+                const users = await response.json();
+                console.log('Received users:', users);
+
+                this.state.loading = false;
+                this.state.users = users;
+                this.renderUsers();
+            } catch (error) {
+                console.error('Error loading users:', error);
+                this.state.loading = false;
+                this.state.users = [];
+                this.renderErrorState(error.message);
+
+                if (typeof showNotification === 'function') {
+                    showNotification('Failed to load users: ' + error.message, 'error');
+                }
+            }
+        },
+
+        // Render States
+        renderLoadingState: function() {
+            const tbody = document.getElementById('usersTableBody');
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="loading-state">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading users...</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        },
+
+        renderErrorState: function(message) {
+            const tbody = document.getElementById('usersTableBody');
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="error-state">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>${message || 'Error loading users'}</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        },
+
+        // Filtering Function
+        getFilteredUsers: function() {
+            if (!Array.isArray(this.state.users)) {
+                return [];
             }
 
-            const form = document.getElementById('editUserForm');
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const submitButton = form.querySelector('button[type="submit"]');
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            return this.state.users.filter(user => {
+                const searchTerm = (this.state.filters.search || '').toLowerCase();
+                const matchesSearch = (user.name?.toLowerCase() || '').includes(searchTerm) ||
+                                    (user.email?.toLowerCase() || '').includes(searchTerm);
+                
+                const matchesDepartment = !this.state.filters.department || 
+                                        user.department === this.state.filters.department;
+                
+                const matchesStatus = !this.state.filters.status || 
+                                    user.status === this.state.filters.status;
+                
+                const matchesRole = !this.state.filters.role || 
+                                  user.role === this.state.filters.role;
 
-                try {
-                    const token = localStorage.getItem('token');
-                    const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify({
-                            name: document.getElementById('editName').value,
-                            email: document.getElementById('editEmail').value,
-                            department: document.getElementById('editDepartment').value,
-                            role: document.getElementById('editRole').value,
-                            requires2FA: document.getElementById('editRequire2FA').checked
-                        })
-                    });
-
-                    if (!response.ok) {
-                        const error = await response.json();
-                        throw new Error(error.message || 'Failed to update user');
-                    }
-
-                    showNotification('User updated successfully', 'success');
-
-                    if (modalElement && modalElement.parentNode) {
-                        modalElement.remove();
-                    }
-
-                    this.loadUsers();
-                } catch (error) {
-                    console.error('Error updating user:', error);
-                    showNotification(error.message, 'error');
-                } finally {
-                    if (submitButton) {
-                        submitButton.disabled = false;
-                        submitButton.innerHTML = 'Save Changes';
-                    }
-                }
+                return matchesSearch && matchesDepartment && matchesStatus && matchesRole;
             });
-        } catch (error) {
-            console.error('Error editing user:', error);
-            showNotification(error.message, 'error');
-        }
-    },
+        },
 
-    // Delete User
-    deleteUser: async function(userId) {
-        try {
-            const user = this.state.users.find(u => u._id === userId);
-            if (!user) throw new Error('User not found');
-
-            if (!confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) {
+               // Main Render Function
+        renderUsers: function() {
+            console.log('Rendering users...');
+            const tbody = document.getElementById('usersTableBody');
+            if (!tbody) {
+                console.error('Table body element not found');
                 return;
             }
 
-            const token = localStorage.getItem('token');
-            const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to delete user');
+            const filteredUsers = this.getFilteredUsers();
+            console.log('Filtered users:', filteredUsers);
+            
+            if (!filteredUsers || filteredUsers.length === 0) {
+                console.log('No users to display');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <i class="fas fa-users-slash"></i>
+                            <p>No users found</p>
+                        </td>
+                    </tr>
+                `;
+                return;
             }
 
-            showNotification('User deleted successfully', 'success');
-            this.loadUsers();
-        } catch (error) {
-            console.error('Error deleting user:', error);
-            showNotification(error.message, 'error');
-        }
-    },
-
-    // Toggle User Status
-    toggleUserStatus: async function(userId) {
-        try {
-            const user = this.state.users.find(u => u._id === userId);
-            if (!user) throw new Error('User not found');
-
-            const newStatus = user.status === 'active' ? 'inactive' : 'active';
-            const token = localStorage.getItem('token');
-
-            const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/status`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ status: newStatus })
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to update user status');
-            }
-
-            showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
-            this.loadUsers();
-        } catch (error) {
-            console.error('Error toggling user status:', error);
-            showNotification(error.message, 'error');
-        }
-    },
-
-    // Toggle 2FA
-    toggle2FA: async function(userId) {
-        try {
-            const user = this.state.users.find(u => u._id === userId);
-            if (!user) throw new Error('User not found');
-
-            const token = localStorage.getItem('token');
-            const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/2fa`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ requires2FA: !user.requires2FA })
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to update 2FA status');
-            }
-
-            showNotification(`2FA ${!user.requires2FA ? 'enabled' : 'disabled'} successfully`, 'success');
-            this.loadUsers();
-        } catch (error) {
-            console.error('Error toggling 2FA:', error);
-            showNotification(error.message, 'error');
-        }
-    },
-        // Change User Password
-    changeUserPassword: async function(userId) {
-        try {
-            const user = this.state.users.find(u => u._id === userId);
-            if (!user) throw new Error('User not found');
-
-            const modalHtml = `
-                <div class="modal active">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h2>Change Password for ${user.name}</h2>
-                            <button class="close-btn" onclick="this.closest('.modal').remove()">
-                                <i class="fas fa-times"></i>
+            console.log('Rendering user table...');
+            tbody.innerHTML = filteredUsers.map(user => `
+                <tr>
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar" style="background-color: ${this.getAvatarColor(user.name || '')}">
+                                ${this.getInitials(user.name || '')}
+                            </div>
+                            <div class="user-details">
+                                <div class="user-name">${user.name || 'N/A'}</div>
+                                <div class="user-id">${user.email || 'N/A'}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${user.email || 'N/A'}</td>
+                    <td>
+                        <span class="department-badge department-${(user.department || 'unknown').toLowerCase()}">
+                            ${user.department || 'Unknown'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="role-badge role-${(user.role || 'unknown').toLowerCase()}">
+                            ${user.role || 'Unknown'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge status-${(user.status || 'inactive').toLowerCase()}">
+                            <i class="fas fa-${user.status === 'active' ? 'check-circle' : 'times-circle'}"></i>
+                            ${user.status || 'Inactive'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="2fa-badge ${user.requires2FA ? 'enabled' : 'disabled'}">
+                            <i class="fas fa-${user.requires2FA ? 'shield-alt' : 'shield'}"></i>
+                            ${user.requires2FA ? 'Enabled' : 'Disabled'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button onclick="UserManagement.editUser('${user._id}')" 
+                                    class="btn-icon" title="Edit User">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="UserManagement.toggleUserStatus('${user._id}')" 
+                                    class="btn-icon ${user.status === 'active' ? 'danger' : 'success'}"
+                                    title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User">
+                                <i class="fas fa-${user.status === 'active' ? 'ban' : 'check'}"></i>
+                            </button>
+                            <button onclick="UserManagement.changeUserPassword('${user._id}')" 
+                                    class="btn-icon warning" title="Change Password">
+                                <i class="fas fa-key"></i>
+                            </button>
+                            <button onclick="UserManagement.toggle2FA('${user._id}')"
+                                    class="btn-icon ${user.requires2FA ? 'success' : 'warning'}"
+                                    title="${user.requires2FA ? 'Disable' : 'Enable'} 2FA">
+                                <i class="fas fa-shield-alt"></i>
+                            </button>
+                            <button onclick="UserManagement.deleteUser('${user._id}')" 
+                                    class="btn-icon danger" title="Delete User">
+                                <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
-                        <form id="changePasswordForm">
-                            <div class="form-group">
-                                <label for="newPassword">New Password</label>
-                                <div class="password-input-group">
-                                    <input type="password" id="newPassword" required minlength="6">
-                                    <button type="button" class="toggle-password" 
-                                        onclick="window.UserManagement.togglePasswordVisibility('newPassword', this)">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="confirmPassword">Confirm Password</label>
-                                <div class="password-input-group">
-                                    <input type="password" id="confirmPassword" required minlength="6">
-                                    <button type="button" class="toggle-password" 
-                                        onclick="window.UserManagement.togglePasswordVisibility('confirmPassword', this)">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" 
-                                    onclick="this.closest('.modal').remove()">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Change Password</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                    </td>
+                </tr>
+            `).join('');
+            
+            console.log('Render complete');
+        },
+
+        // Utility Functions
+        getInitials: function(name) {
+            return name
+                .split(' ')
+                .map(word => word[0])
+                .join('')
+                .toUpperCase();
+        },
+
+        getAvatarColor: function(name) {
+            const colors = [
+                '#4f46e5', '#7c3aed', '#db2777', '#ea580c', '#16a34a',
+                '#2563eb', '#9333ea', '#e11d48', '#d97706', '#15803d'
+            ];
+            
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) {
+                hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            
+            return colors[Math.abs(hash) % colors.length];
+        },
+
+        // Generate role options for select inputs
+        generateRoleOptions: function() {
+            const roles = [
+                { id: 'admin', name: 'Admin' },
+                { id: 'manager', name: 'Manager' },
+                { id: 'user', name: 'User' }
+            ];
+
+            return `
+                <option value="">Select Role</option>
+                ${roles.map(role => `
+                    <option value="${role.id}">${role.name}</option>
+                `).join('')}
             `;
+        },
 
-            // Create and append modal
-            const modalContainer = document.createElement('div');
-            modalContainer.innerHTML = modalHtml;
-            const modalElement = modalContainer.firstElementChild;
-            document.body.appendChild(modalElement);
-
-            // Handle form submission
-            const form = document.getElementById('changePasswordForm');
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const newPassword = document.getElementById('newPassword').value;
-                const confirmPassword = document.getElementById('confirmPassword').value;
-                
-                if (newPassword !== confirmPassword) {
-                    showNotification('Passwords do not match', 'error');
-                    return;
-                }
-
-                if (newPassword.length < 6) {
-                    showNotification('Password must be at least 6 characters long', 'error');
-                    return;
-                }
-
-                const submitButton = form.querySelector('button[type="submit"]');
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Changing Password...';
-
-                try {
-                    const token = localStorage.getItem('token');
-                    const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/reset-password`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify({ password: newPassword })
-                    });
-
-                    if (!response.ok) {
-                        const error = await response.json();
-                        throw new Error(error.message || 'Failed to change password');
-                    }
-
-                    showNotification('Password changed successfully', 'success');
-                    
-                    if (modalElement && modalElement.parentNode) {
-                        modalElement.remove();
-                    }
-                } catch (error) {
-                    console.error('Error changing password:', error);
-                    showNotification(error.message, 'error');
-                } finally {
-                    if (submitButton) {
-                        submitButton.disabled = false;
-                        submitButton.innerHTML = 'Change Password';
-                    }
-                }
-            });
-        } catch (error) {
-            console.error('Error changing password:', error);
-            showNotification(error.message, 'error');
-        }
-    },
-
-    // Toggle Password Visibility
-    togglePasswordVisibility: function(inputId, button) {
-        const input = document.getElementById(inputId);
-        const icon = button.querySelector('i');
-        
-        if (input.type === 'password') {
-            input.type = 'text';
-            icon.className = 'fas fa-eye-slash';
-        } else {
-            input.type = 'password';
-            icon.className = 'fas fa-eye';
-        }
-    },
-
-    // Open Role Management Modal
-   // In openRoleManagement function
-openRoleManagement: function() {
-    try {
-        console.log('Opening role management modal...');
-        const template = document.getElementById('roleManagementModal');
-        console.log('Template found:', template); // Check if template exists
-
-        if (!template) {
-            throw new Error('Role management modal template not found');
-        }
-
-        console.log('Cloning template...');
-        const modalContent = template.content.cloneNode(true);
-        console.log('Modal content cloned:', modalContent);
-
-        console.log('Appending to body...');
-        document.body.appendChild(modalContent);
-        console.log('Modal appended to body');
-
-        // Initialize role management UI
-        this.initializeRoleManagement();
-    } catch (error) {
-        console.error('Error opening role management:', error);
-        showNotification(error.message, 'error');
-    }
-},
-
-    // Initialize Role Management
-    initializeRoleManagement: function() {
-        try {
-            this.renderRolesList();
-            this.renderPermissionsList();
-            this.setupRoleEventListeners();
-        } catch (error) {
-            console.error('Error initializing role management:', error);
-            showNotification(error.message, 'error');
-        }
-    },
-
-    // Render Roles List
-    renderRolesList: function() {
-        const rolesList = document.getElementById('rolesList');
-        if (!rolesList) return;
-
-        const roles = Object.entries(window.RBAC.CONFIG.ROLES);
-        rolesList.innerHTML = roles.map(([key, role]) => `
-            <div class="role-item ${this.state.selectedRole === key ? 'active' : ''}" 
-                 data-role="${key}">
-                <div class="role-info">
-                    <h4>${role.name}</h4>
-                    <p>${role.description}</p>
-                </div>
-            </div>
-        `).join('');
-
-        // Add click handlers
-        rolesList.querySelectorAll('.role-item').forEach(item => {
-            item.addEventListener('click', () => {
-                this.selectRole(item.dataset.role);
-            });
-        });
-    },
-
-    // Select Role
-    selectRole: function(roleKey) {
-        this.state.selectedRole = roleKey;
-        this.renderRolesList();
-        this.renderPermissionsList();
-    },
-
-    // Render Permissions List
-    // Update the renderPermissionsList function
-renderPermissionsList: function() {
-    const permissionsList = document.getElementById('permissionsList');
-    if (!permissionsList || !this.state.selectedRole) return;
-
-    const role = window.RBAC.CONFIG.ROLES[this.state.selectedRole];
-    const permissions = window.RBAC.CONFIG.PERMISSIONS;
-
-    permissionsList.innerHTML = Object.entries(permissions).map(([category, perms]) => `
-        <div class="permission-group">
-            <h4>${category}</h4>
-            ${Object.entries(perms).map(([key, value]) => {
-                const isChecked = role.permissions.includes(value) || 
-                                role.permissions.includes('*');
-                const isDisabled = this.state.selectedRole === 'SUPER_ADMIN';
-                
-                return `
-                    <div class="permission-item">
-                        <label>
-                            <input type="checkbox" 
-                                   value="${value}"
-                                   ${isChecked ? 'checked' : ''}
-                                   ${isDisabled ? 'disabled' : ''}
-                                   onchange="window.UserManagement.handlePermissionChange(event, '${this.state.selectedRole}')">
-                            <span>${key}</span>
-                        </label>
+        // Add User Modal
+        openAddUserModal: function() {
+            try {
+                ensureInitialized();
+                const modalContainer = document.createElement('div');
+                modalContainer.innerHTML = `
+                    <div class="modal active">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2>Add New User</h2>
+                                <button class="close-btn" onclick="this.closest('.modal').remove()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <form id="addUserForm">
+                                <div class="form-group">
+                                    <label for="userName">Full Name *</label>
+                                    <input type="text" id="userName" name="name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="userEmail">Email *</label>
+                                    <input type="email" id="userEmail" name="email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="userDepartment">Department *</label>
+                                    <select id="userDepartment" name="department" required>
+                                        <option value="">Select Department</option>
+                                        <option value="HR">HR</option>
+                                        <option value="Finance">Finance</option>
+                                        <option value="IT">IT</option>
+                                        <option value="Admin">Admin</option>
+                                        <option value="Support">Support</option>
+                                        <option value="Sales">Sales</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="userRole">Role *</label>
+                                    <select id="userRole" name="role" required>
+                                        ${this.generateRoleOptions()}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="require2FA" name="requires2FA">
+                                        <span>Require 2FA</span>
+                                    </label>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Add User</button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 `;
-            }).join('')}
-        </div>
-    `).join('');
-},
+                document.body.appendChild(modalContainer.firstElementChild);
 
-// Add this new helper function
-handlePermissionChange: function(event, roleKey) {
-    if (roleKey === 'SUPER_ADMIN') {
-        event.preventDefault();
-        return;
-    }
-    
-    this.updateRolePermissions();
-},
-    // Add this function to UserManagementModule
-setupRoleEventListeners: function() {
-    // Close button handler
-    const closeBtn = document.querySelector('.role-management-modal .close-btn');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            const modal = document.querySelector('.role-management-modal');
-            if (modal) modal.remove();
-        });
-    }
+                const form = document.getElementById('addUserForm');
+                if (!form) {
+                    throw new Error('Form not found');
+                }
 
-    // Role item click handlers
-    const roleItems = document.querySelectorAll('.role-item');
-    roleItems.forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const roleKey = item.getAttribute('data-role');
-            this.selectRole(roleKey);
-        });
-    });
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
 
-    // Permission checkbox handlers
-    const permissionCheckboxes = document.querySelectorAll('.permission-item input[type="checkbox"]');
-    permissionCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', (e) => {
-            const roleKey = this.state.selectedRole;
+                    const formData = new FormData(form);
+                    const userData = {
+                        name: formData.get('name'),
+                        email: formData.get('email'),
+                        department: formData.get('department'),
+                        role: formData.get('role'),
+                        requires2FA: formData.get('requires2FA') === 'on'
+                    };
+
+                    if (!userData.name || !userData.email || !userData.department || !userData.role) {
+                        showNotification('Please fill in all required fields', 'error');
+                        return;
+                    }
+
+                    const submitButton = form.querySelector('button[type="submit"]');
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding User...';
+
+                    try {
+                        const token = localStorage.getItem('token');
+                        const response = await fetch('https://18.215.160.136.nip.io/api/users', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify(userData)
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            throw new Error(data.message || 'Failed to add user');
+                        }
+
+                        if (data.temporaryPassword) {
+                            const successMessage = `
+                                User created successfully!
+                                <br><br>
+                                <strong>Name:</strong> ${userData.name}
+                                <br>
+                                <strong>Email:</strong> ${userData.email}
+                                <br>
+                                <strong>Department:</strong> ${userData.department}
+                                <br>
+                                <strong>Role:</strong> ${userData.role}
+                                <br>
+                                <strong>Temporary Password:</strong> ${data.temporaryPassword}
+                            `;
+                            showNotification(successMessage, 'success');
+                        } else {
+                            showNotification('User added successfully', 'success');
+                        }
+
+                        const modal = document.querySelector('.modal.active');
+                        if (modal) modal.remove();
+                        this.loadUsers();
+                    } catch (error) {
+                        console.error('Error adding user:', error);
+                        showNotification(error.message, 'error');
+                    } finally {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = 'Add User';
+                    }
+                });
+            } catch (error) {
+                console.error('Error opening add user modal:', error);
+                showNotification(error.message, 'error');
+            }
+        },
+
+                // Edit User
+        editUser: async function(userId) {
+            try {
+                ensureInitialized();
+                const user = this.state.users.find(u => u._id === userId);
+                if (!user) throw new Error('User not found');
+
+                const modalHtml = `
+                    <div class="modal active">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2>Edit User: ${user.name}</h2>
+                                <button class="close-btn" onclick="this.closest('.modal').remove()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <form id="editUserForm">
+                                <div class="form-group">
+                                    <label for="editName">Full Name *</label>
+                                    <input type="text" id="editName" value="${user.name || ''}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="editEmail">Email *</label>
+                                    <input type="email" id="editEmail" value="${user.email || ''}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="editDepartment">Department *</label>
+                                    <select id="editDepartment" required>
+                                        <option value="HR" ${user.department === 'HR' ? 'selected' : ''}>HR</option>
+                                        <option value="Finance" ${user.department === 'Finance' ? 'selected' : ''}>Finance</option>
+                                        <option value="IT" ${user.department === 'IT' ? 'selected' : ''}>IT</option>
+                                        <option value="Admin" ${user.department === 'Admin' ? 'selected' : ''}>Admin</option>
+                                        <option value="Support" ${user.department === 'Support' ? 'selected' : ''}>Support</option>
+                                        <option value="Sales" ${user.department === 'Sales' ? 'selected' : ''}>Sales</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="editRole">Role *</label>
+                                    <select id="editRole" required>
+                                        ${this.generateRoleOptions()}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="editRequire2FA" ${user.requires2FA ? 'checked' : ''}>
+                                        <span>Require 2FA</span>
+                                    </label>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+
+                // Create and append modal
+                const modalContainer = document.createElement('div');
+                modalContainer.innerHTML = modalHtml;
+                const modalElement = modalContainer.firstElementChild;
+                document.body.appendChild(modalElement);
+
+                // Set current role
+                const roleSelect = document.getElementById('editRole');
+                if (roleSelect) {
+                    roleSelect.value = user.role.toLowerCase();
+                }
+
+                const form = document.getElementById('editUserForm');
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const submitButton = form.querySelector('button[type="submit"]');
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+                    try {
+                        const token = localStorage.getItem('token');
+                        const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({
+                                name: document.getElementById('editName').value,
+                                email: document.getElementById('editEmail').value,
+                                department: document.getElementById('editDepartment').value,
+                                role: document.getElementById('editRole').value,
+                                requires2FA: document.getElementById('editRequire2FA').checked
+                            })
+                        });
+
+                        if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(error.message || 'Failed to update user');
+                        }
+
+                        showNotification('User updated successfully', 'success');
+
+                        if (modalElement && modalElement.parentNode) {
+                            modalElement.remove();
+                        }
+
+                        this.loadUsers();
+                    } catch (error) {
+                        console.error('Error updating user:', error);
+                        showNotification(error.message, 'error');
+                    } finally {
+                        if (submitButton) {
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = 'Save Changes';
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error editing user:', error);
+                showNotification(error.message, 'error');
+            }
+        },
+
+        // Delete User
+        deleteUser: async function(userId) {
+            try {
+                ensureInitialized();
+                const user = this.state.users.find(u => u._id === userId);
+                if (!user) throw new Error('User not found');
+
+                if (!confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) {
+                    return;
+                }
+
+                const token = localStorage.getItem('token');
+                const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to delete user');
+                }
+
+                showNotification('User deleted successfully', 'success');
+                this.loadUsers();
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showNotification(error.message, 'error');
+            }
+        },
+
+        // Toggle User Status
+        toggleUserStatus: async function(userId) {
+            try {
+                ensureInitialized();
+                const user = this.state.users.find(u => u._id === userId);
+                if (!user) throw new Error('User not found');
+
+                const newStatus = user.status === 'active' ? 'inactive' : 'active';
+                const token = localStorage.getItem('token');
+
+                const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to update user status');
+                }
+
+                showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
+                this.loadUsers();
+            } catch (error) {
+                console.error('Error toggling user status:', error);
+                showNotification(error.message, 'error');
+            }
+        },
+                // Toggle 2FA
+        toggle2FA: async function(userId) {
+            try {
+                ensureInitialized();
+                const user = this.state.users.find(u => u._id === userId);
+                if (!user) throw new Error('User not found');
+
+                const token = localStorage.getItem('token');
+                const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/2fa`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ requires2FA: !user.requires2FA })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to update 2FA status');
+                }
+
+                showNotification(`2FA ${!user.requires2FA ? 'enabled' : 'disabled'} successfully`, 'success');
+                this.loadUsers();
+            } catch (error) {
+                console.error('Error toggling 2FA:', error);
+                showNotification(error.message, 'error');
+            }
+        },
+
+        // Change User Password
+        changeUserPassword: async function(userId) {
+            try {
+                ensureInitialized();
+                const user = this.state.users.find(u => u._id === userId);
+                if (!user) throw new Error('User not found');
+
+                const modalHtml = `
+                    <div class="modal active">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2>Change Password for ${user.name}</h2>
+                                <button class="close-btn" onclick="this.closest('.modal').remove()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <form id="changePasswordForm">
+                                <div class="form-group">
+                                    <label for="newPassword">New Password</label>
+                                    <div class="password-input-group">
+                                        <input type="password" id="newPassword" required minlength="6">
+                                        <button type="button" class="toggle-password" 
+                                            onclick="UserManagement.togglePasswordVisibility('newPassword', this)">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="confirmPassword">Confirm Password</label>
+                                    <div class="password-input-group">
+                                        <input type="password" id="confirmPassword" required minlength="6">
+                                        <button type="button" class="toggle-password" 
+                                            onclick="UserManagement.togglePasswordVisibility('confirmPassword', this)">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" 
+                                        onclick="this.closest('.modal').remove()">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Change Password</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+
+                // Create and append modal
+                const modalContainer = document.createElement('div');
+                modalContainer.innerHTML = modalHtml;
+                const modalElement = modalContainer.firstElementChild;
+                document.body.appendChild(modalElement);
+
+                // Handle form submission
+                const form = document.getElementById('changePasswordForm');
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const newPassword = document.getElementById('newPassword').value;
+                    const confirmPassword = document.getElementById('confirmPassword').value;
+                    
+                    if (newPassword !== confirmPassword) {
+                        showNotification('Passwords do not match', 'error');
+                        return;
+                    }
+
+                    if (newPassword.length < 6) {
+                        showNotification('Password must be at least 6 characters long', 'error');
+                        return;
+                    }
+
+                    const submitButton = form.querySelector('button[type="submit"]');
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Changing Password...';
+
+                    try {
+                        const token = localStorage.getItem('token');
+                        const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}/reset-password`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ password: newPassword })
+                        });
+
+                        if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(error.message || 'Failed to change password');
+                        }
+
+                        showNotification('Password changed successfully', 'success');
+                        
+                        if (modalElement && modalElement.parentNode) {
+                            modalElement.remove();
+                        }
+                    } catch (error) {
+                        console.error('Error changing password:', error);
+                        showNotification(error.message, 'error');
+                    } finally {
+                        if (submitButton) {
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = 'Change Password';
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error changing password:', error);
+                showNotification(error.message, 'error');
+            }
+        },
+
+        // Toggle Password Visibility
+        togglePasswordVisibility: function(inputId, button) {
+            const input = document.getElementById(inputId);
+            const icon = button.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
+        },
+
+        // Role Management
+        openRoleManagement: function() {
+            try {
+                ensureInitialized();
+                console.log('Opening role management modal...');
+                
+                // Create modal directly
+                const modalHtml = `
+                    <div class="modal role-management-modal active">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2>Role Management</h2>
+                                <button class="close-btn" onclick="this.closest('.modal').remove()">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="roles-section">
+                                    <h3>Roles</h3>
+                                    <div class="roles-list" id="rolesList">
+                                        <!-- Roles will be dynamically populated -->
+                                    </div>
+                                </div>
+                                <div class="permissions-section">
+                                    <h3>Permissions</h3>
+                                    <div class="permissions-list" id="permissionsList">
+                                        <!-- Permissions will be dynamically populated -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const modalContainer = document.createElement('div');
+                modalContainer.innerHTML = modalHtml;
+                document.body.appendChild(modalContainer.firstElementChild);
+
+                // Initialize role management UI
+                this.initializeRoleManagement();
+            } catch (error) {
+                console.error('Error opening role management:', error);
+                showNotification(error.message, 'error');
+            }
+        },
+
+        // Initialize Role Management
+        initializeRoleManagement: function() {
+            try {
+                // Set initial selected role if none is selected
+                if (!this.state.selectedRole) {
+                    this.state.selectedRole = 'SUPER_ADMIN';
+                }
+
+                // Render UI elements
+                this.renderRolesList();
+                this.renderPermissionsList();
+                
+                // Setup event listeners
+                this.setupRoleEventListeners();
+            } catch (error) {
+                console.error('Error initializing role management:', error);
+                showNotification(error.message, 'error');
+            }
+        },
+
+        // Setup Role Event Listeners
+        setupRoleEventListeners: function() {
+            // Close button handler
+            const closeBtn = document.querySelector('.role-management-modal .close-btn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    const modal = document.querySelector('.role-management-modal');
+                    if (modal) modal.remove();
+                });
+            }
+
+            // Role item click handlers
+            const roleItems = document.querySelectorAll('.role-item');
+            roleItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const roleKey = item.getAttribute('data-role');
+                    this.selectRole(roleKey);
+                });
+            });
+
+            // Permission checkbox handlers
+            const permissionCheckboxes = document.querySelectorAll('.permission-item input[type="checkbox"]');
+            permissionCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    const roleKey = this.state.selectedRole;
+                    if (roleKey === 'SUPER_ADMIN') {
+                        e.preventDefault();
+                        return;
+                    }
+                    this.updateRolePermissions();
+                });
+            });
+
+            // Select first role by default
+            const firstRole = document.querySelector('.role-item');
+            if (firstRole) {
+                const roleKey = firstRole.getAttribute('data-role');
+                this.selectRole(roleKey);
+            }
+        },
+
+        // Render Roles List
+        renderRolesList: function() {
+            const rolesList = document.getElementById('rolesList');
+            if (!rolesList) return;
+
+            const roles = Object.entries(window.RBAC.CONFIG.ROLES);
+            rolesList.innerHTML = roles.map(([key, role]) => `
+                <div class="role-item ${this.state.selectedRole === key ? 'active' : ''}" 
+                     data-role="${key}">
+                    <div class="role-info">
+                        <h4>${role.name}</h4>
+                        <p>${role.description}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            // Add click handlers
+            rolesList.querySelectorAll('.role-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    this.selectRole(item.dataset.role);
+                });
+            });
+        },
+
+        // Select Role
+        selectRole: function(roleKey) {
+            this.state.selectedRole = roleKey;
+            this.renderRolesList();
+            this.renderPermissionsList();
+        },
+
+        // Render Permissions List
+        renderPermissionsList: function() {
+            const permissionsList = document.getElementById('permissionsList');
+            if (!permissionsList || !this.state.selectedRole) return;
+
+            const role = window.RBAC.CONFIG.ROLES[this.state.selectedRole];
+            const permissions = window.RBAC.CONFIG.PERMISSIONS;
+
+            permissionsList.innerHTML = Object.entries(permissions).map(([category, perms]) => `
+                <div class="permission-group">
+                    <h4>${category}</h4>
+                    ${Object.entries(perms).map(([key, value]) => {
+                        const isChecked = role.permissions.includes(value) || 
+                                        role.permissions.includes('*');
+                        const isDisabled = this.state.selectedRole === 'SUPER_ADMIN';
+                        
+                        return `
+                            <div class="permission-item">
+                                <label>
+                                    <input type="checkbox" 
+                                           value="${value}"
+                                           ${isChecked ? 'checked' : ''}
+                                           ${isDisabled ? 'disabled' : ''}
+                                           onchange="UserManagement.handlePermissionChange(event, '${this.state.selectedRole}')">
+                                    <span>${key}</span>
+                                </label>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `).join('');
+        },
+
+        // Handle Permission Change
+        handlePermissionChange: function(event, roleKey) {
             if (roleKey === 'SUPER_ADMIN') {
-                e.preventDefault();
+                event.preventDefault();
                 return;
             }
+            
             this.updateRolePermissions();
-        });
-    });
+        },
 
-    // Select first role by default
-    const firstRole = document.querySelector('.role-item');
-    if (firstRole) {
-        const roleKey = firstRole.getAttribute('data-role');
-        this.selectRole(roleKey);
-    }
-},
+        // Update Role Permissions
+        updateRolePermissions: async function() {
+            try {
+                // Get selected permissions
+                const permissions = Array.from(
+                    document.querySelectorAll('#permissionsList input[type="checkbox"]:checked')
+                ).map(cb => cb.value);
 
-// Also update the initializeRoleManagement function to ensure proper order
-initializeRoleManagement: function() {
-    try {
-        // Set initial selected role if none is selected
-        if (!this.state.selectedRole) {
-            this.state.selectedRole = 'SUPER_ADMIN';
+                console.log('Updating permissions for role:', this.state.selectedRole);
+                console.log('New permissions:', permissions);
+
+                // Update local RBAC config
+                window.RBAC.CONFIG.ROLES[this.state.selectedRole].permissions = permissions;
+                
+                // Store in localStorage for persistence
+                try {
+                    const rbacConfig = JSON.stringify(window.RBAC.CONFIG);
+                    localStorage.setItem('rbac_config', rbacConfig);
+                } catch (storageError) {
+                    console.warn('Failed to store RBAC config:', storageError);
+                }
+
+                showNotification('Role permissions updated successfully', 'success');
+                
+                // Re-render the permissions list
+                this.renderPermissionsList();
+                
+                console.log('Updated RBAC config:', window.RBAC.CONFIG);
+
+            } catch (error) {
+                console.error('Error updating role permissions:', error);
+                showNotification('Failed to update permissions: ' + error.message, 'error');
+                this.renderPermissionsList();
+            }
         }
+    };
 
-        // Render UI elements
-        this.renderRolesList();
-        this.renderPermissionsList();
-        
-        // Setup event listeners
-        this.setupRoleEventListeners();
-    } catch (error) {
-        console.error('Error initializing role management:', error);
-        showNotification(error.message, 'error');
-    }
-},
-
-   // Update the updateRolePermissions function
-updateRolePermissions: async function() {
-    try {
-        // Get selected permissions
-        const permissions = Array.from(
-            document.querySelectorAll('#permissionsList input[type="checkbox"]:checked')
-        ).map(cb => cb.value);
-
-        console.log('Updating permissions for role:', this.state.selectedRole);
-        console.log('New permissions:', permissions);
-
-        // Update local RBAC config
-        window.RBAC.CONFIG.ROLES[this.state.selectedRole].permissions = permissions;
-        
-        // Store in localStorage for persistence (optional)
-        try {
-            const rbacConfig = JSON.stringify(window.RBAC.CONFIG);
-            localStorage.setItem('rbac_config', rbacConfig);
-        } catch (storageError) {
-            console.warn('Failed to store RBAC config:', storageError);
-        }
-
-        showNotification('Role permissions updated successfully', 'success');
-        
-        // Re-render the permissions list to reflect changes
-        this.renderPermissionsList();
-        
-        // Log the updated configuration
-        console.log('Updated RBAC config:', window.RBAC.CONFIG);
-
-    } catch (error) {
-        console.error('Error updating role permissions:', error);
-        showNotification('Failed to update permissions: ' + error.message, 'error');
-        // Revert UI to match current permissions
-        this.renderPermissionsList();
-    }
-},
-
-// Initialize the module
-if (!window.UserManagement) {
+    // Initialize the module
     window.UserManagement = UserManagementModule;
-}
 
-// Initialize when the module is loaded
-if (typeof ModuleLoader !== 'undefined' && ModuleLoader.onModuleLoaded) {
-    ModuleLoader.onModuleLoaded('userManagement', UserManagementModule);
-}
-    </script>
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            await window.UserManagement.init();
+        } catch (error) {
+            console.error('Failed to initialize UserManagement:', error);
+        }
+    });
+})();
+</script>
