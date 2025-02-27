@@ -61,6 +61,7 @@ let deleted_users;
 let user_permissions;
 
 // Initialize database connection and collections
+// Initialize database connection and collections
 async function initializeDatabase() {
     try {
         await client.connect();
@@ -72,16 +73,51 @@ async function initializeDatabase() {
         deleted_users = database.collection('deleted_users');
         user_permissions = database.collection('user_permissions');
 
-        // Create indexes
-        await users.createIndex({ email: 1 }, { unique: true });
-        await audit_logs.createIndex({ timestamp: -1 });
-        await deleted_users.createIndex({ originalId: 1 });
-        await user_permissions.createIndex({ userId: 1 }, { unique: true });
+        // Create indexes with error handling
+        const createIndexSafely = async (collection, index, options = {}) => {
+            try {
+                // Drop existing index if it exists
+                await collection.dropIndex(options.name || Object.keys(index)[0] + '_1');
+            } catch (err) {
+                // Ignore error if index doesn't exist
+                if (err.code !== 27) {
+                    console.warn(`Warning dropping index: ${err.message}`);
+                }
+            }
 
-        console.log("Database collections initialized");
+            try {
+                await collection.createIndex(index, options);
+                console.log(`Index created successfully for ${collection.collectionName}`);
+            } catch (err) {
+                console.warn(`Warning creating index for ${collection.collectionName}: ${err.message}`);
+                // Don't throw error, allow other operations to continue
+            }
+        };
+
+        // Create indexes with proper error handling
+        await Promise.all([
+            createIndexSafely(users, { email: 1 }, { 
+                unique: true,
+                name: 'email_unique' 
+            }),
+            createIndexSafely(audit_logs, { timestamp: -1 }, {
+                name: 'timestamp_desc'
+            }),
+            createIndexSafely(deleted_users, { originalId: 1 }, {
+                name: 'originalId_index'
+            }),
+            createIndexSafely(user_permissions, { userId: 1 }, {
+                unique: true,
+                name: 'userId_unique'
+            })
+        ]);
+
+        console.log("Database collections and indexes initialized");
+        return { database, users, audit_logs, deleted_users, user_permissions };
     } catch (err) {
         console.error("MongoDB connection error:", err);
-        process.exit(1);
+        // Don't exit process, let the calling code handle the error
+        throw err;
     }
 }
 
@@ -1186,16 +1222,25 @@ app.use(errorHandler);
 initializeDatabase()
     .then(() => {
         const PORT = process.env.PORT || 8080;
-        app.listen(PORT, '0.0.0.0', () => {
+        const server = app.listen(PORT, '0.0.0.0', () => {
             console.log(`Server running on port ${PORT}`);
+        });
+
+        // Handle server errors
+        server.on('error', (error) => {
+            console.error('Server error:', error);
+            process.exit(1);
         });
     })
     .catch(error => {
         console.error('Failed to initialize database:', error);
-        process.exit(1);
+        // Wait a bit before exiting to allow logs to be written
+        setTimeout(() => {
+            process.exit(1);
+        }, 1000);
     });
 
-// Handle process termination
+// Enhanced error handling for process events
 process.on('SIGTERM', async () => {
     console.log('SIGTERM received. Starting graceful shutdown...');
     try {
@@ -1208,16 +1253,19 @@ process.on('SIGTERM', async () => {
     }
 });
 
-// Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
-    process.exit(1);
+    // Attempt to close database connection before exiting
+    client.close().finally(() => {
+        process.exit(1);
+    });
 });
 
-// Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    process.exit(1);
+    // Attempt to close database connection before exiting
+    client.close().finally(() => {
+        process.exit(1);
+    });
 });
-
 module.exports = app;
