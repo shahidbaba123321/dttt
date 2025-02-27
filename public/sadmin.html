@@ -518,7 +518,25 @@ const API_BASE_URL = 'https://18.215.160.136.nip.io/api';
 // Initialize Dashboard
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        await checkAuthentication();
+        // First check if we're coming from login
+        const params = getQueryParams();
+        if (params.token) {
+            // Save the token from URL params
+            localStorage.setItem('token', params.token);
+            localStorage.setItem('userRole', params.role);
+            localStorage.setItem('userEmail', params.email);
+            
+            // Clean the URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // Then verify authentication
+        const isAuthenticated = await checkAuthentication();
+        if (!isAuthenticated) {
+            redirectToLogin();
+            return;
+        }
+
         initializeDashboard();
         loadUserInfo();
         loadInitialContent();
@@ -528,11 +546,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+
 // Authentication Check
 async function checkAuthentication() {
     const token = getToken();
     if (!token) {
-        throw new Error('No authentication token found');
+        return false;
     }
 
     try {
@@ -548,14 +567,20 @@ async function checkAuthentication() {
         }
 
         const data = await response.json();
+        
+        // Verify role is superadmin
         if (data.user.role.toLowerCase() !== 'superadmin') {
             throw new Error('Unauthorized access');
         }
 
         currentUser = data.user;
+        return true;
     } catch (error) {
         console.error('Authentication check failed:', error);
-        throw error;
+        localStorage.removeItem('token');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userEmail');
+        return false;
     }
 }
 
@@ -572,15 +597,17 @@ function getQueryParams() {
         token: params.get('token')
     };
 }
-
+    
 // User Information
-async function loadUserInfo() {
-    const params = getQueryParams();
-    if (params.email && params.role) {
-        const userInitial = params.email.charAt(0).toUpperCase();
+function loadUserInfo() {
+    const userEmail = localStorage.getItem('userEmail');
+    const userRole = localStorage.getItem('userRole');
+
+    if (userEmail && userRole) {
+        const userInitial = userEmail.charAt(0).toUpperCase();
         document.getElementById('userAvatar').textContent = userInitial;
-        document.getElementById('userName').textContent = params.email;
-        document.getElementById('userRole').textContent = params.role;
+        document.getElementById('userName').textContent = userEmail;
+        document.getElementById('userRole').textContent = userRole;
     }
 }
 
@@ -860,7 +887,14 @@ async function handleLogout() {
     }
 }
 
+// Redirect function
 function redirectToLogin() {
+    // Clear any existing auth data
+    localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userEmail');
+    
+    // Redirect to login
     window.location.href = 'login.html';
 }
 
