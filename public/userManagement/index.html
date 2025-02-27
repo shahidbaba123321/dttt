@@ -1398,41 +1398,50 @@
         },
                 // Enhanced User Management Functions
         loadUsers: async function(resetPage = false) {
-            try {
-                this.state.loading = true;
-                this.renderLoadingState();
+    try {
+        this.state.loading = true;
+        this.renderLoadingState();
 
-                if (resetPage) {
-                    this.state.pagination.page = 1;
-                }
+        if (resetPage) {
+            this.state.pagination.page = 1;
+        }
 
-                const queryParams = new URLSearchParams({
-                    page: this.state.pagination.page,
-                    limit: this.state.pagination.limit,
-                    search: this.state.filters.search,
-                    department: this.state.filters.department,
-                    role: this.state.filters.role,
-                    status: this.state.filters.status
-                });
+        const queryParams = new URLSearchParams({
+            page: this.state.pagination.page,
+            limit: this.state.pagination.limit,
+            search: this.state.filters.search,
+            department: this.state.filters.department,
+            role: this.state.filters.role,
+            status: this.state.filters.status
+        });
 
-                const response = await this.makeAuthenticatedRequest(
-                    `/api/users?${queryParams}`
-                );
+        const response = await this.makeAuthenticatedRequest(
+            `/api/users?${queryParams}`
+        );
 
-                const data = await response.json();
-                this.state.users = data.users;
-                this.state.pagination = data.pagination;
-                
-                this.renderUsers();
-                this.renderPagination();
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to load users');
+        }
 
-            } catch (error) {
-                console.error('Error loading users:', error);
-                this.showNotification('Failed to load users: ' + error.message, 'error');
-                this.renderErrorState(error.message);
-            } finally {
-                this.state.loading = false;
-            }
+        this.state.users = data.users || [];
+        this.state.pagination = data.pagination || {
+            page: 1,
+            limit: 10,
+            total: 0
+        };
+        
+        this.renderUsers();
+        this.renderPagination();
+
+    } catch (error) {
+        console.error('Error loading users:', error);
+        this.showNotification(error.message || 'Failed to load users', 'error');
+        this.renderErrorState(error.message);
+    } finally {
+        this.state.loading = false;
+    }
         },
 
         // Enhanced Delete User Implementation
@@ -1974,6 +1983,21 @@
                 .toUpperCase();
         },
 
+        // Add these functions to the UserManagementModule object
+renderErrorState: function(message) {
+    const tbody = document.getElementById('usersTableBody');
+    if (tbody) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="error-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>${this.escapeHtml(message || 'Error loading users')}</p>
+                </td>
+            </tr>
+        `;
+    }
+},
+
         getAvatarColor: function(name) {
             const colors = [
                 '#4f46e5', '#7c3aed', '#db2777', '#ea580c', '#16a34a',
@@ -1991,6 +2015,111 @@
         hasPermission: function(permission) {
             return window.RBAC.manager.hasPermission(permission);
         },
+        // Add this to the UserManagementModule object
+openRoleManagement: async function() {
+    try {
+        if (!this.hasPermission('MANAGE_ROLES')) {
+            this.showNotification('You do not have permission to manage roles', 'error');
+            return;
+        }
+
+        const modalHtml = `
+            <div class="modal role-management-modal active">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Role Management</h2>
+                        <button class="close-btn" onclick="this.closest('.modal').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="roles-section">
+                            <h3>Roles</h3>
+                            <div class="roles-list" id="rolesList">
+                                ${await this.renderRolesList()}
+                            </div>
+                        </div>
+                        <div class="permissions-section">
+                            <h3>Permissions</h3>
+                            <div class="permissions-list" id="permissionsList">
+                                ${this.renderPermissionsList()}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const modalContainer = document.createElement('div');
+        modalContainer.innerHTML = modalHtml;
+        document.body.appendChild(modalContainer.firstElementChild);
+
+        this.initializeRoleManagement();
+    } catch (error) {
+        console.error('Error opening role management:', error);
+        this.showNotification('Failed to open role management', 'error');
+    }
+},
+
+renderRolesList: async function() {
+    const roles = [
+        { id: 'SUPER_ADMIN', name: 'Super Admin', description: 'Full system access' },
+        { id: 'ADMIN', name: 'Administrator', description: 'System administration' },
+        { id: 'MANAGER', name: 'Manager', description: 'Department management' },
+        { id: 'USER', name: 'User', description: 'Basic user access' }
+    ];
+
+    return roles.map(role => `
+        <div class="role-item ${this.state.selectedRole === role.id ? 'active' : ''}" 
+             data-role="${role.id}">
+            <div class="role-info">
+                <h4>${this.escapeHtml(role.name)}</h4>
+                <p>${this.escapeHtml(role.description)}</p>
+            </div>
+        </div>
+    `).join('');
+},
+
+renderPermissionsList: function() {
+    const permissionGroups = {
+        'User Management': ['CREATE_USERS', 'EDIT_USERS', 'DELETE_USERS', 'VIEW_USERS'],
+        'Role Management': ['MANAGE_ROLES', 'ASSIGN_ROLES'],
+        'Security': ['MANAGE_2FA', 'RESET_PASSWORDS', 'VIEW_AUDIT_LOGS'],
+        'System': ['ACCESS_ADMIN_PANEL', 'MANAGE_SETTINGS']
+    };
+
+    return Object.entries(permissionGroups).map(([groupName, permissions]) => `
+        <div class="permission-group">
+            <h4>${this.escapeHtml(groupName)}</h4>
+            ${permissions.map(permission => `
+                <div class="permission-item">
+                    <label class="checkbox-label">
+                        <input type="checkbox" 
+                               value="${permission}"
+                               ${this.hasPermission(permission) ? 'checked' : ''}
+                               ${this.state.selectedRole === 'SUPER_ADMIN' ? 'disabled' : ''}>
+                        <span>${this.formatPermissionName(permission)}</span>
+                    </label>
+                </div>
+            `).join('')}
+        </div>
+    `).join('');
+},
+
+initializeRoleManagement: function() {
+    const roleItems = document.querySelectorAll('.role-item');
+    roleItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const roleKey = item.dataset.role;
+            this.selectRole(roleKey);
+        });
+    });
+
+    // Select first role by default
+    if (roleItems.length > 0) {
+        this.selectRole(roleItems[0].dataset.role);
+    }
+},
 
         // Tab Management
         switchTab: function(tabName) {
