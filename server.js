@@ -119,7 +119,7 @@ async function connectDB(retries = 5) {
             console.log("Connected to MongoDB Atlas");
             
             // Initialize collections
-            const audit_logs = database.collection('audit_logs');
+           
 
             const database = client.db('infocraftorbis');
             const collections = {
@@ -159,6 +159,8 @@ connectDB()
 app.get('/', (req, res) => {
     res.json({ message: 'Server is running!' });
 });
+
+const audit_logs = database.collection('audit_logs');
 
 // Get audit logs endpoint
 app.get('/api/audit-logs', verifyToken, async (req, res) => {
