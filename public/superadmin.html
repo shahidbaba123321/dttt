@@ -1596,15 +1596,23 @@ const ModuleLoader = {
                 throw new Error('Module container not found');
             }
 
-            // Create a temporary container and parse HTML
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(moduleContent, 'text/html');
+            // Create a temporary container
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = moduleContent;
 
-            // Extract all scripts
-            const scripts = Array.from(doc.getElementsByTagName('script'));
-            
-            // Remove scripts from the content
-            scripts.forEach(script => script.remove());
+            // Extract scripts before modifying content
+            const scripts = Array.from(tempDiv.getElementsByTagName('script'));
+            const scriptContents = [];
+            const scriptSources = [];
+
+            scripts.forEach(script => {
+                if (script.src) {
+                    scriptSources.push(script.src);
+                } else if (script.textContent) {
+                    scriptContents.push(script.textContent);
+                }
+                script.remove();
+            });
 
             // Hide welcome section
             const welcomeSection = document.querySelector('.welcome-section');
@@ -1612,33 +1620,25 @@ const ModuleLoader = {
                 welcomeSection.style.display = 'none';
             }
 
-            // Set HTML content without scripts
-            moduleContainer.innerHTML = doc.body.innerHTML;
+            // Set HTML content
+            moduleContainer.innerHTML = tempDiv.innerHTML;
 
-            // Execute scripts in sequence
-            for (const script of scripts) {
-                if (script.src) {
-                    // Handle external scripts
-                    await this.loadExternalScript(script.src);
-                } else if (script.textContent.trim()) {
-                    // Handle inline scripts
-                    try {
-                        // Create a new script element
-                        const newScript = document.createElement('script');
-                        newScript.textContent = script.textContent;
-                        document.body.appendChild(newScript);
-                    } catch (error) {
-                        console.error('Error executing script:', error);
-                    }
-                }
+            // Load external scripts first
+            for (const src of scriptSources) {
+                await this.loadExternalScript(src);
             }
+
+            // Execute inline scripts
+            for (const content of scriptContents) {
+                await this.executeInlineScript(content);
+            }
+
+            console.log('Module loaded successfully:', moduleName);
 
             // Initialize module if available
             if (window.UserManagement && typeof window.UserManagement.init === 'function') {
                 await window.UserManagement.init();
             }
-
-            console.log('Module loaded successfully:', moduleName);
 
         } catch (error) {
             console.error('Module loading error:', error);
@@ -1649,21 +1649,55 @@ const ModuleLoader = {
 
     loadExternalScript: function(src) {
         return new Promise((resolve, reject) => {
-            const existingScript = document.querySelector(`script[src="${src}"]`);
-            if (existingScript) {
-                resolve();
-                return;
+            try {
+                const existingScript = document.querySelector(`script[src="${src}"]`);
+                if (existingScript) {
+                    resolve();
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.type = 'text/javascript';
+                script.src = src;
+                script.async = true;
+
+                script.onload = resolve;
+                script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+
+                document.head.appendChild(script);
+            } catch (error) {
+                reject(error);
             }
+        });
+    },
 
-            const script = document.createElement('script');
-            script.type = 'text/javascript';
-            script.src = src;
-            script.async = true;
-
-            script.onload = resolve;
-            script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
-
-            document.head.appendChild(script);
+    executeInlineScript: function(content) {
+        return new Promise((resolve, reject) => {
+            try {
+                // Create a clean script element
+                const script = document.createElement('script');
+                script.type = 'text/javascript';
+                
+                // Create a safe wrapper for the content
+                const safeContent = `
+                    try {
+                        ${content}
+                    } catch (error) {
+                        console.error('Script execution error:', error);
+                    }
+                `;
+                
+                script.textContent = safeContent;
+                
+                // Add to document and remove immediately after execution
+                document.head.appendChild(script);
+                document.head.removeChild(script);
+                
+                resolve();
+            } catch (error) {
+                console.error('Script execution error:', error);
+                reject(error);
+            }
         });
     },
 
@@ -2160,13 +2194,8 @@ window.addEventListener('load', function() {
     }
 });
 
-// Error Boundaries
-window.addEventListener('unhandledrejection', function(event) {
-    console.error('Unhandled promise rejection:', event.reason);
-    showNotification('An error occurred while loading the module', 'error');
-});
-
 window.addEventListener('error', function(event) {
+    // Log the error details
     console.error('Global error:', {
         message: event.error?.message,
         stack: event.error?.stack,
@@ -2174,6 +2203,38 @@ window.addEventListener('error', function(event) {
         lineno: event.lineno,
         colno: event.colno
     });
+
+    // Specifically handle script loading errors
+    if (event.error instanceof SyntaxError && event.error.message.includes('Unexpected token')) {
+        console.error('Script loading error:', {
+            message: 'Failed to load module script properly',
+            details: event.error.message,
+            location: `${event.filename}:${event.lineno}:${event.colno}`
+        });
+
+        // Show user-friendly notification
+        showNotification('Error loading module. Please try again.', 'error');
+
+        // Prevent the error from bubbling up
+        event.preventDefault();
+        return;
+    }
+
+    // Handle other types of errors
+    if (event.error) {
+        showNotification(`An error occurred: ${event.error.message}`, 'error');
+    }
+});
+
+// Add unhandled rejection handler
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', {
+        reason: event.reason,
+        promise: event.promise
+    });
+
+    // Show user-friendly notification
+    showNotification('An unexpected error occurred', 'error');
 });
     </script>
 </body>
