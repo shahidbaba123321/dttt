@@ -809,7 +809,7 @@
                 <!-- Dashboard content will be loaded here -->
             </div>
             <!-- Users List Section -->
-<div id="usersListSection" class="content-section" style="display: none;">
+<div id="usersListSection" class="content-section">
     <div class="users-container">
         <div class="users-header">
             <h2>User Management</h2>
@@ -1111,11 +1111,20 @@ function initializeDashboard() {
 
 function initializeSidebar() {
     document.querySelectorAll('.menu-item').forEach(item => {
-        item.addEventListener('click', function(e) {
+        item.addEventListener('click', async function(e) {
+            e.preventDefault();
             if (!this.hasAttribute('onclick')) {
-                e.preventDefault();
-                activateMenuItem(this);
-                loadSectionContent(this.getAttribute('data-section'));
+                const section = this.getAttribute('data-section');
+                if (section) {
+                    // Update active state
+                    document.querySelectorAll('.menu-item').forEach(menuItem => {
+                        menuItem.classList.remove('active');
+                    });
+                    this.classList.add('active');
+
+                    // Load section content
+                    await loadSectionContent(section);
+                }
             }
         });
     });
@@ -1154,38 +1163,47 @@ function activateMenuItem(item) {
 
 // Content Loading
 async function loadSectionContent(section) {
-    const contentArea = document.getElementById('mainContent');
-    const pageTitle = document.getElementById('pageTitle');
-    
     try {
-        showLoading(contentArea);
-        
+        // Hide all sections first
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.style.display = 'none';
+        });
+
         // Update page title
-        pageTitle.textContent = section.charAt(0).toUpperCase() + section.slice(1);
+        const pageTitle = document.getElementById('pageTitle');
+        pageTitle.textContent = section.charAt(0).toUpperCase() + section.slice(1).replace('-', ' ');
 
         switch (section) {
             case 'dashboard':
-                await loadDashboardContent(contentArea);
+                const dashboardSection = document.getElementById('dashboardSection');
+                dashboardSection.style.display = 'block';
+                await loadDashboardContent(dashboardSection);
                 break;
+
             case 'users-list':
-                // Show users list section and hide others
-                document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
-                document.getElementById('usersListSection').style.display = 'block';
+                const usersSection = document.getElementById('usersListSection');
+                if (!usersSection) {
+                    throw new Error('Users list section not found in DOM');
+                }
+                usersSection.style.display = 'block';
                 await initializeUserManagement();
                 break;
-            case 'companies':
-                await loadCompaniesContent(contentArea);
-                break;
+
             default:
-                contentArea.innerHTML = `<h2>Section ${section} is under development</h2>`;
+                const mainContent = document.getElementById('mainContent');
+                mainContent.innerHTML = `
+                    <div class="content-section" style="display: block">
+                        <h2>Section ${section} is under development</h2>
+                    </div>
+                `;
+                break;
         }
     } catch (error) {
         console.error(`Error loading ${section} content:`, error);
-        showError(contentArea, 'Failed to load content');
-    } finally {
-        hideLoading(contentArea);
+        showNotification(`Failed to load ${section} section. Please try again.`, 'error');
     }
 }
+
 // Content Section Loaders
 async function loadDashboardContent(container) {
     try {
@@ -1368,17 +1386,23 @@ function showError(container, message) {
 
 function showNotification(message, type = 'success') {
     const notification = document.getElementById('notification');
-    const messageElement = document.getElementById('notificationMessage');
-    
-    notification.className = `notification ${type}`;
-    messageElement.textContent = message;
-    notification.classList.add('show');
+    if (!notification) {
+        // Create notification element if it doesn't exist
+        const notificationElement = document.createElement('div');
+        notificationElement.id = 'notification';
+        notificationElement.className = 'notification';
+        document.body.appendChild(notificationElement);
+    }
+
+    const notificationElement = document.getElementById('notification');
+    notificationElement.className = `notification ${type}`;
+    notificationElement.textContent = message;
+    notificationElement.classList.add('show');
 
     setTimeout(() => {
-        notification.classList.remove('show');
+        notificationElement.classList.remove('show');
     }, 3000);
 }
-
 function formatTimestamp(timestamp) {
     return new Date(timestamp).toLocaleString();
 }
@@ -1520,6 +1544,20 @@ additionalStyles.textContent = `
         gap: 1rem;
         color: var(--danger-color);
     }
+    .content-section {
+        display: none;
+    }
+
+    #dashboardSection {
+        display: block; /* Show dashboard by default */
+    }
+
+    .error-message {
+        padding: 2rem;
+        text-align: center;
+        color: var(--danger-color);
+    }
+    
 `;
 document.head.appendChild(additionalStyles);
 </script>
@@ -1538,8 +1576,19 @@ let usersData = [];
 
 // Initialize User Management
 async function initializeUserManagement() {
-    await loadUsers();
-    setupEventListeners();
+    try {
+        // Check if users table exists
+        const usersTableBody = document.getElementById('usersTableBody');
+        if (!usersTableBody) {
+            throw new Error('Users table not found in DOM');
+        }
+
+        await loadUsers();
+        setupEventListeners();
+    } catch (error) {
+        console.error('Error initializing user management:', error);
+        showNotification('Failed to initialize user management', 'error');
+    }
 }
 
 // Event Listeners
