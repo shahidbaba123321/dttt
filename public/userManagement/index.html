@@ -1397,7 +1397,7 @@
             }
         },
                 // Enhanced User Management Functions
-        loadUsers: async function(resetPage = false) {
+      loadUsers: async function(resetPage = false) {
     try {
         this.state.loading = true;
         this.renderLoadingState();
@@ -1407,12 +1407,12 @@
         }
 
         const queryParams = new URLSearchParams({
-            page: this.state.pagination.page,
-            limit: this.state.pagination.limit,
-            search: this.state.filters.search,
-            department: this.state.filters.department,
-            role: this.state.filters.role,
-            status: this.state.filters.status
+            page: this.state.pagination.page.toString(),
+            limit: this.state.pagination.limit.toString(),
+            search: this.state.filters.search || '',
+            department: this.state.filters.department || '',
+            role: this.state.filters.role || '',
+            status: this.state.filters.status || ''
         });
 
         const response = await this.makeAuthenticatedRequest(
@@ -1420,29 +1420,32 @@
         );
 
         const data = await response.json();
-        
-        if (!data.success) {
-            throw new Error(data.message || 'Failed to load users');
+
+        // Validate response data
+        if (!data || !Array.isArray(data)) {
+            throw new Error('Invalid response format from server');
         }
 
-        this.state.users = data.users || [];
-        this.state.pagination = data.pagination || {
+        this.state.users = data;
+        
+        // Set default pagination if not provided
+        this.state.pagination = {
             page: 1,
             limit: 10,
-            total: 0
+            total: data.length
         };
-        
+
         this.renderUsers();
         this.renderPagination();
 
     } catch (error) {
         console.error('Error loading users:', error);
-        this.showNotification(error.message || 'Failed to load users', 'error');
-        this.renderErrorState(error.message);
+        this.showNotification('Failed to load users: ' + (error.message || 'Unknown error'), 'error');
+        this.renderErrorState(error.message || 'Failed to load users');
     } finally {
         this.state.loading = false;
     }
-        },
+},
 
         // Enhanced Delete User Implementation
         deleteUser: async function(userId) {
@@ -1609,54 +1612,73 @@
             }
         },
                 // Enhanced UI Rendering Components
-        renderUsers: function() {
-            const tbody = document.getElementById('usersTableBody');
-            if (!tbody) return;
+       renderUsers: function() {
+    const tbody = document.getElementById('usersTableBody');
+    if (!tbody) return;
 
-            if (this.state.loading) {
-                this.renderLoadingState();
-                return;
-            }
+    if (this.state.loading) {
+        this.renderLoadingState();
+        return;
+    }
 
-            if (!this.state.users.length) {
-                this.renderEmptyState();
-                return;
-            }
+    if (!Array.isArray(this.state.users) || this.state.users.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="empty-state">
+                    <i class="fas fa-users-slash"></i>
+                    <p>No users found</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
 
-            tbody.innerHTML = this.state.users.map(user => `
-                <tr data-user-id="${user._id}">
+    try {
+        tbody.innerHTML = this.state.users.map(user => {
+            // Ensure user object exists and has required properties
+            if (!user) return '';
+
+            const name = user.name || 'Unknown User';
+            const email = user.email || 'No Email';
+            const department = user.department || 'Unassigned';
+            const role = user.role || 'No Role';
+            const status = user.status || 'inactive';
+            const requires2FA = !!user.requires2FA;
+
+            return `
+                <tr data-user-id="${user._id || ''}">
                     <td>
                         <div class="user-info">
-                            <div class="user-avatar" style="background-color: ${this.getAvatarColor(user.name)}">
-                                ${this.getInitials(user.name)}
+                            <div class="user-avatar" style="background-color: ${this.getAvatarColor(name)}">
+                                ${this.getInitials(name)}
                             </div>
                             <div class="user-details">
-                                <div class="user-name">${this.escapeHtml(user.name)}</div>
-                                <div class="user-id">${this.escapeHtml(user.email)}</div>
+                                <div class="user-name">${this.escapeHtml(name)}</div>
+                                <div class="user-id">${this.escapeHtml(email)}</div>
                             </div>
                         </div>
                     </td>
-                    <td>${this.escapeHtml(user.email)}</td>
+                    <td>${this.escapeHtml(email)}</td>
                     <td>
-                        <span class="department-badge department-${user.department.toLowerCase()}">
-                            ${this.escapeHtml(user.department)}
+                        <span class="department-badge department-${department.toLowerCase()}">
+                            ${this.escapeHtml(department)}
                         </span>
                     </td>
                     <td>
-                        <span class="role-badge role-${user.role.toLowerCase()}">
-                            ${this.escapeHtml(user.role)}
+                        <span class="role-badge role-${role.toLowerCase()}">
+                            ${this.escapeHtml(role)}
                         </span>
                     </td>
                     <td>
-                        <span class="status-badge status-${user.status.toLowerCase()}">
-                            <i class="fas fa-${user.status === 'active' ? 'check-circle' : 'times-circle'}"></i>
-                            ${user.status}
+                        <span class="status-badge status-${status.toLowerCase()}">
+                            <i class="fas fa-${status === 'active' ? 'check-circle' : 'times-circle'}"></i>
+                            ${status}
                         </span>
                     </td>
                     <td>
-                        <span class="2fa-badge ${user.requires2FA ? 'enabled' : 'disabled'}">
+                        <span class="2fa-badge ${requires2FA ? 'enabled' : 'disabled'}">
                             <i class="fas fa-shield-alt"></i>
-                            ${user.requires2FA ? 'Enabled' : 'Disabled'}
+                            ${requires2FA ? 'Enabled' : 'Disabled'}
                         </span>
                     </td>
                     <td>
@@ -1665,10 +1687,15 @@
                         </div>
                     </td>
                 </tr>
-            `).join('');
+            `;
+        }).join('');
 
-            this.attachTableEventListeners();
-        },
+        this.attachTableEventListeners();
+    } catch (error) {
+        console.error('Error rendering users:', error);
+        this.renderErrorState('Error rendering user list');
+    }
+},
 
         renderActionButtons: function(user) {
             const buttons = [];
@@ -1976,12 +2003,22 @@
         },
 
         getInitials: function(name) {
-            return name
-                .split(' ')
-                .map(word => word[0])
-                .join('')
-                .toUpperCase();
-        },
+    if (!name || typeof name !== 'string') {
+        return 'U'; // Return 'U' for unknown/undefined
+    }
+
+    try {
+        return name
+            .split(' ')
+            .map(word => word[0] || '')
+            .join('')
+            .toUpperCase()
+            .slice(0, 2) || 'U';
+    } catch (error) {
+        console.error('Error generating initials:', error);
+        return 'U';
+    }
+},
 
         // Add these functions to the UserManagementModule object
 renderErrorState: function(message) {
@@ -1999,18 +2036,29 @@ renderErrorState: function(message) {
 },
 
         getAvatarColor: function(name) {
-            const colors = [
-                '#4f46e5', '#7c3aed', '#db2777', '#ea580c', '#16a34a',
-                '#2563eb', '#9333ea', '#e11d48', '#d97706', '#15803d'
-            ];
-            
-            let hash = 0;
-            for (let i = 0; i < name.length; i++) {
-                hash = name.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            
-            return colors[Math.abs(hash) % colors.length];
-        }, 
+    // Default color if name is invalid
+    if (!name || typeof name !== 'string') {
+        return '#4f46e5';
+    }
+
+    const colors = [
+        '#4f46e5', '#7c3aed', '#db2777', '#ea580c', '#16a34a',
+        '#2563eb', '#9333ea', '#e11d48', '#d97706', '#15803d'
+    ];
+    
+    try {
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) {
+            hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        
+        return colors[Math.abs(hash) % colors.length];
+    } catch (error) {
+        console.error('Error generating avatar color:', error);
+        return colors[0]; // Return first color as default
+    }
+},
+
                 // RBAC Utility Functions
         hasPermission: function(permission) {
             return window.RBAC.manager.hasPermission(permission);
