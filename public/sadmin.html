@@ -718,10 +718,10 @@
                     <i class="fas fa-chevron-down ml-auto"></i>
                 </div>
                 <div class="submenu" id="userManagement">
-                    <a href="#users-list" class="menu-item">
-                        <i class="fas fa-user-friends"></i>
-                        <span>Users List</span>
-                    </a>
+                    <a href="#" class="menu-item" data-section="users-list">
+        <i class="fas fa-user-friends"></i>
+        <span>Users List</span>
+    </a>
                     <a href="#roles-permissions" class="menu-item">
                         <i class="fas fa-user-lock"></i>
                         <span>Roles & Permissions</span>
@@ -1167,10 +1167,15 @@ async function loadSectionContent(section) {
             case 'dashboard':
                 await loadDashboardContent(contentArea);
                 break;
+            case 'users-list':
+                // Show users list section and hide others
+                document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
+                document.getElementById('usersListSection').style.display = 'block';
+                await initializeUserManagement();
+                break;
             case 'companies':
                 await loadCompaniesContent(contentArea);
                 break;
-            // Add other section handlers
             default:
                 contentArea.innerHTML = `<h2>Section ${section} is under development</h2>`;
         }
@@ -1181,15 +1186,21 @@ async function loadSectionContent(section) {
         hideLoading(contentArea);
     }
 }
-
 // Content Section Loaders
 async function loadDashboardContent(container) {
     try {
-        // Fetch dashboard statistics
+        // Default statistics in case of API failure
+        const defaultStats = {
+            users: { total: 0, active: 0 },
+            companies: { total: 0, active: 0 },
+            auditLogs: []
+        };
+
+        // Fetch statistics with error handling
         const [usersStats, companiesStats, auditLogs] = await Promise.all([
-            fetchUserStatistics(),
-            fetchCompanyStatistics(),
-            fetchRecentAuditLogs()
+            fetchUserStatistics().catch(() => defaultStats.users),
+            fetchCompanyStatistics().catch(() => defaultStats.companies),
+            fetchRecentAuditLogs().catch(() => defaultStats.auditLogs)
         ]);
 
         container.innerHTML = `
@@ -1198,11 +1209,11 @@ async function loadDashboardContent(container) {
                     <h3>Users Overview</h3>
                     <div class="stats-content">
                         <div class="stat-item">
-                            <span class="stat-value">${usersStats.total}</span>
+                            <span class="stat-value">${usersStats.total || 0}</span>
                             <span class="stat-label">Total Users</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-value">${usersStats.active}</span>
+                            <span class="stat-value">${usersStats.active || 0}</span>
                             <span class="stat-label">Active Users</span>
                         </div>
                     </div>
@@ -1212,11 +1223,11 @@ async function loadDashboardContent(container) {
                     <h3>Companies Overview</h3>
                     <div class="stats-content">
                         <div class="stat-item">
-                            <span class="stat-value">${companiesStats.total}</span>
+                            <span class="stat-value">${companiesStats.total || 0}</span>
                             <span class="stat-label">Total Companies</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-value">${companiesStats.active}</span>
+                            <span class="stat-value">${companiesStats.active || 0}</span>
                             <span class="stat-label">Active Companies</span>
                         </div>
                     </div>
@@ -1225,38 +1236,48 @@ async function loadDashboardContent(container) {
                 <div class="recent-activity">
                     <h3>Recent Activity</h3>
                     <div class="activity-list">
-                        ${auditLogs.map(log => `
-                            <div class="activity-item">
-                                <div class="activity-icon">
-                                    <i class="fas ${getActivityIcon(log.action)}"></i>
+                        ${(auditLogs.length > 0) ? 
+                            auditLogs.map(log => `
+                                <div class="activity-item">
+                                    <div class="activity-icon">
+                                        <i class="fas ${getActivityIcon(log.action)}"></i>
+                                    </div>
+                                    <div class="activity-details">
+                                        <div class="activity-title">${formatActivityTitle(log)}</div>
+                                        <div class="activity-time">${formatTimestamp(log.timestamp)}</div>
+                                    </div>
                                 </div>
-                                <div class="activity-details">
-                                    <div class="activity-title">${formatActivityTitle(log)}</div>
-                                    <div class="activity-time">${formatTimestamp(log.timestamp)}</div>
-                                </div>
-                            </div>
-                        `).join('')}
+                            `).join('') : 
+                            '<div class="no-activity">No recent activity</div>'
+                        }
                     </div>
                 </div>
             </div>
         `;
     } catch (error) {
         console.error('Error loading dashboard content:', error);
-        throw error;
+        container.innerHTML = `
+            <div class="error-container">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Failed to load dashboard content. Please try again later.</p>
+            </div>
+        `;
     }
 }
+
 
 // API Calls
 async function fetchUserStatistics() {
     try {
-        const response = await fetch(`${API_BASE_URL}/users/statistics`, {
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
-        });
-        
+        // Since the statistics endpoint doesn't exist, let's use the users endpoint
+        const response = await makeAuthenticatedRequest('/users?limit=1');
         if (!response.ok) throw new Error('Failed to fetch user statistics');
-        return await response.json();
+        
+        const data = await response.json();
+        return {
+            total: data.pagination.total || 0,
+            active: data.users.filter(u => u.status === 'active').length || 0
+        };
     } catch (error) {
         console.error('Error fetching user statistics:', error);
         return { total: 0, active: 0 };
@@ -1264,32 +1285,18 @@ async function fetchUserStatistics() {
 }
 
 async function fetchCompanyStatistics() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/companies/statistics`, {
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
-        });
-        
-        if (!response.ok) throw new Error('Failed to fetch company statistics');
-        return await response.json();
-    } catch (error) {
-        console.error('Error fetching company statistics:', error);
-        return { total: 0, active: 0 };
-    }
+    // Since there's no companies endpoint yet, return default values
+    return { total: 0, active: 0 };
 }
+
 
 async function fetchRecentAuditLogs() {
     try {
-        const response = await fetch(`${API_BASE_URL}/audit-logs?limit=5`, {
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
-        });
-        
+        const response = await makeAuthenticatedRequest('/audit-logs?limit=5');
         if (!response.ok) throw new Error('Failed to fetch audit logs');
+        
         const data = await response.json();
-        return data.logs;
+        return data.logs || [];
     } catch (error) {
         console.error('Error fetching audit logs:', error);
         return [];
@@ -1884,10 +1891,7 @@ function formatRole(role) {
         .join(' ');
 }
 
-// Initialize when the users section is loaded
-document.querySelector('[data-section="users-list"]').addEventListener('click', () => {
-    initializeUserManagement();
-});
+
     </script>
 </body>
 </html>
