@@ -2080,37 +2080,48 @@ openRoleManagement: function() {
     },
 
     // Render Permissions List
-    renderPermissionsList: function() {
-        const permissionsList = document.getElementById('permissionsList');
-        if (!permissionsList || !this.state.selectedRole) return;
+    // Update the renderPermissionsList function
+renderPermissionsList: function() {
+    const permissionsList = document.getElementById('permissionsList');
+    if (!permissionsList || !this.state.selectedRole) return;
 
-        const role = window.RBAC.CONFIG.ROLES[this.state.selectedRole];
-        const permissions = window.RBAC.CONFIG.PERMISSIONS;
+    const role = window.RBAC.CONFIG.ROLES[this.state.selectedRole];
+    const permissions = window.RBAC.CONFIG.PERMISSIONS;
 
-        permissionsList.innerHTML = Object.entries(permissions).map(([category, perms]) => `
-            <div class="permission-group">
-                <h4>${category}</h4>
-                ${Object.entries(perms).map(([key, value]) => `
+    permissionsList.innerHTML = Object.entries(permissions).map(([category, perms]) => `
+        <div class="permission-group">
+            <h4>${category}</h4>
+            ${Object.entries(perms).map(([key, value]) => {
+                const isChecked = role.permissions.includes(value) || 
+                                role.permissions.includes('*');
+                const isDisabled = this.state.selectedRole === 'SUPER_ADMIN';
+                
+                return `
                     <div class="permission-item">
                         <label>
                             <input type="checkbox" 
                                    value="${value}"
-                                   ${role.permissions.includes(value) || role.permissions.includes('*') ? 'checked' : ''}
-                                   ${this.state.selectedRole === 'SUPER_ADMIN' ? 'disabled' : ''}>
+                                   ${isChecked ? 'checked' : ''}
+                                   ${isDisabled ? 'disabled' : ''}
+                                   onchange="window.UserManagement.handlePermissionChange(event, '${this.state.selectedRole}')">
                             <span>${key}</span>
                         </label>
                     </div>
-                `).join('')}
-            </div>
-        `).join('');
+                `;
+            }).join('')}
+        </div>
+    `).join('');
+},
 
-        // Add change handlers if not SUPER_ADMIN
-        if (this.state.selectedRole !== 'SUPER_ADMIN') {
-            permissionsList.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-                checkbox.addEventListener('change', () => this.updateRolePermissions());
-            });
-        }
-    },
+// Add this new helper function
+handlePermissionChange: function(event, roleKey) {
+    if (roleKey === 'SUPER_ADMIN') {
+        event.preventDefault();
+        return;
+    }
+    
+    this.updateRolePermissions();
+},
     // Add this function to UserManagementModule
 setupRoleEventListeners: function() {
     // Close button handler
@@ -2173,39 +2184,43 @@ initializeRoleManagement: function() {
     }
 },
 
-    // Update Role Permissions
-    updateRolePermissions: async function() {
+   // Update the updateRolePermissions function
+updateRolePermissions: async function() {
+    try {
+        // Get selected permissions
+        const permissions = Array.from(
+            document.querySelectorAll('#permissionsList input[type="checkbox"]:checked')
+        ).map(cb => cb.value);
+
+        console.log('Updating permissions for role:', this.state.selectedRole);
+        console.log('New permissions:', permissions);
+
+        // Update local RBAC config
+        window.RBAC.CONFIG.ROLES[this.state.selectedRole].permissions = permissions;
+        
+        // Store in localStorage for persistence (optional)
         try {
-            const permissions = Array.from(
-                document.querySelectorAll('#permissionsList input[type="checkbox"]:checked')
-            ).map(cb => cb.value);
-
-            const token = localStorage.getItem('token');
-            const response = await fetch(`https://18.215.160.136.nip.io/api/roles/${this.state.selectedRole}/permissions`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ permissions })
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to update role permissions');
-            }
-
-            // Update local RBAC config
-            window.RBAC.CONFIG.ROLES[this.state.selectedRole].permissions = permissions;
-            showNotification('Role permissions updated successfully', 'success');
-        } catch (error) {
-            console.error('Error updating role permissions:', error);
-            showNotification(error.message, 'error');
-            // Revert UI to match current permissions
-            this.renderPermissionsList();
+            const rbacConfig = JSON.stringify(window.RBAC.CONFIG);
+            localStorage.setItem('rbac_config', rbacConfig);
+        } catch (storageError) {
+            console.warn('Failed to store RBAC config:', storageError);
         }
+
+        showNotification('Role permissions updated successfully', 'success');
+        
+        // Re-render the permissions list to reflect changes
+        this.renderPermissionsList();
+        
+        // Log the updated configuration
+        console.log('Updated RBAC config:', window.RBAC.CONFIG);
+
+    } catch (error) {
+        console.error('Error updating role permissions:', error);
+        showNotification('Failed to update permissions: ' + error.message, 'error');
+        // Revert UI to match current permissions
+        this.renderPermissionsList();
     }
-};
+},
 
 // Initialize the module
 if (!window.UserManagement) {
