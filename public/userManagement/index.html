@@ -1297,7 +1297,8 @@
      init: async function() {
     try {
         console.log('Initializing Enhanced User Management module...');
-        
+        / Add tooltip styles
+        this.addTooltipStyles();
         if (!window.UserManagement) {
             window.UserManagement = this;
         }
@@ -1708,83 +1709,184 @@ showAuditDetails: function(logId) {
                 this.showNotification('Failed to restore user: ' + error.message, 'error');
             }
         },
+
+        // Add this to the UserManagementModule object
+attachTableEventListeners: function() {
+    try {
+        const tbody = document.getElementById('usersTableBody');
+        if (!tbody) return;
+
+        // Row hover effects
+        tbody.querySelectorAll('tr').forEach(row => {
+            row.addEventListener('mouseenter', () => {
+                row.classList.add('hover');
+            });
+            row.addEventListener('mouseleave', () => {
+                row.classList.remove('hover');
+            });
+        });
+
+        // Action button tooltips
+        tbody.querySelectorAll('.btn-icon').forEach(button => {
+            // Remove existing listeners to prevent duplicates
+            button.removeEventListener('mouseenter', this.showTooltip);
+            button.removeEventListener('mouseleave', this.hideTooltip);
+
+            // Add new listeners
+            button.addEventListener('mouseenter', this.showTooltip);
+            button.addEventListener('mouseleave', this.hideTooltip);
+        });
+
+        // Add click event listeners for action buttons
+        tbody.querySelectorAll('.action-buttons button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent event bubbling
+            });
+        });
+    } catch (error) {
+        console.error('Error attaching table event listeners:', error);
+    }
+},
+
+showTooltip: function(e) {
+    const button = e.currentTarget;
+    const tooltip = document.createElement('div');
+    tooltip.className = 'tooltip';
+    tooltip.textContent = button.getAttribute('title');
+    document.body.appendChild(tooltip);
+
+    const rect = button.getBoundingClientRect();
+    tooltip.style.top = `${rect.top - tooltip.offsetHeight - 5}px`;
+    tooltip.style.left = `${rect.left + (button.offsetWidth - tooltip.offsetWidth) / 2}px`;
+
+    button.addEventListener('mouseleave', () => tooltip.remove());
+},
+
+hideTooltip: function(e) {
+    const tooltips = document.querySelectorAll('.tooltip');
+    tooltips.forEach(tooltip => tooltip.remove());
+},
+
+// Add CSS for tooltips if not already present
+addTooltipStyles: function() {
+    if (!document.getElementById('tooltip-styles')) {
+        const style = document.createElement('style');
+        style.id = 'tooltip-styles';
+        style.textContent = `
+            .tooltip {
+                position: fixed;
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 5px 10px;
+                border-radius: 4px;
+                font-size: 12px;
+                z-index: 1000;
+                pointer-events: none;
+            }
+            
+            .btn-icon:hover {
+                transform: translateY(-1px);
+                transition: transform 0.2s ease;
+            }
+            
+            tr.hover {
+                background-color: var(--surface-dark);
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+        
                 // UI Rendering Components
-        renderUsers: function() {
-            const tbody = document.getElementById('usersTableBody');
-            if (!tbody) return;
+       renderUsers: function() {
+    try {
+        const tbody = document.getElementById('usersTableBody');
+        if (!tbody) {
+            console.error('Table body element not found');
+            return;
+        }
 
-            if (this.state.loading) {
-                this.renderLoadingState();
-                return;
-            }
+        if (this.state.loading) {
+            this.renderLoadingState();
+            return;
+        }
 
-            if (!Array.isArray(this.state.users) || this.state.users.length === 0) {
-                this.renderEmptyState();
-                return;
-            }
+        if (!Array.isArray(this.state.users) || this.state.users.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <i class="fas fa-users-slash"></i>
+                        <p>No users found</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
 
-            try {
-                tbody.innerHTML = this.state.users.map(user => {
-                    if (!user) return '';
+        tbody.innerHTML = this.state.users.map(user => {
+            if (!user) return '';
 
-                    const name = user.name || 'Unknown User';
-                    const email = user.email || 'No Email';
-                    const department = user.department || 'Unassigned';
-                    const role = user.role || 'No Role';
-                    const status = user.status || 'inactive';
-                    const requires2FA = !!user.requires2FA;
+            const name = user.name || 'Unknown User';
+            const email = user.email || 'No Email';
+            const department = user.department || 'Unassigned';
+            const role = user.role || 'No Role';
+            const status = user.status || 'inactive';
+            const requires2FA = !!user.requires2FA;
 
-                    return `
-                        <tr data-user-id="${user._id || ''}">
-                            <td>
-                                <div class="user-info">
-                                    <div class="user-avatar" style="background-color: ${this.getAvatarColor(name)}">
-                                        ${this.getInitials(name)}
-                                    </div>
-                                    <div class="user-details">
-                                        <div class="user-name">${this.escapeHtml(name)}</div>
-                                        <div class="user-id">${this.escapeHtml(email)}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>${this.escapeHtml(email)}</td>
-                            <td>
-                                <span class="department-badge department-${department.toLowerCase()}">
-                                    ${this.escapeHtml(department)}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="role-badge role-${role.toLowerCase()}">
-                                    ${this.escapeHtml(role)}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="status-badge status-${status.toLowerCase()}">
-                                    <i class="fas fa-${status === 'active' ? 'check-circle' : 'times-circle'}"></i>
-                                    ${status}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="2fa-badge ${requires2FA ? 'enabled' : 'disabled'}">
-                                    <i class="fas fa-shield-alt"></i>
-                                    ${requires2FA ? 'Enabled' : 'Disabled'}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="action-buttons">
-                                    ${this.renderActionButtons(user)}
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
+            return `
+                <tr data-user-id="${user._id || ''}">
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar" style="background-color: ${this.getAvatarColor(name)}">
+                                ${this.getInitials(name)}
+                            </div>
+                            <div class="user-details">
+                                <div class="user-name">${this.escapeHtml(name)}</div>
+                                <div class="user-id">${this.escapeHtml(email)}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${this.escapeHtml(email)}</td>
+                    <td>
+                        <span class="department-badge department-${department.toLowerCase()}">
+                            ${this.escapeHtml(department)}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="role-badge role-${role.toLowerCase()}">
+                            ${this.escapeHtml(role)}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge status-${status.toLowerCase()}">
+                            <i class="fas fa-${status === 'active' ? 'check-circle' : 'times-circle'}"></i>
+                            ${status}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="2fa-badge ${requires2FA ? 'enabled' : 'disabled'}">
+                            <i class="fas fa-shield-alt"></i>
+                            ${requires2FA ? 'Enabled' : 'Disabled'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            ${this.renderActionButtons(user)}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
 
-                this.attachTableEventListeners();
-            } catch (error) {
-                console.error('Error rendering users:', error);
-                this.renderErrorState('Error rendering user list');
-            }
-        },
+        // Attach event listeners after rendering
+        this.attachTableEventListeners();
+
+    } catch (error) {
+        console.error('Error rendering users:', error);
+        this.showNotification('Error rendering user list', 'error');
+    }
+},
+
 
         renderActionButtons: function(user) {
             const buttons = [];
