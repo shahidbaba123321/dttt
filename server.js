@@ -73,50 +73,51 @@ async function initializeDatabase() {
         deleted_users = database.collection('deleted_users');
         user_permissions = database.collection('user_permissions');
 
-        // Create indexes with error handling
-        const createIndexSafely = async (collection, index, options = {}) => {
+        // Function to check and create index if needed
+        const ensureIndex = async (collection, indexSpec, options = {}) => {
             try {
-                // Drop existing index if it exists
-                await collection.dropIndex(options.name || Object.keys(index)[0] + '_1');
-            } catch (err) {
-                // Ignore error if index doesn't exist
-                if (err.code !== 27) {
-                    console.warn(`Warning dropping index: ${err.message}`);
-                }
-            }
+                // Get existing indexes
+                const existingIndexes = await collection.listIndexes().toArray();
+                
+                // Check if an equivalent index already exists
+                const indexExists = existingIndexes.some(idx => {
+                    const keyMatch = Object.keys(idx.key).every(k => 
+                        idx.key[k] === indexSpec[k]
+                    );
+                    return keyMatch;
+                });
 
-            try {
-                await collection.createIndex(index, options);
-                console.log(`Index created successfully for ${collection.collectionName}`);
+                if (!indexExists) {
+                    await collection.createIndex(indexSpec, options);
+                    console.log(`Created index for ${collection.collectionName}`);
+                } else {
+                    console.log(`Index already exists for ${collection.collectionName}`);
+                }
             } catch (err) {
-                console.warn(`Warning creating index for ${collection.collectionName}: ${err.message}`);
-                // Don't throw error, allow other operations to continue
+                console.warn(`Warning handling index for ${collection.collectionName}:`, err.message);
             }
         };
 
-        // Create indexes with proper error handling
-        await Promise.all([
-            createIndexSafely(users, { email: 1 }, { 
-                unique: true,
-                name: 'email_unique' 
-            }),
-            createIndexSafely(audit_logs, { timestamp: -1 }, {
-                name: 'timestamp_desc'
-            }),
-            createIndexSafely(deleted_users, { originalId: 1 }, {
-                name: 'originalId_index'
-            }),
-            createIndexSafely(user_permissions, { userId: 1 }, {
-                unique: true,
-                name: 'userId_unique'
-            })
-        ]);
+        // Initialize indexes
+        const indexPromises = [
+            ensureIndex(users, { email: 1 }, { unique: true }),
+            ensureIndex(audit_logs, { timestamp: -1 }),
+            ensureIndex(deleted_users, { originalId: 1 }),
+            ensureIndex(user_permissions, { userId: 1 }, { unique: true })
+        ];
 
+        await Promise.all(indexPromises);
         console.log("Database collections and indexes initialized");
-        return { database, users, audit_logs, deleted_users, user_permissions };
+        
+        return {
+            database,
+            users,
+            audit_logs,
+            deleted_users,
+            user_permissions
+        };
     } catch (err) {
         console.error("MongoDB connection error:", err);
-        // Don't exit process, let the calling code handle the error
         throw err;
     }
 }
@@ -1234,7 +1235,6 @@ initializeDatabase()
     })
     .catch(error => {
         console.error('Failed to initialize database:', error);
-        // Wait a bit before exiting to allow logs to be written
         setTimeout(() => {
             process.exit(1);
         }, 1000);
@@ -1255,7 +1255,6 @@ process.on('SIGTERM', async () => {
 
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
-    // Attempt to close database connection before exiting
     client.close().finally(() => {
         process.exit(1);
     });
@@ -1263,9 +1262,9 @@ process.on('uncaughtException', (error) => {
 
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    // Attempt to close database connection before exiting
     client.close().finally(() => {
         process.exit(1);
     });
 });
+
 module.exports = app;
