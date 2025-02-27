@@ -18,6 +18,27 @@
         }
     });
 </script>
+<style id="user-management-styles">
+    .tooltip {
+        position: fixed;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        z-index: 1000;
+        pointer-events: none;
+    }
+    
+    .btn-icon:hover {
+        transform: translateY(-1px);
+        transition: transform 0.2s ease;
+    }
+    
+    tr.hover {
+        background-color: var(--surface-dark);
+    }
+</style>
 <div class="user-management-module">
     <script>
         // Ensure UserManagement is available globally
@@ -1266,1289 +1287,12 @@
 </style>
 
 <script>
-// Initialize the module immediately
-(function() {
-    // Enhanced UserManagement Module
-    const UserManagementModule = {
-        // Enhanced State Management
-        state: {
-            users: [],
-            deletedUsers: [],
-            currentUser: null,
-            filters: {
-                search: '',
-                department: '',
-                status: '',
-                role: ''
-            },
-            pagination: {
-                page: 1,
-                limit: 10,
-                total: 0
-            },
-            loading: false,
-            selectedRole: null,
-            auditLogs: [],
-            permissions: new Map(),
-            initialized: false
-        },
-
-        // Enhanced Module Initialization
-     init: async function() {
-    try {
-        console.log('Initializing Enhanced User Management module...');
-        / Add tooltip styles
-        this.addTooltipStyles();
-        if (!window.UserManagement) {
-            window.UserManagement = this;
-        }
-
-        // Initialize RBAC
-        if (!window.RBAC.initialized) {
-            await window.RBAC.manager.initialize();
-        }
-
-        // Get current user info from token
-        this.state.currentUser = this.getCurrentUserFromToken();
-
-        // Setup event listeners
-        this.setupEventListeners();
-        
-        // Load initial data with error handling
-        try {
-            await this.loadUsers();
-        } catch (error) {
-            console.error('Error loading users:', error);
-            this.showNotification('Error loading users: ' + error.message, 'error');
-        }
-
-        // Only load these if user has admin access
-        if (this.isAdmin()) {
-            try {
-                await this.loadDeletedUsers();
-            } catch (error) {
-                console.error('Error loading deleted users:', error);
-            }
-
-            try {
-                await this.loadAuditLogs();
-            } catch (error) {
-                console.error('Error loading audit logs:', error);
-            }
-        }
-
-        this.state.initialized = true;
-        console.log('User Management module initialized');
-    } catch (error) {
-        console.error('Failed to initialize User Management:', error);
-        this.showNotification('Failed to initialize User Management: ' + error.message, 'error');
-    }
-},
-        // Get current user info from token
-     getCurrentUserFromToken: function() {
-    try {
-        const token = localStorage.getItem('token');
-        if (!token) return null;
-
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-
-        const userData = JSON.parse(jsonPayload);
-        console.log('Parsed user data from token:', userData);
-        
-        return {
-            ...userData,
-            role: userData.role ? userData.role.toLowerCase() : ''
-        };
-    } catch (error) {
-        console.error('Error parsing token:', error);
-        return null;
-    }
-},
-        // Enhanced Event Listeners Setup
-        setupEventListeners: function() {
-    // Search input with debounce
-    const searchInput = document.getElementById('userSearch');
-    if (searchInput) {
-        let debounceTimer;
-        const handleSearch = (e) => {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
-                this.state.filters.search = e.target.value;
-                this.loadUsers(true);
-            }, 300);
-        };
-        
-        searchInput.removeEventListener('input', handleSearch);
-        searchInput.addEventListener('input', handleSearch);
-    }
-
-    // Filter selects
-    ['department', 'status', 'role'].forEach(filterType => {
-        const select = document.getElementById(`${filterType}Filter`);
-        if (select) {
-            const handleFilter = (e) => {
-                this.state.filters[filterType] = e.target.value;
-                this.loadUsers(true);
-            };
-            
-            select.removeEventListener('change', handleFilter);
-            select.addEventListener('change', handleFilter);
-        }
-    });
-
-    // Add tooltip styles
-    this.addTooltipStyles();
-},
-
-                // Enhanced API Request Handler
-        makeAuthenticatedRequest: async function(url, method = 'GET', body = null) {
-    try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            throw new Error('No authentication token found');
-        }
-
-        const options = {
-            method,
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-                'X-User-Role': this.state.currentUser?.role || ''
-            }
-        };
-
-        if (body) {
-            options.body = JSON.stringify(body);
-        }
-
-        const response = await fetch(`https://18.215.160.136.nip.io${url}`, options);
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `Request failed with status ${response.status}`);
-        }
-
-        return response;
-    } catch (error) {
-        console.error(`API Request Error (${url}):`, error);
-        throw error;
-    }
-},
-
-        // Enhanced User Management Functions
-        loadUsers: async function(resetPage = false) {
-    try {
-        this.state.loading = true;
-        this.renderLoadingState();
-
-        if (resetPage) {
-            this.state.pagination.page = 1;
-        }
-
-        const queryParams = new URLSearchParams();
-        queryParams.append('page', (this.state.pagination.page || 1).toString());
-        queryParams.append('limit', (this.state.pagination.limit || 10).toString());
-        
-        if (this.state.filters.search) {
-            queryParams.append('search', this.state.filters.search);
-        }
-        if (this.state.filters.department) {
-            queryParams.append('department', this.state.filters.department);
-        }
-        if (this.state.filters.role) {
-            queryParams.append('role', this.state.filters.role);
-        }
-        if (this.state.filters.status) {
-            queryParams.append('status', this.state.filters.status);
-        }
-
-        const response = await this.makeAuthenticatedRequest(
-            `/api/users?${queryParams.toString()}`
-        );
-
-        const data = await response.json();
-
-        if (!data.success) {
-            throw new Error(data.message || 'Failed to load users');
-        }
-
-        this.state.users = Array.isArray(data.users) ? data.users : [];
-        this.state.pagination = data.pagination || {
-            page: 1,
-            limit: 10,
-            total: this.state.users.length
-        };
-
-        this.renderUsers();
-        if (document.getElementById('pagination')) {
-            this.renderPagination();
-        }
-
-    } catch (error) {
-        console.error('Error loading users:', error);
-        this.showNotification('Failed to load users: ' + error.message, 'error');
-        this.renderErrorState(error.message);
-    } finally {
-        this.state.loading = false;
-    }
-},
-
-        loadDeletedUsers: async function() {
-    if (!this.isAdmin()) {
-        console.log('User is not admin, skipping deleted users load');
-        return;
-    }
-
-    try {
-        const response = await this.makeAuthenticatedRequest('/api/deleted-users');
-        const data = await response.json();
-        this.state.deletedUsers = data.deletedUsers || [];
-        
-        if (this.isDeletedUsersTabActive()) {
-            this.renderDeletedUsers();
-        }
-    } catch (error) {
-        console.error('Error loading deleted users:', error);
-        // Don't show error notification for permission issues
-        if (!error.message.includes('Admin access required')) {
-            this.showNotification('Failed to load deleted users', 'error');
-        }
-    }
-},
-loadAuditLogs: async function() {
-    if (!this.isAdmin()) {
-        console.log('User is not admin, skipping audit logs load');
-        return;
-    }
-
-    try {
-        const queryParams = new URLSearchParams({
-            page: '1',
-            limit: '50'
-        });
-
-        const response = await this.makeAuthenticatedRequest(`/api/audit-logs?${queryParams}`);
-        const data = await response.json();
-
-        if (!data.success) {
-            throw new Error(data.message || 'Failed to load audit logs');
-        }
-
-        this.state.auditLogs = data.logs || [];
-        
-        if (this.isAuditLogsTabActive()) {
-            this.renderAuditLogs();
-        }
-    } catch (error) {
-        console.error('Error loading audit logs:', error);
-        // Don't show error notification for permission issues
-        if (!error.message.includes('Admin access required')) {
-            this.showNotification('Failed to load audit logs: ' + error.message, 'error');
-        }
-    }
-},
-        renderAuditLogs: function() {
-    const container = document.getElementById('auditLogsTable');
-    if (!container) return;
-
-    if (!Array.isArray(this.state.auditLogs) || this.state.auditLogs.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-history"></i>
-                <p>No audit logs found</p>
-            </div>
-        `;
-        return;
-    }
-
-    container.innerHTML = `
-        <table class="audit-logs-table">
-            <thead>
-                <tr>
-                    <th>Timestamp</th>
-                    <th>Action</th>
-                    <th>Performed By</th>
-                    <th>Target User</th>
-                    <th>Details</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${this.state.auditLogs.map(log => `
-                    <tr>
-                        <td>${new Date(log.timestamp).toLocaleString()}</td>
-                        <td>
-                            <span class="audit-action ${log.action.toLowerCase()}">
-                                ${this.formatAuditAction(log.action)}
-                            </span>
-                        </td>
-                        <td>${this.escapeHtml(log.performedByUser?.name || 'System')}</td>
-                        <td>${this.escapeHtml(log.targetUser || 'N/A')}</td>
-                        <td>
-                            <button onclick="UserManagement.showAuditDetails('${log._id}')"
-                                    class="btn-icon" title="View Details">
-                                <i class="fas fa-info-circle"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    `;
-},
-        
-
-      formatAuditAction: function(action) {
-    return action
-        .split('_')
-        .map(word => word.charAt(0) + word.slice(1).toLowerCase())
-        .join(' ');
-},
-showAuditDetails: function(logId) {
-    const log = this.state.auditLogs.find(l => l._id === logId);
-    if (!log) return;
-
-    const modal = document.createElement('div');
-    modal.className = 'modal active';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Audit Log Details</h2>
-                <button class="close-btn" onclick="this.closest('.modal').remove()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="audit-details">
-                    <p><strong>Action:</strong> ${this.formatAuditAction(log.action)}</p>
-                    <p><strong>Timestamp:</strong> ${new Date(log.timestamp).toLocaleString()}</p>
-                    <p><strong>Performed By:</strong> ${this.escapeHtml(log.performedByUser?.name || 'System')}</p>
-                    <p><strong>Target User:</strong> ${this.escapeHtml(log.targetUser || 'N/A')}</p>
-                    <div class="details-section">
-                        <h3>Additional Details</h3>
-                        <pre>${JSON.stringify(log.details, null, 2)}</pre>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(modal);
-},
-        
-        
-        deleteUser: async function(userId) {
-            try {
-                const user = this.state.users.find(u => u._id === userId);
-                if (!user) throw new Error('User not found');
-
-                const confirmResult = await this.showDeleteConfirmationModal(user);
-                if (!confirmResult || !confirmResult.confirmed) return;
-
-                const response = await this.makeAuthenticatedRequest(
-                    `/api/users/${userId}`,
-                    'DELETE',
-                    { reason: confirmResult.reason }
-                );
-
-                const data = await response.json();
-                if (!data.success) {
-                    throw new Error(data.message || 'Failed to delete user');
-                }
-
-                this.showNotification('User deleted and archived successfully', 'success');
-                
-                // Refresh all related data
-                await Promise.all([
-                    this.loadUsers(),
-                    this.loadDeletedUsers(),
-                    this.loadAuditLogs()
-                ]);
-
-            } catch (error) {
-                console.error('Error deleting user:', error);
-                this.showNotification('Failed to delete user: ' + error.message, 'error');
-            }
-        },
-
-        restoreUser: async function(userId) {
-            try {
-                const response = await this.makeAuthenticatedRequest(
-                    `/api/deleted-users/${userId}/restore`,
-                    'POST'
-                );
-
-                const data = await response.json();
-                if (!data.success) {
-                    throw new Error(data.message || 'Failed to restore user');
-                }
-
-                this.showNotification('User restored successfully', 'success');
-                
-                // Refresh all related data
-                await Promise.all([
-                    this.loadUsers(),
-                    this.loadDeletedUsers(),
-                    this.loadAuditLogs()
-                ]);
-
-            } catch (error) {
-                console.error('Error restoring user:', error);
-                this.showNotification('Failed to restore user: ' + error.message, 'error');
-            }
-        },
-
-        // Add this to the UserManagementModule object
-attachTableEventListeners: function() {
-    try {
-        const tbody = document.getElementById('usersTableBody');
-        if (!tbody) return;
-
-        // Row hover effects
-        tbody.querySelectorAll('tr').forEach(row => {
-            row.addEventListener('mouseenter', () => {
-                row.classList.add('hover');
-            });
-            row.addEventListener('mouseleave', () => {
-                row.classList.remove('hover');
-            });
-        });
-
-        // Action button tooltips
-        tbody.querySelectorAll('.btn-icon').forEach(button => {
-            // Remove existing listeners to prevent duplicates
-            button.removeEventListener('mouseenter', this.showTooltip);
-            button.removeEventListener('mouseleave', this.hideTooltip);
-
-            // Add new listeners
-            button.addEventListener('mouseenter', this.showTooltip);
-            button.addEventListener('mouseleave', this.hideTooltip);
-        });
-
-        // Add click event listeners for action buttons
-        tbody.querySelectorAll('.action-buttons button').forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent event bubbling
-            });
-        });
-    } catch (error) {
-        console.error('Error attaching table event listeners:', error);
-    }
-},
-
-showTooltip: function(e) {
-    const button = e.currentTarget;
-    const tooltip = document.createElement('div');
-    tooltip.className = 'tooltip';
-    tooltip.textContent = button.getAttribute('title');
-    document.body.appendChild(tooltip);
-
-    const rect = button.getBoundingClientRect();
-    tooltip.style.top = `${rect.top - tooltip.offsetHeight - 5}px`;
-    tooltip.style.left = `${rect.left + (button.offsetWidth - tooltip.offsetWidth) / 2}px`;
-
-    button.addEventListener('mouseleave', () => tooltip.remove());
-},
-
-hideTooltip: function(e) {
-    const tooltips = document.querySelectorAll('.tooltip');
-    tooltips.forEach(tooltip => tooltip.remove());
-},
-
-// Add CSS for tooltips if not already present
-addTooltipStyles: function() {
-    const styleId = 'user-management-styles';
-    if (!document.getElementById(styleId)) {
-        const styleElement = document.createElement('style');
-        styleElement.id = styleId;
-        styleElement.textContent = `
-            .tooltip {
-                position: fixed;
-                background: rgba(0, 0, 0, 0.8);
-                color: white;
-                padding: 5px 10px;
-                border-radius: 4px;
-                font-size: 12px;
-                z-index: 1000;
-                pointer-events: none;
-            }
-            
-            .btn-icon:hover {
-                transform: translateY(-1px);
-                transition: transform 0.2s ease;
-            }
-            
-            tr.hover {
-                background-color: var(--surface-dark);
-            }
-        `;
-        document.head.appendChild(styleElement);
-    }
-},
-        
-                // UI Rendering Components
-       renderUsers: function() {
-    try {
-        const tbody = document.getElementById('usersTableBody');
-        if (!tbody) {
-            console.error('Table body element not found');
-            return;
-        }
-
-        if (this.state.loading) {
-            this.renderLoadingState();
-            return;
-        }
-
-        if (!Array.isArray(this.state.users) || this.state.users.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="empty-state">
-                        <i class="fas fa-users-slash"></i>
-                        <p>No users found</p>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        tbody.innerHTML = this.state.users.map(user => {
-            if (!user) return '';
-
-            const name = user.name || 'Unknown User';
-            const email = user.email || 'No Email';
-            const department = user.department || 'Unassigned';
-            const role = user.role || 'No Role';
-            const status = user.status || 'inactive';
-            const requires2FA = !!user.requires2FA;
-
-            return `
-                <tr data-user-id="${user._id || ''}">
-                    <td>
-                        <div class="user-info">
-                            <div class="user-avatar" style="background-color: ${this.getAvatarColor(name)}">
-                                ${this.getInitials(name)}
-                            </div>
-                            <div class="user-details">
-                                <div class="user-name">${this.escapeHtml(name)}</div>
-                                <div class="user-id">${this.escapeHtml(email)}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td>${this.escapeHtml(email)}</td>
-                    <td>
-                        <span class="department-badge department-${department.toLowerCase()}">
-                            ${this.escapeHtml(department)}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="role-badge role-${role.toLowerCase()}">
-                            ${this.escapeHtml(role)}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="status-badge status-${status.toLowerCase()}">
-                            <i class="fas fa-${status === 'active' ? 'check-circle' : 'times-circle'}"></i>
-                            ${status}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="2fa-badge ${requires2FA ? 'enabled' : 'disabled'}">
-                            <i class="fas fa-shield-alt"></i>
-                            ${requires2FA ? 'Enabled' : 'Disabled'}
-                        </span>
-                    </td>
-                    <td>
-                        <div class="action-buttons">
-                            ${this.renderActionButtons(user)}
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-
-        // Attach event listeners after rendering
-        this.attachTableEventListeners();
-
-    } catch (error) {
-        console.error('Error rendering users:', error);
-        this.showNotification('Error rendering user list', 'error');
-    }
-},
-
-
-        renderActionButtons: function(user) {
-            const buttons = [];
-
-            if (this.hasPermission('EDIT_USERS')) {
-                buttons.push(`
-                    <button onclick="UserManagement.editUser('${user._id}')" 
-                            class="btn-icon" title="Edit User">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                `);
-            }
-
-            if (this.hasPermission('MANAGE_USER_STATUS')) {
-                buttons.push(`
-                    <button onclick="UserManagement.toggleUserStatus('${user._id}')" 
-                            class="btn-icon ${user.status === 'active' ? 'danger' : 'success'}"
-                            title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User">
-                        <i class="fas fa-${user.status === 'active' ? 'ban' : 'check'}"></i>
-                    </button>
-                `);
-            }
-
-            if (this.hasPermission('MANAGE_USER_SECURITY')) {
-                buttons.push(`
-                    <button onclick="UserManagement.changeUserPassword('${user._id}')" 
-                            class="btn-icon warning" title="Change Password">
-                        <i class="fas fa-key"></i>
-                    </button>
-                    <button onclick="UserManagement.toggle2FA('${user._id}')"
-                            class="btn-icon ${user.requires2FA ? 'success' : 'warning'}"
-                            title="${user.requires2FA ? 'Disable' : 'Enable'} 2FA">
-                        <i class="fas fa-shield-alt"></i>
-                    </button>
-                `);
-            }
-
-            if (this.hasPermission('DELETE_USERS')) {
-                buttons.push(`
-                    <button onclick="UserManagement.deleteUser('${user._id}')" 
-                            class="btn-icon danger" title="Delete User">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                `);
-            }
-
-            return buttons.join('');
-        },
-
-        renderDeletedUsers: function() {
-            const container = document.getElementById('deletedUsersTable');
-            if (!container) return;
-
-            if (!Array.isArray(this.state.deletedUsers) || this.state.deletedUsers.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-trash-alt"></i>
-                        <p>No deleted users found</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = `
-                <table class="users-table">
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Email</th>
-                            <th>Previous Role</th>
-                            <th>Deleted At</th>
-                            <th>Deleted By</th>
-                            <th>Reason</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${this.state.deletedUsers.map(user => `
-                            <tr>
-                                <td>
-                                    <div class="user-info">
-                                        <div class="user-avatar" style="background-color: ${this.getAvatarColor(user.name)}">
-                                            ${this.getInitials(user.name)}
-                                        </div>
-                                        <div class="user-details">
-                                            <div class="user-name">${this.escapeHtml(user.name)}</div>
-                                            <div class="user-id">Deleted User</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>${this.escapeHtml(user.email)}</td>
-                                <td>${this.escapeHtml(user.lastKnownRole)}</td>
-                                <td>${new Date(user.deletedAt).toLocaleString()}</td>
-                                <td>${this.escapeHtml(user.deletedBy)}</td>
-                                <td>${this.escapeHtml(user.deletionReason)}</td>
-                                <td>
-                                    <div class="action-buttons">
-                                        ${this.hasPermission('RESTORE_USERS') ? `
-                                            <button onclick="UserManagement.restoreUser('${user.originalId}')"
-                                                    class="btn-icon success" title="Restore User">
-                                                <i class="fas fa-undo"></i>
-                                            </button>
-                                        ` : ''}
-                                    </div>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-        },
-
-                // Modal Implementations
-        openAddUserModal: function() {
-            try {
-                if (!this.hasPermission('CREATE_USERS')) {
-                    this.showNotification('You do not have permission to create users', 'error');
-                    return;
-                }
-
-                const modalContainer = document.createElement('div');
-                modalContainer.innerHTML = `
-                    <div class="modal active">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h2>Add New User</h2>
-                                <button class="close-btn" onclick="this.closest('.modal').remove()">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <form id="addUserForm">
-                                <div class="form-group">
-                                    <label for="userName">Full Name *</label>
-                                    <input type="text" id="userName" name="name" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="userEmail">Email *</label>
-                                    <input type="email" id="userEmail" name="email" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="userDepartment">Department *</label>
-                                    <select id="userDepartment" name="department" required>
-                                        <option value="">Select Department</option>
-                                        <option value="HR">HR</option>
-                                        <option value="Finance">Finance</option>
-                                        <option value="IT">IT</option>
-                                        <option value="Admin">Admin</option>
-                                        <option value="Support">Support</option>
-                                        <option value="Sales">Sales</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="userRole">Role *</label>
-                                    <select id="userRole" name="role" required>
-                                        ${this.generateRoleOptions()}
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" id="require2FA" name="requires2FA">
-                                        <span>Require 2FA</span>
-                                    </label>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" 
-                                            onclick="this.closest('.modal').remove()">Cancel</button>
-                                    <button type="submit" class="btn btn-primary">Add User</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                `;
-
-                document.body.appendChild(modalContainer.firstElementChild);
-                this.setupAddUserForm();
-            } catch (error) {
-                console.error('Error opening add user modal:', error);
-                this.showNotification('Failed to open add user modal', 'error');
-            }
-        },
-
-        showDeleteConfirmationModal: function(user) {
-            return new Promise((resolve) => {
-                const modal = document.createElement('div');
-                modal.className = 'modal active delete-confirmation-modal';
-                modal.innerHTML = `
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h2>Confirm User Deletion</h2>
-                            <button class="close-btn" onclick="this.closest('.modal').remove()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="warning-icon">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </div>
-                            <h3 class="confirmation-title">Delete User Account</h3>
-                            <p class="confirmation-message">
-                                Are you sure you want to delete the following user? This action will move the user to the archived users list.
-                            </p>
-                            <div class="user-details">
-                                <div class="user-detail-item">
-                                    <span class="user-detail-label">Name:</span>
-                                    <span class="user-detail-value">${this.escapeHtml(user.name)}</span>
-                                </div>
-                                <div class="user-detail-item">
-                                    <span class="user-detail-label">Email:</span>
-                                    <span class="user-detail-value">${this.escapeHtml(user.email)}</span>
-                                </div>
-                                <div class="user-detail-item">
-                                    <span class="user-detail-label">Role:</span>
-                                    <span class="user-detail-value">${this.escapeHtml(user.role)}</span>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="deletionReason">Reason for Deletion:</label>
-                                <textarea id="deletionReason" 
-                                        placeholder="Please provide a reason for deletion"
-                                        required></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
-                                Cancel
-                            </button>
-                            <button class="btn btn-danger" onclick="UserManagement.confirmDeletion(this)">
-                                Delete User
-                            </button>
-                        </div>
-                    </div>
-                `;
-
-                document.body.appendChild(modal);
-
-                this.confirmDeletion = (button) => {
-                    const reason = document.getElementById('deletionReason').value.trim();
-                    if (!reason) {
-                        this.showNotification('Please provide a reason for deletion', 'error');
-                        return;
-                    }
-                    modal.remove();
-                    resolve({ confirmed: true, reason });
-                };
-            });
-        },
-
-        openRoleManagement: async function() {
-            try {
-                if (!this.hasPermission('MANAGE_ROLES')) {
-                    this.showNotification('You do not have permission to manage roles', 'error');
-                    return;
-                }
-
-                const modalHtml = `
-                    <div class="modal role-management-modal active">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h2>Role Management</h2>
-                                <button class="close-btn" onclick="this.closest('.modal').remove()">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="roles-section">
-                                    <h3>Roles</h3>
-                                    <div class="roles-list" id="rolesList">
-                                        ${await this.renderRolesList()}
-                                    </div>
-                                </div>
-                                <div class="permissions-section">
-                                    <h3>Permissions</h3>
-                                    <div class="permissions-list" id="permissionsList">
-                                        ${this.renderPermissionsList()}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                const modalContainer = document.createElement('div');
-                modalContainer.innerHTML = modalHtml;
-                document.body.appendChild(modalContainer.firstElementChild);
-
-                this.initializeRoleManagement();
-            } catch (error) {
-                console.error('Error opening role management:', error);
-                this.showNotification('Failed to open role management', 'error');
-            }
-        },
-
-                // Utility Functions
-        setupAddUserForm: function() {
-            const form = document.getElementById('addUserForm');
-            if (!form) return;
-
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const submitButton = form.querySelector('button[type="submit"]');
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding User...';
-
-                try {
-                    const formData = new FormData(form);
-                    const userData = {
-                        name: formData.get('name'),
-                        email: formData.get('email'),
-                        department: formData.get('department'),
-                        role: formData.get('role'),
-                        requires2FA: formData.get('requires2FA') === 'on'
-                    };
-
-                    const response = await this.makeAuthenticatedRequest(
-                        '/api/users',
-                        'POST',
-                        userData
-                    );
-
-                    const data = await response.json();
-                    
-                    if (data.temporaryPassword) {
-                        this.showNotification(`
-                            User created successfully!<br>
-                            Temporary Password: ${data.temporaryPassword}<br>
-                            Please share this password securely with the user.
-                        `, 'success', 10000);
-                    } else {
-                        this.showNotification('User added successfully', 'success');
-                    }
-
-                    form.closest('.modal').remove();
-                    await this.loadUsers();
-                } catch (error) {
-                    console.error('Error adding user:', error);
-                    this.showNotification('Failed to add user: ' + error.message, 'error');
-                } finally {
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = 'Add User';
-                }
-            });
-        },
-
-        renderRolesList: async function() {
-            const roles = [
-                { id: 'SUPER_ADMIN', name: 'Super Admin', description: 'Full system access' },
-                { id: 'ADMIN', name: 'Administrator', description: 'System administration' },
-                { id: 'MANAGER', name: 'Manager', description: 'Department management' },
-                { id: 'USER', name: 'User', description: 'Basic user access' }
-            ];
-
-            return roles.map(role => `
-                <div class="role-item ${this.state.selectedRole === role.id ? 'active' : ''}" 
-                     data-role="${role.id}">
-                    <div class="role-info">
-                        <h4>${this.escapeHtml(role.name)}</h4>
-                        <p>${this.escapeHtml(role.description)}</p>
-                    </div>
-                </div>
-            `).join('');
-        },
-
-        renderPagination: function() {
-    const paginationContainer = document.getElementById('pagination');
-    if (!paginationContainer) return;
-
-    const { page, pages, total } = this.state.pagination;
-    
-    paginationContainer.innerHTML = `
-        <div class="pagination-info">
-            Showing ${Math.min((page - 1) * this.state.pagination.limit + 1, total)} to 
-            ${Math.min(page * this.state.pagination.limit, total)} of ${total} entries
-        </div>
-        <div class="pagination-controls">
-            ${this.renderPaginationControls(page, pages)}
-        </div>
-    `;
-},
-renderPaginationControls: function(currentPage, totalPages) {
-    if (!currentPage || !totalPages) return '';
-    
-    return `
-        <button class="btn-page" 
-                ${currentPage === 1 ? 'disabled' : ''}
-                onclick="UserManagement.changePage(1)">
-            <i class="fas fa-angle-double-left"></i>
-        </button>
-        <button class="btn-page" 
-                ${currentPage === 1 ? 'disabled' : ''}
-                onclick="UserManagement.changePage(${currentPage - 1})">
-            <i class="fas fa-angle-left"></i>
-        </button>
-        ${this.renderPageNumbers(currentPage, totalPages)}
-        <button class="btn-page" 
-                ${currentPage === totalPages ? 'disabled' : ''}
-                onclick="UserManagement.changePage(${currentPage + 1})">
-            <i class="fas fa-angle-right"></i>
-        </button>
-        <button class="btn-page" 
-                ${currentPage === totalPages ? 'disabled' : ''}
-                onclick="UserManagement.changePage(${totalPages})">
-            <i class="fas fa-angle-double-right"></i>
-        </button>
-    `;
-},
-        renderPermissionsList: function() {
-            const permissionGroups = {
-                'User Management': ['CREATE_USERS', 'EDIT_USERS', 'DELETE_USERS', 'VIEW_USERS'],
-                'Role Management': ['MANAGE_ROLES', 'ASSIGN_ROLES'],
-                'Security': ['MANAGE_2FA', 'RESET_PASSWORDS', 'VIEW_AUDIT_LOGS'],
-                'System': ['ACCESS_ADMIN_PANEL', 'MANAGE_SETTINGS']
-            };
-
-            return Object.entries(permissionGroups).map(([groupName, permissions]) => `
-                <div class="permission-group">
-                    <h4>${this.escapeHtml(groupName)}</h4>
-                    ${permissions.map(permission => `
-                        <div class="permission-item">
-                            <label class="checkbox-label">
-                                <input type="checkbox" 
-                                       value="${permission}"
-                                       ${this.hasPermission(permission) ? 'checked' : ''}
-                                       ${this.state.selectedRole === 'SUPER_ADMIN' ? 'disabled' : ''}>
-                                <span>${this.formatPermissionName(permission)}</span>
-                            </label>
-                        </div>
-                    `).join('')}
-                </div>
-            `).join('');
-        },
-
-        initializeRoleManagement: function() {
-            const roleItems = document.querySelectorAll('.role-item');
-            roleItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    const roleKey = item.dataset.role;
-                    this.selectRole(roleKey);
-                });
-            });
-
-            if (roleItems.length > 0) {
-                this.selectRole(roleItems[0].dataset.role);
-            }
-
-            this.setupPermissionHandlers();
-        },
-
-        setupPermissionHandlers: function() {
-            const checkboxes = document.querySelectorAll('.permission-item input[type="checkbox"]');
-            checkboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', async (e) => {
-                    if (this.state.selectedRole === 'SUPER_ADMIN') {
-                        e.preventDefault();
-                        return;
-                    }
-
-                    try {
-                        await this.updateRolePermissions();
-                    } catch (error) {
-                        console.error('Error updating permissions:', error);
-                        this.showNotification('Failed to update permissions', 'error');
-                    }
-                });
-            });
-        },
-
-        selectRole: function(roleKey) {
-            this.state.selectedRole = roleKey;
-            
-            document.querySelectorAll('.role-item').forEach(item => {
-                item.classList.toggle('active', item.dataset.role === roleKey);
-            });
-
-            this.renderPermissionsList();
-        },
-
-        generateRoleOptions: function() {
-            const roles = [
-                { id: 'admin', name: 'Admin' },
-                { id: 'manager', name: 'Manager' },
-                { id: 'user', name: 'User' }
-            ];
-
-            return `
-                <option value="">Select Role</option>
-                ${roles.map(role => `
-                    <option value="${role.id}">${role.name}</option>
-                `).join('')}
-            `;
-        },
-
-    hasPermission: function(permission) {
-    // Log current user role for debugging
-    console.log('Checking permission:', permission);
-    console.log('Current role:', this.state.currentUser?.role);
-    console.log('Current permissions:', this.state.currentUser?.permissions);
-
-    // Check if user is superadmin (case-insensitive)
-    if (this.state.currentUser?.role?.toLowerCase() === 'superadmin') {
-        return true;
-    }
-
-    // Convert permission format if needed
-    const oldFormatMap = {
-        'CREATE_USERS': 'users:create',
-        'EDIT_USERS': 'users:edit',
-        'DELETE_USERS': 'users:delete',
-        'VIEW_USERS': 'users:view',
-        'MANAGE_ROLES': 'users:manage-roles',
-        'MANAGE_2FA': 'security:manage-2fa',
-        'VIEW_AUDIT_LOGS': 'security:view-audit-logs',
-        'VIEW_DELETED_USERS': 'users:view-deleted'
-    };
-
-    const permissionToCheck = oldFormatMap[permission] || permission;
-
-    // Check if user has the specific permission
-    return this.state.currentUser?.permissions?.includes(permissionToCheck) || false;
-},
-
-isAdmin: function() {
-    const role = this.state.currentUser?.role?.toLowerCase();
-    return role === 'superadmin' || role === 'admin';
-},
-        
-        formatPermissionName: function(permission) {
-            return permission
-                .split('_')
-                .map(word => word.charAt(0) + word.slice(1).toLowerCase())
-                .join(' ');
-        },
-
-        getAvatarColor: function(name) {
-            if (!name || typeof name !== 'string') {
-                return '#4f46e5';
-            }
-
-            const colors = [
-                '#4f46e5', '#7c3aed', '#db2777', '#ea580c', '#16a34a',
-                '#2563eb', '#9333ea', '#e11d48', '#d97706', '#15803d'
-            ];
-            
-            try {
-                let hash = 0;
-                for (let i = 0; i < name.length; i++) {
-                    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-                }
-                
-                return colors[Math.abs(hash) % colors.length];
-            } catch (error) {
-                console.error('Error generating avatar color:', error);
-                return colors[0];
-            }
-        },
-
-        getInitials: function(name) {
-            if (!name || typeof name !== 'string') {
-                return 'U';
-            }
-
-            try {
-                return name
-                    .split(' ')
-                    .map(word => word[0] || '')
-                    .join('')
-                    .toUpperCase()
-                    .slice(0, 2) || 'U';
-            } catch (error) {
-                console.error('Error generating initials:', error);
-                return 'U';
-            }
-        },
-
-        escapeHtml: function(unsafe) {
-            if (!unsafe) return '';
-            
-            return unsafe
-                .toString()
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        },
-
-               // Enhanced Notification System
-        showNotification: function(message, type = 'info', duration = 5000) {
-            const notificationId = 'notification-' + Date.now();
-            const notification = document.createElement('div');
-            notification.id = notificationId;
-            notification.className = `notification notification-${type} ${type}`;
-            
-            notification.innerHTML = `
-                <div class="notification-content">
-                    <div class="notification-icon">
-                        <i class="fas fa-${this.getNotificationIcon(type)}"></i>
-                    </div>
-                    <div class="notification-message">
-                        ${typeof message === 'string' ? this.escapeHtml(message) : message}
-                    </div>
-                    <button class="notification-close" onclick="this.parentElement.parentElement.remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="notification-progress"></div>
-            `;
-
-            document.body.appendChild(notification);
-
-            const progress = notification.querySelector('.notification-progress');
-            progress.style.animation = `notification-progress ${duration}ms linear`;
-
-            setTimeout(() => {
-                notification.classList.add('notification-hiding');
-                setTimeout(() => {
-                    if (document.getElementById(notificationId)) {
-                        document.getElementById(notificationId).remove();
-                    }
-                }, 300);
-            }, duration);
-        },
-
-        getNotificationIcon: function(type) {
-            const icons = {
-                success: 'check-circle',
-                error: 'exclamation-circle',
-                warning: 'exclamation-triangle',
-                info: 'info-circle'
-            };
-            return icons[type] || icons.info;
-        },
-
-        // State Management and Cleanup
-        refreshData: async function() {
-            try {
-                this.state.loading = true;
-                await Promise.all([
-                    this.loadUsers(),
-                    this.hasPermission('VIEW_DELETED_USERS') && this.loadDeletedUsers(),
-                    this.hasPermission('VIEW_AUDIT_LOGS') && this.loadAuditLogs()
-                ]);
-            } catch (error) {
-                console.error('Error refreshing data:', error);
-                this.showNotification('Error refreshing data', 'error');
-            } finally {
-                this.state.loading = false;
-            }
-        },
-
-        cleanup: function() {
-            // Remove event listeners
-            const searchInput = document.getElementById('userSearch');
-            if (searchInput) {
-                searchInput.removeEventListener('input', this.handleSearch);
-            }
-
-            ['department', 'status', 'role'].forEach(filterType => {
-                const select = document.getElementById(`${filterType}Filter`);
-                if (select) {
-                    select.removeEventListener('change', this.handleFilter);
-                }
-            });
-
-            // Clear intervals and timeouts
-            if (this.refreshInterval) {
-                clearInterval(this.refreshInterval);
-            }
-
-            // Reset state
-            this.state = {
+    // Initialize the module immediately
+    (function() {
+        // UserManagement Module
+        const UserManagementModule = {
+            // State Management
+            state: {
                 users: [],
                 deletedUsers: [],
                 currentUser: null,
@@ -2566,118 +1310,762 @@ isAdmin: function() {
                 loading: false,
                 selectedRole: null,
                 auditLogs: [],
-                permissions: new Map(),
-                initialized: false
-            };
-        },
+                permissions: new Map()
+            },
 
-        // Loading and Error States
-        renderLoadingState: function() {
-            const tbody = document.getElementById('usersTableBody');
-            if (tbody) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="loading-state">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <p>Loading users...</p>
-                        </td>
-                    </tr>
-                `;
-            }
-        },
+            // Initialize the module
+            init: async function() {
+                try {
+                    console.log('Initializing User Management module...');
+                    
+                    // Ensure we're attached to window
+                    if (!window.UserManagement) {
+                        window.UserManagement = this;
+                    }
 
-        renderErrorState: function(message) {
-            const tbody = document.getElementById('usersTableBody');
-            if (tbody) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="error-state">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <p>${this.escapeHtml(message || 'Error loading users')}</p>
-                        </td>
-                    </tr>
-                `;
-            }
-        },
+                    // Initialize RBAC if not already initialized
+                    if (!window.RBAC.initialized) {
+                        await window.RBAC.manager.initialize();
+                    }
 
-        renderEmptyState: function() {
-            const tbody = document.getElementById('usersTableBody');
-            if (tbody) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="empty-state">
-                            <i class="fas fa-users-slash"></i>
-                            <p>No users found</p>
-                        </td>
-                    </tr>
-                `;
-            }
-        },
+                    // Setup event listeners
+                    this.setupEventListeners();
+                    
+                    // Load initial data
+                    await this.loadUsers();
 
-        // Tab Management
-        isDeletedUsersTabActive: function() {
-            return document.querySelector('.tab-button[data-tab="deleted"]')?.classList.contains('active');
-        },
+                    console.log('User Management module initialized');
+                } catch (error) {
+                    console.error('Failed to initialize User Management:', error);
+                    this.showNotification('Failed to initialize User Management: ' + error.message, 'error');
+                }
+            },
 
-        isAuditLogsTabActive: function() {
-            return document.querySelector('.tab-button[data-tab="audit"]')?.classList.contains('active');
-        },
+            // ... rest of your module code ...
+        };
 
-        switchTab: function(tabName) {
-            const tabs = document.querySelectorAll('.tab-button');
-            const panels = document.querySelectorAll('.tab-panel');
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', async () => {
+                try {
+                    // Ensure RBAC is initialized first
+                    await window.RBAC.manager.initialize();
+                    console.log('RBAC initialized successfully');
 
-            tabs.forEach(tab => {
-                tab.classList.toggle('active', tab.dataset.tab === tabName);
+                    // Then initialize UserManagement
+                    window.UserManagement = UserManagementModule;
+                    await window.UserManagement.init();
+                } catch (error) {
+                    console.error('Initialization failed:', error);
+                }
             });
-
-            panels.forEach(panel => {
-                panel.classList.toggle('active', panel.dataset.tab === tabName);
-            });
-
-            switch(tabName) {
-                case 'users':
-                    this.loadUsers();
-                    break;
-                case 'deleted':
-                    this.loadDeletedUsers();
-                    break;
-                case 'audit':
-                    this.loadAuditLogs();
-                    break;
-            }
+        } else {
+            // If DOM is already loaded, initialize immediately
+            (async () => {
+                try {
+                    await window.RBAC.manager.initialize();
+                    console.log('RBAC initialized successfully');
+                    
+                    window.UserManagement = UserManagementModule;
+                    await window.UserManagement.init();
+                } catch (error) {
+                    console.error('Initialization failed:', error);
+                }
+            })();
         }
+    })();
+
+    // Continue inside UserManagementModule
+loadUsers: async function() {
+    try {
+        this.state.loading = true;
+        this.renderLoadingState();
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const queryParams = new URLSearchParams({
+            page: this.state.pagination.page.toString(),
+            limit: this.state.pagination.limit.toString(),
+            search: this.state.filters.search || '',
+            department: this.state.filters.department || '',
+            role: this.state.filters.role || '',
+            status: this.state.filters.status || ''
+        });
+
+        const response = await fetch(`https://18.215.160.136.nip.io/api/users?${queryParams}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to load users');
+        }
+
+        const data = await response.json();
+        this.state.users = data || [];
+        
+        this.renderUsers();
+
+    } catch (error) {
+        console.error('Error loading users:', error);
+        this.showNotification('Failed to load users: ' + error.message, 'error');
+    } finally {
+        this.state.loading = false;
+    }
+},
+
+renderUsers: function() {
+    const tbody = document.getElementById('usersTableBody');
+    if (!tbody) return;
+
+    if (this.state.loading) {
+        this.renderLoadingState();
+        return;
+    }
+
+    if (!Array.isArray(this.state.users) || this.state.users.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="empty-state">
+                    <i class="fas fa-users-slash"></i>
+                    <p>No users found</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = this.state.users.map(user => {
+        if (!user) return '';
+
+        const name = user.name || 'Unknown User';
+        const email = user.email || 'No Email';
+        const department = user.department || 'Unassigned';
+        const role = user.role || 'No Role';
+        const status = user.status || 'inactive';
+        const requires2FA = !!user.requires2FA;
+
+        return `
+            <tr data-user-id="${user._id || ''}">
+                <td>
+                    <div class="user-info">
+                        <div class="user-avatar" style="background-color: ${this.getAvatarColor(name)}">
+                            ${this.getInitials(name)}
+                        </div>
+                        <div class="user-details">
+                            <div class="user-name">${this.escapeHtml(name)}</div>
+                            <div class="user-id">${this.escapeHtml(email)}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>${this.escapeHtml(email)}</td>
+                <td>
+                    <span class="department-badge department-${department.toLowerCase()}">
+                        ${this.escapeHtml(department)}
+                    </span>
+                </td>
+                <td>
+                    <span class="role-badge role-${role.toLowerCase()}">
+                        ${this.escapeHtml(role)}
+                    </span>
+                </td>
+                <td>
+                    <span class="status-badge status-${status.toLowerCase()}">
+                        <i class="fas fa-${status === 'active' ? 'check-circle' : 'times-circle'}"></i>
+                        ${status}
+                    </span>
+                </td>
+                <td>
+                    <span class="2fa-badge ${requires2FA ? 'enabled' : 'disabled'}">
+                        <i class="fas fa-shield-alt"></i>
+                        ${requires2FA ? 'Enabled' : 'Disabled'}
+                    </span>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        ${this.renderActionButtons(user)}
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+},
+
+renderActionButtons: function(user) {
+    const buttons = [];
+
+    if (this.hasPermission('EDIT_USERS')) {
+        buttons.push(`
+            <button onclick="UserManagement.editUser('${user._id}')" 
+                    class="btn-icon" title="Edit User">
+                <i class="fas fa-edit"></i>
+            </button>
+        `);
+    }
+
+    if (this.hasPermission('MANAGE_USER_STATUS')) {
+        buttons.push(`
+            <button onclick="UserManagement.toggleUserStatus('${user._id}')" 
+                    class="btn-icon ${user.status === 'active' ? 'danger' : 'success'}"
+                    title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User">
+                <i class="fas fa-${user.status === 'active' ? 'ban' : 'check'}"></i>
+            </button>
+        `);
+    }
+
+    if (this.hasPermission('MANAGE_USER_SECURITY')) {
+        buttons.push(`
+            <button onclick="UserManagement.changeUserPassword('${user._id}')" 
+                    class="btn-icon warning" title="Change Password">
+                <i class="fas fa-key"></i>
+            </button>
+            <button onclick="UserManagement.toggle2FA('${user._id}')"
+                    class="btn-icon ${user.requires2FA ? 'success' : 'warning'}"
+                    title="${user.requires2FA ? 'Disable' : 'Enable'} 2FA">
+                <i class="fas fa-shield-alt"></i>
+            </button>
+        `);
+    }
+
+    if (this.hasPermission('DELETE_USERS')) {
+        buttons.push(`
+            <button onclick="UserManagement.deleteUser('${user._id}')" 
+                    class="btn-icon danger" title="Delete User">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        `);
+    }
+
+    return buttons.join('');
+},
+
+setupEventListeners: function() {
+    // Search input with debounce
+    const searchInput = document.getElementById('userSearch');
+    if (searchInput) {
+        let debounceTimer;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                this.state.filters.search = e.target.value;
+                this.loadUsers();
+            }, 300);
+        });
+    }
+
+    // Filter selects
+    ['department', 'status', 'role'].forEach(filterType => {
+        const select = document.getElementById(`${filterType}Filter`);
+        if (select) {
+            select.addEventListener('change', (e) => {
+                this.state.filters[filterType] = e.target.value;
+                this.loadUsers();
+            });
+        }
+    });
+},
+
+ // Continue inside UserManagementModule
+openAddUserModal: function() {
+    try {
+        if (!this.hasPermission('CREATE_USERS')) {
+            this.showNotification('You do not have permission to create users', 'error');
+            return;
+        }
+
+        const modalContainer = document.createElement('div');
+        modalContainer.innerHTML = `
+            <div class="modal active">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Add New User</h2>
+                        <button class="close-btn" onclick="this.closest('.modal').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="addUserForm">
+                        <div class="form-group">
+                            <label for="userName">Full Name *</label>
+                            <input type="text" id="userName" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="userEmail">Email *</label>
+                            <input type="email" id="userEmail" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="userDepartment">Department *</label>
+                            <select id="userDepartment" name="department" required>
+                                <option value="">Select Department</option>
+                                <option value="HR">HR</option>
+                                <option value="Finance">Finance</option>
+                                <option value="IT">IT</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Support">Support</option>
+                                <option value="Sales">Sales</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="userRole">Role *</label>
+                            <select id="userRole" name="role" required>
+                                ${this.generateRoleOptions()}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="require2FA" name="requires2FA">
+                                <span>Require 2FA</span>
+                            </label>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" 
+                                    onclick="this.closest('.modal').remove()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add User</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modalContainer.firstElementChild);
+        this.setupAddUserForm();
+    } catch (error) {
+        console.error('Error opening add user modal:', error);
+        this.showNotification('Failed to open add user modal', 'error');
+    }
+},
+
+setupAddUserForm: function() {
+    const form = document.getElementById('addUserForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitButton = form.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding User...';
+
+        try {
+            const formData = new FormData(form);
+            const userData = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                department: formData.get('department'),
+                role: formData.get('role'),
+                requires2FA: formData.get('requires2FA') === 'on'
+            };
+
+            const token = localStorage.getItem('token');
+            const response = await fetch('https://18.215.160.136.nip.io/api/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(userData)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to add user');
+            }
+
+            if (data.temporaryPassword) {
+                this.showNotification(`
+                    User created successfully!<br>
+                    Temporary Password: ${data.temporaryPassword}<br>
+                    Please share this password securely with the user.
+                `, 'success', 10000);
+            } else {
+                this.showNotification('User added successfully', 'success');
+            }
+
+            form.closest('.modal').remove();
+            await this.loadUsers();
+
+        } catch (error) {
+            console.error('Error adding user:', error);
+            this.showNotification(error.message, 'error');
+        } finally {
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Add User';
+        }
+    });
+},
+
+deleteUser: async function(userId) {
+    try {
+        const user = this.state.users.find(u => u._id === userId);
+        if (!user) throw new Error('User not found');
+
+        const confirmed = await this.showDeleteConfirmationModal(user);
+        if (!confirmed) return;
+
+        const token = localStorage.getItem('token');
+        const response = await fetch(`https://18.215.160.136.nip.io/api/users/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to delete user');
+        }
+
+        this.showNotification('User deleted successfully', 'success');
+        await this.loadUsers();
+
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        this.showNotification(error.message, 'error');
+    }
+},
+
+showDeleteConfirmationModal: function(user) {
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'modal active delete-confirmation-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Confirm User Deletion</h2>
+                    <button class="close-btn" onclick="this.closest('.modal').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="warning-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3 class="confirmation-title">Delete User Account</h3>
+                    <p class="confirmation-message">
+                        Are you sure you want to delete the following user?
+                    </p>
+                    <div class="user-details">
+                        <div class="user-detail-item">
+                            <span class="user-detail-label">Name:</span>
+                            <span class="user-detail-value">${this.escapeHtml(user.name)}</span>
+                        </div>
+                        <div class="user-detail-item">
+                            <span class="user-detail-label">Email:</span>
+                            <span class="user-detail-value">${this.escapeHtml(user.email)}</span>
+                        </div>
+                        <div class="user-detail-item">
+                            <span class="user-detail-label">Role:</span>
+                            <span class="user-detail-value">${this.escapeHtml(user.role)}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+                        Cancel
+                    </button>
+                    <button class="btn btn-danger" onclick="UserManagement.confirmDeletion(this)">
+                        Delete User
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        this.confirmDeletion = (button) => {
+            modal.remove();
+            resolve(true);
+        };
+    });
+},
+
+// Utility Functions
+generateRoleOptions: function() {
+    const roles = [
+        { id: 'admin', name: 'Admin' },
+        { id: 'manager', name: 'Manager' },
+        { id: 'user', name: 'User' }
+    ];
+
+    return `
+        <option value="">Select Role</option>
+        ${roles.map(role => `
+            <option value="${role.id}">${role.name}</option>
+        `).join('')}
+    `;
+},
+
+hasPermission: function(permission) {
+    return window.RBAC.manager.hasPermission(permission);
+},
+
+getAvatarColor: function(name) {
+    if (!name) return '#4f46e5';
+
+    const colors = [
+        '#4f46e5', '#7c3aed', '#db2777', '#ea580c', '#16a34a',
+        '#2563eb', '#9333ea', '#e11d48', '#d97706', '#15803d'
+    ];
+    
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    return colors[Math.abs(hash) % colors.length];
+},
+
+getInitials: function(name) {
+    if (!name) return 'U';
+    return name
+        .split(' ')
+        .map(word => word[0] || '')
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+},
+
+escapeHtml: function(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+},
+
+ // Continue inside UserManagementModule
+showNotification: function(message, type = 'info', duration = 5000) {
+    const notificationId = 'notification-' + Date.now();
+    const notification = document.createElement('div');
+    notification.id = notificationId;
+    notification.className = `notification notification-${type} ${type}`;
+    
+    notification.innerHTML = `
+        <div class="notification-content">
+            <div class="notification-icon">
+                <i class="fas fa-${this.getNotificationIcon(type)}"></i>
+            </div>
+            <div class="notification-message">
+                ${message}
+            </div>
+            <button class="notification-close" onclick="this.parentElement.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="notification-progress"></div>
+    `;
+
+    document.body.appendChild(notification);
+
+    const progress = notification.querySelector('.notification-progress');
+    progress.style.animation = `notification-progress ${duration}ms linear`;
+
+    setTimeout(() => {
+        notification.classList.add('notification-hiding');
+        setTimeout(() => {
+            if (document.getElementById(notificationId)) {
+                document.getElementById(notificationId).remove();
+            }
+        }, 300);
+    }, duration);
+},
+
+getNotificationIcon: function(type) {
+    const icons = {
+        success: 'check-circle',
+        error: 'exclamation-circle',
+        warning: 'exclamation-triangle',
+        info: 'info-circle'
+    };
+    return icons[type] || icons.info;
+},
+
+renderLoadingState: function() {
+    const tbody = document.getElementById('usersTableBody');
+    if (tbody) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="loading-state">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading users...</p>
+                </td>
+            </tr>
+        `;
+    }
+},
+
+renderErrorState: function(message) {
+    const tbody = document.getElementById('usersTableBody');
+    if (tbody) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="error-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>${this.escapeHtml(message || 'Error loading users')}</p>
+                </td>
+            </tr>
+        `;
+    }
+},
+
+openRoleManagement: async function() {
+    try {
+        if (!this.hasPermission('MANAGE_ROLES')) {
+            this.showNotification('You do not have permission to manage roles', 'error');
+            return;
+        }
+
+        const template = document.getElementById('roleManagementModal');
+        if (!template) {
+            throw new Error('Role management modal template not found');
+        }
+
+        const modalContent = template.content.cloneNode(true);
+        document.body.appendChild(modalContent);
+
+        await this.initializeRoleManagement();
+    } catch (error) {
+        console.error('Error opening role management:', error);
+        this.showNotification('Failed to open role management', 'error');
+    }
+},
+
+initializeRoleManagement: async function() {
+    try {
+        const rolesList = document.getElementById('rolesList');
+        const permissionsList = document.getElementById('permissionsList');
+
+        if (!rolesList || !permissionsList) {
+            throw new Error('Required elements not found');
+        }
+
+        // Populate roles list
+        rolesList.innerHTML = await this.renderRolesList();
+
+        // Setup role click handlers
+        const roleItems = document.querySelectorAll('.role-item');
+        roleItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const roleKey = item.dataset.role;
+                this.selectRole(roleKey);
+            });
+        });
+
+        // Select first role by default
+        if (roleItems.length > 0) {
+            this.selectRole(roleItems[0].dataset.role);
+        }
+
+    } catch (error) {
+        console.error('Error initializing role management:', error);
+        this.showNotification('Failed to initialize role management', 'error');
+    }
+},
+
+renderRolesList: async function() {
+    const roles = [
+        { id: 'SUPER_ADMIN', name: 'Super Admin', description: 'Full system access' },
+        { id: 'ADMIN', name: 'Administrator', description: 'System administration' },
+        { id: 'MANAGER', name: 'Manager', description: 'Department management' },
+        { id: 'USER', name: 'User', description: 'Basic user access' }
+    ];
+
+    return roles.map(role => `
+        <div class="role-item ${this.state.selectedRole === role.id ? 'active' : ''}" 
+             data-role="${role.id}">
+            <div class="role-info">
+                <h4>${this.escapeHtml(role.name)}</h4>
+                <p>${this.escapeHtml(role.description)}</p>
+            </div>
+        </div>
+    `).join('');
+},
+
+selectRole: function(roleKey) {
+    this.state.selectedRole = roleKey;
+    
+    // Update UI
+    document.querySelectorAll('.role-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.role === roleKey);
+    });
+
+    // Refresh permissions list
+    this.renderPermissionsList();
+},
+
+renderPermissionsList: function() {
+    const permissionsList = document.getElementById('permissionsList');
+    if (!permissionsList) return;
+
+    const permissionGroups = {
+        'User Management': ['CREATE_USERS', 'EDIT_USERS', 'DELETE_USERS', 'VIEW_USERS'],
+        'Role Management': ['MANAGE_ROLES', 'ASSIGN_ROLES'],
+        'Security': ['MANAGE_2FA', 'RESET_PASSWORDS', 'VIEW_AUDIT_LOGS'],
+        'System': ['ACCESS_ADMIN_PANEL', 'MANAGE_SETTINGS']
     };
 
-    // Initialize the module
-    window.UserManagement = UserManagementModule;
+    permissionsList.innerHTML = Object.entries(permissionGroups).map(([groupName, permissions]) => `
+        <div class="permission-group">
+            <h4>${this.escapeHtml(groupName)}</h4>
+            ${permissions.map(permission => `
+                <div class="permission-item">
+                    <label class="checkbox-label">
+                        <input type="checkbox" 
+                               value="${permission}"
+                               ${this.hasPermission(permission) ? 'checked' : ''}
+                               ${this.state.selectedRole === 'SUPER_ADMIN' ? 'disabled' : ''}>
+                        <span>${this.formatPermissionName(permission)}</span>
+                    </label>
+                </div>
+            `).join('')}
+        </div>
+    `).join('');
 
-    // Initialize when DOM is ready
-    document.addEventListener('DOMContentLoaded', async () => {
-        try {
-            await window.UserManagement.init();
-        } catch (error) {
-            console.error('Failed to initialize UserManagement:', error);
-        }
+    this.setupPermissionHandlers();
+},
+
+formatPermissionName: function(permission) {
+    return permission
+        .split('_')
+        .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+        .join(' ');
+},
+
+setupPermissionHandlers: function() {
+    const checkboxes = document.querySelectorAll('.permission-item input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', async (e) => {
+            if (this.state.selectedRole === 'SUPER_ADMIN') {
+                e.preventDefault();
+                return;
+            }
+
+            try {
+                await this.updateRolePermissions();
+            } catch (error) {
+                console.error('Error updating permissions:', error);
+                this.showNotification('Failed to update permissions', 'error');
+            }
+        });
     });
+}
+};
 
-    // Handle page unload
-    window.addEventListener('unload', () => {
-        if (window.UserManagement) {
-            window.UserManagement.cleanup();
-        }
-    });
+// Initialize the module
+window.UserManagement = UserManagementModule;
 
-    // Handle visibility change
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && window.UserManagement?.state.initialized) {
-            window.UserManagement.refreshData();
-        }
-    });
-
-    // Export module for testing
-    if (typeof module !== 'undefined' && module.exports) {
-        module.exports = UserManagementModule;
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        await window.UserManagement.init();
+    } catch (error) {
+        console.error('Failed to initialize UserManagement:', error);
     }
-})();
-</script> 
+});
+
+    
+</script>
