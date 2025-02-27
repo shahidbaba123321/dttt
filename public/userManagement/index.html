@@ -2100,6 +2100,67 @@ const UserManagementModule = {
             });
         }
     },
+    // Add this function to UserManagementModule
+setupRoleEventListeners: function() {
+    // Close button handler
+    const closeBtn = document.querySelector('.role-management-modal .close-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            const modal = document.querySelector('.role-management-modal');
+            if (modal) modal.remove();
+        });
+    }
+
+    // Role item click handlers
+    const roleItems = document.querySelectorAll('.role-item');
+    roleItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const roleKey = item.getAttribute('data-role');
+            this.selectRole(roleKey);
+        });
+    });
+
+    // Permission checkbox handlers
+    const permissionCheckboxes = document.querySelectorAll('.permission-item input[type="checkbox"]');
+    permissionCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+            const roleKey = this.state.selectedRole;
+            if (roleKey === 'SUPER_ADMIN') {
+                e.preventDefault();
+                return;
+            }
+            this.updateRolePermissions();
+        });
+    });
+
+    // Select first role by default
+    const firstRole = document.querySelector('.role-item');
+    if (firstRole) {
+        const roleKey = firstRole.getAttribute('data-role');
+        this.selectRole(roleKey);
+    }
+},
+
+// Also update the initializeRoleManagement function to ensure proper order
+initializeRoleManagement: function() {
+    try {
+        // Set initial selected role if none is selected
+        if (!this.state.selectedRole) {
+            this.state.selectedRole = 'SUPER_ADMIN';
+        }
+
+        // Render UI elements
+        this.renderRolesList();
+        this.renderPermissionsList();
+        
+        // Setup event listeners
+        this.setupRoleEventListeners();
+    } catch (error) {
+        console.error('Error initializing role management:', error);
+        showNotification(error.message, 'error');
+    }
+},
 
     // Update Role Permissions
     updateRolePermissions: async function() {
