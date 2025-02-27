@@ -1345,7 +1345,7 @@
     }
 },
         // Get current user info from token
-       getCurrentUserFromToken: function() {
+     getCurrentUserFromToken: function() {
     try {
         const token = localStorage.getItem('token');
         if (!token) return null;
@@ -1357,13 +1357,11 @@
         }).join(''));
 
         const userData = JSON.parse(jsonPayload);
-        
-        // Log the parsed user data
         console.log('Parsed user data from token:', userData);
         
         return {
             ...userData,
-            role: userData.role?.toLowerCase() // Normalize role to lowercase
+            role: userData.role ? userData.role.toLowerCase() : ''
         };
     } catch (error) {
         console.error('Error parsing token:', error);
@@ -1372,51 +1370,39 @@
 },
         // Enhanced Event Listeners Setup
         setupEventListeners: function() {
-            // Search input with debounce
-            const searchInput = document.getElementById('userSearch');
-            if (searchInput) {
-                let debounceTimer;
-                searchInput.addEventListener('input', (e) => {
-                    clearTimeout(debounceTimer);
-                    debounceTimer = setTimeout(() => {
-                        this.state.filters.search = e.target.value;
-                        this.loadUsers(true);
-                    }, 300);
-                });
-            }
+    // Search input with debounce
+    const searchInput = document.getElementById('userSearch');
+    if (searchInput) {
+        let debounceTimer;
+        const handleSearch = (e) => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                this.state.filters.search = e.target.value;
+                this.loadUsers(true);
+            }, 300);
+        };
+        
+        searchInput.removeEventListener('input', handleSearch);
+        searchInput.addEventListener('input', handleSearch);
+    }
 
-            // Filter selects
-            ['department', 'status', 'role'].forEach(filterType => {
-                const select = document.getElementById(`${filterType}Filter`);
-                if (select) {
-                    select.addEventListener('change', (e) => {
-                        this.state.filters[filterType] = e.target.value;
-                        this.loadUsers(true);
-                    });
-                }
-            });
+    // Filter selects
+    ['department', 'status', 'role'].forEach(filterType => {
+        const select = document.getElementById(`${filterType}Filter`);
+        if (select) {
+            const handleFilter = (e) => {
+                this.state.filters[filterType] = e.target.value;
+                this.loadUsers(true);
+            };
+            
+            select.removeEventListener('change', handleFilter);
+            select.addEventListener('change', handleFilter);
+        }
+    });
 
-            // Tab switching
-            const tabs = document.querySelectorAll('.tab-button');
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    this.switchTab(tab.dataset.tab);
-                });
-            });
-
-            // Global error handler
-            window.addEventListener('unhandledrejection', (event) => {
-                console.error('Unhandled promise rejection:', event.reason);
-                this.showNotification('An unexpected error occurred', 'error');
-            });
-
-            // Handle page visibility
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible' && this.state.initialized) {
-                    this.refreshData();
-                }
-            });
-        },
+    // Add tooltip styles
+    this.addTooltipStyles();
+},
 
                 // Enhanced API Request Handler
         makeAuthenticatedRequest: async function(url, method = 'GET', body = null) {
@@ -1463,33 +1449,38 @@
             this.state.pagination.page = 1;
         }
 
-        const queryParams = new URLSearchParams({
-            page: (this.state.pagination.page || 1).toString(),
-            limit: (this.state.pagination.limit || 10).toString(),
-            search: this.state.filters.search || '',
-            department: this.state.filters.department || '',
-            role: this.state.filters.role || '',
-            status: this.state.filters.status || ''
-        });
+        const queryParams = new URLSearchParams();
+        queryParams.append('page', (this.state.pagination.page || 1).toString());
+        queryParams.append('limit', (this.state.pagination.limit || 10).toString());
+        
+        if (this.state.filters.search) {
+            queryParams.append('search', this.state.filters.search);
+        }
+        if (this.state.filters.department) {
+            queryParams.append('department', this.state.filters.department);
+        }
+        if (this.state.filters.role) {
+            queryParams.append('role', this.state.filters.role);
+        }
+        if (this.state.filters.status) {
+            queryParams.append('status', this.state.filters.status);
+        }
 
         const response = await this.makeAuthenticatedRequest(
-            `/api/users?${queryParams}`
+            `/api/users?${queryParams.toString()}`
         );
 
         const data = await response.json();
 
-        // Ensure data is in the correct format
-        if (!data || typeof data !== 'object') {
-            throw new Error('Invalid response format from server');
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to load users');
         }
 
-        this.state.users = Array.isArray(data) ? data : (data.users || []);
-        
-        // Handle pagination data
-        this.state.pagination = {
-            page: parseInt(data.pagination?.page || 1),
-            limit: parseInt(data.pagination?.limit || 10),
-            total: parseInt(data.pagination?.total || this.state.users.length)
+        this.state.users = Array.isArray(data.users) ? data.users : [];
+        this.state.pagination = data.pagination || {
+            page: 1,
+            limit: 10,
+            total: this.state.users.length
         };
 
         this.renderUsers();
@@ -1769,10 +1760,11 @@ hideTooltip: function(e) {
 
 // Add CSS for tooltips if not already present
 addTooltipStyles: function() {
-    if (!document.getElementById('tooltip-styles')) {
-        const style = document.createElement('style');
-        style.id = 'tooltip-styles';
-        style.textContent = `
+    const styleId = 'user-management-styles';
+    if (!document.getElementById(styleId)) {
+        const styleElement = document.createElement('style');
+        styleElement.id = styleId;
+        styleElement.textContent = `
             .tooltip {
                 position: fixed;
                 background: rgba(0, 0, 0, 0.8);
@@ -1793,9 +1785,9 @@ addTooltipStyles: function() {
                 background-color: var(--surface-dark);
             }
         `;
-        document.head.appendChild(style);
+        document.head.appendChild(styleElement);
     }
-}
+},
         
                 // UI Rendering Components
        renderUsers: function() {
