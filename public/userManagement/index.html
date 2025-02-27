@@ -1591,32 +1591,28 @@ const canManage2FA = window.RBAC.manager.hasPermission(window.RBAC.CONFIG.PERMIS
     },
 
     // Generate role options based on user permissions
-    generateRoleOptions: function() {
-        const currentUserRole = window.RBAC.manager.getCurrentRole();
-const availableRoles = Object.entries(window.RBAC.CONFIG.ROLES)
-            .filter(([roleKey, role]) => {
-                // Filter roles based on hierarchy
-                const roleHierarchy = {
-                    'SUPER_ADMIN': 0,
-                    'ADMIN': 1,
-                    'MANAGER': 2,
-                    'USER': 3
-                };
-                
-                const currentUserLevel = roleHierarchy[currentUserRole] || 3;
-                const roleLevel = roleHierarchy[roleKey] || 3;
-                
-                return roleLevel > currentUserLevel;
-            })
-            .map(([roleKey, role]) => `
-                <option value="${roleKey.toLowerCase()}">${role.name}</option>
-            `).join('');
+   generateRoleOptions: function() {
+    // Get current user role
+    const currentUserRole = window.RBAC.manager.getCurrentRole();
+    
+    // Define available roles based on RBAC config
+    const availableRoles = Object.entries(window.RBAC.CONFIG.ROLES)
+        .filter(([key]) => key !== 'SUPER_ADMIN') // Exclude SUPER_ADMIN from options
+        .map(([key, role]) => ({
+            id: key.toLowerCase(),
+            name: role.name
+        }));
 
-        return `
-            <option value="">Select Role</option>
-            ${availableRoles}
-        `;
-    },
+    // Generate options HTML
+    const options = availableRoles.map(role => `
+        <option value="${role.id}">${role.name}</option>
+    `).join('');
+
+    return `
+        <option value="">Select Role</option>
+        ${options}
+    `;
+},
        // Edit User with RBAC
     editUser: async function(userId) {
         try {
