@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roles & Permissions - WorkWise Pro</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #4F46E5;
+            --secondary-color: #4338CA;
+            --accent-color: #818CF8;
+            --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --danger-color: #EF4444;
+            --background-color: #F8FAFC;
+            --text-color: #1F2937;
+            --light-text: #64748B;
+            --border-color: rgba(0, 0, 0, 0.1);
+            --transition-speed: 0.3s;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header Section */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .add-role-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .add-role-btn:hover {
+            background: var(--secondary-color);
+        }
+
+        /* Roles Grid */
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .role-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all var(--transition-speed) ease;
+        }
+
+        .role-card:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .role-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .role-name {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .role-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .role-action-btn {
+            background: none;
+            border: none;
+            color: var(--light-text);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .role-action-btn:hover {
+            background: var(--background-color);
+            color: var(--primary-color);
+        }
+
+        .role-description {
+            color: var(--light-text);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .role-stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-item {
+            background: var(--background-color);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        .permissions-preview {
+            margin-top: 1rem;
+        }
+
+        .permission-tag {
+            display: inline-block;
+            background: var(--accent-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin: 0.25rem;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: translateY(-20px);
+            transition: all var(--transition-speed) ease;
+        }
+
+        .modal.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--light-text);
+            cursor: pointer;
+            padding: 0.5rem;
+            font-size: 1.25rem;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+            outline: none;
+        }
+
+        .permissions-section {
+            margin-top: 1.5rem;
+        }
+
+        .permissions-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .permissions-group-title {
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .permission-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .permission-checkbox input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .btn-secondary {
+            background: var(--background-color);
+            color: var(--text-color);
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-color);
+        }
+
+        .btn-secondary:hover {
+            background: #E2E8F0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Roles & Permissions</h1>
+            <button class="add-role-btn" onclick="showAddRoleModal()">
+                <i class="fas fa-plus"></i>
+                Add New Role
+            </button>
+        </div>
+
+        <div class="roles-grid" id="rolesGrid">
+            <!-- Roles will be dynamically inserted here -->
+        </div>
+    </div>
+
+    <!-- Add/Edit Role Modal -->
+    <div class="modal" id="roleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add New Role</h2>
+                <button class="close-modal" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="roleForm">
+                <div class="form-group">
+                    <label class="form-label" for="roleName">Role Name</label>
+                    <input type="text" id="roleName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="roleDescription">Description</label>
+                    <textarea id="roleDescription" class="form-input" rows="3"></textarea>
+                </div>
+                
+                <div class="permissions-section">
+                    <h3>Permissions</h3>
+                    <div id="permissionsContainer">
+                        <!-- Permission groups will be dynamically inserted here -->
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Role</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Add this inside the <script> tag in roles-permissions.html
+
+// Global Variables
+let currentRoleId = null;
+const permissionGroups = {
+    dashboard: {
+        title: 'Dashboard',
+        permissions: [
+            { id: 'view_dashboard', name: 'View Dashboard' },
+            { id: 'view_analytics', name: 'View Analytics' }
+        ]
+    },
+    userManagement: {
+        title: 'User Management',
+        permissions: [
+            { id: 'view_users', name: 'View Users' },
+            { id: 'add_users', name: 'Add Users' },
+            { id: 'edit_users', name: 'Edit Users' },
+            { id: 'delete_users', name: 'Delete Users' },
+            { id: 'manage_user_status', name: 'Manage User Status' },
+            { id: 'manage_2fa', name: 'Manage 2FA Settings' }
+        ]
+    },
+    roleManagement: {
+        title: 'Role Management',
+        permissions: [
+            { id: 'view_roles', name: 'View Roles' },
+            { id: 'add_roles', name: 'Add Roles' },
+            { id: 'edit_roles', name: 'Edit Roles' },
+            { id: 'delete_roles', name: 'Delete Roles' }
+        ]
+    },
+    systemSettings: {
+        title: 'System Settings',
+        permissions: [
+            { id: 'view_settings', name: 'View Settings' },
+            { id: 'edit_settings', name: 'Edit Settings' },
+            { id: 'manage_backup', name: 'Manage Backup & Restore' }
+        ]
+    },
+    auditLogs: {
+        title: 'Audit Logs',
+        permissions: [
+            { id: 'view_audit_logs', name: 'View Audit Logs' },
+            { id: 'export_audit_logs', name: 'Export Audit Logs' }
+        ]
+    }
+};
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    initializeModule();
+    loadRoles();
+});
+
+async function initializeModule() {
+    // Verify authentication
+    const token = parent.localStorage.getItem('token');
+    if (!token) {
+        parent.window.location.href = 'login.html';
+        return;
+    }
+
+    // Setup form listeners
+    document.getElementById('roleForm').addEventListener('submit', handleRoleSubmit);
+    
+    // Generate permission checkboxes
+    generatePermissionCheckboxes();
+}
+
+function generatePermissionCheckboxes() {
+    const container = document.getElementById('permissionsContainer');
+    container.innerHTML = '';
+
+    Object.entries(permissionGroups).forEach(([key, group]) => {
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'permissions-group';
+        
+        groupDiv.innerHTML = `
+            <h4 class="permissions-group-title">${group.title}</h4>
+            ${group.permissions.map(perm => `
+                <label class="permission-checkbox">
+                    <input type="checkbox" name="permissions" 
+                           value="${perm.id}" 
+                           data-group="${key}">
+                    <span>${perm.name}</span>
+                </label>
+            `).join('')}
+        `;
+        
+        container.appendChild(groupDiv);
+    });
+}
+
+async function loadRoles() {
+    try {
+        const token = parent.localStorage.getItem('token');
+        const response = await fetch('https://18.215.160.136.nip.io/api/roles', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch roles');
+        
+        const data = await response.json();
+        renderRoles(data.roles);
+    } catch (error) {
+        showNotification('Error loading roles', 'error');
+        console.error('Error:', error);
+    }
+}
+
+function renderRoles(roles) {
+    const grid = document.getElementById('rolesGrid');
+    grid.innerHTML = '';
+
+    roles.forEach(role => {
+        const card = document.createElement('div');
+        card.className = 'role-card';
+        
+        const isSystemRole = role.isSystem || role.name.toLowerCase() === 'superadmin';
+        
+        card.innerHTML = `
+            <div class="role-header">
+                <h3 class="role-name">${role.name}</h3>
+                <div class="role-actions">
+                    ${!isSystemRole ? `
+                        <button class="role-action-btn" onclick="editRole('${role._id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="role-action-btn" onclick="deleteRole('${role._id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+            <p class="role-description">${role.description || 'No description provided'}</p>
+            <div class="role-stats">
+                <span class="stat-item">
+                    <i class="fas fa-users"></i> ${role.userCount || 0} Users
+                </span>
+                <span class="stat-item">
+                    <i class="fas fa-key"></i> ${role.permissions?.length || 0} Permissions
+                </span>
+            </div>
+            <div class="permissions-preview">
+                ${(role.permissions || []).slice(0, 3).map(perm => `
+                    <span class="permission-tag">${perm}</span>
+                `).join('')}
+                ${role.permissions?.length > 3 ? `
+                    <span class="permission-tag">+${role.permissions.length - 3} more</span>
+                ` : ''}
+            </div>
+        `;
+        
+        grid.appendChild(card);
+    });
+}
+
+function showAddRoleModal() {
+    currentRoleId = null;
+    const modal = document.getElementById('roleModal');
+    const form = document.getElementById('roleForm');
+    const title = document.querySelector('.modal-title');
+    
+    title.textContent = 'Add New Role';
+    form.reset();
+    
+    // Uncheck all permissions
+    document.querySelectorAll('input[name="permissions"]')
+        .forEach(checkbox => checkbox.checked = false);
+    
+    modal.classList.add('show');
+}
+
+async function editRole(roleId) {
+    try {
+        currentRoleId = roleId;
+        const token = parent.localStorage.getItem('token');
+        const response = await fetch(`https://18.215.160.136.nip.io/api/roles/${roleId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch role details');
+        
+        const role = await response.json();
+        
+        // Populate modal
+        document.querySelector('.modal-title').textContent = 'Edit Role';
+        document.getElementById('roleName').value = role.name;
+        document.getElementById('roleDescription').value = role.description || '';
+        
+        // Set permissions
+        document.querySelectorAll('input[name="permissions"]').forEach(checkbox => {
+            checkbox.checked = role.permissions.includes(checkbox.value);
+        });
+        
+        document.getElementById('roleModal').classList.add('show');
+    } catch (error) {
+        showNotification('Error loading role details', 'error');
+        console.error('Error:', error);
+    }
+}
+
+async function handleRoleSubmit(e) {
+    e.preventDefault();
+    
+    try {
+        const formData = {
+            name: document.getElementById('roleName').value,
+            description: document.getElementById('roleDescription').value,
+            permissions: Array.from(document.querySelectorAll('input[name="permissions"]:checked'))
+                .map(checkbox => checkbox.value)
+        };
+
+        const token = parent.localStorage.getItem('token');
+        const url = currentRoleId 
+            ? `https://18.215.160.136.nip.io/api/roles/${currentRoleId}`
+            : 'https://18.215.160.136.nip.io/api/roles';
+            
+        const response = await fetch(url, {
+            method: currentRoleId ? 'PUT' : 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) throw new Error('Failed to save role');
+        
+        showNotification(`Role ${currentRoleId ? 'updated' : 'created'} successfully`, 'success');
+        closeModal();
+        loadRoles();
+    } catch (error) {
+        showNotification('Error saving role', 'error');
+        console.error('Error:', error);
+    }
+}
+
+async function deleteRole(roleId) {
+    if (!confirm('Are you sure you want to delete this role? This action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        const token = parent.localStorage.getItem('token');
+        const response = await fetch(`https://18.215.160.136.nip.io/api/roles/${roleId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Failed to delete role');
+        
+        showNotification('Role deleted successfully', 'success');
+        loadRoles();
+    } catch (error) {
+        showNotification('Error deleting role', 'error');
+        console.error('Error:', error);
+    }
+}
+
+function closeModal() {
+    document.getElementById('roleModal').classList.remove('show');
+}
+
+function showNotification(message, type = 'success') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Trigger animation
+    setTimeout(() => {
+        notification.classList.add('show');
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }, 100);
+}
+
+// Close modal when clicking outside
+document.getElementById('roleModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+
+// Handle escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeModal();
+    }
+});
+    </script>
+</body>
+</html>
