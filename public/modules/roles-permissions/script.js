@@ -447,7 +447,3 @@ const RolesPermissions = {
     }
 };
 
-// Initialize the module
-document.addEventListener('DOMContentLoaded', () => {
-    RolesPermissions.init();
-});
