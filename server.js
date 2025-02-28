@@ -1281,6 +1281,172 @@ app.get('/api/roles', verifyToken, async (req, res) => {
     }
 });
 
+// Get single role
+app.get('/api/roles/:roleId', verifyToken, async (req, res) => {
+    try {
+        const role = await roles.findOne({ 
+            _id: new ObjectId(req.params.roleId)
+        });
+
+        if (!role) {
+            return res.status(404).json({
+                success: false,
+                message: 'Role not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            role
+        });
+    } catch (error) {
+        console.error('Error fetching role:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching role'
+        });
+    }
+});
+// Create new role
+app.post('/api/roles', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { name, description, permissions } = req.body;
+
+        // Validate input
+        if (!name || !Array.isArray(permissions)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid input'
+            });
+        }
+
+        // Check if role name exists
+        const existingRole = await roles.findOne({ 
+            name: { $regex: new RegExp(`^${name}$`, 'i') }
+        });
+
+        if (existingRole) {
+            return res.status(400).json({
+                success: false,
+                message: 'Role name already exists'
+            });
+        }
+
+        const result = await roles.insertOne({
+            name,
+            description,
+            permissions,
+            isDefault: false,
+            isSystem: false,
+            createdAt: new Date(),
+            createdBy: new ObjectId(req.user.userId),
+            updatedAt: new Date()
+        });
+
+        // Create audit log
+        await createAuditLog(
+            'ROLE_CREATED',
+            req.user.userId,
+            null,
+            {
+                roleId: result.insertedId,
+                name,
+                permissions
+            }
+        );
+
+        res.status(201).json({
+            success: true,
+            message: 'Role created successfully',
+            roleId: result.insertedId
+        });
+    } catch (error) {
+        console.error('Error creating role:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error creating role'
+        });
+    }
+});
+// Update role
+app.put('/api/roles/:roleId', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { roleId } = req.params;
+        const { name, description, permissions } = req.body;
+
+        // Check if role exists
+        const existingRole = await roles.findOne({ 
+            _id: new ObjectId(roleId)
+        });
+
+        if (!existingRole) {
+            return res.status(404).json({
+                success: false,
+                message: 'Role not found'
+            });
+        }
+
+        // Prevent modification of system roles
+        if (existingRole.isSystem) {
+            return res.status(403).json({
+                success: false,
+                message: 'System roles cannot be modified'
+            });
+        }
+
+        // Check if new name conflicts with existing roles
+        if (name !== existingRole.name) {
+            const nameExists = await roles.findOne({ 
+                name: { $regex: new RegExp(`^${name}$`, 'i') },
+                _id: { $ne: new ObjectId(roleId) }
+            });
+
+            if (nameExists) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Role name already exists'
+                });
+            }
+        }
+
+        const result = await roles.updateOne(
+            { _id: new ObjectId(roleId) },
+            {
+                $set: {
+                    name,
+                    description,
+                    permissions,
+                    updatedAt: new Date(),
+                    updatedBy: new ObjectId(req.user.userId)
+                }
+            }
+        );
+
+        // Create audit log
+        await createAuditLog(
+            'ROLE_UPDATED',
+            req.user.userId,
+            null,
+            {
+                roleId,
+                previousState: existingRole,
+                newState: { name, description, permissions }
+            }
+        );
+
+        res.json({
+            success: true,
+            message: 'Role updated successfully'
+        });
+    } catch (error) {
+        console.error('Error updating role:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating role'
+        });
+    }
+});
+
 
 // Get audit logs
 app.get('/api/audit-logs', verifyToken, verifyAdmin, async (req, res) => {
