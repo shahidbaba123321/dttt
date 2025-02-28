@@ -1,4 +1,6 @@
 window.RolesPermissions = {
+        API_BASE_URL: 'https://18.215.160.136.nip.io/api',
+
     // State management
     state: {
         roles: [],
@@ -35,6 +37,36 @@ window.RolesPermissions = {
                 { id: 'manage_integrations', name: 'Manage Integrations' },
                 { id: 'manage_api_keys', name: 'Manage API Keys' }
             ]
+        }
+    },
+
+     // Add API methods
+    api: {
+        async makeRequest(endpoint, options = {}) {
+            const token = localStorage.getItem('token');
+            const defaultOptions = {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            try {
+                const response = await fetch(`${this.API_BASE_URL}${endpoint}`, {
+                    ...defaultOptions,
+                    ...options
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('API request failed:', error);
+                throw error;
+            }
         }
     },
 
@@ -130,14 +162,17 @@ window.RolesPermissions = {
     },
 
     // API Calls
-    async loadRoles() {
+     async loadRoles() {
         try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('https://18.215.160.136.nip.io/api/roles', {
+            const response = await fetch(`${this.API_BASE_URL}/roles`, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
             });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
             const data = await response.json();
             
@@ -178,16 +213,32 @@ window.RolesPermissions = {
                 this.renderRoles(paginatedRoles);
                 this.updatePagination();
                 this.updateStats();
-
             } else {
                 throw new Error(data.message || 'Failed to load roles');
             }
         } catch (error) {
             console.error('Error loading roles:', error);
-            this.showToast(error.message || 'Error loading roles', 'error');
+            this.showToast('Error loading roles. Please try again later.', 'error');
+            
+            // Show error state in table
+            const tableBody = document.getElementById('rpRolesTableBody');
+            if (tableBody) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="rp-no-data">
+                            <div class="rp-no-data-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <p>Error loading roles. Please try again.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
         }
     },
 
+
+    // Update the saveRole method
     async saveRole() {
         try {
             const roleData = this.getRoleFormData();
@@ -195,21 +246,27 @@ window.RolesPermissions = {
                 return;
             }
 
-            const token = localStorage.getItem('token');
-            const url = this.state.selectedRoleId 
-                ? `https://18.215.160.136.nip.io/api/roles/${this.state.selectedRoleId}`
-                : 'https://18.215.160.136.nip.io/api/roles';
+            const endpoint = this.state.selectedRoleId 
+                ? `/roles/${this.state.selectedRoleId}`
+                : '/roles';
             
-            const response = await fetch(url, {
-                method: this.state.selectedRoleId ? 'PUT' : 'POST',
+            const method = this.state.selectedRoleId ? 'PUT' : 'POST';
+            
+            const response = await fetch(`${this.API_BASE_URL}${endpoint}`, {
+                method,
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(roleData)
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
+            
             if (data.success) {
                 this.showToast(`Role ${this.state.selectedRoleId ? 'updated' : 'created'} successfully`, 'success');
                 this.closeModals();
@@ -219,23 +276,28 @@ window.RolesPermissions = {
             }
         } catch (error) {
             console.error('Error saving role:', error);
-            this.showToast(error.message || 'Error saving role', 'error');
+            this.showToast('Error saving role. Please try again later.', 'error');
         }
     },
 
+   // Update the deleteRole method
     async deleteRole() {
         try {
             if (!this.state.selectedRoleId) return;
 
-            const token = localStorage.getItem('token');
-            const response = await fetch(`https://18.215.160.136.nip.io/api/roles/${this.state.selectedRoleId}`, {
+            const response = await fetch(`${this.API_BASE_URL}/roles/${this.state.selectedRoleId}`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
+            
             if (data.success) {
                 this.showToast('Role deleted successfully', 'success');
                 this.closeModals();
@@ -245,9 +307,10 @@ window.RolesPermissions = {
             }
         } catch (error) {
             console.error('Error deleting role:', error);
-            this.showToast(error.message || 'Error deleting role', 'error');
+            this.showToast('Error deleting role. Please try again later.', 'error');
         }
-    },
+    }
+};
 
     // UI Rendering
     renderRoles(roles) {
