@@ -708,7 +708,7 @@
             window.location.href = 'login.html';
         }
 
-     function loadModule(moduleName) {
+  function loadModule(moduleName) {
     const contentArea = document.querySelector('.content');
     const token = localStorage.getItem('token');
     
@@ -751,48 +751,60 @@
         fetch(selectedModule.css).then(r => r.text()),
         fetch(selectedModule.js).then(r => r.text())
     ]).then(([html, css, js]) => {
-        // Remove any previous module styles
-        const existingStyle = document.getElementById('moduleStyles');
-        if (existingStyle) {
-            existingStyle.remove();
+        try {
+            // Remove any previous module styles
+            const existingStyle = document.getElementById('moduleStyles');
+            if (existingStyle) {
+                existingStyle.remove();
+            }
+
+            // Add new module styles
+            const styleElement = document.createElement('style');
+            styleElement.id = 'moduleStyles';
+            styleElement.textContent = css;
+            document.head.appendChild(styleElement);
+
+            // Update content
+            contentArea.innerHTML = html;
+
+            // Remove any previous module scripts
+            const existingScript = document.getElementById('moduleScript');
+            if (existingScript) {
+                existingScript.remove();
+            }
+
+            // Clean up any existing module instance
+            if (window.RolesPermissions) {
+                delete window.RolesPermissions;
+            }
+
+            // Create a script element for the module
+            const scriptElement = document.createElement('script');
+            scriptElement.id = 'moduleScript';
+            scriptElement.textContent = `
+                window.RolesPermissions = (function() {
+                    return ${js};
+                })();
+                
+                // Initialize the module
+                if (window.RolesPermissions && typeof window.RolesPermissions.init === 'function') {
+                    window.RolesPermissions.init();
+                }
+            `;
+            document.body.appendChild(scriptElement);
+
+            // Update URL hash without triggering a page reload
+            history.replaceState(null, '', `#${moduleName}`);
+
+        } catch (error) {
+            console.error('Error initializing module:', error);
+            contentArea.innerHTML = `
+                <div class="error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Error initializing module. Please try again.</p>
+                </div>
+            `;
         }
-
-        // Add new module styles
-        const styleElement = document.createElement('style');
-        styleElement.id = 'moduleStyles';
-        styleElement.textContent = css;
-        document.head.appendChild(styleElement);
-
-        // Update content
-        contentArea.innerHTML = html;
-
-        // Remove any previous module scripts
-        const existingScript = document.getElementById('moduleScript');
-        if (existingScript) {
-            existingScript.remove();
-        }
-
-        // Clean up any existing module instance
-        if (window.RolesPermissions) {
-            delete window.RolesPermissions;
-        }
-
-        // Add the module script
-        const scriptElement = document.createElement('script');
-        scriptElement.id = 'moduleScript';
-        scriptElement.textContent = js;
-        document.body.appendChild(scriptElement);
-
-        // Initialize the module
-        if (window.RolesPermissions && typeof window.RolesPermissions.init === 'function') {
-            setTimeout(() => {
-                window.RolesPermissions.init();
-            }, 0);
-        }
-
-        // Update URL hash without triggering a page reload
-        history.replaceState(null, '', `#${moduleName}`);
-
     }).catch(error => {
         console.error('Error loading module:', error);
         contentArea.innerHTML = `
