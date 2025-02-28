@@ -769,9 +769,7 @@ body {
             </header>
 
             <!-- Page Content -->
-            <div class="page-content">
-                <!-- Your page content goes here -->
-            </div>
+            
             <div class="page-content">
     <iframe id="moduleFrame" name="moduleFrame" frameborder="0"></iframe>
 </div>
@@ -782,7 +780,7 @@ body {
        document.addEventListener('DOMContentLoaded', function() {
     initializeDashboard();
     checkAuthentication();
-           initializeModuleLoading();
+           
 });
 
 function initializeDashboard() {
@@ -803,6 +801,8 @@ function initializeDashboard() {
         const text = item.querySelector('.menu-item-text')?.textContent || '';
         item.setAttribute('data-tooltip', text);
     });
+
+    initializeModuleLoading();
 
     // Sidebar Toggle Handler
     toggleBtn.addEventListener('click', (e) => {
@@ -861,35 +861,38 @@ function initializeDashboard() {
     });
 
     function initializeModuleLoading() {
-    // Get all menu items
-    const menuItems = document.querySelectorAll('.menu-item');
-    const moduleFrame = document.getElementById('moduleFrame');
-    
-    // Store current active module
-    let currentModule = '';
+        // Get all menu items
+        const menuItems = document.querySelectorAll('.menu-item, .submenu-item');
+        const moduleFrame = document.getElementById('moduleFrame');
+        
+        // Store current active module
+        let currentModule = '';
 
-    menuItems.forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
+        menuItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
 
-            // Get module path from data attribute
-            const modulePath = item.getAttribute('data-module');
-            if (!modulePath) return;
+                // Get module path from data attribute
+                const modulePath = item.getAttribute('data-module');
+                if (!modulePath) return;
 
-            // Update active state
-            menuItems.forEach(mi => mi.classList.remove('active'));
-            item.classList.add('active');
+                // Update active state
+                menuItems.forEach(mi => mi.classList.remove('active'));
+                item.classList.add('active');
 
-            // Load module if different from current
-            if (currentModule !== modulePath) {
-                loadModule(modulePath);
-                currentModule = modulePath;
-            }
+                // Load module if different from current
+                if (currentModule !== modulePath) {
+                    loadModule(modulePath);
+                    currentModule = modulePath;
+                }
+            });
         });
-    });
-
+    }
     // Function to load module in iframe
     function loadModule(modulePath) {
+        const moduleFrame = document.getElementById('moduleFrame');
+        if (!moduleFrame) return;
+
         // Show loading state
         moduleFrame.style.opacity = '0.5';
         
