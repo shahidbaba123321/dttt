@@ -131,39 +131,54 @@ const RolesPermissions = {
 
     // API Calls
     async loadRoles() {
-        try {
-            const token = localStorage.getItem('token');
-            const queryParams = new URLSearchParams({
-                page: this.state.currentPage,
-                limit: this.state.itemsPerPage,
-                search: this.state.searchTerm,
-                status: this.state.statusFilter,
-                type: this.state.typeFilter,
-                sort: this.state.sortField,
-                order: this.state.sortOrder
-            });
+    try {
+        const token = localStorage.getItem('token');
+        const queryParams = new URLSearchParams({
+            page: this.state.currentPage,
+            limit: this.state.itemsPerPage,
+            search: this.state.searchTerm,
+            status: this.state.statusFilter,
+            type: this.state.typeFilter,
+            sort: this.state.sortField,
+            order: this.state.sortOrder
+        });
 
-            const response = await fetch(`https://18.215.160.136.nip.io/api/roles?${queryParams}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            const data = await response.json();
-            if (data.success) {
-                this.state.roles = data.roles;
-                this.state.totalItems = data.pagination.total;
-                this.renderRoles();
-                this.updatePagination();
-                this.updateStats();
-            } else {
-                throw new Error(data.message || 'Failed to load roles');
+        const response = await fetch(`https://18.215.160.136.nip.io/api/roles`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
             }
-        } catch (error) {
-            console.error('Error loading roles:', error);
-            this.showToast(error.message || 'Error loading roles', 'error');
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update state with the roles data
+            this.state.roles = data.roles || [];
+            this.state.totalItems = this.state.roles.length;
+
+            // Calculate pagination values
+            const startIndex = (this.state.currentPage - 1) * this.state.itemsPerPage;
+            const endIndex = startIndex + this.state.itemsPerPage;
+            
+            // Slice the roles array for current page
+            const paginatedRoles = this.state.roles.slice(startIndex, endIndex);
+            
+            // Update the display
+            this.renderRoles(paginatedRoles);
+            this.updatePagination();
+            this.updateStats();
+
+            // Log success
+            console.log('Roles loaded successfully:', this.state.roles.length, 'roles found');
+        } else {
+            throw new Error(data.message || 'Failed to load roles');
         }
-    },
+    } catch (error) {
+        console.error('Error loading roles:', error);
+        this.showToast(error.message || 'Error loading roles', 'error');
+    }
+},
+
 
     async saveRole() {
         try {
@@ -227,62 +242,93 @@ const RolesPermissions = {
     },
 
     // UI Rendering
-    renderRoles() {
-        const tableBody = document.getElementById('rpRolesTableBody');
-        if (!tableBody) return;
+    renderRoles(roles = []) {
+    const tableBody = document.getElementById('rpRolesTableBody');
+    if (!tableBody) return;
 
-        tableBody.innerHTML = '';
-        this.state.roles.forEach(role => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${role.name}</td>
-                <td>${role.description || '-'}</td>
-                <td>${role.userCount || 0}</td>
-                <td>
-                    <span class="rp-status-badge ${role.isSystem ? 'system' : 'custom'}">
-                        ${role.isSystem ? 'System' : 'Custom'}
-                    </span>
-                </td>
-                <td>
-                    <span class="rp-status-badge ${role.status === 'active' ? 'active' : 'inactive'}">
-                        ${role.status === 'active' ? 'Active' : 'Inactive'}
-                    </span>
-                </td>
-                <td>${new Date(role.updatedAt || role.createdAt).toLocaleDateString()}</td>
-                <td>
-                    <div class="rp-action-buttons">
-                        ${!role.isSystem ? `
-                            <button class="rp-action-btn edit" onclick="RolesPermissions.editRole('${role._id}')">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="rp-action-btn delete" onclick="RolesPermissions.confirmDelete('${role._id}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        ` : '-'}
+    tableBody.innerHTML = '';
+    
+    if (roles.length === 0) {
+        // Show no data message
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="rp-no-data">
+                    <div class="rp-no-data-message">
+                        <i class="fas fa-folder-open"></i>
+                        <p>No roles found</p>
                     </div>
                 </td>
-            `;
-            tableBody.appendChild(row);
-        });
-    },
+            </tr>
+        `;
+        return;
+    }
+
+    roles.forEach(role => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${this.escapeHtml(role.name)}</td>
+            <td>${this.escapeHtml(role.description || '-')}</td>
+            <td>${role.userCount || 0}</td>
+            <td>
+                <span class="rp-status-badge ${role.isSystem ? 'system' : 'custom'}">
+                    ${role.isSystem ? 'System' : 'Custom'}
+                </span>
+            </td>
+            <td>
+                <span class="rp-status-badge ${role.status === 'active' ? 'active' : 'inactive'}">
+                    ${role.status === 'active' ? 'Active' : 'Inactive'}
+                </span>
+            </td>
+            <td>${new Date(role.updatedAt || role.createdAt).toLocaleDateString()}</td>
+            <td>
+                <div class="rp-action-buttons">
+                    ${!role.isSystem ? `
+                        <button class="rp-action-btn edit" onclick="RolesPermissions.editRole('${role._id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="rp-action-btn delete" onclick="RolesPermissions.confirmDelete('${role._id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    ` : '-'}
+                </div>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+},
+    escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+},
 
     updatePagination() {
-        const totalPages = Math.ceil(this.state.totalItems / this.state.itemsPerPage);
-        const startRange = ((this.state.currentPage - 1) * this.state.itemsPerPage) + 1;
-        const endRange = Math.min(startRange + this.state.itemsPerPage - 1, this.state.totalItems);
+    const totalPages = Math.ceil(this.state.totalItems / this.state.itemsPerPage);
+    const startRange = Math.min(
+        ((this.state.currentPage - 1) * this.state.itemsPerPage) + 1,
+        this.state.totalItems
+    );
+    const endRange = Math.min(
+        startRange + this.state.itemsPerPage - 1,
+        this.state.totalItems
+    );
 
-        // Update range display
-        document.getElementById('rpStartRange').textContent = startRange;
-        document.getElementById('rpEndRange').textContent = endRange;
-        document.getElementById('rpTotalItems').textContent = this.state.totalItems;
+    // Update range display
+    document.getElementById('rpStartRange').textContent = this.state.totalItems > 0 ? startRange : 0;
+    document.getElementById('rpEndRange').textContent = endRange;
+    document.getElementById('rpTotalItems').textContent = this.state.totalItems;
 
-        // Update pagination buttons
-        document.getElementById('rpPrevPage').disabled = this.state.currentPage === 1;
-        document.getElementById('rpNextPage').disabled = this.state.currentPage === totalPages;
+    // Update pagination buttons
+    document.getElementById('rpPrevPage').disabled = this.state.currentPage === 1;
+    document.getElementById('rpNextPage').disabled = this.state.currentPage === totalPages || totalPages === 0;
 
-        // Render page numbers
-        this.renderPageNumbers(totalPages);
-    },
+    // Render page numbers
+    this.renderPageNumbers(totalPages);
+}
 
     renderPageNumbers(totalPages) {
         const pageNumbers = document.getElementById('rpPageNumbers');
@@ -308,14 +354,14 @@ const RolesPermissions = {
     },
 
     updateStats() {
-        const totalRoles = this.state.totalItems;
-        const activeRoles = this.state.roles.filter(role => role.status === 'active').length;
-        const customRoles = this.state.roles.filter(role => !role.isSystem).length;
+    const totalRoles = this.state.roles.length;
+    const activeRoles = this.state.roles.filter(role => role.status === 'active').length;
+    const customRoles = this.state.roles.filter(role => !role.isSystem).length;
 
-        document.getElementById('rpTotalRoles').textContent = totalRoles;
-        document.getElementById('rpActiveRoles').textContent = activeRoles;
-        document.getElementById('rpCustomRoles').textContent = customRoles;
-    },
+    document.getElementById('rpTotalRoles').textContent = totalRoles;
+    document.getElementById('rpActiveRoles').textContent = activeRoles;
+    document.getElementById('rpCustomRoles').textContent = customRoles;
+},
 
     setupPermissionsUI() {
         const container = document.getElementById('rpPermissionsContainer');
