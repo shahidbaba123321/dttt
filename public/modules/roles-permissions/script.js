@@ -40,6 +40,8 @@ const RolesPermissions = {
 
     // Initialize module
     init() {
+                console.log('Initializing Roles & Permissions module');
+
         this.attachEventListeners();
         this.loadRoles();
         this.updateStats();
@@ -48,8 +50,10 @@ const RolesPermissions = {
     // Event Listeners
     attachEventListeners() {
         // Create Role Button
-        document.getElementById('rpCreateRoleBtn').addEventListener('click', () => {
-            this.openRoleModal();
+        const createBtn = document.querySelector('.rp-create-btn');
+        if (createBtn) {
+            createBtn.addEventListener('click', () => this.openCreateRoleModal());
+        }
         });
 
         // Search Input
@@ -126,6 +130,20 @@ const RolesPermissions = {
             }
         });
     },
+
+openCreateRoleModal() {
+        console.log('Opening create role modal');
+        const modal = document.getElementById('rpRoleModal');
+        if (modal) {
+            modal.classList.add('show');
+            // Reset form
+            document.getElementById('rpRoleForm').reset();
+            document.getElementById('rpModalTitle').textContent = 'Create New Role';
+        } else {
+            console.error('Modal element not found');
+        }
+    },
+
 
     // API Calls
     async loadRoles() {
@@ -382,3 +400,8 @@ const RolesPermissions = {
 document.addEventListener('DOMContentLoaded', () => {
     RolesPermissions.init();
 });
+// Ensure the module is initialized when loaded
+if (typeof window !== 'undefined') {
+    window.RolesPermissions = RolesPermissions;
+    // Don't auto-initialize, let the module loader handle it
+}
