@@ -708,97 +708,104 @@
             window.location.href = 'login.html';
         }
 
-        function loadModule(moduleName) {
-            const contentArea = document.querySelector('.content');
-            const token = localStorage.getItem('token');
-            
-            if (!token) {
-                window.location.href = 'login.html';
-                return;
-            }
+     function loadModule(moduleName) {
+    const contentArea = document.querySelector('.content');
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+        window.location.href = 'login.html';
+        return;
+    }
 
-            // Show loading state
-            contentArea.innerHTML = `
-                <div class="loading-spinner">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <span>Loading...</span>
-                </div>
-            `;
+    // Show loading state
+    contentArea.innerHTML = `
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Loading...</span>
+        </div>
+    `;
 
-            // Define module paths
-            const modulePaths = {
-                'roles-permissions': {
-                    html: '/modules/roles-permissions/index.html',
-                    css: '/modules/roles-permissions/styles.css',
-                    js: '/modules/roles-permissions/script.js'
-                }
-                // Add other module paths here as needed
-            };
-
-            const selectedModule = modulePaths[moduleName];
-            if (!selectedModule) {
-                contentArea.innerHTML = `
-                    <div class="error">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <p>Module not found</p>
-                    </div>
-                `;
-                return;
-            }
-
-            // Load module resources
-            Promise.all([
-                fetch(selectedModule.html).then(r => r.text()),
-                fetch(selectedModule.css).then(r => r.text()),
-                fetch(selectedModule.js).then(r => r.text())
-            ]).then(([html, css, js]) => {
-                // Remove any previous module styles
-                const existingStyle = document.getElementById('moduleStyles');
-                if (existingStyle) {
-                    existingStyle.remove();
-                }
-
-                // Add new module styles
-                const styleElement = document.createElement('style');
-                styleElement.id = 'moduleStyles';
-                styleElement.textContent = css;
-                document.head.appendChild(styleElement);
-
-                // Update content
-                contentArea.innerHTML = html;
-
-                // Remove any previous module scripts
-                const existingScript = document.getElementById('moduleScript');
-                if (existingScript) {
-                    existingScript.remove();
-                }
-
-                // Add the module script
-                const scriptElement = document.createElement('script');
-                scriptElement.id = 'moduleScript';
-                scriptElement.textContent = js;
-                document.body.appendChild(scriptElement);
-
-                // Initialize module if it has an init function
-                setTimeout(() => {
-                    if (window[moduleName] && typeof window[moduleName].init === 'function') {
-                        window[moduleName].init();
-                    }
-                }, 0);
-
-                // Update URL hash without triggering a page reload
-                history.replaceState(null, '', `#${moduleName}`);
-
-            }).catch(error => {
-                console.error('Error loading module:', error);
-                contentArea.innerHTML = `
-                    <div class="error">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <p>Error loading module. Please try again.</p>
-                    </div>
-                `;
-            });
+    // Define module paths
+    const modulePaths = {
+        'roles-permissions': {
+            html: '/modules/roles-permissions/index.html',
+            css: '/modules/roles-permissions/styles.css',
+            js: '/modules/roles-permissions/script.js'
         }
+    };
+
+    const selectedModule = modulePaths[moduleName];
+    if (!selectedModule) {
+        contentArea.innerHTML = `
+            <div class="error">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Module not found</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Load module resources
+    Promise.all([
+        fetch(selectedModule.html).then(r => r.text()),
+        fetch(selectedModule.css).then(r => r.text()),
+        fetch(selectedModule.js).then(r => r.text())
+    ]).then(([html, css, js]) => {
+        // Remove any previous module styles
+        const existingStyle = document.getElementById('moduleStyles');
+        if (existingStyle) {
+            existingStyle.remove();
+        }
+
+        // Add new module styles
+        const styleElement = document.createElement('style');
+        styleElement.id = 'moduleStyles';
+        styleElement.textContent = css;
+        document.head.appendChild(styleElement);
+
+        // Update content
+        contentArea.innerHTML = html;
+
+        // Remove any previous module scripts
+        const existingScript = document.getElementById('moduleScript');
+        if (existingScript) {
+            existingScript.remove();
+        }
+
+        // Clean up any existing module instance
+        if (window.RolesPermissions) {
+            delete window.RolesPermissions;
+        }
+
+        // Add the module script
+        const scriptElement = document.createElement('script');
+        scriptElement.id = 'moduleScript';
+        scriptElement.textContent = `
+            window.RolesPermissions = (function() {
+                ${js}
+                return RolesPermissions;
+            })();
+            
+            // Initialize the module
+            if (window.RolesPermissions && typeof window.RolesPermissions.init === 'function') {
+                window.RolesPermissions.init();
+            }
+        `;
+        document.body.appendChild(scriptElement);
+
+        // Update URL hash without triggering a page reload
+        history.replaceState(null, '', `#${moduleName}`);
+
+    }).catch(error => {
+        console.error('Error loading module:', error);
+        contentArea.innerHTML = `
+            <div class="error">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Error loading module. Please try again.</p>
+            </div>
+        `;
+    });
+}
     </script>
 </body>
 </html>
