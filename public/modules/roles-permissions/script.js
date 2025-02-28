@@ -37,10 +37,7 @@ const RolesPermissions = {
             ]
         }
     },
-// Initialize if loaded directly
-if (typeof window !== 'undefined') {
-    window.RolesPermissions = RolesPermissions;
-},
+
     // Initialize module
     init() {
         console.log('Initializing Roles & Permissions module');
