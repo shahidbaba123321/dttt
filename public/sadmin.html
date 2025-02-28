@@ -455,13 +455,41 @@ body {
     opacity: 1;
     visibility: visible;
 }
-        #moduleFrame {
+     #moduleFrame {
     width: 100%;
     height: calc(100vh - var(--header-height) - 4rem);
     border: none;
     background: white;
     border-radius: 12px;
     box-shadow: var(--shadow-sm);
+    transition: opacity 0.3s ease;
+}
+
+/* Module Container */
+.page-content {
+    padding: 2rem;
+    height: calc(100vh - var(--header-height));
+    overflow: auto;
+}
+
+/* Loading State */
+.module-loading {
+    position: relative;
+}
+
+.module-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--primary-color);
 }
 
 /* Animations */
@@ -674,7 +702,7 @@ body {
                         <a href="#" class="submenu-item">
                             <span>Users List</span>
                         </a>
-                        <a href="#" class="submenu-item">
+                        <a href="#" class="submenu-item" data-module="roles-permissions.html">
                             <span>Roles & Permissions</span>
                         </a>
                         <a href="#" class="submenu-item">
@@ -754,6 +782,7 @@ body {
        document.addEventListener('DOMContentLoaded', function() {
     initializeDashboard();
     checkAuthentication();
+           initializeModuleLoading();
 });
 
 function initializeDashboard() {
@@ -830,6 +859,55 @@ function initializeDashboard() {
             }
         });
     });
+
+    function initializeModuleLoading() {
+    // Get all menu items
+    const menuItems = document.querySelectorAll('.menu-item');
+    const moduleFrame = document.getElementById('moduleFrame');
+    
+    // Store current active module
+    let currentModule = '';
+
+    menuItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            // Get module path from data attribute
+            const modulePath = item.getAttribute('data-module');
+            if (!modulePath) return;
+
+            // Update active state
+            menuItems.forEach(mi => mi.classList.remove('active'));
+            item.classList.add('active');
+
+            // Load module if different from current
+            if (currentModule !== modulePath) {
+                loadModule(modulePath);
+                currentModule = modulePath;
+            }
+        });
+    });
+
+    // Function to load module in iframe
+    function loadModule(modulePath) {
+        // Show loading state
+        moduleFrame.style.opacity = '0.5';
+        
+        // Update iframe src
+        moduleFrame.src = modulePath;
+
+        // Handle iframe load event
+        moduleFrame.onload = () => {
+            moduleFrame.style.opacity = '1';
+        };
+
+        // Handle iframe load error
+        moduleFrame.onerror = () => {
+            showNotification('Error loading module', 'error');
+            moduleFrame.style.opacity = '1';
+        };
+    }
+}
 
     // Close all submenus function
     function closeAllSubmenus() {
@@ -998,6 +1076,52 @@ function showNotification(message, type = 'success') {
             setTimeout(() => notification.remove(), 300);
         }, 3000);
     }, 100);
+}
+        // Handle messages from iframe
+window.addEventListener('message', function(event) {
+    // Verify origin for security
+    if (event.origin !== window.location.origin) return;
+
+    const { type, message } = event.data;
+    
+    switch (type) {
+        case 'notification':
+            showNotification(message.text, message.style);
+            break;
+        case 'updateTitle':
+            updatePageTitle(message.title);
+            break;
+        case 'requireAuth':
+            handleAuthRequest();
+            break;
+        // Add more message handlers as needed
+    }
+});
+
+// Function to send data to iframe
+function sendToModule(data) {
+    const moduleFrame = document.getElementById('moduleFrame');
+    if (moduleFrame && moduleFrame.contentWindow) {
+        moduleFrame.contentWindow.postMessage(data, window.location.origin);
+    }
+}
+
+// Handle authentication requests from iframe
+function handleAuthRequest() {
+    const token = localStorage.getItem('token');
+    sendToModule({
+        type: 'authData',
+        data: {
+            token,
+            userEmail: localStorage.getItem('userEmail'),
+            userRole: localStorage.getItem('userRole')
+        }
+    });
+}
+
+// Update page title
+function updatePageTitle(title) {
+    document.title = `${title} - WorkWise Pro`;
 }
 
 // Error Handler
