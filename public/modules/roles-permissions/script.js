@@ -1,6 +1,7 @@
-window.RolesPermissions = {
-        API_BASE_URL: 'https://18.215.160.136.nip.io/api',
+const API_BASE_URL = 'https://18.215.160.136.nip.io/api';
 
+window.RolesPermissions = {
+        API_BASE_URL,
     // State management
     state: {
         roles: [],
