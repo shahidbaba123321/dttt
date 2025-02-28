@@ -781,16 +781,19 @@
             // Create a script element for the module
             const scriptElement = document.createElement('script');
             scriptElement.id = 'moduleScript';
+            
+            // Convert the module code to a string representation
+            const moduleCode = js.replace(/^window\.RolesPermissions\s*=\s*/, '');
+            
             scriptElement.textContent = `
-                window.RolesPermissions = (function() {
-                    return ${js};
-                })();
+                window.RolesPermissions = ${moduleCode};
                 
                 // Initialize the module
                 if (window.RolesPermissions && typeof window.RolesPermissions.init === 'function') {
                     window.RolesPermissions.init();
                 }
             `;
+            
             document.body.appendChild(scriptElement);
 
             // Update URL hash without triggering a page reload
