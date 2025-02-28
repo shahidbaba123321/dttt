@@ -13,143 +13,137 @@ const RolesPermissions = {
         selectedRoleId: null,
         permissions: {
             'Dashboard & Analytics': [
-                'view_dashboard',
-                'view_analytics',
-                'export_reports',
-                'manage_widgets'
+                { id: 'view_dashboard', name: 'View Dashboard' },
+                { id: 'view_analytics', name: 'View Analytics' },
+                { id: 'export_reports', name: 'Export Reports' },
+                { id: 'manage_widgets', name: 'Manage Widgets' }
             ],
             'User Management': [
-                'create_users',
-                'edit_users',
-                'delete_users',
-                'view_users',
-                'manage_user_status',
-                'manage_2fa',
-                'assign_roles'
+                { id: 'create_users', name: 'Create Users' },
+                { id: 'edit_users', name: 'Edit Users' },
+                { id: 'delete_users', name: 'Delete Users' },
+                { id: 'view_users', name: 'View Users' },
+                { id: 'manage_user_status', name: 'Manage User Status' },
+                { id: 'manage_2fa', name: 'Manage 2FA' },
+                { id: 'assign_roles', name: 'Assign Roles' }
             ],
             'System Settings': [
-                'view_settings',
-                'edit_settings',
-                'manage_backups',
-                'view_logs',
-                'manage_integrations',
-                'manage_api_keys'
+                { id: 'view_settings', name: 'View Settings' },
+                { id: 'edit_settings', name: 'Edit Settings' },
+                { id: 'manage_backups', name: 'Manage Backups' },
+                { id: 'view_logs', name: 'View Logs' },
+                { id: 'manage_integrations', name: 'Manage Integrations' },
+                { id: 'manage_api_keys', name: 'Manage API Keys' }
             ]
         }
     },
 
     // Initialize module
     init() {
-                console.log('Initializing Roles & Permissions module');
-
+        console.log('Initializing Roles & Permissions module');
         this.attachEventListeners();
         this.loadRoles();
-        this.updateStats();
+        this.setupPermissionsUI();
     },
 
     // Event Listeners
     attachEventListeners() {
         // Create Role Button
-        const createBtn = document.querySelector('.rp-create-btn');
+        const createBtn = document.getElementById('rpCreateRoleBtn');
         if (createBtn) {
             createBtn.addEventListener('click', () => this.openCreateRoleModal());
         }
-        });
 
         // Search Input
-        document.getElementById('rpSearchInput').addEventListener('input', (e) => {
-            this.state.searchTerm = e.target.value;
-            this.state.currentPage = 1;
-            this.loadRoles();
-        });
+        const searchInput = document.getElementById('rpSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                this.state.searchTerm = e.target.value;
+                this.state.currentPage = 1;
+                this.loadRoles();
+            });
+        }
 
         // Filters
-        document.getElementById('rpStatusFilter').addEventListener('change', (e) => {
-            this.state.statusFilter = e.target.value;
-            this.state.currentPage = 1;
-            this.loadRoles();
-        });
+        const statusFilter = document.getElementById('rpStatusFilter');
+        const typeFilter = document.getElementById('rpTypeFilter');
 
-        document.getElementById('rpTypeFilter').addEventListener('change', (e) => {
-            this.state.typeFilter = e.target.value;
-            this.state.currentPage = 1;
-            this.loadRoles();
-        });
+        if (statusFilter) {
+            statusFilter.addEventListener('change', (e) => {
+                this.state.statusFilter = e.target.value;
+                this.state.currentPage = 1;
+                this.loadRoles();
+            });
+        }
+
+        if (typeFilter) {
+            typeFilter.addEventListener('change', (e) => {
+                this.state.typeFilter = e.target.value;
+                this.state.currentPage = 1;
+                this.loadRoles();
+            });
+        }
 
         // Modal Close Buttons
-        document.getElementById('rpCloseModal').addEventListener('click', () => {
-            this.closeRoleModal();
-        });
-
-        document.getElementById('rpCancelBtn').addEventListener('click', () => {
-            this.closeRoleModal();
+        const closeModalBtns = ['rpCloseModal', 'rpCancelBtn', 'rpCloseDeleteModal', 'rpCancelDeleteBtn'];
+        closeModalBtns.forEach(btnId => {
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                btn.addEventListener('click', () => this.closeModals());
+            }
         });
 
         // Save Role Button
-        document.getElementById('rpSaveBtn').addEventListener('click', () => {
-            this.saveRole();
-        });
+        const saveBtn = document.getElementById('rpSaveBtn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => this.saveRole());
+        }
 
-        // Delete Modal Buttons
-        document.getElementById('rpCloseDeleteModal').addEventListener('click', () => {
-            this.closeDeleteModal();
-        });
-
-        document.getElementById('rpCancelDeleteBtn').addEventListener('click', () => {
-            this.closeDeleteModal();
-        });
-
-        document.getElementById('rpConfirmDeleteBtn').addEventListener('click', () => {
-            this.deleteRole();
-        });
-
-        // Category Checkboxes
-        document.querySelectorAll('.rp-category-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', (e) => {
-                const category = e.target.closest('.rp-permission-category');
-                const permissions = category.querySelectorAll('.rp-permission-item input');
-                permissions.forEach(perm => {
-                    perm.checked = e.target.checked;
-                });
-            });
-        });
+        // Delete Role Button
+        const deleteBtn = document.getElementById('rpConfirmDeleteBtn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', () => this.deleteRole());
+        }
 
         // Pagination
-        document.getElementById('rpPrevPage').addEventListener('click', () => {
-            if (this.state.currentPage > 1) {
-                this.state.currentPage--;
-                this.loadRoles();
-            }
-        });
+        const prevPage = document.getElementById('rpPrevPage');
+        const nextPage = document.getElementById('rpNextPage');
 
-        document.getElementById('rpNextPage').addEventListener('click', () => {
-            const maxPages = Math.ceil(this.state.totalItems / this.state.itemsPerPage);
-            if (this.state.currentPage < maxPages) {
-                this.state.currentPage++;
-                this.loadRoles();
-            }
-        });
-    },
+        if (prevPage) {
+            prevPage.addEventListener('click', () => {
+                if (this.state.currentPage > 1) {
+                    this.state.currentPage--;
+                    this.loadRoles();
+                }
+            });
+        }
 
-openCreateRoleModal() {
-        console.log('Opening create role modal');
-        const modal = document.getElementById('rpRoleModal');
-        if (modal) {
-            modal.classList.add('show');
-            // Reset form
-            document.getElementById('rpRoleForm').reset();
-            document.getElementById('rpModalTitle').textContent = 'Create New Role';
-        } else {
-            console.error('Modal element not found');
+        if (nextPage) {
+            nextPage.addEventListener('click', () => {
+                const maxPages = Math.ceil(this.state.totalItems / this.state.itemsPerPage);
+                if (this.state.currentPage < maxPages) {
+                    this.state.currentPage++;
+                    this.loadRoles();
+                }
+            });
         }
     },
-
 
     // API Calls
     async loadRoles() {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`https://18.215.160.136.nip.io/api/roles?page=${this.state.currentPage}&limit=${this.state.itemsPerPage}&search=${this.state.searchTerm}&status=${this.state.statusFilter}&type=${this.state.typeFilter}&sort=${this.state.sortField}&order=${this.state.sortOrder}`, {
+            const queryParams = new URLSearchParams({
+                page: this.state.currentPage,
+                limit: this.state.itemsPerPage,
+                search: this.state.searchTerm,
+                status: this.state.statusFilter,
+                type: this.state.typeFilter,
+                sort: this.state.sortField,
+                order: this.state.sortOrder
+            });
+
+            const response = await fetch(`https://18.215.160.136.nip.io/api/roles?${queryParams}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -163,17 +157,21 @@ openCreateRoleModal() {
                 this.updatePagination();
                 this.updateStats();
             } else {
-                this.showToast('Error loading roles', 'error');
+                throw new Error(data.message || 'Failed to load roles');
             }
         } catch (error) {
             console.error('Error loading roles:', error);
-            this.showToast('Failed to load roles', 'error');
+            this.showToast(error.message || 'Error loading roles', 'error');
         }
     },
 
     async saveRole() {
         try {
             const roleData = this.getRoleFormData();
+            if (!this.validateRoleData(roleData)) {
+                return;
+            }
+
             const token = localStorage.getItem('token');
             const url = this.state.selectedRoleId 
                 ? `https://18.215.160.136.nip.io/api/roles/${this.state.selectedRoleId}`
@@ -191,14 +189,14 @@ openCreateRoleModal() {
             const data = await response.json();
             if (data.success) {
                 this.showToast(`Role ${this.state.selectedRoleId ? 'updated' : 'created'} successfully`, 'success');
-                this.closeRoleModal();
+                this.closeModals();
                 this.loadRoles();
             } else {
-                throw new Error(data.message);
+                throw new Error(data.message || 'Failed to save role');
             }
         } catch (error) {
             console.error('Error saving role:', error);
-            this.showToast(error.message || 'Failed to save role', 'error');
+            this.showToast(error.message || 'Error saving role', 'error');
         }
     },
 
@@ -217,30 +215,27 @@ openCreateRoleModal() {
             const data = await response.json();
             if (data.success) {
                 this.showToast('Role deleted successfully', 'success');
-                this.closeDeleteModal();
+                this.closeModals();
                 this.loadRoles();
             } else {
-                throw new Error(data.message);
+                throw new Error(data.message || 'Failed to delete role');
             }
         } catch (error) {
             console.error('Error deleting role:', error);
-            this.showToast(error.message || 'Failed to delete role', 'error');
+            this.showToast(error.message || 'Error deleting role', 'error');
         }
     },
 
     // UI Rendering
     renderRoles() {
         const tableBody = document.getElementById('rpRolesTableBody');
-        tableBody.innerHTML = '';
+        if (!tableBody) return;
 
+        tableBody.innerHTML = '';
         this.state.roles.forEach(role => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>
-                    <div class="rp-role-name">
-                        <span>${role.name}</span>
-                    </div>
-                </td>
+                <td>${role.name}</td>
                 <td>${role.description || '-'}</td>
                 <td>${role.userCount || 0}</td>
                 <td>
@@ -276,13 +271,16 @@ openCreateRoleModal() {
         const startRange = ((this.state.currentPage - 1) * this.state.itemsPerPage) + 1;
         const endRange = Math.min(startRange + this.state.itemsPerPage - 1, this.state.totalItems);
 
+        // Update range display
         document.getElementById('rpStartRange').textContent = startRange;
         document.getElementById('rpEndRange').textContent = endRange;
         document.getElementById('rpTotalItems').textContent = this.state.totalItems;
 
+        // Update pagination buttons
         document.getElementById('rpPrevPage').disabled = this.state.currentPage === 1;
         document.getElementById('rpNextPage').disabled = this.state.currentPage === totalPages;
 
+        // Render page numbers
         this.renderPageNumbers(totalPages);
     },
 
@@ -310,36 +308,92 @@ openCreateRoleModal() {
     },
 
     updateStats() {
-        document.getElementById('rpTotalRoles').textContent = this.state.totalItems;
+        const totalRoles = this.state.totalItems;
         const activeRoles = this.state.roles.filter(role => role.status === 'active').length;
         const customRoles = this.state.roles.filter(role => !role.isSystem).length;
-        
+
+        document.getElementById('rpTotalRoles').textContent = totalRoles;
         document.getElementById('rpActiveRoles').textContent = activeRoles;
         document.getElementById('rpCustomRoles').textContent = customRoles;
     },
 
-    // Modal Management
-    openRoleModal(roleId = null) {
-        this.state.selectedRoleId = roleId;
-        document.getElementById('rpModalTitle').textContent = roleId ? 'Edit Role' : 'Create New Role';
-        document.getElementById('rpRoleForm').reset();
-        
-        if (roleId) {
-            const role = this.state.roles.find(r => r._id === roleId);
-            if (role) {
-                document.getElementById('rpRoleName').value = role.name;
-                document.getElementById('rpRoleDescription').value = role.description || '';
-                document.getElementById('rpRoleStatus').checked = role.status === 'active';
-                this.setPermissions(role.permissions);
-            }
-        }
+    setupPermissionsUI() {
+        const container = document.getElementById('rpPermissionsContainer');
+        if (!container) return;
 
+        container.innerHTML = '';
+        Object.entries(this.state.permissions).forEach(([category, permissions]) => {
+            const categoryDiv = document.createElement('div');
+            categoryDiv.className = 'rp-permission-category';
+            categoryDiv.innerHTML = `
+                <div class="rp-category-header">
+                    <div class="rp-category-title">
+                        <i class="fas fa-folder"></i>
+                        ${category}
+                    </div>
+                    <div class="rp-category-toggle">
+                        <input type="checkbox" class="rp-category-checkbox" id="rp${category.replace(/\s+/g, '')}">
+                        <label for="rp${category.replace(/\s+/g, '')}">Select All</label>
+                    </div>
+                </div>
+                <div class="rp-permission-list">
+                    ${permissions.map(perm => `
+                        <div class="rp-permission-item">
+                            <input type="checkbox" 
+                                id="rp${perm.id}" 
+                                name="permissions" 
+                                value="${perm.id}">
+                            <label for="rp${perm.id}">${perm.name}</label>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            container.appendChild(categoryDiv);
+
+            // Add category toggle functionality
+            const categoryCheckbox = categoryDiv.querySelector('.rp-category-checkbox');
+            const permissionCheckboxes = categoryDiv.querySelectorAll('.rp-permission-item input');
+            
+            categoryCheckbox.addEventListener('change', (e) => {
+                permissionCheckboxes.forEach(checkbox => {
+                    checkbox.checked = e.target.checked;
+                });
+            });
+
+            // Update category checkbox when individual permissions change
+            permissionCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    categoryCheckbox.checked = Array.from(permissionCheckboxes)
+                        .every(cb => cb.checked);
+                });
+            });
+        });
+    },
+
+    // Modal Management
+    openCreateRoleModal() {
+        this.state.selectedRoleId = null;
+        document.getElementById('rpModalTitle').textContent = 'Create New Role';
+        document.getElementById('rpRoleForm').reset();
         document.getElementById('rpRoleModal').classList.add('show');
     },
 
-    closeRoleModal() {
-        document.getElementById('rpRoleModal').classList.remove('show');
-        this.state.selectedRoleId = null;
+    editRole(roleId) {
+        const role = this.state.roles.find(r => r._id === roleId);
+        if (!role) return;
+
+        this.state.selectedRoleId = roleId;
+        document.getElementById('rpModalTitle').textContent = 'Edit Role';
+        document.getElementById('rpRoleName').value = role.name;
+        document.getElementById('rpRoleDescription').value = role.description || '';
+        document.getElementById('rpRoleStatus').checked = role.status === 'active';
+        
+        // Set permissions
+        document.querySelectorAll('.rp-permission-item input').forEach(checkbox => {
+            checkbox.checked = role.permissions?.includes(checkbox.value);
+        });
+
+        document.getElementById('rpRoleModal').classList.add('show');
     },
 
     confirmDelete(roleId) {
@@ -347,36 +401,33 @@ openCreateRoleModal() {
         document.getElementById('rpDeleteModal').classList.add('show');
     },
 
-    closeDeleteModal() {
+    closeModals() {
+        document.getElementById('rpRoleModal').classList.remove('show');
         document.getElementById('rpDeleteModal').classList.remove('show');
         this.state.selectedRoleId = null;
     },
 
     // Utility Functions
     getRoleFormData() {
-        const form = document.getElementById('rpRoleForm');
-        const permissions = Array.from(form.querySelectorAll('.rp-permission-item input:checked'))
-            .map(input => input.value);
-
         return {
             name: document.getElementById('rpRoleName').value,
             description: document.getElementById('rpRoleDescription').value,
             status: document.getElementById('rpRoleStatus').checked ? 'active' : 'inactive',
-            permissions: permissions
+            permissions: Array.from(document.querySelectorAll('.rp-permission-item input:checked'))
+                .map(input => input.value)
         };
     },
 
-    setPermissions(permissions = []) {
-        document.querySelectorAll('.rp-permission-item input').forEach(input => {
-            input.checked = permissions.includes(input.value);
-        });
-
-        // Update category checkboxes
-        document.querySelectorAll('.rp-category-checkbox').forEach(checkbox => {
-            const category = checkbox.closest('.rp-permission-category');
-            const permInputs = category.querySelectorAll('.rp-permission-item input');
-            checkbox.checked = Array.from(permInputs).every(input => input.checked);
-        });
+    validateRoleData(data) {
+        if (!data.name.trim()) {
+            this.showToast('Role name is required', 'error');
+            return false;
+        }
+        if (data.name.length < 3) {
+            this.showToast('Role name must be at least 3 characters', 'error');
+            return false;
+        }
+        return true;
     },
 
     showToast(message, type = 'success') {
@@ -400,8 +451,3 @@ openCreateRoleModal() {
 document.addEventListener('DOMContentLoaded', () => {
     RolesPermissions.init();
 });
-// Ensure the module is initialized when loaded
-if (typeof window !== 'undefined') {
-    window.RolesPermissions = RolesPermissions;
-    // Don't auto-initialize, let the module loader handle it
-}
