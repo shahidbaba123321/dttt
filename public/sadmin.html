@@ -1295,6 +1295,9 @@ let rolesData = [];
 let sessionTimer;
 let tokenCheckInterval;
 
+        const SESSION_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
+const TOKEN_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
+
 // Add this at the beginning of your JavaScript, after global variables
 function initializeEventListeners() {
     // Sidebar navigation
@@ -1346,10 +1349,9 @@ function initializeEventListeners() {
 // Main Initialization
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // Handle initial login
+        // Handle initial login parameters
         const params = getQueryParams();
         if (params.token) {
-            console.log('Fresh login detected, setting credentials');
             localStorage.setItem('token', params.token);
             localStorage.setItem('userRole', params.role);
             localStorage.setItem('userEmail', params.email);
@@ -1357,36 +1359,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Check authentication
-        const token = localStorage.getItem('token');
-        const userRole = localStorage.getItem('userRole');
-        const userEmail = localStorage.getItem('userEmail');
-
-        if (!token || !userRole || !userEmail) {
-            redirectToLogin();
-            return;
+        const isAuthenticated = await checkAuthentication();
+        if (!isAuthenticated) {
+            if (!params.token) {
+                window.location.href = 'login.html';
+                return;
+            }
         }
 
-        // Verify token
-        const isValid = await verifyToken(token);
-        if (!isValid && !params.token) {
-            redirectToLogin();
-            return;
-        }
-
-        // Initialize everything
-        setupEventListeners();
-        initializeDashboard();
+        // Initialize session management
         initializeSession();
+
+        // Initialize dashboard
+        initializeDashboard();
         loadUserInfo();
         loadInitialContent();
 
     } catch (error) {
         console.error('Initialization error:', error);
-        if (!window.location.search.includes('token=')) {
-            redirectToLogin();
-        }
+        showNotification('Failed to initialize application', 'error');
     }
 });
+
 
 // Error Handling
 window.addEventListener('unhandledrejection', function(event) {
@@ -1396,13 +1390,30 @@ window.addEventListener('unhandledrejection', function(event) {
 
 // Session Management
 function initializeSession() {
-    startSessionMonitor();
-    
+    // Clear any existing timers
+    clearInterval(tokenCheckInterval);
+    clearTimeout(sessionTimer);
+
+    // Start new timers
+    startTokenCheck();
+    resetSessionTimer();
+
     // Add activity listeners
-    ['click', 'keypress', 'mousemove', 'scroll'].forEach(event => {
+    const events = ['click', 'keypress', 'mousemove', 'scroll', 'touchstart'];
+    events.forEach(event => {
         document.addEventListener(event, resetSessionTimer);
     });
 }
+function startTokenCheck() {
+    // Check token validity every 5 minutes
+    tokenCheckInterval = setInterval(async () => {
+        const isValid = await checkAuthentication();
+        if (!isValid) {
+            handleSessionExpired();
+        }
+    }, TOKEN_CHECK_INTERVAL);
+}
+
 
 function startSessionMonitor() {
     clearInterval(tokenCheckInterval);
@@ -1423,7 +1434,7 @@ function startSessionMonitor() {
 
 function resetSessionTimer() {
     clearTimeout(sessionTimer);
-    sessionTimer = setTimeout(handleSessionTimeout, 1800000); // 30 minutes
+    sessionTimer = setTimeout(handleSessionExpired, SESSION_DURATION);
 }
 
 function handleSessionTimeout() {
@@ -1432,7 +1443,54 @@ function handleSessionTimeout() {
     showNotification('Your session has expired. Please login again.', 'warning');
     redirectToLogin();
 }
+        function handleSessionExpired() {
+    clearInterval(tokenCheckInterval);
+    clearTimeout(sessionTimer);
+    showNotification('Your session has expired. Please login again.', 'warning');
+    clearUserSession();
+    window.location.href = 'login.html';
+}
 
+ // Authentication and Session Management
+async function checkAuthentication() {
+    try {
+        const token = localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+        const userEmail = localStorage.getItem('userEmail');
+
+        if (!token || !userRole || !userEmail) {
+            return false;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/verify-token`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            // Update current user
+            currentUser = data.user;
+            
+            // Reset session timer
+            resetSessionTimer();
+            return true;
+        }
+
+        return false;
+    } catch (error) {
+        console.error('Authentication check failed:', error);
+        return false;
+    }
+}       
+// Session Timer Management
+let sessionTimer = null;
+let tokenCheckInterval = null;
+        
 // Authentication Functions
 async function verifyToken(token) {
     try {
@@ -1717,9 +1775,9 @@ async function fetchRecentAuditLogs() {
 // API Request Handler
 async function makeAuthenticatedRequest(endpoint, options = {}) {
     try {
-        const token = getToken();
+        const token = localStorage.getItem('token');
         if (!token) {
-            redirectToLogin();
+            handleSessionExpired();
             return null;
         }
 
@@ -1742,10 +1800,11 @@ async function makeAuthenticatedRequest(endpoint, options = {}) {
         const response = await fetch(`${API_BASE_URL}${endpoint}`, mergedOptions);
         
         if (response.status === 401) {
+            // Only check token for non-verify-token endpoints
             if (!endpoint.includes('verify-token')) {
-                const isValid = await verifyToken(token);
+                const isValid = await checkAuthentication();
                 if (!isValid) {
-                    handleSessionTimeout();
+                    handleSessionExpired();
                     return null;
                 }
             }
@@ -1757,6 +1816,20 @@ async function makeAuthenticatedRequest(endpoint, options = {}) {
         throw error;
     }
 }
+        // Update the logout function
+function handleLogout() {
+    clearUserSession();
+    window.location.href = 'login.html';
+}
+    
+// Add this to your user menu click handler
+function toggleUserMenu() {
+    const dropdown = document.getElementById('userDropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('active');
+    }
+}    
+
         // User Management Functions
 async function initializeUserManagement() {
     try {
