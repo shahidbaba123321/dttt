@@ -200,10 +200,10 @@
 
         /* Header Styles */
         .main-content {
-            margin-left: var(--sidebar-width);
-            flex: 1;
-            transition: margin-left 0.3s ease;
-        }
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
 
         .main-content.expanded {
             margin-left: var(--sidebar-collapsed-width);
@@ -300,8 +300,12 @@
 
         /* Content Area */
         .content {
-            padding: calc(var(--header-height) + 2rem) 2rem 2rem;
-        }
+    padding: 20px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
 
         /* Responsive Design */
         @media (max-width: 1024px) {
@@ -689,22 +693,16 @@ function loadModule(moduleName) {
             css: '/modules/roles-permissions/styles.css',
             js: '/modules/roles-permissions/script.js'
         }
-        // Add other modules here as needed
     };
 
     const selectedModule = modulePaths[moduleName];
     if (!selectedModule) {
-        contentArea.innerHTML = `
-            <div class="error">
-                <i class="fas fa-exclamation-circle"></i>
-                <p>Module not found</p>
-            </div>
-        `;
+        contentArea.innerHTML = '<div class="error">Module not found</div>';
         return;
     }
 
     // Load module resources
-    Promise.all([
+   Promise.all([
         fetch(selectedModule.html).then(r => r.text()),
         fetch(selectedModule.css).then(r => r.text()),
         fetch(selectedModule.js).then(r => r.text())
@@ -735,6 +733,13 @@ function loadModule(moduleName) {
         scriptElement.id = 'moduleScript';
         scriptElement.textContent = js;
         document.body.appendChild(scriptElement);
+
+       // Initialize module
+        setTimeout(() => {
+            if (window[moduleName] && typeof window[moduleName].init === 'function') {
+                window[moduleName].init();
+            }
+        }, 0);
 
         // Initialize module if it has an init function
         if (window[moduleName] && typeof window[moduleName].init === 'function') {
