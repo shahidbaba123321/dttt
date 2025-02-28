@@ -777,10 +777,9 @@ body {
     </div>
 
     <script>
-       document.addEventListener('DOMContentLoaded', function() {
+     document.addEventListener('DOMContentLoaded', function() {
     initializeDashboard();
     checkAuthentication();
-           
 });
 
 function initializeDashboard() {
@@ -794,15 +793,6 @@ function initializeDashboard() {
     const profileTrigger = document.querySelector('.profile-trigger');
     const profileMenu = document.querySelector('.profile-menu');
     const logoutBtn = document.getElementById('logoutBtn');
-
-    // Initialize Tooltips for Menu Items
-    const menuItems = document.querySelectorAll('.menu-item');
-    menuItems.forEach(item => {
-        const text = item.querySelector('.menu-item-text')?.textContent || '';
-        item.setAttribute('data-tooltip', text);
-    });
-
-    initializeModuleLoading();
 
     // Sidebar Toggle Handler
     toggleBtn.addEventListener('click', (e) => {
@@ -824,14 +814,6 @@ function initializeDashboard() {
         }
     });
 
-    // Restore Sidebar State
-    const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-    if (sidebarCollapsed && window.innerWidth > 1024) {
-        sidebar.classList.add('collapsed');
-        mainContent.classList.add('expanded');
-        header.classList.add('expanded');
-    }
-
     // Mobile Overlay Click Handler
     mobileOverlay.addEventListener('click', () => {
         sidebar.classList.remove('mobile-show');
@@ -847,80 +829,10 @@ function initializeDashboard() {
             e.stopPropagation();
 
             const submenu = trigger.nextElementSibling;
-            const isOpen = submenu.classList.contains('open');
-
-            // Close all other submenus
-            closeAllSubmenus();
-
-            // Toggle clicked submenu
-            if (!isOpen) {
-                submenu.classList.add('open');
-                trigger.classList.add('active');
-            }
+            submenu.classList.toggle('open');
+            trigger.classList.toggle('active');
         });
     });
-
-    function initializeModuleLoading() {
-        // Get all menu items
-        const menuItems = document.querySelectorAll('.menu-item, .submenu-item');
-        const moduleFrame = document.getElementById('moduleFrame');
-        
-        // Store current active module
-        let currentModule = '';
-
-        menuItems.forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-
-                // Get module path from data attribute
-                const modulePath = item.getAttribute('data-module');
-                if (!modulePath) return;
-
-                // Update active state
-                menuItems.forEach(mi => mi.classList.remove('active'));
-                item.classList.add('active');
-
-                // Load module if different from current
-                if (currentModule !== modulePath) {
-                    loadModule(modulePath);
-                    currentModule = modulePath;
-                }
-            });
-        });
-    }
-    // Function to load module in iframe
-    function loadModule(modulePath) {
-        const moduleFrame = document.getElementById('moduleFrame');
-        if (!moduleFrame) return;
-
-        // Show loading state
-        moduleFrame.style.opacity = '0.5';
-        
-        // Update iframe src
-        moduleFrame.src = modulePath;
-
-        // Handle iframe load event
-        moduleFrame.onload = () => {
-            moduleFrame.style.opacity = '1';
-        };
-
-        // Handle iframe load error
-        moduleFrame.onerror = () => {
-            showNotification('Error loading module', 'error');
-            moduleFrame.style.opacity = '1';
-        };
-    }
-}
-
-    // Close all submenus function
-    function closeAllSubmenus() {
-        document.querySelectorAll('.submenu').forEach(sub => {
-            sub.classList.remove('open');
-        });
-        document.querySelectorAll('.has-submenu').forEach(trigger => {
-            trigger.classList.remove('active');
-        });
-    }
 
     // Profile Menu Handlers
     profileTrigger.addEventListener('click', (e) => {
@@ -931,11 +843,44 @@ function initializeDashboard() {
 
     // Close profile menu when clicking outside
     document.addEventListener('click', (e) => {
-        if (!profileTrigger.contains(e.target) && !profileMenu.contains(e.target)) {
+        if (!profileTrigger.contains(e.target)) {
             profileMenu.classList.remove('show');
             profileTrigger.classList.remove('active');
         }
     });
+
+    // Initialize Module Loading
+    const menuItems = document.querySelectorAll('.menu-item, .submenu-item');
+    const moduleFrame = document.getElementById('moduleFrame');
+    let currentModule = '';
+
+    menuItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+
+            // Get module path from data attribute
+            const modulePath = item.getAttribute('data-module');
+            if (!modulePath) return;
+
+            // Update active state
+            menuItems.forEach(mi => mi.classList.remove('active'));
+            item.classList.add('active');
+
+            // Load module if different from current
+            if (currentModule !== modulePath) {
+                loadModule(modulePath);
+                currentModule = modulePath;
+            }
+        });
+    });
+
+    // Restore Sidebar State
+    const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    if (sidebarCollapsed && window.innerWidth > 1024) {
+        sidebar.classList.add('collapsed');
+        mainContent.classList.add('expanded');
+        header.classList.add('expanded');
+    }
 
     // Window Resize Handler
     let resizeTimer;
@@ -943,12 +888,10 @@ function initializeDashboard() {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
             if (window.innerWidth > 1024) {
-                // Reset mobile states
                 sidebar.classList.remove('mobile-show');
                 mobileOverlay.classList.remove('show');
                 document.body.classList.remove('no-scroll');
                 
-                // Restore desktop collapsed state
                 const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
                 sidebar.classList.toggle('collapsed', sidebarCollapsed);
                 mainContent.classList.toggle('expanded', sidebarCollapsed);
@@ -962,33 +905,99 @@ function initializeDashboard() {
         e.preventDefault();
         handleLogout();
     });
+}
 
-    // Active Menu Item Handler
-    const currentPath = window.location.pathname;
-    menuItems.forEach(item => {
-        if (item.getAttribute('href') === currentPath) {
-            item.classList.add('active');
-            // If item is in submenu, open parent
-            const parentSubmenu = item.closest('.submenu');
-            if (parentSubmenu) {
-                parentSubmenu.classList.add('open');
-                parentSubmenu.previousElementSibling.classList.add('active');
-            }
+function loadModule(modulePath) {
+    const moduleFrame = document.getElementById('moduleFrame');
+    if (!moduleFrame) return;
+
+    // Show loading state
+    moduleFrame.style.opacity = '0.5';
+    
+    // Update iframe src
+    moduleFrame.src = modulePath;
+
+    // Handle iframe load event
+    moduleFrame.onload = () => {
+        moduleFrame.style.opacity = '1';
+    };
+
+    // Handle iframe load error
+    moduleFrame.onerror = () => {
+        showNotification('Error loading module', 'error');
+        moduleFrame.style.opacity = '1';
+    };
+}
+
+function closeAllSubmenus() {
+    document.querySelectorAll('.submenu').forEach(submenu => {
+        submenu.classList.remove('open');
+    });
+    document.querySelectorAll('.has-submenu').forEach(trigger => {
+        trigger.classList.remove('active');
+    });
+}
+
+// Handle messages from iframe
+window.addEventListener('message', function(event) {
+    // Verify origin for security
+    if (event.origin !== window.location.origin) return;
+
+    const { type, message } = event.data;
+    
+    switch (type) {
+        case 'notification':
+            showNotification(message.text, message.style);
+            break;
+        case 'updateTitle':
+            updatePageTitle(message.title);
+            break;
+        case 'requireAuth':
+            handleAuthRequest();
+            break;
+    }
+});
+
+function sendToModule(data) {
+    const moduleFrame = document.getElementById('moduleFrame');
+    if (moduleFrame && moduleFrame.contentWindow) {
+        moduleFrame.contentWindow.postMessage(data, window.location.origin);
+    }
+}
+
+function handleAuthRequest() {
+    const token = localStorage.getItem('token');
+    sendToModule({
+        type: 'authData',
+        data: {
+            token,
+            userEmail: localStorage.getItem('userEmail'),
+            userRole: localStorage.getItem('userRole')
         }
     });
+}
 
-    // Keyboard Navigation
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            profileMenu.classList.remove('show');
-            profileTrigger.classList.remove('active');
-            if (window.innerWidth <= 1024) {
-                sidebar.classList.remove('mobile-show');
-                mobileOverlay.classList.remove('show');
-                document.body.classList.remove('no-scroll');
-            }
-        }
-    });
+function updatePageTitle(title) {
+    document.title = `${title} - WorkWise Pro`;
+}
+
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.classList.add('show');
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }, 100);
 }
 
 async function checkAuthentication() {
@@ -1010,134 +1019,20 @@ async function checkAuthentication() {
 
         // Verify token
         await verifyToken(token);
-
     } catch (error) {
         console.error('Authentication check failed:', error);
         handleLogout();
     }
 }
 
-async function verifyToken(token) {
-    try {
-        const response = await fetch('https://18.215.160.136.nip.io/api/verify-token', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Token verification failed');
-        }
-
-        const data = await response.json();
-        
-        if (!data.success || data.user.role !== 'superadmin') {
-            throw new Error('Invalid user role');
-        }
-
-        // Update user permissions if needed
-        if (data.user.permissions) {
-            localStorage.setItem('userPermissions', JSON.stringify(data.user.permissions));
-        }
-
-    } catch (error) {
-        console.error('Token verification error:', error);
-        throw error;
-    }
-}
-
 function handleLogout() {
-    // Clear all auth-related data
     localStorage.removeItem('token');
     localStorage.removeItem('userEmail');
     localStorage.removeItem('userRole');
     localStorage.removeItem('userPermissions');
     localStorage.removeItem('sidebarCollapsed');
-
-    // Redirect to login page
     window.location.href = 'login.html';
 }
-
-// Utility Functions
-function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-        <span>${message}</span>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Trigger animation
-    setTimeout(() => {
-        notification.classList.add('show');
-        setTimeout(() => {
-            notification.classList.remove('show');
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
-    }, 100);
-}
-        // Handle messages from iframe
-window.addEventListener('message', function(event) {
-    // Verify origin for security
-    if (event.origin !== window.location.origin) return;
-
-    const { type, message } = event.data;
-    
-    switch (type) {
-        case 'notification':
-            showNotification(message.text, message.style);
-            break;
-        case 'updateTitle':
-            updatePageTitle(message.title);
-            break;
-        case 'requireAuth':
-            handleAuthRequest();
-            break;
-        // Add more message handlers as needed
-    }
-});
-
-// Function to send data to iframe
-function sendToModule(data) {
-    const moduleFrame = document.getElementById('moduleFrame');
-    if (moduleFrame && moduleFrame.contentWindow) {
-        moduleFrame.contentWindow.postMessage(data, window.location.origin);
-    }
-}
-
-// Handle authentication requests from iframe
-function handleAuthRequest() {
-    const token = localStorage.getItem('token');
-    sendToModule({
-        type: 'authData',
-        data: {
-            token,
-            userEmail: localStorage.getItem('userEmail'),
-            userRole: localStorage.getItem('userRole')
-        }
-    });
-}
-
-// Update page title
-function updatePageTitle(title) {
-    document.title = `${title} - WorkWise Pro`;
-}
-
-// Error Handler
-window.addEventListener('error', function(e) {
-    console.error('Global error:', e.error);
-    showNotification('An unexpected error occurred', 'error');
-});
-
-// Unhandled Promise Rejection Handler
-window.addEventListener('unhandledrejection', function(e) {
-    console.error('Unhandled promise rejection:', e.reason);
-    showNotification('An unexpected error occurred', 'error');
-});
     </script>
 </body>
 </html>
