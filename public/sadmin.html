@@ -203,11 +203,14 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    margin-left: var(--sidebar-width);
+    transition: margin-left 0.3s ease;
 }
 
+
         .main-content.expanded {
-            margin-left: var(--sidebar-collapsed-width);
-        }
+    margin-left: var(--sidebar-collapsed-width);
+}
 
         .header {
             height: var(--header-height);
@@ -217,7 +220,7 @@
             align-items: center;
             justify-content: flex-end;
             padding: 0 2rem;
-            position: fixed;
+            position: sticky;
             top: 0;
             right: 0;
             left: var(--sidebar-width);
@@ -299,13 +302,11 @@
         }
 
         /* Content Area */
-        .content {
+       .content {
+    flex: 1;
     padding: 20px;
-    width: 100%;
-    box-sizing: border-box;
-    overflow-x: hidden;
+    background: var(--background-color);
 }
-
 
         /* Responsive Design */
         @media (max-width: 1024px) {
@@ -729,10 +730,34 @@ function loadModule(moduleName) {
         }
 
         // Add new module script
-        const scriptElement = document.createElement('script');
+       const scriptElement = document.createElement('script');
         scriptElement.id = 'moduleScript';
-        scriptElement.textContent = js;
+        scriptElement.type = 'text/javascript';
+        // Ensure RolesPermissions object is created before executing module code
+        scriptElement.textContent = `
+            window.RolesPermissions = {
+                init() {
+                    this.loadRoles();
+                    this.attachEventListeners();
+                },
+                // Add other methods from your script.js here
+                ${js}
+            };
+            // Initialize the module
+            RolesPermissions.init();
+        `;
         document.body.appendChild(scriptElement);
+
+    }).catch(error => {
+        console.error('Error loading module:', error);
+        contentArea.innerHTML = `
+            <div class="error">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Error loading module. Please try again.</p>
+            </div>
+        `;
+    });
+}
 
        // Initialize module
         setTimeout(() => {
