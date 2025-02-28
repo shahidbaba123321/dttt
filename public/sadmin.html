@@ -777,21 +777,24 @@
             delete window.RolesPermissions;
         }
 
-        // Add the module script
-        const scriptElement = document.createElement('script');
-        scriptElement.id = 'moduleScript';
-        scriptElement.textContent = `
-            window.RolesPermissions = (function() {
-                ${js}
-                return RolesPermissions;
-            })();
-            
+        try {
+            // Create and execute the module script
+            const moduleScript = new Function(js);
+            moduleScript.call(window);
+
             // Initialize the module
             if (window.RolesPermissions && typeof window.RolesPermissions.init === 'function') {
                 window.RolesPermissions.init();
             }
-        `;
-        document.body.appendChild(scriptElement);
+        } catch (error) {
+            console.error('Error executing module script:', error);
+            contentArea.innerHTML = `
+                <div class="error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Error initializing module. Please try again.</p>
+                </div>
+            `;
+        }
 
         // Update URL hash without triggering a page reload
         history.replaceState(null, '', `#${moduleName}`);
