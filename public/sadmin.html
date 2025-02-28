@@ -455,6 +455,14 @@ body {
     opacity: 1;
     visibility: visible;
 }
+        #moduleFrame {
+    width: 100%;
+    height: calc(100vh - var(--header-height) - 4rem);
+    border: none;
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+}
 
 /* Animations */
 @keyframes slideIn {
@@ -736,6 +744,9 @@ body {
             <div class="page-content">
                 <!-- Your page content goes here -->
             </div>
+            <div class="page-content">
+    <iframe id="moduleFrame" name="moduleFrame" frameborder="0"></iframe>
+</div>
         </main>
     </div>
 
