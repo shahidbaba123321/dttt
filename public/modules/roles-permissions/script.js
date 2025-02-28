@@ -310,7 +310,7 @@ window.RolesPermissions = {
             this.showToast('Error deleting role. Please try again later.', 'error');
         }
     }
-};
+},
 
     // UI Rendering
     renderRoles(roles) {
