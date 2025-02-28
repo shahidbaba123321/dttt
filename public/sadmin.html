@@ -419,10 +419,10 @@
                             <i class="fas fa-user-friends"></i>
                             <span>Users List</span>
                         </a>
-                        <a href="#roles" class="menu-item">
-                            <i class="fas fa-user-shield"></i>
-                            <span>Roles & Permissions</span>
-                        </a>
+                        <a href="#roles" class="menu-item" data-module="roles-permissions">
+    <i class="fas fa-user-shield"></i>
+    <span>Roles & Permissions</span>
+</a>
                         <a href="#organization-chart" class="menu-item">
                             <i class="fas fa-sitemap"></i>
                             <span>Organization Chart</span>
@@ -493,137 +493,303 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeDashboard();
-            checkAuthentication();
-            loadUserRole();
-        });
+       document.addEventListener('DOMContentLoaded', function() {
+    initializeDashboard();
+    checkAuthentication();
+    loadUserRole();
+});
 
-        function initializeDashboard() {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-            const header = document.getElementById('header');
-            const sidebarToggle = document.getElementById('sidebarToggle');
-            const userMenu = document.getElementById('userMenu');
-            const userDropdown = document.getElementById('userDropdown');
+function initializeDashboard() {
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    const header = document.getElementById('header');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const userMenu = document.getElementById('userMenu');
+    const userDropdown = document.getElementById('userDropdown');
 
-            // Sidebar toggle
-            sidebarToggle.addEventListener('click', function() {
-                sidebar.classList.toggle('collapsed');
-                mainContent.classList.toggle('expanded');
-                header.classList.toggle('expanded');
-            });
+    // Sidebar toggle
+    sidebarToggle.addEventListener('click', function() {
+        sidebar.classList.toggle('collapsed');
+        mainContent.classList.toggle('expanded');
+        header.classList.toggle('expanded');
+    });
 
-            // Submenu toggle
-            document.querySelectorAll('.menu-item[data-submenu]').forEach(item => {
-                item.addEventListener('click', function() {
-                    const submenuId = this.getAttribute('data-submenu');
-                    const submenu = document.getElementById(submenuId);
-                    const arrow = this.querySelector('.arrow');
-                    
-                    // Close other submenus
-                    document.querySelectorAll('.submenu').forEach(menu => {
-                        if (menu.id !== submenuId) {
-                            menu.classList.remove('expanded');
-                            const parentItem = document.querySelector(`[data-submenu="${menu.id}"]`);
-                            if (parentItem) {
-                                parentItem.classList.remove('expanded');
-                            }
-                        }
-                    });
-
-                    // Toggle current submenu
-                    this.classList.toggle('expanded');
-                    submenu.classList.toggle('expanded');
-                });
-            });
-
-            // User dropdown toggle
-            userMenu.addEventListener('click', function(e) {
-                e.stopPropagation();
-                userDropdown.classList.toggle('show');
-            });
-
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function() {
-                userDropdown.classList.remove('show');
-            });
-
-            // Sign out functionality
-            document.getElementById('signOutBtn').addEventListener('click', function(e) {
-                e.preventDefault();
-                signOut();
-            });
-        }
-
-        async function loadUserRole() {
-            try {
-                const token = localStorage.getItem('token');
-                const response = await fetch('https://18.215.160.136.nip.io/api/roles', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                const data = await response.json();
-                if (data.success && data.roles) {
-                    const userRole = document.getElementById('userRole');
-                    const currentRole = localStorage.getItem('userRole');
-                    const roleDetails = data.roles.find(role => role.name.toLowerCase() === currentRole.toLowerCase());
-                    
-                    if (roleDetails) {
-                        userRole.textContent = roleDetails.name;
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading role:', error);
-            }
-        }
-
-        function checkAuthentication() {
-            const token = localStorage.getItem('token');
-            const email = localStorage.getItem('userEmail');
-            const role = localStorage.getItem('userRole');
-
-            if (!token || role !== 'superadmin') {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            // Update user info
-            const userName = document.getElementById('userName');
-            const userAvatar = document.getElementById('userAvatar');
+    // Submenu toggle
+    document.querySelectorAll('.menu-item[data-submenu]').forEach(item => {
+        item.addEventListener('click', function(e) {
+            const submenuId = this.getAttribute('data-submenu');
+            const submenu = document.getElementById(submenuId);
+            const arrow = this.querySelector('.arrow');
             
-            if (email) {
-                userName.textContent = email;
-                userAvatar.textContent = email.substring(0, 2).toUpperCase();
+            // If this menu item has a link and submenu, prevent default only for submenu toggle
+            if (this.hasAttribute('data-module') && e.target === arrow) {
+                e.preventDefault();
             }
+            
+            // Close other submenus
+            document.querySelectorAll('.submenu').forEach(menu => {
+                if (menu.id !== submenuId) {
+                    menu.classList.remove('expanded');
+                    const parentItem = document.querySelector(`[data-submenu="${menu.id}"]`);
+                    if (parentItem) {
+                        parentItem.classList.remove('expanded');
+                    }
+                }
+            });
 
-            // Verify token with server
-            fetch('https://18.215.160.136.nip.io/api/verify-token', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    signOut();
-                }
-            })
-            .catch(error => {
-                console.error('Token verification error:', error);
-                signOut();
+            // Toggle current submenu
+            this.classList.toggle('expanded');
+            submenu.classList.toggle('expanded');
+
+            // If this item has a module attribute, load the module
+            const moduleName = this.getAttribute('data-module');
+            if (moduleName && e.target !== arrow) {
+                loadModule(moduleName);
+                
+                // Update active states
+                document.querySelectorAll('.menu-item').forEach(menuItem => {
+                    menuItem.classList.remove('active');
+                });
+                this.classList.add('active');
+            }
+        });
+    });
+
+    // User dropdown toggle
+    userMenu.addEventListener('click', function(e) {
+        e.stopPropagation();
+        userDropdown.classList.toggle('show');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function() {
+        userDropdown.classList.remove('show');
+    });
+
+    // Sign out functionality
+    document.getElementById('signOutBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        signOut();
+    });
+
+    // Initialize module loading for direct links
+    document.querySelectorAll('.menu-item[data-module]').forEach(item => {
+        if (!item.hasAttribute('data-submenu')) {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const moduleName = this.getAttribute('data-module');
+                loadModule(moduleName);
+
+                // Update active states
+                document.querySelectorAll('.menu-item').forEach(menuItem => {
+                    menuItem.classList.remove('active');
+                });
+                this.classList.add('active');
             });
         }
+    });
+}
 
-        function signOut() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('userEmail');
-            localStorage.removeItem('userRole');
-            window.location.href = 'login.html';
+async function loadUserRole() {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('https://18.215.160.136.nip.io/api/roles', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        const data = await response.json();
+        if (data.success && data.roles) {
+            const userRole = document.getElementById('userRole');
+            const currentRole = localStorage.getItem('userRole');
+            const roleDetails = data.roles.find(role => role.name.toLowerCase() === currentRole.toLowerCase());
+            
+            if (roleDetails) {
+                userRole.textContent = roleDetails.name;
+            }
         }
+    } catch (error) {
+        console.error('Error loading role:', error);
+    }
+}
+
+function checkAuthentication() {
+    const token = localStorage.getItem('token');
+    const email = localStorage.getItem('userEmail');
+    const role = localStorage.getItem('userRole');
+
+    if (!token || role !== 'superadmin') {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // Update user info
+    const userName = document.getElementById('userName');
+    const userAvatar = document.getElementById('userAvatar');
+    
+    if (email) {
+        userName.textContent = email;
+        userAvatar.textContent = email.substring(0, 2).toUpperCase();
+    }
+
+    // Verify token with server
+    fetch('https://18.215.160.136.nip.io/api/verify-token', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            signOut();
+        } else {
+            // Load default module if specified in URL hash
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                loadModule(hash);
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Token verification error:', error);
+        signOut();
+    });
+}
+
+function signOut() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userRole');
+    window.location.href = 'login.html';
+}
+
+function loadModule(moduleName) {
+    const contentArea = document.querySelector('.content');
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // Show loading state
+    contentArea.innerHTML = `
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Loading...</span>
+        </div>
+    `;
+
+    // Define module paths
+    const modulePaths = {
+        'roles-permissions': {
+            html: '/modules/roles-permissions/index.html',
+            css: '/modules/roles-permissions/styles.css',
+            js: '/modules/roles-permissions/script.js'
+        }
+        // Add other modules here as needed
+    };
+
+    const selectedModule = modulePaths[moduleName];
+    if (!selectedModule) {
+        contentArea.innerHTML = `
+            <div class="error">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Module not found</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Load module resources
+    Promise.all([
+        fetch(selectedModule.html).then(r => r.text()),
+        fetch(selectedModule.css).then(r => r.text()),
+        fetch(selectedModule.js).then(r => r.text())
+    ]).then(([html, css, js]) => {
+        // Remove any previous module styles
+        const existingStyle = document.getElementById('moduleStyles');
+        if (existingStyle) {
+            existingStyle.remove();
+        }
+
+        // Add new module styles
+        const styleElement = document.createElement('style');
+        styleElement.id = 'moduleStyles';
+        styleElement.textContent = css;
+        document.head.appendChild(styleElement);
+
+        // Update content
+        contentArea.innerHTML = html;
+
+        // Remove any previous module scripts
+        const existingScript = document.getElementById('moduleScript');
+        if (existingScript) {
+            existingScript.remove();
+        }
+
+        // Add new module script
+        const scriptElement = document.createElement('script');
+        scriptElement.id = 'moduleScript';
+        scriptElement.textContent = js;
+        document.body.appendChild(scriptElement);
+
+        // Initialize module if it has an init function
+        if (window[moduleName] && typeof window[moduleName].init === 'function') {
+            window[moduleName].init();
+        }
+
+        // Update URL hash without triggering a page reload
+        history.replaceState(null, '', `#${moduleName}`);
+    }).catch(error => {
+        console.error('Error loading module:', error);
+        contentArea.innerHTML = `
+            <div class="error">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Error loading module. Please try again.</p>
+            </div>
+        `;
+    });
+}
+
+// Add loading spinner and error styles
+const additionalStyles = `
+    .loading-spinner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+        color: var(--primary-color);
+    }
+
+    .loading-spinner i {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .error {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+        color: var(--danger-color);
+        text-align: center;
+    }
+
+    .error i {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+`;
+
+// Add the styles to the document
+const styleElement = document.createElement('style');
+styleElement.textContent = additionalStyles;
+document.head.appendChild(styleElement);
     </script>
 </body>
 </html>
