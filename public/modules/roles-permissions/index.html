@@ -1,0 +1,71 @@
+<!-- modules/roles-permissions/index.html -->
+<div class="roles-permissions-module">
+    <div class="roles-container">
+        <div class="roles-header">
+            <h1 class="roles-title">Roles & Permissions</h1>
+            <button class="rp-create-role-btn" onclick="RolesPermissions.openCreateRoleModal()">
+                <i class="fas fa-plus"></i>
+                <span>Create New Role</span>
+            </button>
+        </div>
+
+        <div class="roles-filters">
+            <input type="text" class="rp-search-input" placeholder="Search roles..." onkeyup="RolesPermissions.searchRoles()">
+            <select class="rp-filter-select" onchange="RolesPermissions.filterRoles()">
+                <option value="all">All Roles</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="system">System</option>
+            </select>
+        </div>
+
+        <table class="rp-roles-table">
+            <thead>
+                <tr>
+                    <th>Role Name</th>
+                    <th>Description</th>
+                    <th>Users</th>
+                    <th>Status</th>
+                    <th>Last Modified</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="rpRolesTableBody">
+                <!-- Roles will be dynamically loaded here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Create/Edit Role Modal -->
+    <div class="rp-modal" id="rpRoleModal">
+        <div class="rp-modal-content">
+            <div class="rp-modal-header">
+                <h2 class="rp-modal-title" id="rpModalTitle">Create New Role</h2>
+                <button class="rp-modal-close" onclick="RolesPermissions.closeRoleModal()">&times;</button>
+            </div>
+            <div class="rp-modal-body">
+                <form id="rpRoleForm">
+                    <div class="rp-form-group">
+                        <label for="rpRoleName">Role Name</label>
+                        <input type="text" id="rpRoleName" required>
+                    </div>
+                    <div class="rp-form-group">
+                        <label for="rpRoleDescription">Description</label>
+                        <textarea id="rpRoleDescription" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="rp-permissions-container">
+                        <h3>Permissions</h3>
+                        <div id="rpPermissionsContainer">
+                            <!-- Permission categories will be dynamically loaded here -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="rp-modal-footer">
+                <button class="rp-btn rp-btn-secondary" onclick="RolesPermissions.closeRoleModal()">Cancel</button>
+                <button class="rp-btn rp-btn-primary" onclick="RolesPermissions.saveRole()">Save Role</button>
+            </div>
+        </div>
+    </div>
+</div>
