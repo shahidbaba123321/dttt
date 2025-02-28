@@ -708,7 +708,7 @@
             window.location.href = 'login.html';
         }
 
-  function loadModule(moduleName) {
+function loadModule(moduleName) {
     const contentArea = document.querySelector('.content');
     const token = localStorage.getItem('token');
     
@@ -778,20 +778,25 @@
                 delete window.RolesPermissions;
             }
 
-            // Evaluate the module script
-            const scriptContent = `
-                (function() {
-                    ${js}
-                    // Initialize the module
+            // Create a new script element
+            const scriptElement = document.createElement('script');
+            scriptElement.id = 'moduleScript';
+            scriptElement.type = 'text/javascript';
+
+            // Convert the module code to a string and evaluate it
+            const moduleCode = js.trim();
+            const evalCode = `
+                try {
+                    ${moduleCode}
                     if (window.RolesPermissions && typeof window.RolesPermissions.init === 'function') {
                         window.RolesPermissions.init();
                     }
-                })();
+                } catch (error) {
+                    console.error('Module initialization error:', error);
+                }
             `;
 
-            const scriptElement = document.createElement('script');
-            scriptElement.id = 'moduleScript';
-            scriptElement.textContent = scriptContent;
+            scriptElement.text = evalCode;
             document.body.appendChild(scriptElement);
 
             // Update URL hash without triggering a page reload
