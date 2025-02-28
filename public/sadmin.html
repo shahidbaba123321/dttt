@@ -1295,6 +1295,54 @@ let rolesData = [];
 let sessionTimer;
 let tokenCheckInterval;
 
+// Add this at the beginning of your JavaScript, after global variables
+function initializeEventListeners() {
+    // Sidebar navigation
+    document.querySelectorAll('.nav-link, .menu-item').forEach(item => {
+        item.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const section = this.getAttribute('data-section');
+            if (section) {
+                // Update active state
+                document.querySelectorAll('.nav-link, .menu-item').forEach(menuItem => {
+                    menuItem.classList.remove('active');
+                });
+                this.classList.add('active');
+
+                // Load section content
+                await loadSectionContent(section);
+            }
+        });
+    });
+
+    // Sidebar toggle
+    const toggleSidebarBtn = document.getElementById('toggleSidebar');
+    if (toggleSidebarBtn) {
+        toggleSidebarBtn.addEventListener('click', () => {
+            document.querySelector('.sidebar').classList.toggle('active');
+        });
+    }
+
+    // User menu
+    const userMenuTrigger = document.getElementById('userMenuTrigger');
+    const userDropdown = document.getElementById('userDropdown');
+    if (userMenuTrigger && userDropdown) {
+        userMenuTrigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            userDropdown.classList.toggle('active');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!userMenuTrigger.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.remove('active');
+            }
+        });
+    }
+}
+
+        
 // Main Initialization
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -1504,12 +1552,23 @@ const ApiService = {
         }
     }
 };
-    // Dashboard Functions
+  // Update the initialization function
 function initializeDashboard() {
+    // Hide all sections except dashboard initially
+    document.querySelectorAll('.content-section').forEach(section => {
+        section.style.display = 'none';
+    });
+
+    // Show dashboard section
+    const dashboardSection = document.getElementById('dashboardSection');
+    if (dashboardSection) {
+        dashboardSection.style.display = 'block';
+    }
+
     initializeSidebar();
     initializeEventListeners();
 }
-
+        
 function initializeSidebar() {
     document.querySelectorAll('.menu-item').forEach(item => {
         item.addEventListener('click', async function(e) {
@@ -2385,6 +2444,7 @@ function loadInitialContent() {
     loadSectionContent('dashboard');
 }
 
+// Update loadSectionContent function
 async function loadSectionContent(section) {
     try {
         // Hide all sections first
@@ -2399,46 +2459,41 @@ async function loadSectionContent(section) {
                                   section.slice(1).replace('-', ' ');
         }
 
-        switch (section) {
-            case 'dashboard':
-                const dashboardSection = document.getElementById('dashboardSection');
-                if (dashboardSection) {
-                    dashboardSection.style.display = 'block';
-                    await loadDashboardContent(dashboardSection);
-                }
-                break;
-
-            case 'users-list':
-                const usersSection = document.getElementById('usersListSection');
-                if (usersSection) {
-                    usersSection.style.display = 'block';
+        const sectionElement = document.getElementById(`${section}Section`);
+        if (sectionElement) {
+            sectionElement.style.display = 'block';
+            
+            switch (section) {
+                case 'dashboard':
+                    await loadDashboardContent(sectionElement);
+                    break;
+                case 'userManagement':
                     await initializeUserManagement();
-                }
-                break;
-
-            case 'roles-permissions':
-                const rolesSection = document.getElementById('rolesPermissionsSection');
-                if (rolesSection) {
-                    rolesSection.style.display = 'block';
+                    break;
+                case 'rolesPermissions':
                     await initializeRolesManagement();
-                }
-                break;
-
-            default:
-                const mainContent = document.getElementById('mainContent');
-                if (mainContent) {
-                    mainContent.innerHTML = `
-                        <div class="content-section" style="display: block">
-                            <h2>Section ${escapeHtml(section)} is under development</h2>
-                        </div>
-                    `;
-                }
-                break;
+                    break;
+                // Add other cases as needed
+            }
+        } else {
+            const mainContent = document.getElementById('mainContent');
+            if (mainContent) {
+                mainContent.innerHTML = `
+                    <div class="content-section">
+                        <h2>Section ${escapeHtml(section)} is under development</h2>
+                    </div>
+                `;
+            }
         }
     } catch (error) {
         console.error(`Error loading ${section} content:`, error);
         showNotification(`Failed to load ${section} section. Please try again.`, 'error');
     }
+}
+// Add the redirectToLogin function
+function redirectToLogin() {
+    clearUserSession();
+    window.location.href = 'login.html';
 }
 
 </script>
