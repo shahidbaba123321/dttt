@@ -778,18 +778,20 @@
                 delete window.RolesPermissions;
             }
 
-            // Load the module script using a separate script tag
+            // Evaluate the module script
+            const scriptContent = `
+                (function() {
+                    ${js}
+                    // Initialize the module
+                    if (window.RolesPermissions && typeof window.RolesPermissions.init === 'function') {
+                        window.RolesPermissions.init();
+                    }
+                })();
+            `;
+
             const scriptElement = document.createElement('script');
             scriptElement.id = 'moduleScript';
-            scriptElement.src = selectedModule.js;
-            
-            // Initialize after script loads
-            scriptElement.onload = () => {
-                if (window.RolesPermissions && typeof window.RolesPermissions.init === 'function') {
-                    window.RolesPermissions.init();
-                }
-            };
-            
+            scriptElement.textContent = scriptContent;
             document.body.appendChild(scriptElement);
 
             // Update URL hash without triggering a page reload
