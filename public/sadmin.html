@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Admin Dashboard - WorkWise Pro</title>
+    <title>SuperAdmin Dashboard - WorkWise Pro</title>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -13,3281 +13,498 @@
 
     <style>
         :root {
-            /* Primary Colors */
-            --primary-color: #1a237e;     
-            --primary-light: #534bae;
-            --primary-dark: #121858;
-            --primary-gradient: linear-gradient(135deg, #1a237e 0%, #534bae 100%);
-            
-            /* Secondary Colors */
-            --secondary-color: #283593;
-            --secondary-light: #5f5fc4;
-            --secondary-dark: #001064;
-            
-            /* Background Colors */
-            --background-color: #f8f9fc;  
-            --surface-color: #ffffff;
-            --surface-dark: #f1f5f9;
-            --nav-background: #1a237e;    
-            
-            /* Text Colors */
-            --text-primary: #2c3345;      
-            --text-secondary: #6b7280;    
-            --text-tertiary: #9ca3af;     
-            --text-light: #ffffff;        
-            
-            /* Status Colors */
-            --success-color: #4caf50;     
-            --warning-color: #ff9800;     
-            --danger-color: #f44336;      
-            --info-color: #2196f3;        
-            
-            /* Border & Shadow */
-            --border-color: #e2e8f0;
-            --border-light: #f1f5f9;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            
-            /* Component Specific */
+            --primary-color: #4F46E5;
+            --secondary-color: #4338CA;
+            --accent-color: #818CF8;
+            --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --danger-color: #EF4444;
+            --background-color: #F8FAFC;
+            --text-color: #1F2937;
+            --light-text: #64748B;
             --sidebar-width: 280px;
-            --sidebar-collapsed-width: 70px;
             --header-height: 70px;
-            
-            /* Transitions */
-            --transition-fast: 0.2s ease;
-            --transition-normal: 0.3s ease;
+            --sidebar-bg: #1E293B;
+            --sidebar-hover: #334155;
+            --sidebar-active: #2563EB;
         }
 
-        /* Base Styles */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             font-family: 'Poppins', sans-serif;
-            line-height: 1.6;
-            color: var(--text-primary);
             background-color: var(--background-color);
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            color: var(--text-color);
+            min-height: 100vh;
         }
 
-        /* Layout Structure */
-        .layout-container {
+        /* Layout */
+        .dashboard-container {
             display: flex;
             min-height: 100vh;
         }
 
         /* Sidebar Styles */
         .sidebar {
-            width: 280px;
-            background: var(--nav-background);
-            height: 100vh;
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            color: white;
             position: fixed;
+            height: 100vh;
             left: 0;
             top: 0;
             overflow-y: auto;
-            overflow-x: hidden;
+            transition: all 0.3s ease;
             z-index: 1000;
-            transition: all var(--transition-normal);
         }
 
-        .sidebar.collapsed {
-            width: 70px;
-        }
-                /* Custom Scrollbar */
-        .sidebar::-webkit-scrollbar {
-            width: 5px;
-        }
-
-        .sidebar::-webkit-scrollbar-track {
-            background: var(--primary-dark);
-        }
-
-        .sidebar::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-        }
-
-        .sidebar:hover::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.3);
-        }
-
-        /* Sidebar Header */
         .sidebar-header {
-            padding: 1.25rem;
-            background: var(--primary-dark);
+            padding: 1.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 10;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .sidebar-logo {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            color: var(--text-light);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.25rem;
-        }
-
-        .sidebar-logo i {
+        .logo {
             font-size: 1.5rem;
-        }
-
-        .sidebar.collapsed .sidebar-logo span,
-        .sidebar.collapsed .nav-section-title,
-        .sidebar.collapsed .nav-link span {
-            display: none;
-        }
-
-        .sidebar.collapsed .nav-link {
-            padding: 0.75rem;
-            justify-content: center;
-        }
-
-        .sidebar.collapsed .nav-link i {
-            margin: 0;
-        }
-
-        /* Collapse Toggle */
-        .collapse-toggle {
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: var(--text-light);
-            padding: 0.5rem;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            transition: var(--transition-normal);
-        }
-
-        .collapse-toggle:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        /* Navigation Sections */
-        .nav-section {
-            padding: 0.75rem 0;
-        }
-
-        .nav-section-title {
-            padding: 0.75rem 1.25rem;
-            color: var(--text-light);
-            opacity: 0.6;
-            font-size: 0.75rem;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .nav-items {
-            list-style: none;
-        }
-
-        .nav-item {
-            position: relative;
-        }
-
-        /* Navigation Links */
-        .nav-link {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem 1.25rem;
-            color: var(--text-light);
-            opacity: 0.8;
+            font-weight: 700;
+            color: white;
             text-decoration: none;
-            transition: var(--transition-normal);
-            border-radius: 0.5rem;
-            margin: 0.25rem 0.75rem;
-            position: relative;
         }
 
-        .nav-link i {
-            min-width: 1.5rem;
-            font-size: 1.25rem;
-            text-align: center;
-            margin-right: 0.75rem;
-            opacity: 0.8;
-            transition: var(--transition-normal);
+        .sidebar-menu {
+            padding: 1rem 0;
         }
 
-        .nav-link span {
-            white-space: nowrap;
-            transition: var(--transition-normal);
-        }
-
-        .nav-link:hover {
-            opacity: 1;
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .nav-link.active {
-            opacity: 1;
-            background: rgba(255, 255, 255, 0.1);
-            font-weight: 500;
-        }
-
-        .nav-link.active i {
-            opacity: 1;
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            margin-left: var(--sidebar-width);
-            transition: margin-left var(--transition-normal);
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        .main-content.expanded {
-            margin-left: var(--sidebar-collapsed-width);
-        }
-
-        /* Header */
-        .header {
-            height: var(--header-height);
-            background: var(--surface-color);
-            padding: 0 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--border-color);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        /* Sidebar Toggle Button */
-        .sidebar-toggle {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            padding: 0.5rem;
-            font-size: 1.25rem;
-        }
-
-        /* User Menu */
-        .user-menu {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-email {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        /* Dropdown */
-        .dropdown {
-            position: relative;
-        }
-
-        .menu-trigger {
-            background: none;
-            border: none;
-            padding: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            color: var(--text-secondary);
-            border-radius: 0.375rem;
-            transition: all var(--transition-normal);
-        }
-
-        .menu-trigger:hover,
-        .menu-trigger.active {
-            background: var(--surface-dark);
-            color: var(--primary-color);
-        }
-
-        .menu-trigger i {
-            font-size: 1.25rem;
-            transition: transform var(--transition-normal);
-        }
-
-        .menu-trigger.active i:last-child {
-            transform: rotate(180deg);
-        }
-
-        .dropdown-menu {
-            position: absolute;
-            top: calc(100% + 0.5rem);
-            right: 0;
-            background: var(--surface-color);
-            border-radius: 0.5rem;
-            box-shadow: var(--shadow-lg);
-            min-width: 200px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all var(--transition-normal);
-            border: 1px solid var(--border-color);
-            z-index: 1000;
-        }
-
-        .dropdown-menu.active {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        .dropdown-menu a {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem 1rem;
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: all var(--transition-normal);
-        }
-
-        .dropdown-menu a:hover {
-            background: var(--surface-dark);
-            color: var(--primary-color);
-        }
-
-        .dropdown-menu a i {
-            width: 1.25rem;
-            text-align: center;
-        }
-
-        /* Dashboard Content */
-        .dashboard-content {
-            flex: 1;
-            padding: 2rem;
-            background: var(--background-color);
-            overflow-y: auto;
-        }
-
-        /* Welcome Section */
-        .welcome-section {
-            background: var(--surface-color);
-            border-radius: 0.75rem;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .welcome-section h1 {
-            color: var(--primary-color);
-            font-size: 1.875rem;
+        .menu-section {
             margin-bottom: 1rem;
         }
 
-        .welcome-section p {
-            color: var(--text-secondary);
-        }
-
-        /* Content Section */
-        .content-section {
-            background: var(--surface-color);
-            border-radius: 0.75rem;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: var(--shadow-sm);
-        }
-
-        /* Module Header */
-        .module-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .header-title h1 {
-            color: var(--primary-color);
-            font-size: 1.875rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .header-title p {
-            color: var(--text-secondary);
-        }
-
-        /* Button Styles */
-        .btn {
+        .menu-section-title {
             padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            transition: all var(--transition-normal);
-        }
-
-        .btn-primary {
-            background: var(--primary-gradient);
-            color: var(--text-light);
-            border: none;
-        }
-
-        .btn-secondary {
-            background: var(--surface-dark);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
-
-        /* Search and Filter Section */
-        .search-filter-section {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .search-box {
-            flex: 1;
-            min-width: 300px;
-            position: relative;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 0.75rem 1rem 0.75rem 2.5rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            font-size: 0.875rem;
-        }
-
-        .search-box i {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-tertiary);
-        }
-
-        .filter-controls {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .filter-controls select {
-            padding: 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            color: var(--text-primary);
-            background: var(--surface-color);
-        }
-
-                /* Table Styles */
-        .users-table-container {
-            overflow-x: auto;
-        }
-
-        .users-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .users-table th,
-        .users-table td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .users-table th {
-            background: var(--surface-dark);
-            color: var(--text-primary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--accent-color);
             font-weight: 600;
+            letter-spacing: 0.05em;
         }
 
-        .users-table tbody tr:hover {
-            background: var(--surface-dark);
+        .menu-item {
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
 
-        /* Modal Styles */
-        .modal {
+        .menu-item:hover {
+            background-color: var(--sidebar-hover);
+            color: white;
+        }
+
+        .menu-item.active {
+            background-color: var(--sidebar-active);
+            color: white;
+        }
+
+        .menu-item i {
+            width: 20px;
+            margin-right: 0.75rem;
+        }
+
+        .submenu {
+            padding-left: 1rem;
             display: none;
+        }
+
+        .submenu.show {
+            display: block;
+        }
+
+        /* Header Styles */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+        }
+
+        .header {
+            height: var(--header-height);
+            background: white;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 2rem;
             position: fixed;
             top: 0;
-            left: 0;
             right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1100;
-            align-items: center;
-            justify-content: center;
+            left: var(--sidebar-width);
+            z-index: 999;
         }
 
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: var(--surface-color);
-            border-radius: 0.75rem;
-            width: 100%;
-            max-width: 500px;
-            box-shadow: var(--shadow-lg);
+        .user-menu {
             position: relative;
-        }
-
-        .modal-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
             display: flex;
-            justify-content: space-between;
             align-items: center;
-        }
-
-        .modal-header h2 {
-            color: var(--primary-color);
-            font-size: 1.25rem;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            color: var(--text-tertiary);
             cursor: pointer;
-            font-size: 1.25rem;
-            padding: 0.5rem;
-            transition: color var(--transition-normal);
         }
 
-        .close-btn:hover {
-            color: var(--text-primary);
-        }
-
-        /* Form Styles */
-        .form-group {
-            margin-bottom: 1.5rem;
-            padding: 0 1.5rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--text-primary);
-            font-weight: 500;
-        }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            font-size: 0.875rem;
-        }
-
-        .modal-footer {
-            padding: 1.5rem;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            justify-content: flex-end;
-            gap: 1rem;
-        }
-
-        /* Animations */
-        @keyframes dropdownFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* User Table Styles */
         .user-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
+            margin-right: 0.75rem;
+            text-align: right;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--light-text);
         }
 
         .user-avatar {
             width: 40px;
             height: 40px;
             border-radius: 50%;
+            background-color: var(--primary-color);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: 600;
-            font-size: 1rem;
         }
 
-        .user-details {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .user-name {
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-
-        .user-id {
-            font-size: 0.875rem;
-            color: var(--text-tertiary);
-        }
-
-        /* Badge Styles */
-        .department-badge,
-        .role-badge,
-        .status-badge,
-        .2fa-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 1rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .department-badge {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        .role-badge {
-            background: var(--accent-purple);
-            color: white;
-        }
-
-        .status-badge.status-active {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success-color);
-        }
-
-        .status-badge.status-inactive {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger-color);
-        }
-
-        .2fa-badge.enabled {
-            background: rgba(79, 70, 229, 0.1);
-            color: var(--primary-color);
-        }
-
-        .2fa-badge.disabled {
-            background: rgba(100, 116, 139, 0.1);
-            color: var(--text-secondary);
-        }
-
-                /* Action Buttons */
-        .action-buttons {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .btn-icon {
-            padding: 0.5rem;
-            border: none;
-            border-radius: 0.375rem;
-            background: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: all var(--transition-normal);
-        }
-
-        .btn-icon:hover {
-            background: var(--surface-dark);
-            color: var(--primary-color);
-        }
-
-        .btn-icon.danger:hover {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger-color);
-        }
-
-        .btn-icon.success:hover {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success-color);
-        }
-
-        .btn-icon.warning:hover {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--warning-color);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 2rem !important;
-            color: var(--text-tertiary);
-        }
-
-        .empty-state i {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-        }
-
-        .empty-state p {
-            font-size: 1rem;
-        }
-
-        /* Detailed Notification Styles */
-        .notification.detailed {
-            width: 400px;
-            max-width: 90vw;
-            padding: 0;
-            background: var(--surface-color);
-            border-radius: 8px;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .notification.detailed .notification-header {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 1rem;
-            background: var(--primary-color);
-            color: var(--text-light);
-            border-radius: 8px 8px 0 0;
-        }
-
-        .notification.detailed .notification-header i {
-            font-size: 1.25rem;
-        }
-
-        .notification.detailed .notification-body {
-            padding: 1rem;
-            color: var(--text-primary);
-            line-height: 1.6;
-        }
-
-        .notification.detailed .notification-body strong {
-            color: var(--primary-color);
-        }
-
-        .notification.detailed.show {
-            transform: translateX(0);
-        }
-
-        /* Password Input Group */
-        .password-input-group {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .password-input-group input {
-            flex: 1;
-            padding-right: 2.5rem;
-        }
-
-        .toggle-password {
+        .dropdown-menu {
             position: absolute;
-            right: 0.5rem;
-            background: none;
-            border: none;
-            color: var(--text-tertiary);
-            cursor: pointer;
-            padding: 0.5rem;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            width: 200px;
+            padding: 0.5rem 0;
+            display: none;
+            z-index: 1000;
         }
 
-        .toggle-password:hover {
-            color: var(--primary-color);
+        .dropdown-menu.show {
+            display: block;
         }
 
-        /* Warning Message */
-        .warning-message {
+        .dropdown-item {
+            padding: 0.75rem 1rem;
             display: flex;
             align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            background: rgba(239, 68, 68, 0.1);
-            border-radius: 0.5rem;
-            margin-bottom: 1rem;
+            color: var(--text-color);
+            text-decoration: none;
+            transition: all 0.3s ease;
         }
 
-        .warning-message i {
-            color: var(--danger-color);
-            font-size: 1.5rem;
+        .dropdown-item:hover {
+            background-color: var(--background-color);
         }
 
-        /* Form Validation Styles */
-        .form-group input.error,
-        .form-group select.error {
-            border-color: var(--danger-color);
-            background-color: rgba(239, 68, 68, 0.05);
+        .dropdown-item i {
+            width: 20px;
+            margin-right: 0.75rem;
         }
 
-        .form-group input.error:focus,
-        .form-group select.error:focus {
-            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        /* Content Area */
+        .content {
+            padding: calc(var(--header-height) + 2rem) 2rem 2rem;
         }
 
-        .form-group .error-message {
-            color: var(--danger-color);
-            font-size: 0.875rem;
-            margin-top: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .form-group .error-message i {
-            font-size: 1rem;
-        }
-
-        /* Responsive Styles */
+        /* Responsive Design */
         @media (max-width: 1024px) {
             .sidebar {
-                left: calc(-1 * var(--sidebar-width));
+                transform: translateX(-100%);
             }
 
-            .sidebar.active {
-                left: 0;
+            .sidebar.show {
+                transform: translateX(0);
             }
 
             .main-content {
                 margin-left: 0;
             }
 
-            .sidebar-toggle {
-                display: block;
-            }
-
-            .overlay {
-                display: none;
-                position: fixed;
-                top: 0;
+            .header {
                 left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.5);
-                z-index: 999;
             }
 
-            .overlay.active {
+            .menu-toggle {
                 display: block;
             }
         }
 
-        @media (max-width: 640px) {
-            .user-email {
-                display: none;
-            }
+        /* Animation Classes */
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
 
-            .dashboard-content {
-                padding: 1rem;
-            }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
 
-            .search-filter-section {
-                flex-direction: column;
-            }
-
-            .filter-controls {
-                flex-wrap: wrap;
-            }
-
-            .filter-controls select {
-                flex: 1;
-                min-width: 150px;
-            }
+        /* Utility Classes */
+        .divider {
+            height: 1px;
+            background-color: rgba(0, 0, 0, 0.1);
+            margin: 0.5rem 0;
         }
     </style>
-
-    <style>
-        /* User Management Styles */
-.users-container {
-    padding: 1.5rem;
-}
-
-.users-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-}
-
-.search-filter-container {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.search-bar {
-    flex: 1;
-    position: relative;
-}
-
-.search-bar input {
-    width: 100%;
-    padding: 0.75rem 1rem 0.75rem 2.5rem;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-}
-
-.search-bar i {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--light-text);
-}
-
-.filter-dropdown {
-    position: relative;
-}
-
-.filter-button {
-    padding: 0.75rem 1rem;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 0.5rem;
-    background: white;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    font-size: 0.875rem;
-}
-
-.filter-menu {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: white;
-    border-radius: 0.5rem;
-    box-shadow: var(--box-shadow);
-    min-width: 200px;
-    display: none;
-    z-index: 100;
-}
-
-.filter-menu.active {
-    display: block;
-}
-
-.filter-option {
-    padding: 0.75rem 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.filter-option:hover {
-    background: var(--gradient-start);
-}
-
-/* Table Styles */
-.users-table {
-    width: 100%;
-    background: white;
-    border-radius: 0.5rem;
-    box-shadow: var(--box-shadow);
-    overflow: hidden;
-}
-
-.users-table table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.users-table th,
-.users-table td {
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.users-table th {
-    background: var(--gradient-start);
-    font-weight: 600;
-    color: var(--text-color);
-}
-
-.users-table tr:hover {
-    background: var(--gradient-start);
-}
-
-.user-status {
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.status-active {
-    background: var(--success-color);
-    color: white;
-}
-
-.status-inactive {
-    background: var(--danger-color);
-    color: white;
-}
-
-.user-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.action-button {
-    padding: 0.5rem;
-    border: none;
-    border-radius: 0.25rem;
-    background: none;
-    color: var(--text-color);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.action-button:hover {
-    color: var(--primary-color);
-}
-
-/* Pagination Styles */
-.pagination {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 1.5rem;
-    padding: 1rem;
-    background: white;
-    border-radius: 0.5rem;
-    box-shadow: var(--box-shadow);
-}
-
-.pagination-info {
-    font-size: 0.875rem;
-    color: var(--light-text);
-}
-
-.pagination-buttons {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.pagination-button {
-    padding: 0.5rem 1rem;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 0.25rem;
-    background: white;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.pagination-button:hover {
-    background: var(--gradient-start);
-}
-
-.pagination-button.active {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-.pagination-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Modal Styles */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.modal.active {
-    display: flex;
-}
-
-.modal-content {
-    background: white;
-    border-radius: 0.5rem;
-    width: 90%;
-    max-width: 600px;
-    max-height: 90vh;
-    overflow-y: auto;
-    position: relative;
-}
-
-.modal-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: var(--light-text);
-}
-
-.modal-body {
-    padding: 1.5rem;
-}
-
-.modal-footer {
-    padding: 1.5rem;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-}
-
-/* Form Styles */
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-}
-
-.form-group input,
-.form-group select {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-    border-color: var(--primary-color);
-    outline: none;
-}
-
-/* Button Styles */
-.btn {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.btn-primary {
-    background: var(--primary-color);
-    color: white;
-}
-
-.btn-secondary {
-    background: var(--light-text);
-    color: white;
-}
-
-.btn-danger {
-    background: var(--danger-color);
-    color: white;
-}
-
-.btn:hover {
-    opacity: 0.9;
-}
-    </style>
+</head>
 <body>
-    <div class="layout-container">
+    <div class="dashboard-container">
         <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
+        <aside class="sidebar">
             <div class="sidebar-header">
-                <a href="#" class="sidebar-logo">
-                    <i class="fas fa-briefcase"></i>
-                    <span>WorkWise Pro</span>
-                </a>
-                <button class="collapse-toggle" onclick="toggleSidebar()">
-                    <i class="fas fa-chevron-left"></i>
+                <a href="#" class="logo">WorkWise Pro</a>
+                <button class="menu-toggle">
+                    <i class="fas fa-bars"></i>
                 </button>
             </div>
 
-            <!-- Main Navigation -->
-            <nav class="nav-section">
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="#dashboard" class="nav-link active" data-section="dashboard">
-                            <i class="fas fa-th-large"></i>
-                            <span>Dashboard Overview</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#companies" class="nav-link" data-section="companies">
-                            <i class="fas fa-building"></i>
-                            <span>Companies/Organizations</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+            <nav class="sidebar-menu">
+                <div class="menu-section">
+                    <a href="#dashboard" class="menu-item active">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard Overview</span>
+                    </a>
+                </div>
 
-            <!-- System Navigation -->
-            <div class="nav-section">
-                <div class="nav-section-title">System</div>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="#settings" class="nav-link" data-section="settings">
-                            <i class="fas fa-cog"></i>
-                            <span>System Settings</span>
+                <div class="menu-section">
+                    <div class="menu-section-title">Companies/Organizations</div>
+                    <a href="#companies" class="menu-item">
+                        <i class="fas fa-building"></i>
+                        <span>Management</span>
+                    </a>
+                </div>
+
+                <div class="menu-section">
+                    <div class="menu-section-title">System</div>
+                    <a href="#settings" class="menu-item">
+                        <i class="fas fa-cog"></i>
+                        <span>System Settings</span>
+                    </a>
+                    <div class="submenu">
+                        <a href="#general-settings" class="menu-item">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>General Settings</span>
                         </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#pricing" class="nav-link" data-section="pricing">
+                        <a href="#pricing" class="menu-item">
                             <i class="fas fa-tags"></i>
                             <span>Pricing & Plans</span>
                         </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#security" class="nav-link" data-section="security">
+                        <a href="#security" class="menu-item">
                             <i class="fas fa-shield-alt"></i>
                             <span>Security Settings</span>
                         </a>
-                    </li>
-                </ul>
-            </div>
+                    </div>
+                </div>
 
-            <!-- Management Navigation -->
-            <div class="nav-section">
-                <div class="nav-section-title">Management</div>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="#modules" class="nav-link" data-section="modules">
-                            <i class="fas fa-cube"></i>
-                            <span>Modules Management</span>
+                <div class="menu-section">
+                    <div class="menu-section-title">Management</div>
+                    <a href="#modules" class="menu-item">
+                        <i class="fas fa-cube"></i>
+                        <span>Modules Management</span>
+                    </a>
+                    <div class="submenu">
+                        <a href="#modules-list" class="menu-item">
+                            <i class="fas fa-list"></i>
+                            <span>Modules List</span>
                         </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" data-section="userManagement" onclick="loadUserManagement(event)">
-                            <i class="fas fa-users"></i>
-                            <span>User Management</span>
+                        <a href="#module-settings" class="menu-item">
+                            <i class="fas fa-cogs"></i>
+                            <span>Module Settings</span>
                         </a>
-                    </li>
-                </ul>
-            </div>
+                    </div>
+                    <a href="#users" class="menu-item">
+                        <i class="fas fa-users"></i>
+                        <span>User Management</span>
+                    </a>
+                    <div class="submenu">
+                        <a href="#users-list" class="menu-item">
+                            <i class="fas fa-user-friends"></i>
+                            <span>Users List</span>
+                        </a>
+                        <a href="#roles" class="menu-item">
+                            <i class="fas fa-user-shield"></i>
+                            <span>Roles & Permissions</span>
+                        </a>
+                    </div>
+                </div>
 
-            <!-- Tools Navigation -->
-            <div class="nav-section">
-                <div class="nav-section-title">Tools</div>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="#analytics" class="nav-link" data-section="analytics">
-                            <i class="fas fa-chart-bar"></i>
-                            <span>Analytics & Reports</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#backup" class="nav-link" data-section="backup">
-                            <i class="fas fa-database"></i>
-                            <span>Backup & Restore</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#audit" class="nav-link" data-section="audit">
-                            <i class="fas fa-history"></i>
-                            <span>Audit Logs</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#api" class="nav-link" data-section="api">
-                            <i class="fas fa-code"></i>
-                            <span>API Management</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
+                <div class="menu-section">
+                    <div class="menu-section-title">Tools</div>
+                    <a href="#analytics" class="menu-item">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Analytics & Reports</span>
+                    </a>
+                    <a href="#backup" class="menu-item">
+                        <i class="fas fa-database"></i>
+                        <span>Backup & Restore</span>
+                    </a>
+                    <a href="#audit" class="menu-item">
+                        <i class="fas fa-history"></i>
+                        <span>Audit Logs</span>
+                    </a>
+                    <a href="#api" class="menu-item">
+                        <i class="fas fa-code"></i>
+                        <span>API Management</span>
+                    </a>
+                </div>
 
-            <!-- Support Navigation -->
-            <div class="nav-section">
-                <div class="nav-section-title">Support</div>
-                <ul class="nav-items">
-                    <li class="nav-item">
-                        <a href="#support" class="nav-link" data-section="support">
-                            <i class="fas fa-headset"></i>
-                            <span>Support Center</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
+                <div class="menu-section">
+                    <div class="menu-section-title">Support</div>
+                    <a href="#support" class="menu-item">
+                        <i class="fas fa-headset"></i>
+                        <span>Support Center</span>
+                    </a>
+                </div>
+            </nav>
         </aside>
 
         <!-- Main Content -->
-        <div class="main-content">
+        <main class="main-content">
             <header class="header">
-                <button class="sidebar-toggle" onclick="toggleSidebar()">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div class="user-menu">
-                    <span class="user-email" id="userEmail"></span>
-                    <div class="dropdown">
-                        <button type="button" class="menu-trigger" id="userMenuTrigger">
-                            <i class="fas fa-user-circle"></i>
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
-                        <div class="dropdown-menu" id="dropdownMenu">
-                            <a href="#" onclick="handleMyAccount()">
-                                <i class="fas fa-user"></i>
-                                My Account
-                            </a>
-                            <a href="#" onclick="handleSignOut()">
-                                <i class="fas fa-sign-out-alt"></i>
-                                Sign Out
-                            </a>
-                        </div>
+                <div class="user-menu" id="userMenu">
+                    <div class="user-info">
+                        <div class="user-name" id="userName">Loading...</div>
+                        <div class="user-role">Super Admin</div>
+                    </div>
+                    <div class="user-avatar" id="userAvatar">
+                        SA
+                    </div>
+                    <div class="dropdown-menu" id="userDropdown">
+                        <a href="#account" class="dropdown-item">
+                            <i class="fas fa-user"></i>
+                            <span>My Account</span>
+                        </a>
+                        <div class="divider"></div>
+                        <a href="#" class="dropdown-item" id="signOutBtn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Sign Out</span>
+                        </a>
                     </div>
                 </div>
             </header>
 
-            <div id="moduleContainer" class="dashboard-content">
-                <!-- Welcome Section -->
-                <section class="welcome-section">
-                    <h1>Welcome to Super Admin Dashboard</h1>
-                    <p>Manage your organization's HR system with complete control and oversight.</p>
-                </section>
+            <div class="content">
+                <!-- Content will be dynamically loaded here -->
+                <h1>Welcome to WorkWise Pro Dashboard</h1>
             </div>
-        </div>
+        </main>
     </div>
-
-    <!-- Overlay for mobile -->
-    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
-
-    
-         <div class="content" id="mainContent">
-            <!-- Content will be dynamically loaded here -->
-            <div id="dashboardSection" class="content-section active">
-                <!-- Dashboard content will be loaded here -->
-            </div>
-            <!-- Users List Section -->
-<div id="usersListSection" class="content-section">
-    <div class="users-container">
-        <div class="users-header">
-            <h2>User Management</h2>
-            <button class="btn btn-primary" onclick="openAddUserModal()">
-                <i class="fas fa-plus"></i> Add New User
-            </button>
-        </div>
-
-        <div class="search-filter-container">
-            <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input type="text" id="userSearch" placeholder="Search users by name, email, or role..." onkeyup="debounceSearch()">
-            </div>
-            
-            <div class="filter-dropdown">
-                <button class="filter-button" onclick="toggleFilterMenu()">
-                    <i class="fas fa-filter"></i>
-                    <span>Filter</span>
-                </button>
-                <div class="filter-menu" id="filterMenu">
-                    <div class="filter-option" onclick="applyFilter('department')">Department</div>
-                    <div class="filter-option" onclick="applyFilter('role')">Role</div>
-                    <div class="filter-option" onclick="applyFilter('status')">Status</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="users-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Email</th>
-                        <th>Department</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>2FA</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="usersTableBody">
-                    <!-- Table content will be dynamically populated -->
-                </tbody>
-            </table>
-        </div>
-
-        <div class="pagination">
-            <div class="pagination-info">
-                Showing <span id="showingStart">0</span> to <span id="showingEnd">0</span> of <span id="totalUsers">0</span> users
-            </div>
-            <div class="pagination-buttons" id="paginationButtons">
-                <!-- Pagination buttons will be dynamically populated -->
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Add/Edit User Modal -->
-<div class="modal" id="userModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="modalTitle">Add New User</h3>
-            <button class="modal-close" onclick="closeUserModal()">×</button>
-        </div>
-        <div class="modal-body">
-            <form id="userForm">
-                <div class="form-group">
-                    <label for="userName">Full Name</label>
-                    <input type="text" id="userName" required>
-                </div>
-                <div class="form-group">
-                    <label for="userEmail">Email</label>
-                    <input type="email" id="userEmail" required>
-                </div>
-                <div class="form-group">
-                    <label for="userDepartment">Department</label>
-                    <select id="userDepartment" required>
-                        <option value="">Select Department</option>
-                        <option value="Administration">Administration</option>
-                        <option value="Product">Product</option>
-                        <option value="HR">HR</option>
-                        <option value="Finance">Finance</option>
-                        <option value="IT">IT</option>
-                        <option value="Support">Support</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="userRole">Role</label>
-                    <select id="userRole" required>
-                        <option value="">Select Role</option>
-                        <option value="admin">Admin</option>
-                        <option value="product_manager">Product Manager</option>
-                        <option value="hr_admin">HR Admin</option>
-                        <option value="finance_specialist">Finance Specialist</option>
-                        <option value="data_analyst">Data Analyst</option>
-                        <option value="api_developer">API Developer</option>
-                        <option value="support_specialist">Support Specialist</option>
-                        <option value="it_manager">IT Manager</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="requires2FA">Two-Factor Authentication</label>
-                    <select id="requires2FA">
-                        <option value="false">Disabled</option>
-                        <option value="true">Enabled</option>
-                    </select>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeUserModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="saveUser()">Save User</button>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Confirmation Modal -->
-<div class="modal" id="deleteModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Delete User</h3>
-            <button class="modal-close" onclick="closeDeleteModal()">×</button>
-        </div>
-        <div class="modal-body">
-            <p>Are you sure you want to delete this user? This action cannot be undone.</p>
-            <div class="form-group">
-                <label for="deleteReason">Reason for Deletion</label>
-                <input type="text" id="deleteReason" required placeholder="Please provide a reason">
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
-            <button class="btn btn-danger" onclick="confirmDeleteUser()">Delete User</button>
-        </div>
-    </div>
-</div>
-
-<!-- Reset Password Modal -->
-<div class="modal" id="resetPasswordModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Reset Password</h3>
-            <button class="modal-close" onclick="closeResetPasswordModal()">×</button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label for="newPassword">New Password</label>
-                <input type="password" id="newPassword" required>
-            </div>
-            <div class="form-group">
-                <label for="confirmPassword">Confirm Password</label>
-                <input type="password" id="confirmPassword" required>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeResetPasswordModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="confirmResetPassword()">Reset Password</button>
-        </div>
-    </div>
-</div>
-
-            <!-- Roles & Permissions Section -->
-<div id="rolesPermissionsSection" class="content-section">
-    <div class="roles-container">
-        <div class="roles-header">
-            <h2>Roles & Permissions Management</h2>
-            <button class="btn btn-primary" onclick="openAddRoleModal()">
-                <i class="fas fa-plus"></i> Add New Role
-            </button>
-        </div>
-
-        <!-- Roles List -->
-        <div class="roles-grid">
-            <!-- Superadmin Card -->
-            <div class="role-card superadmin">
-                <div class="role-header">
-                    <i class="fas fa-crown"></i>
-                    <h3>Superadmin</h3>
-                </div>
-                <div class="role-description">
-                    Full system access with no restrictions. Cannot be modified.
-                </div>
-                <div class="role-stats">
-                    <div class="stat">
-                        <span class="stat-value" id="superadminCount">0</span>
-                        <span class="stat-label">Users</span>
-                    </div>
-                </div>
-                <div class="role-footer">
-                    <button class="btn btn-secondary" disabled>
-                        <i class="fas fa-lock"></i> System Role
-                    </button>
-                </div>
-            </div>
-
-            <!-- Dynamic Role Cards -->
-            <div id="rolesGrid"></div>
-        </div>
-    </div>
-</div>
-
-<!-- Add/Edit Role Modal -->
-<div class="modal" id="roleModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="roleModalTitle">Add New Role</h3>
-            <button class="modal-close" onclick="closeRoleModal()">×</button>
-        </div>
-        <div class="modal-body">
-            <form id="roleForm">
-                <div class="form-group">
-                    <label for="roleName">Role Name *</label>
-                    <input type="text" id="roleName" required>
-                </div>
-                <div class="form-group">
-                    <label for="roleDescription">Description *</label>
-                    <textarea id="roleDescription" required></textarea>
-                </div>
-                
-                <div class="permissions-section">
-                    <h4>Permissions</h4>
-                    
-                    <!-- Dashboard Permissions -->
-                    <div class="permission-group">
-                        <h5>Dashboard Access</h5>
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="perm_dashboard_view">
-                            <span class="checkbox-label">View Dashboard</span>
-                        </label>
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="perm_dashboard_analytics">
-                            <span class="checkbox-label">Access Analytics</span>
-                        </label>
-                    </div>
-
-                    <!-- User Management Permissions -->
-                    <div class="permission-group">
-                        <h5>User Management</h5>
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="perm_users_view">
-                            <span class="checkbox-label">View Users</span>
-                        </label>
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="perm_users_create">
-                            <span class="checkbox-label">Create Users</span>
-                        </label>
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="perm_users_edit">
-                            <span class="checkbox-label">Edit Users</span>
-                        </label>
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="perm_users_delete">
-                            <span class="checkbox-label">Delete Users</span>
-                        </label>
-                    </div>
-
-                    <!-- System Settings Permissions -->
-                    <div class="permission-group">
-                        <h5>System Settings</h5>
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="perm_settings_view">
-                            <span class="checkbox-label">View Settings</span>
-                        </label>
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="perm_settings_edit">
-                            <span class="checkbox-label">Modify Settings</span>
-                        </label>
-                    </div>
-
-                    <!-- Module Management Permissions -->
-                    <div class="permission-group">
-                        <h5>Module Management</h5>
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="perm_modules_view">
-                            <span class="checkbox-label">View Modules</span>
-                        </label>
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="perm_modules_manage">
-                            <span class="checkbox-label">Manage Modules</span>
-                        </label>
-                    </div>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeRoleModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="saveRole()">Save Role</button>
-        </div>
-    </div>
-</div>
-            
-        </div>
-        
-    </main>
-</div>
-    <style>
-        /* Roles & Permissions Styles */
-.roles-container {
-    padding: 1.5rem;
-}
-
-.roles-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.roles-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-}
-
-.role-card {
-    background: white;
-    border-radius: 0.5rem;
-    box-shadow: var(--box-shadow);
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.role-card.superadmin {
-    border: 2px solid var(--primary-color);
-    background: linear-gradient(to bottom right, white, var(--gradient-start));
-}
-
-.role-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.role-header i {
-    font-size: 1.5rem;
-    color: var(--primary-color);
-}
-
-.role-header h3 {
-    margin: 0;
-    color: var(--text-color);
-}
-
-.role-description {
-    color: var(--light-text);
-    font-size: 0.875rem;
-}
-
-.role-stats {
-    display: flex;
-    gap: 1rem;
-    padding: 1rem 0;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.stat {
-    text-align: center;
-}
-
-.stat-value {
-    display: block;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--primary-color);
-}
-
-.stat-label {
-    font-size: 0.75rem;
-    color: var(--light-text);
-}
-
-.role-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-}
-
-/* Permissions Section Styles */
-.permissions-section {
-    margin-top: 1.5rem;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    padding-top: 1.5rem;
-}
-
-.permission-group {
-    margin-bottom: 1.5rem;
-}
-
-.permission-group h5 {
-    margin: 0 0 0.75rem 0;
-    color: var(--text-color);
-}
-
-.checkbox-container {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-    cursor: pointer;
-}
-
-.checkbox-container input[type="checkbox"] {
-    width: 1.25rem;
-    height: 1.25rem;
-    border-radius: 0.25rem;
-    border: 2px solid var(--light-text);
-    cursor: pointer;
-}
-
-.checkbox-label {
-    font-size: 0.875rem;
-    color: var(--text-color);
-}
-
-/* Role Actions */
-.role-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.role-action-button {
-    padding: 0.5rem;
-    border: none;
-    border-radius: 0.25rem;
-    background: none;
-    color: var(--text-color);
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.role-action-button:hover {
-    color: var(--primary-color);
-}
-
-/* Permission Matrix */
-.permission-matrix {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-}
-
-.permission-matrix th,
-.permission-matrix td {
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.permission-matrix th {
-    background: var(--gradient-start);
-    font-weight: 600;
-}
-
-.permission-matrix tr:hover {
-    background: var(--gradient-start);
-}
-    </style>
-
-<!-- Notification Template -->
-<div class="notification" id="notification">
-    <i class="fas fa-info-circle"></i>
-    <span id="notificationMessage"></span>
-</div>
 
     <script>
-        // Global Variables
-let currentUser = null;
-    let rolesData = [];
-let selectedRoleId = null;
-const API_BASE_URL = 'https://18.215.160.136.nip.io/api';
-
-// Initialize Dashboard
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        // Check URL parameters first
-        const params = getQueryParams();
-        
-        // If we have URL parameters, this is a fresh login
-        if (params.token && params.email && params.role) {
-            console.log('Fresh login detected, setting credentials');
-            // Store the credentials
-            localStorage.setItem('token', params.token);
-            localStorage.setItem('userEmail', params.email);
-            localStorage.setItem('userRole', params.role);
-            
-            // Initialize the dashboard with the new credentials
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the dashboard
             initializeDashboard();
-            loadUserInfo();
-            loadInitialContent();
             
-            // Clean the URL
-            window.history.replaceState({}, document.title, window.location.pathname);
-            return;
-        }
-
-        // If no URL parameters, check existing token
-        const existingToken = localStorage.getItem('token');
-        if (!existingToken) {
-            console.log('No token found, redirecting to login');
-            redirectToLogin();
-            return;
-        }
-
-        // Verify existing token
-        const isValid = await verifyToken(existingToken);
-        if (!isValid) {
-            console.log('Token invalid, redirecting to login');
-            redirectToLogin();
-            return;
-        }
-
-        // If we reach here, token is valid
-        console.log('Token valid, initializing dashboard');
-        initializeDashboard();
-        loadUserInfo();
-        loadInitialContent();
-
-    } catch (error) {
-        console.error('Dashboard initialization error:', error);
-        redirectToLogin();
-    }
-});
-
-
-
-// Authentication Check
-async function verifyToken(token) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/verify-token`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
+            // Check authentication
+            checkAuthentication();
         });
 
-        if (!response.ok) {
-            return false;
+        function initializeDashboard() {
+            // Toggle submenu
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const submenu = this.nextElementSibling;
+                    if (submenu && submenu.classList.contains('submenu')) {
+                        submenu.classList.toggle('show');
+                    }
+                });
+            });
+
+            // User dropdown toggle
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
+
+            userMenu.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function() {
+                userDropdown.classList.remove('show');
+            });
+
+            // Sign out functionality
+            document.getElementById('signOutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                signOut();
+            });
+
+            // Mobile menu toggle
+            const menuToggle = document.querySelector('.menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('show');
+                });
+            }
         }
 
-        const data = await response.json();
-        return data.success && data.user.role.toLowerCase() === 'superadmin';
-    } catch (error) {
-        console.error('Token verification error:', error);
-        return false;
-    }
-}
+        function checkAuthentication() {
+            const token = localStorage.getItem('token');
+            const email = localStorage.getItem('userEmail');
+            const role = localStorage.getItem('userRole');
 
+            if (!token || role !== 'superadmin') {
+                window.location.href = 'login.html';
+                return;
+            }
 
-// Token Management
-function getToken() {
-    return localStorage.getItem('token');
-}
+            // Update user info
+            const userName = document.getElementById('userName');
+            const userAvatar = document.getElementById('userAvatar');
+            
+            if (email) {
+                userName.textContent = email;
+                userAvatar.textContent = email.substring(0, 2).toUpperCase();
+            }
 
-function getQueryParams() {
-    const params = new URLSearchParams(window.location.search);
-    return {
-        email: params.get('email'),
-        role: params.get('role'),
-        token: params.get('token')
-    };
-}
-    
-// User Information
-function loadUserInfo() {
-    const userEmail = localStorage.getItem('userEmail');
-    const userRole = localStorage.getItem('userRole');
-
-    if (userEmail && userRole) {
-        const userInitial = userEmail.charAt(0).toUpperCase();
-        document.getElementById('userAvatar').textContent = userInitial;
-        document.getElementById('userName').textContent = userEmail;
-        document.getElementById('userRole').textContent = userRole;
-    }
-}
-    // Add this debug function to check token status
-function checkTokenStatus() {
-    const token = localStorage.getItem('token');
-    const email = localStorage.getItem('userEmail');
-    const role = localStorage.getItem('userRole');
-    
-    console.log('Current token:', token ? 'exists' : 'missing');
-    console.log('Current email:', email);
-    console.log('Current role:', role);
-}
-// Load Initial Content
-function loadInitialContent() {
-    loadSectionContent('dashboard');
-}
-// Dashboard Initialization
-function initializeDashboard() {
-    initializeSidebar();
-    initializeEventListeners();
-}
-
-function initializeSidebar() {
-    document.querySelectorAll('.menu-item').forEach(item => {
-        item.addEventListener('click', async function(e) {
-            e.preventDefault();
-            if (!this.hasAttribute('onclick')) {
-                const section = this.getAttribute('data-section');
-                if (section) {
-                    // Update active state
-                    document.querySelectorAll('.menu-item').forEach(menuItem => {
-                        menuItem.classList.remove('active');
-                    });
-                    this.classList.add('active');
-
-                    // Load section content
-                    await loadSectionContent(section);
+            // Verify token with server
+            fetch('https://18.215.160.136.nip.io/api/verify-token', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
                 }
-            }
-        });
-    });
-}
-
-function initializeEventListeners() {
-    // Sidebar Toggle
-    document.getElementById('toggleSidebar').addEventListener('click', () => {
-        document.querySelector('.sidebar').classList.toggle('active');
-    });
-
-    document.getElementById('closeSidebar').addEventListener('click', () => {
-        document.querySelector('.sidebar').classList.remove('active');
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(event) {
-        if (!event.target.closest('.user-menu')) {
-            document.getElementById('userDropdown').classList.remove('active');
-        }
-    });
-}
-
-// Menu Management
-function toggleSubmenu(submenuId) {
-    const submenu = document.getElementById(submenuId);
-    submenu.classList.toggle('active');
-}
-
-function activateMenuItem(item) {
-    document.querySelectorAll('.menu-item').forEach(menuItem => {
-        menuItem.classList.remove('active');
-    });
-    item.classList.add('active');
-}
-
-// Content Loading
-async function loadSectionContent(section) {
-    try {
-        // Hide all sections first
-        document.querySelectorAll('.content-section').forEach(section => {
-            if (section) section.style.display = 'none';
-        });
-
-        // Update page title
-        const pageTitle = document.getElementById('pageTitle');
-        if (pageTitle) {
-            pageTitle.textContent = section.charAt(0).toUpperCase() + section.slice(1).replace('-', ' ');
-        }
-
-        switch (section) {
-            case 'dashboard':
-                const dashboardSection = document.getElementById('dashboardSection');
-                if (dashboardSection) {
-                    dashboardSection.style.display = 'block';
-                    await loadDashboardContent(dashboardSection);
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    signOut();
                 }
-                break;
-
-            case 'users-list':
-                const usersSection = document.getElementById('usersListSection');
-                if (usersSection) {
-                    usersSection.style.display = 'block';
-                    await initializeUserManagement();
-                }
-                break;
-
-             // Add this case to your existing loadSectionContent function
-case 'roles-permissions':
-    const rolesSection = document.getElementById('rolesPermissionsSection');
-    if (rolesSection) {
-        rolesSection.style.display = 'block';
-        await initializeRolesManagement();
-    }
-    break;   
-
-            default:
-                const mainContent = document.getElementById('mainContent');
-                if (mainContent) {
-                    mainContent.innerHTML = `
-                        <div class="content-section" style="display: block">
-                            <h2>Section ${escapeHtml(section)} is under development</h2>
-                        </div>
-                    `;
-                }
-                break;
-        }
-    } catch (error) {
-        console.error(`Error loading ${section} content:`, error);
-        showNotification(`Failed to load ${section} section. Please try again.`, 'error');
-    }
-}
-// Content Section Loaders
-async function loadDashboardContent(container) {
-    try {
-        // Default statistics in case of API failure
-        const defaultStats = {
-            users: { total: 0, active: 0 },
-            companies: { total: 0, active: 0 },
-            auditLogs: []
-        };
-
-        // Fetch statistics with error handling
-        const [usersStats, companiesStats, auditLogs] = await Promise.all([
-            fetchUserStatistics().catch(() => defaultStats.users),
-            fetchCompanyStatistics().catch(() => defaultStats.companies),
-            fetchRecentAuditLogs().catch(() => defaultStats.auditLogs)
-        ]);
-
-        container.innerHTML = `
-            <div class="dashboard-grid">
-                <div class="stats-card">
-                    <h3>Users Overview</h3>
-                    <div class="stats-content">
-                        <div class="stat-item">
-                            <span class="stat-value">${usersStats.total || 0}</span>
-                            <span class="stat-label">Total Users</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">${usersStats.active || 0}</span>
-                            <span class="stat-label">Active Users</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="stats-card">
-                    <h3>Companies Overview</h3>
-                    <div class="stats-content">
-                        <div class="stat-item">
-                            <span class="stat-value">${companiesStats.total || 0}</span>
-                            <span class="stat-label">Total Companies</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">${companiesStats.active || 0}</span>
-                            <span class="stat-label">Active Companies</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="recent-activity">
-                    <h3>Recent Activity</h3>
-                    <div class="activity-list">
-                        ${(auditLogs.length > 0) ? 
-                            auditLogs.map(log => `
-                                <div class="activity-item">
-                                    <div class="activity-icon">
-                                        <i class="fas ${getActivityIcon(log.action)}"></i>
-                                    </div>
-                                    <div class="activity-details">
-                                        <div class="activity-title">${formatActivityTitle(log)}</div>
-                                        <div class="activity-time">${formatTimestamp(log.timestamp)}</div>
-                                    </div>
-                                </div>
-                            `).join('') : 
-                            '<div class="no-activity">No recent activity</div>'
-                        }
-                    </div>
-                </div>
-            </div>
-        `;
-    } catch (error) {
-        console.error('Error loading dashboard content:', error);
-        container.innerHTML = `
-            <div class="error-container">
-                <i class="fas fa-exclamation-circle"></i>
-                <p>Failed to load dashboard content. Please try again later.</p>
-            </div>
-        `;
-    }
-}
-
-
-// API Calls
-async function fetchUserStatistics() {
-    try {
-        // Since the statistics endpoint doesn't exist, let's use the users endpoint
-        const response = await makeAuthenticatedRequest('/users?limit=1');
-        if (!response.ok) throw new Error('Failed to fetch user statistics');
-        
-        const data = await response.json();
-        return {
-            total: data.pagination.total || 0,
-            active: data.users.filter(u => u.status === 'active').length || 0
-        };
-    } catch (error) {
-        console.error('Error fetching user statistics:', error);
-        return { total: 0, active: 0 };
-    }
-}
-
-async function fetchCompanyStatistics() {
-    // Since there's no companies endpoint yet, return default values
-    return { total: 0, active: 0 };
-}
-
-
-async function fetchRecentAuditLogs() {
-    try {
-        const response = await makeAuthenticatedRequest('/audit-logs?limit=5');
-        if (!response.ok) throw new Error('Failed to fetch audit logs');
-        
-        const data = await response.json();
-        return data.logs || [];
-    } catch (error) {
-        console.error('Error fetching audit logs:', error);
-        return [];
-    }
-}
-    async function makeAuthenticatedRequest(endpoint, options = {}) {
-    try {
-        const token = getToken();
-        if (!token) {
-            throw new Error('No authentication token available');
+            })
+            .catch(error => {
+                console.error('Token verification error:', error);
+                signOut();
+            });
         }
 
-        const defaultOptions = {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        };
+        function signOut() {
+            // Clear local storage
+            localStorage.removeItem('token');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userRole');
 
-        const mergedOptions = {
-            ...defaultOptions,
-            ...options,
-            headers: {
-                ...defaultOptions.headers,
-                ...options.headers
-            }
-        };
-
-        console.log('Making request to:', `${API_BASE_URL}${endpoint}`);
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, mergedOptions);
-        
-        if (response.status === 401) {
-            // Token expired or invalid
-            redirectToLogin();
-            return null;
+            // Redirect to login
+            window.location.href = 'login.html';
         }
-
-        return response;
-    } catch (error) {
-        console.error('API request failed:', error);
-        throw error;
-    }
-}
-// Utility Functions
-function showLoading(container) {
-    container.innerHTML = `
-        <div class="loading-container">
-            <div class="loading-spinner"></div>
-            <p>Loading content...</p>
-        </div>
-    `;
-}
-
-function hideLoading(container) {
-    const loadingElement = container.querySelector('.loading-container');
-    if (loadingElement) {
-        loadingElement.remove();
-    }
-}
-
-function showError(container, message) {
-    container.innerHTML = `
-        <div class="error-container">
-            <i class="fas fa-exclamation-circle"></i>
-            <p>${message}</p>
-        </div>
-    `;
-}
-
-function showNotification(message, type = 'success') {
-    const notification = document.getElementById('notification');
-    if (!notification) {
-        // Create notification element if it doesn't exist
-        const notificationElement = document.createElement('div');
-        notificationElement.id = 'notification';
-        notificationElement.className = 'notification';
-        document.body.appendChild(notificationElement);
-    }
-
-    const notificationElement = document.getElementById('notification');
-    notificationElement.className = `notification ${type}`;
-    notificationElement.textContent = message;
-    notificationElement.classList.add('show');
-
-    setTimeout(() => {
-        notificationElement.classList.remove('show');
-    }, 3000);
-}
-function formatTimestamp(timestamp) {
-    return new Date(timestamp).toLocaleString();
-}
-
-function getActivityIcon(action) {
-    const icons = {
-        'USER_CREATED': 'fa-user-plus',
-        'USER_UPDATED': 'fa-user-edit',
-        'USER_DELETED': 'fa-user-minus',
-        'USER_LOGIN': 'fa-sign-in-alt',
-        'default': 'fa-info-circle'
-    };
-    return icons[action] || icons.default;
-}
-
-function formatActivityTitle(log) {
-    return `${log.action.replace(/_/g, ' ')} by ${log.performedByUser.email}`;
-}
-
-// User Menu Functions
-function toggleUserMenu() {
-    document.getElementById('userDropdown').classList.toggle('active');
-}
-
-function openMyAccount() {
-    // Implement My Account page navigation
-    window.location.href = 'my-account.html';
-}
-
-async function handleLogout() {
-    localStorage.clear(); // Clear all localStorage items
-    window.location.href = 'login.html';
-}
-
-// Redirect function
-function redirectToLogin() {
-    localStorage.clear(); // Clear all localStorage items
-    window.location.href = 'login.html';
-}
-
-// Additional styles for dashboard content
-const additionalStyles = document.createElement('style');
-additionalStyles.textContent = `
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1.5rem;
-        padding: 1.5rem;
-    }
-
-    .stats-card {
-        background: white;
-        border-radius: 0.5rem;
-        padding: 1.5rem;
-        box-shadow: var(--box-shadow);
-    }
-
-    .stats-content {
-        display: flex;
-        justify-content: space-around;
-        margin-top: 1rem;
-    }
-
-    .stat-item {
-        text-align: center;
-    }
-
-    .stat-value {
-        font-size: 2rem;
-        font-weight: 600;
-        color: var(--primary-color);
-        display: block;
-    }
-
-    .stat-label {
-        color: var(--light-text);
-        font-size: 0.875rem;
-    }
-
-    .recent-activity {
-        grid-column: 1 / -1;
-        background: white;
-        border-radius: 0.5rem;
-        padding: 1.5rem;
-        box-shadow: var(--box-shadow);
-    }
-
-    .activity-list {
-        margin-top: 1rem;
-    }
-
-    .activity-item {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        padding: 1rem;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    }
-
-    .activity-icon {
-        width: 2.5rem;
-        height: 2.5rem;
-        background: var(--gradient-start);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--primary-color);
-    }
-
-    .activity-details {
-        flex: 1;
-    }
-
-    .activity-title {
-        font-weight: 500;
-    }
-
-    .activity-time {
-        font-size: 0.875rem;
-        color: var(--light-text);
-    }
-
-    .loading-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 200px;
-        gap: 1rem;
-    }
-
-    .error-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 200px;
-        gap: 1rem;
-        color: var(--danger-color);
-    }
-    .content-section {
-        display: none;
-    }
-
-    #dashboardSection {
-        display: block; /* Show dashboard by default */
-    }
-
-    .error-message {
-        padding: 2rem;
-        text-align: center;
-        color: var(--danger-color);
-    }
-     .loading-message {
-        text-align: center;
-        padding: 2rem;
-        color: var(--light-text);
-    }
-
-    .error-message {
-        text-align: center;
-        padding: 2rem;
-        color: var(--danger-color);
-    }
-
-    .no-data-message {
-        text-align: center;
-        padding: 2rem;
-        color: var(--light-text);
-    }
-
-    .loading-spinner {
-        display: inline-block;
-        width: 2rem;
-        height: 2rem;
-        border: 2px solid rgba(0, 0, 0, 0.1);
-        border-left-color: var(--primary-color);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-    
-    
-`;
-document.head.appendChild(additionalStyles);
-</script>
-    <script>
-        // User Management Variables
-let currentPage = 1;
-let totalPages = 1;
-let currentFilters = {
-    search: '',
-    department: '',
-    role: '',
-    status: ''
-};
-let selectedUserId = null;
-let usersData = [];
-
-// Initialize User Management
-async function initializeUserManagement() {
-    try {
-        await loadUsers();
-        setupEventListeners();
-    } catch (error) {
-        console.error('Error initializing user management:', error);
-        showNotification('Failed to initialize user management', 'error');
-    }
-}
-
-
-// Setup Event Listeners
-function setupEventListeners() {
-    const userSearch = document.getElementById('userSearch');
-    if (userSearch) {
-        userSearch.addEventListener('keyup', debounceSearch);
-    }
-
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.filter-dropdown')) {
-            const filterMenu = document.getElementById('filterMenu');
-            if (filterMenu) {
-                filterMenu.classList.remove('active');
-            }
-        }
-    });
-}
-    
-// Debounce Search
-let searchTimeout;
-function debounceSearch() {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        const searchValue = document.getElementById('userSearch').value;
-        currentFilters.search = searchValue;
-        currentPage = 1;
-        loadUsers();
-    }, 300);
-}
-// Loading Indicators
-function showLoading(element) {
-    if (element) {
-        element.innerHTML = `
-            <div class="loading-container">
-                <div class="loading-spinner"></div>
-                <p>Loading...</p>
-            </div>
-        `;
-    }
-}
-function hideLoading(element) {
-    const loadingContainer = element?.querySelector('.loading-container');
-    if (loadingContainer) {
-        loadingContainer.remove();
-    }
-}        
-        
-// Load Users
-async function loadUsers() {
-    try {
-        showLoading(document.getElementById('usersTableBody'));
-        
-        const queryParams = new URLSearchParams({
-            page: currentPage,
-            limit: 10,
-            ...(currentFilters.search && { search: currentFilters.search }),
-            ...(currentFilters.department && { department: currentFilters.department }),
-            ...(currentFilters.role && { role: currentFilters.role }),
-            ...(currentFilters.status && { status: currentFilters.status })
-        });
-
-        const response = await makeAuthenticatedRequest(`/users?${queryParams}`);
-        if (!response.ok) throw new Error('Failed to fetch users');
-
-        const data = await response.json();
-        usersData = data.users;
-        totalPages = data.pagination.pages;
-
-        updateUsersTable(data.users);
-        updatePagination(data.pagination);
-    } catch (error) {
-        console.error('Error loading users:', error);
-        showNotification('Failed to load users', 'error');
-        document.getElementById('usersTableBody').innerHTML = `
-            <tr>
-                <td colspan="7" class="error-message">
-                    Failed to load users. Please try again.
-                </td>
-            </tr>
-        `;
-    } finally {
-        hideLoading(document.getElementById('usersTableBody'));
-    }
-}
-
-// Update Users Table
-// Update Users Table
-function updateUsersTable(users) {
-    const tbody = document.getElementById('usersTableBody');
-    if (!tbody) return;
-
-    if (!users || users.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="no-data-message">
-                    No users found
-                </td>
-            </tr>
-        `;
-        return;
-    }
-
-    tbody.innerHTML = users.map(user => `
-        <tr>
-            <td>${escapeHtml(user.name || '')}</td>
-            <td>${escapeHtml(user.email || '')}</td>
-            <td>${escapeHtml(user.department || '')}</td>
-            <td>${escapeHtml(formatRole(user.role || ''))}</td>
-            <td>
-                <span class="user-status ${user.status === 'active' ? 'status-active' : 'status-inactive'}">
-                    ${escapeHtml(user.status || '')}
-                </span>
-            </td>
-            <td>
-                <span class="user-status ${user.requires2FA ? 'status-active' : 'status-inactive'}">
-                    ${user.requires2FA ? 'Enabled' : 'Disabled'}
-                </span>
-            </td>
-            <td>
-                <div class="user-actions">
-                    <button class="action-button" onclick="editUser('${user._id}')" title="Edit">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="action-button" onclick="toggleUserStatus('${user._id}', '${user.status}')" 
-                            title="${user.status === 'active' ? 'Deactivate' : 'Activate'}">
-                        <i class="fas fa-${user.status === 'active' ? 'ban' : 'check-circle'}"></i>
-                    </button>
-                    <button class="action-button" onclick="openResetPasswordModal('${user._id}')" title="Reset Password">
-                        <i class="fas fa-key"></i>
-                    </button>
-                    <button class="action-button" onclick="toggle2FA('${user._id}', ${user.requires2FA})" 
-                            title="${user.requires2FA ? 'Disable 2FA' : 'Enable 2FA'}">
-                        <i class="fas fa-shield-alt"></i>
-                    </button>
-                    <button class="action-button" onclick="openDeleteModal('${user._id}')" title="Delete">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `).join('');
-}
-
-// Update Pagination
-function updatePagination(pagination) {
-    const { total, page, pages } = pagination;
-    const start = (page - 1) * 10 + 1;
-    const end = Math.min(page * 10, total);
-
-    document.getElementById('showingStart').textContent = start;
-    document.getElementById('showingEnd').textContent = end;
-    document.getElementById('totalUsers').textContent = total;
-
-    const paginationButtons = document.getElementById('paginationButtons');
-    paginationButtons.innerHTML = `
-        <button class="pagination-button" onclick="changePage(1)" ${page === 1 ? 'disabled' : ''}>
-            <i class="fas fa-angle-double-left"></i>
-        </button>
-        <button class="pagination-button" onclick="changePage(${page - 1})" ${page === 1 ? 'disabled' : ''}>
-            <i class="fas fa-angle-left"></i>
-        </button>
-        ${generatePageButtons(page, pages)}
-        <button class="pagination-button" onclick="changePage(${page + 1})" ${page === pages ? 'disabled' : ''}>
-            <i class="fas fa-angle-right"></i>
-        </button>
-        <button class="pagination-button" onclick="changePage(${pages})" ${page === pages ? 'disabled' : ''}>
-            <i class="fas fa-angle-double-right"></i>
-        </button>
-    `;
-}
-
-// Generate Page Buttons
-function generatePageButtons(currentPage, totalPages) {
-    let buttons = [];
-    let startPage = Math.max(1, currentPage - 2);
-    let endPage = Math.min(totalPages, currentPage + 2);
-
-    if (startPage > 1) {
-        buttons.push(`<span class="pagination-ellipsis">...</span>`);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-        buttons.push(`
-            <button class="pagination-button ${i === currentPage ? 'active' : ''}" 
-                    onclick="changePage(${i})">
-                ${i}
-            </button>
-        `);
-    }
-
-    if (endPage < totalPages) {
-        buttons.push(`<span class="pagination-ellipsis">...</span>`);
-    }
-
-    return buttons.join('');
-}
-
-// Change Page
-function changePage(page) {
-    if (page < 1 || page > totalPages) return;
-    currentPage = page;
-    loadUsers();
-}
-
-// Filter Functions
-function toggleFilterMenu() {
-    document.getElementById('filterMenu').classList.toggle('active');
-}
-
-function applyFilter(filterType) {
-    const value = prompt(`Enter ${filterType}:`);
-    if (value !== null) {
-        currentFilters[filterType] = value;
-        currentPage = 1;
-        loadUsers();
-    }
-    toggleFilterMenu();
-}
-
-// User Modal Functions
-function openAddUserModal() {
-    selectedUserId = null;
-    document.getElementById('modalTitle').textContent = 'Add New User';
-    document.getElementById('userForm').reset();
-    document.getElementById('userModal').classList.add('active');
-}
-
-function openEditUserModal(userId) {
-    const user = usersData.find(u => u._id === userId);
-    if (!user) return;
-
-    selectedUserId = userId;
-    document.getElementById('modalTitle').textContent = 'Edit User';
-    document.getElementById('userName').value = user.name;
-    document.getElementById('userEmail').value = user.email;
-    document.getElementById('userDepartment').value = user.department;
-    document.getElementById('userRole').value = user.role;
-    document.getElementById('requires2FA').value = user.requires2FA.toString();
-    document.getElementById('userModal').classList.add('active');
-}
-
-function closeUserModal() {
-    document.getElementById('userModal').classList.remove('active');
-    document.getElementById('userForm').reset();
-    selectedUserId = null;
-}
-
-// Save User
-async function saveUser() {
-    try {
-        // Get form values
-        const userData = {
-            name: document.getElementById('userName').value,
-            email: document.getElementById('userEmail').value,
-            department: document.getElementById('userDepartment').value,
-            role: document.getElementById('userRole').value,
-            requires2FA: document.getElementById('requires2FA').value === 'true'
-        };
-
-        // Validate required fields
-        if (!userData.name || !userData.email || !userData.department || !userData.role) {
-            showNotification('Please fill in all required fields', 'error');
-            return;
-        }
-
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(userData.email)) {
-            showNotification('Please enter a valid email address', 'error');
-            return;
-        }
-
-        const endpoint = selectedUserId ? 
-            `/users/${selectedUserId}` : 
-            '/users';
-
-        const method = selectedUserId ? 'PUT' : 'POST';
-
-        const response = await makeAuthenticatedRequest(endpoint, {
-            method,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(userData)
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to save user');
-        }
-
-        showNotification(
-            selectedUserId ? 'User updated successfully' : 'User created successfully',
-            'success'
-        );
-
-        closeUserModal();
-        loadUsers(); // Refresh the users list
-    } catch (error) {
-        console.error('Error saving user:', error);
-        showNotification(error.message || 'Failed to save user', 'error');
-    }
-}
-
-// Delete User Functions
-function openDeleteModal(userId) {
-    selectedUserId = userId;
-    document.getElementById('deleteModal').classList.add('active');
-}
-
-function closeDeleteModal() {
-    document.getElementById('deleteModal').classList.remove('active');
-    document.getElementById('deleteReason').value = '';
-    selectedUserId = null;
-}
-
-async function confirmDeleteUser() {
-    try {
-        const reason = document.getElementById('deleteReason').value;
-        if (!reason) {
-            showNotification('Please provide a reason for deletion', 'error');
-            return;
-        }
-
-        const response = await makeAuthenticatedRequest(`/users/${selectedUserId}`, {
-            method: 'DELETE',
-            body: JSON.stringify({ reason })
-        });
-
-        if (!response.ok) throw new Error('Failed to delete user');
-
-        showNotification('User deleted successfully', 'success');
-        closeDeleteModal();
-        loadUsers();
-    } catch (error) {
-        console.error('Error deleting user:', error);
-        showNotification('Failed to delete user', 'error');
-    }
-}
-
-// Status Toggle Function
-async function toggleUserStatus(userId, currentStatus) {
-    try {
-        const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-        const response = await makeAuthenticatedRequest(`/users/${userId}/status`, {
-            method: 'PUT',
-            body: JSON.stringify({ status: newStatus })
-        });
-
-        if (!response.ok) throw new Error('Failed to update user status');
-
-        showNotification('User status updated successfully', 'success');
-        loadUsers();
-    } catch (error) {
-        console.error('Error updating user status:', error);
-        showNotification('Failed to update user status', 'error');
-    }
-}
-
-// 2FA Toggle Function
-async function toggle2FA(userId, current2FAStatus) {
-    try {
-        const response = await makeAuthenticatedRequest(`/users/${userId}/2fa`, {
-            method: 'PUT',
-            body: JSON.stringify({ requires2FA: !current2FAStatus })
-        });
-
-        if (!response.ok) throw new Error('Failed to update 2FA status');
-
-        showNotification('2FA status updated successfully', 'success');
-        loadUsers();
-    } catch (error) {
-        console.error('Error updating 2FA status:', error);
-        showNotification('Failed to update 2FA status', 'error');
-    }
-}
-        
-function editUser(userId) {
-    try {
-        const user = usersData.find(u => u._id === userId);
-        if (!user) {
-            showNotification('User not found', 'error');
-            return;
-        }
-
-        selectedUserId = userId;
-        document.getElementById('modalTitle').textContent = 'Edit User';
-        
-        // Populate form fields
-        document.getElementById('userName').value = user.name || '';
-        document.getElementById('userEmail').value = user.email || '';
-        document.getElementById('userDepartment').value = user.department || '';
-        document.getElementById('userRole').value = user.role || '';
-        document.getElementById('requires2FA').value = (user.requires2FA || false).toString();
-
-        // Show modal
-        document.getElementById('userModal').classList.add('active');
-    } catch (error) {
-        console.error('Error editing user:', error);
-        showNotification('Failed to load user data', 'error');
-    }
-}
-
-        
-// Password Reset Functions
-function openResetPasswordModal(userId) {
-    selectedUserId = userId;
-    document.getElementById('resetPasswordModal').classList.add('active');
-}
-
-function closeResetPasswordModal() {
-    document.getElementById('resetPasswordModal').classList.remove('active');
-    document.getElementById('newPassword').value = '';
-    document.getElementById('confirmPassword').value = '';
-    selectedUserId = null;
-}
-
-async function confirmResetPassword() {
-    try {
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-
-        if (newPassword !== confirmPassword) {
-            showNotification('Passwords do not match', 'error');
-            return;
-        }
-
-        const response = await makeAuthenticatedRequest(`/users/${selectedUserId}/reset-password`, {
-            method: 'POST',
-            body: JSON.stringify({ password: newPassword })
-        });
-
-        if (!response.ok) throw new Error('Failed to reset password');
-
-        showNotification('Password reset successfully', 'success');
-        closeResetPasswordModal();
-    } catch (error) {
-        console.error('Error resetting password:', error);
-        showNotification('Failed to reset password', 'error');
-    }
-}
-
-// Utility Functions
-function formatRole(role) {
-    return role
-        .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-}
-
-// Add this security utility function
-function escapeHtml(unsafe) {
-    if (typeof unsafe !== 'string') return '';
-    return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
-        // Add error handling wrapper for action buttons
-function wrapActionWithErrorHandler(action, errorMessage) {
-    return async (...args) => {
-        try {
-            await action(...args);
-        } catch (error) {
-            console.error(error);
-            showNotification(errorMessage, 'error');
-        }
-    };
-}
-
-    </script>
-    <script>
-
-// Define default roles and their permissions
-const DEFAULT_ROLES = {
-    admin: {
-        name: 'Admin',
-        description: 'System administrator with extensive access rights',
-        permissions: ['all_except_superadmin']
-    },
-    product_manager: {
-        name: 'Product Manager',
-        description: 'Manages product modules and features',
-        permissions: ['dashboard_view', 'modules_view', 'modules_manage']
-    },
-    hr_admin: {
-        name: 'HR Admin',
-        description: 'Manages user accounts and permissions',
-        permissions: ['users_view', 'users_create', 'users_edit']
-    },
-    finance_specialist: {
-        name: 'Finance Specialist',
-        description: 'Handles financial aspects and billing',
-        permissions: ['dashboard_view', 'dashboard_analytics']
-    },
-    data_analyst: {
-        name: 'Data Analyst',
-        description: 'Analyzes system data and generates reports',
-        permissions: ['dashboard_view', 'dashboard_analytics']
-    },
-    api_developer: {
-        name: 'API Developer',
-        description: 'Manages API integrations and development',
-        permissions: ['api_view', 'api_manage']
-    },
-    support_specialist: {
-        name: 'Support Specialist',
-        description: 'Handles user support and assistance',
-        permissions: ['support_view', 'support_manage']
-    },
-    it_manager: {
-        name: 'IT Manager',
-        description: 'Manages IT infrastructure and security',
-        permissions: ['settings_view', 'settings_edit']
-    }
-};
-
-// Define all available permissions
-const AVAILABLE_PERMISSIONS = {
-    dashboard: {
-        view: 'View Dashboard',
-        analytics: 'Access Analytics'
-    },
-    users: {
-        view: 'View Users',
-        create: 'Create Users',
-        edit: 'Edit Users',
-        delete: 'Delete Users'
-    },
-    settings: {
-        view: 'View Settings',
-        edit: 'Modify Settings'
-    },
-    modules: {
-        view: 'View Modules',
-        manage: 'Manage Modules'
-    },
-    api: {
-        view: 'View API',
-        manage: 'Manage API'
-    },
-    support: {
-        view: 'View Support',
-        manage: 'Manage Support'
-    }
-};
-        // Initialize Roles Management
-sync function initializeRolesManagement() {
-    try {
-        console.log('Initializing roles management...');
-        await loadRoles();
-        setupRolesEventListeners();
-        console.log('Roles management initialized successfully');
-    } catch (error) {
-        console.error('Error initializing roles management:', error);
-        showNotification('Failed to initialize roles management', 'error');
-    }
-}
-
-// Load Roles
-// Update the loadRoles function
-async function loadRoles() {
-    try {
-        showLoading(document.getElementById('rolesGrid'));
-        
-        const response = await makeAuthenticatedRequest('/roles', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to fetch roles');
-        }
-
-        const data = await response.json();
-        if (data.success) {
-            rolesData = data.roles;
-            updateRolesGrid(data.roles);
-        } else {
-            throw new Error(data.message || 'Failed to fetch roles');
-        }
-    } catch (error) {
-        console.error('Error loading roles:', error);
-        const rolesGrid = document.getElementById('rolesGrid');
-        if (rolesGrid) {
-            rolesGrid.innerHTML = `
-                <div class="error-message">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <p>Failed to load roles. Please try again later.</p>
-                </div>
-            `;
-        }
-        showNotification('Failed to load roles', 'error');
-    } finally {
-        hideLoading(document.getElementById('rolesGrid'));
-    }
-}
-// Update Roles Grid
-function updateRolesGrid(roles) {
-    const rolesGrid = document.getElementById('rolesGrid');
-    if (!rolesGrid) return;
-
-    rolesGrid.innerHTML = roles.map(role => `
-        <div class="role-card ${role.isDefault ? 'default-role' : ''}">
-            <div class="role-header">
-                <i class="fas ${getRoleIcon(role.name)}"></i>
-                <h3>${escapeHtml(role.name)}</h3>
-            </div>
-            <div class="role-description">
-                ${escapeHtml(role.description)}
-            </div>
-            <div class="role-stats">
-                <div class="stat">
-                    <span class="stat-value">${role.userCount || 0}</span>
-                    <span class="stat-label">Users</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-value">${role.permissions.length}</span>
-                    <span class="stat-label">Permissions</span>
-                </div>
-            </div>
-            <div class="role-footer">
-                <div class="role-actions">
-                    <button class="role-action-button" onclick="viewRolePermissions('${role._id}')" title="View Permissions">
-                        <i class="fas fa-key"></i>
-                    </button>
-                    ${role.isDefault ? '' : `
-                        <button class="role-action-button" onclick="editRole('${role._id}')" title="Edit Role">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="role-action-button" onclick="deleteRole('${role._id}')" title="Delete Role">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    `}
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Role Modal Functions
-function openAddRoleModal() {
-    selectedRoleId = null;
-    document.getElementById('roleModalTitle').textContent = 'Add New Role';
-    document.getElementById('roleForm').reset();
-    resetPermissionCheckboxes();
-    document.getElementById('roleModal').classList.add('active');
-}
-
-function openEditRoleModal(roleId) {
-    const role = rolesData.find(r => r._id === roleId);
-    if (!role) return;
-
-    selectedRoleId = roleId;
-    document.getElementById('roleModalTitle').textContent = 'Edit Role';
-    document.getElementById('roleName').value = role.name;
-    document.getElementById('roleDescription').value = role.description;
-    
-    // Set permissions
-    resetPermissionCheckboxes();
-    role.permissions.forEach(permission => {
-        const checkbox = document.getElementById(`perm_${permission}`);
-        if (checkbox) checkbox.checked = true;
-    });
-
-    document.getElementById('roleModal').classList.add('active');
-}
-
-function closeRoleModal() {
-    document.getElementById('roleModal').classList.remove('active');
-    document.getElementById('roleForm').reset();
-    resetPermissionCheckboxes();
-    selectedRoleId = null;
-}
-
-// Save Role
-async function saveRole() {
-    try {
-        const roleData = {
-            name: document.getElementById('roleName').value,
-            description: document.getElementById('roleDescription').value,
-            permissions: getSelectedPermissions()
-        };
-
-        // Validate
-        if (!roleData.name || !roleData.description) {
-            showNotification('Please fill in all required fields', 'error');
-            return;
-        }
-
-        if (roleData.permissions.length === 0) {
-            showNotification('Please select at least one permission', 'error');
-            return;
-        }
-
-        const endpoint = selectedRoleId ? 
-            `/roles/${selectedRoleId}` : 
-            '/roles';
-
-        const method = selectedRoleId ? 'PUT' : 'POST';
-
-        const response = await makeAuthenticatedRequest(endpoint, {
-            method,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(roleData)
-        });
-
-        if (!response.ok) throw new Error('Failed to save role');
-
-        showNotification(
-            selectedRoleId ? 'Role updated successfully' : 'Role created successfully',
-            'success'
-        );
-        
-        closeRoleModal();
-        loadRoles();
-    } catch (error) {
-        console.error('Error saving role:', error);
-        showNotification(error.message || 'Failed to save role', 'error');
-    }
-}
-
-// Delete Role
-async function deleteRole(roleId) {
-    if (!confirm('Are you sure you want to delete this role? Users with this role will need to be reassigned.')) {
-        return;
-    }
-
-    try {
-        const response = await makeAuthenticatedRequest(`/roles/${roleId}`, {
-            method: 'DELETE'
-        });
-
-        if (!response.ok) throw new Error('Failed to delete role');
-
-        showNotification('Role deleted successfully', 'success');
-        loadRoles();
-    } catch (error) {
-        console.error('Error deleting role:', error);
-        showNotification('Failed to delete role', 'error');
-    }
-}
-
-// Utility Functions
-function getRoleIcon(roleName) {
-    const icons = {
-        'Admin': 'fa-user-shield',
-        'Product Manager': 'fa-tasks',
-        'HR Admin': 'fa-users-cog',
-        'Finance Specialist': 'fa-dollar-sign',
-        'Data Analyst': 'fa-chart-line',
-        'API Developer': 'fa-code',
-        'Support Specialist': 'fa-headset',
-        'IT Manager': 'fa-server',
-        'default': 'fa-user-tie'
-    };
-    return icons[roleName] || icons.default;
-}
-
-function getSelectedPermissions() {
-    const permissions = [];
-    document.querySelectorAll('input[type="checkbox"][id^="perm_"]').forEach(checkbox => {
-        if (checkbox.checked) {
-            permissions.push(checkbox.id.replace('perm_', ''));
-        }
-    });
-    return permissions;
-}
-
-function resetPermissionCheckboxes() {
-    document.querySelectorAll('input[type="checkbox"][id^="perm_"]').forEach(checkbox => {
-        checkbox.checked = false;
-    });
-}
-
-// Setup Event Listeners
-function setupRolesEventListeners() {
-    // Add any specific event listeners for the roles management section
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.role-card') && !e.target.closest('.modal')) {
-            closeRoleModal();
-        }
-    });
-}
     </script>
 </body>
 </html>
-
