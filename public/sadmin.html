@@ -1349,6 +1349,17 @@ function initializeEventListeners() {
 // Main Initialization
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        // Hide all content sections initially
+        document.querySelectorAll('[id$="Section"]').forEach(section => {
+            if (section.id !== 'dashboardSection') {
+                section.style.display = 'none';
+            }
+        });
+
+        // Hide specific content areas
+        document.querySelector('.user-management-content')?.style.display = 'none';
+        document.querySelector('.roles-permissions-content')?.style.display = 'none';
+
         // Handle initial login parameters
         const params = getQueryParams();
         if (params.token) {
@@ -1380,8 +1391,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         showNotification('Failed to initialize application', 'error');
     }
 });
-
-
 // Error Handling
 window.addEventListener('unhandledrejection', function(event) {
     console.error('Unhandled promise rejection:', event.reason);
@@ -1487,9 +1496,20 @@ async function checkAuthentication() {
         return false;
     }
 }       
-// Session Timer Management
-let sessionTimer = null;
-let tokenCheckInterval = null;
+
+function toggleSubmenu(submenuId) {
+    const submenu = document.getElementById(submenuId);
+    if (submenu) {
+        // Close all other submenus first
+        document.querySelectorAll('.submenu').forEach(menu => {
+            if (menu.id !== submenuId) {
+                menu.classList.remove('active');
+            }
+        });
+        // Toggle the clicked submenu
+        submenu.classList.toggle('active');
+    }
+}        
         
 // Authentication Functions
 async function verifyToken(token) {
@@ -2520,10 +2540,14 @@ function loadInitialContent() {
 // Update loadSectionContent function
 async function loadSectionContent(section) {
     try {
-        // Hide all sections first
-        document.querySelectorAll('.content-section').forEach(s => {
-            if (s) s.style.display = 'none';
+        // First hide all sections
+        document.querySelectorAll('[id$="Section"]').forEach(section => {
+            section.style.display = 'none';
         });
+
+        // Hide all content that shouldn't be visible initially
+        document.querySelector('.user-management-content')?.style.display = 'none';
+        document.querySelector('.roles-permissions-content')?.style.display = 'none';
 
         // Update page title
         const pageTitle = document.getElementById('pageTitle');
@@ -2532,31 +2556,41 @@ async function loadSectionContent(section) {
                                   section.slice(1).replace('-', ' ');
         }
 
-        const sectionElement = document.getElementById(`${section}Section`);
-        if (sectionElement) {
-            sectionElement.style.display = 'block';
-            
-            switch (section) {
-                case 'dashboard':
-                    await loadDashboardContent(sectionElement);
-                    break;
-                case 'userManagement':
+        switch (section) {
+            case 'dashboard':
+                const dashboardSection = document.getElementById('dashboardSection');
+                if (dashboardSection) {
+                    dashboardSection.style.display = 'block';
+                    await loadDashboardContent(dashboardSection);
+                }
+                break;
+
+            case 'userManagement':
+                const userSection = document.getElementById('userManagementSection');
+                if (userSection) {
+                    userSection.style.display = 'block';
                     await initializeUserManagement();
-                    break;
-                case 'rolesPermissions':
+                }
+                break;
+
+            case 'rolesPermissions':
+                const rolesSection = document.getElementById('rolesPermissionsSection');
+                if (rolesSection) {
+                    rolesSection.style.display = 'block';
                     await initializeRolesManagement();
-                    break;
-                // Add other cases as needed
-            }
-        } else {
-            const mainContent = document.getElementById('mainContent');
-            if (mainContent) {
-                mainContent.innerHTML = `
-                    <div class="content-section">
-                        <h2>Section ${escapeHtml(section)} is under development</h2>
-                    </div>
-                `;
-            }
+                }
+                break;
+
+            default:
+                const mainContent = document.getElementById('mainContent');
+                if (mainContent) {
+                    mainContent.innerHTML = `
+                        <div class="content-section">
+                            <h2>Section ${escapeHtml(section)} is under development</h2>
+                        </div>
+                    `;
+                }
+                break;
         }
     } catch (error) {
         console.error(`Error loading ${section} content:`, error);
