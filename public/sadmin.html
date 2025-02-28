@@ -1631,28 +1631,29 @@ async function fetchRecentAuditLogs() {
     }
 }
     async function makeAuthenticatedRequest(endpoint, options = {}) {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        throw new Error('No authentication token available');
-    }
-
-    const defaultOptions = {
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        }
-    };
-
-    const mergedOptions = {
-        ...defaultOptions,
-        ...options,
-        headers: {
-            ...defaultOptions.headers,
-            ...options.headers
-        }
-    };
-
     try {
+        const token = getToken();
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        const defaultOptions = {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        };
+
+        const mergedOptions = {
+            ...defaultOptions,
+            ...options,
+            headers: {
+                ...defaultOptions.headers,
+                ...options.headers
+            }
+        };
+
+        console.log('Making request to:', `${API_BASE_URL}${endpoint}`);
         const response = await fetch(`${API_BASE_URL}${endpoint}`, mergedOptions);
         
         if (response.status === 401) {
@@ -1667,7 +1668,6 @@ async function fetchRecentAuditLogs() {
         throw error;
     }
 }
-
 // Utility Functions
 function showLoading(container) {
     container.innerHTML = `
@@ -1960,15 +1960,19 @@ function debounceSearch() {
 function showLoading(element) {
     if (element) {
         element.innerHTML = `
-            <tr>
-                <td colspan="7" class="loading-message">
-                    <div class="loading-spinner"></div>
-                    Loading...
-                </td>
-            </tr>
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <p>Loading...</p>
+            </div>
         `;
     }
 }
+function hideLoading(element) {
+    const loadingContainer = element?.querySelector('.loading-container');
+    if (loadingContainer) {
+        loadingContainer.remove();
+    }
+}        
         
 // Load Users
 async function loadUsers() {
@@ -2472,10 +2476,12 @@ const AVAILABLE_PERMISSIONS = {
     }
 };
         // Initialize Roles Management
-async function initializeRolesManagement() {
+sync function initializeRolesManagement() {
     try {
+        console.log('Initializing roles management...');
         await loadRoles();
         setupRolesEventListeners();
+        console.log('Roles management initialized successfully');
     } catch (error) {
         console.error('Error initializing roles management:', error);
         showNotification('Failed to initialize roles management', 'error');
@@ -2483,26 +2489,46 @@ async function initializeRolesManagement() {
 }
 
 // Load Roles
+// Update the loadRoles function
 async function loadRoles() {
     try {
         showLoading(document.getElementById('rolesGrid'));
         
-        const response = await makeAuthenticatedRequest('/roles');
-        if (!response.ok) throw new Error('Failed to fetch roles');
+        const response = await makeAuthenticatedRequest('/roles', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${getToken()}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to fetch roles');
+        }
 
         const data = await response.json();
-        rolesData = data.roles;
-        
-        updateRolesGrid(data.roles);
-        updateRoleStatistics(data.statistics);
+        if (data.success) {
+            rolesData = data.roles;
+            updateRolesGrid(data.roles);
+        } else {
+            throw new Error(data.message || 'Failed to fetch roles');
+        }
     } catch (error) {
         console.error('Error loading roles:', error);
+        const rolesGrid = document.getElementById('rolesGrid');
+        if (rolesGrid) {
+            rolesGrid.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Failed to load roles. Please try again later.</p>
+                </div>
+            `;
+        }
         showNotification('Failed to load roles', 'error');
     } finally {
         hideLoading(document.getElementById('rolesGrid'));
     }
 }
-
 // Update Roles Grid
 function updateRolesGrid(roles) {
     const rolesGrid = document.getElementById('rolesGrid');
