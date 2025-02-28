@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SuperAdmin Dashboard - WorkWise Pro</title>
+    <title>Super Admin Dashboard - WorkWise Pro</title>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -13,22 +13,53 @@
 
     <style>
         :root {
-            --primary-color: #4F46E5;
-            --secondary-color: #4338CA;
-            --accent-color: #818CF8;
-            --success-color: #10B981;
-            --warning-color: #F59E0B;
-            --danger-color: #EF4444;
-            --background-color: #F8FAFC;
-            --text-color: #1F2937;
-            --light-text: #64748B;
+            /* Primary Colors */
+            --primary-color: #1a237e;     
+            --primary-light: #534bae;
+            --primary-dark: #121858;
+            --primary-gradient: linear-gradient(135deg, #1a237e 0%, #534bae 100%);
+            
+            /* Secondary Colors */
+            --secondary-color: #283593;
+            --secondary-light: #5f5fc4;
+            --secondary-dark: #001064;
+            
+            /* Background Colors */
+            --background-color: #f8f9fc;  
+            --surface-color: #ffffff;
+            --surface-dark: #f1f5f9;
+            --nav-background: #1a237e;    
+            
+            /* Text Colors */
+            --text-primary: #2c3345;      
+            --text-secondary: #6b7280;    
+            --text-tertiary: #9ca3af;     
+            --text-light: #ffffff;        
+            
+            /* Status Colors */
+            --success-color: #4caf50;     
+            --warning-color: #ff9800;     
+            --danger-color: #f44336;      
+            --info-color: #2196f3;        
+            
+            /* Border & Shadow */
+            --border-color: #e2e8f0;
+            --border-light: #f1f5f9;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            
+            /* Component Specific */
             --sidebar-width: 280px;
+            --sidebar-collapsed-width: 70px;
             --header-height: 70px;
-            --gradient-start: #EEF2FF;
-            --gradient-end: #E0E7FF;
-            --box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            
+            /* Transitions */
+            --transition-fast: 0.2s ease;
+            --transition-normal: 0.3s ease;
         }
 
+        /* Base Styles */
         * {
             margin: 0;
             padding: 0;
@@ -39,321 +70,839 @@
         body {
             font-family: 'Poppins', sans-serif;
             line-height: 1.6;
-            color: var(--text-color);
+            color: var(--text-primary);
             background-color: var(--background-color);
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Layout */
-       .sidebar {
-    width: 280px;
-    background: var(--primary-color);
-    height: 100vh;
-    position: fixed;
-    left: 0;
-    top: 0;
-    overflow-y: auto;
-    transition: all 0.3s ease;
-    z-index: 1000;
-}
-
-.sidebar-header {
-    padding: 1.25rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--primary-dark);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-       .logo {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    color: var(--text-light);
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 1.25rem;
-}
-        .logo i {
-    font-size: 1.5rem;
-}
-
-        .sidebar-menu {
-            padding: 1rem 0;
+        /* Layout Structure */
+        .layout-container {
+            display: flex;
+            min-height: 100vh;
         }
 
-        .menu-section {
-            margin-bottom: 1rem;
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: var(--nav-background);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 1000;
+            transition: all var(--transition-normal);
         }
 
-        .menu-section-title {
-            padding: 0.75rem 1.5rem;
-            font-size: 0.875rem;
-            color: var(--light-text);
+        .sidebar.collapsed {
+            width: 70px;
+        }
+                /* Custom Scrollbar */
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: var(--primary-dark);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+        }
+
+        .sidebar:hover::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Sidebar Header */
+        .sidebar-header {
+            padding: 1.25rem;
+            background: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        .sidebar-logo i {
+            font-size: 1.5rem;
+        }
+
+        .sidebar.collapsed .sidebar-logo span,
+        .sidebar.collapsed .nav-section-title,
+        .sidebar.collapsed .nav-link span {
+            display: none;
+        }
+
+        .sidebar.collapsed .nav-link {
+            padding: 0.75rem;
+            justify-content: center;
+        }
+
+        .sidebar.collapsed .nav-link i {
+            margin: 0;
+        }
+
+        /* Collapse Toggle */
+        .collapse-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--text-light);
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: var(--transition-normal);
+        }
+
+        .collapse-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Navigation Sections */
+        .nav-section {
+            padding: 0.75rem 0;
+        }
+
+        .nav-section-title {
+            padding: 0.75rem 1.25rem;
+            color: var(--text-light);
+            opacity: 0.6;
+            font-size: 0.75rem;
+            font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
 
-        .menu-item {
-            padding: 0.75rem 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            color: var(--text-color);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            cursor: pointer;
+        .nav-items {
+            list-style: none;
         }
 
-        .menu-item:hover {
-            background: var(--gradient-start);
-            color: var(--primary-color);
-        }
-
-        .menu-item.active {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        .menu-item i {
-            width: 1.5rem;
-            text-align: center;
-        }
-
-        .submenu {
-            padding-left: 1rem;
-            display: none;
-        }
-
-        .submenu.active {
-            display: block;
-        }
-
-        .submenu .menu-item {
-            padding-left: 2.5rem;
-        }
-
-        /* Header Styles */
-        .main-content {
-            flex: 1;
-            margin-left: var(--sidebar-width);
-            min-height: 100vh;
-        }
-
-        .header {
-            height: var(--header-height);
-            background: white;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 2rem;
-            position: fixed;
-            top: 0;
-            right: 0;
-            left: var(--sidebar-width);
-            z-index: 999;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .toggle-sidebar {
-    background: none;
-    border: none;
-    color: var(--text-light);
-    cursor: pointer;
-    padding: 0.5rem;
-    display: none;
-}
-        .sidebar-nav {
-    padding: 1rem 0;
-}
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-menu {
+        .nav-item {
             position: relative;
         }
 
-        .user-trigger {
+        /* Navigation Links */
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.25rem;
+            color: var(--text-light);
+            opacity: 0.8;
+            text-decoration: none;
+            transition: var(--transition-normal);
+            border-radius: 0.5rem;
+            margin: 0.25rem 0.75rem;
+            position: relative;
+        }
+
+        .nav-link i {
+            min-width: 1.5rem;
+            font-size: 1.25rem;
+            text-align: center;
+            margin-right: 0.75rem;
+            opacity: 0.8;
+            transition: var(--transition-normal);
+        }
+
+        .nav-link span {
+            white-space: nowrap;
+            transition: var(--transition-normal);
+        }
+
+        .nav-link:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link.active {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+        }
+
+        .nav-link.active i {
+            opacity: 1;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            transition: margin-left var(--transition-normal);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .main-content.expanded {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+
+        /* Header */
+        .header {
+            height: var(--header-height);
+            background: var(--surface-color);
+            padding: 0 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        /* Sidebar Toggle Button */
+        .sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.5rem;
+            font-size: 1.25rem;
+        }
+
+        /* User Menu */
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-email {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* Dropdown */
+        .dropdown {
+            position: relative;
+        }
+
+        .menu-trigger {
+            background: none;
+            border: none;
+            padding: 0.5rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.5rem;
-            border-radius: 0.5rem;
             cursor: pointer;
-            transition: all 0.3s ease;
+            color: var(--text-secondary);
+            border-radius: 0.375rem;
+            transition: all var(--transition-normal);
         }
 
-        .user-trigger:hover {
-            background: var(--gradient-start);
-        }
-
-        .user-avatar {
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: 50%;
-            background: var(--primary-color);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-        }
-
-        .user-info {
-            display: none;
-        }
-
-        .user-dropdown {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: white;
-            border-radius: 0.5rem;
-            box-shadow: var(--box-shadow);
-            min-width: 200px;
-            padding: 0.5rem 0;
-            display: none;
-            z-index: 1000;
-        }
-
-        .user-dropdown.active {
-            display: block;
-        }
-
-        .dropdown-item {
-            padding: 0.75rem 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            color: var(--text-color);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .dropdown-item:hover {
-            background: var(--gradient-start);
+        .menu-trigger:hover,
+        .menu-trigger.active {
+            background: var(--surface-dark);
             color: var(--primary-color);
         }
 
-        .dropdown-divider {
-            height: 1px;
-            background: rgba(0, 0, 0, 0.1);
-            margin: 0.5rem 0;
+        .menu-trigger i {
+            font-size: 1.25rem;
+            transition: transform var(--transition-normal);
         }
 
-        /* Content Area */
-        .content {
-            padding: calc(var(--header-height) + 2rem) 2rem 2rem;
+        .menu-trigger.active i:last-child {
+            transform: rotate(180deg);
         }
 
-        /* Responsive Design */
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            background: var(--surface-color);
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow-lg);
+            min-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all var(--transition-normal);
+            border: 1px solid var(--border-color);
+            z-index: 1000;
+        }
+
+        .dropdown-menu.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-menu a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all var(--transition-normal);
+        }
+
+        .dropdown-menu a:hover {
+            background: var(--surface-dark);
+            color: var(--primary-color);
+        }
+
+        .dropdown-menu a i {
+            width: 1.25rem;
+            text-align: center;
+        }
+
+        /* Dashboard Content */
+        .dashboard-content {
+            flex: 1;
+            padding: 2rem;
+            background: var(--background-color);
+            overflow-y: auto;
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            background: var(--surface-color);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .welcome-section h1 {
+            color: var(--primary-color);
+            font-size: 1.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-section p {
+            color: var(--text-secondary);
+        }
+
+        /* Content Section */
+        .content-section {
+            background: var(--surface-color);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Module Header */
+        .module-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .header-title h1 {
+            color: var(--primary-color);
+            font-size: 1.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-title p {
+            color: var(--text-secondary);
+        }
+
+        /* Button Styles */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: var(--text-light);
+            border: none;
+        }
+
+        .btn-secondary {
+            background: var(--surface-dark);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Search and Filter Section */
+        .search-filter-section {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-tertiary);
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .filter-controls select {
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            color: var(--text-primary);
+            background: var(--surface-color);
+        }
+
+                /* Table Styles */
+        .users-table-container {
+            overflow-x: auto;
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .users-table th,
+        .users-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .users-table th {
+            background: var(--surface-dark);
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .users-table tbody tr:hover {
+            background: var(--surface-dark);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--surface-color);
+            border-radius: 0.75rem;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            color: var(--primary-color);
+            font-size: 1.25rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            font-size: 1.25rem;
+            padding: 0.5rem;
+            transition: color var(--transition-normal);
+        }
+
+        .close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+            padding: 0 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        /* Animations */
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* User Table Styles */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .user-id {
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+        }
+
+        /* Badge Styles */
+        .department-badge,
+        .role-badge,
+        .status-badge,
+        .2fa-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .department-badge {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .role-badge {
+            background: var(--accent-purple);
+            color: white;
+        }
+
+        .status-badge.status-active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-badge.status-inactive {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+
+        .2fa-badge.enabled {
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary-color);
+        }
+
+        .2fa-badge.disabled {
+            background: rgba(100, 116, 139, 0.1);
+            color: var(--text-secondary);
+        }
+
+                /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-icon {
+            padding: 0.5rem;
+            border: none;
+            border-radius: 0.375rem;
+            background: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+        }
+
+        .btn-icon:hover {
+            background: var(--surface-dark);
+            color: var(--primary-color);
+        }
+
+        .btn-icon.danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+
+        .btn-icon.success:hover {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .btn-icon.warning:hover {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem !important;
+            color: var(--text-tertiary);
+        }
+
+        .empty-state i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state p {
+            font-size: 1rem;
+        }
+
+        /* Detailed Notification Styles */
+        .notification.detailed {
+            width: 400px;
+            max-width: 90vw;
+            padding: 0;
+            background: var(--surface-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .notification.detailed .notification-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--primary-color);
+            color: var(--text-light);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .notification.detailed .notification-header i {
+            font-size: 1.25rem;
+        }
+
+        .notification.detailed .notification-body {
+            padding: 1rem;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .notification.detailed .notification-body strong {
+            color: var(--primary-color);
+        }
+
+        .notification.detailed.show {
+            transform: translateX(0);
+        }
+
+        /* Password Input Group */
+        .password-input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-input-group input {
+            flex: 1;
+            padding-right: 2.5rem;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 0.5rem;
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .toggle-password:hover {
+            color: var(--primary-color);
+        }
+
+        /* Warning Message */
+        .warning-message {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .warning-message i {
+            color: var(--danger-color);
+            font-size: 1.5rem;
+        }
+
+        /* Form Validation Styles */
+        .form-group input.error,
+        .form-group select.error {
+            border-color: var(--danger-color);
+            background-color: rgba(239, 68, 68, 0.05);
+        }
+
+        .form-group input.error:focus,
+        .form-group select.error:focus {
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+
+        .form-group .error-message {
+            color: var(--danger-color);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group .error-message i {
+            font-size: 1rem;
+        }
+
+        /* Responsive Styles */
         @media (max-width: 1024px) {
             .sidebar {
-        left: -280px;
-    }
+                left: calc(-1 * var(--sidebar-width));
+            }
 
-    .sidebar.active {
-        left: 0;
-    }
-
-    .main-content {
-        margin-left: 0;
-    }
-
-            .header {
+            .sidebar.active {
                 left: 0;
             }
 
-           .toggle-sidebar {
-        display: block;
-    }
-
-            .user-info {
-                display: none;
+            .main-content {
+                margin-left: 0;
             }
-        }
 
-        @media (min-width: 1024px) {
-            .user-info {
+            .sidebar-toggle {
+                display: block;
+            }
+
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+
+            .overlay.active {
                 display: block;
             }
         }
 
-        /* Notification Styles */
-        .notification {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            padding: 1rem 1.5rem;
-            border-radius: 0.5rem;
-            background: white;
-            box-shadow: var(--box-shadow);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            transform: translateX(120%);
-            transition: transform 0.3s ease;
-            z-index: 1000;
+        @media (max-width: 640px) {
+            .user-email {
+                display: none;
+            }
+
+            .dashboard-content {
+                padding: 1rem;
+            }
+
+            .search-filter-section {
+                flex-direction: column;
+            }
+
+            .filter-controls {
+                flex-wrap: wrap;
+            }
+
+            .filter-controls select {
+                flex: 1;
+                min-width: 150px;
+            }
         }
-
-        .notification.show {
-            transform: translateX(0);
-        }
-
-        .notification.success {
-            border-left: 4px solid var(--success-color);
-        }
-
-        .notification.error {
-            border-left: 4px solid var(--danger-color);
-        }
-
-        /* Loading Spinner */
-        .loading-spinner {
-            display: inline-block;
-            width: 1.5rem;
-            height: 1.5rem;
-            border: 2px solid rgba(0, 0, 0, 0.1);
-            border-left-color: var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        /* Custom Scrollbar for Sidebar */
-.sidebar::-webkit-scrollbar {
-    width: 5px;
-}
-
-.sidebar::-webkit-scrollbar-track {
-    background: var(--primary-dark);
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-}
-
-.sidebar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
     </style>
+
     <style>
         /* User Management Styles */
 .users-container {
@@ -660,217 +1209,169 @@
     opacity: 0.9;
 }
     </style>
-  <div class="dashboard-container">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <a href="#" class="logo">
-                <i class="fas fa-briefcase"></i>
-                WorkWise Pro
-            </a>
-            <button class="toggle-sidebar" id="closeSidebar">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-
-        <!-- Navigation Menu -->
-        <nav class="sidebar-nav">
-            <!-- Dashboard Overview -->
-            <div class="menu-item active">
-                <a href="#" class="nav-link" data-section="dashboard">
-                    <i class="fas fa-th-large"></i>
-                    <span>Dashboard Overview</span>
+<body>
+    <div class="layout-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="sidebar-logo">
+                    <i class="fas fa-briefcase"></i>
+                    <span>WorkWise Pro</span>
                 </a>
+                <button class="collapse-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
             </div>
 
-            <!-- Companies/Organizations -->
-            <div class="menu-item">
-                <a href="#" class="nav-link" data-section="companies">
-                    <i class="fas fa-building"></i>
-                    <span>Companies/Organizations</span>
-                </a>
+            <!-- Main Navigation -->
+            <nav class="nav-section">
+                <ul class="nav-items">
+                    <li class="nav-item">
+                        <a href="#dashboard" class="nav-link active" data-section="dashboard">
+                            <i class="fas fa-th-large"></i>
+                            <span>Dashboard Overview</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#companies" class="nav-link" data-section="companies">
+                            <i class="fas fa-building"></i>
+                            <span>Companies/Organizations</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- System Navigation -->
+            <div class="nav-section">
+                <div class="nav-section-title">System</div>
+                <ul class="nav-items">
+                    <li class="nav-item">
+                        <a href="#settings" class="nav-link" data-section="settings">
+                            <i class="fas fa-cog"></i>
+                            <span>System Settings</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#pricing" class="nav-link" data-section="pricing">
+                            <i class="fas fa-tags"></i>
+                            <span>Pricing & Plans</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#security" class="nav-link" data-section="security">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Security Settings</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
 
-            <!-- SYSTEM Section -->
-            <div class="section-title">SYSTEM</div>
-
-            <!-- System Settings Submenu -->
-            <div class="menu-item" onclick="toggleSubmenu(event, 'systemSettingsSubmenu')">
-                <div class="menu-title">
-                    <i class="fas fa-cog"></i>
-                    <span>System Settings</span>
-                    <i class="fas fa-chevron-right arrow-icon"></i>
-                </div>
-                <div id="systemSettingsSubmenu" class="submenu">
-                    <a href="#" class="submenu-item" data-section="general-settings">
-                        <i class="fas fa-sliders-h"></i>
-                        <span>General Settings</span>
-                    </a>
-                    <a href="#" class="submenu-item" data-section="security-settings">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>Security Settings</span>
-                    </a>
-                    <a href="#" class="submenu-item" data-section="email-settings">
-                        <i class="fas fa-envelope"></i>
-                        <span>Email Settings</span>
-                    </a>
-                    <a href="#" class="submenu-item" data-section="notification-settings">
-                        <i class="fas fa-bell"></i>
-                        <span>Notification Settings</span>
-                    </a>
-                </div>
+            <!-- Management Navigation -->
+            <div class="nav-section">
+                <div class="nav-section-title">Management</div>
+                <ul class="nav-items">
+                    <li class="nav-item">
+                        <a href="#modules" class="nav-link" data-section="modules">
+                            <i class="fas fa-cube"></i>
+                            <span>Modules Management</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-section="userManagement" onclick="loadUserManagement(event)">
+                            <i class="fas fa-users"></i>
+                            <span>User Management</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
 
-            <!-- MANAGEMENT Section -->
-            <div class="section-title">MANAGEMENT</div>
-
-            <!-- Modules Management Submenu -->
-            <div class="menu-item" onclick="toggleSubmenu(event, 'modulesManagementSubmenu')">
-                <div class="menu-title">
-                    <i class="fas fa-cube"></i>
-                    <span>Modules Management</span>
-                    <i class="fas fa-chevron-right arrow-icon"></i>
-                </div>
-                <div id="modulesManagementSubmenu" class="submenu">
-                    <a href="#" class="submenu-item" data-section="installed-modules">
-                        <i class="fas fa-box"></i>
-                        <span>Installed Modules</span>
-                    </a>
-                    <a href="#" class="submenu-item" data-section="available-modules">
-                        <i class="fas fa-box-open"></i>
-                        <span>Available Modules</span>
-                    </a>
-                    <a href="#" class="submenu-item" data-section="module-updates">
-                        <i class="fas fa-sync"></i>
-                        <span>Updates</span>
-                    </a>
-                    <a href="#" class="submenu-item" data-section="module-settings">
-                        <i class="fas fa-cogs"></i>
-                        <span>Module Settings</span>
-                    </a>
-                </div>
+            <!-- Tools Navigation -->
+            <div class="nav-section">
+                <div class="nav-section-title">Tools</div>
+                <ul class="nav-items">
+                    <li class="nav-item">
+                        <a href="#analytics" class="nav-link" data-section="analytics">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Analytics & Reports</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#backup" class="nav-link" data-section="backup">
+                            <i class="fas fa-database"></i>
+                            <span>Backup & Restore</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#audit" class="nav-link" data-section="audit">
+                            <i class="fas fa-history"></i>
+                            <span>Audit Logs</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#api" class="nav-link" data-section="api">
+                            <i class="fas fa-code"></i>
+                            <span>API Management</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
 
-            <!-- User Management Submenu -->
-            <div class="menu-item" onclick="toggleSubmenu(event, 'userManagementSubmenu')">
-                <div class="menu-title">
-                    <i class="fas fa-users"></i>
-                    <span>User Management</span>
-                    <i class="fas fa-chevron-right arrow-icon"></i>
-                </div>
-                <div id="userManagementSubmenu" class="submenu">
-                    <a href="#" class="submenu-item" data-section="user-list">
-                        <i class="fas fa-user-friends"></i>
-                        <span>User List</span>
-                    </a>
-                    <a href="#" class="submenu-item" data-section="roles-permissions">
-                        <i class="fas fa-user-shield"></i>
-                        <span>Roles & Permissions</span>
-                    </a>
-                    <a href="#" class="submenu-item" data-section="user-groups">
-                        <i class="fas fa-users-cog"></i>
-                        <span>User Groups</span>
-                    </a>
-                    <a href="#" class="submenu-item" data-section="access-logs">
-                        <i class="fas fa-history"></i>
-                        <span>Access Logs</span>
-                    </a>
-                </div>
+            <!-- Support Navigation -->
+            <div class="nav-section">
+                <div class="nav-section-title">Support</div>
+                <ul class="nav-items">
+                    <li class="nav-item">
+                        <a href="#support" class="nav-link" data-section="support">
+                            <i class="fas fa-headset"></i>
+                            <span>Support Center</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
+        </aside>
 
-            <!-- TOOLS Section -->
-            <div class="section-title">TOOLS</div>
-
-            <!-- Analytics & Reports -->
-            <div class="menu-item">
-                <a href="#" class="nav-link" data-section="analytics">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Analytics & Reports</span>
-                </a>
-            </div>
-
-            <!-- Backup & Restore -->
-            <div class="menu-item">
-                <a href="#" class="nav-link" data-section="backup">
-                    <i class="fas fa-database"></i>
-                    <span>Backup & Restore</span>
-                </a>
-            </div>
-
-            <!-- Audit Logs -->
-            <div class="menu-item">
-                <a href="#" class="nav-link" data-section="audit">
-                    <i class="fas fa-history"></i>
-                    <span>Audit Logs</span>
-                </a>
-            </div>
-
-            <!-- API Management -->
-            <div class="menu-item">
-                <a href="#" class="nav-link" data-section="api">
-                    <i class="fas fa-code"></i>
-                    <span>API Management</span>
-                </a>
-            </div>
-
-            <!-- SUPPORT Section -->
-            <div class="section-title">SUPPORT</div>
-
-            <!-- Support Center -->
-            <div class="menu-item">
-                <a href="#" class="nav-link" data-section="support">
-                    <i class="fas fa-headset"></i>
-                    <span>Support Center</span>
-                </a>
-            </div>
-        </nav>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <header class="header">
-            <div class="header-left">
-                <button class="toggle-sidebar" id="toggleSidebar">
+        <!-- Main Content -->
+        <div class="main-content">
+            <header class="header">
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
                     <i class="fas fa-bars"></i>
                 </button>
-                <h2 id="pageTitle">Dashboard Overview</h2>
-            </div>
-
-            <div class="header-right">
                 <div class="user-menu">
-                    <div class="user-trigger" onclick="toggleUserMenu()">
-                        <div class="user-avatar" id="userAvatar">
-                            <!-- Will be set by JS -->
+                    <span class="user-email" id="userEmail"></span>
+                    <div class="dropdown">
+                        <button type="button" class="menu-trigger" id="userMenuTrigger">
+                            <i class="fas fa-user-circle"></i>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-menu" id="dropdownMenu">
+                            <a href="#" onclick="handleMyAccount()">
+                                <i class="fas fa-user"></i>
+                                My Account
+                            </a>
+                            <a href="#" onclick="handleSignOut()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Sign Out
+                            </a>
                         </div>
-                        <div class="user-info">
-                            <div id="userName">Loading...</div>
-                            <div id="userRole" style="font-size: 0.8rem; color: var(--light-text)">
-                                SuperAdmin
-                            </div>
-                        </div>
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
-
-                    <div class="user-dropdown" id="userDropdown">
-                        <a href="#my-account" class="dropdown-item" onclick="openMyAccount()">
-                            <i class="fas fa-user"></i>
-                            <span>My Account</span>
-                        </a>
-                        <a href="#settings" class="dropdown-item">
-                            <i class="fas fa-cog"></i>
-                            <span>Settings</span>
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item" onclick="handleLogout()">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Sign Out</span>
-                        </a>
                     </div>
                 </div>
-            </div>
-        </header>
+            </header>
 
-        <div class="content" id="mainContent">
+            <div id="moduleContainer" class="dashboard-content">
+                <!-- Welcome Section -->
+                <section class="welcome-section">
+                    <h1>Welcome to Super Admin Dashboard</h1>
+                    <p>Manage your organization's HR system with complete control and oversight.</p>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay for mobile -->
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    
+         <div class="content" id="mainContent">
             <!-- Content will be dynamically loaded here -->
             <div id="dashboardSection" class="content-section active">
                 <!-- Dashboard content will be loaded here -->
