@@ -1293,7 +1293,7 @@ let selectedRoleId = null;
 let usersData = [];
 let rolesData = [];
 
-// Initialize Dashboard
+// Update the initialization code
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const params = getQueryParams();
@@ -1303,13 +1303,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             localStorage.setItem('userRole', params.role);
             localStorage.setItem('userEmail', params.email);
             
+            // Remove query parameters from URL without reloading
             window.history.replaceState({}, document.title, window.location.pathname);
         }
 
-        const isAuthenticated = await checkAuthentication();
-        if (!isAuthenticated) {
+        // Check if we have the necessary credentials
+        const token = localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+        const userEmail = localStorage.getItem('userEmail');
+
+        if (!token || !userRole || !userEmail) {
             redirectToLogin();
             return;
+        }
+
+        // Only verify token if we have all credentials
+        const isAuthenticated = await checkAuthentication();
+        if (!isAuthenticated) {
+            // Only redirect if token verification actually failed
+            if (!params.token) {
+                redirectToLogin();
+                return;
+            }
         }
 
         initializeDashboard();
@@ -1317,7 +1332,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadInitialContent();
     } catch (error) {
         console.error('Dashboard initialization error:', error);
-        redirectToLogin();
+        // Only redirect on actual errors, not during initial load
+        if (!window.location.search.includes('token=')) {
+            redirectToLogin();
+        }
     }
 });
 
@@ -1402,7 +1420,7 @@ const ApiService = {
     }
 };
 
-// Authentication Functions
+// Update the checkAuthentication function
 async function checkAuthentication() {
     const token = getToken();
     if (!token) {
@@ -1413,39 +1431,60 @@ async function checkAuthentication() {
         const response = await fetch(`${API_BASE_URL}/verify-token`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
         });
 
-        if (!response.ok) {
-            throw new Error('Token verification failed');
-        }
-
         const data = await response.json();
-        
-        // Remove the toLowerCase check that was causing issues
-        if (data.user.role !== 'superadmin') {
-            throw new Error('Unauthorized access');
+
+        // Check if the response indicates success
+        if (response.ok && data.success) {
+            currentUser = data.user;
+            // Store user info in localStorage if not already present
+            if (!localStorage.getItem('userEmail')) {
+                localStorage.setItem('userEmail', data.user.email);
+            }
+            if (!localStorage.getItem('userRole')) {
+                localStorage.setItem('userRole', data.user.role);
+            }
+            return true;
         }
 
-        currentUser = data.user;
-        return true;
+        return false;
     } catch (error) {
         console.error('Authentication check failed:', error);
-        clearUserSession();
         return false;
     }
 }
-        // Add this new function for clearing user session
+
+   // Update the clearUserSession function
 function clearUserSession() {
     localStorage.removeItem('token');
     localStorage.removeItem('userRole');
     localStorage.removeItem('userEmail');
+    currentUser = null;
 }
+
 
 function getToken() {
     return localStorage.getItem('token');
 }
+        // Add this function to verify token periodically
+function setupTokenRefresh() {
+    // Check token validity every 5 minutes
+    setInterval(async () => {
+        const isValid = await checkAuthentication();
+        if (!isValid && !window.location.pathname.includes('login.html')) {
+            handleUnauthorized();
+        }
+    }, 300000); // 5 minutes
+}
+
+// Call this in your initialization
+document.addEventListener('DOMContentLoaded', () => {
+    setupTokenRefresh();
+});
 
 function getQueryParams() {
     const params = new URLSearchParams(window.location.search);
@@ -1715,7 +1754,7 @@ function handleRoleActions(event) {
             break;
     }
 }
-   // Additional API Integration Functions
+  // Update the makeAuthenticatedRequest function
 async function makeAuthenticatedRequest(endpoint, options = {}) {
     try {
         const token = getToken();
@@ -1741,9 +1780,13 @@ async function makeAuthenticatedRequest(endpoint, options = {}) {
 
         const response = await fetch(`${API_BASE_URL}${endpoint}`, mergedOptions);
         
-        if (response.status === 401) {
-            handleUnauthorized();
-            return null;
+        // Only handle 401 if it's not the verify-token endpoint
+        if (response.status === 401 && !endpoint.includes('verify-token')) {
+            const isStillValid = await checkAuthentication();
+            if (!isStillValid) {
+                handleUnauthorized();
+                return null;
+            }
         }
 
         return response;
@@ -1752,14 +1795,20 @@ async function makeAuthenticatedRequest(endpoint, options = {}) {
         throw error;
     }
 }
-        function handleUnauthorized() {
+
+     // Update the handleUnauthorized function
+function handleUnauthorized() {
+    // Check if we're already on the login page to prevent redirect loops
+    if (window.location.pathname.includes('login.html')) {
+        return;
+    }
+    
     clearUserSession();
     showNotification('Session expired. Please login again.', 'error');
     setTimeout(() => {
         window.location.href = 'login.html';
     }, 2000);
 }
-
         // Additional Modal Handling Functions
 function handleModalOutsideClick(event, modalId) {
     const modal = document.getElementById(modalId);
