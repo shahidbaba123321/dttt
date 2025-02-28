@@ -1572,12 +1572,12 @@ async function initializeUserManagement() {
     try {
         await loadUsers();
         setupUserEventListeners();
+        setupUserModalEventListeners(); // Add this line
     } catch (error) {
         console.error('Error initializing user management:', error);
         showNotification('Failed to initialize user management', 'error');
     }
 }
-
 async function loadUsers() {
     try {
         showLoading(document.getElementById('usersTableBody'));
@@ -1831,6 +1831,32 @@ function updateUsersTable(users) {
     `).join('');
 }
 
+// Add these event listeners to your setupEventListeners function
+function setupUserModalEventListeners() {
+    // Form submission handling
+    const userForm = document.getElementById('userForm');
+    if (userForm) {
+        userForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveUser();
+        });
+    }
+
+    // Modal close handling
+    const modalClose = document.querySelector('.modal-close');
+    if (modalClose) {
+        modalClose.addEventListener('click', closeUserModal);
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (e) => {
+        const modal = document.getElementById('userModal');
+        if (e.target === modal) {
+            closeUserModal();
+        }
+    });
+}    
+
 // Pagination Functions
 function updatePagination(pagination) {
     const { total, page, pages } = pagination;
@@ -2065,6 +2091,29 @@ function toggleSubmenu(submenuId) {
         submenu.classList.toggle('active');
     }
 }
+    // Validate User Data
+function validateUserData(userData) {
+    const errors = [];
+
+    if (!userData.name || userData.name.trim().length < 2) {
+        errors.push('Name must be at least 2 characters long');
+    }
+
+    if (!userData.email || !userData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+        errors.push('Please enter a valid email address');
+    }
+
+    if (!userData.department) {
+        errors.push('Please select a department');
+    }
+
+    if (!userData.role) {
+        errors.push('Please select a role');
+    }
+
+    return errors;
+}
+
 
 // Update the setupEventListeners function
 function setupEventListeners() {
@@ -2119,6 +2168,31 @@ function setupEventListeners() {
         }
     });
 }
+ function editUser(userId) {
+    try {
+        const user = usersData.find(u => u._id === userId);
+        if (!user) {
+            showNotification('User not found', 'error');
+            return;
+        }
+
+        selectedUserId = userId;
+        document.getElementById('modalTitle').textContent = 'Edit User';
+        
+        // Populate form fields
+        document.getElementById('userName').value = user.name || '';
+        document.getElementById('userEmail').value = user.email || '';
+        document.getElementById('userDepartment').value = user.department || '';
+        document.getElementById('userRole').value = user.role || '';
+        document.getElementById('requires2FA').value = (user.requires2FA || false).toString();
+
+        // Show modal
+        document.getElementById('userModal').classList.add('active');
+    } catch (error) {
+        console.error('Error editing user:', error);
+        showNotification('Failed to load user data', 'error');
+    }
+}   
 
 // Update the fetchCompanyStatistics function to handle missing endpoint
 async function fetchCompanyStatistics() {
@@ -2145,6 +2219,26 @@ async function fetchCompanyStatistics() {
         return { total: 0, active: 0 };
     }
 }
+// Update User Function
+async function updateUser(userId, userData) {
+    try {
+        const response = await makeAuthenticatedRequest(`/users/${userId}`, {
+            method: 'PUT',
+            body: JSON.stringify(userData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to update user');
+        }
+
+        showNotification('User updated successfully', 'success');
+        await loadUsers(); // Refresh the users list
+    } catch (error) {
+        console.error('Error updating user:', error);
+        showNotification(error.message || 'Failed to update user', 'error');
+    }
+}    
 
 // Update loadDashboardContent to handle missing endpoints gracefully
 async function loadDashboardContent(container) {
@@ -2316,42 +2410,48 @@ async function fetchRecentAuditLogs() {
 // User Actions
 async function saveUser() {
     try {
+        // Get form values
         const userData = {
-            name: document.getElementById('userName').value,
-            email: document.getElementById('userEmail').value,
+            name: document.getElementById('userName').value.trim(),
+            email: document.getElementById('userEmail').value.trim(),
             department: document.getElementById('userDepartment').value,
             role: document.getElementById('userRole').value,
             requires2FA: document.getElementById('requires2FA').value === 'true'
         };
 
+        // Validate required fields
         if (!userData.name || !userData.email || !userData.department || !userData.role) {
             showNotification('Please fill in all required fields', 'error');
             return;
         }
 
-        const endpoint = selectedUserId ? 
-            `/users/${selectedUserId}` : 
-            '/users';
-
-        const method = selectedUserId ? 'PUT' : 'POST';
-
-        const response = await makeAuthenticatedRequest(endpoint, {
-            method,
-            body: JSON.stringify(userData)
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to save user');
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(userData.email)) {
+            showNotification('Please enter a valid email address', 'error');
+            return;
         }
 
-        showNotification(
-            selectedUserId ? 'User updated successfully' : 'User created successfully',
-            'success'
-        );
-        
+        if (selectedUserId) {
+            // Update existing user
+            await updateUser(selectedUserId, userData);
+        } else {
+            // Create new user
+            const response = await makeAuthenticatedRequest('/users', {
+                method: 'POST',
+                body: JSON.stringify(userData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to create user');
+            }
+
+            showNotification('User created successfully', 'success');
+            await loadUsers(); // Refresh the users list
+        }
+
         closeUserModal();
-        loadUsers();
     } catch (error) {
         console.error('Error saving user:', error);
         showNotification(error.message || 'Failed to save user', 'error');
