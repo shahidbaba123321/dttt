@@ -465,7 +465,28 @@
 .roles-permissions-module .rp-toast.warning {
     border-left: 4px solid var(--rp-warning);
 }
+/* No data message styles */
+.roles-permissions-module .rp-no-data {
+    text-align: center;
+    padding: 40px !important;
+}
 
+.roles-permissions-module .rp-no-data-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    color: var(--rp-text-light);
+}
+
+.roles-permissions-module .rp-no-data-message i {
+    font-size: 24px;
+}
+
+.roles-permissions-module .rp-no-data-message p {
+    margin: 0;
+    font-size: 14px;
+}
 @keyframes slideIn {
     from {
         transform: translateX(100%);
