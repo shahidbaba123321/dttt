@@ -1,6 +1,10 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <!-- Your existing meta tags and other styles -->
-    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roles & Permissions - WorkWise Pro</title>
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
@@ -14,57 +18,57 @@
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
-    <!-- Your module styles -->
-    <link rel="stylesheet" href="styles.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
+    <!-- Module styles -->
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="roles-permissions-module">
-    <!-- Page Header -->
-    <div class="rp-page-header">
-        <div class="rp-header-title">
-            <h1>Roles & Permissions</h1>
-            <p>Manage user roles and their associated permissions</p>
+        <!-- Page Header -->
+        <div class="rp-page-header">
+            <div class="rp-header-title">
+                <h1>Roles & Permissions</h1>
+                <p>Manage user roles and their associated permissions</p>
+            </div>
+            <button class="rp-create-btn" id="rpCreateRoleBtn">
+                <i class="fas fa-plus"></i>
+                <span>Create New Role</span>
+            </button>
         </div>
-        <button class="rp-create-btn" id="rpCreateRoleBtn">
-    <i class="fas fa-plus"></i>
-    <span>Create New Role</span>
-</button>
-    </div>
 
-    <!-- Stats Cards -->
-    <div class="rp-stats-container">
-        <div class="rp-stat-card">
-            <div class="rp-stat-icon">
-                <i class="fas fa-users-cog"></i>
+        <!-- Stats Cards -->
+        <div class="rp-stats-container">
+            <div class="rp-stat-card">
+                <div class="rp-stat-icon">
+                    <i class="fas fa-users-cog"></i>
+                </div>
+                <div class="rp-stat-info">
+                    <h3 id="rpTotalRoles">0</h3>
+                    <p>Total Roles</p>
+                </div>
             </div>
-            <div class="rp-stat-info">
-                <h3 id="rpTotalRoles">0</h3>
-                <p>Total Roles</p>
+            <div class="rp-stat-card">
+                <div class="rp-stat-icon">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <div class="rp-stat-info">
+                    <h3 id="rpActiveRoles">0</h3>
+                    <p>Active Roles</p>
+                </div>
+            </div>
+            <div class="rp-stat-card">
+                <div class="rp-stat-icon">
+                    <i class="fas fa-user-lock"></i>
+                </div>
+                <div class="rp-stat-info">
+                    <h3 id="rpCustomRoles">0</h3>
+                    <p>Custom Roles</p>
+                </div>
             </div>
         </div>
-        <div class="rp-stat-card">
-            <div class="rp-stat-icon">
-                <i class="fas fa-user-shield"></i>
-            </div>
-            <div class="rp-stat-info">
-                <h3 id="rpActiveRoles">0</h3>
-                <p>Active Roles</p>
-            </div>
-        </div>
-        <div class="rp-stat-card">
-            <div class="rp-stat-icon">
-                <i class="fas fa-user-lock"></i>
-            </div>
-            <div class="rp-stat-info">
-                <h3 id="rpCustomRoles">0</h3>
-                <p>Custom Roles</p>
-            </div>
-        </div>
-    </div>
 
-    <!-- Main Content -->
-    <div class="rp-main-content">
         <!-- Filters and Search -->
         <div class="rp-filters">
             <div class="rp-search-box">
@@ -87,7 +91,7 @@
 
         <!-- Roles Table -->
         <div class="rp-table-container">
-            <table class="rp-table">
+            <table class="rp-table" id="rpRolesTable">
                 <thead>
                     <tr>
                         <th>
@@ -96,42 +100,26 @@
                                 <i class="fas fa-sort"></i>
                             </div>
                         </th>
-                        <th>
-                            <div class="rp-th-content">
-                                Description
-                            </div>
-                        </th>
+                        <th>Description</th>
                         <th>
                             <div class="rp-th-content">
                                 Users
                                 <i class="fas fa-sort"></i>
                             </div>
                         </th>
-                        <th>
-                            <div class="rp-th-content">
-                                Type
-                            </div>
-                        </th>
-                        <th>
-                            <div class="rp-th-content">
-                                Status
-                            </div>
-                        </th>
+                        <th>Type</th>
+                        <th>Status</th>
                         <th>
                             <div class="rp-th-content">
                                 Last Modified
                                 <i class="fas fa-sort"></i>
                             </div>
                         </th>
-                        <th>
-                            <div class="rp-th-content">
-                                Actions
-                            </div>
-                        </th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="rpRolesTableBody">
-                    <!-- Table content will be dynamically populated -->
+                    <!-- Roles will be dynamically populated here -->
                 </tbody>
             </table>
         </div>
@@ -153,123 +141,80 @@
                 </button>
             </div>
         </div>
-    </div>
 
-    <!-- Create/Edit Role Modal -->
-    <div class="rp-modal" id="rpRoleModal">
-        <div class="rp-modal-content">
-            <div class="rp-modal-header">
-                <h2 id="rpModalTitle">Create New Role</h2>
-                <button class="rp-modal-close" id="rpCloseModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="rp-modal-body">
-                <form id="rpRoleForm">
-                    <div class="rp-form-group">
-                        <label for="rpRoleName">Role Name</label>
-                        <input type="text" id="rpRoleName" name="roleName" required>
-                        <small class="rp-form-help">Enter a unique name for this role</small>
-                    </div>
-                    <div class="rp-form-group">
-                        <label for="rpRoleDescription">Description</label>
-                        <textarea id="rpRoleDescription" name="roleDescription" rows="3"></textarea>
-                        <small class="rp-form-help">Briefly describe the purpose of this role</small>
-                    </div>
-                    <div class="rp-form-group">
-                        <label>Status</label>
-                        <div class="rp-toggle-switch">
-                            <input type="checkbox" id="rpRoleStatus" name="roleStatus" checked>
-                            <label for="rpRoleStatus"></label>
-                            <span class="rp-toggle-label">Active</span>
+        <!-- Create/Edit Role Modal -->
+        <div class="rp-modal" id="rpRoleModal">
+            <div class="rp-modal-content">
+                <div class="rp-modal-header">
+                    <h2 id="rpModalTitle">Create New Role</h2>
+                    <button class="rp-modal-close" id="rpCloseModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="rp-modal-body">
+                    <form id="rpRoleForm">
+                        <div class="rp-form-group">
+                            <label for="rpRoleName">Role Name</label>
+                            <input type="text" id="rpRoleName" name="roleName" required>
+                            <small class="rp-form-help">Enter a unique name for this role</small>
                         </div>
-                    </div>
-                    
-                    <div class="rp-permissions-section">
-                        <h3>Permissions</h3>
-                        <div class="rp-permissions-container" id="rpPermissionsContainer">
-                            <!-- Permission categories -->
-                            <div class="rp-permission-category">
-                                <div class="rp-category-header">
-                                    <div class="rp-category-title">
-                                        <i class="fas fa-desktop"></i>
-                                        Dashboard & Analytics
-                                    </div>
-                                    <div class="rp-category-toggle">
-                                        <input type="checkbox" class="rp-category-checkbox" id="rpDashboardCategory">
-                                        <label for="rpDashboardCategory">Select All</label>
-                                    </div>
-                                </div>
-                                <div class="rp-permission-list">
-                                    <!-- Permission items will be dynamically populated -->
-                                </div>
-                            </div>
-
-                            <div class="rp-permission-category">
-                                <div class="rp-category-header">
-                                    <div class="rp-category-title">
-                                        <i class="fas fa-users"></i>
-                                        User Management
-                                    </div>
-                                    <div class="rp-category-toggle">
-                                        <input type="checkbox" class="rp-category-checkbox" id="rpUserCategory">
-                                        <label for="rpUserCategory">Select All</label>
-                                    </div>
-                                </div>
-                                <div class="rp-permission-list">
-                                    <!-- Permission items will be dynamically populated -->
-                                </div>
-                            </div>
-
-                            <div class="rp-permission-category">
-                                <div class="rp-category-header">
-                                    <div class="rp-category-title">
-                                        <i class="fas fa-cogs"></i>
-                                        System Settings
-                                    </div>
-                                    <div class="rp-category-toggle">
-                                        <input type="checkbox" class="rp-category-checkbox" id="rpSystemCategory">
-                                        <label for="rpSystemCategory">Select All</label>
-                                    </div>
-                                </div>
-                                <div class="rp-permission-list">
-                                    <!-- Permission items will be dynamically populated -->
-                                </div>
+                        <div class="rp-form-group">
+                            <label for="rpRoleDescription">Description</label>
+                            <textarea id="rpRoleDescription" name="roleDescription" rows="3"></textarea>
+                            <small class="rp-form-help">Briefly describe the purpose of this role</small>
+                        </div>
+                        <div class="rp-form-group">
+                            <label>Status</label>
+                            <div class="rp-toggle-switch">
+                                <input type="checkbox" id="rpRoleStatus" name="roleStatus" checked>
+                                <label for="rpRoleStatus"></label>
+                                <span class="rp-toggle-label">Active</span>
                             </div>
                         </div>
-                    </div>
-                </form>
-            </div>
-            <div class="rp-modal-footer">
-                <button class="rp-btn rp-btn-secondary" id="rpCancelBtn">Cancel</button>
-                <button class="rp-btn rp-btn-primary" id="rpSaveBtn">Save Role</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div class="rp-modal" id="rpDeleteModal">
-        <div class="rp-modal-content rp-modal-sm">
-            <div class="rp-modal-header">
-                <h2>Delete Role</h2>
-                <button class="rp-modal-close" id="rpCloseDeleteModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="rp-modal-body">
-                <div class="rp-delete-confirmation">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <p>Are you sure you want to delete this role?</p>
-                    <p class="rp-delete-warning">This action cannot be undone. All users assigned to this role will be affected.</p>
+                        <div class="rp-permissions-section">
+                            <h3>Permissions</h3>
+                            <div class="rp-permissions-container" id="rpPermissionsContainer">
+                                <!-- Permission categories will be dynamically populated -->
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="rp-modal-footer">
+                    <button class="rp-btn rp-btn-secondary" id="rpCancelBtn">Cancel</button>
+                    <button class="rp-btn rp-btn-primary" id="rpSaveBtn">Save Role</button>
                 </div>
             </div>
-            <div class="rp-modal-footer">
-                <button class="rp-btn rp-btn-secondary" id="rpCancelDeleteBtn">Cancel</button>
-                <button class="rp-btn rp-btn-danger" id="rpConfirmDeleteBtn">Delete Role</button>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div class="rp-modal" id="rpDeleteModal">
+            <div class="rp-modal-content rp-modal-sm">
+                <div class="rp-modal-header">
+                    <h2>Delete Role</h2>
+                    <button class="rp-modal-close" id="rpCloseDeleteModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="rp-modal-body">
+                    <div class="rp-delete-confirmation">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Are you sure you want to delete this role?</p>
+                        <p class="rp-delete-warning">This action cannot be undone. All users assigned to this role will be affected.</p>
+                    </div>
+                </div>
+                <div class="rp-modal-footer">
+                    <button class="rp-btn rp-btn-secondary" id="rpCancelDeleteBtn">Cancel</button>
+                    <button class="rp-btn rp-btn-danger" id="rpConfirmDeleteBtn">Delete Role</button>
+                </div>
             </div>
         </div>
+
+        <!-- Toast Notifications Container -->
+        <div class="rp-toast-container" id="rpToastContainer"></div>
     </div>
-    <!-- jQuery (required for DataTables and Select2) -->
+
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <!-- DataTables JS -->
@@ -279,22 +224,10 @@
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-    <!-- SweetAlert2 for better alerts -->
+    <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <!-- Your module script -->
+    <!-- Module script -->
     <script src="script.js"></script>
-
-    <!-- Initialize module -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize RolesPermissions module
-            if (typeof RolesPermissions !== 'undefined') {
-                RolesPermissions.init();
-            }
-        });
-    </script>
 </body>
-    <!-- Toast Notifications Container -->
-    <div class="rp-toast-container" id="rpToastContainer"></div>
-</div>
+</html>
