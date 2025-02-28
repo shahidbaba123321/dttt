@@ -1746,6 +1746,309 @@ function editRole(roleId) {
 
     document.getElementById('roleModal').classList.add('active');
 }
+    // User Management Additional Functions
+function openAddUserModal() {
+    selectedUserId = null;
+    document.getElementById('modalTitle').textContent = 'Add New User';
+    document.getElementById('userForm').reset();
+    document.getElementById('userModal').classList.add('active');
+}
+
+function closeUserModal() {
+    document.getElementById('userModal').classList.remove('active');
+    document.getElementById('userForm').reset();
+    selectedUserId = null;
+}
+
+function openEditUserModal(userId) {
+    const user = usersData.find(u => u._id === userId);
+    if (!user) return;
+
+    selectedUserId = userId;
+    document.getElementById('modalTitle').textContent = 'Edit User';
+    document.getElementById('userName').value = user.name;
+    document.getElementById('userEmail').value = user.email;
+    document.getElementById('userDepartment').value = user.department;
+    document.getElementById('userRole').value = user.role;
+    document.getElementById('requires2FA').value = user.requires2FA.toString();
+    document.getElementById('userModal').classList.add('active');
+}
+
+// User Table Functions
+function updateUsersTable(users) {
+    const tbody = document.getElementById('usersTableBody');
+    if (!tbody) return;
+
+    if (!users || users.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="no-data-message">
+                    No users found
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = users.map(user => `
+        <tr>
+            <td>${escapeHtml(user.name || '')}</td>
+            <td>${escapeHtml(user.email || '')}</td>
+            <td>${escapeHtml(user.department || '')}</td>
+            <td>${escapeHtml(formatRole(user.role || ''))}</td>
+            <td>
+                <span class="user-status ${user.status === 'active' ? 'status-active' : 'status-inactive'}">
+                    ${escapeHtml(user.status || '')}
+                </span>
+            </td>
+            <td>
+                <span class="user-status ${user.requires2FA ? 'status-active' : 'status-inactive'}">
+                    ${user.requires2FA ? 'Enabled' : 'Disabled'}
+                </span>
+            </td>
+            <td>
+                <div class="user-actions">
+                    <button class="action-button" onclick="editUser('${user._id}')" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-button" onclick="toggleUserStatus('${user._id}', '${user.status}')" 
+                            title="${user.status === 'active' ? 'Deactivate' : 'Activate'}">
+                        <i class="fas fa-${user.status === 'active' ? 'ban' : 'check-circle'}"></i>
+                    </button>
+                    <button class="action-button" onclick="openResetPasswordModal('${user._id}')" title="Reset Password">
+                        <i class="fas fa-key"></i>
+                    </button>
+                    <button class="action-button" onclick="toggle2FA('${user._id}', ${user.requires2FA})" 
+                            title="${user.requires2FA ? 'Disable 2FA' : 'Enable 2FA'}">
+                        <i class="fas fa-shield-alt"></i>
+                    </button>
+                    <button class="action-button" onclick="openDeleteModal('${user._id}')" title="Delete">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Pagination Functions
+function updatePagination(pagination) {
+    const { total, page, pages } = pagination;
+    const start = (page - 1) * 10 + 1;
+    const end = Math.min(page * 10, total);
+
+    document.getElementById('showingStart').textContent = start;
+    document.getElementById('showingEnd').textContent = end;
+    document.getElementById('totalUsers').textContent = total;
+
+    const paginationButtons = document.getElementById('paginationButtons');
+    paginationButtons.innerHTML = `
+        <button class="pagination-button" onclick="changePage(1)" ${page === 1 ? 'disabled' : ''}>
+            <i class="fas fa-angle-double-left"></i>
+        </button>
+        <button class="pagination-button" onclick="changePage(${page - 1})" ${page === 1 ? 'disabled' : ''}>
+            <i class="fas fa-angle-left"></i>
+        </button>
+        ${generatePageButtons(page, pages)}
+        <button class="pagination-button" onclick="changePage(${page + 1})" ${page === pages ? 'disabled' : ''}>
+            <i class="fas fa-angle-right"></i>
+        </button>
+        <button class="pagination-button" onclick="changePage(${pages})" ${page === pages ? 'disabled' : ''}>
+            <i class="fas fa-angle-double-right"></i>
+        </button>
+    `;
+}
+
+function generatePageButtons(currentPage, totalPages) {
+    let buttons = [];
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, currentPage + 2);
+
+    if (startPage > 1) {
+        buttons.push(`<span class="pagination-ellipsis">...</span>`);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        buttons.push(`
+            <button class="pagination-button ${i === currentPage ? 'active' : ''}" 
+                    onclick="changePage(${i})">
+                ${i}
+            </button>
+        `);
+    }
+
+    if (endPage < totalPages) {
+        buttons.push(`<span class="pagination-ellipsis">...</span>`);
+    }
+
+    return buttons.join('');
+}
+
+function changePage(page) {
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    loadUsers();
+}
+
+// User Actions
+async function toggleUserStatus(userId, currentStatus) {
+    try {
+        const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+        const response = await makeAuthenticatedRequest(`/users/${userId}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        if (!response.ok) throw new Error('Failed to update user status');
+
+        showNotification('User status updated successfully', 'success');
+        loadUsers();
+    } catch (error) {
+        console.error('Error updating user status:', error);
+        showNotification('Failed to update user status', 'error');
+    }
+}
+
+async function toggle2FA(userId, current2FAStatus) {
+    try {
+        const response = await makeAuthenticatedRequest(`/users/${userId}/2fa`, {
+            method: 'PUT',
+            body: JSON.stringify({ requires2FA: !current2FAStatus })
+        });
+
+        if (!response.ok) throw new Error('Failed to update 2FA status');
+
+        showNotification('2FA status updated successfully', 'success');
+        loadUsers();
+    } catch (error) {
+        console.error('Error updating 2FA status:', error);
+        showNotification('Failed to update 2FA status', 'error');
+    }
+}
+
+// Password Reset Functions
+function openResetPasswordModal(userId) {
+    selectedUserId = userId;
+    document.getElementById('resetPasswordModal').classList.add('active');
+}
+
+function closeResetPasswordModal() {
+    document.getElementById('resetPasswordModal').classList.remove('active');
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+    selectedUserId = null;
+}
+
+async function confirmResetPassword() {
+    try {
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (newPassword !== confirmPassword) {
+            showNotification('Passwords do not match', 'error');
+            return;
+        }
+
+        const response = await makeAuthenticatedRequest(`/users/${selectedUserId}/reset-password`, {
+            method: 'POST',
+            body: JSON.stringify({ password: newPassword })
+        });
+
+        if (!response.ok) throw new Error('Failed to reset password');
+
+        showNotification('Password reset successfully', 'success');
+        closeResetPasswordModal();
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        showNotification('Failed to reset password', 'error');
+    }
+}
+
+// Delete User Functions
+function openDeleteModal(userId) {
+    selectedUserId = userId;
+    document.getElementById('deleteModal').classList.add('active');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('active');
+    document.getElementById('deleteReason').value = '';
+    selectedUserId = null;
+}
+
+async function confirmDeleteUser() {
+    try {
+        const reason = document.getElementById('deleteReason').value;
+        if (!reason) {
+            showNotification('Please provide a reason for deletion', 'error');
+            return;
+        }
+
+        const response = await makeAuthenticatedRequest(`/users/${selectedUserId}`, {
+            method: 'DELETE',
+            body: JSON.stringify({ reason })
+        });
+
+        if (!response.ok) throw new Error('Failed to delete user');
+
+        showNotification('User deleted successfully', 'success');
+        closeDeleteModal();
+        loadUsers();
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        showNotification('Failed to delete user', 'error');
+    }
+}
+
+// Search and Filter Functions
+let searchTimeout;
+function debounceSearch() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        currentFilters.search = document.getElementById('userSearch').value;
+        currentPage = 1;
+        loadUsers();
+    }, 300);
+}
+
+function toggleFilterMenu() {
+    document.getElementById('filterMenu').classList.toggle('active');
+}
+
+function applyFilter(filterType) {
+    const value = prompt(`Enter ${filterType}:`);
+    if (value !== null) {
+        currentFilters[filterType] = value;
+        currentPage = 1;
+        loadUsers();
+    }
+    toggleFilterMenu();
+}
+
+// Setup User Event Listeners
+function setupUserEventListeners() {
+    const userSearch = document.getElementById('userSearch');
+    if (userSearch) {
+        userSearch.addEventListener('keyup', debounceSearch);
+    }
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.filter-dropdown')) {
+            const filterMenu = document.getElementById('filterMenu');
+            if (filterMenu) {
+                filterMenu.classList.remove('active');
+            }
+        }
+    });
+}
+
+// Format Functions
+function formatRole(role) {
+    return role
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
 
 // API Integration Functions
 async function makeAuthenticatedRequest(endpoint, options = {}) {
