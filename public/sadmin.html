@@ -1292,6 +1292,15 @@ let usersData = [];
 let rolesData = [];
 
 const API_BASE_URL = 'https://18.215.160.136.nip.io/api';
+// Add API utility functions
+const ApiService = {
+    getHeaders() {
+        const token = localStorage.getItem('token');
+        return {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+    },
 
 // Initialize Dashboard
 document.addEventListener('DOMContentLoaded', async () => {
@@ -2057,6 +2066,87 @@ async function toggle2FA(userId, current2FAStatus) {
         showNotification('Failed to update 2FA status', 'error');
     }
 }
+    async handleResponse(response) {
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({
+                message: 'An error occurred'
+            }));
+            throw new Error(errorData.message || 'Request failed');
+        }
+        return response.json();
+    },
+
+    async get(endpoint) {
+        try {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                method: 'GET',
+                headers: this.getHeaders()
+            });
+            return this.handleResponse(response);
+        } catch (error) {
+            console.error(`GET ${endpoint} failed:`, error);
+            throw error;
+        }
+    },
+
+    async post(endpoint, data) {
+        try {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify(data)
+            });
+            return this.handleResponse(response);
+        } catch (error) {
+            console.error(`POST ${endpoint} failed:`, error);
+            throw error;
+        }
+    },
+
+    async put(endpoint, data) {
+        try {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                method: 'PUT',
+                headers: this.getHeaders(),
+                body: JSON.stringify(data)
+            });
+            return this.handleResponse(response);
+        } catch (error) {
+            console.error(`PUT ${endpoint} failed:`, error);
+            throw error;
+        }
+    },
+
+    async delete(endpoint) {
+        try {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                method: 'DELETE',
+                headers: this.getHeaders()
+            });
+            return this.handleResponse(response);
+        } catch (error) {
+            console.error(`DELETE ${endpoint} failed:`, error);
+            throw error;
+        }
+    }
+};
+loadUsers: async function() {
+    try {
+        this.state.loading = true;
+        this.renderLoadingState();
+
+        const users = await ApiService.get('/users');
+        this.state.users = users;
+        this.renderUsers();
+    } catch (error) {
+        console.error('Error loading users:', error);
+        showNotification('Failed to load users: ' + error.message, 'error');
+        this.state.users = [];
+        this.renderErrorState(error.message);
+    } finally {
+        this.state.loading = false;
+    }
+},
 
 // Password Reset Functions
 function openResetPasswordModal(userId) {
@@ -2095,6 +2185,108 @@ async function confirmResetPassword() {
         showNotification('Failed to reset password', 'error');
     }
 }
+
+// Update the dashboard statistics loading
+async function loadDashboardContent() {
+    try {
+        const [userStats, companyStats] = await Promise.all([
+            ApiService.get('/statistics/users'),
+            ApiService.get('/statistics/companies')
+        ]);
+
+        // Update dashboard UI with statistics
+        updateDashboardStatistics(userStats, companyStats);
+    } catch (error) {
+        console.error('Error loading dashboard content:', error);
+        showNotification('Failed to load dashboard content', 'error');
+    }
+}
+
+// Update role deletion
+async function deleteRole(roleId) {
+    try {
+        await ApiService.delete(`/roles/${roleId}`);
+        showNotification('Role deleted successfully', 'success');
+        // Refresh roles list
+        loadRoles();
+    } catch (error) {
+        console.error('Error deleting role:', error);
+        showNotification('Failed to delete role: ' + error.message, 'error');
+    }
+}
+
+// Add error handling middleware
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+    showNotification('An unexpected error occurred', 'error');
+});
+
+// Update token verification
+async function verifyToken(token) {
+    try {
+        await ApiService.post('/verify-token');
+        console.log('Token verified successfully');
+    } catch (error) {
+        console.error('Token verification failed:', error);
+        localStorage.clear();
+        window.location.href = 'login.html';
+    }
+}
+
+// Update user management actions
+const UserManagement = {
+    // ... other methods ...
+
+    async toggleUserStatus(userId) {
+        try {
+            const user = this.state.users.find(u => u._id === userId);
+            if (!user) throw new Error('User not found');
+
+            const newStatus = user.status === 'active' ? 'inactive' : 'active';
+            await ApiService.put(`/users/${userId}/status`, { status: newStatus });
+            
+            showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
+            this.loadUsers();
+        } catch (error) {
+            console.error('Error toggling user status:', error);
+            showNotification(error.message, 'error');
+        }
+    },
+
+    async deleteUser(userId) {
+        try {
+            const user = this.state.users.find(u => u._id === userId);
+            if (!user) throw new Error('User not found');
+
+            if (!confirm(`Are you sure you want to delete ${user.name}?`)) {
+                return;
+            }
+
+            await ApiService.delete(`/users/${userId}`);
+            showNotification('User deleted successfully', 'success');
+            this.loadUsers();
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            showNotification(error.message, 'error');
+        }
+    },
+
+    async toggle2FA(userId) {
+        try {
+            const user = this.state.users.find(u => u._id === userId);
+            if (!user) throw new Error('User not found');
+
+            const newState = !user.requires2FA;
+            await ApiService.put(`/users/${userId}/2fa`, { requires2FA: newState });
+            
+            showNotification(`2FA ${newState ? 'enabled' : 'disabled'} successfully`, 'success');
+            this.loadUsers();
+        } catch (error) {
+            console.error('Error toggling 2FA:', error);
+            showNotification(error.message, 'error');
+        }
+    }
+};    
 
 // Delete User Functions
 function openDeleteModal(userId) {
