@@ -1673,7 +1673,7 @@ function updateRolesGrid(roles) {
     }
 
     rolesGrid.innerHTML = roles.map(role => `
-        <div class="role-card ${role.isSystem ? 'system-role' : ''}">
+        <div class="role-card ${role.isSystem ? 'system-role' : ''}" data-role-id="${role._id}">
             <div class="role-header">
                 <i class="fas ${getRoleIcon(role.name)}"></i>
                 <h3>${escapeHtml(role.name)}</h3>
@@ -1698,10 +1698,13 @@ function updateRolesGrid(roles) {
                     </button>
                 ` : `
                     <div class="role-actions">
-                        <button class="role-action-button" onclick="editRole('${role._id}')" title="Edit Role">
+                        <button class="role-action-button" data-action="edit" title="Edit Role">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="role-action-button" onclick="deleteRole('${role._id}')" title="Delete Role">
+                        <button class="role-action-button" data-action="permissions" title="View Permissions">
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <button class="role-action-button" data-action="delete" title="Delete Role">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
@@ -1709,22 +1712,35 @@ function updateRolesGrid(roles) {
             </div>
         </div>
     `).join('');
+
+    // Reattach event listeners after updating grid
+    setupRolesEventListeners();
 }
+
     // Role Modal Functions
 function openAddRoleModal() {
     selectedRoleId = null;
-    document.getElementById('roleModalTitle').textContent = 'Add New Role';
-    document.getElementById('roleForm').reset();
+    const roleModal = document.getElementById('roleModal');
+    const modalTitle = document.getElementById('roleModalTitle');
+    const roleForm = document.getElementById('roleForm');
+
+    if (modalTitle) modalTitle.textContent = 'Add New Role';
+    if (roleForm) roleForm.reset();
     resetPermissionCheckboxes();
-    document.getElementById('roleModal').classList.add('active');
+    if (roleModal) roleModal.classList.add('active');
 }
 
+
 function closeRoleModal() {
-    document.getElementById('roleModal').classList.remove('active');
-    document.getElementById('roleForm').reset();
+    const roleModal = document.getElementById('roleModal');
+    const roleForm = document.getElementById('roleForm');
+
+    if (roleForm) roleForm.reset();
     resetPermissionCheckboxes();
+    if (roleModal) roleModal.classList.remove('active');
     selectedRoleId = null;
 }
+
 
 function editRole(roleId) {
     const role = rolesData.find(r => r._id === roleId);
@@ -1916,7 +1932,95 @@ function changePage(page) {
     loadUsers();
 }
 
+// Roles Event Listeners and Setup
+function setupRolesEventListeners() {
+    // Role modal events
+    const roleModal = document.getElementById('roleModal');
+    if (roleModal) {
+        // Close modal when clicking outside
+        roleModal.addEventListener('click', (e) => {
+            if (e.target === roleModal) {
+                closeRoleModal();
+            }
+        });
+
+        // Form submission
+        const roleForm = document.getElementById('roleForm');
+        if (roleForm) {
+            roleForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveRole();
+            });
+        }
+    }
     
+// Permission checkboxes group handling
+    document.querySelectorAll('.permission-group').forEach(group => {
+        const groupCheckboxes = group.querySelectorAll('input[type="checkbox"]');
+        groupCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                updatePermissionGroup(group);
+            });
+        });
+    });
+
+    // Role actions delegation
+    const rolesGrid = document.getElementById('rolesGrid');
+    if (rolesGrid) {
+        rolesGrid.addEventListener('click', handleRoleActions);
+    }
+
+    // Add role button
+    const addRoleButton = document.querySelector('.roles-header .btn-primary');
+    if (addRoleButton) {
+        addRoleButton.addEventListener('click', openAddRoleModal);
+    }
+}
+
+    // Role Action Handler
+function handleRoleActions(event) {
+    const target = event.target;
+    const actionButton = target.closest('.role-action-button');
+    
+    if (!actionButton) return;
+
+    const roleCard = actionButton.closest('.role-card');
+    if (!roleCard) return;
+
+    const roleId = roleCard.dataset.roleId;
+    const action = actionButton.dataset.action;
+
+    switch (action) {
+        case 'edit':
+            editRole(roleId);
+            break;
+        case 'delete':
+            deleteRole(roleId);
+            break;
+        case 'permissions':
+            viewRolePermissions(roleId);
+            break;
+    }
+}
+
+    // Permission Group Updates
+function updatePermissionGroup(group) {
+    const checkboxes = group.querySelectorAll('input[type="checkbox"]');
+    const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+    
+    // Update group header status
+    const groupHeader = group.querySelector('.permission-group-header');
+    if (groupHeader) {
+        if (checkedCount === checkboxes.length) {
+            groupHeader.classList.add('all-selected');
+        } else if (checkedCount === 0) {
+            groupHeader.classList.remove('all-selected', 'partial-selected');
+        } else {
+            groupHeader.classList.add('partial-selected');
+            groupHeader.classList.remove('all-selected');
+        }
+    }
+}
 
 // User Actions
 async function toggleUserStatus(userId, currentStatus) {
@@ -2619,15 +2723,23 @@ function formatActivityTitle(log) {
 }
 
 function getSelectedPermissions() {
-    const permissions = [];
-    document.querySelectorAll('input[type="checkbox"][id^="perm_"]').forEach(checkbox => {
-        if (checkbox.checked) {
-            permissions.push(checkbox.id.replace('perm_', ''));
-        }
-    });
-    return permissions;
+    return Array.from(document.querySelectorAll('input[type="checkbox"][id^="perm_"]'))
+        .filter(cb => cb.checked)
+        .map(cb => cb.id.replace('perm_', ''));
 }
 
+    // View Role Permissions
+function viewRolePermissions(roleId) {
+    const role = rolesData.find(r => r._id === roleId);
+    if (!role) {
+        showNotification('Role not found', 'error');
+        return;
+    }
+
+    // Implement your permissions view logic here
+    console.log('Viewing permissions for role:', role.name);
+}
+    
 function resetPermissionCheckboxes() {
     document.querySelectorAll('input[type="checkbox"][id^="perm_"]').forEach(checkbox => {
         checkbox.checked = false;
