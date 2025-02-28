@@ -777,23 +777,17 @@
             delete window.RolesPermissions;
         }
 
-        try {
-            // Create and execute the module script
-            const moduleScript = new Function(js);
-            moduleScript.call(window);
+        // Add the module script
+        const scriptElement = document.createElement('script');
+        scriptElement.id = 'moduleScript';
+        scriptElement.textContent = js;
+        document.body.appendChild(scriptElement);
 
-            // Initialize the module
-            if (window.RolesPermissions && typeof window.RolesPermissions.init === 'function') {
+        // Initialize the module
+        if (window.RolesPermissions && typeof window.RolesPermissions.init === 'function') {
+            setTimeout(() => {
                 window.RolesPermissions.init();
-            }
-        } catch (error) {
-            console.error('Error executing module script:', error);
-            contentArea.innerHTML = `
-                <div class="error">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <p>Error initializing module. Please try again.</p>
-                </div>
-            `;
+            }, 0);
         }
 
         // Update URL hash without triggering a page reload
