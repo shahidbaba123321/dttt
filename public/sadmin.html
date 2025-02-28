@@ -1292,22 +1292,23 @@ let selectedUserId = null;
 let selectedRoleId = null;
 let usersData = [];
 let rolesData = [];
+let sessionTimer;
+let tokenCheckInterval;
 
-// Update the initialization code
+// Main Initialization
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        // Handle initial login
         const params = getQueryParams();
         if (params.token) {
             console.log('Fresh login detected, setting credentials');
             localStorage.setItem('token', params.token);
             localStorage.setItem('userRole', params.role);
             localStorage.setItem('userEmail', params.email);
-            
-            // Remove query parameters from URL without reloading
             window.history.replaceState({}, document.title, window.location.pathname);
         }
 
-        // Check if we have the necessary credentials
+        // Check authentication
         const token = localStorage.getItem('token');
         const userRole = localStorage.getItem('userRole');
         const userEmail = localStorage.getItem('userEmail');
@@ -1317,22 +1318,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        // Only verify token if we have all credentials
-        const isAuthenticated = await checkAuthentication();
-        if (!isAuthenticated) {
-            // Only redirect if token verification actually failed
-            if (!params.token) {
-                redirectToLogin();
-                return;
-            }
+        // Verify token
+        const isValid = await verifyToken(token);
+        if (!isValid && !params.token) {
+            redirectToLogin();
+            return;
         }
 
+        // Initialize everything
+        setupEventListeners();
         initializeDashboard();
+        initializeSession();
         loadUserInfo();
         loadInitialContent();
+
     } catch (error) {
-        console.error('Dashboard initialization error:', error);
-        // Only redirect on actual errors, not during initial load
+        console.error('Initialization error:', error);
         if (!window.location.search.includes('token=')) {
             redirectToLogin();
         }
@@ -1344,6 +1345,90 @@ window.addEventListener('unhandledrejection', function(event) {
     console.error('Unhandled promise rejection:', event.reason);
     showNotification('An unexpected error occurred', 'error');
 });
+
+// Session Management
+function initializeSession() {
+    startSessionMonitor();
+    
+    // Add activity listeners
+    ['click', 'keypress', 'mousemove', 'scroll'].forEach(event => {
+        document.addEventListener(event, resetSessionTimer);
+    });
+}
+
+function startSessionMonitor() {
+    clearInterval(tokenCheckInterval);
+    clearTimeout(sessionTimer);
+
+    tokenCheckInterval = setInterval(async () => {
+        const token = getToken();
+        if (token) {
+            const isValid = await verifyToken(token);
+            if (!isValid) {
+                handleSessionTimeout();
+            }
+        }
+    }, 300000); // 5 minutes
+
+    resetSessionTimer();
+}
+
+function resetSessionTimer() {
+    clearTimeout(sessionTimer);
+    sessionTimer = setTimeout(handleSessionTimeout, 1800000); // 30 minutes
+}
+
+function handleSessionTimeout() {
+    clearInterval(tokenCheckInterval);
+    clearTimeout(sessionTimer);
+    showNotification('Your session has expired. Please login again.', 'warning');
+    redirectToLogin();
+}
+
+// Authentication Functions
+async function verifyToken(token) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/verify-token`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+        if (response.ok && data.success) {
+            currentUser = data.user;
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('Token verification failed:', error);
+        return false;
+    }
+}
+
+function getToken() {
+    return localStorage.getItem('token');
+}
+
+function clearUserSession() {
+    clearInterval(tokenCheckInterval);
+    clearTimeout(sessionTimer);
+    localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userEmail');
+    currentUser = null;
+}
+
+function getQueryParams() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+        email: params.get('email'),
+        role: params.get('role'),
+        token: params.get('token')
+    };
+}
 
 // API Service
 const ApiService = {
@@ -1419,82 +1504,7 @@ const ApiService = {
         }
     }
 };
-
-// Update the checkAuthentication function
-async function checkAuthentication() {
-    const token = getToken();
-    if (!token) {
-        return false;
-    }
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/verify-token`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        const data = await response.json();
-
-        // Check if the response indicates success
-        if (response.ok && data.success) {
-            currentUser = data.user;
-            // Store user info in localStorage if not already present
-            if (!localStorage.getItem('userEmail')) {
-                localStorage.setItem('userEmail', data.user.email);
-            }
-            if (!localStorage.getItem('userRole')) {
-                localStorage.setItem('userRole', data.user.role);
-            }
-            return true;
-        }
-
-        return false;
-    } catch (error) {
-        console.error('Authentication check failed:', error);
-        return false;
-    }
-}
-
-   // Update the clearUserSession function
-function clearUserSession() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userEmail');
-    currentUser = null;
-}
-
-
-function getToken() {
-    return localStorage.getItem('token');
-}
-        // Add this function to verify token periodically
-function setupTokenRefresh() {
-    // Check token validity every 5 minutes
-    setInterval(async () => {
-        const isValid = await checkAuthentication();
-        if (!isValid && !window.location.pathname.includes('login.html')) {
-            handleUnauthorized();
-        }
-    }, 300000); // 5 minutes
-}
-
-// Call this in your initialization
-document.addEventListener('DOMContentLoaded', () => {
-    setupTokenRefresh();
-});
-
-function getQueryParams() {
-    const params = new URLSearchParams(window.location.search);
-    return {
-        email: params.get('email'),
-        role: params.get('role'),
-        token: params.get('token')
-    };
-}
-        // Dashboard Functions
+    // Dashboard Functions
 function initializeDashboard() {
     initializeSidebar();
     initializeEventListeners();
@@ -1520,482 +1530,7 @@ function initializeSidebar() {
         });
     });
 }
-        // Role Management Functions
-function editRole(roleId) {
-    const role = rolesData.find(r => r._id === roleId);
-    if (!role) {
-        showNotification('Role not found', 'error');
-        return;
-    }
 
-    selectedRoleId = roleId;
-    document.getElementById('roleModalTitle').textContent = 'Edit Role';
-    document.getElementById('roleName').value = role.name;
-    document.getElementById('roleDescription').value = role.description;
-    
-    resetPermissionCheckboxes();
-    role.permissions.forEach(permission => {
-        const checkbox = document.getElementById(`perm_${permission}`);
-        if (checkbox) checkbox.checked = true;
-    });
-
-    document.getElementById('roleModal').classList.add('active');
-}
-
-async function deleteRole(roleId) {
-    if (!confirm('Are you sure you want to delete this role? This action cannot be undone.')) {
-        return;
-    }
-
-    try {
-        const response = await makeAuthenticatedRequest(`/roles/${roleId}`, {
-            method: 'DELETE'
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to delete role');
-        }
-
-        showNotification('Role deleted successfully', 'success');
-        loadRoles();
-    } catch (error) {
-        console.error('Error deleting role:', error);
-        showNotification(error.message || 'Failed to delete role', 'error');
-    }
-}
-
-function viewRolePermissions(roleId) {
-    const role = rolesData.find(r => r._id === roleId);
-    if (!role) {
-        showNotification('Role not found', 'error');
-        return;
-    }
-
-    // Create and show permissions modal
-    const modalHtml = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Permissions for ${escapeHtml(role.name)}</h2>
-                <button class="close-btn" onclick="this.closest('.modal').remove()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="permissions-list">
-                    ${role.permissions.map(perm => `
-                        <div class="permission-item">
-                            <i class="fas fa-check-circle"></i>
-                            <span>${formatPermissionName(perm)}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        </div>
-    `;
-
-    const modal = document.createElement('div');
-    modal.className = 'modal active';
-    modal.innerHTML = modalHtml;
-    document.body.appendChild(modal);
-}
-
-     // Table Update Functions
-function updateUsersTable(users) {
-    const tbody = document.getElementById('usersTableBody');
-    if (!tbody) return;
-
-    if (!users || users.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="no-data-message">
-                    No users found
-                </td>
-            </tr>
-        `;
-        return;
-    }
-
-    tbody.innerHTML = users.map(user => `
-        <tr>
-            <td>
-                <div class="user-info">
-                    <div class="user-avatar" style="background-color: ${getAvatarColor(user.name || '')}">
-                        ${getInitials(user.name || '')}
-                    </div>
-                    <div class="user-details">
-                        <div class="user-name">${escapeHtml(user.name || '')}</div>
-                        <div class="user-email">${escapeHtml(user.email || '')}</div>
-                    </div>
-                </div>
-            </td>
-            <td>${escapeHtml(user.department || '')}</td>
-            <td>
-                <span class="role-badge role-${(user.role || '').toLowerCase()}">
-                    ${escapeHtml(formatRole(user.role || ''))}
-                </span>
-            </td>
-            <td>
-                <span class="status-badge status-${user.status || 'inactive'}">
-                    ${user.status === 'active' ? 'Active' : 'Inactive'}
-                </span>
-            </td>
-            <td>
-                <span class="2fa-badge ${user.requires2FA ? 'enabled' : 'disabled'}">
-                    ${user.requires2FA ? 'Enabled' : 'Disabled'}
-                </span>
-            </td>
-            <td>
-                <div class="action-buttons">
-                    <button onclick="editUser('${user._id}')" class="btn-icon" title="Edit User">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button onclick="toggleUserStatus('${user._id}')" 
-                            class="btn-icon ${user.status === 'active' ? 'danger' : 'success'}"
-                            title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User">
-                        <i class="fas fa-${user.status === 'active' ? 'ban' : 'check'}"></i>
-                    </button>
-                    <button onclick="openResetPasswordModal('${user._id}')" 
-                            class="btn-icon warning" title="Reset Password">
-                        <i class="fas fa-key"></i>
-                    </button>
-                    <button onclick="toggle2FA('${user._id}')"
-                            class="btn-icon ${user.requires2FA ? 'success' : 'warning'}"
-                            title="${user.requires2FA ? 'Disable' : 'Enable'} 2FA">
-                        <i class="fas fa-shield-alt"></i>
-                    </button>
-                    <button onclick="openDeleteModal('${user._id}')" 
-                            class="btn-icon danger" title="Delete User">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `).join('');
-}
-        function updateRolesGrid(roles) {
-    const rolesGrid = document.getElementById('rolesGrid');
-    if (!rolesGrid) return;
-
-    if (!roles || roles.length === 0) {
-        rolesGrid.innerHTML = `
-            <div class="no-data-message">
-                No roles found. Create a new role to get started.
-            </div>
-        `;
-        return;
-    }
-
-    rolesGrid.innerHTML = roles.map(role => `
-        <div class="role-card ${role.isSystem ? 'system-role' : ''}" data-role-id="${role._id}">
-            <div class="role-header">
-                <i class="fas ${getRoleIcon(role.name)}"></i>
-                <h3>${escapeHtml(role.name)}</h3>
-            </div>
-            <div class="role-description">
-                ${escapeHtml(role.description)}
-            </div>
-            <div class="role-stats">
-                <div class="stat">
-                    <span class="stat-value">${role.userCount || 0}</span>
-                    <span class="stat-label">Users</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-value">${role.permissions?.length || 0}</span>
-                    <span class="stat-label">Permissions</span>
-                </div>
-            </div>
-            <div class="role-footer">
-                ${role.isSystem ? `
-                    <button class="btn btn-secondary" disabled>
-                        <i class="fas fa-lock"></i> System Role
-                    </button>
-                ` : `
-                    <div class="role-actions">
-                        <button class="role-action-button" onclick="editRole('${role._id}')" title="Edit Role">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="role-action-button" onclick="viewRolePermissions('${role._id}')" 
-                                title="View Permissions">
-                            <i class="fas fa-key"></i>
-                        </button>
-                        <button class="role-action-button" onclick="deleteRole('${role._id}')" 
-                                title="Delete Role">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                `}
-            </div>
-        </div>
-    `).join('');
-}
-        // Additional Event Handlers
-function handleRoleActions(event) {
-    const target = event.target;
-    const actionButton = target.closest('.role-action-button');
-    
-    if (!actionButton) return;
-
-    const roleCard = actionButton.closest('.role-card');
-    if (!roleCard) return;
-
-    const roleId = roleCard.dataset.roleId;
-    const action = actionButton.dataset.action;
-
-    switch (action) {
-        case 'edit':
-            editRole(roleId);
-            break;
-        case 'delete':
-            deleteRole(roleId);
-            break;
-        case 'permissions':
-            viewRolePermissions(roleId);
-            break;
-    }
-}
-  // Update the makeAuthenticatedRequest function
-async function makeAuthenticatedRequest(endpoint, options = {}) {
-    try {
-        const token = getToken();
-        if (!token) {
-            throw new Error('No authentication token available');
-        }
-
-        const defaultOptions = {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        };
-
-        const mergedOptions = {
-            ...defaultOptions,
-            ...options,
-            headers: {
-                ...defaultOptions.headers,
-                ...options.headers
-            }
-        };
-
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, mergedOptions);
-        
-        // Only handle 401 if it's not the verify-token endpoint
-        if (response.status === 401 && !endpoint.includes('verify-token')) {
-            const isStillValid = await checkAuthentication();
-            if (!isStillValid) {
-                handleUnauthorized();
-                return null;
-            }
-        }
-
-        return response;
-    } catch (error) {
-        console.error('API request failed:', error);
-        throw error;
-    }
-}
-
-     // Update the handleUnauthorized function
-function handleUnauthorized() {
-    // Check if we're already on the login page to prevent redirect loops
-    if (window.location.pathname.includes('login.html')) {
-        return;
-    }
-    
-    clearUserSession();
-    showNotification('Session expired. Please login again.', 'error');
-    setTimeout(() => {
-        window.location.href = 'login.html';
-    }, 2000);
-}
-        // Additional Modal Handling Functions
-function handleModalOutsideClick(event, modalId) {
-    const modal = document.getElementById(modalId);
-    if (event.target === modal) {
-        closeModal(modalId);
-    }
-}
-        function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.remove('active');
-        // Reset any form inside the modal
-        const form = modal.querySelector('form');
-        if (form) form.reset();
-    }
-}
-
-        function showConfirmationModal(message, confirmCallback) {
-    const modalHtml = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Confirm Action</h2>
-                <button class="close-btn" onclick="this.closest('.modal').remove()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>${message}</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
-                <button class="btn btn-danger" onclick="handleConfirmAction(this)">Confirm</button>
-            </div>
-        </div>
-    `;
-
-    const modal = document.createElement('div');
-    modal.className = 'modal active';
-    modal.innerHTML = modalHtml;
-    
-    // Store the callback function
-    modal.dataset.callback = confirmCallback.toString();
-    
-    document.body.appendChild(modal);
-}
-        
-function handleConfirmAction(button) {
-    const modal = button.closest('.modal');
-    const callback = new Function('return ' + modal.dataset.callback)();
-    callback();
-    modal.remove();
-}
-// Additional Utility Functions
-function getAvatarColor(name) {
-    const colors = [
-        '#4f46e5', '#7c3aed', '#db2777', '#ea580c', '#16a34a',
-        '#2563eb', '#9333ea', '#e11d48', '#d97706', '#15803d'
-    ];
-    
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-        hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    
-    return colors[Math.abs(hash) % colors.length];
-}
-        function getInitials(name) {
-    if (!name) return '??';
-    return name
-        .split(' ')
-        .map(word => word[0])
-        .join('')
-        .toUpperCase();
-}
-
-function formatRole(role) {
-    return role
-        .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(' ');
-}
-
-function formatPermissionName(permission) {
-    return permission
-        .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(' ');
-}
-// Session Management Functions
-function initializeSession() {
-    const token = getToken();
-    if (!token) {
-        redirectToLogin();
-        return;
-    }
-
-    // Set up session timeout monitoring
-    setupSessionMonitoring();
-}
-function setupSessionMonitoring() {
-    // Check session every minute
-    setInterval(() => {
-        verifyToken(getToken());
-    }, 60000); // 1 minute
-
-    // Monitor user activity
-    document.addEventListener('click', resetSessionTimer);
-    document.addEventListener('keypress', resetSessionTimer);
-    document.addEventListener('mousemove', resetSessionTimer);
-    document.addEventListener('scroll', resetSessionTimer);
-}
-
-let sessionTimer;
-        function resetSessionTimer() {
-    clearTimeout(sessionTimer);
-    sessionTimer = setTimeout(() => {
-        // Session timeout after 30 minutes of inactivity
-        handleSessionTimeout();
-    }, 1800000); // 30 minutes
-}
-
-function handleSessionTimeout() {
-    showNotification('Your session has expired due to inactivity', 'warning');
-    clearUserSession();
-    redirectToLogin();
-}
-        // Form Validation Functions
-function validateForm(formId, validationRules) {
-    const form = document.getElementById(formId);
-    if (!form) return false;
-
-    let isValid = true;
-    const errors = {};
-
-    Object.keys(validationRules).forEach(fieldName => {
-        const field = form.querySelector(`[name="${fieldName}"]`);
-        if (!field) return;
-
-        const rules = validationRules[fieldName];
-        const fieldValue = field.value.trim();
-
-        rules.forEach(rule => {
-            if (rule.required && !fieldValue) {
-                errors[fieldName] = 'This field is required';
-                isValid = false;
-            } else if (rule.minLength && fieldValue.length < rule.minLength) {
-                errors[fieldName] = `Minimum length is ${rule.minLength} characters`;
-                isValid = false;
-            } else if (rule.pattern && !rule.pattern.test(fieldValue)) {
-                errors[fieldName] = rule.message || 'Invalid format';
-                isValid = false;
-            }
-        });
-    });
-
-    // Display errors if any
-    Object.keys(errors).forEach(fieldName => {
-        const field = form.querySelector(`[name="${fieldName}"]`);
-        showFieldError(field, errors[fieldName]);
-    });
-
-    return isValid;
-}
-
-function showFieldError(field, message) {
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'field-error';
-    errorDiv.textContent = message;
-    
-    // Remove any existing error message
-    const existingError = field.parentElement.querySelector('.field-error');
-    if (existingError) {
-        existingError.remove();
-    }
-    
-    field.classList.add('error');
-    field.parentElement.appendChild(errorDiv);
-}
-
-function clearFieldError(field) {
-    field.classList.remove('error');
-    const errorDiv = field.parentElement.querySelector('.field-error');
-    if (errorDiv) {
-        errorDiv.remove();
-    }
-}
-        
 async function loadDashboardContent(container) {
     try {
         showLoading(container);
@@ -2097,7 +1632,6 @@ async function fetchUserStatistics() {
 
 async function fetchCompanyStatistics() {
     try {
-        // Since the companies endpoint doesn't exist yet, return default values
         return {
             total: 0,
             active: 0
@@ -2121,7 +1655,50 @@ async function fetchRecentAuditLogs() {
     }
 }
 
-// User Management Functions
+// API Request Handler
+async function makeAuthenticatedRequest(endpoint, options = {}) {
+    try {
+        const token = getToken();
+        if (!token) {
+            redirectToLogin();
+            return null;
+        }
+
+        const defaultOptions = {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        };
+
+        const mergedOptions = {
+            ...defaultOptions,
+            ...options,
+            headers: {
+                ...defaultOptions.headers,
+                ...options.headers
+            }
+        };
+
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, mergedOptions);
+        
+        if (response.status === 401) {
+            if (!endpoint.includes('verify-token')) {
+                const isValid = await verifyToken(token);
+                if (!isValid) {
+                    handleSessionTimeout();
+                    return null;
+                }
+            }
+        }
+
+        return response;
+    } catch (error) {
+        console.error('API request failed:', error);
+        throw error;
+    }
+}
+        // User Management Functions
 async function initializeUserManagement() {
     try {
         await loadUsers();
@@ -2169,7 +1746,8 @@ async function loadUsers() {
         hideLoading(document.getElementById('usersTableBody'));
     }
 }
-// User Management Modal Functions
+
+// User Modal Functions
 function openAddUserModal() {
     selectedUserId = null;
     document.getElementById('modalTitle').textContent = 'Add New User';
@@ -2221,15 +1799,9 @@ async function saveUser() {
         };
 
         // Validate required fields
-        if (!userData.name || !userData.email || !userData.department || !userData.role) {
-            showNotification('Please fill in all required fields', 'error');
-            return;
-        }
-
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(userData.email)) {
-            showNotification('Please enter a valid email address', 'error');
+        const validationErrors = validateUserData(userData);
+        if (validationErrors.length > 0) {
+            showNotification(validationErrors[0], 'error');
             return;
         }
 
@@ -2351,8 +1923,7 @@ async function confirmResetPassword() {
         showNotification('Failed to reset password', 'error');
     }
 }
-
-// Delete User Functions
+        // Delete User Functions
 function openDeleteModal(userId) {
     selectedUserId = userId;
     document.getElementById('deleteModal').classList.add('active');
@@ -2387,7 +1958,8 @@ async function confirmDeleteUser() {
         showNotification('Failed to delete user', 'error');
     }
 }
-        // Role Management Functions
+
+// Role Management Functions
 async function initializeRolesManagement() {
     try {
         console.log('Initializing roles management...');
@@ -2431,66 +2003,157 @@ async function loadRoles() {
     }
 }
 
-// Pagination Functions
-function updatePagination(pagination) {
-    const { total, page, pages } = pagination;
-    const start = (page - 1) * 10 + 1;
-    const end = Math.min(page * 10, total);
+function editRole(roleId) {
+    const role = rolesData.find(r => r._id === roleId);
+    if (!role) {
+        showNotification('Role not found', 'error');
+        return;
+    }
 
-    document.getElementById('showingStart').textContent = start;
-    document.getElementById('showingEnd').textContent = end;
-    document.getElementById('totalUsers').textContent = total;
+    selectedRoleId = roleId;
+    document.getElementById('roleModalTitle').textContent = 'Edit Role';
+    document.getElementById('roleName').value = role.name;
+    document.getElementById('roleDescription').value = role.description;
+    
+    resetPermissionCheckboxes();
+    role.permissions.forEach(permission => {
+        const checkbox = document.getElementById(`perm_${permission}`);
+        if (checkbox) checkbox.checked = true;
+    });
 
-    const paginationButtons = document.getElementById('paginationButtons');
-    paginationButtons.innerHTML = `
-        <button class="pagination-button" onclick="changePage(1)" ${page === 1 ? 'disabled' : ''}>
-            <i class="fas fa-angle-double-left"></i>
-        </button>
-        <button class="pagination-button" onclick="changePage(${page - 1})" ${page === 1 ? 'disabled' : ''}>
-            <i class="fas fa-angle-left"></i>
-        </button>
-        ${generatePageButtons(page, pages)}
-        <button class="pagination-button" onclick="changePage(${page + 1})" ${page === pages ? 'disabled' : ''}>
-            <i class="fas fa-angle-right"></i>
-        </button>
-        <button class="pagination-button" onclick="changePage(${pages})" ${page === pages ? 'disabled' : ''}>
-            <i class="fas fa-angle-double-right"></i>
-        </button>
+    document.getElementById('roleModal').classList.add('active');
+}
+
+async function saveRole() {
+    try {
+        const roleData = {
+            name: document.getElementById('roleName').value,
+            description: document.getElementById('roleDescription').value,
+            permissions: getSelectedPermissions()
+        };
+
+        if (!roleData.name || !roleData.description) {
+            showNotification('Please fill in all required fields', 'error');
+            return;
+        }
+
+        if (roleData.permissions.length === 0) {
+            showNotification('Please select at least one permission', 'error');
+            return;
+        }
+
+        const endpoint = selectedRoleId ? 
+            `/roles/${selectedRoleId}` : 
+            '/roles';
+
+        const method = selectedRoleId ? 'PUT' : 'POST';
+
+        const response = await makeAuthenticatedRequest(endpoint, {
+            method,
+            body: JSON.stringify(roleData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to save role');
+        }
+
+        showNotification(
+            selectedRoleId ? 'Role updated successfully' : 'Role created successfully',
+            'success'
+        );
+        
+        closeRoleModal();
+        loadRoles();
+    } catch (error) {
+        console.error('Error saving role:', error);
+        showNotification(error.message || 'Failed to save role', 'error');
+    }
+}
+
+async function deleteRole(roleId) {
+    if (!confirm('Are you sure you want to delete this role? This action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        const response = await makeAuthenticatedRequest(`/roles/${roleId}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to delete role');
+        }
+
+        showNotification('Role deleted successfully', 'success');
+        loadRoles();
+    } catch (error) {
+        console.error('Error deleting role:', error);
+        showNotification(error.message || 'Failed to delete role', 'error');
+    }
+}
+
+function viewRolePermissions(roleId) {
+    const role = rolesData.find(r => r._id === roleId);
+    if (!role) {
+        showNotification('Role not found', 'error');
+        return;
+    }
+
+    const modalHtml = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Permissions for ${escapeHtml(role.name)}</h2>
+                <button class="close-btn" onclick="this.closest('.modal').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="permissions-list">
+                    ${role.permissions.map(perm => `
+                        <div class="permission-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>${formatPermissionName(perm)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
     `;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = modalHtml;
+    document.body.appendChild(modal);
 }
 
-function generatePageButtons(currentPage, totalPages) {
-    let buttons = [];
-    let startPage = Math.max(1, currentPage - 2);
-    let endPage = Math.min(totalPages, currentPage + 2);
+// Event Handlers
+function handleRoleActions(event) {
+    const target = event.target;
+    const actionButton = target.closest('.role-action-button');
+    
+    if (!actionButton) return;
 
-    if (startPage > 1) {
-        buttons.push(`<span class="pagination-ellipsis">...</span>`);
+    const roleCard = actionButton.closest('.role-card');
+    if (!roleCard) return;
+
+    const roleId = roleCard.dataset.roleId;
+    const action = actionButton.dataset.action;
+
+    switch (action) {
+        case 'edit':
+            editRole(roleId);
+            break;
+        case 'delete':
+            deleteRole(roleId);
+            break;
+        case 'permissions':
+            viewRolePermissions(roleId);
+            break;
     }
-
-    for (let i = startPage; i <= endPage; i++) {
-        buttons.push(`
-            <button class="pagination-button ${i === currentPage ? 'active' : ''}" 
-                    onclick="changePage(${i})">
-                ${i}
-            </button>
-        `);
-    }
-
-    if (endPage < totalPages) {
-        buttons.push(`<span class="pagination-ellipsis">...</span>`);
-    }
-
-    return buttons.join('');
 }
-
-function changePage(page) {
-    if (page < 1 || page > totalPages) return;
-    currentPage = page;
-    loadUsers();
-}
-
-// Event Listeners Setup
+        // Event Listeners Setup
 function setupEventListeners() {
     // Sidebar toggle
     const toggleSidebarBtn = document.getElementById('toggleSidebar');
@@ -2590,7 +2253,8 @@ function setupRolesEventListeners() {
         }
     }
 }
-        // Search and Filter Functions
+
+// Search and Filter Functions
 let searchTimeout;
 function debounceSearch() {
     clearTimeout(searchTimeout);
@@ -2716,44 +2380,6 @@ function resetPermissionCheckboxes() {
     });
 }
 
-// User Menu Functions
-function toggleUserMenu() {
-    document.getElementById('userDropdown').classList.toggle('active');
-}
-
-function handleLogout() {
-    localStorage.clear();
-    window.location.href = 'login.html';
-}
-
-function redirectToLogin() {
-    localStorage.clear();
-    window.location.href = 'login.html';
-}
-
-// Validation Functions
-function validateUserData(userData) {
-    const errors = [];
-
-    if (!userData.name || userData.name.trim().length < 2) {
-        errors.push('Name must be at least 2 characters long');
-    }
-
-    if (!userData.email || !userData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-        errors.push('Please enter a valid email address');
-    }
-
-    if (!userData.department) {
-        errors.push('Please select a department');
-    }
-
-    if (!userData.role) {
-        errors.push('Please select a role');
-    }
-
-    return errors;
-}
-
 // Content Loading Functions
 function loadInitialContent() {
     loadSectionContent('dashboard');
@@ -2814,12 +2440,6 @@ async function loadSectionContent(section) {
         showNotification(`Failed to load ${section} section. Please try again.`, 'error');
     }
 }
-
-// Initialize everything when the page loads
-document.addEventListener('DOMContentLoaded', () => {
-    setupEventListeners();
-    initializeDashboard();
-});
 
 </script>
 </body>
