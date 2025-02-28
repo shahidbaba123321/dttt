@@ -47,40 +47,40 @@
         }
 
         /* Layout */
-        .dashboard-container {
-            display: flex;
-            min-height: 100vh;
-        }
+       .sidebar {
+    width: 280px;
+    background: var(--primary-color);
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    overflow-y: auto;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
 
-        /* Sidebar Styles */
-        .sidebar {
-            width: var(--sidebar-width);
-            background: white;
-            border-right: 1px solid rgba(0, 0, 0, 0.1);
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            transition: transform 0.3s ease;
-            z-index: 1000;
-        }
-
-        .sidebar-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+.sidebar-header {
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--primary-dark);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+       .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-light);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+        .logo i {
+    font-size: 1.5rem;
+}
 
         .sidebar-menu {
             padding: 1rem 0;
@@ -166,14 +166,16 @@
         }
 
         .toggle-sidebar {
-            display: none;
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: var(--text-color);
-            font-size: 1.25rem;
-        }
-
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    padding: 0.5rem;
+    display: none;
+}
+        .sidebar-nav {
+    padding: 1rem 0;
+}
         .header-right {
             display: flex;
             align-items: center;
@@ -261,24 +263,24 @@
         /* Responsive Design */
         @media (max-width: 1024px) {
             .sidebar {
-                transform: translateX(-100%);
-            }
+        left: -280px;
+    }
 
-            .sidebar.active {
-                transform: translateX(0);
-            }
+    .sidebar.active {
+        left: 0;
+    }
 
-            .main-content {
-                margin-left: 0;
-            }
+    .main-content {
+        margin-left: 0;
+    }
 
             .header {
                 left: 0;
             }
 
-            .toggle-sidebar {
-                display: block;
-            }
+           .toggle-sidebar {
+        display: block;
+    }
 
             .user-info {
                 display: none;
@@ -334,7 +336,23 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        
+        /* Custom Scrollbar for Sidebar */
+.sidebar::-webkit-scrollbar {
+    width: 5px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: var(--primary-dark);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
     </style>
     <style>
         /* User Management Styles */
@@ -655,103 +673,152 @@
             </button>
         </div>
 
-        <nav class="sidebar-menu">
-            <div class="menu-section">
-                <a href="#dashboard" class="menu-item active" data-section="dashboard">
-                    <i class="fas fa-tachometer-alt"></i>
+        <!-- Navigation Menu -->
+        <nav class="sidebar-nav">
+            <!-- Dashboard Overview -->
+            <div class="menu-item active">
+                <a href="#" class="nav-link" data-section="dashboard">
+                    <i class="fas fa-th-large"></i>
                     <span>Dashboard Overview</span>
                 </a>
             </div>
 
-            <div class="menu-section">
-                <div class="menu-section-title">Management</div>
-                <a href="#companies" class="menu-item" data-section="companies">
+            <!-- Companies/Organizations -->
+            <div class="menu-item">
+                <a href="#" class="nav-link" data-section="companies">
                     <i class="fas fa-building"></i>
                     <span>Companies/Organizations</span>
                 </a>
             </div>
 
-            <div class="menu-section">
-                <div class="menu-section-title">System</div>
-                <div class="menu-item" onclick="toggleSubmenu('systemSettings')">
-                    <i class="fas fa-cogs"></i>
+            <!-- SYSTEM Section -->
+            <div class="section-title">SYSTEM</div>
+
+            <!-- System Settings Submenu -->
+            <div class="menu-item" onclick="toggleSubmenu(event, 'systemSettingsSubmenu')">
+                <div class="menu-title">
+                    <i class="fas fa-cog"></i>
                     <span>System Settings</span>
-                    <i class="fas fa-chevron-down ml-auto"></i>
+                    <i class="fas fa-chevron-right arrow-icon"></i>
                 </div>
-                <div class="submenu" id="systemSettings">
-                    <a href="#general-settings" class="menu-item">
+                <div id="systemSettingsSubmenu" class="submenu">
+                    <a href="#" class="submenu-item" data-section="general-settings">
                         <i class="fas fa-sliders-h"></i>
                         <span>General Settings</span>
                     </a>
-                    <a href="#pricing-plans" class="menu-item">
-                        <i class="fas fa-tags"></i>
-                        <span>Pricing & Plans</span>
-                    </a>
-                    <a href="#security-settings" class="menu-item">
+                    <a href="#" class="submenu-item" data-section="security-settings">
                         <i class="fas fa-shield-alt"></i>
                         <span>Security Settings</span>
                     </a>
+                    <a href="#" class="submenu-item" data-section="email-settings">
+                        <i class="fas fa-envelope"></i>
+                        <span>Email Settings</span>
+                    </a>
+                    <a href="#" class="submenu-item" data-section="notification-settings">
+                        <i class="fas fa-bell"></i>
+                        <span>Notification Settings</span>
+                    </a>
                 </div>
             </div>
 
-            <div class="menu-section">
-                <div class="menu-section-title">Management</div>
-                <div class="menu-item" onclick="toggleSubmenu('moduleManagement')">
-                    <i class="fas fa-cubes"></i>
+            <!-- MANAGEMENT Section -->
+            <div class="section-title">MANAGEMENT</div>
+
+            <!-- Modules Management Submenu -->
+            <div class="menu-item" onclick="toggleSubmenu(event, 'modulesManagementSubmenu')">
+                <div class="menu-title">
+                    <i class="fas fa-cube"></i>
                     <span>Modules Management</span>
-                    <i class="fas fa-chevron-down ml-auto"></i>
+                    <i class="fas fa-chevron-right arrow-icon"></i>
                 </div>
-                <div class="submenu" id="moduleManagement">
-                    <a href="#modules-list" class="menu-item">
-                        <i class="fas fa-list"></i>
-                        <span>Modules List</span>
+                <div id="modulesManagementSubmenu" class="submenu">
+                    <a href="#" class="submenu-item" data-section="installed-modules">
+                        <i class="fas fa-box"></i>
+                        <span>Installed Modules</span>
                     </a>
-                    <a href="#module-settings" class="menu-item">
-                        <i class="fas fa-wrench"></i>
+                    <a href="#" class="submenu-item" data-section="available-modules">
+                        <i class="fas fa-box-open"></i>
+                        <span>Available Modules</span>
+                    </a>
+                    <a href="#" class="submenu-item" data-section="module-updates">
+                        <i class="fas fa-sync"></i>
+                        <span>Updates</span>
+                    </a>
+                    <a href="#" class="submenu-item" data-section="module-settings">
+                        <i class="fas fa-cogs"></i>
                         <span>Module Settings</span>
                     </a>
                 </div>
+            </div>
 
-                <div class="menu-item" onclick="toggleSubmenu('userManagement')">
+            <!-- User Management Submenu -->
+            <div class="menu-item" onclick="toggleSubmenu(event, 'userManagementSubmenu')">
+                <div class="menu-title">
                     <i class="fas fa-users"></i>
                     <span>User Management</span>
-                    <i class="fas fa-chevron-down ml-auto"></i>
+                    <i class="fas fa-chevron-right arrow-icon"></i>
                 </div>
-                <div class="submenu" id="userManagement">
-                    <a href="#" class="menu-item" data-section="users-list">
-        <i class="fas fa-user-friends"></i>
-        <span>Users List</span>
-    </a>
-                    <a href="#" class="menu-item" data-section="roles-permissions">
-        <i class="fas fa-user-lock"></i>
-        <span>Roles & Permissions</span>
-    </a>
+                <div id="userManagementSubmenu" class="submenu">
+                    <a href="#" class="submenu-item" data-section="user-list">
+                        <i class="fas fa-user-friends"></i>
+                        <span>User List</span>
+                    </a>
+                    <a href="#" class="submenu-item" data-section="roles-permissions">
+                        <i class="fas fa-user-shield"></i>
+                        <span>Roles & Permissions</span>
+                    </a>
+                    <a href="#" class="submenu-item" data-section="user-groups">
+                        <i class="fas fa-users-cog"></i>
+                        <span>User Groups</span>
+                    </a>
+                    <a href="#" class="submenu-item" data-section="access-logs">
+                        <i class="fas fa-history"></i>
+                        <span>Access Logs</span>
+                    </a>
                 </div>
             </div>
 
-            <div class="menu-section">
-                <div class="menu-section-title">Tools</div>
-                <a href="#analytics" class="menu-item">
-                    <i class="fas fa-chart-line"></i>
+            <!-- TOOLS Section -->
+            <div class="section-title">TOOLS</div>
+
+            <!-- Analytics & Reports -->
+            <div class="menu-item">
+                <a href="#" class="nav-link" data-section="analytics">
+                    <i class="fas fa-chart-bar"></i>
                     <span>Analytics & Reports</span>
                 </a>
-                <a href="#backup" class="menu-item">
+            </div>
+
+            <!-- Backup & Restore -->
+            <div class="menu-item">
+                <a href="#" class="nav-link" data-section="backup">
                     <i class="fas fa-database"></i>
                     <span>Backup & Restore</span>
                 </a>
-                <a href="#audit-logs" class="menu-item">
+            </div>
+
+            <!-- Audit Logs -->
+            <div class="menu-item">
+                <a href="#" class="nav-link" data-section="audit">
                     <i class="fas fa-history"></i>
                     <span>Audit Logs</span>
                 </a>
-                <a href="#api-management" class="menu-item">
+            </div>
+
+            <!-- API Management -->
+            <div class="menu-item">
+                <a href="#" class="nav-link" data-section="api">
                     <i class="fas fa-code"></i>
                     <span>API Management</span>
                 </a>
             </div>
 
-            <div class="menu-section">
-                <div class="menu-section-title">Support</div>
-                <a href="#support-center" class="menu-item">
+            <!-- SUPPORT Section -->
+            <div class="section-title">SUPPORT</div>
+
+            <!-- Support Center -->
+            <div class="menu-item">
+                <a href="#" class="nav-link" data-section="support">
                     <i class="fas fa-headset"></i>
                     <span>Support Center</span>
                 </a>
@@ -1298,6 +1365,28 @@ let tokenCheckInterval;
         const SESSION_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
 const TOKEN_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
+ // Submenu handling
+function toggleSubmenu(event, submenuId) {
+    event.preventDefault();
+    const submenu = document.getElementById(submenuId);
+    if (!submenu) return;
+
+    // Close all other submenus
+    document.querySelectorAll('.submenu').forEach(menu => {
+        if (menu.id !== submenuId) {
+            menu.classList.remove('active');
+        }
+    });
+
+    // Toggle current submenu
+    submenu.classList.toggle('active');
+
+    // Update arrow icon if it exists
+    const arrow = event.currentTarget.querySelector('.arrow-icon');
+    if (arrow) {
+        arrow.classList.toggle('rotated');
+    }
+}       
 // Add this at the beginning of your JavaScript, after global variables
 function initializeEventListeners() {
     // Sidebar navigation
@@ -1648,21 +1737,46 @@ function initializeDashboard() {
 }
         
 function initializeSidebar() {
-    document.querySelectorAll('.menu-item').forEach(item => {
-        item.addEventListener('click', async function(e) {
-            if (!this.hasAttribute('onclick')) {
-                e.preventDefault();
-                const section = this.getAttribute('data-section');
-                if (section) {
-                    // Update active state
-                    document.querySelectorAll('.menu-item').forEach(menuItem => {
-                        menuItem.classList.remove('active');
-                    });
-                    this.classList.add('active');
+    // Initialize submenu state
+    document.querySelectorAll('.submenu').forEach(submenu => {
+        submenu.classList.remove('active');
+    });
 
-                    // Load section content
-                    await loadSectionContent(section);
+    // Add click handlers for menu items
+    document.querySelectorAll('.menu-item').forEach(item => {
+        const menuTitle = item.querySelector('.menu-title');
+        const submenu = item.querySelector('.submenu');
+        
+        if (menuTitle && submenu) {
+            menuTitle.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Close other submenus
+                document.querySelectorAll('.submenu').forEach(otherSubmenu => {
+                    if (otherSubmenu !== submenu) {
+                        otherSubmenu.classList.remove('active');
+                    }
+                });
+
+                // Toggle current submenu
+                submenu.classList.toggle('active');
+
+                // Rotate arrow icon
+                const arrow = menuTitle.querySelector('.arrow-icon');
+                if (arrow) {
+                    arrow.classList.toggle('rotated');
                 }
+            });
+        }
+    });
+ // Add click handlers for submenu items
+    document.querySelectorAll('.submenu-item').forEach(item => {
+        item.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const section = item.getAttribute('data-section');
+            if (section) {
+                await loadSectionContent(section);
             }
         });
     });
@@ -2350,15 +2464,16 @@ function setupEventListeners() {
     });
 
     // Submenu click outside close
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.menu-item')) {
-            document.querySelectorAll('.submenu').forEach(submenu => {
-                submenu.classList.remove('active');
-            });
-        }
-    });
-}
-
+   document.addEventListener('click', (e) => {
+    if (!e.target.closest('.menu-item')) {
+        document.querySelectorAll('.submenu').forEach(submenu => {
+            submenu.classList.remove('active');
+        });
+        document.querySelectorAll('.arrow-icon').forEach(arrow => {
+            arrow.classList.remove('rotated');
+        });
+    }
+});
 function setupUserModalEventListeners() {
     // Form submission handling
     const userForm = document.getElementById('userForm');
