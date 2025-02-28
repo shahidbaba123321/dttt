@@ -1275,8 +1275,8 @@
     <i class="fas fa-info-circle"></i>
     <span id="notificationMessage"></span>
 </div>
-<script>
-<script>
+
+    <script>
 // Global Variables and Configuration
 const API_BASE_URL = 'https://18.215.160.136.nip.io/api';
 let currentUser = null;
@@ -1292,6 +1292,40 @@ let selectedUserId = null;
 let selectedRoleId = null;
 let usersData = [];
 let rolesData = [];
+
+// Initialize Dashboard
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const params = getQueryParams();
+        if (params.token) {
+            console.log('Fresh login detected, setting credentials');
+            localStorage.setItem('token', params.token);
+            localStorage.setItem('userRole', params.role);
+            localStorage.setItem('userEmail', params.email);
+            
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        const isAuthenticated = await checkAuthentication();
+        if (!isAuthenticated) {
+            redirectToLogin();
+            return;
+        }
+
+        initializeDashboard();
+        loadUserInfo();
+        loadInitialContent();
+    } catch (error) {
+        console.error('Dashboard initialization error:', error);
+        redirectToLogin();
+    }
+});
+
+// Error Handling
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+    showNotification('An unexpected error occurred', 'error');
+});
 
 // API Service
 const ApiService = {
@@ -1368,51 +1402,7 @@ const ApiService = {
     }
 };
 
-// Initial Setup and Authentication
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const params = getQueryParams();
-        if (params.token) {
-            console.log('Fresh login detected, setting credentials');
-            localStorage.setItem('token', params.token);
-            localStorage.setItem('userRole', params.role);
-            localStorage.setItem('userEmail', params.email);
-            
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-        const isAuthenticated = await checkAuthentication();
-        if (!isAuthenticated) {
-            redirectToLogin();
-            return;
-        }
-
-        initializeDashboard();
-        loadUserInfo();
-        loadInitialContent();
-    } catch (error) {
-        console.error('Dashboard initialization error:', error);
-        redirectToLogin();
-    }
-});
-
-// Error Handling
-window.addEventListener('unhandledrejection', function(event) {
-    console.error('Unhandled promise rejection:', event.reason);
-    showNotification('An unexpected error occurred', 'error');
-});
-
-window.addEventListener('error', function(event) {
-    console.error('Global error:', {
-        message: event.error?.message,
-        stack: event.error?.stack,
-        filename: event.filename,
-        lineno: event.lineno,
-        colno: event.colno
-    });
-    showNotification('An unexpected error occurred', 'error');
-});
-    // Authentication Functions
+// Authentication Functions
 async function checkAuthentication() {
     const token = getToken();
     if (!token) {
@@ -1460,202 +1450,33 @@ function getQueryParams() {
         token: params.get('token')
     };
 }
+        // Dashboard Functions
+function initializeDashboard() {
+    initializeSidebar();
+    initializeEventListeners();
+}
 
-// User Management Functions
-const UserManagement = {
-    state: {
-        users: [],
-        currentUser: null,
-        filters: {
-            search: '',
-            department: '',
-            status: '',
-            role: ''
-        },
-        loading: false
-    },
+function initializeSidebar() {
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.addEventListener('click', async function(e) {
+            if (!this.hasAttribute('onclick')) {
+                e.preventDefault();
+                const section = this.getAttribute('data-section');
+                if (section) {
+                    // Update active state
+                    document.querySelectorAll('.menu-item').forEach(menuItem => {
+                        menuItem.classList.remove('active');
+                    });
+                    this.classList.add('active');
 
-    async init() {
-        try {
-            await this.loadUsers();
-            this.setupEventListeners();
-        } catch (error) {
-            console.error('Failed to initialize User Management:', error);
-            showNotification('Failed to initialize User Management', 'error');
-        }
-    },
-
-    async loadUsers() {
-        try {
-            this.state.loading = true;
-            showLoading(document.getElementById('usersTableBody'));
-            
-            const queryParams = new URLSearchParams({
-                page: currentPage,
-                limit: 10,
-                ...(currentFilters.search && { search: currentFilters.search }),
-                ...(currentFilters.department && { department: currentFilters.department }),
-                ...(currentFilters.role && { role: currentFilters.role }),
-                ...(currentFilters.status && { status: currentFilters.status })
-            });
-
-            const response = await makeAuthenticatedRequest(`/users?${queryParams}`);
-            if (!response.ok) throw new Error('Failed to fetch users');
-
-            const data = await response.json();
-            usersData = data.users;
-            totalPages = data.pagination.pages;
-
-            updateUsersTable(data.users);
-            updatePagination(data.pagination);
-        } catch (error) {
-            console.error('Error loading users:', error);
-            showNotification('Failed to load users', 'error');
-            document.getElementById('usersTableBody').innerHTML = `
-                <tr>
-                    <td colspan="7" class="error-message">
-                        Failed to load users. Please try again.
-                    </td>
-                </tr>
-            `;
-        } finally {
-            this.state.loading = false;
-            hideLoading(document.getElementById('usersTableBody'));
-        }
-    },
-
-    async toggleUserStatus(userId) {
-        try {
-            const user = this.state.users.find(u => u._id === userId);
-            if (!user) throw new Error('User not found');
-
-            const newStatus = user.status === 'active' ? 'inactive' : 'active';
-            await ApiService.put(`/users/${userId}/status`, { status: newStatus });
-            
-            showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
-            this.loadUsers();
-        } catch (error) {
-            console.error('Error toggling user status:', error);
-            showNotification(error.message, 'error');
-        }
-    },
-
-    async deleteUser(userId) {
-        try {
-            const user = this.state.users.find(u => u._id === userId);
-            if (!user) throw new Error('User not found');
-
-            if (!confirm(`Are you sure you want to delete ${user.name}?`)) {
-                return;
-            }
-
-            await ApiService.delete(`/users/${userId}`);
-            showNotification('User deleted successfully', 'success');
-            this.loadUsers();
-        } catch (error) {
-            console.error('Error deleting user:', error);
-            showNotification(error.message, 'error');
-        }
-    },
-
-    async toggle2FA(userId) {
-        try {
-            const user = this.state.users.find(u => u._id === userId);
-            if (!user) throw new Error('User not found');
-
-            const newState = !user.requires2FA;
-            await ApiService.put(`/users/${userId}/2fa`, { requires2FA: newState });
-            
-            showNotification(`2FA ${newState ? 'enabled' : 'disabled'} successfully`, 'success');
-            this.loadUsers();
-        } catch (error) {
-            console.error('Error toggling 2FA:', error);
-            showNotification(error.message, 'error');
-        }
-    },
-
-    setupEventListeners() {
-        // Search input with debounce
-        const searchInput = document.getElementById('userSearch');
-        if (searchInput) {
-            let debounceTimer;
-            searchInput.addEventListener('input', (e) => {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(() => {
-                    this.state.filters.search = e.target.value;
-                    this.loadUsers();
-                }, 300);
-            });
-        }
-
-        // Filter selects
-        ['department', 'status', 'role'].forEach(filterType => {
-            const select = document.getElementById(`${filterType}Filter`);
-            if (select) {
-                select.addEventListener('change', (e) => {
-                    this.state.filters[filterType] = e.target.value;
-                    this.loadUsers();
-                });
+                    // Load section content
+                    await loadSectionContent(section);
+                }
             }
         });
-
-        // Form validation
-        const form = document.getElementById('userForm');
-        if (form) {
-            const requiredFields = form.querySelectorAll('input[required], select[required]');
-            requiredFields.forEach(field => {
-                field.addEventListener('blur', () => {
-                    this.validateField(field);
-                });
-
-                field.addEventListener('input', () => {
-                    this.clearFieldError(field);
-                });
-            });
-        }
-    }
-};
-
-// User Modal Functions
-function openAddUserModal() {
-    selectedUserId = null;
-    document.getElementById('modalTitle').textContent = 'Add New User';
-    document.getElementById('userForm').reset();
-    document.getElementById('userModal').classList.add('active');
+    });
 }
 
-function closeUserModal() {
-    document.getElementById('userModal').classList.remove('active');
-    document.getElementById('userForm').reset();
-    selectedUserId = null;
-}
-
-function editUser(userId) {
-    try {
-        const user = usersData.find(u => u._id === userId);
-        if (!user) {
-            showNotification('User not found', 'error');
-            return;
-        }
-
-        selectedUserId = userId;
-        document.getElementById('modalTitle').textContent = 'Edit User';
-        
-        // Populate form fields
-        document.getElementById('userName').value = user.name || '';
-        document.getElementById('userEmail').value = user.email || '';
-        document.getElementById('userDepartment').value = user.department || '';
-        document.getElementById('userRole').value = user.role || '';
-        document.getElementById('requires2FA').value = (user.requires2FA || false).toString();
-
-        // Show modal
-        document.getElementById('userModal').classList.add('active');
-    } catch (error) {
-        console.error('Error editing user:', error);
-        showNotification('Failed to load user data', 'error');
-    }
-}
-    // Dashboard Functions
 async function loadDashboardContent(container) {
     try {
         showLoading(container);
@@ -1738,7 +1559,316 @@ async function loadDashboardContent(container) {
     }
 }
 
-// Role Management Functions
+// Statistics Functions
+async function fetchUserStatistics() {
+    try {
+        const response = await makeAuthenticatedRequest('/users?limit=1');
+        if (!response.ok) throw new Error('Failed to fetch user statistics');
+        
+        const data = await response.json();
+        return {
+            total: data.pagination.total || 0,
+            active: data.users.filter(u => u.status === 'active').length || 0
+        };
+    } catch (error) {
+        console.error('Error fetching user statistics:', error);
+        return { total: 0, active: 0 };
+    }
+}
+
+async function fetchCompanyStatistics() {
+    try {
+        // Since the companies endpoint doesn't exist yet, return default values
+        return {
+            total: 0,
+            active: 0
+        };
+    } catch (error) {
+        console.error('Error fetching company statistics:', error);
+        return { total: 0, active: 0 };
+    }
+}
+
+async function fetchRecentAuditLogs() {
+    try {
+        const response = await makeAuthenticatedRequest('/audit-logs?limit=5');
+        if (!response.ok) throw new Error('Failed to fetch audit logs');
+        
+        const data = await response.json();
+        return data.logs || [];
+    } catch (error) {
+        console.error('Error fetching audit logs:', error);
+        return [];
+    }
+}
+
+// User Management Functions
+async function initializeUserManagement() {
+    try {
+        await loadUsers();
+        setupUserEventListeners();
+        setupUserModalEventListeners();
+    } catch (error) {
+        console.error('Error initializing user management:', error);
+        showNotification('Failed to initialize user management', 'error');
+    }
+}
+
+async function loadUsers() {
+    try {
+        showLoading(document.getElementById('usersTableBody'));
+        
+        const queryParams = new URLSearchParams({
+            page: currentPage,
+            limit: 10,
+            ...(currentFilters.search && { search: currentFilters.search }),
+            ...(currentFilters.department && { department: currentFilters.department }),
+            ...(currentFilters.role && { role: currentFilters.role }),
+            ...(currentFilters.status && { status: currentFilters.status })
+        });
+
+        const response = await makeAuthenticatedRequest(`/users?${queryParams}`);
+        if (!response.ok) throw new Error('Failed to fetch users');
+
+        const data = await response.json();
+        usersData = data.users;
+        totalPages = data.pagination.pages;
+
+        updateUsersTable(data.users);
+        updatePagination(data.pagination);
+    } catch (error) {
+        console.error('Error loading users:', error);
+        showNotification('Failed to load users', 'error');
+        document.getElementById('usersTableBody').innerHTML = `
+            <tr>
+                <td colspan="7" class="error-message">
+                    Failed to load users. Please try again.
+                </td>
+            </tr>
+        `;
+    } finally {
+        hideLoading(document.getElementById('usersTableBody'));
+    }
+}
+// User Management Modal Functions
+function openAddUserModal() {
+    selectedUserId = null;
+    document.getElementById('modalTitle').textContent = 'Add New User';
+    document.getElementById('userForm').reset();
+    document.getElementById('userModal').classList.add('active');
+}
+
+function closeUserModal() {
+    document.getElementById('userModal').classList.remove('active');
+    document.getElementById('userForm').reset();
+    selectedUserId = null;
+}
+
+function editUser(userId) {
+    try {
+        const user = usersData.find(u => u._id === userId);
+        if (!user) {
+            showNotification('User not found', 'error');
+            return;
+        }
+
+        selectedUserId = userId;
+        document.getElementById('modalTitle').textContent = 'Edit User';
+        
+        // Populate form fields
+        document.getElementById('userName').value = user.name || '';
+        document.getElementById('userEmail').value = user.email || '';
+        document.getElementById('userDepartment').value = user.department || '';
+        document.getElementById('userRole').value = user.role || '';
+        document.getElementById('requires2FA').value = (user.requires2FA || false).toString();
+
+        // Show modal
+        document.getElementById('userModal').classList.add('active');
+    } catch (error) {
+        console.error('Error editing user:', error);
+        showNotification('Failed to load user data', 'error');
+    }
+}
+
+async function saveUser() {
+    try {
+        // Get form values
+        const userData = {
+            name: document.getElementById('userName').value.trim(),
+            email: document.getElementById('userEmail').value.trim(),
+            department: document.getElementById('userDepartment').value,
+            role: document.getElementById('userRole').value,
+            requires2FA: document.getElementById('requires2FA').value === 'true'
+        };
+
+        // Validate required fields
+        if (!userData.name || !userData.email || !userData.department || !userData.role) {
+            showNotification('Please fill in all required fields', 'error');
+            return;
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(userData.email)) {
+            showNotification('Please enter a valid email address', 'error');
+            return;
+        }
+
+        if (selectedUserId) {
+            // Update existing user
+            await updateUser(selectedUserId, userData);
+        } else {
+            // Create new user
+            const response = await makeAuthenticatedRequest('/users', {
+                method: 'POST',
+                body: JSON.stringify(userData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to create user');
+            }
+
+            showNotification('User created successfully', 'success');
+            await loadUsers();
+        }
+
+        closeUserModal();
+    } catch (error) {
+        console.error('Error saving user:', error);
+        showNotification(error.message || 'Failed to save user', 'error');
+    }
+}
+
+async function updateUser(userId, userData) {
+    try {
+        const response = await makeAuthenticatedRequest(`/users/${userId}`, {
+            method: 'PUT',
+            body: JSON.stringify(userData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to update user');
+        }
+
+        showNotification('User updated successfully', 'success');
+        await loadUsers();
+    } catch (error) {
+        console.error('Error updating user:', error);
+        showNotification(error.message || 'Failed to update user', 'error');
+    }
+}
+
+async function toggleUserStatus(userId, currentStatus) {
+    try {
+        const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+        const response = await makeAuthenticatedRequest(`/users/${userId}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        if (!response.ok) throw new Error('Failed to update user status');
+
+        showNotification('User status updated successfully', 'success');
+        loadUsers();
+    } catch (error) {
+        console.error('Error updating user status:', error);
+        showNotification('Failed to update user status', 'error');
+    }
+}
+
+async function toggle2FA(userId, current2FAStatus) {
+    try {
+        const response = await makeAuthenticatedRequest(`/users/${userId}/2fa`, {
+            method: 'PUT',
+            body: JSON.stringify({ requires2FA: !current2FAStatus })
+        });
+
+        if (!response.ok) throw new Error('Failed to update 2FA status');
+
+        showNotification('2FA status updated successfully', 'success');
+        loadUsers();
+    } catch (error) {
+        console.error('Error updating 2FA status:', error);
+        showNotification('Failed to update 2FA status', 'error');
+    }
+}
+
+// Password Reset Functions
+function openResetPasswordModal(userId) {
+    selectedUserId = userId;
+    document.getElementById('resetPasswordModal').classList.add('active');
+}
+
+function closeResetPasswordModal() {
+    document.getElementById('resetPasswordModal').classList.remove('active');
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+    selectedUserId = null;
+}
+
+async function confirmResetPassword() {
+    try {
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (newPassword !== confirmPassword) {
+            showNotification('Passwords do not match', 'error');
+            return;
+        }
+
+        const response = await makeAuthenticatedRequest(`/users/${selectedUserId}/reset-password`, {
+            method: 'POST',
+            body: JSON.stringify({ password: newPassword })
+        });
+
+        if (!response.ok) throw new Error('Failed to reset password');
+
+        showNotification('Password reset successfully', 'success');
+        closeResetPasswordModal();
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        showNotification('Failed to reset password', 'error');
+    }
+}
+
+// Delete User Functions
+function openDeleteModal(userId) {
+    selectedUserId = userId;
+    document.getElementById('deleteModal').classList.add('active');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('active');
+    document.getElementById('deleteReason').value = '';
+    selectedUserId = null;
+}
+
+async function confirmDeleteUser() {
+    try {
+        const reason = document.getElementById('deleteReason').value;
+        if (!reason) {
+            showNotification('Please provide a reason for deletion', 'error');
+            return;
+        }
+
+        const response = await makeAuthenticatedRequest(`/users/${selectedUserId}`, {
+            method: 'DELETE',
+            body: JSON.stringify({ reason })
+        });
+
+        if (!response.ok) throw new Error('Failed to delete user');
+
+        showNotification('User deleted successfully', 'success');
+        closeDeleteModal();
+        loadUsers();
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        showNotification('Failed to delete user', 'error');
+    }
+}
+        // Role Management Functions
 async function initializeRolesManagement() {
     try {
         console.log('Initializing roles management...');
@@ -1779,225 +1909,6 @@ async function loadRoles() {
         showNotification('Failed to load roles', 'error');
     } finally {
         hideLoading(document.getElementById('rolesGrid'));
-    }
-}
-
-function updateRolesGrid(roles) {
-    const rolesGrid = document.getElementById('rolesGrid');
-    if (!rolesGrid) return;
-
-    if (!roles || roles.length === 0) {
-        rolesGrid.innerHTML = `
-            <div class="no-data-message">
-                No roles found. Create a new role to get started.
-            </div>
-        `;
-        return;
-    }
-
-    rolesGrid.innerHTML = roles.map(role => `
-        <div class="role-card ${role.isSystem ? 'system-role' : ''}" data-role-id="${role._id}">
-            <div class="role-header">
-                <i class="fas ${getRoleIcon(role.name)}"></i>
-                <h3>${escapeHtml(role.name)}</h3>
-            </div>
-            <div class="role-description">
-                ${escapeHtml(role.description)}
-            </div>
-            <div class="role-stats">
-                <div class="stat">
-                    <span class="stat-value">${role.userCount || 0}</span>
-                    <span class="stat-label">Users</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-value">${role.permissions?.length || 0}</span>
-                    <span class="stat-label">Permissions</span>
-                </div>
-            </div>
-            <div class="role-footer">
-                ${role.isSystem ? `
-                    <button class="btn btn-secondary" disabled>
-                        <i class="fas fa-lock"></i> System Role
-                    </button>
-                ` : `
-                    <div class="role-actions">
-                        <button class="role-action-button" data-action="edit" title="Edit Role">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="role-action-button" data-action="permissions" title="View Permissions">
-                            <i class="fas fa-key"></i>
-                        </button>
-                        <button class="role-action-button" data-action="delete" title="Delete Role">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                `}
-            </div>
-        </div>
-    `).join('');
-
-    setupRolesEventListeners();
-}
-
-// Role Modal Functions
-function openAddRoleModal() {
-    selectedRoleId = null;
-    const roleModal = document.getElementById('roleModal');
-    const modalTitle = document.getElementById('roleModalTitle');
-    const roleForm = document.getElementById('roleForm');
-
-    if (modalTitle) modalTitle.textContent = 'Add New Role';
-    if (roleForm) roleForm.reset();
-    resetPermissionCheckboxes();
-    if (roleModal) roleModal.classList.add('active');
-}
-
-function closeRoleModal() {
-    const roleModal = document.getElementById('roleModal');
-    const roleForm = document.getElementById('roleForm');
-
-    if (roleForm) roleForm.reset();
-    resetPermissionCheckboxes();
-    if (roleModal) roleModal.classList.remove('active');
-    selectedRoleId = null;
-}
-
-async function saveRole() {
-    try {
-        const roleData = {
-            name: document.getElementById('roleName').value,
-            description: document.getElementById('roleDescription').value,
-            permissions: getSelectedPermissions()
-        };
-
-        if (!roleData.name || !roleData.description) {
-            showNotification('Please fill in all required fields', 'error');
-            return;
-        }
-
-        if (roleData.permissions.length === 0) {
-            showNotification('Please select at least one permission', 'error');
-            return;
-        }
-
-        const endpoint = selectedRoleId ? 
-            `/roles/${selectedRoleId}` : 
-            '/roles';
-
-        const method = selectedRoleId ? 'PUT' : 'POST';
-
-        const response = await makeAuthenticatedRequest(endpoint, {
-            method,
-            body: JSON.stringify(roleData)
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to save role');
-        }
-
-        showNotification(
-            selectedRoleId ? 'Role updated successfully' : 'Role created successfully',
-            'success'
-        );
-        
-        closeRoleModal();
-        loadRoles();
-    } catch (error) {
-        console.error('Error saving role:', error);
-        showNotification(error.message || 'Failed to save role', 'error');
-    }
-}
-    // Statistics and API Integration Functions
-async function makeAuthenticatedRequest(endpoint, options = {}) {
-    try {
-        const token = getToken();
-        if (!token) {
-            throw new Error('No authentication token available');
-        }
-
-        const defaultOptions = {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        };
-
-        const mergedOptions = {
-            ...defaultOptions,
-            ...options,
-            headers: {
-                ...defaultOptions.headers,
-                ...options.headers
-            }
-        };
-
-        console.log('Making request to:', `${API_BASE_URL}${endpoint}`);
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, mergedOptions);
-        
-        if (response.status === 401) {
-            redirectToLogin();
-            return null;
-        }
-
-        return response;
-    } catch (error) {
-        console.error('API request failed:', error);
-        throw error;
-    }
-}
-
-async function fetchUserStatistics() {
-    try {
-        const response = await makeAuthenticatedRequest('/users?limit=1');
-        if (!response.ok) throw new Error('Failed to fetch user statistics');
-        
-        const data = await response.json();
-        return {
-            total: data.pagination.total || 0,
-            active: data.users.filter(u => u.status === 'active').length || 0
-        };
-    } catch (error) {
-        console.error('Error fetching user statistics:', error);
-        return { total: 0, active: 0 };
-    }
-}
-
-async function fetchCompanyStatistics() {
-    try {
-        // Since the companies endpoint doesn't exist yet, return default values
-        return {
-            total: 0,
-            active: 0
-        };
-        
-        // When the endpoint is ready, uncomment this code:
-        /*
-        const response = await makeAuthenticatedRequest('/companies/statistics');
-        if (!response.ok) throw new Error('Failed to fetch company statistics');
-        
-        const data = await response.json();
-        return {
-            total: data.total || 0,
-            active: data.active || 0
-        };
-        */
-    } catch (error) {
-        console.error('Error fetching company statistics:', error);
-        return { total: 0, active: 0 };
-    }
-}
-
-async function fetchRecentAuditLogs() {
-    try {
-        const response = await makeAuthenticatedRequest('/audit-logs?limit=5');
-        if (!response.ok) throw new Error('Failed to fetch audit logs');
-        
-        const data = await response.json();
-        return data.logs || [];
-    } catch (error) {
-        console.error('Error fetching audit logs:', error);
-        return [];
     }
 }
 
@@ -2058,6 +1969,131 @@ function changePage(page) {
     if (page < 1 || page > totalPages) return;
     currentPage = page;
     loadUsers();
+}
+
+// Event Listeners Setup
+function setupEventListeners() {
+    // Sidebar toggle
+    const toggleSidebarBtn = document.getElementById('toggleSidebar');
+    if (toggleSidebarBtn) {
+        toggleSidebarBtn.addEventListener('click', () => {
+            document.querySelector('.sidebar').classList.toggle('active');
+        });
+    }
+
+    // Close sidebar
+    const closeSidebarBtn = document.getElementById('closeSidebar');
+    if (closeSidebarBtn) {
+        closeSidebarBtn.addEventListener('click', () => {
+            document.querySelector('.sidebar').classList.remove('active');
+        });
+    }
+
+    // User dropdown
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.user-menu')) {
+            const userDropdown = document.getElementById('userDropdown');
+            if (userDropdown) {
+                userDropdown.classList.remove('active');
+            }
+        }
+    });
+
+    // Search input
+    const searchInput = document.getElementById('userSearch');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', debounceSearch);
+    }
+
+    // Filter menu close
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.filter-dropdown')) {
+            const filterMenu = document.getElementById('filterMenu');
+            if (filterMenu) {
+                filterMenu.classList.remove('active');
+            }
+        }
+    });
+
+    // Submenu click outside close
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.menu-item')) {
+            document.querySelectorAll('.submenu').forEach(submenu => {
+                submenu.classList.remove('active');
+            });
+        }
+    });
+}
+
+function setupUserModalEventListeners() {
+    // Form submission handling
+    const userForm = document.getElementById('userForm');
+    if (userForm) {
+        userForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            saveUser();
+        });
+    }
+
+    // Modal close handling
+    const modalClose = document.querySelector('.modal-close');
+    if (modalClose) {
+        modalClose.addEventListener('click', closeUserModal);
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (e) => {
+        const modal = document.getElementById('userModal');
+        if (e.target === modal) {
+            closeUserModal();
+        }
+    });
+}
+
+function setupRolesEventListeners() {
+    // Role modal events
+    const roleModal = document.getElementById('roleModal');
+    if (roleModal) {
+        // Close modal when clicking outside
+        roleModal.addEventListener('click', (e) => {
+            if (e.target === roleModal) {
+                closeRoleModal();
+            }
+        });
+
+        // Form submission
+        const roleForm = document.getElementById('roleForm');
+        if (roleForm) {
+            roleForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveRole();
+            });
+        }
+    }
+}
+        // Search and Filter Functions
+let searchTimeout;
+function debounceSearch() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        currentFilters.search = document.getElementById('userSearch').value;
+        currentPage = 1;
+        loadUsers();
+    }, 300);
+}
+
+function toggleFilterMenu() {
+    document.getElementById('filterMenu').classList.toggle('active');
+}
+
+function applyFilter(filterType) {
+    const value = prompt(`Enter ${filterType}:`);
+    if (value !== null) {
+        currentFilters[filterType] = value;
+        currentPage = 1;
+        loadUsers();
+    }
+    toggleFilterMenu();
 }
 
 // Utility Functions
@@ -2128,7 +2164,7 @@ function getActivityIcon(action) {
     };
     return icons[action] || icons.default;
 }
-    // Additional Utility Functions
+
 function getRoleIcon(roleName) {
     const icons = {
         'Superadmin': 'fa-crown',
@@ -2159,100 +2195,6 @@ function resetPermissionCheckboxes() {
     document.querySelectorAll('input[type="checkbox"][id^="perm_"]').forEach(checkbox => {
         checkbox.checked = false;
     });
-}
-
-// Search and Filter Functions
-let searchTimeout;
-function debounceSearch() {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        currentFilters.search = document.getElementById('userSearch').value;
-        currentPage = 1;
-        loadUsers();
-    }, 300);
-}
-
-function toggleFilterMenu() {
-    document.getElementById('filterMenu').classList.toggle('active');
-}
-
-function applyFilter(filterType) {
-    const value = prompt(`Enter ${filterType}:`);
-    if (value !== null) {
-        currentFilters[filterType] = value;
-        currentPage = 1;
-        loadUsers();
-    }
-    toggleFilterMenu();
-}
-
-// Event Listeners Setup
-function setupEventListeners() {
-    // Sidebar toggle
-    const toggleSidebarBtn = document.getElementById('toggleSidebar');
-    if (toggleSidebarBtn) {
-        toggleSidebarBtn.addEventListener('click', () => {
-            document.querySelector('.sidebar').classList.toggle('active');
-        });
-    }
-
-    // Close sidebar
-    const closeSidebarBtn = document.getElementById('closeSidebar');
-    if (closeSidebarBtn) {
-        closeSidebarBtn.addEventListener('click', () => {
-            document.querySelector('.sidebar').classList.remove('active');
-        });
-    }
-
-    // User dropdown
-    document.addEventListener('click', function(event) {
-        if (!event.target.closest('.user-menu')) {
-            const userDropdown = document.getElementById('userDropdown');
-            if (userDropdown) {
-                userDropdown.classList.remove('active');
-            }
-        }
-    });
-
-    // Search input
-    const searchInput = document.getElementById('userSearch');
-    if (searchInput) {
-        searchInput.addEventListener('keyup', debounceSearch);
-    }
-
-    // Filter menu close
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.filter-dropdown')) {
-            const filterMenu = document.getElementById('filterMenu');
-            if (filterMenu) {
-                filterMenu.classList.remove('active');
-            }
-        }
-    });
-
-    // Submenu click outside close
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.menu-item')) {
-            document.querySelectorAll('.submenu').forEach(submenu => {
-                submenu.classList.remove('active');
-            });
-        }
-    });
-}
-
-// Submenu Toggle Function
-function toggleSubmenu(submenuId) {
-    const submenu = document.getElementById(submenuId);
-    if (submenu) {
-        // Close all other submenus first
-        document.querySelectorAll('.submenu').forEach(menu => {
-            if (menu.id !== submenuId) {
-                menu.classList.remove('active');
-            }
-        });
-        // Toggle the clicked submenu
-        submenu.classList.toggle('active');
-    }
 }
 
 // User Menu Functions
@@ -2293,37 +2235,65 @@ function validateUserData(userData) {
     return errors;
 }
 
-// Initialize Dashboard
-function initializeDashboard() {
-    initializeSidebar();
-    initializeEventListeners();
+// Content Loading Functions
+function loadInitialContent() {
+    loadSectionContent('dashboard');
 }
 
-function initializeSidebar() {
-    document.querySelectorAll('.menu-item').forEach(item => {
-        item.addEventListener('click', async function(e) {
-            if (!this.hasAttribute('onclick')) {
-                e.preventDefault();
-                const section = this.getAttribute('data-section');
-                if (section) {
-                    // Update active state
-                    document.querySelectorAll('.menu-item').forEach(menuItem => {
-                        menuItem.classList.remove('active');
-                    });
-                    this.classList.add('active');
-
-                    // Load section content
-                    await loadSectionContent(section);
-                }
-            }
+async function loadSectionContent(section) {
+    try {
+        // Hide all sections first
+        document.querySelectorAll('.content-section').forEach(s => {
+            if (s) s.style.display = 'none';
         });
-    });
-}
 
-function initializeEventListeners() {
-    setupEventListeners();
-    setupUserModalEventListeners();
-    setupRolesEventListeners();
+        // Update page title
+        const pageTitle = document.getElementById('pageTitle');
+        if (pageTitle) {
+            pageTitle.textContent = section.charAt(0).toUpperCase() + 
+                                  section.slice(1).replace('-', ' ');
+        }
+
+        switch (section) {
+            case 'dashboard':
+                const dashboardSection = document.getElementById('dashboardSection');
+                if (dashboardSection) {
+                    dashboardSection.style.display = 'block';
+                    await loadDashboardContent(dashboardSection);
+                }
+                break;
+
+            case 'users-list':
+                const usersSection = document.getElementById('usersListSection');
+                if (usersSection) {
+                    usersSection.style.display = 'block';
+                    await initializeUserManagement();
+                }
+                break;
+
+            case 'roles-permissions':
+                const rolesSection = document.getElementById('rolesPermissionsSection');
+                if (rolesSection) {
+                    rolesSection.style.display = 'block';
+                    await initializeRolesManagement();
+                }
+                break;
+
+            default:
+                const mainContent = document.getElementById('mainContent');
+                if (mainContent) {
+                    mainContent.innerHTML = `
+                        <div class="content-section" style="display: block">
+                            <h2>Section ${escapeHtml(section)} is under development</h2>
+                        </div>
+                    `;
+                }
+                break;
+        }
+    } catch (error) {
+        console.error(`Error loading ${section} content:`, error);
+        showNotification(`Failed to load ${section} section. Please try again.`, 'error');
+    }
 }
 
 // Initialize everything when the page loads
@@ -2332,6 +2302,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeDashboard();
 });
 
-    </script>
+</script>
 </body>
 </html>
+
