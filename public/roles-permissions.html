@@ -534,7 +534,31 @@ function showAddRoleModal() {
     
     modal.classList.add('show');
 }
+        
+// Function to communicate with parent window
+function notifyParent(type, data) {
+    window.parent.postMessage({ type, ...data }, window.location.origin);
+}
 
+// Request authentication data from parent
+function requestAuthData() {
+    notifyParent('requireAuth');
+}
+
+// Update page title in parent
+document.addEventListener('DOMContentLoaded', function() {
+    notifyParent('updateTitle', { title: 'Roles & Permissions' });
+});
+
+// Show notifications through parent
+function showNotification(message, type = 'success') {
+    notifyParent('notification', {
+        message: {
+            text: message,
+            style: type
+        }
+    });
+}
 async function editRole(roleId) {
     try {
         currentRoleId = roleId;
