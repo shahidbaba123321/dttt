@@ -703,7 +703,7 @@ function loadModule(moduleName) {
     }
 
     // Load module resources
-   Promise.all([
+    Promise.all([
         fetch(selectedModule.html).then(r => r.text()),
         fetch(selectedModule.css).then(r => r.text()),
         fetch(selectedModule.js).then(r => r.text())
@@ -729,24 +729,51 @@ function loadModule(moduleName) {
             existingScript.remove();
         }
 
-        // Add new module script
-       const scriptElement = document.createElement('script');
-        scriptElement.id = 'moduleScript';
-        scriptElement.type = 'text/javascript';
-        // Ensure RolesPermissions object is created before executing module code
-        scriptElement.textContent = `
-            window.RolesPermissions = {
+        // Create and add the RolesPermissions object first
+        const initScript = document.createElement('script');
+        initScript.textContent = `
+            const RolesPermissions = {
                 init() {
-                    this.loadRoles();
+                    console.log('Initializing Roles & Permissions module');
                     this.attachEventListeners();
+                    this.loadRoles();
                 },
-                // Add other methods from your script.js here
-                ${js}
+
+                attachEventListeners() {
+                    const createBtn = document.getElementById('rpCreateRoleBtn');
+                    if (createBtn) {
+                        createBtn.addEventListener('click', () => this.openCreateRoleModal());
+                    }
+                },
+
+                openCreateRoleModal() {
+                    console.log('Opening create role modal');
+                    const modal = document.getElementById('rpRoleModal');
+                    if (modal) {
+                        modal.classList.add('show');
+                        document.getElementById('rpRoleForm').reset();
+                        document.getElementById('rpModalTitle').textContent = 'Create New Role';
+                    }
+                },
+
+                loadRoles() {
+                    // Implementation for loading roles
+                    console.log('Loading roles...');
+                }
             };
-            // Initialize the module
-            RolesPermissions.init();
         `;
-        document.body.appendChild(scriptElement);
+        document.body.appendChild(initScript);
+
+        // Add the module script
+        const moduleScript = document.createElement('script');
+        moduleScript.id = 'moduleScript';
+        moduleScript.textContent = js;
+        document.body.appendChild(moduleScript);
+
+        // Initialize the module
+        const initModuleScript = document.createElement('script');
+        initModuleScript.textContent = 'RolesPermissions.init();';
+        document.body.appendChild(initModuleScript);
 
     }).catch(error => {
         console.error('Error loading module:', error);
