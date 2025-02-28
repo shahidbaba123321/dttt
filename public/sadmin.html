@@ -1344,263 +1344,67 @@
 </div>
 
     <script>
-// Global Variables and Configuration
-const API_BASE_URL = 'https://18.215.160.136.nip.io/api';
+        // Global Variables
 let currentUser = null;
-let currentPage = 1;
-let totalPages = 1;
-let currentFilters = {
-    search: '',
-    department: '',
-    role: '',
-    status: ''
-};
-let selectedUserId = null;
+    let rolesData = [];
 let selectedRoleId = null;
-let usersData = [];
-let rolesData = [];
-let sessionTimer;
-let tokenCheckInterval;
+const API_BASE_URL = 'https://18.215.160.136.nip.io/api';
 
-        const SESSION_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
-const TOKEN_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
-
- // Submenu handling
-function toggleSubmenu(event, submenuId) {
-    event.preventDefault();
-    const submenu = document.getElementById(submenuId);
-    if (!submenu) return;
-
-    // Close all other submenus
-    document.querySelectorAll('.submenu').forEach(menu => {
-        if (menu.id !== submenuId) {
-            menu.classList.remove('active');
-        }
-    });
-
-    // Toggle current submenu
-    submenu.classList.toggle('active');
-
-    // Update arrow icon if it exists
-    const arrow = event.currentTarget.querySelector('.arrow-icon');
-    if (arrow) {
-        arrow.classList.toggle('rotated');
-    }
-}       
-// Add this at the beginning of your JavaScript, after global variables
-function initializeEventListeners() {
-    // Sidebar navigation
-    document.querySelectorAll('.nav-link, .menu-item').forEach(item => {
-        item.addEventListener('click', async function(e) {
-            e.preventDefault();
-            const section = this.getAttribute('data-section');
-            if (section) {
-                // Update active state
-                document.querySelectorAll('.nav-link, .menu-item').forEach(menuItem => {
-                    menuItem.classList.remove('active');
-                });
-                this.classList.add('active');
-
-                // Load section content
-                await loadSectionContent(section);
-            }
-        });
-    });
-
-    // Sidebar toggle
-    const toggleSidebarBtn = document.getElementById('toggleSidebar');
-    if (toggleSidebarBtn) {
-        toggleSidebarBtn.addEventListener('click', () => {
-            document.querySelector('.sidebar').classList.toggle('active');
-        });
-    }
-
-    // User menu
-    const userMenuTrigger = document.getElementById('userMenuTrigger');
-    const userDropdown = document.getElementById('userDropdown');
-    if (userMenuTrigger && userDropdown) {
-        userMenuTrigger.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            userDropdown.classList.toggle('active');
-        });
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!userMenuTrigger.contains(e.target) && !userDropdown.contains(e.target)) {
-                userDropdown.classList.remove('active');
-            }
-        });
-    }
-}
-
-        
-// Main Initialization
+// Initialize Dashboard
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // Hide all content sections initially
-        document.querySelectorAll('[id$="Section"]').forEach(section => {
-            if (section.id !== 'dashboardSection') {
-                section.style.display = 'none';
-            }
-        });
-
-        // Hide specific content areas
-        document.querySelector('.user-management-content')?.style.display = 'none';
-        document.querySelector('.roles-permissions-content')?.style.display = 'none';
-
-        // Handle initial login parameters
+        // Check URL parameters first
         const params = getQueryParams();
-        if (params.token) {
+        
+        // If we have URL parameters, this is a fresh login
+        if (params.token && params.email && params.role) {
+            console.log('Fresh login detected, setting credentials');
+            // Store the credentials
             localStorage.setItem('token', params.token);
-            localStorage.setItem('userRole', params.role);
             localStorage.setItem('userEmail', params.email);
+            localStorage.setItem('userRole', params.role);
+            
+            // Initialize the dashboard with the new credentials
+            initializeDashboard();
+            loadUserInfo();
+            loadInitialContent();
+            
+            // Clean the URL
             window.history.replaceState({}, document.title, window.location.pathname);
+            return;
         }
 
-        // Check authentication
-        const isAuthenticated = await checkAuthentication();
-        if (!isAuthenticated) {
-            if (!params.token) {
-                window.location.href = 'login.html';
-                return;
-            }
+        // If no URL parameters, check existing token
+        const existingToken = localStorage.getItem('token');
+        if (!existingToken) {
+            console.log('No token found, redirecting to login');
+            redirectToLogin();
+            return;
         }
 
-        // Initialize session management
-        initializeSession();
+        // Verify existing token
+        const isValid = await verifyToken(existingToken);
+        if (!isValid) {
+            console.log('Token invalid, redirecting to login');
+            redirectToLogin();
+            return;
+        }
 
-        // Initialize dashboard
+        // If we reach here, token is valid
+        console.log('Token valid, initializing dashboard');
         initializeDashboard();
         loadUserInfo();
         loadInitialContent();
 
     } catch (error) {
-        console.error('Initialization error:', error);
-        showNotification('Failed to initialize application', 'error');
+        console.error('Dashboard initialization error:', error);
+        redirectToLogin();
     }
 });
-// Error Handling
-window.addEventListener('unhandledrejection', function(event) {
-    console.error('Unhandled promise rejection:', event.reason);
-    showNotification('An unexpected error occurred', 'error');
-});
-
-// Session Management
-function initializeSession() {
-    // Clear any existing timers
-    clearInterval(tokenCheckInterval);
-    clearTimeout(sessionTimer);
-
-    // Start new timers
-    startTokenCheck();
-    resetSessionTimer();
-
-    // Add activity listeners
-    const events = ['click', 'keypress', 'mousemove', 'scroll', 'touchstart'];
-    events.forEach(event => {
-        document.addEventListener(event, resetSessionTimer);
-    });
-}
-function startTokenCheck() {
-    // Check token validity every 5 minutes
-    tokenCheckInterval = setInterval(async () => {
-        const isValid = await checkAuthentication();
-        if (!isValid) {
-            handleSessionExpired();
-        }
-    }, TOKEN_CHECK_INTERVAL);
-}
 
 
-function startSessionMonitor() {
-    clearInterval(tokenCheckInterval);
-    clearTimeout(sessionTimer);
 
-    tokenCheckInterval = setInterval(async () => {
-        const token = getToken();
-        if (token) {
-            const isValid = await verifyToken(token);
-            if (!isValid) {
-                handleSessionTimeout();
-            }
-        }
-    }, 300000); // 5 minutes
-
-    resetSessionTimer();
-}
-
-function resetSessionTimer() {
-    clearTimeout(sessionTimer);
-    sessionTimer = setTimeout(handleSessionExpired, SESSION_DURATION);
-}
-
-function handleSessionTimeout() {
-    clearInterval(tokenCheckInterval);
-    clearTimeout(sessionTimer);
-    showNotification('Your session has expired. Please login again.', 'warning');
-    redirectToLogin();
-}
-        function handleSessionExpired() {
-    clearInterval(tokenCheckInterval);
-    clearTimeout(sessionTimer);
-    showNotification('Your session has expired. Please login again.', 'warning');
-    clearUserSession();
-    window.location.href = 'login.html';
-}
-
- // Authentication and Session Management
-async function checkAuthentication() {
-    try {
-        const token = localStorage.getItem('token');
-        const userRole = localStorage.getItem('userRole');
-        const userEmail = localStorage.getItem('userEmail');
-
-        if (!token || !userRole || !userEmail) {
-            return false;
-        }
-
-        const response = await fetch(`${API_BASE_URL}/verify-token`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-            // Update current user
-            currentUser = data.user;
-            
-            // Reset session timer
-            resetSessionTimer();
-            return true;
-        }
-
-        return false;
-    } catch (error) {
-        console.error('Authentication check failed:', error);
-        return false;
-    }
-}       
-
-function toggleSubmenu(submenuId) {
-    const submenu = document.getElementById(submenuId);
-    if (submenu) {
-        // Close all other submenus first
-        document.querySelectorAll('.submenu').forEach(menu => {
-            if (menu.id !== submenuId) {
-                menu.classList.remove('active');
-            }
-        });
-        // Toggle the clicked submenu
-        submenu.classList.toggle('active');
-    }
-}        
-        
-// Authentication Functions
+// Authentication Check
 async function verifyToken(token) {
     try {
         const response = await fetch(`${API_BASE_URL}/verify-token`, {
@@ -1611,29 +1415,22 @@ async function verifyToken(token) {
             }
         });
 
-        const data = await response.json();
-        if (response.ok && data.success) {
-            currentUser = data.user;
-            return true;
+        if (!response.ok) {
+            return false;
         }
-        return false;
+
+        const data = await response.json();
+        return data.success && data.user.role.toLowerCase() === 'superadmin';
     } catch (error) {
-        console.error('Token verification failed:', error);
+        console.error('Token verification error:', error);
         return false;
     }
 }
 
+
+// Token Management
 function getToken() {
     return localStorage.getItem('token');
-}
-
-function clearUserSession() {
-    clearInterval(tokenCheckInterval);
-    clearTimeout(sessionTimer);
-    localStorage.removeItem('token');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userEmail');
-    currentUser = null;
 }
 
 function getQueryParams() {
@@ -1644,149 +1441,151 @@ function getQueryParams() {
         token: params.get('token')
     };
 }
+    
+// User Information
+function loadUserInfo() {
+    const userEmail = localStorage.getItem('userEmail');
+    const userRole = localStorage.getItem('userRole');
 
-// API Service
-const ApiService = {
-    getHeaders() {
-        const token = localStorage.getItem('token');
-        return {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        };
-    },
-
-    async handleResponse(response) {
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({
-                message: 'An error occurred'
-            }));
-            throw new Error(errorData.message || 'Request failed');
-        }
-        return response.json();
-    },
-
-    async get(endpoint) {
-        try {
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-                method: 'GET',
-                headers: this.getHeaders()
-            });
-            return this.handleResponse(response);
-        } catch (error) {
-            console.error(`GET ${endpoint} failed:`, error);
-            throw error;
-        }
-    },
-
-    async post(endpoint, data) {
-        try {
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-                method: 'POST',
-                headers: this.getHeaders(),
-                body: JSON.stringify(data)
-            });
-            return this.handleResponse(response);
-        } catch (error) {
-            console.error(`POST ${endpoint} failed:`, error);
-            throw error;
-        }
-    },
-
-    async put(endpoint, data) {
-        try {
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-                method: 'PUT',
-                headers: this.getHeaders(),
-                body: JSON.stringify(data)
-            });
-            return this.handleResponse(response);
-        } catch (error) {
-            console.error(`PUT ${endpoint} failed:`, error);
-            throw error;
-        }
-    },
-
-    async delete(endpoint) {
-        try {
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-                method: 'DELETE',
-                headers: this.getHeaders()
-            });
-            return this.handleResponse(response);
-        } catch (error) {
-            console.error(`DELETE ${endpoint} failed:`, error);
-            throw error;
-        }
+    if (userEmail && userRole) {
+        const userInitial = userEmail.charAt(0).toUpperCase();
+        document.getElementById('userAvatar').textContent = userInitial;
+        document.getElementById('userName').textContent = userEmail;
+        document.getElementById('userRole').textContent = userRole;
     }
-};
-  // Update the initialization function
+}
+    // Add this debug function to check token status
+function checkTokenStatus() {
+    const token = localStorage.getItem('token');
+    const email = localStorage.getItem('userEmail');
+    const role = localStorage.getItem('userRole');
+    
+    console.log('Current token:', token ? 'exists' : 'missing');
+    console.log('Current email:', email);
+    console.log('Current role:', role);
+}
+// Load Initial Content
+function loadInitialContent() {
+    loadSectionContent('dashboard');
+}
+// Dashboard Initialization
 function initializeDashboard() {
-    // Hide all sections except dashboard initially
-    document.querySelectorAll('.content-section').forEach(section => {
-        section.style.display = 'none';
-    });
-
-    // Show dashboard section
-    const dashboardSection = document.getElementById('dashboardSection');
-    if (dashboardSection) {
-        dashboardSection.style.display = 'block';
-    }
-
     initializeSidebar();
     initializeEventListeners();
 }
-        
+
 function initializeSidebar() {
-    // Initialize submenu state
-    document.querySelectorAll('.submenu').forEach(submenu => {
-        submenu.classList.remove('active');
-    });
-
-    // Add click handlers for menu items
     document.querySelectorAll('.menu-item').forEach(item => {
-        const menuTitle = item.querySelector('.menu-title');
-        const submenu = item.querySelector('.submenu');
-        
-        if (menuTitle && submenu) {
-            menuTitle.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Close other submenus
-                document.querySelectorAll('.submenu').forEach(otherSubmenu => {
-                    if (otherSubmenu !== submenu) {
-                        otherSubmenu.classList.remove('active');
-                    }
-                });
-
-                // Toggle current submenu
-                submenu.classList.toggle('active');
-
-                // Rotate arrow icon
-                const arrow = menuTitle.querySelector('.arrow-icon');
-                if (arrow) {
-                    arrow.classList.toggle('rotated');
-                }
-            });
-        }
-    });
- // Add click handlers for submenu items
-    document.querySelectorAll('.submenu-item').forEach(item => {
-        item.addEventListener('click', async (e) => {
+        item.addEventListener('click', async function(e) {
             e.preventDefault();
-            const section = item.getAttribute('data-section');
-            if (section) {
-                await loadSectionContent(section);
+            if (!this.hasAttribute('onclick')) {
+                const section = this.getAttribute('data-section');
+                if (section) {
+                    // Update active state
+                    document.querySelectorAll('.menu-item').forEach(menuItem => {
+                        menuItem.classList.remove('active');
+                    });
+                    this.classList.add('active');
+
+                    // Load section content
+                    await loadSectionContent(section);
+                }
             }
         });
     });
 }
 
+function initializeEventListeners() {
+    // Sidebar Toggle
+    document.getElementById('toggleSidebar').addEventListener('click', () => {
+        document.querySelector('.sidebar').classList.toggle('active');
+    });
+
+    document.getElementById('closeSidebar').addEventListener('click', () => {
+        document.querySelector('.sidebar').classList.remove('active');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.user-menu')) {
+            document.getElementById('userDropdown').classList.remove('active');
+        }
+    });
+}
+
+// Menu Management
+function toggleSubmenu(submenuId) {
+    const submenu = document.getElementById(submenuId);
+    submenu.classList.toggle('active');
+}
+
+function activateMenuItem(item) {
+    document.querySelectorAll('.menu-item').forEach(menuItem => {
+        menuItem.classList.remove('active');
+    });
+    item.classList.add('active');
+}
+
+// Content Loading
+async function loadSectionContent(section) {
+    try {
+        // Hide all sections first
+        document.querySelectorAll('.content-section').forEach(section => {
+            if (section) section.style.display = 'none';
+        });
+
+        // Update page title
+        const pageTitle = document.getElementById('pageTitle');
+        if (pageTitle) {
+            pageTitle.textContent = section.charAt(0).toUpperCase() + section.slice(1).replace('-', ' ');
+        }
+
+        switch (section) {
+            case 'dashboard':
+                const dashboardSection = document.getElementById('dashboardSection');
+                if (dashboardSection) {
+                    dashboardSection.style.display = 'block';
+                    await loadDashboardContent(dashboardSection);
+                }
+                break;
+
+            case 'users-list':
+                const usersSection = document.getElementById('usersListSection');
+                if (usersSection) {
+                    usersSection.style.display = 'block';
+                    await initializeUserManagement();
+                }
+                break;
+
+             // Add this case to your existing loadSectionContent function
+case 'roles-permissions':
+    const rolesSection = document.getElementById('rolesPermissionsSection');
+    if (rolesSection) {
+        rolesSection.style.display = 'block';
+        await initializeRolesManagement();
+    }
+    break;   
+
+            default:
+                const mainContent = document.getElementById('mainContent');
+                if (mainContent) {
+                    mainContent.innerHTML = `
+                        <div class="content-section" style="display: block">
+                            <h2>Section ${escapeHtml(section)} is under development</h2>
+                        </div>
+                    `;
+                }
+                break;
+        }
+    } catch (error) {
+        console.error(`Error loading ${section} content:`, error);
+        showNotification(`Failed to load ${section} section. Please try again.`, 'error');
+    }
+}
+// Content Section Loaders
 async function loadDashboardContent(container) {
     try {
-        showLoading(container);
-
-        // Default statistics
+        // Default statistics in case of API failure
         const defaultStats = {
             users: { total: 0, active: 0 },
             companies: { total: 0, active: 0 },
@@ -1833,7 +1632,7 @@ async function loadDashboardContent(container) {
                 <div class="recent-activity">
                     <h3>Recent Activity</h3>
                     <div class="activity-list">
-                        ${auditLogs.length > 0 ? 
+                        ${(auditLogs.length > 0) ? 
                             auditLogs.map(log => `
                                 <div class="activity-item">
                                     <div class="activity-icon">
@@ -1859,14 +1658,14 @@ async function loadDashboardContent(container) {
                 <p>Failed to load dashboard content. Please try again later.</p>
             </div>
         `;
-    } finally {
-        hideLoading(container);
     }
 }
 
-// Statistics Functions
+
+// API Calls
 async function fetchUserStatistics() {
     try {
+        // Since the statistics endpoint doesn't exist, let's use the users endpoint
         const response = await makeAuthenticatedRequest('/users?limit=1');
         if (!response.ok) throw new Error('Failed to fetch user statistics');
         
@@ -1882,16 +1681,10 @@ async function fetchUserStatistics() {
 }
 
 async function fetchCompanyStatistics() {
-    try {
-        return {
-            total: 0,
-            active: 0
-        };
-    } catch (error) {
-        console.error('Error fetching company statistics:', error);
-        return { total: 0, active: 0 };
-    }
+    // Since there's no companies endpoint yet, return default values
+    return { total: 0, active: 0 };
 }
+
 
 async function fetchRecentAuditLogs() {
     try {
@@ -1905,14 +1698,11 @@ async function fetchRecentAuditLogs() {
         return [];
     }
 }
-
-// API Request Handler
-async function makeAuthenticatedRequest(endpoint, options = {}) {
+    async function makeAuthenticatedRequest(endpoint, options = {}) {
     try {
-        const token = localStorage.getItem('token');
+        const token = getToken();
         if (!token) {
-            handleSessionExpired();
-            return null;
+            throw new Error('No authentication token available');
         }
 
         const defaultOptions = {
@@ -1931,17 +1721,13 @@ async function makeAuthenticatedRequest(endpoint, options = {}) {
             }
         };
 
+        console.log('Making request to:', `${API_BASE_URL}${endpoint}`);
         const response = await fetch(`${API_BASE_URL}${endpoint}`, mergedOptions);
         
         if (response.status === 401) {
-            // Only check token for non-verify-token endpoints
-            if (!endpoint.includes('verify-token')) {
-                const isValid = await checkAuthentication();
-                if (!isValid) {
-                    handleSessionExpired();
-                    return null;
-                }
-            }
+            // Token expired or invalid
+            redirectToLogin();
+            return null;
         }
 
         return response;
@@ -1950,32 +1736,313 @@ async function makeAuthenticatedRequest(endpoint, options = {}) {
         throw error;
     }
 }
-        // Update the logout function
-function handleLogout() {
-    clearUserSession();
+// Utility Functions
+function showLoading(container) {
+    container.innerHTML = `
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>Loading content...</p>
+        </div>
+    `;
+}
+
+function hideLoading(container) {
+    const loadingElement = container.querySelector('.loading-container');
+    if (loadingElement) {
+        loadingElement.remove();
+    }
+}
+
+function showError(container, message) {
+    container.innerHTML = `
+        <div class="error-container">
+            <i class="fas fa-exclamation-circle"></i>
+            <p>${message}</p>
+        </div>
+    `;
+}
+
+function showNotification(message, type = 'success') {
+    const notification = document.getElementById('notification');
+    if (!notification) {
+        // Create notification element if it doesn't exist
+        const notificationElement = document.createElement('div');
+        notificationElement.id = 'notification';
+        notificationElement.className = 'notification';
+        document.body.appendChild(notificationElement);
+    }
+
+    const notificationElement = document.getElementById('notification');
+    notificationElement.className = `notification ${type}`;
+    notificationElement.textContent = message;
+    notificationElement.classList.add('show');
+
+    setTimeout(() => {
+        notificationElement.classList.remove('show');
+    }, 3000);
+}
+function formatTimestamp(timestamp) {
+    return new Date(timestamp).toLocaleString();
+}
+
+function getActivityIcon(action) {
+    const icons = {
+        'USER_CREATED': 'fa-user-plus',
+        'USER_UPDATED': 'fa-user-edit',
+        'USER_DELETED': 'fa-user-minus',
+        'USER_LOGIN': 'fa-sign-in-alt',
+        'default': 'fa-info-circle'
+    };
+    return icons[action] || icons.default;
+}
+
+function formatActivityTitle(log) {
+    return `${log.action.replace(/_/g, ' ')} by ${log.performedByUser.email}`;
+}
+
+// User Menu Functions
+function toggleUserMenu() {
+    document.getElementById('userDropdown').classList.toggle('active');
+}
+
+function openMyAccount() {
+    // Implement My Account page navigation
+    window.location.href = 'my-account.html';
+}
+
+async function handleLogout() {
+    localStorage.clear(); // Clear all localStorage items
     window.location.href = 'login.html';
 }
-    
-// Add this to your user menu click handler
-function toggleUserMenu() {
-    const dropdown = document.getElementById('userDropdown');
-    if (dropdown) {
-        dropdown.classList.toggle('active');
-    }
-}    
 
-        // User Management Functions
+// Redirect function
+function redirectToLogin() {
+    localStorage.clear(); // Clear all localStorage items
+    window.location.href = 'login.html';
+}
+
+// Additional styles for dashboard content
+const additionalStyles = document.createElement('style');
+additionalStyles.textContent = `
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .stats-card {
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        box-shadow: var(--box-shadow);
+    }
+
+    .stats-content {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 1rem;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        display: block;
+    }
+
+    .stat-label {
+        color: var(--light-text);
+        font-size: 0.875rem;
+    }
+
+    .recent-activity {
+        grid-column: 1 / -1;
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        box-shadow: var(--box-shadow);
+    }
+
+    .activity-list {
+        margin-top: 1rem;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .activity-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        background: var(--gradient-start);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-color);
+    }
+
+    .activity-details {
+        flex: 1;
+    }
+
+    .activity-title {
+        font-weight: 500;
+    }
+
+    .activity-time {
+        font-size: 0.875rem;
+        color: var(--light-text);
+    }
+
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 200px;
+        gap: 1rem;
+    }
+
+    .error-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 200px;
+        gap: 1rem;
+        color: var(--danger-color);
+    }
+    .content-section {
+        display: none;
+    }
+
+    #dashboardSection {
+        display: block; /* Show dashboard by default */
+    }
+
+    .error-message {
+        padding: 2rem;
+        text-align: center;
+        color: var(--danger-color);
+    }
+     .loading-message {
+        text-align: center;
+        padding: 2rem;
+        color: var(--light-text);
+    }
+
+    .error-message {
+        text-align: center;
+        padding: 2rem;
+        color: var(--danger-color);
+    }
+
+    .no-data-message {
+        text-align: center;
+        padding: 2rem;
+        color: var(--light-text);
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 2rem;
+        height: 2rem;
+        border: 2px solid rgba(0, 0, 0, 0.1);
+        border-left-color: var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    
+`;
+document.head.appendChild(additionalStyles);
+</script>
+    <script>
+        // User Management Variables
+let currentPage = 1;
+let totalPages = 1;
+let currentFilters = {
+    search: '',
+    department: '',
+    role: '',
+    status: ''
+};
+let selectedUserId = null;
+let usersData = [];
+
+// Initialize User Management
 async function initializeUserManagement() {
     try {
         await loadUsers();
-        setupUserEventListeners();
-        setupUserModalEventListeners();
+        setupEventListeners();
     } catch (error) {
         console.error('Error initializing user management:', error);
         showNotification('Failed to initialize user management', 'error');
     }
 }
 
+
+// Setup Event Listeners
+function setupEventListeners() {
+    const userSearch = document.getElementById('userSearch');
+    if (userSearch) {
+        userSearch.addEventListener('keyup', debounceSearch);
+    }
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.filter-dropdown')) {
+            const filterMenu = document.getElementById('filterMenu');
+            if (filterMenu) {
+                filterMenu.classList.remove('active');
+            }
+        }
+    });
+}
+    
+// Debounce Search
+let searchTimeout;
+function debounceSearch() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        const searchValue = document.getElementById('userSearch').value;
+        currentFilters.search = searchValue;
+        currentPage = 1;
+        loadUsers();
+    }, 300);
+}
+// Loading Indicators
+function showLoading(element) {
+    if (element) {
+        element.innerHTML = `
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <p>Loading...</p>
+            </div>
+        `;
+    }
+}
+function hideLoading(element) {
+    const loadingContainer = element?.querySelector('.loading-container');
+    if (loadingContainer) {
+        loadingContainer.remove();
+    }
+}        
+        
+// Load Users
 async function loadUsers() {
     try {
         showLoading(document.getElementById('usersTableBody'));
@@ -2013,11 +2080,159 @@ async function loadUsers() {
     }
 }
 
+// Update Users Table
+// Update Users Table
+function updateUsersTable(users) {
+    const tbody = document.getElementById('usersTableBody');
+    if (!tbody) return;
+
+    if (!users || users.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="no-data-message">
+                    No users found
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = users.map(user => `
+        <tr>
+            <td>${escapeHtml(user.name || '')}</td>
+            <td>${escapeHtml(user.email || '')}</td>
+            <td>${escapeHtml(user.department || '')}</td>
+            <td>${escapeHtml(formatRole(user.role || ''))}</td>
+            <td>
+                <span class="user-status ${user.status === 'active' ? 'status-active' : 'status-inactive'}">
+                    ${escapeHtml(user.status || '')}
+                </span>
+            </td>
+            <td>
+                <span class="user-status ${user.requires2FA ? 'status-active' : 'status-inactive'}">
+                    ${user.requires2FA ? 'Enabled' : 'Disabled'}
+                </span>
+            </td>
+            <td>
+                <div class="user-actions">
+                    <button class="action-button" onclick="editUser('${user._id}')" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-button" onclick="toggleUserStatus('${user._id}', '${user.status}')" 
+                            title="${user.status === 'active' ? 'Deactivate' : 'Activate'}">
+                        <i class="fas fa-${user.status === 'active' ? 'ban' : 'check-circle'}"></i>
+                    </button>
+                    <button class="action-button" onclick="openResetPasswordModal('${user._id}')" title="Reset Password">
+                        <i class="fas fa-key"></i>
+                    </button>
+                    <button class="action-button" onclick="toggle2FA('${user._id}', ${user.requires2FA})" 
+                            title="${user.requires2FA ? 'Disable 2FA' : 'Enable 2FA'}">
+                        <i class="fas fa-shield-alt"></i>
+                    </button>
+                    <button class="action-button" onclick="openDeleteModal('${user._id}')" title="Delete">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Update Pagination
+function updatePagination(pagination) {
+    const { total, page, pages } = pagination;
+    const start = (page - 1) * 10 + 1;
+    const end = Math.min(page * 10, total);
+
+    document.getElementById('showingStart').textContent = start;
+    document.getElementById('showingEnd').textContent = end;
+    document.getElementById('totalUsers').textContent = total;
+
+    const paginationButtons = document.getElementById('paginationButtons');
+    paginationButtons.innerHTML = `
+        <button class="pagination-button" onclick="changePage(1)" ${page === 1 ? 'disabled' : ''}>
+            <i class="fas fa-angle-double-left"></i>
+        </button>
+        <button class="pagination-button" onclick="changePage(${page - 1})" ${page === 1 ? 'disabled' : ''}>
+            <i class="fas fa-angle-left"></i>
+        </button>
+        ${generatePageButtons(page, pages)}
+        <button class="pagination-button" onclick="changePage(${page + 1})" ${page === pages ? 'disabled' : ''}>
+            <i class="fas fa-angle-right"></i>
+        </button>
+        <button class="pagination-button" onclick="changePage(${pages})" ${page === pages ? 'disabled' : ''}>
+            <i class="fas fa-angle-double-right"></i>
+        </button>
+    `;
+}
+
+// Generate Page Buttons
+function generatePageButtons(currentPage, totalPages) {
+    let buttons = [];
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, currentPage + 2);
+
+    if (startPage > 1) {
+        buttons.push(`<span class="pagination-ellipsis">...</span>`);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        buttons.push(`
+            <button class="pagination-button ${i === currentPage ? 'active' : ''}" 
+                    onclick="changePage(${i})">
+                ${i}
+            </button>
+        `);
+    }
+
+    if (endPage < totalPages) {
+        buttons.push(`<span class="pagination-ellipsis">...</span>`);
+    }
+
+    return buttons.join('');
+}
+
+// Change Page
+function changePage(page) {
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    loadUsers();
+}
+
+// Filter Functions
+function toggleFilterMenu() {
+    document.getElementById('filterMenu').classList.toggle('active');
+}
+
+function applyFilter(filterType) {
+    const value = prompt(`Enter ${filterType}:`);
+    if (value !== null) {
+        currentFilters[filterType] = value;
+        currentPage = 1;
+        loadUsers();
+    }
+    toggleFilterMenu();
+}
+
 // User Modal Functions
 function openAddUserModal() {
     selectedUserId = null;
     document.getElementById('modalTitle').textContent = 'Add New User';
     document.getElementById('userForm').reset();
+    document.getElementById('userModal').classList.add('active');
+}
+
+function openEditUserModal(userId) {
+    const user = usersData.find(u => u._id === userId);
+    if (!user) return;
+
+    selectedUserId = userId;
+    document.getElementById('modalTitle').textContent = 'Edit User';
+    document.getElementById('userName').value = user.name;
+    document.getElementById('userEmail').value = user.email;
+    document.getElementById('userDepartment').value = user.department;
+    document.getElementById('userRole').value = user.role;
+    document.getElementById('requires2FA').value = user.requires2FA.toString();
     document.getElementById('userModal').classList.add('active');
 }
 
@@ -2027,6 +2242,136 @@ function closeUserModal() {
     selectedUserId = null;
 }
 
+// Save User
+async function saveUser() {
+    try {
+        // Get form values
+        const userData = {
+            name: document.getElementById('userName').value,
+            email: document.getElementById('userEmail').value,
+            department: document.getElementById('userDepartment').value,
+            role: document.getElementById('userRole').value,
+            requires2FA: document.getElementById('requires2FA').value === 'true'
+        };
+
+        // Validate required fields
+        if (!userData.name || !userData.email || !userData.department || !userData.role) {
+            showNotification('Please fill in all required fields', 'error');
+            return;
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(userData.email)) {
+            showNotification('Please enter a valid email address', 'error');
+            return;
+        }
+
+        const endpoint = selectedUserId ? 
+            `/users/${selectedUserId}` : 
+            '/users';
+
+        const method = selectedUserId ? 'PUT' : 'POST';
+
+        const response = await makeAuthenticatedRequest(endpoint, {
+            method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to save user');
+        }
+
+        showNotification(
+            selectedUserId ? 'User updated successfully' : 'User created successfully',
+            'success'
+        );
+
+        closeUserModal();
+        loadUsers(); // Refresh the users list
+    } catch (error) {
+        console.error('Error saving user:', error);
+        showNotification(error.message || 'Failed to save user', 'error');
+    }
+}
+
+// Delete User Functions
+function openDeleteModal(userId) {
+    selectedUserId = userId;
+    document.getElementById('deleteModal').classList.add('active');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('active');
+    document.getElementById('deleteReason').value = '';
+    selectedUserId = null;
+}
+
+async function confirmDeleteUser() {
+    try {
+        const reason = document.getElementById('deleteReason').value;
+        if (!reason) {
+            showNotification('Please provide a reason for deletion', 'error');
+            return;
+        }
+
+        const response = await makeAuthenticatedRequest(`/users/${selectedUserId}`, {
+            method: 'DELETE',
+            body: JSON.stringify({ reason })
+        });
+
+        if (!response.ok) throw new Error('Failed to delete user');
+
+        showNotification('User deleted successfully', 'success');
+        closeDeleteModal();
+        loadUsers();
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        showNotification('Failed to delete user', 'error');
+    }
+}
+
+// Status Toggle Function
+async function toggleUserStatus(userId, currentStatus) {
+    try {
+        const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+        const response = await makeAuthenticatedRequest(`/users/${userId}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        if (!response.ok) throw new Error('Failed to update user status');
+
+        showNotification('User status updated successfully', 'success');
+        loadUsers();
+    } catch (error) {
+        console.error('Error updating user status:', error);
+        showNotification('Failed to update user status', 'error');
+    }
+}
+
+// 2FA Toggle Function
+async function toggle2FA(userId, current2FAStatus) {
+    try {
+        const response = await makeAuthenticatedRequest(`/users/${userId}/2fa`, {
+            method: 'PUT',
+            body: JSON.stringify({ requires2FA: !current2FAStatus })
+        });
+
+        if (!response.ok) throw new Error('Failed to update 2FA status');
+
+        showNotification('2FA status updated successfully', 'success');
+        loadUsers();
+    } catch (error) {
+        console.error('Error updating 2FA status:', error);
+        showNotification('Failed to update 2FA status', 'error');
+    }
+}
+        
 function editUser(userId) {
     try {
         const user = usersData.find(u => u._id === userId);
@@ -2053,105 +2398,7 @@ function editUser(userId) {
     }
 }
 
-async function saveUser() {
-    try {
-        // Get form values
-        const userData = {
-            name: document.getElementById('userName').value.trim(),
-            email: document.getElementById('userEmail').value.trim(),
-            department: document.getElementById('userDepartment').value,
-            role: document.getElementById('userRole').value,
-            requires2FA: document.getElementById('requires2FA').value === 'true'
-        };
-
-        // Validate required fields
-        const validationErrors = validateUserData(userData);
-        if (validationErrors.length > 0) {
-            showNotification(validationErrors[0], 'error');
-            return;
-        }
-
-        if (selectedUserId) {
-            // Update existing user
-            await updateUser(selectedUserId, userData);
-        } else {
-            // Create new user
-            const response = await makeAuthenticatedRequest('/users', {
-                method: 'POST',
-                body: JSON.stringify(userData)
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to create user');
-            }
-
-            showNotification('User created successfully', 'success');
-            await loadUsers();
-        }
-
-        closeUserModal();
-    } catch (error) {
-        console.error('Error saving user:', error);
-        showNotification(error.message || 'Failed to save user', 'error');
-    }
-}
-
-async function updateUser(userId, userData) {
-    try {
-        const response = await makeAuthenticatedRequest(`/users/${userId}`, {
-            method: 'PUT',
-            body: JSON.stringify(userData)
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to update user');
-        }
-
-        showNotification('User updated successfully', 'success');
-        await loadUsers();
-    } catch (error) {
-        console.error('Error updating user:', error);
-        showNotification(error.message || 'Failed to update user', 'error');
-    }
-}
-
-async function toggleUserStatus(userId, currentStatus) {
-    try {
-        const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-        const response = await makeAuthenticatedRequest(`/users/${userId}/status`, {
-            method: 'PUT',
-            body: JSON.stringify({ status: newStatus })
-        });
-
-        if (!response.ok) throw new Error('Failed to update user status');
-
-        showNotification('User status updated successfully', 'success');
-        loadUsers();
-    } catch (error) {
-        console.error('Error updating user status:', error);
-        showNotification('Failed to update user status', 'error');
-    }
-}
-
-async function toggle2FA(userId, current2FAStatus) {
-    try {
-        const response = await makeAuthenticatedRequest(`/users/${userId}/2fa`, {
-            method: 'PUT',
-            body: JSON.stringify({ requires2FA: !current2FAStatus })
-        });
-
-        if (!response.ok) throw new Error('Failed to update 2FA status');
-
-        showNotification('2FA status updated successfully', 'success');
-        loadUsers();
-    } catch (error) {
-        console.error('Error updating 2FA status:', error);
-        showNotification('Failed to update 2FA status', 'error');
-    }
-}
-
+        
 // Password Reset Functions
 function openResetPasswordModal(userId) {
     selectedUserId = userId;
@@ -2189,44 +2436,115 @@ async function confirmResetPassword() {
         showNotification('Failed to reset password', 'error');
     }
 }
-        // Delete User Functions
-function openDeleteModal(userId) {
-    selectedUserId = userId;
-    document.getElementById('deleteModal').classList.add('active');
+
+// Utility Functions
+function formatRole(role) {
+    return role
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
 }
 
-function closeDeleteModal() {
-    document.getElementById('deleteModal').classList.remove('active');
-    document.getElementById('deleteReason').value = '';
-    selectedUserId = null;
+// Add this security utility function
+function escapeHtml(unsafe) {
+    if (typeof unsafe !== 'string') return '';
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
-
-async function confirmDeleteUser() {
-    try {
-        const reason = document.getElementById('deleteReason').value;
-        if (!reason) {
-            showNotification('Please provide a reason for deletion', 'error');
-            return;
+        // Add error handling wrapper for action buttons
+function wrapActionWithErrorHandler(action, errorMessage) {
+    return async (...args) => {
+        try {
+            await action(...args);
+        } catch (error) {
+            console.error(error);
+            showNotification(errorMessage, 'error');
         }
-
-        const response = await makeAuthenticatedRequest(`/users/${selectedUserId}`, {
-            method: 'DELETE',
-            body: JSON.stringify({ reason })
-        });
-
-        if (!response.ok) throw new Error('Failed to delete user');
-
-        showNotification('User deleted successfully', 'success');
-        closeDeleteModal();
-        loadUsers();
-    } catch (error) {
-        console.error('Error deleting user:', error);
-        showNotification('Failed to delete user', 'error');
-    }
+    };
 }
 
-// Role Management Functions
-async function initializeRolesManagement() {
+    </script>
+    <script>
+
+// Define default roles and their permissions
+const DEFAULT_ROLES = {
+    admin: {
+        name: 'Admin',
+        description: 'System administrator with extensive access rights',
+        permissions: ['all_except_superadmin']
+    },
+    product_manager: {
+        name: 'Product Manager',
+        description: 'Manages product modules and features',
+        permissions: ['dashboard_view', 'modules_view', 'modules_manage']
+    },
+    hr_admin: {
+        name: 'HR Admin',
+        description: 'Manages user accounts and permissions',
+        permissions: ['users_view', 'users_create', 'users_edit']
+    },
+    finance_specialist: {
+        name: 'Finance Specialist',
+        description: 'Handles financial aspects and billing',
+        permissions: ['dashboard_view', 'dashboard_analytics']
+    },
+    data_analyst: {
+        name: 'Data Analyst',
+        description: 'Analyzes system data and generates reports',
+        permissions: ['dashboard_view', 'dashboard_analytics']
+    },
+    api_developer: {
+        name: 'API Developer',
+        description: 'Manages API integrations and development',
+        permissions: ['api_view', 'api_manage']
+    },
+    support_specialist: {
+        name: 'Support Specialist',
+        description: 'Handles user support and assistance',
+        permissions: ['support_view', 'support_manage']
+    },
+    it_manager: {
+        name: 'IT Manager',
+        description: 'Manages IT infrastructure and security',
+        permissions: ['settings_view', 'settings_edit']
+    }
+};
+
+// Define all available permissions
+const AVAILABLE_PERMISSIONS = {
+    dashboard: {
+        view: 'View Dashboard',
+        analytics: 'Access Analytics'
+    },
+    users: {
+        view: 'View Users',
+        create: 'Create Users',
+        edit: 'Edit Users',
+        delete: 'Delete Users'
+    },
+    settings: {
+        view: 'View Settings',
+        edit: 'Modify Settings'
+    },
+    modules: {
+        view: 'View Modules',
+        manage: 'Manage Modules'
+    },
+    api: {
+        view: 'View API',
+        manage: 'Manage API'
+    },
+    support: {
+        view: 'View Support',
+        manage: 'Manage Support'
+    }
+};
+        // Initialize Roles Management
+sync function initializeRolesManagement() {
     try {
         console.log('Initializing roles management...');
         await loadRoles();
@@ -2238,12 +2556,23 @@ async function initializeRolesManagement() {
     }
 }
 
+// Load Roles
+// Update the loadRoles function
 async function loadRoles() {
     try {
         showLoading(document.getElementById('rolesGrid'));
         
-        const response = await makeAuthenticatedRequest('/roles');
-        if (!response.ok) throw new Error('Failed to fetch roles');
+        const response = await makeAuthenticatedRequest('/roles', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${getToken()}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to fetch roles');
+        }
 
         const data = await response.json();
         if (data.success) {
@@ -2268,19 +2597,68 @@ async function loadRoles() {
         hideLoading(document.getElementById('rolesGrid'));
     }
 }
+// Update Roles Grid
+function updateRolesGrid(roles) {
+    const rolesGrid = document.getElementById('rolesGrid');
+    if (!rolesGrid) return;
 
-function editRole(roleId) {
+    rolesGrid.innerHTML = roles.map(role => `
+        <div class="role-card ${role.isDefault ? 'default-role' : ''}">
+            <div class="role-header">
+                <i class="fas ${getRoleIcon(role.name)}"></i>
+                <h3>${escapeHtml(role.name)}</h3>
+            </div>
+            <div class="role-description">
+                ${escapeHtml(role.description)}
+            </div>
+            <div class="role-stats">
+                <div class="stat">
+                    <span class="stat-value">${role.userCount || 0}</span>
+                    <span class="stat-label">Users</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">${role.permissions.length}</span>
+                    <span class="stat-label">Permissions</span>
+                </div>
+            </div>
+            <div class="role-footer">
+                <div class="role-actions">
+                    <button class="role-action-button" onclick="viewRolePermissions('${role._id}')" title="View Permissions">
+                        <i class="fas fa-key"></i>
+                    </button>
+                    ${role.isDefault ? '' : `
+                        <button class="role-action-button" onclick="editRole('${role._id}')" title="Edit Role">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="role-action-button" onclick="deleteRole('${role._id}')" title="Delete Role">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    `}
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Role Modal Functions
+function openAddRoleModal() {
+    selectedRoleId = null;
+    document.getElementById('roleModalTitle').textContent = 'Add New Role';
+    document.getElementById('roleForm').reset();
+    resetPermissionCheckboxes();
+    document.getElementById('roleModal').classList.add('active');
+}
+
+function openEditRoleModal(roleId) {
     const role = rolesData.find(r => r._id === roleId);
-    if (!role) {
-        showNotification('Role not found', 'error');
-        return;
-    }
+    if (!role) return;
 
     selectedRoleId = roleId;
     document.getElementById('roleModalTitle').textContent = 'Edit Role';
     document.getElementById('roleName').value = role.name;
     document.getElementById('roleDescription').value = role.description;
     
+    // Set permissions
     resetPermissionCheckboxes();
     role.permissions.forEach(permission => {
         const checkbox = document.getElementById(`perm_${permission}`);
@@ -2290,6 +2668,14 @@ function editRole(roleId) {
     document.getElementById('roleModal').classList.add('active');
 }
 
+function closeRoleModal() {
+    document.getElementById('roleModal').classList.remove('active');
+    document.getElementById('roleForm').reset();
+    resetPermissionCheckboxes();
+    selectedRoleId = null;
+}
+
+// Save Role
 async function saveRole() {
     try {
         const roleData = {
@@ -2298,6 +2684,7 @@ async function saveRole() {
             permissions: getSelectedPermissions()
         };
 
+        // Validate
         if (!roleData.name || !roleData.description) {
             showNotification('Please fill in all required fields', 'error');
             return;
@@ -2316,13 +2703,13 @@ async function saveRole() {
 
         const response = await makeAuthenticatedRequest(endpoint, {
             method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify(roleData)
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to save role');
-        }
+        if (!response.ok) throw new Error('Failed to save role');
 
         showNotification(
             selectedRoleId ? 'Role updated successfully' : 'Role created successfully',
@@ -2337,8 +2724,9 @@ async function saveRole() {
     }
 }
 
+// Delete Role
 async function deleteRole(roleId) {
-    if (!confirm('Are you sure you want to delete this role? This action cannot be undone.')) {
+    if (!confirm('Are you sure you want to delete this role? Users with this role will need to be reassigned.')) {
         return;
     }
 
@@ -2347,277 +2735,19 @@ async function deleteRole(roleId) {
             method: 'DELETE'
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to delete role');
-        }
+        if (!response.ok) throw new Error('Failed to delete role');
 
         showNotification('Role deleted successfully', 'success');
         loadRoles();
     } catch (error) {
         console.error('Error deleting role:', error);
-        showNotification(error.message || 'Failed to delete role', 'error');
+        showNotification('Failed to delete role', 'error');
     }
-}
-
-function viewRolePermissions(roleId) {
-    const role = rolesData.find(r => r._id === roleId);
-    if (!role) {
-        showNotification('Role not found', 'error');
-        return;
-    }
-
-    const modalHtml = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Permissions for ${escapeHtml(role.name)}</h2>
-                <button class="close-btn" onclick="this.closest('.modal').remove()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="permissions-list">
-                    ${role.permissions.map(perm => `
-                        <div class="permission-item">
-                            <i class="fas fa-check-circle"></i>
-                            <span>${formatPermissionName(perm)}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        </div>
-    `;
-
-    const modal = document.createElement('div');
-    modal.className = 'modal active';
-    modal.innerHTML = modalHtml;
-    document.body.appendChild(modal);
-}
-
-// Event Handlers
-function handleRoleActions(event) {
-    const target = event.target;
-    const actionButton = target.closest('.role-action-button');
-    
-    if (!actionButton) return;
-
-    const roleCard = actionButton.closest('.role-card');
-    if (!roleCard) return;
-
-    const roleId = roleCard.dataset.roleId;
-    const action = actionButton.dataset.action;
-
-    switch (action) {
-        case 'edit':
-            editRole(roleId);
-            break;
-        case 'delete':
-            deleteRole(roleId);
-            break;
-        case 'permissions':
-            viewRolePermissions(roleId);
-            break;
-    }
-}
-        // Event Listeners Setup
-function setupEventListeners() {
-    // Sidebar toggle
-    const toggleSidebarBtn = document.getElementById('toggleSidebar');
-    if (toggleSidebarBtn) {
-        toggleSidebarBtn.addEventListener('click', () => {
-            document.querySelector('.sidebar').classList.toggle('active');
-        });
-    }
-
-    // Close sidebar
-    const closeSidebarBtn = document.getElementById('closeSidebar');
-    if (closeSidebarBtn) {
-        closeSidebarBtn.addEventListener('click', () => {
-            document.querySelector('.sidebar').classList.remove('active');
-        });
-    }
-
-    // User dropdown
-    document.addEventListener('click', function(event) {
-        if (!event.target.closest('.user-menu')) {
-            const userDropdown = document.getElementById('userDropdown');
-            if (userDropdown) {
-                userDropdown.classList.remove('active');
-            }
-        }
-    });
-
-    // Search input
-    const searchInput = document.getElementById('userSearch');
-    if (searchInput) {
-        searchInput.addEventListener('keyup', debounceSearch);
-    }
-
-    // Filter menu close
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.filter-dropdown')) {
-            const filterMenu = document.getElementById('filterMenu');
-            if (filterMenu) {
-                filterMenu.classList.remove('active');
-            }
-        }
-    });
-
-    // Submenu click outside close
-   document.addEventListener('click', (e) => {
-    if (!e.target.closest('.menu-item')) {
-        document.querySelectorAll('.submenu').forEach(submenu => {
-            submenu.classList.remove('active');
-        });
-        document.querySelectorAll('.arrow-icon').forEach(arrow => {
-            arrow.classList.remove('rotated');
-        });
-    }
-});
-function setupUserModalEventListeners() {
-    // Form submission handling
-    const userForm = document.getElementById('userForm');
-    if (userForm) {
-        userForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            saveUser();
-        });
-    }
-
-    // Modal close handling
-    const modalClose = document.querySelector('.modal-close');
-    if (modalClose) {
-        modalClose.addEventListener('click', closeUserModal);
-    }
-
-    // Close modal when clicking outside
-    window.addEventListener('click', (e) => {
-        const modal = document.getElementById('userModal');
-        if (e.target === modal) {
-            closeUserModal();
-        }
-    });
-}
-
-function setupRolesEventListeners() {
-    // Role modal events
-    const roleModal = document.getElementById('roleModal');
-    if (roleModal) {
-        // Close modal when clicking outside
-        roleModal.addEventListener('click', (e) => {
-            if (e.target === roleModal) {
-                closeRoleModal();
-            }
-        });
-
-        // Form submission
-        const roleForm = document.getElementById('roleForm');
-        if (roleForm) {
-            roleForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                saveRole();
-            });
-        }
-    }
-}
-
-// Search and Filter Functions
-let searchTimeout;
-function debounceSearch() {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        currentFilters.search = document.getElementById('userSearch').value;
-        currentPage = 1;
-        loadUsers();
-    }, 300);
-}
-
-function toggleFilterMenu() {
-    document.getElementById('filterMenu').classList.toggle('active');
-}
-
-function applyFilter(filterType) {
-    const value = prompt(`Enter ${filterType}:`);
-    if (value !== null) {
-        currentFilters[filterType] = value;
-        currentPage = 1;
-        loadUsers();
-    }
-    toggleFilterMenu();
 }
 
 // Utility Functions
-function showLoading(element) {
-    if (element) {
-        element.innerHTML = `
-            <div class="loading-container">
-                <div class="loading-spinner"></div>
-                <p>Loading...</p>
-            </div>
-        `;
-    }
-}
-
-function hideLoading(element) {
-    const loadingContainer = element?.querySelector('.loading-container');
-    if (loadingContainer) {
-        loadingContainer.remove();
-    }
-}
-
-function showNotification(message, type = 'success') {
-    const notification = document.getElementById('notification');
-    if (!notification) {
-        const notificationElement = document.createElement('div');
-        notificationElement.id = 'notification';
-        notificationElement.className = 'notification';
-        document.body.appendChild(notificationElement);
-    }
-
-    const notificationElement = document.getElementById('notification');
-    notificationElement.className = `notification ${type}`;
-    notificationElement.innerHTML = `
-        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
-        <span>${message}</span>
-    `;
-    notificationElement.classList.add('show');
-
-    setTimeout(() => {
-        notificationElement.classList.remove('show');
-    }, 3000);
-}
-
-function escapeHtml(unsafe) {
-    if (typeof unsafe !== 'string') return '';
-    return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
-
-function formatTimestamp(timestamp) {
-    return new Date(timestamp).toLocaleString();
-}
-
-function getActivityIcon(action) {
-    const icons = {
-        'USER_CREATED': 'fa-user-plus',
-        'USER_UPDATED': 'fa-user-edit',
-        'USER_DELETED': 'fa-user-minus',
-        'USER_LOGIN': 'fa-sign-in-alt',
-        'ROLE_CREATED': 'fa-plus-circle',
-        'ROLE_UPDATED': 'fa-edit',
-        'ROLE_DELETED': 'fa-trash-alt',
-        'default': 'fa-info-circle'
-    };
-    return icons[action] || icons.default;
-}
-
 function getRoleIcon(roleName) {
     const icons = {
-        'Superadmin': 'fa-crown',
         'Admin': 'fa-user-shield',
         'Product Manager': 'fa-tasks',
         'HR Admin': 'fa-users-cog',
@@ -2631,14 +2761,14 @@ function getRoleIcon(roleName) {
     return icons[roleName] || icons.default;
 }
 
-function formatActivityTitle(log) {
-    return `${log.action.replace(/_/g, ' ')} by ${log.performedByUser?.email || 'System'}`;
-}
-
 function getSelectedPermissions() {
-    return Array.from(document.querySelectorAll('input[type="checkbox"][id^="perm_"]'))
-        .filter(cb => cb.checked)
-        .map(cb => cb.id.replace('perm_', ''));
+    const permissions = [];
+    document.querySelectorAll('input[type="checkbox"][id^="perm_"]').forEach(checkbox => {
+        if (checkbox.checked) {
+            permissions.push(checkbox.id.replace('perm_', ''));
+        }
+    });
+    return permissions;
 }
 
 function resetPermissionCheckboxes() {
@@ -2647,78 +2777,16 @@ function resetPermissionCheckboxes() {
     });
 }
 
-// Content Loading Functions
-function loadInitialContent() {
-    loadSectionContent('dashboard');
-}
-
-// Update loadSectionContent function
-async function loadSectionContent(section) {
-    try {
-        // First hide all sections
-        document.querySelectorAll('[id$="Section"]').forEach(section => {
-            section.style.display = 'none';
-        });
-
-        // Hide all content that shouldn't be visible initially
-        document.querySelector('.user-management-content')?.style.display = 'none';
-        document.querySelector('.roles-permissions-content')?.style.display = 'none';
-
-        // Update page title
-        const pageTitle = document.getElementById('pageTitle');
-        if (pageTitle) {
-            pageTitle.textContent = section.charAt(0).toUpperCase() + 
-                                  section.slice(1).replace('-', ' ');
+// Setup Event Listeners
+function setupRolesEventListeners() {
+    // Add any specific event listeners for the roles management section
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.role-card') && !e.target.closest('.modal')) {
+            closeRoleModal();
         }
-
-        switch (section) {
-            case 'dashboard':
-                const dashboardSection = document.getElementById('dashboardSection');
-                if (dashboardSection) {
-                    dashboardSection.style.display = 'block';
-                    await loadDashboardContent(dashboardSection);
-                }
-                break;
-
-            case 'userManagement':
-                const userSection = document.getElementById('userManagementSection');
-                if (userSection) {
-                    userSection.style.display = 'block';
-                    await initializeUserManagement();
-                }
-                break;
-
-            case 'rolesPermissions':
-                const rolesSection = document.getElementById('rolesPermissionsSection');
-                if (rolesSection) {
-                    rolesSection.style.display = 'block';
-                    await initializeRolesManagement();
-                }
-                break;
-
-            default:
-                const mainContent = document.getElementById('mainContent');
-                if (mainContent) {
-                    mainContent.innerHTML = `
-                        <div class="content-section">
-                            <h2>Section ${escapeHtml(section)} is under development</h2>
-                        </div>
-                    `;
-                }
-                break;
-        }
-    } catch (error) {
-        console.error(`Error loading ${section} content:`, error);
-        showNotification(`Failed to load ${section} section. Please try again.`, 'error');
-    }
+    });
 }
-// Add the redirectToLogin function
-function redirectToLogin() {
-    clearUserSession();
-    window.location.href = 'login.html';
-}
-
-</script>
+    </script>
 </body>
 </html>
 
