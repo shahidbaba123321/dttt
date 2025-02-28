@@ -1,8 +1,8 @@
 /* Base Styles and Variables */
 .roles-permissions-module {
-    --rp-primary: #4F46E5;
+        --rp-primary: var(--primary-color);
     --rp-primary-dark: #4338CA;
-    --rp-secondary: #6B7280;
+    --rp-secondary: var(--secondary-color);
     --rp-success: #10B981;
     --rp-danger: #EF4444;
     --rp-warning: #F59E0B;
@@ -12,20 +12,24 @@
     --rp-border: #E5E7EB;
     --rp-text: #374151;
     --rp-text-light: #6B7280;
-    --rp-background: #F9FAFB;
+     --rp-background: var(--background-color);
     --rp-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     
     width: 100%;
-    padding: 1.5rem;
+    padding: 20px;
+    box-sizing: border-box;
     color: var(--rp-text);
 }
 
 /* Page Header */
 .rp-page-header {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
 }
 
 .rp-header-title h1 {
