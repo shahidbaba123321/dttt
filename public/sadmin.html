@@ -1276,7 +1276,9 @@
     <span id="notificationMessage"></span>
 </div>
 <script>
-// Global Variables
+<script>
+// Global Variables and Configuration
+const API_BASE_URL = 'https://18.215.160.136.nip.io/api';
 let currentUser = null;
 let currentPage = 1;
 let totalPages = 1;
@@ -1291,8 +1293,7 @@ let selectedRoleId = null;
 let usersData = [];
 let rolesData = [];
 
-const API_BASE_URL = 'https://18.215.160.136.nip.io/api';
-// Add API utility functions
+// API Service
 const ApiService = {
     getHeaders() {
         const token = localStorage.getItem('token');
@@ -1302,7 +1303,72 @@ const ApiService = {
         };
     },
 
-// Initialize Dashboard
+    async handleResponse(response) {
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({
+                message: 'An error occurred'
+            }));
+            throw new Error(errorData.message || 'Request failed');
+        }
+        return response.json();
+    },
+
+    async get(endpoint) {
+        try {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                method: 'GET',
+                headers: this.getHeaders()
+            });
+            return this.handleResponse(response);
+        } catch (error) {
+            console.error(`GET ${endpoint} failed:`, error);
+            throw error;
+        }
+    },
+
+    async post(endpoint, data) {
+        try {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                method: 'POST',
+                headers: this.getHeaders(),
+                body: JSON.stringify(data)
+            });
+            return this.handleResponse(response);
+        } catch (error) {
+            console.error(`POST ${endpoint} failed:`, error);
+            throw error;
+        }
+    },
+
+    async put(endpoint, data) {
+        try {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                method: 'PUT',
+                headers: this.getHeaders(),
+                body: JSON.stringify(data)
+            });
+            return this.handleResponse(response);
+        } catch (error) {
+            console.error(`PUT ${endpoint} failed:`, error);
+            throw error;
+        }
+    },
+
+    async delete(endpoint) {
+        try {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                method: 'DELETE',
+                headers: this.getHeaders()
+            });
+            return this.handleResponse(response);
+        } catch (error) {
+            console.error(`DELETE ${endpoint} failed:`, error);
+            throw error;
+        }
+    }
+};
+
+// Initial Setup and Authentication
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const params = getQueryParams();
@@ -1330,7 +1396,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Authentication Functions
+// Error Handling
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+    showNotification('An unexpected error occurred', 'error');
+});
+
+window.addEventListener('error', function(event) {
+    console.error('Global error:', {
+        message: event.error?.message,
+        stack: event.error?.stack,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno
+    });
+    showNotification('An unexpected error occurred', 'error');
+});
+    // Authentication Functions
 async function checkAuthentication() {
     const token = getToken();
     if (!token) {
@@ -1379,128 +1461,206 @@ function getQueryParams() {
     };
 }
 
-// Dashboard Initialization
-function initializeDashboard() {
-    initializeSidebar();
-    initializeEventListeners();
-}
+// User Management Functions
+const UserManagement = {
+    state: {
+        users: [],
+        currentUser: null,
+        filters: {
+            search: '',
+            department: '',
+            status: '',
+            role: ''
+        },
+        loading: false
+    },
 
-function initializeSidebar() {
-    document.querySelectorAll('.menu-item').forEach(item => {
-        item.addEventListener('click', async function(e) {
-            if (!this.hasAttribute('onclick')) {
-                e.preventDefault();
-                const section = this.getAttribute('data-section');
-                if (section) {
-                    // Update active state
-                    document.querySelectorAll('.menu-item').forEach(menuItem => {
-                        menuItem.classList.remove('active');
-                    });
-                    this.classList.add('active');
+    async init() {
+        try {
+            await this.loadUsers();
+            this.setupEventListeners();
+        } catch (error) {
+            console.error('Failed to initialize User Management:', error);
+            showNotification('Failed to initialize User Management', 'error');
+        }
+    },
 
-                    // Load section content
-                    await loadSectionContent(section);
-                }
+    async loadUsers() {
+        try {
+            this.state.loading = true;
+            showLoading(document.getElementById('usersTableBody'));
+            
+            const queryParams = new URLSearchParams({
+                page: currentPage,
+                limit: 10,
+                ...(currentFilters.search && { search: currentFilters.search }),
+                ...(currentFilters.department && { department: currentFilters.department }),
+                ...(currentFilters.role && { role: currentFilters.role }),
+                ...(currentFilters.status && { status: currentFilters.status })
+            });
+
+            const response = await makeAuthenticatedRequest(`/users?${queryParams}`);
+            if (!response.ok) throw new Error('Failed to fetch users');
+
+            const data = await response.json();
+            usersData = data.users;
+            totalPages = data.pagination.pages;
+
+            updateUsersTable(data.users);
+            updatePagination(data.pagination);
+        } catch (error) {
+            console.error('Error loading users:', error);
+            showNotification('Failed to load users', 'error');
+            document.getElementById('usersTableBody').innerHTML = `
+                <tr>
+                    <td colspan="7" class="error-message">
+                        Failed to load users. Please try again.
+                    </td>
+                </tr>
+            `;
+        } finally {
+            this.state.loading = false;
+            hideLoading(document.getElementById('usersTableBody'));
+        }
+    },
+
+    async toggleUserStatus(userId) {
+        try {
+            const user = this.state.users.find(u => u._id === userId);
+            if (!user) throw new Error('User not found');
+
+            const newStatus = user.status === 'active' ? 'inactive' : 'active';
+            await ApiService.put(`/users/${userId}/status`, { status: newStatus });
+            
+            showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
+            this.loadUsers();
+        } catch (error) {
+            console.error('Error toggling user status:', error);
+            showNotification(error.message, 'error');
+        }
+    },
+
+    async deleteUser(userId) {
+        try {
+            const user = this.state.users.find(u => u._id === userId);
+            if (!user) throw new Error('User not found');
+
+            if (!confirm(`Are you sure you want to delete ${user.name}?`)) {
+                return;
+            }
+
+            await ApiService.delete(`/users/${userId}`);
+            showNotification('User deleted successfully', 'success');
+            this.loadUsers();
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            showNotification(error.message, 'error');
+        }
+    },
+
+    async toggle2FA(userId) {
+        try {
+            const user = this.state.users.find(u => u._id === userId);
+            if (!user) throw new Error('User not found');
+
+            const newState = !user.requires2FA;
+            await ApiService.put(`/users/${userId}/2fa`, { requires2FA: newState });
+            
+            showNotification(`2FA ${newState ? 'enabled' : 'disabled'} successfully`, 'success');
+            this.loadUsers();
+        } catch (error) {
+            console.error('Error toggling 2FA:', error);
+            showNotification(error.message, 'error');
+        }
+    },
+
+    setupEventListeners() {
+        // Search input with debounce
+        const searchInput = document.getElementById('userSearch');
+        if (searchInput) {
+            let debounceTimer;
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    this.state.filters.search = e.target.value;
+                    this.loadUsers();
+                }, 300);
+            });
+        }
+
+        // Filter selects
+        ['department', 'status', 'role'].forEach(filterType => {
+            const select = document.getElementById(`${filterType}Filter`);
+            if (select) {
+                select.addEventListener('change', (e) => {
+                    this.state.filters[filterType] = e.target.value;
+                    this.loadUsers();
+                });
             }
         });
-    });
-}
 
-function initializeEventListeners() {
-    // Sidebar Toggle
-    document.getElementById('toggleSidebar')?.addEventListener('click', () => {
-        document.querySelector('.sidebar').classList.toggle('active');
-    });
+        // Form validation
+        const form = document.getElementById('userForm');
+        if (form) {
+            const requiredFields = form.querySelectorAll('input[required], select[required]');
+            requiredFields.forEach(field => {
+                field.addEventListener('blur', () => {
+                    this.validateField(field);
+                });
 
-    document.getElementById('closeSidebar')?.addEventListener('click', () => {
-        document.querySelector('.sidebar').classList.remove('active');
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(event) {
-        if (!event.target.closest('.user-menu')) {
-            document.getElementById('userDropdown')?.classList.remove('active');
+                field.addEventListener('input', () => {
+                    this.clearFieldError(field);
+                });
+            });
         }
-    });
-}
-
-// User Information
-function loadUserInfo() {
-    const userEmail = localStorage.getItem('userEmail');
-    const userRole = localStorage.getItem('userRole');
-
-    if (userEmail && userRole) {
-        const userInitial = userEmail.charAt(0).toUpperCase();
-        document.getElementById('userAvatar').textContent = userInitial;
-        document.getElementById('userName').textContent = userEmail;
-        document.getElementById('userRole').textContent = userRole;
     }
+};
+
+// User Modal Functions
+function openAddUserModal() {
+    selectedUserId = null;
+    document.getElementById('modalTitle').textContent = 'Add New User';
+    document.getElementById('userForm').reset();
+    document.getElementById('userModal').classList.add('active');
 }
 
-// Content Loading
-function loadInitialContent() {
-    loadSectionContent('dashboard');
+function closeUserModal() {
+    document.getElementById('userModal').classList.remove('active');
+    document.getElementById('userForm').reset();
+    selectedUserId = null;
 }
 
-async function loadSectionContent(section) {
+function editUser(userId) {
     try {
-        // Hide all sections first
-        document.querySelectorAll('.content-section').forEach(s => {
-            if (s) s.style.display = 'none';
-        });
-
-        // Update page title
-        const pageTitle = document.getElementById('pageTitle');
-        if (pageTitle) {
-            pageTitle.textContent = section.charAt(0).toUpperCase() + 
-                                  section.slice(1).replace('-', ' ');
+        const user = usersData.find(u => u._id === userId);
+        if (!user) {
+            showNotification('User not found', 'error');
+            return;
         }
 
-        switch (section) {
-            case 'dashboard':
-                const dashboardSection = document.getElementById('dashboardSection');
-                if (dashboardSection) {
-                    dashboardSection.style.display = 'block';
-                    await loadDashboardContent(dashboardSection);
-                }
-                break;
+        selectedUserId = userId;
+        document.getElementById('modalTitle').textContent = 'Edit User';
+        
+        // Populate form fields
+        document.getElementById('userName').value = user.name || '';
+        document.getElementById('userEmail').value = user.email || '';
+        document.getElementById('userDepartment').value = user.department || '';
+        document.getElementById('userRole').value = user.role || '';
+        document.getElementById('requires2FA').value = (user.requires2FA || false).toString();
 
-            case 'users-list':
-                const usersSection = document.getElementById('usersListSection');
-                if (usersSection) {
-                    usersSection.style.display = 'block';
-                    await initializeUserManagement();
-                }
-                break;
-
-            case 'roles-permissions':
-                const rolesSection = document.getElementById('rolesPermissionsSection');
-                if (rolesSection) {
-                    rolesSection.style.display = 'block';
-                    await initializeRolesManagement();
-                }
-                break;
-
-            default:
-                const mainContent = document.getElementById('mainContent');
-                if (mainContent) {
-                    mainContent.innerHTML = `
-                        <div class="content-section" style="display: block">
-                            <h2>Section ${escapeHtml(section)} is under development</h2>
-                        </div>
-                    `;
-                }
-                break;
-        }
+        // Show modal
+        document.getElementById('userModal').classList.add('active');
     } catch (error) {
-        console.error(`Error loading ${section} content:`, error);
-        showNotification(`Failed to load ${section} section. Please try again.`, 'error');
+        console.error('Error editing user:', error);
+        showNotification('Failed to load user data', 'error');
     }
 }
-    // Dashboard Content Loading
+    // Dashboard Functions
 async function loadDashboardContent(container) {
     try {
-        // Default statistics in case of API failure
+        showLoading(container);
+
+        // Default statistics
         const defaultStats = {
             users: { total: 0, active: 0 },
             companies: { total: 0, active: 0 },
@@ -1547,7 +1707,7 @@ async function loadDashboardContent(container) {
                 <div class="recent-activity">
                     <h3>Recent Activity</h3>
                     <div class="activity-list">
-                        ${(auditLogs.length > 0) ? 
+                        ${auditLogs.length > 0 ? 
                             auditLogs.map(log => `
                                 <div class="activity-item">
                                     <div class="activity-icon">
@@ -1573,58 +1733,12 @@ async function loadDashboardContent(container) {
                 <p>Failed to load dashboard content. Please try again later.</p>
             </div>
         `;
-    }
-}
-
-// User Management Functions
-async function initializeUserManagement() {
-    try {
-        await loadUsers();
-        setupUserEventListeners();
-        setupUserModalEventListeners(); // Add this line
-    } catch (error) {
-        console.error('Error initializing user management:', error);
-        showNotification('Failed to initialize user management', 'error');
-    }
-}
-async function loadUsers() {
-    try {
-        showLoading(document.getElementById('usersTableBody'));
-        
-        const queryParams = new URLSearchParams({
-            page: currentPage,
-            limit: 10,
-            ...(currentFilters.search && { search: currentFilters.search }),
-            ...(currentFilters.department && { department: currentFilters.department }),
-            ...(currentFilters.role && { role: currentFilters.role }),
-            ...(currentFilters.status && { status: currentFilters.status })
-        });
-
-        const response = await makeAuthenticatedRequest(`/users?${queryParams}`);
-        if (!response.ok) throw new Error('Failed to fetch users');
-
-        const data = await response.json();
-        usersData = data.users;
-        totalPages = data.pagination.pages;
-
-        updateUsersTable(data.users);
-        updatePagination(data.pagination);
-    } catch (error) {
-        console.error('Error loading users:', error);
-        showNotification('Failed to load users', 'error');
-        document.getElementById('usersTableBody').innerHTML = `
-            <tr>
-                <td colspan="7" class="error-message">
-                    Failed to load users. Please try again.
-                </td>
-            </tr>
-        `;
     } finally {
-        hideLoading(document.getElementById('usersTableBody'));
+        hideLoading(container);
     }
 }
 
-// Roles Management Functions
+// Role Management Functions
 async function initializeRolesManagement() {
     try {
         console.log('Initializing roles management...');
@@ -1722,11 +1836,10 @@ function updateRolesGrid(roles) {
         </div>
     `).join('');
 
-    // Reattach event listeners after updating grid
     setupRolesEventListeners();
 }
 
-    // Role Modal Functions
+// Role Modal Functions
 function openAddRoleModal() {
     selectedRoleId = null;
     const roleModal = document.getElementById('roleModal');
@@ -1739,7 +1852,6 @@ function openAddRoleModal() {
     if (roleModal) roleModal.classList.add('active');
 }
 
-
 function closeRoleModal() {
     const roleModal = document.getElementById('roleModal');
     const roleForm = document.getElementById('roleForm');
@@ -1750,137 +1862,144 @@ function closeRoleModal() {
     selectedRoleId = null;
 }
 
+async function saveRole() {
+    try {
+        const roleData = {
+            name: document.getElementById('roleName').value,
+            description: document.getElementById('roleDescription').value,
+            permissions: getSelectedPermissions()
+        };
 
-function editRole(roleId) {
-    const role = rolesData.find(r => r._id === roleId);
-    if (!role) {
-        showNotification('Role not found', 'error');
-        return;
-    }
-
-    selectedRoleId = roleId;
-    document.getElementById('roleModalTitle').textContent = 'Edit Role';
-    document.getElementById('roleName').value = role.name;
-    document.getElementById('roleDescription').value = role.description;
-    
-    resetPermissionCheckboxes();
-    role.permissions.forEach(permission => {
-        const checkbox = document.getElementById(`perm_${permission}`);
-        if (checkbox) checkbox.checked = true;
-    });
-
-    document.getElementById('roleModal').classList.add('active');
-}
-    // User Management Additional Functions
-function openAddUserModal() {
-    selectedUserId = null;
-    document.getElementById('modalTitle').textContent = 'Add New User';
-    document.getElementById('userForm').reset();
-    document.getElementById('userModal').classList.add('active');
-}
-
-function closeUserModal() {
-    document.getElementById('userModal').classList.remove('active');
-    document.getElementById('userForm').reset();
-    selectedUserId = null;
-}
-
-function openEditUserModal(userId) {
-    const user = usersData.find(u => u._id === userId);
-    if (!user) return;
-
-    selectedUserId = userId;
-    document.getElementById('modalTitle').textContent = 'Edit User';
-    document.getElementById('userName').value = user.name;
-    document.getElementById('userEmail').value = user.email;
-    document.getElementById('userDepartment').value = user.department;
-    document.getElementById('userRole').value = user.role;
-    document.getElementById('requires2FA').value = user.requires2FA.toString();
-    document.getElementById('userModal').classList.add('active');
-}
-
-// User Table Functions
-function updateUsersTable(users) {
-    const tbody = document.getElementById('usersTableBody');
-    if (!tbody) return;
-
-    if (!users || users.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" class="no-data-message">
-                    No users found
-                </td>
-            </tr>
-        `;
-        return;
-    }
-
-    tbody.innerHTML = users.map(user => `
-        <tr>
-            <td>${escapeHtml(user.name || '')}</td>
-            <td>${escapeHtml(user.email || '')}</td>
-            <td>${escapeHtml(user.department || '')}</td>
-            <td>${escapeHtml(formatRole(user.role || ''))}</td>
-            <td>
-                <span class="user-status ${user.status === 'active' ? 'status-active' : 'status-inactive'}">
-                    ${escapeHtml(user.status || '')}
-                </span>
-            </td>
-            <td>
-                <span class="user-status ${user.requires2FA ? 'status-active' : 'status-inactive'}">
-                    ${user.requires2FA ? 'Enabled' : 'Disabled'}
-                </span>
-            </td>
-            <td>
-                <div class="user-actions">
-                    <button class="action-button" onclick="editUser('${user._id}')" title="Edit">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="action-button" onclick="toggleUserStatus('${user._id}', '${user.status}')" 
-                            title="${user.status === 'active' ? 'Deactivate' : 'Activate'}">
-                        <i class="fas fa-${user.status === 'active' ? 'ban' : 'check-circle'}"></i>
-                    </button>
-                    <button class="action-button" onclick="openResetPasswordModal('${user._id}')" title="Reset Password">
-                        <i class="fas fa-key"></i>
-                    </button>
-                    <button class="action-button" onclick="toggle2FA('${user._id}', ${user.requires2FA})" 
-                            title="${user.requires2FA ? 'Disable 2FA' : 'Enable 2FA'}">
-                        <i class="fas fa-shield-alt"></i>
-                    </button>
-                    <button class="action-button" onclick="openDeleteModal('${user._id}')" title="Delete">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `).join('');
-}
-
-// Add these event listeners to your setupEventListeners function
-function setupUserModalEventListeners() {
-    // Form submission handling
-    const userForm = document.getElementById('userForm');
-    if (userForm) {
-        userForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            saveUser();
-        });
-    }
-
-    // Modal close handling
-    const modalClose = document.querySelector('.modal-close');
-    if (modalClose) {
-        modalClose.addEventListener('click', closeUserModal);
-    }
-
-    // Close modal when clicking outside
-    window.addEventListener('click', (e) => {
-        const modal = document.getElementById('userModal');
-        if (e.target === modal) {
-            closeUserModal();
+        if (!roleData.name || !roleData.description) {
+            showNotification('Please fill in all required fields', 'error');
+            return;
         }
-    });
-}    
+
+        if (roleData.permissions.length === 0) {
+            showNotification('Please select at least one permission', 'error');
+            return;
+        }
+
+        const endpoint = selectedRoleId ? 
+            `/roles/${selectedRoleId}` : 
+            '/roles';
+
+        const method = selectedRoleId ? 'PUT' : 'POST';
+
+        const response = await makeAuthenticatedRequest(endpoint, {
+            method,
+            body: JSON.stringify(roleData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to save role');
+        }
+
+        showNotification(
+            selectedRoleId ? 'Role updated successfully' : 'Role created successfully',
+            'success'
+        );
+        
+        closeRoleModal();
+        loadRoles();
+    } catch (error) {
+        console.error('Error saving role:', error);
+        showNotification(error.message || 'Failed to save role', 'error');
+    }
+}
+    // Statistics and API Integration Functions
+async function makeAuthenticatedRequest(endpoint, options = {}) {
+    try {
+        const token = getToken();
+        if (!token) {
+            throw new Error('No authentication token available');
+        }
+
+        const defaultOptions = {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        };
+
+        const mergedOptions = {
+            ...defaultOptions,
+            ...options,
+            headers: {
+                ...defaultOptions.headers,
+                ...options.headers
+            }
+        };
+
+        console.log('Making request to:', `${API_BASE_URL}${endpoint}`);
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, mergedOptions);
+        
+        if (response.status === 401) {
+            redirectToLogin();
+            return null;
+        }
+
+        return response;
+    } catch (error) {
+        console.error('API request failed:', error);
+        throw error;
+    }
+}
+
+async function fetchUserStatistics() {
+    try {
+        const response = await makeAuthenticatedRequest('/users?limit=1');
+        if (!response.ok) throw new Error('Failed to fetch user statistics');
+        
+        const data = await response.json();
+        return {
+            total: data.pagination.total || 0,
+            active: data.users.filter(u => u.status === 'active').length || 0
+        };
+    } catch (error) {
+        console.error('Error fetching user statistics:', error);
+        return { total: 0, active: 0 };
+    }
+}
+
+async function fetchCompanyStatistics() {
+    try {
+        // Since the companies endpoint doesn't exist yet, return default values
+        return {
+            total: 0,
+            active: 0
+        };
+        
+        // When the endpoint is ready, uncomment this code:
+        /*
+        const response = await makeAuthenticatedRequest('/companies/statistics');
+        if (!response.ok) throw new Error('Failed to fetch company statistics');
+        
+        const data = await response.json();
+        return {
+            total: data.total || 0,
+            active: data.active || 0
+        };
+        */
+    } catch (error) {
+        console.error('Error fetching company statistics:', error);
+        return { total: 0, active: 0 };
+    }
+}
+
+async function fetchRecentAuditLogs() {
+    try {
+        const response = await makeAuthenticatedRequest('/audit-logs?limit=5');
+        if (!response.ok) throw new Error('Failed to fetch audit logs');
+        
+        const data = await response.json();
+        return data.logs || [];
+    } catch (error) {
+        console.error('Error fetching audit logs:', error);
+        return [];
+    }
+}
 
 // Pagination Functions
 function updatePagination(pagination) {
@@ -1939,890 +2058,6 @@ function changePage(page) {
     if (page < 1 || page > totalPages) return;
     currentPage = page;
     loadUsers();
-}
-
-// Roles Event Listeners and Setup
-function setupRolesEventListeners() {
-    // Role modal events
-    const roleModal = document.getElementById('roleModal');
-    if (roleModal) {
-        // Close modal when clicking outside
-        roleModal.addEventListener('click', (e) => {
-            if (e.target === roleModal) {
-                closeRoleModal();
-            }
-        });
-
-        // Form submission
-        const roleForm = document.getElementById('roleForm');
-        if (roleForm) {
-            roleForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                saveRole();
-            });
-        }
-    }
-    
-// Permission checkboxes group handling
-    document.querySelectorAll('.permission-group').forEach(group => {
-        const groupCheckboxes = group.querySelectorAll('input[type="checkbox"]');
-        groupCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', () => {
-                updatePermissionGroup(group);
-            });
-        });
-    });
-
-    // Role actions delegation
-    const rolesGrid = document.getElementById('rolesGrid');
-    if (rolesGrid) {
-        rolesGrid.addEventListener('click', handleRoleActions);
-    }
-
-    // Add role button
-    const addRoleButton = document.querySelector('.roles-header .btn-primary');
-    if (addRoleButton) {
-        addRoleButton.addEventListener('click', openAddRoleModal);
-    }
-}
-
-    // Role Action Handler
-function handleRoleActions(event) {
-    const target = event.target;
-    const actionButton = target.closest('.role-action-button');
-    
-    if (!actionButton) return;
-
-    const roleCard = actionButton.closest('.role-card');
-    if (!roleCard) return;
-
-    const roleId = roleCard.dataset.roleId;
-    const action = actionButton.dataset.action;
-
-    switch (action) {
-        case 'edit':
-            editRole(roleId);
-            break;
-        case 'delete':
-            deleteRole(roleId);
-            break;
-        case 'permissions':
-            viewRolePermissions(roleId);
-            break;
-    }
-}
-
-    // Permission Group Updates
-function updatePermissionGroup(group) {
-    const checkboxes = group.querySelectorAll('input[type="checkbox"]');
-    const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
-    
-    // Update group header status
-    const groupHeader = group.querySelector('.permission-group-header');
-    if (groupHeader) {
-        if (checkedCount === checkboxes.length) {
-            groupHeader.classList.add('all-selected');
-        } else if (checkedCount === 0) {
-            groupHeader.classList.remove('all-selected', 'partial-selected');
-        } else {
-            groupHeader.classList.add('partial-selected');
-            groupHeader.classList.remove('all-selected');
-        }
-    }
-}
-
-// User Actions
-async function toggleUserStatus(userId, currentStatus) {
-    try {
-        const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-        const response = await makeAuthenticatedRequest(`/users/${userId}/status`, {
-            method: 'PUT',
-            body: JSON.stringify({ status: newStatus })
-        });
-
-        if (!response.ok) throw new Error('Failed to update user status');
-
-        showNotification('User status updated successfully', 'success');
-        loadUsers();
-    } catch (error) {
-        console.error('Error updating user status:', error);
-        showNotification('Failed to update user status', 'error');
-    }
-}
-
-async function toggle2FA(userId, current2FAStatus) {
-    try {
-        const response = await makeAuthenticatedRequest(`/users/${userId}/2fa`, {
-            method: 'PUT',
-            body: JSON.stringify({ requires2FA: !current2FAStatus })
-        });
-
-        if (!response.ok) throw new Error('Failed to update 2FA status');
-
-        showNotification('2FA status updated successfully', 'success');
-        loadUsers();
-    } catch (error) {
-        console.error('Error updating 2FA status:', error);
-        showNotification('Failed to update 2FA status', 'error');
-    }
-}
-    async handleResponse(response) {
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({
-                message: 'An error occurred'
-            }));
-            throw new Error(errorData.message || 'Request failed');
-        }
-        return response.json();
-    },
-
-    async get(endpoint) {
-        try {
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-                method: 'GET',
-                headers: this.getHeaders()
-            });
-            return this.handleResponse(response);
-        } catch (error) {
-            console.error(`GET ${endpoint} failed:`, error);
-            throw error;
-        }
-    },
-
-    async post(endpoint, data) {
-        try {
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-                method: 'POST',
-                headers: this.getHeaders(),
-                body: JSON.stringify(data)
-            });
-            return this.handleResponse(response);
-        } catch (error) {
-            console.error(`POST ${endpoint} failed:`, error);
-            throw error;
-        }
-    },
-
-    async put(endpoint, data) {
-        try {
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-                method: 'PUT',
-                headers: this.getHeaders(),
-                body: JSON.stringify(data)
-            });
-            return this.handleResponse(response);
-        } catch (error) {
-            console.error(`PUT ${endpoint} failed:`, error);
-            throw error;
-        }
-    },
-
-    async delete(endpoint) {
-        try {
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-                method: 'DELETE',
-                headers: this.getHeaders()
-            });
-            return this.handleResponse(response);
-        } catch (error) {
-            console.error(`DELETE ${endpoint} failed:`, error);
-            throw error;
-        }
-    }
-};
-loadUsers: async function() {
-    try {
-        this.state.loading = true;
-        this.renderLoadingState();
-
-        const users = await ApiService.get('/users');
-        this.state.users = users;
-        this.renderUsers();
-    } catch (error) {
-        console.error('Error loading users:', error);
-        showNotification('Failed to load users: ' + error.message, 'error');
-        this.state.users = [];
-        this.renderErrorState(error.message);
-    } finally {
-        this.state.loading = false;
-    }
-},
-
-// Password Reset Functions
-function openResetPasswordModal(userId) {
-    selectedUserId = userId;
-    document.getElementById('resetPasswordModal').classList.add('active');
-}
-
-function closeResetPasswordModal() {
-    document.getElementById('resetPasswordModal').classList.remove('active');
-    document.getElementById('newPassword').value = '';
-    document.getElementById('confirmPassword').value = '';
-    selectedUserId = null;
-}
-
-async function confirmResetPassword() {
-    try {
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-
-        if (newPassword !== confirmPassword) {
-            showNotification('Passwords do not match', 'error');
-            return;
-        }
-
-        const response = await makeAuthenticatedRequest(`/users/${selectedUserId}/reset-password`, {
-            method: 'POST',
-            body: JSON.stringify({ password: newPassword })
-        });
-
-        if (!response.ok) throw new Error('Failed to reset password');
-
-        showNotification('Password reset successfully', 'success');
-        closeResetPasswordModal();
-    } catch (error) {
-        console.error('Error resetting password:', error);
-        showNotification('Failed to reset password', 'error');
-    }
-}
-
-// Update the dashboard statistics loading
-async function loadDashboardContent() {
-    try {
-        const [userStats, companyStats] = await Promise.all([
-            ApiService.get('/statistics/users'),
-            ApiService.get('/statistics/companies')
-        ]);
-
-        // Update dashboard UI with statistics
-        updateDashboardStatistics(userStats, companyStats);
-    } catch (error) {
-        console.error('Error loading dashboard content:', error);
-        showNotification('Failed to load dashboard content', 'error');
-    }
-}
-
-// Update role deletion
-async function deleteRole(roleId) {
-    try {
-        await ApiService.delete(`/roles/${roleId}`);
-        showNotification('Role deleted successfully', 'success');
-        // Refresh roles list
-        loadRoles();
-    } catch (error) {
-        console.error('Error deleting role:', error);
-        showNotification('Failed to delete role: ' + error.message, 'error');
-    }
-}
-
-// Add error handling middleware
-window.addEventListener('unhandledrejection', function(event) {
-    console.error('Unhandled promise rejection:', event.reason);
-    showNotification('An unexpected error occurred', 'error');
-});
-
-// Update token verification
-async function verifyToken(token) {
-    try {
-        await ApiService.post('/verify-token');
-        console.log('Token verified successfully');
-    } catch (error) {
-        console.error('Token verification failed:', error);
-        localStorage.clear();
-        window.location.href = 'login.html';
-    }
-}
-
-// Update user management actions
-const UserManagement = {
-    // ... other methods ...
-
-    async toggleUserStatus(userId) {
-        try {
-            const user = this.state.users.find(u => u._id === userId);
-            if (!user) throw new Error('User not found');
-
-            const newStatus = user.status === 'active' ? 'inactive' : 'active';
-            await ApiService.put(`/users/${userId}/status`, { status: newStatus });
-            
-            showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`, 'success');
-            this.loadUsers();
-        } catch (error) {
-            console.error('Error toggling user status:', error);
-            showNotification(error.message, 'error');
-        }
-    },
-
-    async deleteUser(userId) {
-        try {
-            const user = this.state.users.find(u => u._id === userId);
-            if (!user) throw new Error('User not found');
-
-            if (!confirm(`Are you sure you want to delete ${user.name}?`)) {
-                return;
-            }
-
-            await ApiService.delete(`/users/${userId}`);
-            showNotification('User deleted successfully', 'success');
-            this.loadUsers();
-        } catch (error) {
-            console.error('Error deleting user:', error);
-            showNotification(error.message, 'error');
-        }
-    },
-
-    async toggle2FA(userId) {
-        try {
-            const user = this.state.users.find(u => u._id === userId);
-            if (!user) throw new Error('User not found');
-
-            const newState = !user.requires2FA;
-            await ApiService.put(`/users/${userId}/2fa`, { requires2FA: newState });
-            
-            showNotification(`2FA ${newState ? 'enabled' : 'disabled'} successfully`, 'success');
-            this.loadUsers();
-        } catch (error) {
-            console.error('Error toggling 2FA:', error);
-            showNotification(error.message, 'error');
-        }
-    }
-};    
-
-// Delete User Functions
-function openDeleteModal(userId) {
-    selectedUserId = userId;
-    document.getElementById('deleteModal').classList.add('active');
-}
-
-function closeDeleteModal() {
-    document.getElementById('deleteModal').classList.remove('active');
-    document.getElementById('deleteReason').value = '';
-    selectedUserId = null;
-}
-
-async function confirmDeleteUser() {
-    try {
-        const reason = document.getElementById('deleteReason').value;
-        if (!reason) {
-            showNotification('Please provide a reason for deletion', 'error');
-            return;
-        }
-
-        const response = await makeAuthenticatedRequest(`/users/${selectedUserId}`, {
-            method: 'DELETE',
-            body: JSON.stringify({ reason })
-        });
-
-        if (!response.ok) throw new Error('Failed to delete user');
-
-        showNotification('User deleted successfully', 'success');
-        closeDeleteModal();
-        loadUsers();
-    } catch (error) {
-        console.error('Error deleting user:', error);
-        showNotification('Failed to delete user', 'error');
-    }
-}
-
-// Search and Filter Functions
-let searchTimeout;
-function debounceSearch() {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        currentFilters.search = document.getElementById('userSearch').value;
-        currentPage = 1;
-        loadUsers();
-    }, 300);
-}
-
-function toggleFilterMenu() {
-    document.getElementById('filterMenu').classList.toggle('active');
-}
-
-function applyFilter(filterType) {
-    const value = prompt(`Enter ${filterType}:`);
-    if (value !== null) {
-        currentFilters[filterType] = value;
-        currentPage = 1;
-        loadUsers();
-    }
-    toggleFilterMenu();
-}
-
-// Setup User Event Listeners
-function setupUserEventListeners() {
-    const userSearch = document.getElementById('userSearch');
-    if (userSearch) {
-        userSearch.addEventListener('keyup', debounceSearch);
-    }
-
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.filter-dropdown')) {
-            const filterMenu = document.getElementById('filterMenu');
-            if (filterMenu) {
-                filterMenu.classList.remove('active');
-            }
-        }
-    });
-}
-
-// Format Functions
-function formatRole(role) {
-    return role
-        .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-}
-// Add this to your existing functions
-function toggleSubmenu(submenuId) {
-    const submenu = document.getElementById(submenuId);
-    if (submenu) {
-        // Close all other submenus first
-        document.querySelectorAll('.submenu').forEach(menu => {
-            if (menu.id !== submenuId) {
-                menu.classList.remove('active');
-            }
-        });
-        // Toggle the clicked submenu
-        submenu.classList.toggle('active');
-    }
-}
-    // Validate User Data
-function validateUserData(userData) {
-    const errors = [];
-
-    if (!userData.name || userData.name.trim().length < 2) {
-        errors.push('Name must be at least 2 characters long');
-    }
-
-    if (!userData.email || !userData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-        errors.push('Please enter a valid email address');
-    }
-
-    if (!userData.department) {
-        errors.push('Please select a department');
-    }
-
-    if (!userData.role) {
-        errors.push('Please select a role');
-    }
-
-    return errors;
-}
-
-
-// Update the setupEventListeners function
-function setupEventListeners() {
-    // Sidebar toggle
-    const toggleSidebarBtn = document.getElementById('toggleSidebar');
-    if (toggleSidebarBtn) {
-        toggleSidebarBtn.addEventListener('click', () => {
-            document.querySelector('.sidebar').classList.toggle('active');
-        });
-    }
-
-    // Close sidebar
-    const closeSidebarBtn = document.getElementById('closeSidebar');
-    if (closeSidebarBtn) {
-        closeSidebarBtn.addEventListener('click', () => {
-            document.querySelector('.sidebar').classList.remove('active');
-        });
-    }
-
-    // User dropdown
-    document.addEventListener('click', function(event) {
-        if (!event.target.closest('.user-menu')) {
-            const userDropdown = document.getElementById('userDropdown');
-            if (userDropdown) {
-                userDropdown.classList.remove('active');
-            }
-        }
-    });
-
-    // Search input
-    const searchInput = document.getElementById('userSearch');
-    if (searchInput) {
-        searchInput.addEventListener('keyup', debounceSearch);
-    }
-
-    // Filter menu close
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.filter-dropdown')) {
-            const filterMenu = document.getElementById('filterMenu');
-            if (filterMenu) {
-                filterMenu.classList.remove('active');
-            }
-        }
-    });
-
-    // Submenu click outside close
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.menu-item')) {
-            document.querySelectorAll('.submenu').forEach(submenu => {
-                submenu.classList.remove('active');
-            });
-        }
-    });
-}
- function editUser(userId) {
-    try {
-        const user = usersData.find(u => u._id === userId);
-        if (!user) {
-            showNotification('User not found', 'error');
-            return;
-        }
-
-        selectedUserId = userId;
-        document.getElementById('modalTitle').textContent = 'Edit User';
-        
-        // Populate form fields
-        document.getElementById('userName').value = user.name || '';
-        document.getElementById('userEmail').value = user.email || '';
-        document.getElementById('userDepartment').value = user.department || '';
-        document.getElementById('userRole').value = user.role || '';
-        document.getElementById('requires2FA').value = (user.requires2FA || false).toString();
-
-        // Show modal
-        document.getElementById('userModal').classList.add('active');
-    } catch (error) {
-        console.error('Error editing user:', error);
-        showNotification('Failed to load user data', 'error');
-    }
-}   
-
-// Update the fetchCompanyStatistics function to handle missing endpoint
-async function fetchCompanyStatistics() {
-    try {
-        // Since the companies endpoint doesn't exist yet, return default values
-        return {
-            total: 0,
-            active: 0
-        };
-        
-        // When the endpoint is ready, uncomment this code:
-        /*
-        const response = await makeAuthenticatedRequest('/companies/statistics');
-        if (!response.ok) throw new Error('Failed to fetch company statistics');
-        
-        const data = await response.json();
-        return {
-            total: data.total || 0,
-            active: data.active || 0
-        };
-        */
-    } catch (error) {
-        console.error('Error fetching company statistics:', error);
-        return { total: 0, active: 0 };
-    }
-}
-// Update User Function
-async function updateUser(userId, userData) {
-    try {
-        const response = await makeAuthenticatedRequest(`/users/${userId}`, {
-            method: 'PUT',
-            body: JSON.stringify(userData)
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to update user');
-        }
-
-        showNotification('User updated successfully', 'success');
-        await loadUsers(); // Refresh the users list
-    } catch (error) {
-        console.error('Error updating user:', error);
-        showNotification(error.message || 'Failed to update user', 'error');
-    }
-}    
-
-// Update loadDashboardContent to handle missing endpoints gracefully
-async function loadDashboardContent(container) {
-    try {
-        // Show loading state
-        showLoading(container);
-
-        // Default statistics
-        const defaultStats = {
-            users: { total: 0, active: 0 },
-            companies: { total: 0, active: 0 },
-            auditLogs: []
-        };
-
-        // Fetch statistics with error handling
-        const [usersStats, companiesStats, auditLogs] = await Promise.all([
-            fetchUserStatistics().catch(() => defaultStats.users),
-            fetchCompanyStatistics().catch(() => defaultStats.companies),
-            fetchRecentAuditLogs().catch(() => defaultStats.auditLogs)
-        ]);
-
-        // Update the dashboard content
-        container.innerHTML = `
-            <div class="dashboard-grid">
-                <div class="stats-card">
-                    <h3>Users Overview</h3>
-                    <div class="stats-content">
-                        <div class="stat-item">
-                            <span class="stat-value">${usersStats.total || 0}</span>
-                            <span class="stat-label">Total Users</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">${usersStats.active || 0}</span>
-                            <span class="stat-label">Active Users</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="stats-card">
-                    <h3>Companies Overview</h3>
-                    <div class="stats-content">
-                        <div class="stat-item">
-                            <span class="stat-value">${companiesStats.total || 0}</span>
-                            <span class="stat-label">Total Companies</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-value">${companiesStats.active || 0}</span>
-                            <span class="stat-label">Active Companies</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="recent-activity">
-                    <h3>Recent Activity</h3>
-                    <div class="activity-list">
-                        ${auditLogs.length > 0 ? 
-                            auditLogs.map(log => `
-                                <div class="activity-item">
-                                    <div class="activity-icon">
-                                        <i class="fas ${getActivityIcon(log.action)}"></i>
-                                    </div>
-                                    <div class="activity-details">
-                                        <div class="activity-title">${formatActivityTitle(log)}</div>
-                                        <div class="activity-time">${formatTimestamp(log.timestamp)}</div>
-                                    </div>
-                                </div>
-                            `).join('') : 
-                            '<div class="no-activity">No recent activity</div>'
-                        }
-                    </div>
-                </div>
-            </div>
-        `;
-    } catch (error) {
-        console.error('Error loading dashboard content:', error);
-        container.innerHTML = `
-            <div class="error-container">
-                <i class="fas fa-exclamation-circle"></i>
-                <p>Failed to load dashboard content. Please try again later.</p>
-            </div>
-        `;
-    } finally {
-        hideLoading(container);
-    }
-}
-
-
-// API Integration Functions
-async function makeAuthenticatedRequest(endpoint, options = {}) {
-    try {
-        const token = getToken();
-        if (!token) {
-            throw new Error('No authentication token available');
-        }
-
-        const defaultOptions = {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        };
-
-        const mergedOptions = {
-            ...defaultOptions,
-            ...options,
-            headers: {
-                ...defaultOptions.headers,
-                ...options.headers
-            }
-        };
-
-        console.log('Making request to:', `${API_BASE_URL}${endpoint}`);
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, mergedOptions);
-        
-        if (response.status === 401) {
-            redirectToLogin();
-            return null;
-        }
-
-        return response;
-    } catch (error) {
-        console.error('API request failed:', error);
-        throw error;
-    }
-}
-
-async function fetchUserStatistics() {
-    try {
-        const response = await makeAuthenticatedRequest('/users?limit=1');
-        if (!response.ok) throw new Error('Failed to fetch user statistics');
-        
-        const data = await response.json();
-        return {
-            total: data.pagination.total || 0,
-            active: data.users.filter(u => u.status === 'active').length || 0
-        };
-    } catch (error) {
-        console.error('Error fetching user statistics:', error);
-        return { total: 0, active: 0 };
-    }
-}
-
-async function fetchCompanyStatistics() {
-    try {
-        const response = await makeAuthenticatedRequest('/companies/statistics');
-        if (!response.ok) throw new Error('Failed to fetch company statistics');
-        
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Error fetching company statistics:', error);
-        return { total: 0, active: 0 };
-    }
-}
-
-async function fetchRecentAuditLogs() {
-    try {
-        const response = await makeAuthenticatedRequest('/audit-logs?limit=5');
-        if (!response.ok) throw new Error('Failed to fetch audit logs');
-        
-        const data = await response.json();
-        return data.logs || [];
-    } catch (error) {
-        console.error('Error fetching audit logs:', error);
-        return [];
-    }
-}
-
-// User Actions
-async function saveUser() {
-    try {
-        // Get form values
-        const userData = {
-            name: document.getElementById('userName').value.trim(),
-            email: document.getElementById('userEmail').value.trim(),
-            department: document.getElementById('userDepartment').value,
-            role: document.getElementById('userRole').value,
-            requires2FA: document.getElementById('requires2FA').value === 'true'
-        };
-
-        // Validate required fields
-        if (!userData.name || !userData.email || !userData.department || !userData.role) {
-            showNotification('Please fill in all required fields', 'error');
-            return;
-        }
-
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(userData.email)) {
-            showNotification('Please enter a valid email address', 'error');
-            return;
-        }
-
-        if (selectedUserId) {
-            // Update existing user
-            await updateUser(selectedUserId, userData);
-        } else {
-            // Create new user
-            const response = await makeAuthenticatedRequest('/users', {
-                method: 'POST',
-                body: JSON.stringify(userData)
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to create user');
-            }
-
-            showNotification('User created successfully', 'success');
-            await loadUsers(); // Refresh the users list
-        }
-
-        closeUserModal();
-    } catch (error) {
-        console.error('Error saving user:', error);
-        showNotification(error.message || 'Failed to save user', 'error');
-    }
-}
-
-// Role Actions
-async function saveRole() {
-    try {
-        const roleData = {
-            name: document.getElementById('roleName').value,
-            description: document.getElementById('roleDescription').value,
-            permissions: getSelectedPermissions()
-        };
-
-        if (!roleData.name || !roleData.description) {
-            showNotification('Please fill in all required fields', 'error');
-            return;
-        }
-
-        if (roleData.permissions.length === 0) {
-            showNotification('Please select at least one permission', 'error');
-            return;
-        }
-
-        const endpoint = selectedRoleId ? 
-            `/roles/${selectedRoleId}` : 
-            '/roles';
-
-        const method = selectedRoleId ? 'PUT' : 'POST';
-
-        const response = await makeAuthenticatedRequest(endpoint, {
-            method,
-            body: JSON.stringify(roleData)
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to save role');
-        }
-
-        showNotification(
-            selectedRoleId ? 'Role updated successfully' : 'Role created successfully',
-            'success'
-        );
-        
-        closeRoleModal();
-        loadRoles();
-    } catch (error) {
-        console.error('Error saving role:', error);
-        showNotification(error.message || 'Failed to save role', 'error');
-    }
-}
-
-async function deleteRole(roleId) {
-    if (!confirm('Are you sure you want to delete this role? This action cannot be undone.')) {
-        return;
-    }
-
-    try {
-        const response = await makeAuthenticatedRequest(`/roles/${roleId}`, {
-            method: 'DELETE'
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to delete role');
-        }
-
-        showNotification('Role deleted successfully', 'success');
-        loadRoles();
-    } catch (error) {
-        console.error('Error deleting role:', error);
-        showNotification(error.message || 'Failed to delete role', 'error');
-    }
 }
 
 // Utility Functions
@@ -2893,7 +2128,7 @@ function getActivityIcon(action) {
     };
     return icons[action] || icons.default;
 }
-
+    // Additional Utility Functions
 function getRoleIcon(roleName) {
     const icons = {
         'Superadmin': 'fa-crown',
@@ -2920,22 +2155,104 @@ function getSelectedPermissions() {
         .map(cb => cb.id.replace('perm_', ''));
 }
 
-    // View Role Permissions
-function viewRolePermissions(roleId) {
-    const role = rolesData.find(r => r._id === roleId);
-    if (!role) {
-        showNotification('Role not found', 'error');
-        return;
-    }
-
-    // Implement your permissions view logic here
-    console.log('Viewing permissions for role:', role.name);
-}
-    
 function resetPermissionCheckboxes() {
     document.querySelectorAll('input[type="checkbox"][id^="perm_"]').forEach(checkbox => {
         checkbox.checked = false;
     });
+}
+
+// Search and Filter Functions
+let searchTimeout;
+function debounceSearch() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        currentFilters.search = document.getElementById('userSearch').value;
+        currentPage = 1;
+        loadUsers();
+    }, 300);
+}
+
+function toggleFilterMenu() {
+    document.getElementById('filterMenu').classList.toggle('active');
+}
+
+function applyFilter(filterType) {
+    const value = prompt(`Enter ${filterType}:`);
+    if (value !== null) {
+        currentFilters[filterType] = value;
+        currentPage = 1;
+        loadUsers();
+    }
+    toggleFilterMenu();
+}
+
+// Event Listeners Setup
+function setupEventListeners() {
+    // Sidebar toggle
+    const toggleSidebarBtn = document.getElementById('toggleSidebar');
+    if (toggleSidebarBtn) {
+        toggleSidebarBtn.addEventListener('click', () => {
+            document.querySelector('.sidebar').classList.toggle('active');
+        });
+    }
+
+    // Close sidebar
+    const closeSidebarBtn = document.getElementById('closeSidebar');
+    if (closeSidebarBtn) {
+        closeSidebarBtn.addEventListener('click', () => {
+            document.querySelector('.sidebar').classList.remove('active');
+        });
+    }
+
+    // User dropdown
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.user-menu')) {
+            const userDropdown = document.getElementById('userDropdown');
+            if (userDropdown) {
+                userDropdown.classList.remove('active');
+            }
+        }
+    });
+
+    // Search input
+    const searchInput = document.getElementById('userSearch');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', debounceSearch);
+    }
+
+    // Filter menu close
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.filter-dropdown')) {
+            const filterMenu = document.getElementById('filterMenu');
+            if (filterMenu) {
+                filterMenu.classList.remove('active');
+            }
+        }
+    });
+
+    // Submenu click outside close
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.menu-item')) {
+            document.querySelectorAll('.submenu').forEach(submenu => {
+                submenu.classList.remove('active');
+            });
+        }
+    });
+}
+
+// Submenu Toggle Function
+function toggleSubmenu(submenuId) {
+    const submenu = document.getElementById(submenuId);
+    if (submenu) {
+        // Close all other submenus first
+        document.querySelectorAll('.submenu').forEach(menu => {
+            if (menu.id !== submenuId) {
+                menu.classList.remove('active');
+            }
+        });
+        // Toggle the clicked submenu
+        submenu.classList.toggle('active');
+    }
 }
 
 // User Menu Functions
@@ -2953,11 +2270,68 @@ function redirectToLogin() {
     window.location.href = 'login.html';
 }
 
-// Initialize event listeners when the page loads
+// Validation Functions
+function validateUserData(userData) {
+    const errors = [];
+
+    if (!userData.name || userData.name.trim().length < 2) {
+        errors.push('Name must be at least 2 characters long');
+    }
+
+    if (!userData.email || !userData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+        errors.push('Please enter a valid email address');
+    }
+
+    if (!userData.department) {
+        errors.push('Please select a department');
+    }
+
+    if (!userData.role) {
+        errors.push('Please select a role');
+    }
+
+    return errors;
+}
+
+// Initialize Dashboard
+function initializeDashboard() {
+    initializeSidebar();
+    initializeEventListeners();
+}
+
+function initializeSidebar() {
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.addEventListener('click', async function(e) {
+            if (!this.hasAttribute('onclick')) {
+                e.preventDefault();
+                const section = this.getAttribute('data-section');
+                if (section) {
+                    // Update active state
+                    document.querySelectorAll('.menu-item').forEach(menuItem => {
+                        menuItem.classList.remove('active');
+                    });
+                    this.classList.add('active');
+
+                    // Load section content
+                    await loadSectionContent(section);
+                }
+            }
+        });
+    });
+}
+
+function initializeEventListeners() {
+    setupEventListeners();
+    setupUserModalEventListeners();
+    setupRolesEventListeners();
+}
+
+// Initialize everything when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-     setupEventListeners();
+    setupEventListeners();
     initializeDashboard();
 });
+
     </script>
 </body>
 </html>
