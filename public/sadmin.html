@@ -60,7 +60,7 @@
             top: 0;
             overflow-y: auto;
             overflow-x: hidden;
-            transition: all 0.3s ease;
+            transition: width 0.3s ease;
             z-index: 1000;
         }
 
@@ -184,10 +184,10 @@
         }
 
         .submenu {
-            padding-left: 1rem;
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.3s ease;
+            background-color: rgba(0, 0, 0, 0.1);
         }
 
         .submenu.expanded {
@@ -198,20 +198,25 @@
             display: none;
         }
 
-        /* Header Styles */
-        .main-content {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    margin-left: var(--sidebar-width);
-    transition: margin-left 0.3s ease;
-}
+        .submenu .menu-item {
+            padding-left: 3.5rem;
+        }
 
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            transition: margin-left 0.3s ease;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
         .main-content.expanded {
-    margin-left: var(--sidebar-collapsed-width);
-}
+            margin-left: var(--sidebar-collapsed-width);
+        }
 
+        /* Header Styles */
         .header {
             height: var(--header-height);
             background: white;
@@ -222,14 +227,8 @@
             padding: 0 2rem;
             position: sticky;
             top: 0;
-            right: 0;
-            left: var(--sidebar-width);
             z-index: 999;
             transition: left 0.3s ease;
-        }
-
-        .header.expanded {
-            left: var(--sidebar-collapsed-width);
         }
 
         .user-menu {
@@ -302,11 +301,42 @@
         }
 
         /* Content Area */
-       .content {
-    flex: 1;
-    padding: 20px;
-    background: var(--background-color);
-}
+        .content {
+            flex: 1;
+            padding: 2rem;
+            background-color: var(--background-color);
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: var(--primary-color);
+        }
+
+        .loading-spinner i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Error State */
+        .error {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: var(--danger-color);
+            text-align: center;
+        }
+
+        .error i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
 
         /* Responsive Design */
         @media (max-width: 1024px) {
@@ -348,7 +378,7 @@
 
             <nav class="sidebar-menu">
                 <div class="menu-section">
-                    <a href="#dashboard" class="menu-item active">
+                    <a href="#dashboard" class="menu-item active" data-module="dashboard">
                         <i class="fas fa-tachometer-alt"></i>
                         <span>Dashboard Overview</span>
                     </a>
@@ -362,11 +392,11 @@
                         <i class="fas fa-chevron-down arrow"></i>
                     </div>
                     <div class="submenu" id="companies">
-                        <a href="#companies-list" class="menu-item">
+                        <a href="#companies-list" class="menu-item" data-module="companies-list">
                             <i class="fas fa-list"></i>
                             <span>Companies List</span>
                         </a>
-                        <a href="#company-settings" class="menu-item">
+                        <a href="#company-settings" class="menu-item" data-module="company-settings">
                             <i class="fas fa-cogs"></i>
                             <span>Company Settings</span>
                         </a>
@@ -381,15 +411,15 @@
                         <i class="fas fa-chevron-down arrow"></i>
                     </div>
                     <div class="submenu" id="settings">
-                        <a href="#general-settings" class="menu-item">
+                        <a href="#general-settings" class="menu-item" data-module="general-settings">
                             <i class="fas fa-sliders-h"></i>
                             <span>General Settings</span>
                         </a>
-                        <a href="#pricing" class="menu-item">
+                        <a href="#pricing" class="menu-item" data-module="pricing">
                             <i class="fas fa-tags"></i>
                             <span>Pricing & Plans</span>
                         </a>
-                        <a href="#security" class="menu-item">
+                        <a href="#security" class="menu-item" data-module="security">
                             <i class="fas fa-shield-alt"></i>
                             <span>Security Settings</span>
                         </a>
@@ -404,11 +434,11 @@
                         <i class="fas fa-chevron-down arrow"></i>
                     </div>
                     <div class="submenu" id="modules">
-                        <a href="#modules-list" class="menu-item">
+                        <a href="#modules-list" class="menu-item" data-module="modules-list">
                             <i class="fas fa-list"></i>
                             <span>Modules List</span>
                         </a>
-                        <a href="#module-settings" class="menu-item">
+                        <a href="#module-settings" class="menu-item" data-module="module-settings">
                             <i class="fas fa-cogs"></i>
                             <span>Module Settings</span>
                         </a>
@@ -420,15 +450,15 @@
                         <i class="fas fa-chevron-down arrow"></i>
                     </div>
                     <div class="submenu" id="users">
-                        <a href="#users-list" class="menu-item">
+                        <a href="#users-list" class="menu-item" data-module="users-list">
                             <i class="fas fa-user-friends"></i>
                             <span>Users List</span>
                         </a>
                         <a href="#roles" class="menu-item" data-module="roles-permissions">
-    <i class="fas fa-user-shield"></i>
-    <span>Roles & Permissions</span>
-</a>
-                        <a href="#organization-chart" class="menu-item">
+                            <i class="fas fa-user-shield"></i>
+                            <span>Roles & Permissions</span>
+                        </a>
+                        <a href="#organization-chart" class="menu-item" data-module="organization-chart">
                             <i class="fas fa-sitemap"></i>
                             <span>Organization Chart</span>
                         </a>
@@ -437,19 +467,19 @@
 
                 <div class="menu-section">
                     <div class="menu-section-title">Tools</div>
-                    <a href="#analytics" class="menu-item">
+                    <a href="#analytics" class="menu-item" data-module="analytics">
                         <i class="fas fa-chart-line"></i>
                         <span>Analytics & Reports</span>
                     </a>
-                    <a href="#backup" class="menu-item">
+                    <a href="#backup" class="menu-item" data-module="backup">
                         <i class="fas fa-database"></i>
                         <span>Backup & Restore</span>
                     </a>
-                    <a href="#audit" class="menu-item">
+                    <a href="#audit" class="menu-item" data-module="audit">
                         <i class="fas fa-history"></i>
                         <span>Audit Logs</span>
                     </a>
-                    <a href="#api" class="menu-item">
+                    <a href="#api" class="menu-item" data-module="api">
                         <i class="fas fa-code"></i>
                         <span>API Management</span>
                     </a>
@@ -457,7 +487,7 @@
 
                 <div class="menu-section">
                     <div class="menu-section-title">Support</div>
-                    <a href="#support" class="menu-item">
+                    <a href="#support" class="menu-item" data-module="support">
                         <i class="fas fa-headset"></i>
                         <span>Support Center</span>
                     </a>
@@ -497,356 +527,278 @@
         </main>
     </div>
 
-    <script>
-       document.addEventListener('DOMContentLoaded', function() {
-    initializeDashboard();
-    checkAuthentication();
-    loadUserRole();
-});
+    <!-- Add jQuery for potential future use -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDashboard();
+            checkAuthentication();
+            loadUserRole();
+        });
 
-function initializeDashboard() {
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.getElementById('mainContent');
-    const header = document.getElementById('header');
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const userMenu = document.getElementById('userMenu');
-    const userDropdown = document.getElementById('userDropdown');
+        function initializeDashboard() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const header = document.getElementById('header');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const userMenu = document.getElementById('userMenu');
+            const userDropdown = document.getElementById('userDropdown');
 
-    // Sidebar toggle
-    sidebarToggle.addEventListener('click', function() {
-        sidebar.classList.toggle('collapsed');
-        mainContent.classList.toggle('expanded');
-        header.classList.toggle('expanded');
-    });
+            // Sidebar toggle
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+                header.classList.toggle('expanded');
+            });
 
-    // Submenu toggle
-    document.querySelectorAll('.menu-item[data-submenu]').forEach(item => {
-        item.addEventListener('click', function(e) {
-            const submenuId = this.getAttribute('data-submenu');
-            const submenu = document.getElementById(submenuId);
-            const arrow = this.querySelector('.arrow');
-            
-            // If this menu item has a link and submenu, prevent default only for submenu toggle
-            if (this.hasAttribute('data-module') && e.target === arrow) {
-                e.preventDefault();
-            }
-            
-            // Close other submenus
-            document.querySelectorAll('.submenu').forEach(menu => {
-                if (menu.id !== submenuId) {
-                    menu.classList.remove('expanded');
-                    const parentItem = document.querySelector(`[data-submenu="${menu.id}"]`);
-                    if (parentItem) {
-                        parentItem.classList.remove('expanded');
+            // Submenu toggle with module loading
+            document.querySelectorAll('.menu-item[data-submenu]').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    const submenuId = this.getAttribute('data-submenu');
+                    const submenu = document.getElementById(submenuId);
+                    const arrow = this.querySelector('.arrow');
+                    
+                    // If this menu item has a link and submenu, prevent default only for submenu toggle
+                    if (this.hasAttribute('data-module') && e.target === arrow) {
+                        e.preventDefault();
                     }
+                    
+                    // Close other submenus
+                    document.querySelectorAll('.submenu').forEach(menu => {
+                        if (menu.id !== submenuId) {
+                            menu.classList.remove('expanded');
+                            const parentItem = document.querySelector(`[data-submenu="${menu.id}"]`);
+                            if (parentItem) {
+                                parentItem.classList.remove('expanded');
+                            }
+                        }
+                    });
+
+                    // Toggle current submenu
+                    this.classList.toggle('expanded');
+                    submenu.classList.toggle('expanded');
+
+                    // If this item has a module attribute and wasn't clicked on the arrow, load the module
+                    const moduleName = this.getAttribute('data-module');
+                    if (moduleName && e.target !== arrow) {
+                        loadModule(moduleName);
+                        
+                        // Update active states
+                        document.querySelectorAll('.menu-item').forEach(menuItem => {
+                            menuItem.classList.remove('active');
+                        });
+                        this.classList.add('active');
+                    }
+                });
+            });
+
+            // Direct module links
+            document.querySelectorAll('.menu-item[data-module]').forEach(item => {
+                if (!item.hasAttribute('data-submenu')) {
+                    item.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const moduleName = this.getAttribute('data-module');
+                        loadModule(moduleName);
+
+                        // Update active states
+                        document.querySelectorAll('.menu-item').forEach(menuItem => {
+                            menuItem.classList.remove('active');
+                        });
+                        this.classList.add('active');
+                    });
                 }
             });
 
-            // Toggle current submenu
-            this.classList.toggle('expanded');
-            submenu.classList.toggle('expanded');
+            // User dropdown toggle
+            userMenu.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+            });
 
-            // If this item has a module attribute, load the module
-            const moduleName = this.getAttribute('data-module');
-            if (moduleName && e.target !== arrow) {
-                loadModule(moduleName);
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function() {
+                userDropdown.classList.remove('show');
+            });
+
+            // Sign out functionality
+            document.getElementById('signOutBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                signOut();
+            });
+        }
+
+        async function loadUserRole() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('https://18.215.160.136.nip.io/api/roles', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 
-                // Update active states
-                document.querySelectorAll('.menu-item').forEach(menuItem => {
-                    menuItem.classList.remove('active');
-                });
-                this.classList.add('active');
+                const data = await response.json();
+                if (data.success && data.roles) {
+                    const userRole = document.getElementById('userRole');
+                    const currentRole = localStorage.getItem('userRole');
+                    const roleDetails = data.roles.find(role => 
+                        role.name.toLowerCase() === currentRole.toLowerCase()
+                    );
+                    
+                    if (roleDetails) {
+                        userRole.textContent = roleDetails.name;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading role:', error);
             }
-        });
-    });
+        }
 
-    // User dropdown toggle
-    userMenu.addEventListener('click', function(e) {
-        e.stopPropagation();
-        userDropdown.classList.toggle('show');
-    });
+        function checkAuthentication() {
+            const token = localStorage.getItem('token');
+            const email = localStorage.getItem('userEmail');
+            const role = localStorage.getItem('userRole');
 
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function() {
-        userDropdown.classList.remove('show');
-    });
+            if (!token || role !== 'superadmin') {
+                window.location.href = 'login.html';
+                return;
+            }
 
-    // Sign out functionality
-    document.getElementById('signOutBtn').addEventListener('click', function(e) {
-        e.preventDefault();
-        signOut();
-    });
+            // Update user info
+            const userName = document.getElementById('userName');
+            const userAvatar = document.getElementById('userAvatar');
+            
+            if (email) {
+                userName.textContent = email;
+                userAvatar.textContent = email.substring(0, 2).toUpperCase();
+            }
 
-    // Initialize module loading for direct links
-    document.querySelectorAll('.menu-item[data-module]').forEach(item => {
-        if (!item.hasAttribute('data-submenu')) {
-            item.addEventListener('click', function(e) {
-                e.preventDefault();
-                const moduleName = this.getAttribute('data-module');
-                loadModule(moduleName);
-
-                // Update active states
-                document.querySelectorAll('.menu-item').forEach(menuItem => {
-                    menuItem.classList.remove('active');
-                });
-                this.classList.add('active');
+            // Verify token with server
+            fetch('https://18.215.160.136.nip.io/api/verify-token', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    signOut();
+                } else {
+                    // Load default module if specified in URL hash
+                    const hash = window.location.hash.substring(1);
+                    if (hash) {
+                        const moduleLink = document.querySelector(`.menu-item[data-module="${hash}"]`);
+                        if (moduleLink) {
+                            moduleLink.classList.add('active');
+                            loadModule(hash);
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Token verification error:', error);
+                signOut();
             });
         }
-    });
-}
 
-async function loadUserRole() {
-    try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('https://18.215.160.136.nip.io/api/roles', {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        
-        const data = await response.json();
-        if (data.success && data.roles) {
-            const userRole = document.getElementById('userRole');
-            const currentRole = localStorage.getItem('userRole');
-            const roleDetails = data.roles.find(role => role.name.toLowerCase() === currentRole.toLowerCase());
+        function signOut() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userRole');
+            window.location.href = 'login.html';
+        }
+
+        function loadModule(moduleName) {
+            const contentArea = document.querySelector('.content');
+            const token = localStorage.getItem('token');
             
-            if (roleDetails) {
-                userRole.textContent = roleDetails.name;
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
             }
-        }
-    } catch (error) {
-        console.error('Error loading role:', error);
-    }
-}
 
-function checkAuthentication() {
-    const token = localStorage.getItem('token');
-    const email = localStorage.getItem('userEmail');
-    const role = localStorage.getItem('userRole');
+            // Show loading state
+            contentArea.innerHTML = `
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading...</span>
+                </div>
+            `;
 
-    if (!token || role !== 'superadmin') {
-        window.location.href = 'login.html';
-        return;
-    }
-
-    // Update user info
-    const userName = document.getElementById('userName');
-    const userAvatar = document.getElementById('userAvatar');
-    
-    if (email) {
-        userName.textContent = email;
-        userAvatar.textContent = email.substring(0, 2).toUpperCase();
-    }
-
-    // Verify token with server
-    fetch('https://18.215.160.136.nip.io/api/verify-token', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (!data.success) {
-            signOut();
-        } else {
-            // Load default module if specified in URL hash
-            const hash = window.location.hash.substring(1);
-            if (hash) {
-                loadModule(hash);
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Token verification error:', error);
-        signOut();
-    });
-}
-
-function signOut() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userRole');
-    window.location.href = 'login.html';
-}
-
-function loadModule(moduleName) {
-    const contentArea = document.querySelector('.content');
-    const token = localStorage.getItem('token');
-    
-    if (!token) {
-        window.location.href = 'login.html';
-        return;
-    }
-
-    // Show loading state
-    contentArea.innerHTML = `
-        <div class="loading-spinner">
-            <i class="fas fa-spinner fa-spin"></i>
-            <span>Loading...</span>
-        </div>
-    `;
-
-    // Define module paths
-    const modulePaths = {
-        'roles-permissions': {
-            html: '/modules/roles-permissions/index.html',
-            css: '/modules/roles-permissions/styles.css',
-            js: '/modules/roles-permissions/script.js'
-        }
-    };
-
-    const selectedModule = modulePaths[moduleName];
-    if (!selectedModule) {
-        contentArea.innerHTML = '<div class="error">Module not found</div>';
-        return;
-    }
-
-    // Load module resources
-    Promise.all([
-        fetch(selectedModule.html).then(r => r.text()),
-        fetch(selectedModule.css).then(r => r.text()),
-        fetch(selectedModule.js).then(r => r.text())
-    ]).then(([html, css, js]) => {
-        // Remove any previous module styles
-        const existingStyle = document.getElementById('moduleStyles');
-        if (existingStyle) {
-            existingStyle.remove();
-        }
-
-        // Add new module styles
-        const styleElement = document.createElement('style');
-        styleElement.id = 'moduleStyles';
-        styleElement.textContent = css;
-        document.head.appendChild(styleElement);
-
-        // Update content
-        contentArea.innerHTML = html;
-
-        // Remove any previous module scripts
-        const existingScript = document.getElementById('moduleScript');
-        if (existingScript) {
-            existingScript.remove();
-        }
-
-        // Create and add the RolesPermissions object first
-        const initScript = document.createElement('script');
-        initScript.textContent = `
-            const RolesPermissions = {
-                init() {
-                    console.log('Initializing Roles & Permissions module');
-                    this.attachEventListeners();
-                    this.loadRoles();
-                },
-
-                attachEventListeners() {
-                    const createBtn = document.getElementById('rpCreateRoleBtn');
-                    if (createBtn) {
-                        createBtn.addEventListener('click', () => this.openCreateRoleModal());
-                    }
-                },
-
-                openCreateRoleModal() {
-                    console.log('Opening create role modal');
-                    const modal = document.getElementById('rpRoleModal');
-                    if (modal) {
-                        modal.classList.add('show');
-                        document.getElementById('rpRoleForm').reset();
-                        document.getElementById('rpModalTitle').textContent = 'Create New Role';
-                    }
-                },
-
-                loadRoles() {
-                    // Implementation for loading roles
-                    console.log('Loading roles...');
+            // Define module paths
+            const modulePaths = {
+                'roles-permissions': {
+                    html: '/modules/roles-permissions/index.html',
+                    css: '/modules/roles-permissions/styles.css',
+                    js: '/modules/roles-permissions/script.js'
                 }
+                // Add other module paths here as needed
             };
-        `;
-        document.body.appendChild(initScript);
 
-        // Add the module script
-        const moduleScript = document.createElement('script');
-        moduleScript.id = 'moduleScript';
-        moduleScript.textContent = js;
-        document.body.appendChild(moduleScript);
-
-        // Initialize the module
-        const initModuleScript = document.createElement('script');
-        initModuleScript.textContent = 'RolesPermissions.init();';
-        document.body.appendChild(initModuleScript);
-
-    }).catch(error => {
-        console.error('Error loading module:', error);
-        contentArea.innerHTML = `
-            <div class="error">
-                <i class="fas fa-exclamation-circle"></i>
-                <p>Error loading module. Please try again.</p>
-            </div>
-        `;
-    });
-}
-
-       // Initialize module
-        setTimeout(() => {
-            if (window[moduleName] && typeof window[moduleName].init === 'function') {
-                window[moduleName].init();
+            const selectedModule = modulePaths[moduleName];
+            if (!selectedModule) {
+                contentArea.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Module not found</p>
+                    </div>
+                `;
+                return;
             }
-        }, 0);
 
-        // Initialize module if it has an init function
-        if (window[moduleName] && typeof window[moduleName].init === 'function') {
-            window[moduleName].init();
+            // Load module resources
+            Promise.all([
+                fetch(selectedModule.html).then(r => r.text()),
+                fetch(selectedModule.css).then(r => r.text()),
+                fetch(selectedModule.js).then(r => r.text())
+            ]).then(([html, css, js]) => {
+                // Remove any previous module styles
+                const existingStyle = document.getElementById('moduleStyles');
+                if (existingStyle) {
+                    existingStyle.remove();
+                }
+
+                // Add new module styles
+                const styleElement = document.createElement('style');
+                styleElement.id = 'moduleStyles';
+                styleElement.textContent = css;
+                document.head.appendChild(styleElement);
+
+                // Update content
+                contentArea.innerHTML = html;
+
+                // Remove any previous module scripts
+                const existingScript = document.getElementById('moduleScript');
+                if (existingScript) {
+                    existingScript.remove();
+                }
+
+                // Add the module script
+                const scriptElement = document.createElement('script');
+                scriptElement.id = 'moduleScript';
+                scriptElement.textContent = js;
+                document.body.appendChild(scriptElement);
+
+                // Initialize module if it has an init function
+                setTimeout(() => {
+                    if (window[moduleName] && typeof window[moduleName].init === 'function') {
+                        window[moduleName].init();
+                    }
+                }, 0);
+
+                // Update URL hash without triggering a page reload
+                history.replaceState(null, '', `#${moduleName}`);
+
+            }).catch(error => {
+                console.error('Error loading module:', error);
+                contentArea.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Error loading module. Please try again.</p>
+                    </div>
+                `;
+            });
         }
-
-        // Update URL hash without triggering a page reload
-        history.replaceState(null, '', `#${moduleName}`);
-    }).catch(error => {
-        console.error('Error loading module:', error);
-        contentArea.innerHTML = `
-            <div class="error">
-                <i class="fas fa-exclamation-circle"></i>
-                <p>Error loading module. Please try again.</p>
-            </div>
-        `;
-    });
-}
-
-// Add loading spinner and error styles
-const additionalStyles = `
-    .loading-spinner {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 200px;
-        color: var(--primary-color);
-    }
-
-    .loading-spinner i {
-        font-size: 2rem;
-        margin-bottom: 1rem;
-    }
-
-    .error {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 200px;
-        color: var(--danger-color);
-        text-align: center;
-    }
-
-    .error i {
-        font-size: 2rem;
-        margin-bottom: 1rem;
-    }
-`;
-
-// Add the styles to the document
-const styleElement = document.createElement('style');
-styleElement.textContent = additionalStyles;
-document.head.appendChild(styleElement);
     </script>
 </body>
 </html>
