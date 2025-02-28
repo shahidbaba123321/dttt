@@ -778,21 +778,17 @@
                 delete window.RolesPermissions;
             }
 
-            // Create a script element for the module
+            // Load the module script using a separate script tag
             const scriptElement = document.createElement('script');
             scriptElement.id = 'moduleScript';
+            scriptElement.src = selectedModule.js;
             
-            // Convert the module code to a string representation
-            const moduleCode = js.replace(/^window\.RolesPermissions\s*=\s*/, '');
-            
-            scriptElement.textContent = `
-                window.RolesPermissions = ${moduleCode};
-                
-                // Initialize the module
+            // Initialize after script loads
+            scriptElement.onload = () => {
                 if (window.RolesPermissions && typeof window.RolesPermissions.init === 'function') {
                     window.RolesPermissions.init();
                 }
-            `;
+            };
             
             document.body.appendChild(scriptElement);
 
