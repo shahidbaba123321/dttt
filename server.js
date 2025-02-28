@@ -44,6 +44,15 @@ app.use((req, res, next) => {
     next();
 });
 
+// Add this to your server.js
+app.use((err, req, res, next) => {
+    console.error('Global error handler:', err);
+    res.status(500).json({
+        success: false,
+        message: 'Internal server error'
+    });
+});
+
 // MongoDB connection
 const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri, { 
@@ -61,7 +70,6 @@ let deleted_users;
 let user_permissions;
 
 // Initialize database connection and collections
-// Initialize database connection and collections
 async function initializeDatabase() {
     try {
         await client.connect();
@@ -72,6 +80,9 @@ async function initializeDatabase() {
         audit_logs = database.collection('audit_logs');
         deleted_users = database.collection('deleted_users');
         user_permissions = database.collection('user_permissions');
+        roles = database.collection('roles');
+        role_permissions = database.collection('role_permissions');
+        user_role_assignments = database.collection('user_role_assignments');
 
         // Function to check and create index if needed
         const ensureIndex = async (collection, indexSpec, options = {}) => {
@@ -103,10 +114,24 @@ async function initializeDatabase() {
             ensureIndex(users, { email: 1 }, { unique: true }),
             ensureIndex(audit_logs, { timestamp: -1 }),
             ensureIndex(deleted_users, { originalId: 1 }),
-            ensureIndex(user_permissions, { userId: 1 }, { unique: true })
+            ensureIndex(user_permissions, { userId: 1 }, { unique: true }),
+            ensureIndex(roles, { name: 1 }, { unique: true }),
+            ensureIndex(role_permissions, { roleId: 1 }, { unique: true }),
+            ensureIndex(user_role_assignments, { userId: 1 }, { unique: true })
         ];
 
         await Promise.all(indexPromises);
+        
+        // Verify roles collection and initialize default roles if needed
+        console.log('Verifying roles collection...');
+        const rolesCount = await roles.countDocuments();
+        console.log(`Found ${rolesCount} roles in database`);
+
+        if (rolesCount === 0) {
+            console.log('Initializing default roles...');
+            await initializeDefaultRoles();
+        }
+
         console.log("Database collections and indexes initialized");
         
         return {
@@ -114,7 +139,10 @@ async function initializeDatabase() {
             users,
             audit_logs,
             deleted_users,
-            user_permissions
+            user_permissions,
+            roles,
+            role_permissions,
+            user_role_assignments
         };
     } catch (err) {
         console.error("MongoDB connection error:", err);
@@ -122,6 +150,85 @@ async function initializeDatabase() {
     }
 }
 
+// Add this function after initializeDatabase
+async function initializeDefaultRoles() {
+    const defaultRoles = {
+        superadmin: {
+            name: 'Superadmin',
+            description: 'Full system access with no restrictions',
+            permissions: ['all'],
+            isDefault: true,
+            isSystem: true
+        },
+        admin: {
+            name: 'Admin',
+            description: 'System administrator with extensive access rights',
+            permissions: ['all_except_superadmin'],
+            isDefault: true
+        },
+        product_manager: {
+            name: 'Product Manager',
+            description: 'Manages product modules and features',
+            permissions: ['dashboard_view', 'modules_view', 'modules_manage'],
+            isDefault: true
+        },
+        hr_admin: {
+            name: 'HR Admin',
+            description: 'Manages user accounts and permissions',
+            permissions: ['users_view', 'users_create', 'users_edit'],
+            isDefault: true
+        },
+        finance_specialist: {
+            name: 'Finance Specialist',
+            description: 'Handles financial aspects and billing',
+            permissions: ['dashboard_view', 'dashboard_analytics'],
+            isDefault: true
+        },
+        data_analyst: {
+            name: 'Data Analyst',
+            description: 'Analyzes system data and generates reports',
+            permissions: ['dashboard_view', 'dashboard_analytics'],
+            isDefault: true
+        },
+        api_developer: {
+            name: 'API Developer',
+            description: 'Manages API integrations and development',
+            permissions: ['api_view', 'api_manage'],
+            isDefault: true
+        },
+        support_specialist: {
+            name: 'Support Specialist',
+            description: 'Handles user support and assistance',
+            permissions: ['support_view', 'support_manage'],
+            isDefault: true
+        },
+        it_manager: {
+            name: 'IT Manager',
+            description: 'Manages IT infrastructure and security',
+            permissions: ['settings_view', 'settings_edit'],
+            isDefault: true
+        }
+    };
+
+    for (const [key, role] of Object.entries(defaultRoles)) {
+        try {
+            await roles.updateOne(
+                { name: role.name },
+                { 
+                    $setOnInsert: { 
+                        ...role,
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                    }
+                },
+                { upsert: true }
+            );
+            console.log(`Role ${role.name} initialized`);
+        } catch (error) {
+            console.error(`Error creating default role ${role.name}:`, error);
+        }
+    }
+}
 // Audit log function
 async function createAuditLog(action, performedBy, targetUser = null, details = {}) {
     try {
@@ -1144,6 +1251,36 @@ app.post('/api/deleted-users/:userId/restore', verifyToken, verifyAdmin, async (
         await session.endSession();
     }
 });
+
+// Update your server.js routes to match the frontend calls
+app.get('/api/roles', verifyToken, async (req, res) => {
+    try {
+        console.log('Fetching roles...');
+        const rolesList = await roles.find().toArray();
+        
+        // Get user count for each role
+        const roleStats = await Promise.all(rolesList.map(async (role) => {
+            const userCount = await user_role_assignments.countDocuments({ roleId: role._id });
+            return {
+                ...role,
+                userCount
+            };
+        }));
+
+        console.log('Roles fetched successfully:', roleStats.length);
+        res.json({
+            success: true,
+            roles: roleStats
+        });
+    } catch (error) {
+        console.error('Error fetching roles:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching roles'
+        });
+    }
+});
+
 
 // Get audit logs
 app.get('/api/audit-logs', verifyToken, verifyAdmin, async (req, res) => {
