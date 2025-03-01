@@ -253,103 +253,110 @@
         };
 
         // Sidebar Component
-        const Sidebar = () => {
-            const [menuItems, setMenuItems] = useState({
-                dashboard: true,
-                companies: false,
-                settings: false,
-                modules: false,
-                users: false,
-                tools: false,
-                support: false
-            });
+      // Update the Sidebar component's styles
+const Sidebar = () => {
+    const [menuItems, setMenuItems] = useState({
+        dashboard: false,
+        companies: false,
+        'system-settings': false,
+        modules: false,
+        users: false,
+        tools: false,
+        support: false
+    });
 
-            const handleClick = (item) => {
-                setMenuItems(prev => ({
-                    ...prev,
-                    [item]: !prev[item]
-                }));
-            };
+    const handleClick = (item) => {
+        setMenuItems(prev => ({
+            ...prev,
+            [item]: !prev[item]
+        }));
+    };
 
-            const menuStructure = [
-                {
-                    id: 'dashboard',
-                    title: 'Dashboard Overview',
-                    icon: 'tachometer-alt',
-                    path: '/dashboard'
-                },
-                {
-                    id: 'companies',
-                    title: 'Companies/Organizations',
-                    icon: 'building',
-                    submenu: [
-                        { title: 'Companies List', path: '/companies/list' },
-                        { title: 'Management', path: '/companies/management' }
-                    ]
-                },
-                {
-                    id: 'settings',
-                    title: 'System Settings',
-                    icon: 'cogs',
-                    submenu: [
-                        { title: 'General Settings', path: '/settings/general' },
-                        { title: 'Pricing & Plans', path: '/settings/pricing' },
-                        { title: 'Security Settings', path: '/settings/security' }
-                    ]
-                },
-                // Add other menu items...
-            ];
-
-            return (
-                <Drawer
-                    variant="permanent"
-                    sx={{
-                        width: 240,
-                        flexShrink: 0,
-                        '& .MuiDrawer-paper': {
-                            width: 240,
-                            boxSizing: 'border-box',
-                            backgroundColor: '#1a237e',
-                            color: 'white'
-                        }
-                    }}
-                >
-                    <Box sx={{ p: 2, textAlign: 'center' }}>
-                        <Typography variant="h6">WorkWise Pro</Typography>
-                    </Box>
-                    <List>
-                        {menuStructure.map((item) => (
-                            <div key={item.id}>
-                                <div 
-                                    className="menu-item"
-                                    onClick={() => handleClick(item.id)}
-                                >
-                                    <i className={`fas fa-${item.icon}`}></i>
-                                    <span>{item.title}</span>
-                                </div>
-                                {item.submenu && menuItems[item.id] && (
-                                    <div className="submenu">
-                                        {item.submenu.map((subItem, index) => (
-                                            <div 
-                                                key={index}
-                                                className="menu-item"
-                                                onClick={() => {
-                                                    if (subItem.path) {
-                                                        window.location.href = subItem.path;
-                                                    }
+    return (
+        <Drawer
+            variant="permanent"
+            sx={{
+                width: 240,
+                flexShrink: 0,
+                '& .MuiDrawer-paper': {
+                    width: 240,
+                    boxSizing: 'border-box',
+                    backgroundColor: '#1a237e',
+                    color: 'white'
+                }
+            }}
+        >
+            <Box sx={{ 
+                p: 2, 
+                textAlign: 'center', 
+                borderBottom: '1px solid rgba(255,255,255,0.1)'
+            }}>
+                <Typography variant="h6">WorkWise Pro</Typography>
+            </Box>
+            <List sx={{ pt: 0 }}>
+                {menuStructure.map((item) => (
+                    <React.Fragment key={item.id}>
+                        <ListItem 
+                            button 
+                            onClick={() => handleClick(item.id)}
+                            sx={{
+                                py: 1.5,
+                                '&:hover': {
+                                    backgroundColor: 'rgba(255,255,255,0.1)'
+                                }
+                            }}
+                        >
+                            <ListItemIcon sx={{ minWidth: 40, color: 'white' }}>
+                                <i className={`fas fa-${item.icon}`} />
+                            </ListItemIcon>
+                            <ListItemText primary={item.title} />
+                            {item.submenu && (
+                                <i 
+                                    className={`fas fa-chevron-${menuItems[item.id] ? 'down' : 'right'}`}
+                                    style={{ fontSize: '12px' }}
+                                />
+                            )}
+                        </ListItem>
+                        {item.submenu && (
+                            <Collapse in={menuItems[item.id]} timeout="auto" unmountOnExit>
+                                <List component="div" disablePadding>
+                                    {item.submenu.map((subItem, index) => (
+                                        <ListItem 
+                                            button 
+                                            key={index}
+                                            onClick={() => {
+                                                if (subItem.path) {
+                                                    window.location.href = subItem.path;
+                                                }
+                                            }}
+                                            sx={{
+                                                pl: 4,
+                                                py: 1,
+                                                backgroundColor: 'rgba(0,0,0,0.1)',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(255,255,255,0.1)'
+                                                }
+                                            }}
+                                        >
+                                            <ListItemText 
+                                                primary={subItem.title} 
+                                                sx={{ 
+                                                    '& .MuiTypography-root': { 
+                                                        fontSize: '0.9rem' 
+                                                    } 
                                                 }}
-                                            >
-                                                <span>{subItem.title}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </List>
-                </Drawer>
-            );
-        };
+                                            />
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            </Collapse>
+                        )}
+                    </React.Fragment>
+                ))}
+            </List>
+        </Drawer>
+    );
+};
 
         // Header Component
         const Header = () => {
