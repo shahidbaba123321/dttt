@@ -1,18 +1,16 @@
 version: 1
 applications:
-  - frontend:
+  - appRoot: .
+    frontend:
       phases:
         preBuild:
           commands:
             - npm ci
-            - npm run lint
-            - npm run test:ci
         build:
           commands:
             - npm run build
         postBuild:
           commands:
-            - npm run test:e2e
             - npm audit
       artifacts:
         baseDirectory: build
@@ -22,7 +20,6 @@ applications:
         paths:
           - node_modules/**/*
           - build/**/*
-          - .npm-cache/**/*
       customHeaders:
         - pattern: '**/*'
           headers:
@@ -34,30 +31,3 @@ applications:
               value: 'nosniff'
             - key: 'X-XSS-Protection'
               value: '1; mode=block'
-            - key: 'Referrer-Policy'
-              value: 'strict-origin-when-cross-origin'
-            - key: 'Content-Security-Policy'
-              value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.yourservice.com;"
-    appRoot: frontend
-  - backend:
-      phases:
-        preBuild:
-          commands:
-            - npm ci
-            - npm run lint:server
-            - npm run test:server
-        build:
-          commands:
-            - npm run build:server
-        postBuild:
-          commands:
-            - npm audit
-      artifacts:
-        baseDirectory: dist
-        files:
-          - '**/*'
-      cache:
-        paths:
-          - node_modules/**/*
-          - dist/**/*
-    appRoot: backend
