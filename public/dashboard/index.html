@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WorkWise Pro - Dashboard</title>
+    <title>SuperAdmin Dashboard - WorkWise Pro</title>
+
+    <!-- React Dependencies -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+    <!-- Material-UI Dependencies -->
+    <script src="https://unpkg.com/@mui/material@latest/umd/material-ui.development.js"></script>
+    <script src="https://unpkg.com/@mui/icons-material@latest/index.js"></script>
     
-    <!-- React and ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Material-UI -->
-    <script src="https://unpkg.com/@mui/material@5.14.3/umd/material-ui.production.min.js"></script>
-    
-    <!-- Babel -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Material Icons -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-    
-    <!-- Roboto Font -->
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Fonts and Icons -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
-    
-    <!-- Base Styles -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
     <style>
         * {
             margin: 0;
@@ -32,1388 +32,573 @@
         body {
             font-family: 'Roboto', sans-serif;
             background-color: #f5f5f5;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
 
-        #root {
-            min-height: 100vh;
-        }
-
-        /* Transitions */
-        .fade-enter {
-            opacity: 0;
-        }
-
-        .fade-enter-active {
-            opacity: 1;
-            transition: opacity 300ms ease-in;
-        }
-
-        .fade-exit {
-            opacity: 1;
-        }
-
-        .fade-exit-active {
-            opacity: 0;
-            transition: opacity 300ms ease-in;
-        }
-
-        /* Notifications */
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 16px;
+        .dashboard-card {
+            background: white;
             border-radius: 8px;
-            background-color: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            z-index: 2000;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #1a237e;
+        }
+
+        .chart-container {
+            height: 300px;
+            margin-bottom: 30px;
+        }
+
+        .activity-list {
+            list-style: none;
+        }
+
+        .activity-item {
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
             display: flex;
             align-items: center;
-            gap: 8px;
-            min-width: 300px;
-            transform: translateX(120%);
-            transition: transform 0.3s ease-in-out;
+            gap: 15px;
         }
 
-        .notification.show {
-            transform: translateX(0);
-        }
-
-        .notification.success {
-            border-left: 4px solid #4CAF50;
-        }
-
-        .notification.error {
-            border-left: 4px solid #f44336;
-        }
-
-        .notification.warning {
-            border-left: 4px solid #ff9800;
-        }
-
-        .notification.info {
-            border-left: 4px solid #2196f3;
-        }
-
-        /* Loading Spinner */
-        .loading-spinner {
-            border: 3px solid rgba(0, 0, 0, 0.1);
+        .activity-icon {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            border-top: 3px solid #4F46E5;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
+            background: #e3f2fd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1a237e;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .activity-details h4 {
+            font-size: 0.9rem;
+            color: #333;
         }
 
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+        .activity-details p {
+            font-size: 0.8rem;
+            color: #666;
         }
 
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
+        .notification-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #f44336;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
-    <!-- Include page components -->
-    <script type="text/babel" src="pages/RolesAndPermissions.js"></script>
-
-    
     <script type="text/babel">
-    // Destructure Material-UI components
-    const {
-        AppBar,
-        Toolbar,
-        Typography,
-        Button,
-        IconButton,
-        Avatar,
-        Menu,
-        MenuItem,
-        CircularProgress,
-        Drawer,
-        List,
-        ListItem,
-        ListItemIcon,
-        ListItemText,
-        Divider,
-        Box,
-        CssBaseline,
-        ThemeProvider,
-        createTheme,
-        Collapse,
-        Paper,
-        Grid,
-        Card,
-        CardContent,
-        Table,
-        TableBody,
-        TableCell,
-        TableContainer,
-        TableHead,
-        TableRow,
-        Switch,
-        Dialog,
-        DialogTitle,
-        DialogContent,
-        DialogActions,
-        TextField,
-        FormControlLabel,
-        Checkbox,
-        Alert,
-        Tooltip,
-        Chip,
-        Badge
-    } = MaterialUI;
+        const { useState, useEffect } = React;
+        const { 
+            AppBar, 
+            Drawer, 
+            List, 
+            ListItem, 
+            ListItemIcon, 
+            ListItemText, 
+            Typography,
+            IconButton,
+            Avatar,
+            Menu,
+            MenuItem,
+            Box,
+            CssBaseline,
+            Toolbar,
+            Collapse,
+            Paper,
+            Grid,
+            Button,
+            Divider,
+            Badge
+        } = MaterialUI;
 
-    // Utility Functions
-    const showNotification = (message, type = 'success') => {
-        // Remove existing notifications
-        const existingNotifications = document.querySelectorAll('.notification');
-        existingNotifications.forEach(n => n.remove());
+        // Utility function to format numbers
+        const formatNumber = (num) => {
+            return new Intl.NumberFormat('en-US').format(num);
+        };
 
-        // Create new notification
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.innerHTML = `
-            <span class="material-icons">
-                ${type === 'success' ? 'check_circle' : 
-                  type === 'error' ? 'error' :
-                  type === 'warning' ? 'warning' : 'info'}
-            </span>
-            <span>${message}</span>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // Show notification with animation
-        setTimeout(() => {
-            notification.classList.add('show');
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }, 100);
-    };
-
-    // API utility function
-    const apiRequest = async (endpoint, options = {}) => {
-        try {
-            const token = localStorage.getItem('token');
-            const defaultOptions = {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            };
-
-            const response = await fetch(
-                `https://18.215.160.136.nip.io/api${endpoint}`,
-                { ...defaultOptions, ...options }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || 'API request failed');
-            }
-
-            return data;
-        } catch (error) {
-            console.error('API Request Error:', error);
-            showNotification(error.message, 'error');
-            throw error;
-        }
-    };
-
-    // Date formatting utility
-    const formatDate = (date) => {
-        return new Intl.DateTimeFormat('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        }).format(new Date(date));
-    };
-
-    // Permission checking utility
-    const checkPermission = (requiredPermission) => {
-        const userRole = localStorage.getItem('userRole');
-        if (userRole === 'superadmin') return true;
-        
-        const userPermissions = JSON.parse(localStorage.getItem('userPermissions') || '[]');
-        return userPermissions.includes(requiredPermission);
-    };
-
-    // Theme configuration
-    const theme = createTheme({
-        palette: {
-            primary: {
-                main: '#4F46E5',
-                light: '#818CF8',
-                dark: '#4338CA',
-                contrastText: '#ffffff'
-            },
-            secondary: {
-                main: '#10B981',
-                light: '#34D399',
-                dark: '#059669',
-                contrastText: '#ffffff'
-            },
-            error: {
-                main: '#EF4444',
-                light: '#F87171',
-                dark: '#DC2626'
-            },
-            warning: {
-                main: '#F59E0B',
-                light: '#FBBF24',
-                dark: '#D97706'
-            },
-            info: {
-                main: '#3B82F6',
-                light: '#60A5FA',
-                dark: '#2563EB'
-            },
-            success: {
-                main: '#10B981',
-                light: '#34D399',
-                dark: '#059669'
-            },
-            background: {
-                default: '#F8FAFC',
-                paper: '#FFFFFF'
-            },
-            text: {
-                primary: '#1F2937',
-                secondary: '#6B7280'
-            }
-        },
-        typography: {
-            fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-            h1: {
-                fontSize: '2.5rem',
-                fontWeight: 600
-            },
-            h2: {
-                fontSize: '2rem',
-                fontWeight: 600
-            },
-            h3: {
-                fontSize: '1.75rem',
-                fontWeight: 600
-            },
-            h4: {
-                fontSize: '1.5rem',
-                fontWeight: 500
-            },
-            h5: {
-                fontSize: '1.25rem',
-                fontWeight: 500
-            },
-            h6: {
-                fontSize: '1rem',
-                fontWeight: 500
-            }
-        },
-        components: {
-            MuiButton: {
-                styleOverrides: {
-                    root: {
-                        borderRadius: 8,
-                        textTransform: 'none',
-                        fontWeight: 500
-                    }
-                }
-            },
-            MuiCard: {
-                styleOverrides: {
-                    root: {
-                        borderRadius: 12,
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                    }
-                }
-            },
-            MuiDrawer: {
-                styleOverrides: {
-                    paper: {
-                        borderRight: '1px solid rgba(0, 0, 0, 0.12)'
-                    }
-                }
-            }
-        }
-    });
-
-    // Session management
-    const checkSession = () => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            window.location.href = '/login.html';
-            return false;
-        }
-        return true;
-    };
-
-    // Initialize session timeout
-    let sessionTimeout;
-    const resetSessionTimeout = () => {
-        clearTimeout(sessionTimeout);
-        sessionTimeout = setTimeout(() => {
-            localStorage.clear();
-            window.location.href = '/login.html';
-        }, 30 * 60 * 1000); // 30 minutes
-    };
-
-    // Add session timeout listeners
-    document.addEventListener('mousemove', resetSessionTimeout);
-    document.addEventListener('keypress', resetSessionTimeout);
-    document.addEventListener('click', resetSessionTimeout);
-
-    // Continue with components in next part...
-        // Header Component
-const Header = () => {
-    const [anchorEl, setAnchorEl] = React.useState(null);
-    const [notificationsAnchor, setNotificationsAnchor] = React.useState(null);
-    const [notifications, setNotifications] = React.useState([]);
-    const [unreadCount, setUnreadCount] = React.useState(0);
-    const userEmail = localStorage.getItem('userEmail');
-    const userName = localStorage.getItem('userName');
-    const userRole = localStorage.getItem('userRole');
-
-    React.useEffect(() => {
-        fetchNotifications();
-    }, []);
-
-    const fetchNotifications = async () => {
-        try {
-            const response = await apiRequest('/notifications');
-            setNotifications(response.notifications || []);
-            setUnreadCount(response.notifications.filter(n => !n.read).length);
-        } catch (error) {
-            console.error('Failed to fetch notifications:', error);
-        }
-    };
-
-    const handleNotificationClick = async (notificationId) => {
-        try {
-            await apiRequest(`/notifications/${notificationId}/read`, { method: 'PUT' });
-            setNotifications(prev => 
-                prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
-            );
-            setUnreadCount(prev => Math.max(0, prev - 1));
-        } catch (error) {
-            console.error('Failed to mark notification as read:', error);
-        }
-    };
-
-    const handleMenu = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleNotificationsMenu = (event) => {
-        setNotificationsAnchor(event.currentTarget);
-    };
-
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
-
-    const handleNotificationsClose = () => {
-        setNotificationsAnchor(null);
-    };
-
-    const handleLogout = () => {
-        try {
-            // Clear session
-            localStorage.clear();
-            // Clear any running timers
-            clearTimeout(sessionTimeout);
-            // Redirect to login
-            window.location.href = '/login.html';
-        } catch (error) {
-            console.error('Logout error:', error);
-            showNotification('Failed to logout properly', 'error');
-        }
-    };
-
-    const handleProfile = () => {
-        handleClose();
-        // Navigate to profile page
-        // This will be implemented when we add routing
-    };
-
-    return (
-        <AppBar 
-            position="fixed" 
-            sx={{ 
-                zIndex: (theme) => theme.zIndex.drawer + 1,
-                backgroundColor: 'white',
-                color: 'text.primary',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.12)'
-            }}
-        >
-            <Toolbar>
-                {/* Logo and Brand */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Avatar 
-                        sx={{ 
-                            bgcolor: 'primary.main',
-                            width: 40,
-                            height: 40
-                        }}
-                    >
-                        <span className="material-icons">work</span>
-                    </Avatar>
-                    <Typography 
-                        variant="h6" 
-                        component="div" 
-                        sx={{ 
-                            color: 'primary.main',
-                            fontWeight: 600,
-                            display: { xs: 'none', sm: 'block' }
-                        }}
-                    >
-                        WorkWise Pro
-                    </Typography>
-                </Box>
-
-                <Box sx={{ flexGrow: 1 }} />
-
-                {/* Notifications */}
-                <IconButton 
-                    size="large" 
-                    color="inherit"
-                    onClick={handleNotificationsMenu}
-                    sx={{ mr: 2 }}
-                >
-                    <Badge badgeContent={unreadCount} color="error">
-                        <span className="material-icons">notifications</span>
-                    </Badge>
-                </IconButton>
-
-                {/* Notifications Menu */}
-                <Menu
-                    anchorEl={notificationsAnchor}
-                    open={Boolean(notificationsAnchor)}
-                    onClose={handleNotificationsClose}
-                    PaperProps={{
-                        sx: { 
-                            width: 320,
-                            maxHeight: 400
-                        }
-                    }}
-                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                >
-                    <Box sx={{ p: 2, borderBottom: '1px solid rgba(0,0,0,0.12)' }}>
-                        <Typography variant="h6">Notifications</Typography>
-                    </Box>
-                    {notifications.length === 0 ? (
-                        <Box sx={{ p: 2, textAlign: 'center' }}>
-                            <Typography color="textSecondary">
-                                No notifications
-                            </Typography>
-                        </Box>
-                    ) : (
-                        notifications.map((notification) => (
-                            <MenuItem 
-                                key={notification.id}
-                                onClick={() => handleNotificationClick(notification.id)}
-                                sx={{
-                                    py: 1.5,
-                                    px: 2,
-                                    borderLeft: notification.read ? 'none' : '4px solid',
-                                    borderLeftColor: 'primary.main'
-                                }}
-                            >
-                                <Box sx={{ width: '100%' }}>
-                                    <Typography variant="subtitle2">
-                                        {notification.title}
-                                    </Typography>
-                                    <Typography variant="body2" color="textSecondary">
-                                        {notification.message}
-                                    </Typography>
-                                    <Typography 
-                                        variant="caption" 
-                                        color="textSecondary"
-                                        sx={{ display: 'block', mt: 0.5 }}
-                                    >
-                                        {formatDate(notification.timestamp)}
-                                    </Typography>
-                                </Box>
-                            </MenuItem>
-                        ))
-                    )}
-                </Menu>
-
-                {/* User Menu */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-                        <Typography variant="subtitle1">
-                            {userName || userEmail}
-                        </Typography>
-                        <Typography 
-                            variant="caption" 
-                            color="textSecondary"
-                            sx={{ display: 'block', lineHeight: 1 }}
-                        >
-                            {userRole}
-                        </Typography>
-                    </Box>
-                    <IconButton
-                        onClick={handleMenu}
-                        size="small"
-                        sx={{ ml: 1 }}
-                    >
-                        <Avatar 
-                            sx={{ 
-                                width: 32, 
-                                height: 32,
-                                bgcolor: 'primary.main',
-                                fontSize: '1rem'
-                            }}
-                        >
-                            {userName ? userName[0].toUpperCase() : 
-                             userEmail ? userEmail[0].toUpperCase() : 'U'}
-                        </Avatar>
-                    </IconButton>
-                </Box>
-
-                {/* User Menu Items */}
-                <Menu
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl)}
-                    onClose={handleClose}
-                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                >
-                    <MenuItem onClick={handleProfile}>
-                        <ListItemIcon>
-                            <span className="material-icons">account_circle</span>
-                        </ListItemIcon>
-                        <ListItemText primary="My Profile" />
-                    </MenuItem>
-                    <MenuItem onClick={handleClose}>
-                        <ListItemIcon>
-                            <span className="material-icons">settings</span>
-                        </ListItemIcon>
-                        <ListItemText primary="Settings" />
-                    </MenuItem>
-                    <Divider />
-                    <MenuItem onClick={handleLogout}>
-                        <ListItemIcon>
-                            <span className="material-icons" style={{ color: '#EF4444' }}>
-                                logout
-                            </span>
-                        </ListItemIcon>
-                        <ListItemText 
-                            primary="Logout" 
-                            primaryTypographyProps={{ color: 'error' }}
-                        />
-                    </MenuItem>
-                </Menu>
-            </Toolbar>
-        </AppBar>
-    );
-};
-        // Sidebar Component
-const Sidebar = ({ onPageChange }) => {
-    const [openMenus, setOpenMenus] = React.useState({});
-    const [selectedPath, setSelectedPath] = React.useState('dashboard');
-
-    const menuItems = [
-        {
-            text: 'Dashboard Overview',
-            icon: 'dashboard',
-            path: 'dashboard'
-        },
-        {
-            text: 'Companies/Organizations',
-            icon: 'business',
-            children: [
-                { 
-                    text: 'Management', 
-                    icon: 'manage_accounts', 
-                    path: 'companies-management' 
-                },
-                { 
-                    text: 'Companies List', 
-                    icon: 'list', 
-                    path: 'companies-list' 
-                }
-            ]
-        },
-        {
-            text: 'System Settings',
-            icon: 'settings',
-            children: [
-                { 
-                    text: 'General Settings', 
-                    icon: 'tune', 
-                    path: 'general-settings' 
-                },
-                { 
-                    text: 'Pricing & Plans', 
-                    icon: 'payments', 
-                    path: 'pricing-plans' 
-                },
-                { 
-                    text: 'Security Settings', 
-                    icon: 'security', 
-                    path: 'security-settings' 
-                }
-            ]
-        },
-        {
-            text: 'Modules Management',
-            icon: 'extension',
-            children: [
-                { 
-                    text: 'Modules List', 
-                    icon: 'view_module', 
-                    path: 'modules-list' 
-                },
-                { 
-                    text: 'Module Settings', 
-                    icon: 'settings_applications', 
-                    path: 'module-settings' 
-                }
-            ]
-        },
-        {
-            text: 'User Management',
-            icon: 'people',
-            children: [
-                { 
-                    text: 'Users List', 
-                    icon: 'group', 
-                    path: 'users-list' 
-                },
-                { 
-                    text: 'Roles & Permissions', 
-                    icon: 'admin_panel_settings', 
-                    path: 'roles-permissions' 
-                },
-                { 
-                    text: 'Organization Chart', 
-                    icon: 'account_tree', 
-                    path: 'org-chart' 
-                }
-            ]
-        },
-        {
-            text: 'Tools',
-            icon: 'build',
-            children: [
-                { 
-                    text: 'Analytics & Reports', 
-                    icon: 'analytics', 
-                    path: 'analytics' 
-                },
-                { 
-                    text: 'Backup & Restore', 
-                    icon: 'backup', 
-                    path: 'backup' 
-                },
-                { 
-                    text: 'Audit Logs', 
-                    icon: 'fact_check', 
-                    path: 'audit-logs' 
-                },
-                { 
-                    text: 'API Management', 
-                    icon: 'api', 
-                    path: 'api-management' 
-                }
-            ]
-        },
-        {
-            text: 'Support',
-            icon: 'help',
-            children: [
-                { 
-                    text: 'Support Center', 
-                    icon: 'support', 
-                    path: 'support-center' 
-                }
-            ]
-        }
-    ];
-
-    const handleMenuClick = (item) => {
-        if (item.children) {
-            setOpenMenus(prev => ({
-                ...prev,
-                [item.text]: !prev[item.text]
-            }));
-        } else {
-            setSelectedPath(item.path);
-            onPageChange(item.path);
-        }
-    };
-
-    const handleChildClick = (childItem, parentText) => {
-        setSelectedPath(childItem.path);
-        onPageChange(childItem.path);
-    };
-
-    const isItemSelected = (path) => selectedPath === path;
-
-    const renderMenuItem = (item) => {
-        const isOpen = openMenus[item.text];
-        const isSelected = isItemSelected(item.path);
-
-        return (
-            <React.Fragment key={item.text}>
-                <ListItem 
-                    button 
-                    onClick={() => handleMenuClick(item)}
-                    sx={{
-                        borderRadius: '8px',
-                        mx: 1,
-                        my: 0.5,
-                        backgroundColor: isSelected ? 'rgba(79, 70, 229, 0.08)' : 'transparent',
-                        color: isSelected ? 'primary.main' : 'text.primary',
-                        '&:hover': {
-                            backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                        }
-                    }}
-                >
-                    <ListItemIcon sx={{ 
-                        color: isSelected ? 'primary.main' : 'inherit',
-                        minWidth: 40 
-                    }}>
-                        <span className="material-icons">{item.icon}</span>
-                    </ListItemIcon>
-                    <ListItemText 
-                        primary={item.text}
-                        sx={{
-                            '& .MuiTypography-root': {
-                                fontSize: '0.9rem',
-                                fontWeight: isSelected ? 600 : 400
-                            }
-                        }}
-                    />
-                    {item.children && (
-                        <span className="material-icons">
-                            {isOpen ? 'expand_less' : 'expand_more'}
-                        </span>
-                    )}
-                </ListItem>
-
-                {item.children && (
-                    <Collapse in={isOpen} timeout="auto" unmountOnExit>
-                        <List component="div" disablePadding>
-                            {item.children.map((child) => {
-                                const isChildSelected = isItemSelected(child.path);
-                                return (
-                                    <ListItem 
-                                        button 
-                                        key={child.text}
-                                        onClick={() => handleChildClick(child, item.text)}
-                                        sx={{ 
-                                            pl: 4,
-                                            borderRadius: '8px',
-                                            mx: 1,
-                                            my: 0.5,
-                                            backgroundColor: isChildSelected ? 
-                                                'rgba(79, 70, 229, 0.08)' : 'transparent',
-                                            color: isChildSelected ? 'primary.main' : 'text.primary',
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                                            }
-                                        }}
-                                    >
-                                        <ListItemIcon sx={{ 
-                                            color: isChildSelected ? 'primary.main' : 'inherit',
-                                            minWidth: 40 
-                                        }}>
-                                            <span className="material-icons">{child.icon}</span>
-                                        </ListItemIcon>
-                                        <ListItemText 
-                                            primary={child.text}
-                                            sx={{
-                                                '& .MuiTypography-root': {
-                                                    fontSize: '0.875rem',
-                                                    fontWeight: isChildSelected ? 600 : 400
-                                                }
-                                            }}
-                                        />
-                                    </ListItem>
-                                );
-                            })}
-                        </List>
-                    </Collapse>
-                )}
-            </React.Fragment>
-        );
-    };
-
-    return (
-        <Drawer
-            variant="permanent"
-            sx={{
-                width: 280,
-                flexShrink: 0,
-                '& .MuiDrawer-paper': {
-                    width: 280,
-                    boxSizing: 'border-box',
-                    marginTop: '64px',
-                    backgroundColor: '#ffffff',
-                    borderRight: '1px solid rgba(0, 0, 0, 0.12)',
-                    height: 'calc(100vh - 64px)'
-                },
-            }}
-        >
-            <Box
-                sx={{
-                    overflow: 'auto',
-                    height: '100%',
-                    '&::-webkit-scrollbar': {
-                        width: '4px',
-                    },
-                    '&::-webkit-scrollbar-track': {
-                        backgroundColor: 'transparent',
-                    },
-                    '&::-webkit-scrollbar-thumb': {
-                        backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                        borderRadius: '2px',
-                    }
-                }}
-            >
-                <List>
-                    {menuItems.map(renderMenuItem)}
-                </List>
-            </Box>
-        </Drawer>
-    );
-};
-        // Dashboard Component
-const Dashboard = () => {
-    const [stats, setStats] = React.useState({
-        totalUsers: 0,
-        activeCompanies: 0,
-        totalRevenue: 0,
-        activeProjects: 0
-    });
-    const [recentActivities, setRecentActivities] = React.useState([]);
-    const [loading, setLoading] = React.useState(true);
-
-    React.useEffect(() => {
-        fetchDashboardData();
-    }, []);
-
-    const fetchDashboardData = async () => {
-        try {
-            const [statsData, activitiesData] = await Promise.all([
-                apiRequest('/dashboard/stats'),
-                apiRequest('/dashboard/activities')
-            ]);
-
-            setStats(statsData);
-            setRecentActivities(activitiesData.activities);
-        } catch (error) {
-            console.error('Error fetching dashboard data:', error);
-            showNotification('Failed to load dashboard data', 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const StatCard = ({ title, value, icon, color }) => (
-        <Card sx={{ height: '100%' }}>
-            <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Avatar sx={{ bgcolor: color, mr: 2 }}>
-                        <span className="material-icons">{icon}</span>
-                    </Avatar>
-                    <Typography color="textSecondary" variant="h6">
-                        {title}
-                    </Typography>
-                </Box>
-                <Typography variant="h4" sx={{ fontWeight: 600 }}>
-                    {value}
-                </Typography>
-            </CardContent>
-        </Card>
-    );
-
-    const QuickAction = ({ title, icon, onClick }) => (
-        <Button
-            variant="outlined"
-            startIcon={<span className="material-icons">{icon}</span>}
-            onClick={onClick}
-            sx={{
-                height: '100%',
-                minHeight: 80,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 1,
-                p: 2,
-                borderRadius: 2,
-                borderColor: 'rgba(0, 0, 0, 0.12)',
-                '&:hover': {
-                    borderColor: 'primary.main',
-                    backgroundColor: 'rgba(79, 70, 229, 0.04)'
-                }
-            }}
-        >
-            {title}
-        </Button>
-    );
-
-    const ActivityItem = ({ activity }) => (
-        <ListItem 
-            sx={{ 
-                borderRadius: 1,
-                mb: 1,
-                '&:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.02)'
-                }
-            }}
-        >
-            <ListItemIcon>
-                <Avatar 
-                    sx={{ 
-                        bgcolor: activity.type === 'user' ? 'primary.main' :
-                                activity.type === 'company' ? 'secondary.main' :
-                                'warning.main'
-                    }}
-                >
-                    <span className="material-icons">{activity.icon}</span>
-                </Avatar>
-            </ListItemIcon>
-            <ListItemText
-                primary={activity.description}
-                secondary={formatDate(activity.timestamp)}
-                primaryTypographyProps={{
-                    variant: 'body1',
-                    fontWeight: 500
-                }}
-                secondaryTypographyProps={{
-                    variant: 'caption',
-                    color: 'textSecondary'
-                }}
-            />
-            {activity.status && (
-                <Chip
-                    label={activity.status}
-                    size="small"
-                    color={
-                        activity.status === 'completed' ? 'success' :
-                        activity.status === 'pending' ? 'warning' : 'default'
-                    }
-                    sx={{ ml: 1 }}
-                />
-            )}
-        </ListItem>
-    );
-
-    if (loading) {
-        return (
-            <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center',
-                height: '100%',
-                p: 3 
-            }}>
-                <CircularProgress />
-            </Box>
-        );
-    }
-
-    return (
-        <Box sx={{ p: 3 }}>
-            {/* Page Header */}
-            <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                mb: 3 
-            }}>
-                <Typography variant="h4" sx={{ fontWeight: 600 }}>
-                    Dashboard Overview
-                </Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<span className="material-icons">download</span>}
-                >
-                    Export Report
-                </Button>
-            </Box>
-
-            {/* Statistics Cards */}
-            <Grid container spacing={3} sx={{ mb: 3 }}>
-                <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                        title="Total Users"
-                        value={stats.totalUsers.toLocaleString()}
-                        icon="people"
-                        color="#4F46E5"
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                        title="Active Companies"
-                        value={stats.activeCompanies.toLocaleString()}
-                        icon="business"
-                        color="#10B981"
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                        title="Total Revenue"
-                        value={`$${stats.totalRevenue.toLocaleString()}`}
-                        icon="attach_money"
-                        color="#F59E0B"
-                    />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <StatCard
-                        title="Active Projects"
-                        value={stats.activeProjects.toLocaleString()}
-                        icon="assignment"
-                        color="#EF4444"
-                    />
-                </Grid>
-            </Grid>
-
-            {/* Main Content */}
-            <Grid container spacing={3}>
-                {/* Recent Activity */}
-                <Grid item xs={12} md={8}>
-                    <Card>
-                        <CardContent>
-                            <Box sx={{ 
-                                display: 'flex', 
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                mb: 2
-                            }}>
-                                <Typography variant="h6">Recent Activity</Typography>
-                                <Button 
-                                    size="small"
-                                    endIcon={<span className="material-icons">arrow_forward</span>}
-                                >
-                                    View All
-                                </Button>
-                            </Box>
-                            <List>
-                                {recentActivities.map((activity, index) => (
-                                    <ActivityItem key={index} activity={activity} />
-                                ))}
-                            </List>
-                        </CardContent>
-                    </Card>
-                </Grid>
-
-                {/* Quick Actions */}
-                <Grid item xs={12} md={4}>
-                    <Card>
-                        <CardContent>
-                            <Typography variant="h6" sx={{ mb: 2 }}>
-                                Quick Actions
-                            </Typography>
-                            <Grid container spacing={2}>
-                                <Grid item xs={6}>
-                                    <QuickAction
-                                        title="Add User"
-                                        icon="person_add"
-                                        onClick={() => onPageChange('users-list')}
-                                    />
-                                </Grid>
-                                <Grid item xs={6}>
-                                    <QuickAction
-                                        title="New Company"
-                                        icon="business"
-                                        onClick={() => onPageChange('companies-list')}
-                                    />
-                                </Grid>
-                                <Grid item xs={6}>
-                                    <QuickAction
-                                        title="Generate Report"
-                                        icon="assessment"
-                                        onClick={() => onPageChange('analytics')}
-                                    />
-                                </Grid>
-                                <Grid item xs={6}>
-                                    <QuickAction
-                                        title="System Backup"
-                                        icon="backup"
-                                        onClick={() => onPageChange('backup')}
-                                    />
-                                </Grid>
-                            </Grid>
-                        </CardContent>
-                    </Card>
-                </Grid>
-            </Grid>
-        </Box>
-    );
-};
-        // Error Boundary Component
-class ErrorBoundary extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = { hasError: false, error: null };
-    }
-
-    static getDerivedStateFromError(error) {
-        return { hasError: true, error };
-    }
-
-    componentDidCatch(error, errorInfo) {
-        console.error('Error caught by boundary:', error, errorInfo);
-        // You could send this to an error reporting service
-    }
-
-    handleRetry = () => {
-        this.setState({ hasError: false, error: null });
-        window.location.reload();
-    };
-
-    render() {
-        if (this.state.hasError) {
-            return (
-                <Box
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        height: '100vh',
-                        textAlign: 'center',
-                        p: 3
-                    }}
-                >
-                    <Avatar
-                        sx={{
-                            bgcolor: 'error.main',
-                            width: 64,
-                            height: 64,
-                            mb: 2
-                        }}
-                    >
-                        <span className="material-icons" style={{ fontSize: 40 }}>
-                            error_outline
-                        </span>
-                    </Avatar>
-                    <Typography variant="h5" gutterBottom>
-                        Oops! Something went wrong
-                    </Typography>
-                    <Typography color="textSecondary" sx={{ mb: 3 }}>
-                        {this.state.error?.message || 'An unexpected error occurred'}
-                    </Typography>
-                    <Button
-                        variant="contained"
-                        onClick={this.handleRetry}
-                        startIcon={<span className="material-icons">refresh</span>}
-                    >
-                        Retry
-                    </Button>
-                </Box>
-            );
-        }
-
-        return this.props.children;
-    }
-}
-
-// Main App Component
-// Update the App component with proper token verification and session management
-const App = () => {
-    const [loading, setLoading] = React.useState(true);
-    const [currentPage, setCurrentPage] = React.useState('dashboard');
-    const [initialized, setInitialized] = React.useState(false);
-    const [user, setUser] = React.useState(null);
-
-    React.useEffect(() => {
-        initializeApp();
-    }, []);
-
-    const initializeApp = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = '/login.html';
-                return;
-            }
-
-            // Verify token
-            const response = await fetch('https://18.215.160.136.nip.io/api/verify-token', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
+        // Dashboard Stats Component
+        const DashboardStats = () => {
+            const [stats, setStats] = useState({
+                totalCompanies: 0,
+                activeUsers: 0,
+                totalRevenue: 0,
+                activeModules: 0
             });
 
-            const data = await response.json();
+            useEffect(() => {
+                // Fetch stats from API
+                const fetchStats = async () => {
+                    try {
+                        const token = localStorage.getItem('token');
+                        const response = await fetch('https://18.215.160.136.nip.io/api/dashboard/stats', {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            setStats(data.stats);
+                        }
+                    } catch (error) {
+                        console.error('Error fetching stats:', error);
+                    }
+                };
 
-            if (!response.ok || !data.success) {
-                throw new Error('Invalid token');
-            }
+                fetchStats();
+            }, []);
 
-            // Set user data
-            setUser(data.user);
-            setInitialized(true);
+            return (
+                <div className="stats-grid">
+                    <div className="stat-card">
+                        <h3>Total Companies</h3>
+                        <div className="value">{formatNumber(stats.totalCompanies)}</div>
+                    </div>
+                    <div className="stat-card">
+                        <h3>Active Users</h3>
+                        <div className="value">{formatNumber(stats.activeUsers)}</div>
+                    </div>
+                    <div className="stat-card">
+                        <h3>Total Revenue</h3>
+                        <div className="value">${formatNumber(stats.totalRevenue)}</div>
+                    </div>
+                    <div className="stat-card">
+                        <h3>Active Modules</h3>
+                        <div className="value">{formatNumber(stats.activeModules)}</div>
+                    </div>
+                </div>
+            );
+        };
 
-            // Initialize session timeout with longer duration
-            initializeSessionTimeout();
-        } catch (error) {
-            console.error('Initialization error:', error);
-            // Don't immediately clear localStorage and redirect
-            handleAuthError();
-        } finally {
-            setLoading(false);
-        }
-    };
+        // Recent Activity Component
+        const RecentActivity = () => {
+            const [activities, setActivities] = useState([]);
 
-    const initializeSessionTimeout = () => {
-        // Clear any existing timeout
-        if (window.sessionTimeout) {
-            clearTimeout(window.sessionTimeout);
-        }
+            useEffect(() => {
+                // Fetch recent activities
+                const fetchActivities = async () => {
+                    try {
+                        const token = localStorage.getItem('token');
+                        const response = await fetch('https://18.215.160.136.nip.io/api/activities', {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            setActivities(data.activities);
+                        }
+                    } catch (error) {
+                        console.error('Error fetching activities:', error);
+                    }
+                };
 
-        // Set new timeout - 30 minutes
-        window.sessionTimeout = setTimeout(() => {
-            handleSessionTimeout();
-        }, 30 * 60 * 1000); // 30 minutes
-    };
+                fetchActivities();
+            }, []);
 
-    const handleSessionTimeout = () => {
-        showNotification('Session expired. Please login again.', 'warning');
-        localStorage.clear();
-        window.location.href = '/login.html';
-    };
+            return (
+                <div className="dashboard-card">
+                    <Typography variant="h6" gutterBottom>
+                        Recent Activity
+                    </Typography>
+                    <List className="activity-list">
+                        {activities.map((activity, index) => (
+                            <ListItem key={index} className="activity-item">
+                                <div className="activity-icon">
+                                    <i className={`fas fa-${activity.icon}`}></i>
+                                </div>
+                                <div className="activity-details">
+                                    <Typography variant="subtitle2">{activity.action}</Typography>
+                                    <Typography variant="body2" color="textSecondary">
+                                        {activity.timestamp}
+                                    </Typography>
+                                </div>
+                            </ListItem>
+                        ))}
+                    </List>
+                </div>
+            );
+        };
 
-    const handleAuthError = () => {
-        // Show error message
-        showNotification('Authentication failed. Please login again.', 'error');
-        // Delay the redirect to show the notification
-        setTimeout(() => {
-            localStorage.clear();
-            window.location.href = '/login.html';
-        }, 2000);
-    };
+        // Sidebar Component
+        const Sidebar = () => {
+            const [menuItems, setMenuItems] = useState({
+                dashboard: true,
+                companies: false,
+                settings: false,
+                modules: false,
+                users: false,
+                tools: false,
+                support: false
+            });
 
-    const resetSessionTimeout = () => {
-        initializeSessionTimeout();
-    };
-
-    // Add event listeners for session management
-    React.useEffect(() => {
-        if (initialized) {
-            document.addEventListener('mousemove', resetSessionTimeout);
-            document.addEventListener('keypress', resetSessionTimeout);
-            document.addEventListener('click', resetSessionTimeout);
-
-            return () => {
-                document.removeEventListener('mousemove', resetSessionTimeout);
-                document.removeEventListener('keypress', resetSessionTimeout);
-                document.removeEventListener('click', resetSessionTimeout);
+            const handleClick = (item) => {
+                setMenuItems(prev => ({
+                    ...prev,
+                    [item]: !prev[item]
+                }));
             };
-        }
-    }, [initialized]);
 
-    const handlePageChange = (page) => {
-        setCurrentPage(page);
-        resetSessionTimeout();
-    };
+            const menuStructure = [
+                {
+                    id: 'dashboard',
+                    title: 'Dashboard Overview',
+                    icon: 'tachometer-alt',
+                    path: '/dashboard'
+                },
+                {
+                    id: 'companies',
+                    title: 'Companies/Organizations',
+                    icon: 'building',
+                    submenu: [
+                        { title: 'Companies List', path: '/companies/list' },
+                        { title: 'Management', path: '/companies/management' }
+                    ]
+                },
+                {
+                    id: 'settings',
+                    title: 'System Settings',
+                    icon: 'cogs',
+                    submenu: [
+                        { title: 'General Settings', path: '/settings/general' },
+                        { title: 'Pricing & Plans', path: '/settings/pricing' },
+                        { title: 'Security Settings', path: '/settings/security' }
+                    ]
+                },
+                {
+                    id: 'modules',
+                    title: 'Modules Management',
+                    icon: 'puzzle-piece',
+                    submenu: [
+                        { title: 'Modules List', path: '/modules/list' },
+                        { title: 'Module Settings', path: '/modules/settings' }
+                    ]
+                },
+                {
+                    id: 'users',
+                    title: 'User Management',
+                    icon: 'users',
+                    submenu: [
+                        { title: 'Users List', path: '/users/list' },
+                        { title: 'Roles & Permissions', path: '/users/roles' },
+                        { title: 'Organization Chart', path: '/users/org-chart' }
+                    ]
+                },
+                {
+                    id: 'tools',
+                    title: 'Tools',
+                    icon: 'tools',
+                    submenu: [
+                        { title: 'Analytics & Reports', path: '/tools/analytics' },
+                        { title: 'Backup & Restore', path: '/tools/backup' },
+                        { title: 'Audit Logs', path: '/tools/audit-logs' },
+                        { title: 'API Management', path: '/tools/api' }
+                    ]
+                },
+                {
+                    id: 'support',
+                    title: 'Support',
+                    icon: 'headset',
+                    path: '/support'
+                }
+            ];
 
-    // Rest of the App component remains the same...
-    if (loading) {
-        return (
-            <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
-                height: '100vh' 
-            }}>
-                <CircularProgress />
-            </Box>
-        );
-    }
+            return (
+                <Drawer
+                    variant="permanent"
+                    sx={{
+                        width: 240,
+                        flexShrink: 0,
+                        '& .MuiDrawer-paper': {
+                            width: 240,
+                            boxSizing: 'border-box',
+                            backgroundColor: '#1a237e',
+                            color: 'white'
+                        }
+                    }}
+                >
+                    <Box sx={{ p: 2, textAlign: 'center' }}>
+                        <Typography variant="h6">WorkWise Pro</Typography>
+                    </Box>
+                    <List>
+                        {menuStructure.map((item) => (
+                            <React.Fragment key={item.id}>
+                                <ListItem 
+                                    button 
+                                    onClick={() => handleClick(item.id)}
+                                    sx={{
+                                        backgroundColor: menuItems[item.id] ? 'rgba(255,255,255,0.1)' : 'transparent'
+                                    }}
+                                >
+                                    <ListItemIcon>
+                                        <i className={`fas fa-${item.icon}`} style={{color: 'white'}} />
+                                    </ListItemIcon>
+                                    <ListItemText primary={item.title} />
+                                    {item.submenu && (
+                                        <i className={`fas fa-chevron-${menuItems[item.id] ? 'up' : 'down'}`} 
+                                           style={{color: 'white'}} />
+                                    )}
+                                </ListItem>
+                                {item.submenu && (
+                                    <Collapse in={menuItems[item.id]}>
+                                        <List component="div" disablePadding>
+                                            {item.submenu.map((subItem, index) => (
+                                                <ListItem 
+                                                    button 
+                                                    key={index}
+                                                    sx={{ pl: 4 }}
+                                                    onClick={() => {
+                                                        if (subItem.path) {
+                                                            window.location.href = subItem.path;
+                                                        }
+                                                    }}
+                                                >
+                                                    <ListItemText primary={subItem.title} />
+                                                </ListItem>
+                                            ))}
+                                        </List>
+                                    </Collapse>
+                                )}
+                            </React.Fragment>
+                        ))}
+                    </List>
+                </Drawer>
+            );
+        };
 
-    if (!initialized) {
-        return null;
-    }
+        // Header Component
+        const Header = () => {
+            const [anchorEl, setAnchorEl] = useState(null);
+            const [notifications, setNotifications] = useState([]);
 
-    return (
-        <ErrorBoundary>
-            <ThemeProvider theme={theme}>
+            useEffect(() => {
+                // Fetch notifications
+                const fetchNotifications = async () => {
+                    try {
+                        const token = localStorage.getItem('token');
+                        const response = await fetch('https://18.215.160.136.nip.io/api/notifications', {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            setNotifications(data.notifications);
+                        }
+                    } catch (error) {
+                        console.error('Error fetching notifications:', error);
+                    }
+                };
+
+                fetchNotifications();
+            }, []);
+
+            const handleMenu = (event) => {
+                setAnchorEl(event.currentTarget);
+            };
+
+            const handleClose = () => {
+                setAnchorEl(null);
+            };
+
+            const handleLogout = async () => {
+                try {
+                    const token = localStorage.getItem('token');
+                    await fetch('https://18.215.160.136.nip.io/api/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    localStorage.clear();
+                    window.location.href = '/login.html';
+                } catch (error) {
+                    console.error('Logout error:', error);
+                }
+            };
+
+            return (
+                <AppBar 
+                    position="fixed" 
+                    sx={{ 
+                        zIndex: theme => theme.zIndex.drawer + 1,
+                        backgroundColor: 'white',
+                        color: '#333'
+                    }}
+                >
+                    <Toolbar>
+                        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                            Super Admin Dashboard
+                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <IconButton color="inherit" sx={{ position: 'relative' }}>
+                                <Badge badgeContent={notifications.length} color="error">
+                                    <i className="fas fa-bell"></i>
+                                </Badge>
+                            </IconButton>
+                            <IconButton
+                                size="large"
+                                onClick={handleMenu}
+                                color="inherit"
+                            >
+                                <Avatar sx={{ bgcolor: '#1a237e' }}>
+                                    {localStorage.getItem('userEmail')?.charAt(0).toUpperCase() || 'SA'}
+                                </Avatar>
+                            </IconButton>
+                            <Menu
+                                anchorEl={anchorEl}
+                                open={Boolean(anchorEl)}
+                                onClose={handleClose}
+                            >
+                                <MenuItem onClick={() => window.location.href = '/account.html'}>
+                                    <i className="fas fa-user" style={{marginRight: '10px'}}></i>
+                                    My Account
+                                </MenuItem>
+                                <MenuItem onClick={handleLogout}>
+                                    <i className="fas fa-sign-out-alt" style={{marginRight: '10px'}}></i>
+                                    Sign Out
+                                </MenuItem>
+                            </Menu>
+                        </Box>
+                    </Toolbar>
+                </AppBar>
+            );
+        };
+
+        // Main Dashboard Component
+        const Dashboard = () => {
+            useEffect(() => {
+                // Check authentication
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                // Verify token
+                const verifyToken = async () => {
+                    try {
+                        const response = await fetch('https://18.215.160.136.nip.io/api/verify-token', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        const data = await response.json();
+                        if (!data.success) {
+                            localStorage.clear();
+                            window.location.href = '/login.html';
+                        }
+                    } catch (error) {
+                        console.error('Token verification error:', error);
+                        localStorage.clear();
+                        window.location.href = '/login.html';
+                    }
+                };
+
+                verifyToken();
+            }, []);
+
+            return (
                 <Box sx={{ display: 'flex' }}>
                     <CssBaseline />
-                    <Header user={user} />
-                    <Sidebar onPageChange={handlePageChange} />
+                    <Header />
+                    <Sidebar />
                     <Box
                         component="main"
                         sx={{
                             flexGrow: 1,
                             p: 3,
-                            marginLeft: '280px',
-                            marginTop: '64px',
-                            backgroundColor: 'background.default',
-                            minHeight: '100vh'
+                            mt: 8,
+                            ml: '240px'
                         }}
                     >
-                        {renderPage()}
+                        <DashboardStats />
+                        <Grid container spacing={3}>
+                            <Grid item xs={12} md={8}>
+                                <Paper sx={{ p: 2, height: '400px' }}>
+                                    <Typography variant="h6" gutterBottom>
+                                        System Analytics
+                                    </Typography>
+                                    <div className="chart-container">
+                                        {/* Chart.js implementation will go here */}
+                                    </div>
+                                </Paper>
+                            </Grid>
+                            <Grid item xs={12} md={4}>
+                                <RecentActivity />
+                            </Grid>
+                        </Grid>
                     </Box>
                 </Box>
-            </ThemeProvider>
-        </ErrorBoundary>
-    );
-};
+            );
+        };
 
-// Render the application
-ReactDOM.render(
-    <React.StrictMode>
-        <App />
-    </React.StrictMode>,
-    document.getElementById('root')
-);
+        // Initialize Chart.js
+        useEffect(() => {
+            const ctx = document.getElementById('systemAnalytics');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'System Usage',
+                            data: [65, 59, 80, 81, 56, 55],
+                            fill: false,
+                            borderColor: '#1a237e',
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+        }, []);
 
-// Add event listeners for session management
-document.addEventListener('mousemove', resetSessionTimeout);
-document.addEventListener('keypress', resetSessionTimeout);
-document.addEventListener('click', resetSessionTimeout);
-
-// Handle unhandled errors
-window.addEventListener('unhandledrejection', (event) => {
-    console.error('Unhandled promise rejection:', event.reason);
-    showNotification('An unexpected error occurred', 'error');
-});
-
-// Handle offline/online status
-window.addEventListener('online', () => {
-    showNotification('Connection restored', 'success');
-});
-
-window.addEventListener('offline', () => {
-    showNotification('No internet connection', 'warning');
-});
-</script>
+        // Render the app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Dashboard />);
+    </script>
 </body>
 </html>
