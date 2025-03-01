@@ -138,9 +138,7 @@
     <!-- Include page components -->
     <script type="text/babel" src="pages/RolesAndPermissions.js"></script>
 
-    <script type="text/babel">
-        // Component implementations will follow in next parts
-    </script>
+    
     <script type="text/babel">
     // Destructure Material-UI components
     const {
@@ -1175,6 +1173,247 @@ const Dashboard = () => {
         </Box>
     );
 };
+        // Error Boundary Component
+class ErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false, error: null };
+    }
+
+    static getDerivedStateFromError(error) {
+        return { hasError: true, error };
+    }
+
+    componentDidCatch(error, errorInfo) {
+        console.error('Error caught by boundary:', error, errorInfo);
+        // You could send this to an error reporting service
+    }
+
+    handleRetry = () => {
+        this.setState({ hasError: false, error: null });
+        window.location.reload();
+    };
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: '100vh',
+                        textAlign: 'center',
+                        p: 3
+                    }}
+                >
+                    <Avatar
+                        sx={{
+                            bgcolor: 'error.main',
+                            width: 64,
+                            height: 64,
+                            mb: 2
+                        }}
+                    >
+                        <span className="material-icons" style={{ fontSize: 40 }}>
+                            error_outline
+                        </span>
+                    </Avatar>
+                    <Typography variant="h5" gutterBottom>
+                        Oops! Something went wrong
+                    </Typography>
+                    <Typography color="textSecondary" sx={{ mb: 3 }}>
+                        {this.state.error?.message || 'An unexpected error occurred'}
+                    </Typography>
+                    <Button
+                        variant="contained"
+                        onClick={this.handleRetry}
+                        startIcon={<span className="material-icons">refresh</span>}
+                    >
+                        Retry
+                    </Button>
+                </Box>
+            );
+        }
+
+        return this.props.children;
+    }
+}
+
+// Main App Component
+const App = () => {
+    const [loading, setLoading] = React.useState(true);
+    const [currentPage, setCurrentPage] = React.useState('dashboard');
+    const [initialized, setInitialized] = React.useState(false);
+
+    React.useEffect(() => {
+        initializeApp();
+    }, []);
+
+    const initializeApp = async () => {
+        try {
+            // Check authentication
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Verify token
+            const response = await apiRequest('/verify-token');
+            if (!response.success) {
+                throw new Error('Invalid token');
+            }
+
+            // Initialize session timeout
+            resetSessionTimeout();
+
+            // Set initialized flag
+            setInitialized(true);
+        } catch (error) {
+            console.error('Initialization error:', error);
+            localStorage.clear();
+            window.location.href = '/login.html';
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+        // Reset session timeout on page change
+        resetSessionTimeout();
+    };
+
+    const renderPage = () => {
+        switch (currentPage) {
+            case 'dashboard':
+                return <Dashboard />;
+            case 'roles-permissions':
+                return <RolesAndPermissions />;
+            case 'users-list':
+                return <UsersList />;
+            case 'companies-list':
+                return <CompaniesList />;
+            // Add other page components here
+            default:
+                return <Dashboard />;
+        }
+    };
+
+    if (loading) {
+        return (
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: '100vh',
+                    flexDirection: 'column',
+                    gap: 2
+                }}
+            >
+                <CircularProgress />
+                <Typography color="textSecondary">
+                    Loading WorkWise Pro...
+                </Typography>
+            </Box>
+        );
+    }
+
+    if (!initialized) {
+        return null;
+    }
+
+    return (
+        <ErrorBoundary>
+            <ThemeProvider theme={theme}>
+                <Box sx={{ display: 'flex' }}>
+                    <CssBaseline />
+                    <Header />
+                    <Sidebar onPageChange={handlePageChange} />
+                    <Box
+                        component="main"
+                        sx={{
+                            flexGrow: 1,
+                            height: '100vh',
+                            overflow: 'auto',
+                            marginLeft: '280px',
+                            marginTop: '64px',
+                            backgroundColor: 'background.default'
+                        }}
+                    >
+                        <ErrorBoundary>
+                            {renderPage()}
+                        </ErrorBoundary>
+
+                        {/* Footer */}
+                        <Box
+                            sx={{
+                                p: 3,
+                                mt: 'auto',
+                                backgroundColor: 'background.paper',
+                                borderTop: '1px solid',
+                                borderColor: 'divider'
+                            }}
+                        >
+                            <Typography
+                                variant="body2"
+                                color="textSecondary"
+                                align="center"
+                            >
+                                © {new Date().getFullYear()} WorkWise Pro. All rights reserved.
+                            </Typography>
+                        </Box>
+                    </Box>
+
+                    {/* Global Loading Indicator */}
+                    <Box
+                        sx={{
+                            position: 'fixed',
+                            top: 64,
+                            left: 0,
+                            right: 0,
+                            zIndex: (theme) => theme.zIndex.drawer + 2,
+                            visibility: loading ? 'visible' : 'hidden'
+                        }}
+                    >
+                        <LinearProgress />
+                    </Box>
+                </Box>
+            </ThemeProvider>
+        </ErrorBoundary>
+    );
+};
+
+// Render the application
+ReactDOM.render(
+    <React.StrictMode>
+        <App />
+    </React.StrictMode>,
+    document.getElementById('root')
+);
+
+// Add event listeners for session management
+document.addEventListener('mousemove', resetSessionTimeout);
+document.addEventListener('keypress', resetSessionTimeout);
+document.addEventListener('click', resetSessionTimeout);
+
+// Handle unhandled errors
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('Unhandled promise rejection:', event.reason);
+    showNotification('An unexpected error occurred', 'error');
+});
+
+// Handle offline/online status
+window.addEventListener('online', () => {
+    showNotification('Connection restored', 'success');
+});
+
+window.addEventListener('offline', () => {
+    showNotification('No internet connection', 'warning');
+});
 </script>
 </body>
 </html>
