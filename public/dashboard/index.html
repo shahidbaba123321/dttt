@@ -1242,10 +1242,12 @@ class ErrorBoundary extends React.Component {
 }
 
 // Main App Component
+// Update the App component with proper token verification and session management
 const App = () => {
     const [loading, setLoading] = React.useState(true);
     const [currentPage, setCurrentPage] = React.useState('dashboard');
     const [initialized, setInitialized] = React.useState(false);
+    const [user, setUser] = React.useState(null);
 
     React.useEffect(() => {
         initializeApp();
@@ -1253,7 +1255,6 @@ const App = () => {
 
     const initializeApp = async () => {
         try {
-            // Check authentication
             const token = localStorage.getItem('token');
             if (!token) {
                 window.location.href = '/login.html';
@@ -1261,63 +1262,97 @@ const App = () => {
             }
 
             // Verify token
-            const response = await apiRequest('/verify-token');
-            if (!response.success) {
+            const response = await fetch('https://18.215.160.136.nip.io/api/verify-token', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
                 throw new Error('Invalid token');
             }
 
-            // Initialize session timeout
-            resetSessionTimeout();
-
-            // Set initialized flag
+            // Set user data
+            setUser(data.user);
             setInitialized(true);
+
+            // Initialize session timeout with longer duration
+            initializeSessionTimeout();
         } catch (error) {
             console.error('Initialization error:', error);
-            localStorage.clear();
-            window.location.href = '/login.html';
+            // Don't immediately clear localStorage and redirect
+            handleAuthError();
         } finally {
             setLoading(false);
         }
     };
 
+    const initializeSessionTimeout = () => {
+        // Clear any existing timeout
+        if (window.sessionTimeout) {
+            clearTimeout(window.sessionTimeout);
+        }
+
+        // Set new timeout - 30 minutes
+        window.sessionTimeout = setTimeout(() => {
+            handleSessionTimeout();
+        }, 30 * 60 * 1000); // 30 minutes
+    };
+
+    const handleSessionTimeout = () => {
+        showNotification('Session expired. Please login again.', 'warning');
+        localStorage.clear();
+        window.location.href = '/login.html';
+    };
+
+    const handleAuthError = () => {
+        // Show error message
+        showNotification('Authentication failed. Please login again.', 'error');
+        // Delay the redirect to show the notification
+        setTimeout(() => {
+            localStorage.clear();
+            window.location.href = '/login.html';
+        }, 2000);
+    };
+
+    const resetSessionTimeout = () => {
+        initializeSessionTimeout();
+    };
+
+    // Add event listeners for session management
+    React.useEffect(() => {
+        if (initialized) {
+            document.addEventListener('mousemove', resetSessionTimeout);
+            document.addEventListener('keypress', resetSessionTimeout);
+            document.addEventListener('click', resetSessionTimeout);
+
+            return () => {
+                document.removeEventListener('mousemove', resetSessionTimeout);
+                document.removeEventListener('keypress', resetSessionTimeout);
+                document.removeEventListener('click', resetSessionTimeout);
+            };
+        }
+    }, [initialized]);
+
     const handlePageChange = (page) => {
         setCurrentPage(page);
-        // Reset session timeout on page change
         resetSessionTimeout();
     };
 
-    const renderPage = () => {
-        switch (currentPage) {
-            case 'dashboard':
-                return <Dashboard />;
-            case 'roles-permissions':
-                return <RolesAndPermissions />;
-            case 'users-list':
-                return <UsersList />;
-            case 'companies-list':
-                return <CompaniesList />;
-            // Add other page components here
-            default:
-                return <Dashboard />;
-        }
-    };
-
+    // Rest of the App component remains the same...
     if (loading) {
         return (
-            <Box
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    height: '100vh',
-                    flexDirection: 'column',
-                    gap: 2
-                }}
-            >
+            <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: '100vh' 
+            }}>
                 <CircularProgress />
-                <Typography color="textSecondary">
-                    Loading WorkWise Pro...
-                </Typography>
             </Box>
         );
     }
@@ -1331,55 +1366,20 @@ const App = () => {
             <ThemeProvider theme={theme}>
                 <Box sx={{ display: 'flex' }}>
                     <CssBaseline />
-                    <Header />
+                    <Header user={user} />
                     <Sidebar onPageChange={handlePageChange} />
                     <Box
                         component="main"
                         sx={{
                             flexGrow: 1,
-                            height: '100vh',
-                            overflow: 'auto',
+                            p: 3,
                             marginLeft: '280px',
                             marginTop: '64px',
-                            backgroundColor: 'background.default'
+                            backgroundColor: 'background.default',
+                            minHeight: '100vh'
                         }}
                     >
-                        <ErrorBoundary>
-                            {renderPage()}
-                        </ErrorBoundary>
-
-                        {/* Footer */}
-                        <Box
-                            sx={{
-                                p: 3,
-                                mt: 'auto',
-                                backgroundColor: 'background.paper',
-                                borderTop: '1px solid',
-                                borderColor: 'divider'
-                            }}
-                        >
-                            <Typography
-                                variant="body2"
-                                color="textSecondary"
-                                align="center"
-                            >
-                                © {new Date().getFullYear()} WorkWise Pro. All rights reserved.
-                            </Typography>
-                        </Box>
-                    </Box>
-
-                    {/* Global Loading Indicator */}
-                    <Box
-                        sx={{
-                            position: 'fixed',
-                            top: 64,
-                            left: 0,
-                            right: 0,
-                            zIndex: (theme) => theme.zIndex.drawer + 2,
-                            visibility: loading ? 'visible' : 'hidden'
-                        }}
-                    >
-                        <LinearProgress />
+                        {renderPage()}
                     </Box>
                 </Box>
             </ThemeProvider>
