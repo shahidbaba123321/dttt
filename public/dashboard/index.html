@@ -5,16 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SuperAdmin Dashboard - WorkWise Pro</title>
 
-    <!-- React Dependencies -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <!-- Updated Dependencies -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@mui/material@5.14.13/umd/material-ui.production.min.js"></script>
+    <script src="https://unpkg.com/@emotion/react@11.11.1/dist/emotion-react.umd.min.js"></script>
+    <script src="https://unpkg.com/@emotion/styled@11.11.0/dist/emotion-styled.umd.min.js"></script>
 
-    <!-- Material-UI Dependencies -->
-    <script src="https://unpkg.com/@mui/material@latest/umd/material-ui.development.js"></script>
-    <script src="https://unpkg.com/@mui/icons-material@latest/index.js"></script>
-    
-    <!-- Chart.js for analytics -->
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Fonts and Icons -->
@@ -106,19 +105,39 @@
             color: #666;
         }
 
-        .notification-badge {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: #f44336;
-            color: white;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            font-size: 0.7rem;
+        .menu-item {
             display: flex;
             align-items: center;
-            justify-content: center;
+            padding: 12px 24px;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .menu-item i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .submenu {
+            padding-left: 24px;
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .notification-badge {
+            background-color: #f44336;
+            color: white;
+            border-radius: 50%;
+            padding: 4px 8px;
+            font-size: 12px;
+            position: absolute;
+            top: 0;
+            right: 0;
         }
     </style>
 </head>
@@ -155,7 +174,39 @@
             return new Intl.NumberFormat('en-US').format(num);
         };
 
-        // Dashboard Stats Component
+        // Simple API service
+        const apiService = {
+            baseUrl: 'https://18.215.160.136.nip.io/api',
+            
+            async fetch(endpoint, options = {}) {
+                const token = localStorage.getItem('token');
+                const defaultOptions = {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                };
+
+                try {
+                    const response = await fetch(
+                        `${this.baseUrl}${endpoint}`,
+                        { ...defaultOptions, ...options }
+                    );
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.message || 'API request failed');
+                    }
+                    
+                    return data;
+                } catch (error) {
+                    console.error('API Error:', error);
+                    throw error;
+                }
+            }
+        };
+
+        // DashboardStats Component
         const DashboardStats = () => {
             const [stats, setStats] = useState({
                 totalCompanies: 0,
@@ -165,16 +216,9 @@
             });
 
             useEffect(() => {
-                // Fetch stats from API
                 const fetchStats = async () => {
                     try {
-                        const token = localStorage.getItem('token');
-                        const response = await fetch('https://18.215.160.136.nip.io/api/dashboard/stats', {
-                            headers: {
-                                'Authorization': `Bearer ${token}`
-                            }
-                        });
-                        const data = await response.json();
+                        const data = await apiService.fetch('/dashboard/stats');
                         if (data.success) {
                             setStats(data.stats);
                         }
@@ -204,56 +248,6 @@
                         <h3>Active Modules</h3>
                         <div className="value">{formatNumber(stats.activeModules)}</div>
                     </div>
-                </div>
-            );
-        };
-
-        // Recent Activity Component
-        const RecentActivity = () => {
-            const [activities, setActivities] = useState([]);
-
-            useEffect(() => {
-                // Fetch recent activities
-                const fetchActivities = async () => {
-                    try {
-                        const token = localStorage.getItem('token');
-                        const response = await fetch('https://18.215.160.136.nip.io/api/activities', {
-                            headers: {
-                                'Authorization': `Bearer ${token}`
-                            }
-                        });
-                        const data = await response.json();
-                        if (data.success) {
-                            setActivities(data.activities);
-                        }
-                    } catch (error) {
-                        console.error('Error fetching activities:', error);
-                    }
-                };
-
-                fetchActivities();
-            }, []);
-
-            return (
-                <div className="dashboard-card">
-                    <Typography variant="h6" gutterBottom>
-                        Recent Activity
-                    </Typography>
-                    <List className="activity-list">
-                        {activities.map((activity, index) => (
-                            <ListItem key={index} className="activity-item">
-                                <div className="activity-icon">
-                                    <i className={`fas fa-${activity.icon}`}></i>
-                                </div>
-                                <div className="activity-details">
-                                    <Typography variant="subtitle2">{activity.action}</Typography>
-                                    <Typography variant="body2" color="textSecondary">
-                                        {activity.timestamp}
-                                    </Typography>
-                                </div>
-                            </ListItem>
-                        ))}
-                    </List>
                 </div>
             );
         };
@@ -303,42 +297,7 @@
                         { title: 'Security Settings', path: '/settings/security' }
                     ]
                 },
-                {
-                    id: 'modules',
-                    title: 'Modules Management',
-                    icon: 'puzzle-piece',
-                    submenu: [
-                        { title: 'Modules List', path: '/modules/list' },
-                        { title: 'Module Settings', path: '/modules/settings' }
-                    ]
-                },
-                {
-                    id: 'users',
-                    title: 'User Management',
-                    icon: 'users',
-                    submenu: [
-                        { title: 'Users List', path: '/users/list' },
-                        { title: 'Roles & Permissions', path: '/users/roles' },
-                        { title: 'Organization Chart', path: '/users/org-chart' }
-                    ]
-                },
-                {
-                    id: 'tools',
-                    title: 'Tools',
-                    icon: 'tools',
-                    submenu: [
-                        { title: 'Analytics & Reports', path: '/tools/analytics' },
-                        { title: 'Backup & Restore', path: '/tools/backup' },
-                        { title: 'Audit Logs', path: '/tools/audit-logs' },
-                        { title: 'API Management', path: '/tools/api' }
-                    ]
-                },
-                {
-                    id: 'support',
-                    title: 'Support',
-                    icon: 'headset',
-                    path: '/support'
-                }
+                // Add other menu items...
             ];
 
             return (
@@ -360,44 +319,32 @@
                     </Box>
                     <List>
                         {menuStructure.map((item) => (
-                            <React.Fragment key={item.id}>
-                                <ListItem 
-                                    button 
+                            <div key={item.id}>
+                                <div 
+                                    className="menu-item"
                                     onClick={() => handleClick(item.id)}
-                                    sx={{
-                                        backgroundColor: menuItems[item.id] ? 'rgba(255,255,255,0.1)' : 'transparent'
-                                    }}
                                 >
-                                    <ListItemIcon>
-                                        <i className={`fas fa-${item.icon}`} style={{color: 'white'}} />
-                                    </ListItemIcon>
-                                    <ListItemText primary={item.title} />
-                                    {item.submenu && (
-                                        <i className={`fas fa-chevron-${menuItems[item.id] ? 'up' : 'down'}`} 
-                                           style={{color: 'white'}} />
-                                    )}
-                                </ListItem>
-                                {item.submenu && (
-                                    <Collapse in={menuItems[item.id]}>
-                                        <List component="div" disablePadding>
-                                            {item.submenu.map((subItem, index) => (
-                                                <ListItem 
-                                                    button 
-                                                    key={index}
-                                                    sx={{ pl: 4 }}
-                                                    onClick={() => {
-                                                        if (subItem.path) {
-                                                            window.location.href = subItem.path;
-                                                        }
-                                                    }}
-                                                >
-                                                    <ListItemText primary={subItem.title} />
-                                                </ListItem>
-                                            ))}
-                                        </List>
-                                    </Collapse>
+                                    <i className={`fas fa-${item.icon}`}></i>
+                                    <span>{item.title}</span>
+                                </div>
+                                {item.submenu && menuItems[item.id] && (
+                                    <div className="submenu">
+                                        {item.submenu.map((subItem, index) => (
+                                            <div 
+                                                key={index}
+                                                className="menu-item"
+                                                onClick={() => {
+                                                    if (subItem.path) {
+                                                        window.location.href = subItem.path;
+                                                    }
+                                                }}
+                                            >
+                                                <span>{subItem.title}</span>
+                                            </div>
+                                        ))}
+                                    </div>
                                 )}
-                            </React.Fragment>
+                            </div>
                         ))}
                     </List>
                 </Drawer>
@@ -409,28 +356,6 @@
             const [anchorEl, setAnchorEl] = useState(null);
             const [notifications, setNotifications] = useState([]);
 
-            useEffect(() => {
-                // Fetch notifications
-                const fetchNotifications = async () => {
-                    try {
-                        const token = localStorage.getItem('token');
-                        const response = await fetch('https://18.215.160.136.nip.io/api/notifications', {
-                            headers: {
-                                'Authorization': `Bearer ${token}`
-                            }
-                        });
-                        const data = await response.json();
-                        if (data.success) {
-                            setNotifications(data.notifications);
-                        }
-                    } catch (error) {
-                        console.error('Error fetching notifications:', error);
-                    }
-                };
-
-                fetchNotifications();
-            }, []);
-
             const handleMenu = (event) => {
                 setAnchorEl(event.currentTarget);
             };
@@ -439,20 +364,9 @@
                 setAnchorEl(null);
             };
 
-            const handleLogout = async () => {
-                try {
-                    const token = localStorage.getItem('token');
-                    await fetch('https://18.215.160.136.nip.io/api/logout', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-                    localStorage.clear();
-                    window.location.href = '/login.html';
-                } catch (error) {
-                    console.error('Logout error:', error);
-                }
+            const handleLogout = () => {
+                localStorage.clear();
+                window.location.href = '/login.html';
             };
 
             return (
@@ -470,17 +384,22 @@
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <IconButton color="inherit" sx={{ position: 'relative' }}>
-                                <Badge badgeContent={notifications.length} color="error">
-                                    <i className="fas fa-bell"></i>
-                                </Badge>
+                                <i className="fas fa-bell"></i>
+                                {notifications.length > 0 && (
+                                    <span className="notification-badge">
+                                        {notifications.length}
+                                    </span>
+                                )}
                             </IconButton>
                             <IconButton
-                                size="large"
                                 onClick={handleMenu}
                                 color="inherit"
                             >
                                 <Avatar sx={{ bgcolor: '#1a237e' }}>
-                                    {localStorage.getItem('userEmail')?.charAt(0).toUpperCase() || 'SA'}
+                                    {(() => {
+                                        const email = localStorage.getItem('userEmail');
+                                        return email ? email.charAt(0).toUpperCase() : 'SA';
+                                    })()}
                                 </Avatar>
                             </IconButton>
                             <Menu
@@ -506,35 +425,10 @@
         // Main Dashboard Component
         const Dashboard = () => {
             useEffect(() => {
-                // Check authentication
                 const token = localStorage.getItem('token');
                 if (!token) {
                     window.location.href = '/login.html';
-                    return;
                 }
-
-                // Verify token
-                const verifyToken = async () => {
-                    try {
-                        const response = await fetch('https://18.215.160.136.nip.io/api/verify-token', {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': `Bearer ${token}`
-                            }
-                        });
-                        const data = await response.json();
-                        if (!data.success) {
-                            localStorage.clear();
-                            window.location.href = '/login.html';
-                        }
-                    } catch (error) {
-                        console.error('Token verification error:', error);
-                        localStorage.clear();
-                        window.location.href = '/login.html';
-                    }
-                };
-
-                verifyToken();
             }, []);
 
             return (
@@ -553,18 +447,13 @@
                     >
                         <DashboardStats />
                         <Grid container spacing={3}>
-                            <Grid item xs={12} md={8}>
+                            <Grid item xs={12}>
                                 <Paper sx={{ p: 2, height: '400px' }}>
                                     <Typography variant="h6" gutterBottom>
                                         System Analytics
                                     </Typography>
-                                    <div className="chart-container">
-                                        {/* Chart.js implementation will go here */}
-                                    </div>
+                                    <canvas id="systemAnalytics"></canvas>
                                 </Paper>
-                            </Grid>
-                            <Grid item xs={12} md={4}>
-                                <RecentActivity />
                             </Grid>
                         </Grid>
                     </Box>
@@ -573,7 +462,7 @@
         };
 
         // Initialize Chart.js
-        useEffect(() => {
+        const initializeChart = () => {
             const ctx = document.getElementById('systemAnalytics');
             if (ctx) {
                 new Chart(ctx, {
@@ -594,11 +483,14 @@
                     }
                 });
             }
-        }, []);
+        };
 
         // Render the app
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<Dashboard />);
+
+        // Initialize chart after render
+        setTimeout(initializeChart, 1000);
     </script>
 </body>
 </html>
