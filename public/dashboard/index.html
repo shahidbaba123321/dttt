@@ -5,11 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SuperAdmin Dashboard - WorkWise Pro</title>
 
-    <!-- Updated Dependencies -->
+    <!-- Dependencies -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Material UI Core -->
     <script src="https://unpkg.com/@mui/material@5.14.13/umd/material-ui.production.min.js"></script>
+    
+    <!-- Material UI Icons -->
+    <script src="https://unpkg.com/@mui/icons-material@5.14.13/index.js"></script>
+    
+    <!-- Emotion (Required for Material UI) -->
     <script src="https://unpkg.com/@emotion/react@11.11.1/dist/emotion-react.umd.min.js"></script>
     <script src="https://unpkg.com/@emotion/styled@11.11.0/dist/emotion-styled.umd.min.js"></script>
 
@@ -139,62 +146,126 @@
             top: 0;
             right: 0;
         }
+
+        /* Role Management Styles */
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .role-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .role-card.superadmin {
+            border-left: 4px solid #4F46E5;
+        }
+
+        .permission-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .permission-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            margin: 4px 0;
+            border-radius: 4px;
+            background: white;
+        }
+
+        .audit-log-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .audit-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e3f2fd;
+            color: #1a237e;
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
-        const { 
-            AppBar, 
-            Drawer, 
-            List, 
-            ListItem, 
-            ListItemIcon, 
-            ListItemText, 
-            Typography,
-            IconButton,
-            Avatar,
-            Menu,
-            MenuItem,
-            Box,
-            CssBaseline,
-            Toolbar,
-            Collapse,
-            Paper,
-            Grid,
-            Button,
-            Divider,
-            Badge
-        } = MaterialUI;
+            const { 
+        useState, 
+        useEffect 
+    } = React;
 
-        // Utility function to format numbers
-        const formatNumber = (num) => {
-            return new Intl.NumberFormat('en-US').format(num);
-        };
+    const {
+        Box,
+        Typography,
+        Button,
+        Dialog: MuiDialog,
+        DialogTitle: MuiDialogTitle,
+        DialogContent: MuiDialogContent,
+        DialogActions: MuiDialogActions,
+        TextField,
+        Checkbox,
+        FormControlLabel,
+        Alert,
+        Snackbar,
+        Paper,
+        Divider,
+        IconButton,
+        Tooltip,
+        List,
+        ListItem,
+        ListItemText,
+        ListItemIcon,
+        Switch,
+        Tab,
+        Tabs,
+        Drawer,
+        CssBaseline,
+        Toolbar,
+        AppBar,
+        Avatar,
+        Menu,
+        MenuItem,
+        Badge,
+        Grid,
+        Collapse
+    } = MaterialUI;
 
-        // Simple API service
-       // API Service with actual user endpoints and mock data for others
-const apiService = {
-    baseUrl: 'https://18.215.160.136.nip.io/api',
-    
-    async fetch(endpoint, options = {}) {
-        const token = localStorage.getItem('token');
-        const defaultOptions = {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-        };
+    // Utility function to format numbers
+    const formatNumber = (num) => {
+        return new Intl.NumberFormat('en-US').format(num);
+    };
 
-        try {
-            // User-related endpoints from your server.js
-            if (endpoint.startsWith('/users') || 
-                endpoint === '/verify-token' || 
-                endpoint === '/login' || 
-                endpoint === '/register') {
-                
+    // API Service
+    const apiService = {
+        baseUrl: 'https://18.215.160.136.nip.io/api',
+        
+        async fetch(endpoint, options = {}) {
+            const token = localStorage.getItem('token');
+            const defaultOptions = {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            };
+
+            try {
                 const response = await fetch(
                     `${this.baseUrl}${endpoint}`,
                     { ...defaultOptions, ...options }
@@ -205,745 +276,639 @@ const apiService = {
                 }
 
                 return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
             }
-
-            // Mock data for other endpoints
-            return this.getMockData(endpoint);
-        } catch (error) {
-            console.error('API Error:', error);
-            throw error;
         }
-    },
+    };
 
-    // Mock data provider
-    getMockData(endpoint) {
-        switch (endpoint) {
-            case '/dashboard/stats':
-                return {
-                    success: true,
-                    stats: {
-                        totalCompanies: 150,
-                        activeUsers: 1250,
-                        totalRevenue: 125000,
-                        activeModules: 25
-                    }
-                };
+    // DashboardStats Component
+    const DashboardStats = () => {
+        const [stats, setStats] = useState({
+            totalCompanies: 150,
+            activeUsers: 1250,
+            totalRevenue: 125000,
+            activeModules: 25
+        });
 
-            case '/activities':
-                return {
-                    success: true,
-                    activities: [
-                        {
-                            id: 1,
-                            action: 'New company registered',
-                            timestamp: '2 minutes ago',
-                            icon: 'building'
-                        },
-                        {
-                            id: 2,
-                            action: 'User role updated',
-                            timestamp: '5 minutes ago',
-                            icon: 'user-cog'
-                        },
-                        {
-                            id: 3,
-                            action: 'System backup completed',
-                            timestamp: '15 minutes ago',
-                            icon: 'database'
-                        },
-                        {
-                            id: 4,
-                            action: 'New module activated',
-                            timestamp: '1 hour ago',
-                            icon: 'puzzle-piece'
-                        }
-                    ]
-                };
+        return (
+            <div className="stats-grid">
+                <div className="stat-card">
+                    <h3>Total Companies</h3>
+                    <div className="value">{formatNumber(stats.totalCompanies)}</div>
+                </div>
+                <div className="stat-card">
+                    <h3>Active Users</h3>
+                    <div className="value">{formatNumber(stats.activeUsers)}</div>
+                </div>
+                <div className="stat-card">
+                    <h3>Total Revenue</h3>
+                    <div className="value">${formatNumber(stats.totalRevenue)}</div>
+                </div>
+                <div className="stat-card">
+                    <h3>Active Modules</h3>
+                    <div className="value">{formatNumber(stats.activeModules)}</div>
+                </div>
+            </div>
+        );
+    };
 
-            case '/notifications':
-                return {
-                    success: true,
-                    notifications: [
-                        {
-                            id: 1,
-                            message: 'System update available',
-                            type: 'info',
-                            timestamp: new Date().toISOString()
-                        },
-                        {
-                            id: 2,
-                            message: 'New user registration',
-                            type: 'success',
-                            timestamp: new Date().toISOString()
-                        }
-                    ]
-                };
-
-            default:
-                return {
-                    success: false,
-                    message: 'Endpoint not implemented'
-                };
+    // Permission Groups Definition
+    const permissionGroups = {
+        ui: {
+            name: 'UI Access',
+            permissions: [
+                'dashboard_view',
+                'companies_view',
+                'settings_view',
+                'modules_view',
+                'users_view',
+                'tools_view',
+                'support_view'
+            ]
+        },
+        users: {
+            name: 'User Management',
+            permissions: [
+                'users_create',
+                'users_edit',
+                'users_delete',
+                'users_activate',
+                'users_2fa'
+            ]
+        },
+        roles: {
+            name: 'Role Management',
+            permissions: [
+                'roles_view',
+                'roles_create',
+                'roles_edit',
+                'roles_delete'
+            ]
+        },
+        settings: {
+            name: 'System Settings',
+            permissions: [
+                'settings_general',
+                'settings_security',
+                'settings_backup',
+                'settings_api'
+            ]
         }
-    }
-};
+    };
 
-        // DashboardStats Component
-       const DashboardStats = () => {
-    const [stats, setStats] = useState({
-        totalCompanies: 0,
-        activeUsers: 0,
-        totalRevenue: 0,
-        activeModules: 0
-    });
+    // RoleManagement Component
+    const RoleManagement = () => {
+        const [roles, setRoles] = useState([]);
+        const [openDialog, setOpenDialog] = useState(false);
+        const [newRole, setNewRole] = useState({ name: '', description: '' });
+        const [selectedRole, setSelectedRole] = useState(null);
+        const [notification, setNotification] = useState({ open: false, message: '', type: 'success' });
+        const [auditLogs, setAuditLogs] = useState([]);
 
-    useEffect(() => {
-        const fetchStats = async () => {
+        useEffect(() => {
+            fetchRoles();
+            fetchAuditLogs();
+        }, []);
+
+        const fetchRoles = async () => {
             try {
-                const data = await apiService.fetch('/dashboard/stats');
-                if (data.success) {
-                    setStats(data.stats);
+                const response = await apiService.fetch('/roles');
+                if (response.success) {
+                    setRoles(response.roles);
                 }
             } catch (error) {
-                console.error('Error fetching stats:', error);
-                // Keep using initial state if API fails
+                console.error('Error fetching roles:', error);
+                showNotification('Error fetching roles', 'error');
             }
         };
 
-        fetchStats();
-    }, []);
-
-    return (
-        <div className="stats-grid">
-            <div className="stat-card">
-                <h3>Total Companies</h3>
-                <div className="value">{formatNumber(stats.totalCompanies)}</div>
-            </div>
-            <div className="stat-card">
-                <h3>Active Users</h3>
-                <div className="value">{formatNumber(stats.activeUsers)}</div>
-            </div>
-            <div className="stat-card">
-                <h3>Total Revenue</h3>
-                <div className="value">${formatNumber(stats.totalRevenue)}</div>
-            </div>
-            <div className="stat-card">
-                <h3>Active Modules</h3>
-                <div className="value">{formatNumber(stats.activeModules)}</div>
-            </div>
-        </div>
-    );
-};
-        // Sidebar Component
-  const Sidebar = ({ isCollapsed, setIsCollapsed, onMenuClick }) => {
-    const [menuItems, setMenuItems] = useState({
-        dashboard: true,
-        companies: false,
-        'system-settings': false,
-        modules: false,
-        users: false,
-        tools: false,
-        support: false
-    });
-
-    const menuStructure = [
-        {
-            id: 'dashboard',
-            title: 'Dashboard Overview',
-            icon: 'tachometer-alt',
-            path: 'dashboard'
-        },
-        {
-            id: 'companies',
-            title: 'Companies/Organizations',
-            icon: 'building',
-            submenu: [
-                { title: 'Management', path: 'companies-management' },
-                { title: 'Companies/Organizations', path: 'companies-list' }
-            ]
-        },
-        {
-            id: 'system-settings',
-            title: 'System Settings',
-            icon: 'cogs',
-            submenu: [
-                { title: 'General Settings', path: 'settings-general' },
-                { title: 'Pricing & Plans', path: 'settings-pricing' },
-                { title: 'Security Settings', path: 'settings-security' }
-            ]
-        },
-        {
-            id: 'modules',
-            title: 'Modules Management',
-            icon: 'puzzle-piece',
-            submenu: [
-                { title: 'Modules List', path: 'modules-list' },
-                { title: 'Module Settings', path: 'modules-settings' }
-            ]
-        },
-        {
-            id: 'users',
-            title: 'User Management',
-            icon: 'users',
-            submenu: [
-                { title: 'Users List', path: 'users-list' },
-                { title: 'Roles & Permissions', path: 'roles' },
-                { title: 'Organization Chart', path: 'org-chart' }
-            ]
-        },
-        {
-            id: 'tools',
-            title: 'Tools',
-            icon: 'tools',
-            submenu: [
-                { title: 'Analytics & Reports', path: 'tools-analytics' },
-                { title: 'Backup & Restore', path: 'tools-backup' },
-                { title: 'Audit Logs', path: 'tools-audit' },
-                { title: 'API Management', path: 'tools-api' }
-            ]
-        },
-        {
-            id: 'support',
-            title: 'Support',
-            icon: 'headset',
-            submenu: [
-                { title: 'Support Center', path: 'support-center' }
-            ]
-        }
-    ];
-
-    const handleMenuClick = (item, path = null) => {
-        if (!isCollapsed) {
-            // Toggle submenu
-            setMenuItems(prev => ({
-                ...prev,
-                [item]: !prev[item]
-            }));
-
-            // If it's a direct path (no submenu), navigate to the page
-            if (path) {
-                onMenuClick(path);
-            }
-        }
-    };
-
-    const handleSubMenuClick = (path) => {
-        onMenuClick(path);
-    };
-
-    const drawerWidth = isCollapsed ? 65 : 240;
-
-    return (
-        <Drawer
-            variant="permanent"
-            sx={{
-                width: drawerWidth,
-                flexShrink: 0,
-                '& .MuiDrawer-paper': {
-                    width: drawerWidth,
-                    boxSizing: 'border-box',
-                    backgroundColor: '#1a237e',
-                    color: 'white',
-                    transition: 'width 0.3s ease'
+        const fetchAuditLogs = async () => {
+            try {
+                const response = await apiService.fetch('/audit-logs?type=role');
+                if (response.success) {
+                    setAuditLogs(response.logs);
                 }
-            }}
-        >
-            <Box sx={{ 
-                p: 2, 
-                textAlign: 'center', 
-                borderBottom: '1px solid rgba(255,255,255,0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: isCollapsed ? 'center' : 'space-between'
-            }}>
-                {!isCollapsed && <Typography variant="h6">WorkWise Pro</Typography>}
-                <IconButton 
-                    onClick={() => setIsCollapsed(!isCollapsed)}
-                    sx={{ 
-                        color: 'white',
-                        padding: '4px',
-                        '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
-                    }}
-                >
-                    <i className={`fas fa-chevron-${isCollapsed ? 'right' : 'left'}`} />
-                </IconButton>
-            </Box>
-            <List sx={{ pt: 0 }}>
-                {menuStructure.map((item) => (
-                    <React.Fragment key={item.id}>
-                        <ListItem 
-                            button 
-                            onClick={() => handleMenuClick(item.id, item.path)}
-                            sx={{
-                                py: 1.5,
-                                minHeight: 48,
-                                px: 2.5,
-                                '&:hover': {
-                                    backgroundColor: 'rgba(255,255,255,0.1)'
-                                }
-                            }}
-                        >
-                            <ListItemIcon 
-                                sx={{ 
-                                    minWidth: isCollapsed ? 'auto' : 40, 
-                                    color: 'white',
-                                    justifyContent: 'center'
-                                }}
-                            >
-                                <i className={`fas fa-${item.icon}`} />
-                            </ListItemIcon>
-                            {!isCollapsed && (
-                                <>
-                                    <ListItemText primary={item.title} />
-                                    {item.submenu && (
-                                        <i 
-                                            className={`fas fa-chevron-${menuItems[item.id] ? 'down' : 'right'}`}
-                                            style={{ fontSize: '12px' }}
-                                        />
-                                    )}
-                                </>
-                            )}
-                        </ListItem>
-                        {!isCollapsed && item.submenu && (
-                            <Collapse in={menuItems[item.id]} timeout="auto" unmountOnExit>
-                                <List component="div" disablePadding>
-                                    {item.submenu.map((subItem, index) => (
-                                        <ListItem 
-                                            button 
-                                            key={index}
-                                            onClick={() => handleSubMenuClick(subItem.path)}
-                                            sx={{
-                                                pl: 4,
-                                                py: 1,
-                                                backgroundColor: 'rgba(0,0,0,0.1)',
-                                                '&:hover': {
-                                                    backgroundColor: 'rgba(255,255,255,0.1)'
-                                                }
-                                            }}
-                                        >
-                                            <ListItemText 
-                                                primary={subItem.title} 
-                                                sx={{ 
-                                                    '& .MuiTypography-root': { 
-                                                        fontSize: '0.9rem' 
-                                                    } 
-                                                }}
-                                            />
-                                        </ListItem>
-                                    ))}
-                                </List>
-                            </Collapse>
-                        )}
-                    </React.Fragment>
-                ))}
-            </List>
-        </Drawer>
-    );
-};
-
-        // Header Component
-        const Header = () => {
-            const [anchorEl, setAnchorEl] = useState(null);
-            const [notifications, setNotifications] = useState([]);
-
-            const handleMenu = (event) => {
-                setAnchorEl(event.currentTarget);
-            };
-
-            const handleClose = () => {
-                setAnchorEl(null);
-            };
-
-            const handleLogout = () => {
-                localStorage.clear();
-                window.location.href = '/login.html';
-            };
-
-            return (
-                <AppBar 
-                    position="fixed" 
-                    sx={{ 
-                        zIndex: theme => theme.zIndex.drawer + 1,
-                        backgroundColor: 'white',
-                        color: '#333'
-                    }}
-                >
-                    <Toolbar>
-                        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                            Super Admin Dashboard
-                        </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <IconButton color="inherit" sx={{ position: 'relative' }}>
-                                <i className="fas fa-bell"></i>
-                                {notifications.length > 0 && (
-                                    <span className="notification-badge">
-                                        {notifications.length}
-                                    </span>
-                                )}
-                            </IconButton>
-                            <IconButton
-                                onClick={handleMenu}
-                                color="inherit"
-                            >
-                                <Avatar sx={{ bgcolor: '#1a237e' }}>
-                                    {(() => {
-                                        const email = localStorage.getItem('userEmail');
-                                        return email ? email.charAt(0).toUpperCase() : 'SA';
-                                    })()}
-                                </Avatar>
-                            </IconButton>
-                            <Menu
-                                anchorEl={anchorEl}
-                                open={Boolean(anchorEl)}
-                                onClose={handleClose}
-                            >
-                                <MenuItem onClick={() => window.location.href = '/account.html'}>
-                                    <i className="fas fa-user" style={{marginRight: '10px'}}></i>
-                                    My Account
-                                </MenuItem>
-                                <MenuItem onClick={handleLogout}>
-                                    <i className="fas fa-sign-out-alt" style={{marginRight: '10px'}}></i>
-                                    Sign Out
-                                </MenuItem>
-                            </Menu>
-                        </Box>
-                    </Toolbar>
-                </AppBar>
-            );
+            } catch (error) {
+                console.error('Error fetching audit logs:', error);
+            }
         };
 
-        // Main Dashboard Component
-        const RoleManagement = () => {
-            const [roles, setRoles] = useState([]);
-            const [openDialog, setOpenDialog] = useState(false);
-            const [newRole, setNewRole] = useState({ name: '', description: '' });
-            const [selectedRole, setSelectedRole] = useState(null);
-            const [notification, setNotification] = useState({ open: false, message: '', type: 'success' });
-            const [auditLogs, setAuditLogs] = useState([]);
-
-            useEffect(() => {
-                fetchRoles();
-                fetchAuditLogs();
-            }, []);
-
-            const fetchRoles = async () => {
-                try {
-                    const response = await fetch('https://18.215.160.136.nip.io/api/roles', {
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        }
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        setRoles(data.roles);
-                    }
-                } catch (error) {
-                    console.error('Error fetching roles:', error);
-                    showNotification('Error fetching roles', 'error');
+        const handleCreateRole = async () => {
+            try {
+                const response = await apiService.fetch('/roles', {
+                    method: 'POST',
+                    body: JSON.stringify(newRole)
+                });
+                
+                if (response.success) {
+                    showNotification('Role created successfully');
+                    fetchRoles();
+                    setOpenDialog(false);
+                    setNewRole({ name: '', description: '' });
                 }
-            };
+            } catch (error) {
+                console.error('Error creating role:', error);
+                showNotification('Error creating role', 'error');
+            }
+        };
 
-            const fetchAuditLogs = async () => {
-                try {
-                    const response = await fetch('https://18.215.160.136.nip.io/api/audit-logs?type=role', {
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        }
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        setAuditLogs(data.logs);
-                    }
-                } catch (error) {
-                    console.error('Error fetching audit logs:', error);
+        const handleUpdatePermissions = async (roleId, permissions) => {
+            try {
+                const response = await apiService.fetch(`/roles/${roleId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ permissions })
+                });
+                
+                if (response.success) {
+                    showNotification('Permissions updated successfully');
+                    fetchRoles();
                 }
-            };
+            } catch (error) {
+                console.error('Error updating permissions:', error);
+                showNotification('Error updating permissions', 'error');
+            }
+        };
 
-            const handleCreateRole = async () => {
-                try {
-                    const response = await fetch('https://18.215.160.136.nip.io/api/roles', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(newRole)
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        showNotification('Role created successfully');
-                        fetchRoles();
-                        setOpenDialog(false);
-                        setNewRole({ name: '', description: '' });
-                    }
-                } catch (error) {
-                    console.error('Error creating role:', error);
-                    showNotification('Error creating role', 'error');
-                }
-            };
+        const showNotification = (message, type = 'success') => {
+            setNotification({ open: true, message, type });
+        };
 
-            const handleUpdatePermissions = async (roleId, permissions) => {
-                try {
-                    const response = await fetch(`https://18.215.160.136.nip.io/api/roles/${roleId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ permissions })
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        showNotification('Permissions updated successfully');
-                        fetchRoles();
-                    }
-                } catch (error) {
-                    console.error('Error updating permissions:', error);
-                    showNotification('Error updating permissions', 'error');
-                }
-            };
-
-            const showNotification = (message, type = 'success') => {
-                setNotification({ open: true, message, type });
-            };
-
-            return (
-                <Box sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                        <Typography variant="h5">Roles & Permissions</Typography>
-                        <Button 
-                            variant="contained" 
-                            startIcon={<i className="fas fa-plus"></i>}
-                            onClick={() => setOpenDialog(true)}
-                        >
-                            Create New Role
-                        </Button>
-                    </Box>
-
-                    {/* Roles Grid */}
-                    <div className="roles-grid">
-                        {roles.map(role => (
-                            <Paper 
-                                key={role._id} 
-                                className={`role-card ${role.name === 'Superadmin' ? 'superadmin' : ''}`}
-                            >
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                                    <Typography variant="h6">{role.name}</Typography>
-                                    {role.name !== 'Superadmin' && (
-                                        <IconButton 
-                                            size="small"
-                                            onClick={() => setSelectedRole(role)}
-                                        >
-                                            <i className="fas fa-edit"></i>
-                                        </IconButton>
-                                    )}
-                                </Box>
-                                <Typography variant="body2" color="textSecondary" gutterBottom>
-                                    {role.description}
-                                </Typography>
-                                <Divider sx={{ my: 2 }} />
-                                <Typography variant="subtitle2" gutterBottom>
-                                    Permissions: {role.permissions?.length || 0}
-                                </Typography>
-                            </Paper>
-                        ))}
-                    </div>
-
-                    {/* Create Role Dialog */}
-                    <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-                        <DialogTitle>Create New Role</DialogTitle>
-                        <DialogContent>
-                            <TextField
-                                autoFocus
-                                margin="dense"
-                                label="Role Name"
-                                fullWidth
-                                value={newRole.name}
-                                onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
-                            />
-                            <TextField
-                                margin="dense"
-                                label="Description"
-                                fullWidth
-                                multiline
-                                rows={3}
-                                value={newRole.description}
-                                onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
-                            />
-                        </DialogContent>
-                        <DialogActions>
-                            <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-                            <Button onClick={handleCreateRole} variant="contained">Create</Button>
-                        </DialogActions>
-                    </Dialog>
-
-                    {/* Edit Permissions Dialog */}
-                    <Dialog 
-                        open={Boolean(selectedRole)} 
-                        onClose={() => setSelectedRole(null)}
-                        maxWidth="md"
-                        fullWidth
+        return (
+            <Box sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+                    <Typography variant="h5">Roles & Permissions</Typography>
+                    <Button 
+                        variant="contained" 
+                        startIcon={<i className="fas fa-plus"></i>}
+                        onClick={() => setOpenDialog(true)}
                     >
-                        <DialogTitle>
-                            Edit Permissions - {selectedRole?.name}
-                        </DialogTitle>
-                        <DialogContent>
-                            {Object.entries(permissionGroups).map(([key, group]) => (
-                                <div key={key} className="permission-group">
-                                    <Typography variant="subtitle1" gutterBottom>
-                                        {group.name}
-                                    </Typography>
-                                    {group.permissions.map(permission => (
-                                        <div key={permission} className="permission-item">
-                                            <FormControlLabel
-                                                control={
-                                                    <Checkbox
-                                                        checked={selectedRole?.permissions?.includes(permission)}
-                                                        onChange={(e) => {
-                                                            const newPermissions = e.target.checked
-                                                                ? [...(selectedRole.permissions || []), permission]
-                                                                : selectedRole.permissions.filter(p => p !== permission);
-                                                            setSelectedRole({
-                                                                ...selectedRole,
-                                                                permissions: newPermissions
-                                                            });
-                                                        }}
-                                                    />
-                                                }
-                                                label={permission.replace(/_/g, ' ').toUpperCase()}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            ))}
-                        </DialogContent>
-                        <DialogActions>
-                            <Button onClick={() => setSelectedRole(null)}>Cancel</Button>
-                            <Button 
-                                onClick={() => {
-                                    handleUpdatePermissions(selectedRole._id, selectedRole.permissions);
-                                    setSelectedRole(null);
-                                }}
-                                variant="contained"
-                            >
-                                Save Changes
-                            </Button>
-                        </DialogActions>
-                    </Dialog>
-
-                    {/* Audit Logs */}
-                    <Paper sx={{ mt: 3, p: 2 }}>
-                        <Typography variant="h6" gutterBottom>Audit Logs</Typography>
-                        <List>
-                            {auditLogs.map((log, index) => (
-                                <ListItem key={index} className="audit-log-item">
-                                    <div className="audit-icon">
-                                        <i className="fas fa-history"></i>
-                                    </div>
-                                    <ListItemText
-                                        primary={log.action}
-                                        secondary={new Date(log.timestamp).toLocaleString()}
-                                    />
-                                </ListItem>
-                            ))}
-                        </List>
-                    </Paper>
-
-                    {/* Notification */}
-                    <Snackbar
-                        open={notification.open}
-                        autoHideDuration={6000}
-                        onClose={() => setNotification({ ...notification, open: false })}
-                    >
-                        <Alert 
-                            onClose={() => setNotification({ ...notification, open: false })}
-                            severity={notification.type}
-                        >
-                            {notification.message}
-                        </Alert>
-                    </Snackbar>
+                        Create New Role
+                    </Button>
                 </Box>
-            );
-        };
-      // In the Dashboard component of index.html, update the main content Box:
 
-const Dashboard = () => {
-    const [isCollapsed, setIsCollapsed] = useState(false);
-    const [currentPage, setCurrentPage] = useState('dashboard');
-    const [pageContent, setPageContent] = useState(null);
+                <div className="roles-grid">
+                    {roles.map(role => (
+                        <Paper 
+                            key={role._id} 
+                            className={`role-card ${role.name === 'Superadmin' ? 'superadmin' : ''}`}
+                        >
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                                <Typography variant="h6">{role.name}</Typography>
+                                {role.name !== 'Superadmin' && (
+                                    <IconButton 
+                                        size="small"
+                                        onClick={() => setSelectedRole(role)}
+                                    >
+                                        <i className="fas fa-edit"></i>
+                                    </IconButton>
+                                )}
+                            </Box>
+                            <Typography variant="body2" color="textSecondary" gutterBottom>
+                                {role.description}
+                            </Typography>
+                            <Divider sx={{ my: 2 }} />
+                            <Typography variant="subtitle2" gutterBottom>
+                                Permissions: {role.permissions?.length || 0}
+                            </Typography>
+                        </Paper>
+                    ))}
+                </div>
 
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            window.location.href = '/login.html';
-        }
-    }, []);
+                {/* Create Role Dialog */}
+                <MuiDialog open={openDialog} onClose={() => setOpenDialog(false)}>
+                    <MuiDialogTitle>Create New Role</MuiDialogTitle>
+                    <MuiDialogContent>
+                        <TextField
+                            autoFocus
+                            margin="dense"
+                            label="Role Name"
+                            fullWidth
+                            value={newRole.name}
+                            onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Description"
+                            fullWidth
+                            multiline
+                            rows={3}
+                            value={newRole.description}
+                            onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
+                        />
+                    </MuiDialogContent>
+                    <MuiDialogActions>
+                        <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+                        <Button onClick={handleCreateRole} variant="contained">Create</Button>
+                    </MuiDialogActions>
+                </MuiDialog>
 
-    const loadPage = async (pageName) => {
-        setCurrentPage(pageName);
-        
-        if (pageName === 'roles') {
-            try {
-                // Load the RoleManagement component
-                setPageContent(<RoleManagement />);
-            } catch (error) {
-                console.error('Error loading roles page:', error);
-                setPageContent(
-                    <Alert severity="error">
-                        Error loading page content
+                {/* Edit Permissions Dialog */}
+                <MuiDialog 
+                    open={Boolean(selectedRole)} 
+                    onClose={() => setSelectedRole(null)}
+                    maxWidth="md"
+                    fullWidth
+                >
+                    <MuiDialogTitle>
+                        Edit Permissions - {selectedRole?.name}
+                    </MuiDialogTitle>
+                    <MuiDialogContent>
+                        {Object.entries(permissionGroups).map(([key, group]) => (
+                            <div key={key} className="permission-group">
+                                <Typography variant="subtitle1" gutterBottom>
+                                    {group.name}
+                                </Typography>
+                                {group.permissions.map(permission => (
+                                    <div key={permission} className="permission-item">
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={selectedRole?.permissions?.includes(permission)}
+                                                    onChange={(e) => {
+                                                        const newPermissions = e.target.checked
+                                                            ? [...(selectedRole.permissions || []), permission]
+                                                            : selectedRole.permissions.filter(p => p !== permission);
+                                                        setSelectedRole({
+                                                            ...selectedRole,
+                                                            permissions: newPermissions
+                                                        });
+                                                    }}
+                                                />
+                                            }
+                                            label={permission.replace(/_/g, ' ').toUpperCase()}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        ))}
+                    </MuiDialogContent>
+                    <MuiDialogActions>
+                        <Button onClick={() => setSelectedRole(null)}>Cancel</Button>
+                        <Button 
+                            onClick={() => {
+                                handleUpdatePermissions(selectedRole._id, selectedRole.permissions);
+                                setSelectedRole(null);
+                            }}
+                            variant="contained"
+                        >
+                            Save Changes
+                        </Button>
+                    </MuiDialogActions>
+                </MuiDialog>
+
+                {/* Audit Logs */}
+                <Paper sx={{ mt: 3, p: 2 }}>
+                    <Typography variant="h6" gutterBottom>Audit Logs</Typography>
+                    <List>
+                        {auditLogs.map((log, index) => (
+                            <ListItem key={index} className="audit-log-item">
+                                <div className="audit-icon">
+                                    <i className="fas fa-history"></i>
+                                </div>
+                                <ListItemText
+                                    primary={log.action}
+                                    secondary={new Date(log.timestamp).toLocaleString()}
+                                />
+                            </ListItem>
+                        ))}
+                    </List>
+                </Paper>
+
+                {/* Notification */}
+                <Snackbar
+                    open={notification.open}
+                    autoHideDuration={6000}
+                    onClose={() => setNotification({ ...notification, open: false })}
+                >
+                    <Alert 
+                        onClose={() => setNotification({ ...notification, open: false })}
+                        severity={notification.type}
+                    >
+                        {notification.message}
                     </Alert>
-                );
-            }
-        } else {
-            // Reset to dashboard content
-            setPageContent(null);
-        }
+                </Snackbar>
+            </Box>
+        );
     };
+            // Sidebar Component
+    const Sidebar = ({ isCollapsed, setIsCollapsed, onMenuClick }) => {
+        const [menuItems, setMenuItems] = useState({
+            dashboard: true,
+            companies: false,
+            'system-settings': false,
+            modules: false,
+            users: false,
+            tools: false,
+            support: false
+        });
 
-    return (
-        <Box sx={{ display: 'flex' }}>
-            <CssBaseline />
-            <Header />
-            <Sidebar 
-                isCollapsed={isCollapsed} 
-                setIsCollapsed={setIsCollapsed}
-                onMenuClick={loadPage}
-            />
-            <Box
-                component="main"
+        const menuStructure = [
+            {
+                id: 'dashboard',
+                title: 'Dashboard Overview',
+                icon: 'tachometer-alt',
+                path: 'dashboard'
+            },
+            {
+                id: 'companies',
+                title: 'Companies/Organizations',
+                icon: 'building',
+                submenu: [
+                    { title: 'Management', path: 'companies-management' },
+                    { title: 'Companies/Organizations', path: 'companies-list' }
+                ]
+            },
+            {
+                id: 'system-settings',
+                title: 'System Settings',
+                icon: 'cogs',
+                submenu: [
+                    { title: 'General Settings', path: 'settings-general' },
+                    { title: 'Pricing & Plans', path: 'settings-pricing' },
+                    { title: 'Security Settings', path: 'settings-security' }
+                ]
+            },
+            {
+                id: 'modules',
+                title: 'Modules Management',
+                icon: 'puzzle-piece',
+                submenu: [
+                    { title: 'Modules List', path: 'modules-list' },
+                    { title: 'Module Settings', path: 'modules-settings' }
+                ]
+            },
+            {
+                id: 'users',
+                title: 'User Management',
+                icon: 'users',
+                submenu: [
+                    { title: 'Users List', path: 'users-list' },
+                    { title: 'Roles & Permissions', path: 'roles' },
+                    { title: 'Organization Chart', path: 'org-chart' }
+                ]
+            },
+            {
+                id: 'tools',
+                title: 'Tools',
+                icon: 'tools',
+                submenu: [
+                    { title: 'Analytics & Reports', path: 'tools-analytics' },
+                    { title: 'Backup & Restore', path: 'tools-backup' },
+                    { title: 'Audit Logs', path: 'tools-audit' },
+                    { title: 'API Management', path: 'tools-api' }
+                ]
+            },
+            {
+                id: 'support',
+                title: 'Support',
+                icon: 'headset',
+                submenu: [
+                    { title: 'Support Center', path: 'support-center' }
+                ]
+            }
+        ];
+
+        const handleMenuClick = (item, path = null) => {
+            if (!isCollapsed) {
+                setMenuItems(prev => ({
+                    ...prev,
+                    [item]: !prev[item]
+                }));
+
+                if (path) {
+                    onMenuClick(path);
+                }
+            }
+        };
+
+        const handleSubMenuClick = (path) => {
+            onMenuClick(path);
+        };
+
+        const drawerWidth = isCollapsed ? 65 : 240;
+
+        return (
+            <Drawer
+                variant="permanent"
                 sx={{
-                    flexGrow: 1,
-                    p: 3,
-                    mt: 8,
-                    ml: isCollapsed ? '65px' : '240px',
-                    transition: 'margin-left 0.3s ease'
+                    width: drawerWidth,
+                    flexShrink: 0,
+                    '& .MuiDrawer-paper': {
+                        width: drawerWidth,
+                        boxSizing: 'border-box',
+                        backgroundColor: '#1a237e',
+                        color: 'white',
+                        transition: 'width 0.3s ease'
+                    }
                 }}
             >
-                {currentPage === 'dashboard' ? (
-                    // Dashboard content
-                    <>
-                        <DashboardStats />
-                        <Grid container spacing={3}>
-                            <Grid item xs={12}>
-                                <Paper sx={{ p: 2, height: '400px' }}>
-                                    <Typography variant="h6" gutterBottom>
-                                        System Analytics
-                                    </Typography>
-                                    <canvas id="systemAnalytics"></canvas>
-                                </Paper>
-                            </Grid>
-                        </Grid>
-                    </>
-                ) : (
-                    // Dynamically loaded content
-                    pageContent
-                )}
-            </Box>
-        </Box>
-    );
-};
+                <Box sx={{ 
+                    p: 2, 
+                    textAlign: 'center', 
+                    borderBottom: '1px solid rgba(255,255,255,0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: isCollapsed ? 'center' : 'space-between'
+                }}>
+                    {!isCollapsed && <Typography variant="h6">WorkWise Pro</Typography>}
+                    <IconButton 
+                        onClick={() => setIsCollapsed(!isCollapsed)}
+                        sx={{ 
+                            color: 'white',
+                            padding: '4px',
+                            '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+                        }}
+                    >
+                        <i className={`fas fa-chevron-${isCollapsed ? 'right' : 'left'}`} />
+                    </IconButton>
+                </Box>
+                <List sx={{ pt: 0 }}>
+                    {menuStructure.map((item) => (
+                        <React.Fragment key={item.id}>
+                            <ListItem 
+                                button 
+                                onClick={() => handleMenuClick(item.id, item.path)}
+                                sx={{
+                                    py: 1.5,
+                                    minHeight: 48,
+                                    px: 2.5,
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(255,255,255,0.1)'
+                                    }
+                                }}
+                            >
+                                <ListItemIcon 
+                                    sx={{ 
+                                        minWidth: isCollapsed ? 'auto' : 40, 
+                                        color: 'white',
+                                        justifyContent: 'center'
+                                    }}
+                                >
+                                    <i className={`fas fa-${item.icon}`} />
+                                </ListItemIcon>
+                                {!isCollapsed && (
+                                    <>
+                                        <ListItemText primary={item.title} />
+                                        {item.submenu && (
+                                            <i 
+                                                className={`fas fa-chevron-${menuItems[item.id] ? 'down' : 'right'}`}
+                                                style={{ fontSize: '12px' }}
+                                            />
+                                        )}
+                                    </>
+                                )}
+                            </ListItem>
+                            {!isCollapsed && item.submenu && (
+                                <Collapse in={menuItems[item.id]} timeout="auto" unmountOnExit>
+                                    <List component="div" disablePadding>
+                                        {item.submenu.map((subItem, index) => (
+                                            <ListItem 
+                                                button 
+                                                key={index}
+                                                onClick={() => handleSubMenuClick(subItem.path)}
+                                                sx={{
+                                                    pl: 4,
+                                                    py: 1,
+                                                    backgroundColor: 'rgba(0,0,0,0.1)',
+                                                    '&:hover': {
+                                                        backgroundColor: 'rgba(255,255,255,0.1)'
+                                                    }
+                                                }}
+                                            >
+                                                <ListItemText 
+                                                    primary={subItem.title} 
+                                                    sx={{ 
+                                                        '& .MuiTypography-root': { 
+                                                            fontSize: '0.9rem' 
+                                                        } 
+                                                    }}
+                                                />
+                                            </ListItem>
+                                        ))}
+                                    </List>
+                                </Collapse>
+                            )}
+                        </React.Fragment>
+                    ))}
+                </List>
+            </Drawer>
+        );
+    };
 
-        // Initialize Chart.js
+    // Header Component
+    const Header = () => {
+        const [anchorEl, setAnchorEl] = useState(null);
+        const [notifications] = useState([
+            {
+                id: 1,
+                message: 'System update available',
+                type: 'info'
+            },
+            {
+                id: 2,
+                message: 'New user registration',
+                type: 'success'
+            }
+        ]);
+
+        const handleMenu = (event) => {
+            setAnchorEl(event.currentTarget);
+        };
+
+        const handleClose = () => {
+            setAnchorEl(null);
+        };
+
+        const handleLogout = () => {
+            localStorage.clear();
+            window.location.href = '/login.html';
+        };
+
+        return (
+            <AppBar 
+                position="fixed" 
+                sx={{ 
+                    zIndex: theme => theme.zIndex.drawer + 1,
+                    backgroundColor: 'white',
+                    color: '#333'
+                }}
+            >
+                <Toolbar>
+                    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                        Super Admin Dashboard
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <IconButton color="inherit" sx={{ position: 'relative' }}>
+                            <Badge badgeContent={notifications.length} color="error">
+                                <i className="fas fa-bell"></i>
+                            </Badge>
+                        </IconButton>
+                        <IconButton
+                            onClick={handleMenu}
+                            color="inherit"
+                        >
+                            <Avatar sx={{ bgcolor: '#1a237e' }}>
+                                {(() => {
+                                    const email = localStorage.getItem('userEmail');
+                                    return email ? email.charAt(0).toUpperCase() : 'SA';
+                                })()}
+                            </Avatar>
+                        </IconButton>
+                        <Menu
+                            anchorEl={anchorEl}
+                            open={Boolean(anchorEl)}
+                            onClose={handleClose}
+                        >
+                            <MenuItem onClick={() => window.location.href = '/account.html'}>
+                                <i className="fas fa-user" style={{marginRight: '10px'}}></i>
+                                My Account
+                            </MenuItem>
+                            <MenuItem onClick={handleLogout}>
+                                <i className="fas fa-sign-out-alt" style={{marginRight: '10px'}}></i>
+                                Sign Out
+                            </MenuItem>
+                        </Menu>
+                    </Box>
+                </Toolbar>
+            </AppBar>
+        );
+    };
+            // Main Dashboard Component
+    const Dashboard = () => {
+        const [isCollapsed, setIsCollapsed] = useState(false);
+        const [currentPage, setCurrentPage] = useState('dashboard');
+        const [pageContent, setPageContent] = useState(null);
+
+        useEffect(() => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Verify token
+            const verifyToken = async () => {
+                try {
+                    const response = await apiService.fetch('/verify-token', {
+                        method: 'POST'
+                    });
+                    if (!response.success) {
+                        localStorage.clear();
+                        window.location.href = '/login.html';
+                    }
+                } catch (error) {
+                    console.error('Token verification error:', error);
+                    localStorage.clear();
+                    window.location.href = '/login.html';
+                }
+            };
+
+            verifyToken();
+            initializeChart();
+        }, []);
+
         const initializeChart = () => {
             const ctx = document.getElementById('systemAnalytics');
             if (ctx) {
@@ -961,18 +926,95 @@ const Dashboard = () => {
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
                     }
                 });
             }
         };
 
-        // Render the app
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<Dashboard />);
+        const loadPage = (pageName) => {
+            setCurrentPage(pageName);
+            
+            switch(pageName) {
+                case 'roles':
+                    setPageContent(<RoleManagement />);
+                    break;
+                case 'dashboard':
+                    setPageContent(null); // Reset to default dashboard
+                    break;
+                default:
+                    setPageContent(
+                        <Box sx={{ p: 3 }}>
+                            <Typography variant="h5">
+                                {pageName.split('-').map(word => 
+                                    word.charAt(0).toUpperCase() + word.slice(1)
+                                ).join(' ')}
+                            </Typography>
+                            <Typography variant="body1" sx={{ mt: 2 }}>
+                                This page is under development.
+                            </Typography>
+                        </Box>
+                    );
+            }
+        };
 
-        // Initialize chart after render
-        setTimeout(initializeChart, 1000);
+        return (
+            <Box sx={{ display: 'flex' }}>
+                <CssBaseline />
+                <Header />
+                <Sidebar 
+                    isCollapsed={isCollapsed} 
+                    setIsCollapsed={setIsCollapsed}
+                    onMenuClick={loadPage}
+                />
+                <Box
+                    component="main"
+                    sx={{
+                        flexGrow: 1,
+                        p: 3,
+                        mt: 8,
+                        ml: isCollapsed ? '65px' : '240px',
+                        transition: 'margin-left 0.3s ease'
+                    }}
+                >
+                    {currentPage === 'dashboard' ? (
+                        <>
+                            <DashboardStats />
+                            <Grid container spacing={3}>
+                                <Grid item xs={12}>
+                                    <Paper sx={{ p: 2, height: '400px' }}>
+                                        <Typography variant="h6" gutterBottom>
+                                            System Analytics
+                                        </Typography>
+                                        <Box sx={{ height: 'calc(100% - 40px)' }}>
+                                            <canvas id="systemAnalytics"></canvas>
+                                        </Box>
+                                    </Paper>
+                                </Grid>
+                            </Grid>
+                        </>
+                    ) : (
+                        pageContent
+                    )}
+                </Box>
+            </Box>
+        );
+    };
+
+    // Initialize the app
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<Dashboard />);
+
     </script>
 </body>
 </html>
