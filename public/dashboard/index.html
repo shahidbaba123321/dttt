@@ -254,6 +254,7 @@
 
         // Sidebar Component
       // Update the Sidebar component's styles
+// Update the Sidebar component like this:
 const Sidebar = () => {
     const [menuItems, setMenuItems] = useState({
         dashboard: false,
@@ -264,6 +265,73 @@ const Sidebar = () => {
         tools: false,
         support: false
     });
+
+    // Define menuStructure inside the component
+    const menuStructure = [
+        {
+            id: 'dashboard',
+            title: 'Dashboard Overview',
+            icon: 'tachometer-alt',
+            path: '/dashboard'
+        },
+        {
+            id: 'companies',
+            title: 'Companies/Organizations',
+            icon: 'building',
+            submenu: [
+                { title: 'Management', path: '/companies/management' },
+                { title: 'Companies/Organizations', path: '/companies/list' }
+            ]
+        },
+        {
+            id: 'system-settings',
+            title: 'System Settings',
+            icon: 'cogs',
+            submenu: [
+                { title: 'General Settings', path: '/settings/general' },
+                { title: 'Pricing & Plans', path: '/settings/pricing' },
+                { title: 'Security Settings', path: '/settings/security' }
+            ]
+        },
+        {
+            id: 'modules',
+            title: 'Modules Management',
+            icon: 'puzzle-piece',
+            submenu: [
+                { title: 'Modules List', path: '/modules/list' },
+                { title: 'Module Settings', path: '/modules/settings' }
+            ]
+        },
+        {
+            id: 'users',
+            title: 'User Management',
+            icon: 'users',
+            submenu: [
+                { title: 'Users List', path: '/users/list' },
+                { title: 'Roles & Permissions', path: '/users/roles' },
+                { title: 'Organization Chart', path: '/users/org-chart' }
+            ]
+        },
+        {
+            id: 'tools',
+            title: 'Tools',
+            icon: 'tools',
+            submenu: [
+                { title: 'Analytics & Reports', path: '/tools/analytics' },
+                { title: 'Backup & Restore', path: '/tools/backup' },
+                { title: 'Audit Logs', path: '/tools/audit' },
+                { title: 'API Management', path: '/tools/api' }
+            ]
+        },
+        {
+            id: 'support',
+            title: 'Support',
+            icon: 'headset',
+            submenu: [
+                { title: 'Support Center', path: '/support/center' }
+            ]
+        }
+    ];
 
     const handleClick = (item) => {
         setMenuItems(prev => ({
