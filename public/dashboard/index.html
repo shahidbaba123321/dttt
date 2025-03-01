@@ -9,17 +9,11 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     
-    <!-- Babel for JSX -->
+    <!-- Babel -->
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     
     <!-- Material-UI -->
     <script src="https://unpkg.com/@mui/material@5.14.3/umd/material-ui.production.min.js"></script>
-    
-    <!-- React Router -->
-    <script src="https://unpkg.com/react-router-dom@6.14.2/umd/react-router-dom.production.min.js"></script>
-    
-    <!-- Axios for HTTP requests -->
-    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     
     <!-- Material Icons -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
@@ -27,33 +21,24 @@
     <!-- Roboto Font -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
     
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f5f5f5;
-        }
-
-        #root {
-            min-height: 100vh;
-        }
-    </style>
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles/main.css">
 </head>
 <body>
     <div id="root"></div>
 
-    <!-- App Components -->
-    <script type="text/babel" src="components/Layout.js"></script>
-    <script type="text/babel" src="components/Sidebar.js"></script>
+    <!-- Services -->
+    <script type="text/babel" src="services/api.js"></script>
+
+    <!-- Components -->
     <script type="text/babel" src="components/Header.js"></script>
+    <script type="text/babel" src="components/Sidebar.js"></script>
     <script type="text/babel" src="components/Dashboard.js"></script>
+    <script type="text/babel" src="components/ActivityList.js"></script>
+
+    <!-- Main App -->
     <script type="text/babel" src="App.js"></script>
-    
+
     <script type="text/babel">
         ReactDOM.render(
             <React.StrictMode>
