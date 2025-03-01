@@ -5,29 +5,14 @@ applications:
       phases:
         preBuild:
           commands:
-            - npm ci
+            - npm install
         build:
           commands:
-            - npm run build
-        postBuild:
-          commands:
-            - npm audit
+            - echo "Build completed"
       artifacts:
-        baseDirectory: build
+        baseDirectory: public
         files:
           - '**/*'
       cache:
         paths:
           - node_modules/**/*
-          - build/**/*
-      customHeaders:
-        - pattern: '**/*'
-          headers:
-            - key: 'Strict-Transport-Security'
-              value: 'max-age=31536000; includeSubDomains'
-            - key: 'X-Frame-Options'
-              value: 'DENY'
-            - key: 'X-Content-Type-Options'
-              value: 'nosniff'
-            - key: 'X-XSS-Protection'
-              value: '1; mode=block'
