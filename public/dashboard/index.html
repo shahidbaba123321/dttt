@@ -335,8 +335,7 @@ const apiService = {
     );
 };
         // Sidebar Component
-   const Sidebar = () => {
-    const [isCollapsed, setIsCollapsed] = useState(false);
+   const Sidebar = ({ isCollapsed, setIsCollapsed, onMenuClick }) => {
     const [menuItems, setMenuItems] = useState({
         dashboard: false,
         companies: false,
@@ -348,6 +347,20 @@ const apiService = {
     });
 
     const drawerWidth = isCollapsed ? 65 : 240;
+       const handleClick = (item) => {
+        if (!isCollapsed) {
+            setMenuItems(prev => ({
+                ...prev,
+                [item]: !prev[item]
+            }));
+        }
+    };
+
+    const handleSubItemClick = (path) => {
+        // Extract page name from path
+        const pageName = path.split('/').pop();
+        onMenuClick(pageName);
+    };
 
     const menuStructure = [
         {
@@ -430,60 +443,39 @@ const apiService = {
             sx={{
                 width: drawerWidth,
                 flexShrink: 0,
-                transition: 'width 0.3s ease',
                 '& .MuiDrawer-paper': {
                     width: drawerWidth,
                     boxSizing: 'border-box',
                     backgroundColor: '#1a237e',
-                    color: 'white',
-                    transition: 'width 0.3s ease',
-                    overflowX: 'hidden',
-                    position: 'relative'
+                    color: 'white'
                 }
             }}
         >
             <Box sx={{ 
                 p: 2, 
                 textAlign: 'center', 
-                borderBottom: '1px solid rgba(255,255,255,0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: isCollapsed ? 'center' : 'space-between'
+                borderBottom: '1px solid rgba(255,255,255,0.1)'
             }}>
                 {!isCollapsed && <Typography variant="h6">WorkWise Pro</Typography>}
-                <IconButton 
-                    onClick={() => setIsCollapsed(!isCollapsed)}
-                    sx={{ 
-                        color: 'white',
-                        padding: '4px',
-                        '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
-                    }}
-                >
-                    <i className={`fas fa-chevron-${isCollapsed ? 'right' : 'left'}`} />
-                </IconButton>
             </Box>
-            <List sx={{ pt: 0 }}>
+            <List>
                 {menuStructure.map((item) => (
                     <React.Fragment key={item.id}>
                         <ListItem 
                             button 
-                            onClick={() => handleClick(item.id)}
+                            onClick={() => {
+                                handleClick(item.id);
+                                if (!item.submenu) {
+                                    handleSubItemClick(item.path);
+                                }
+                            }}
                             sx={{
                                 py: 1.5,
                                 minHeight: 48,
-                                px: 2.5,
-                                '&:hover': {
-                                    backgroundColor: 'rgba(255,255,255,0.1)'
-                                }
+                                px: 2.5
                             }}
                         >
-                            <ListItemIcon 
-                                sx={{ 
-                                    minWidth: isCollapsed ? 'auto' : 40, 
-                                    color: 'white',
-                                    justifyContent: 'center'
-                                }}
-                            >
+                            <ListItemIcon sx={{ minWidth: isCollapsed ? 'auto' : 40, color: 'white' }}>
                                 <i className={`fas fa-${item.icon}`} />
                             </ListItemIcon>
                             {!isCollapsed && (
@@ -505,18 +497,11 @@ const apiService = {
                                         <ListItem 
                                             button 
                                             key={index}
-                                            onClick={() => {
-                                                if (subItem.path) {
-                                                    window.location.href = subItem.path;
-                                                }
-                                            }}
+                                            onClick={() => handleSubItemClick(subItem.path)}
                                             sx={{
                                                 pl: 4,
                                                 py: 1,
-                                                backgroundColor: 'rgba(0,0,0,0.1)',
-                                                '&:hover': {
-                                                    backgroundColor: 'rgba(255,255,255,0.1)'
-                                                }
+                                                backgroundColor: 'rgba(0,0,0,0.1)'
                                             }}
                                         >
                                             <ListItemText 
@@ -611,9 +596,265 @@ const apiService = {
         };
 
         // Main Dashboard Component
-       const Dashboard = () => {
+        const RoleManagement = () => {
+            const [roles, setRoles] = useState([]);
+            const [openDialog, setOpenDialog] = useState(false);
+            const [newRole, setNewRole] = useState({ name: '', description: '' });
+            const [selectedRole, setSelectedRole] = useState(null);
+            const [notification, setNotification] = useState({ open: false, message: '', type: 'success' });
+            const [auditLogs, setAuditLogs] = useState([]);
+
+            useEffect(() => {
+                fetchRoles();
+                fetchAuditLogs();
+            }, []);
+
+            const fetchRoles = async () => {
+                try {
+                    const response = await fetch('https://18.215.160.136.nip.io/api/roles', {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        setRoles(data.roles);
+                    }
+                } catch (error) {
+                    console.error('Error fetching roles:', error);
+                    showNotification('Error fetching roles', 'error');
+                }
+            };
+
+            const fetchAuditLogs = async () => {
+                try {
+                    const response = await fetch('https://18.215.160.136.nip.io/api/audit-logs?type=role', {
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        setAuditLogs(data.logs);
+                    }
+                } catch (error) {
+                    console.error('Error fetching audit logs:', error);
+                }
+            };
+
+            const handleCreateRole = async () => {
+                try {
+                    const response = await fetch('https://18.215.160.136.nip.io/api/roles', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(newRole)
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        showNotification('Role created successfully');
+                        fetchRoles();
+                        setOpenDialog(false);
+                        setNewRole({ name: '', description: '' });
+                    }
+                } catch (error) {
+                    console.error('Error creating role:', error);
+                    showNotification('Error creating role', 'error');
+                }
+            };
+
+            const handleUpdatePermissions = async (roleId, permissions) => {
+                try {
+                    const response = await fetch(`https://18.215.160.136.nip.io/api/roles/${roleId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ permissions })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        showNotification('Permissions updated successfully');
+                        fetchRoles();
+                    }
+                } catch (error) {
+                    console.error('Error updating permissions:', error);
+                    showNotification('Error updating permissions', 'error');
+                }
+            };
+
+            const showNotification = (message, type = 'success') => {
+                setNotification({ open: true, message, type });
+            };
+
+            return (
+                <Box sx={{ p: 3 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+                        <Typography variant="h5">Roles & Permissions</Typography>
+                        <Button 
+                            variant="contained" 
+                            startIcon={<i className="fas fa-plus"></i>}
+                            onClick={() => setOpenDialog(true)}
+                        >
+                            Create New Role
+                        </Button>
+                    </Box>
+
+                    {/* Roles Grid */}
+                    <div className="roles-grid">
+                        {roles.map(role => (
+                            <Paper 
+                                key={role._id} 
+                                className={`role-card ${role.name === 'Superadmin' ? 'superadmin' : ''}`}
+                            >
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                                    <Typography variant="h6">{role.name}</Typography>
+                                    {role.name !== 'Superadmin' && (
+                                        <IconButton 
+                                            size="small"
+                                            onClick={() => setSelectedRole(role)}
+                                        >
+                                            <i className="fas fa-edit"></i>
+                                        </IconButton>
+                                    )}
+                                </Box>
+                                <Typography variant="body2" color="textSecondary" gutterBottom>
+                                    {role.description}
+                                </Typography>
+                                <Divider sx={{ my: 2 }} />
+                                <Typography variant="subtitle2" gutterBottom>
+                                    Permissions: {role.permissions?.length || 0}
+                                </Typography>
+                            </Paper>
+                        ))}
+                    </div>
+
+                    {/* Create Role Dialog */}
+                    <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+                        <DialogTitle>Create New Role</DialogTitle>
+                        <DialogContent>
+                            <TextField
+                                autoFocus
+                                margin="dense"
+                                label="Role Name"
+                                fullWidth
+                                value={newRole.name}
+                                onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
+                            />
+                            <TextField
+                                margin="dense"
+                                label="Description"
+                                fullWidth
+                                multiline
+                                rows={3}
+                                value={newRole.description}
+                                onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
+                            />
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
+                            <Button onClick={handleCreateRole} variant="contained">Create</Button>
+                        </DialogActions>
+                    </Dialog>
+
+                    {/* Edit Permissions Dialog */}
+                    <Dialog 
+                        open={Boolean(selectedRole)} 
+                        onClose={() => setSelectedRole(null)}
+                        maxWidth="md"
+                        fullWidth
+                    >
+                        <DialogTitle>
+                            Edit Permissions - {selectedRole?.name}
+                        </DialogTitle>
+                        <DialogContent>
+                            {Object.entries(permissionGroups).map(([key, group]) => (
+                                <div key={key} className="permission-group">
+                                    <Typography variant="subtitle1" gutterBottom>
+                                        {group.name}
+                                    </Typography>
+                                    {group.permissions.map(permission => (
+                                        <div key={permission} className="permission-item">
+                                            <FormControlLabel
+                                                control={
+                                                    <Checkbox
+                                                        checked={selectedRole?.permissions?.includes(permission)}
+                                                        onChange={(e) => {
+                                                            const newPermissions = e.target.checked
+                                                                ? [...(selectedRole.permissions || []), permission]
+                                                                : selectedRole.permissions.filter(p => p !== permission);
+                                                            setSelectedRole({
+                                                                ...selectedRole,
+                                                                permissions: newPermissions
+                                                            });
+                                                        }}
+                                                    />
+                                                }
+                                                label={permission.replace(/_/g, ' ').toUpperCase()}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            ))}
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={() => setSelectedRole(null)}>Cancel</Button>
+                            <Button 
+                                onClick={() => {
+                                    handleUpdatePermissions(selectedRole._id, selectedRole.permissions);
+                                    setSelectedRole(null);
+                                }}
+                                variant="contained"
+                            >
+                                Save Changes
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+
+                    {/* Audit Logs */}
+                    <Paper sx={{ mt: 3, p: 2 }}>
+                        <Typography variant="h6" gutterBottom>Audit Logs</Typography>
+                        <List>
+                            {auditLogs.map((log, index) => (
+                                <ListItem key={index} className="audit-log-item">
+                                    <div className="audit-icon">
+                                        <i className="fas fa-history"></i>
+                                    </div>
+                                    <ListItemText
+                                        primary={log.action}
+                                        secondary={new Date(log.timestamp).toLocaleString()}
+                                    />
+                                </ListItem>
+                            ))}
+                        </List>
+                    </Paper>
+
+                    {/* Notification */}
+                    <Snackbar
+                        open={notification.open}
+                        autoHideDuration={6000}
+                        onClose={() => setNotification({ ...notification, open: false })}
+                    >
+                        <Alert 
+                            onClose={() => setNotification({ ...notification, open: false })}
+                            severity={notification.type}
+                        >
+                            {notification.message}
+                        </Alert>
+                    </Snackbar>
+                </Box>
+            );
+        };
+      // In the Dashboard component of index.html, update the main content Box:
+
+const Dashboard = () => {
     const [isCollapsed, setIsCollapsed] = useState(false);
-    
+    const [currentPage, setCurrentPage] = useState('dashboard');
+    const [pageContent, setPageContent] = useState(null);
+
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -621,11 +862,36 @@ const apiService = {
         }
     }, []);
 
+    const loadPage = async (pageName) => {
+        setCurrentPage(pageName);
+        
+        if (pageName === 'roles') {
+            try {
+                // Load the RoleManagement component
+                setPageContent(<RoleManagement />);
+            } catch (error) {
+                console.error('Error loading roles page:', error);
+                setPageContent(
+                    <Alert severity="error">
+                        Error loading page content
+                    </Alert>
+                );
+            }
+        } else {
+            // Reset to dashboard content
+            setPageContent(null);
+        }
+    };
+
     return (
         <Box sx={{ display: 'flex' }}>
             <CssBaseline />
             <Header />
-            <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+            <Sidebar 
+                isCollapsed={isCollapsed} 
+                setIsCollapsed={setIsCollapsed}
+                onMenuClick={loadPage}
+            />
             <Box
                 component="main"
                 sx={{
@@ -636,17 +902,25 @@ const apiService = {
                     transition: 'margin-left 0.3s ease'
                 }}
             >
-                <DashboardStats />
-                <Grid container spacing={3}>
-                    <Grid item xs={12}>
-                        <Paper sx={{ p: 2, height: '400px' }}>
-                            <Typography variant="h6" gutterBottom>
-                                System Analytics
-                            </Typography>
-                            <canvas id="systemAnalytics"></canvas>
-                        </Paper>
-                    </Grid>
-                </Grid>
+                {currentPage === 'dashboard' ? (
+                    // Dashboard content
+                    <>
+                        <DashboardStats />
+                        <Grid container spacing={3}>
+                            <Grid item xs={12}>
+                                <Paper sx={{ p: 2, height: '400px' }}>
+                                    <Typography variant="h6" gutterBottom>
+                                        System Analytics
+                                    </Typography>
+                                    <canvas id="systemAnalytics"></canvas>
+                                </Paper>
+                            </Grid>
+                        </Grid>
+                    </>
+                ) : (
+                    // Dynamically loaded content
+                    pageContent
+                )}
             </Box>
         </Box>
     );
