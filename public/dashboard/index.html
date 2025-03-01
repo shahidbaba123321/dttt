@@ -253,9 +253,8 @@
         };
 
         // Sidebar Component
-      // Update the Sidebar component's styles
-// Update the Sidebar component like this:
-const Sidebar = () => {
+   const Sidebar = () => {
+    const [isCollapsed, setIsCollapsed] = useState(false);
     const [menuItems, setMenuItems] = useState({
         dashboard: false,
         companies: false,
@@ -266,7 +265,8 @@ const Sidebar = () => {
         support: false
     });
 
-    // Define menuStructure inside the component
+    const drawerWidth = isCollapsed ? 65 : 240;
+
     const menuStructure = [
         {
             id: 'dashboard',
@@ -334,32 +334,51 @@ const Sidebar = () => {
     ];
 
     const handleClick = (item) => {
-        setMenuItems(prev => ({
-            ...prev,
-            [item]: !prev[item]
-        }));
+        if (!isCollapsed) {
+            setMenuItems(prev => ({
+                ...prev,
+                [item]: !prev[item]
+            }));
+        }
     };
 
     return (
         <Drawer
             variant="permanent"
             sx={{
-                width: 240,
+                width: drawerWidth,
                 flexShrink: 0,
+                transition: 'width 0.3s ease',
                 '& .MuiDrawer-paper': {
-                    width: 240,
+                    width: drawerWidth,
                     boxSizing: 'border-box',
                     backgroundColor: '#1a237e',
-                    color: 'white'
+                    color: 'white',
+                    transition: 'width 0.3s ease',
+                    overflowX: 'hidden',
+                    position: 'relative'
                 }
             }}
         >
             <Box sx={{ 
                 p: 2, 
                 textAlign: 'center', 
-                borderBottom: '1px solid rgba(255,255,255,0.1)'
+                borderBottom: '1px solid rgba(255,255,255,0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: isCollapsed ? 'center' : 'space-between'
             }}>
-                <Typography variant="h6">WorkWise Pro</Typography>
+                {!isCollapsed && <Typography variant="h6">WorkWise Pro</Typography>}
+                <IconButton 
+                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    sx={{ 
+                        color: 'white',
+                        padding: '4px',
+                        '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+                    }}
+                >
+                    <i className={`fas fa-chevron-${isCollapsed ? 'right' : 'left'}`} />
+                </IconButton>
             </Box>
             <List sx={{ pt: 0 }}>
                 {menuStructure.map((item) => (
@@ -369,23 +388,35 @@ const Sidebar = () => {
                             onClick={() => handleClick(item.id)}
                             sx={{
                                 py: 1.5,
+                                minHeight: 48,
+                                px: 2.5,
                                 '&:hover': {
                                     backgroundColor: 'rgba(255,255,255,0.1)'
                                 }
                             }}
                         >
-                            <ListItemIcon sx={{ minWidth: 40, color: 'white' }}>
+                            <ListItemIcon 
+                                sx={{ 
+                                    minWidth: isCollapsed ? 'auto' : 40, 
+                                    color: 'white',
+                                    justifyContent: 'center'
+                                }}
+                            >
                                 <i className={`fas fa-${item.icon}`} />
                             </ListItemIcon>
-                            <ListItemText primary={item.title} />
-                            {item.submenu && (
-                                <i 
-                                    className={`fas fa-chevron-${menuItems[item.id] ? 'down' : 'right'}`}
-                                    style={{ fontSize: '12px' }}
-                                />
+                            {!isCollapsed && (
+                                <>
+                                    <ListItemText primary={item.title} />
+                                    {item.submenu && (
+                                        <i 
+                                            className={`fas fa-chevron-${menuItems[item.id] ? 'down' : 'right'}`}
+                                            style={{ fontSize: '12px' }}
+                                        />
+                                    )}
+                                </>
                             )}
                         </ListItem>
-                        {item.submenu && (
+                        {!isCollapsed && item.submenu && (
                             <Collapse in={menuItems[item.id]} timeout="auto" unmountOnExit>
                                 <List component="div" disablePadding>
                                     {item.submenu.map((subItem, index) => (
@@ -498,43 +529,46 @@ const Sidebar = () => {
         };
 
         // Main Dashboard Component
-        const Dashboard = () => {
-            useEffect(() => {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    window.location.href = '/login.html';
-                }
-            }, []);
+       const Dashboard = () => {
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+    }, []);
 
-            return (
-                <Box sx={{ display: 'flex' }}>
-                    <CssBaseline />
-                    <Header />
-                    <Sidebar />
-                    <Box
-                        component="main"
-                        sx={{
-                            flexGrow: 1,
-                            p: 3,
-                            mt: 8,
-                            ml: '240px'
-                        }}
-                    >
-                        <DashboardStats />
-                        <Grid container spacing={3}>
-                            <Grid item xs={12}>
-                                <Paper sx={{ p: 2, height: '400px' }}>
-                                    <Typography variant="h6" gutterBottom>
-                                        System Analytics
-                                    </Typography>
-                                    <canvas id="systemAnalytics"></canvas>
-                                </Paper>
-                            </Grid>
-                        </Grid>
-                    </Box>
-                </Box>
-            );
-        };
+    return (
+        <Box sx={{ display: 'flex' }}>
+            <CssBaseline />
+            <Header />
+            <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+            <Box
+                component="main"
+                sx={{
+                    flexGrow: 1,
+                    p: 3,
+                    mt: 8,
+                    ml: isCollapsed ? '65px' : '240px',
+                    transition: 'margin-left 0.3s ease'
+                }}
+            >
+                <DashboardStats />
+                <Grid container spacing={3}>
+                    <Grid item xs={12}>
+                        <Paper sx={{ p: 2, height: '400px' }}>
+                            <Typography variant="h6" gutterBottom>
+                                System Analytics
+                            </Typography>
+                            <canvas id="systemAnalytics"></canvas>
+                        </Paper>
+                    </Grid>
+                </Grid>
+            </Box>
+        </Box>
+    );
+};
 
         // Initialize Chart.js
         const initializeChart = () => {
