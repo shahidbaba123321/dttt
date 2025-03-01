@@ -36,6 +36,53 @@
         #root {
             min-height: 100vh;
         }
+
+        .fade-enter {
+            opacity: 0;
+        }
+
+        .fade-enter-active {
+            opacity: 1;
+            transition: opacity 300ms ease-in;
+        }
+
+        .fade-exit {
+            opacity: 1;
+        }
+
+        .fade-exit-active {
+            opacity: 0;
+            transition: opacity 300ms ease-in;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px;
+            border-radius: 4px;
+            background-color: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 300px;
+            transform: translateX(120%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left: 4px solid #4CAF50;
+        }
+
+        .notification.error {
+            border-left: 4px solid #f44336;
+        }
     </style>
 </head>
 <body>
@@ -62,12 +109,35 @@
             Box,
             CssBaseline,
             ThemeProvider,
-            createTheme
+            createTheme,
+            Collapse,
+            Paper,
+            Grid,
+            Card,
+            CardContent,
+            Chip
         } = MaterialUI;
+
+        // Utility function for notifications
+        const showNotification = (message, type = 'success') => {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <span class="material-icons">${type === 'success' ? 'check_circle' : 'error'}</span>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.classList.add('show'), 100);
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        };
 
         // Header Component
         const Header = () => {
             const [anchorEl, setAnchorEl] = React.useState(null);
+            const [notifications, setNotifications] = React.useState([]);
             const userEmail = localStorage.getItem('userEmail');
             const userName = localStorage.getItem('userName');
 
@@ -85,16 +155,36 @@
             };
 
             return (
-                <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+                <AppBar 
+                    position="fixed" 
+                    sx={{ 
+                        zIndex: (theme) => theme.zIndex.drawer + 1,
+                        backgroundColor: 'white',
+                        color: 'text.primary',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.12)'
+                    }}
+                >
                     <Toolbar>
-                        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                        <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: 'primary.main' }}>
                             WorkWise Pro
                         </Typography>
+                        
+                        {/* Notifications */}
+                        <IconButton 
+                            size="large" 
+                            sx={{ mr: 2 }}
+                            onClick={() => showNotification('No new notifications', 'info')}
+                        >
+                            <span className="material-icons">notifications</span>
+                        </IconButton>
+
+                        {/* User Menu */}
                         <IconButton
                             onClick={handleMenu}
-                            color="inherit"
+                            size="small"
+                            sx={{ ml: 2 }}
                         >
-                            <Avatar sx={{ bgcolor: 'secondary.main' }}>
+                            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
                                 {userName ? userName[0] : userEmail ? userEmail[0] : 'U'}
                             </Avatar>
                         </IconButton>
@@ -102,9 +192,28 @@
                             anchorEl={anchorEl}
                             open={Boolean(anchorEl)}
                             onClose={handleClose}
+                            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                         >
-                            <MenuItem onClick={handleClose}>Profile</MenuItem>
-                            <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                            <MenuItem onClick={handleClose}>
+                                <ListItemIcon>
+                                    <span className="material-icons">account_circle</span>
+                                </ListItemIcon>
+                                <ListItemText primary="My Profile" />
+                            </MenuItem>
+                            <MenuItem onClick={handleClose}>
+                                <ListItemIcon>
+                                    <span className="material-icons">settings</span>
+                                </ListItemIcon>
+                                <ListItemText primary="Settings" />
+                            </MenuItem>
+                            <Divider />
+                            <MenuItem onClick={handleLogout}>
+                                <ListItemIcon>
+                                    <span className="material-icons">logout</span>
+                                </ListItemIcon>
+                                <ListItemText primary="Logout" />
+                            </MenuItem>
                         </Menu>
                     </Toolbar>
                 </AppBar>
@@ -112,36 +221,189 @@
         };
 
         // Sidebar Component
-        const Sidebar = () => {
+        const Sidebar = ({ onPageChange }) => {
+            const [openMenus, setOpenMenus] = React.useState({});
+
             const menuItems = [
-                { text: 'Dashboard', icon: 'dashboard' },
-                { text: 'Users', icon: 'people' },
-                { text: 'Companies', icon: 'business' },
-                { text: 'Settings', icon: 'settings' }
+                {
+                    text: 'Dashboard Overview',
+                    icon: 'dashboard',
+                    path: 'dashboard'
+                },
+                {
+                    text: 'Companies/Organizations',
+                    icon: 'business',
+                    children: [
+                        { text: 'Management', icon: 'manage_accounts', path: 'companies-management' },
+                        { text: 'Companies List', icon: 'list', path: 'companies-list' }
+                    ]
+                },
+                {
+                    text: 'System Settings',
+                    icon: 'settings',
+                    children: [
+                        { text: 'General Settings', icon: 'tune', path: 'general-settings' },
+                        { text: 'Pricing & Plans', icon: 'payments', path: 'pricing-plans' },
+                        { text: 'Security Settings', icon: 'security', path: 'security-settings' }
+                    ]
+                },
+                {
+                    text: 'Modules Management',
+                    icon: 'extension',
+                    children: [
+                        { text: 'Modules List', icon: 'view_module', path: 'modules-list' },
+                        { text: 'Module Settings', icon: 'settings_applications', path: 'module-settings' }
+                    ]
+                },
+                {
+                    text: 'User Management',
+                    icon: 'people',
+                    children: [
+                        { text: 'Users List', icon: 'group', path: 'users-list' },
+                        { text: 'Roles & Permissions', icon: 'admin_panel_settings', path: 'roles-permissions' },
+                        { text: 'Organization Chart', icon: 'account_tree', path: 'org-chart' }
+                    ]
+                },
+                {
+                    text: 'Tools',
+                    icon: 'build',
+                    children: [
+                        { text: 'Analytics & Reports', icon: 'analytics', path: 'analytics' },
+                        { text: 'Backup & Restore', icon: 'backup', path: 'backup' },
+                        { text: 'Audit Logs', icon: 'fact_check', path: 'audit-logs' },
+                        { text: 'API Management', icon: 'api', path: 'api-management' }
+                    ]
+                },
+                {
+                    text: 'Support',
+                    icon: 'help',
+                    children: [
+                        { text: 'Support Center', icon: 'support', path: 'support-center' }
+                    ]
+                }
             ];
+
+            const handleMenuClick = (item) => {
+                if (item.children) {
+                    setOpenMenus(prev => ({
+                        ...prev,
+                        [item.text]: !prev[item.text]
+                    }));
+                } else {
+                    onPageChange(item.path);
+                }
+            };
+
+            const renderMenuItem = (item) => {
+                const isOpen = openMenus[item.text];
+
+                return (
+                    <React.Fragment key={item.text}>
+                        <ListItem 
+                            button 
+                            onClick={() => handleMenuClick(item)}
+                            sx={{
+                                borderRadius: '8px',
+                                mx: 1,
+                                my: 0.5,
+                                '&:hover': {
+                                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                                }
+                            }}
+                        >
+                            <ListItemIcon>
+                                <span className="material-icons">{item.icon}</span>
+                            </ListItemIcon>
+                            <ListItemText 
+                                primary={item.text}
+                                sx={{
+                                    '& .MuiTypography-root': {
+                                        fontSize: '0.9rem',
+                                        fontWeight: 500
+                                    }
+                                }}
+                            />
+                            {item.children && (
+                                <span className="material-icons">
+                                    {isOpen ? 'expand_less' : 'expand_more'}
+                                </span>
+                            )}
+                        </ListItem>
+                        {item.children && (
+                            <Collapse in={isOpen} timeout="auto" unmountOnExit>
+                                <List component="div" disablePadding>
+                                    {item.children.map((child) => (
+                                        <ListItem 
+                                            button 
+                                            key={child.text}
+                                            onClick={() => handleMenuClick(child)}
+                                            sx={{ 
+                                                pl: 4,
+                                                borderRadius: '8px',
+                                                mx: 1,
+                                                my: 0.5,
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                                                }
+                                            }}
+                                        >
+                                            <ListItemIcon>
+                                                <span className="material-icons">{child.icon}</span>
+                                            </ListItemIcon>
+                                            <ListItemText 
+                                                primary={child.text}
+                                                sx={{
+                                                    '& .MuiTypography-root': {
+                                                        fontSize: '0.875rem'
+                                                    }
+                                                }}
+                                            />
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            </Collapse>
+                        )}
+                    </React.Fragment>
+                );
+            };
 
             return (
                 <Drawer
                     variant="permanent"
                     sx={{
-                        width: 240,
+                        width: 280,
                         flexShrink: 0,
                         '& .MuiDrawer-paper': {
-                            width: 240,
+                            width: 280,
                             boxSizing: 'border-box',
-                            marginTop: '64px'
+                            marginTop: '64px',
+                            backgroundColor: '#ffffff',
+                            borderRight: '1px solid rgba(0, 0, 0, 0.12)'
                         },
                     }}
                 >
+                    <Box sx={{ 
+                        p: 2, 
+                        borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1
+                    }}>
+                        <Avatar 
+                            sx={{ 
+                                bgcolor: 'primary.main',
+                                width: 40,
+                                height: 40
+                            }}
+                        >
+                            <span className="material-icons">work</span>
+                        </Avatar>
+                        <Typography variant="h6" color="primary">
+                            WorkWise Pro
+                        </Typography>
+                    </Box>
                     <List>
-                        {menuItems.map((item) => (
-                            <ListItem button key={item.text}>
-                                <ListItemIcon>
-                                    <span className="material-icons">{item.icon}</span>
-                                </ListItemIcon>
-                                <ListItemText primary={item.text} />
-                            </ListItem>
-                        ))}
+                        {menuItems.map(renderMenuItem)}
                     </List>
                 </Drawer>
             );
@@ -149,12 +411,88 @@
 
         // Dashboard Component
         const Dashboard = () => {
+            const stats = [
+                { title: 'Total Users', value: '1,234', icon: 'people', color: '#4F46E5' },
+                { title: 'Active Companies', value: '56', icon: 'business', color: '#10B981' },
+                { title: 'Total Revenue', value: '$12,345', icon: 'attach_money', color: '#F59E0B' },
+                { title: 'Active Projects', value: '89', icon: 'assignment', color: '#EF4444' }
+            ];
+
             return (
                 <Box sx={{ p: 3 }}>
                     <Typography variant="h4" gutterBottom>
-                        Dashboard
+                        Dashboard Overview
                     </Typography>
-                    {/* Add dashboard content here */}
+
+                    <Grid container spacing={3}>
+                        {stats.map((stat) => (
+                            <Grid item xs={12} sm={6} md={3} key={stat.title}>
+                                <Card sx={{ height: '100%' }}>
+                                    <CardContent>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                            <Avatar sx={{ bgcolor: stat.color, mr: 2 }}>
+                                                <span className="material-icons">{stat.icon}</span>
+                                            </Avatar>
+                                            <Typography color="textSecondary" variant="h6">
+                                                {stat.title}
+                                            </Typography>
+                                        </Box>
+                                        <Typography variant="h4">
+                                            {stat.value}
+                                        </Typography>
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                        ))}
+                    </Grid>
+
+                    {/* Recent Activity Section */}
+                    <Grid container spacing={3} sx={{ mt: 2 }}>
+                        <Grid item xs={12} md={6}>
+                            <Paper sx={{ p: 2 }}>
+                                <Typography variant="h6" gutterBottom>
+                                    Recent Activity
+                                </Typography>
+                                <List>
+                                    {[1, 2, 3].map((item) => (
+                                        <ListItem key={item}>
+                                            <ListItemIcon>
+                                                <Avatar sx={{ bgcolor: 'primary.main' }}>
+                                                    <span className="material-icons">notification_important</span>
+                                                </Avatar>
+                                            </ListItemIcon>
+                                            <ListItemText
+                                                primary="New user registered"
+                                                secondary="2 minutes ago"
+                                            />
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            </Paper>
+                        </Grid>
+                        
+                        {/* Quick Actions Section */}
+                        <Grid item xs={12} md={6}>
+                            <Paper sx={{ p: 2 }}>
+                                <Typography variant="h6" gutterBottom>
+                                    Quick Actions
+                                </Typography>
+                                <Grid container spacing={2}>
+                                    {['Add User', 'New Company', 'Generate Report', 'System Backup'].map((action) => (
+                                        <Grid item xs={6} key={action}>
+                                            <Button
+                                                variant="outlined"
+                                                fullWidth
+                                                sx={{ height: '100%', minHeight: 80 }}
+                                            >
+                                                {action}
+                                            </Button>
+                                        </Grid>
+                                    ))}
+                                </Grid>
+                            </Paper>
+                        </Grid>
+                    </Grid>
                 </Box>
             );
         };
@@ -162,8 +500,16 @@
         // Main App Component
         const App = () => {
             const [loading, setLoading] = React.useState(true);
+            const [currentPage, setCurrentPage] = React.useState('dashboard');
 
             React.useEffect(() => {
+                // Verify authentication
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+
                 // Simulate loading
                 setTimeout(() => setLoading(false), 1000);
             }, []);
@@ -175,6 +521,22 @@
                     },
                     secondary: {
                         main: '#4338CA',
+                    },
+                    background: {
+                        default: '#F8FAFC',
+                    },
+                },
+                typography: {
+                    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+                },
+                components: {
+                    MuiButton: {
+                        styleOverrides: {
+                            root: {
+                                textTransform: 'none',
+                                borderRadius: 8,
+                            },
+                        },
                     },
                 },
             });
@@ -197,14 +559,16 @@
                     <Box sx={{ display: 'flex' }}>
                         <CssBaseline />
                         <Header />
-                        <Sidebar />
+                        <Sidebar onPageChange={setCurrentPage} />
                         <Box
                             component="main"
                             sx={{
                                 flexGrow: 1,
                                 p: 3,
-                                marginLeft: '240px',
-                                marginTop: '64px'
+                                marginLeft: '280px',
+                                marginTop: '64px',
+                                backgroundColor: 'background.default',
+                                minHeight: '100vh'
                             }}
                         >
                             <Dashboard />
