@@ -489,31 +489,42 @@
             }
         };
 
-        const handleUpdatePermissions = async (roleId, permissions) => {
-            try {
-                setSubmitting(true);
-                const response = await apiService.fetch(`/roles/${roleId}`, {
-                    method: 'PUT',
-                    body: JSON.stringify({
-                        permissions,
-                        updatedAt: new Date(),
-                        updatedBy: localStorage.getItem('userId')
-                    })
-                });
+        // Update this function in the RoleManagement component
+const handleUpdatePermissions = async (roleId, permissions) => {
+    try {
+        if (!selectedRole.name || !selectedRole.description) {
+            showNotification('Role name and description are required', 'error');
+            return;
+        }
 
-                if (response.success) {
-                    showNotification('Permissions updated successfully');
-                    fetchRoles();
-                    setSelectedRole(null);
-                }
-            } catch (error) {
-                console.error('Error updating permissions:', error);
-                showNotification(error.message || 'Error updating permissions', 'error');
-            } finally {
-                setSubmitting(false);
-            }
+        setSubmitting(true);
+        const updateData = {
+            name: selectedRole.name,
+            description: selectedRole.description,
+            permissions: permissions,
+            updatedAt: new Date(),
+            updatedBy: localStorage.getItem('userId')
         };
 
+        console.log('Updating role with data:', updateData);
+
+        const response = await apiService.fetch(`/roles/${roleId}`, {
+            method: 'PUT',
+            body: JSON.stringify(updateData)
+        });
+
+        if (response.success) {
+            showNotification('Permissions updated successfully');
+            await fetchRoles(); // Await the fetch to ensure we have updated data
+            setSelectedRole(null);
+        }
+    } catch (error) {
+        console.error('Error updating permissions:', error);
+        showNotification(error.message || 'Error updating permissions', 'error');
+    } finally {
+        setSubmitting(false);
+    }
+};
         const showNotification = (message, type = 'success') => {
             setNotification({ open: true, message, type });
         };
@@ -631,24 +642,26 @@
                                 </Typography>
                                 {group.permissions.map(permission => (
                                     <div key={permission} className="permission-item">
-                                        <FormControlLabel
-                                            control={
-                                                <Checkbox
-                                                    checked={selectedRole?.permissions?.includes(permission)}
-                                                    onChange={(e) => {
-                                                        const newPermissions = e.target.checked
-                                                            ? [...(selectedRole.permissions || []), permission]
-                                                            : selectedRole.permissions.filter(p => p !== permission);
-                                                        setSelectedRole({
-                                                            ...selectedRole,
-                                                            permissions: newPermissions
-                                                        });
-                                                    }}
-                                                    disabled={submitting}
-                                                />
-                                            }
-                                            label={permission.replace(/_/g, ' ').toUpperCase()}
-                                        />
+                                        // Update the Checkbox onChange handler in the Edit Permissions Dialog
+<FormControlLabel
+    control={
+        <Checkbox
+            checked={selectedRole?.permissions?.includes(permission)}
+            onChange={(e) => {
+                const newPermissions = e.target.checked
+                    ? [...(selectedRole.permissions || []), permission]
+                    : selectedRole.permissions.filter(p => p !== permission);
+                // Maintain all role data while updating permissions
+                setSelectedRole(prevRole => ({
+                    ...prevRole,
+                    permissions: newPermissions
+                }));
+            }}
+            disabled={submitting}
+        />
+    }
+    label={permission.replace(/_/g, ' ').toUpperCase()}
+/>
                                     </div>
                                 ))}
                             </div>
