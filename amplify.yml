@@ -1,18 +1,63 @@
 version: 1
 applications:
-  - appRoot: .
-    frontend:
+  - frontend:
       phases:
         preBuild:
           commands:
-            - npm install
+            - npm ci
+            - npm run lint
+            - npm run test:ci
         build:
           commands:
-            - echo "Build completed"
+            - npm run build
+        postBuild:
+          commands:
+            - npm run test:e2e
+            - npm audit
       artifacts:
-        baseDirectory: public
+        baseDirectory: build
         files:
           - '**/*'
       cache:
         paths:
           - node_modules/**/*
+          - build/**/*
+          - .npm-cache/**/*
+    appRoot: frontend
+  - backend:
+      phases:
+        preBuild:
+          commands:
+            - npm ci
+            - npm run lint:server
+            - npm run test:server
+        build:
+          commands:
+            - npm run build:server
+        postBuild:
+          commands:
+            - npm audit
+      artifacts:
+        baseDirectory: dist
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*
+          - dist/**/*
+    appRoot: backend
+  customHeaders:
+    - pattern: '**/*'
+      headers:
+        - key: 'Strict-Transport-Security'
+          value: 'max-age=31536000; includeSubDomains'
+        - key: 'X-Frame-Options'
+          value: 'DENY'
+        - key: 'X-Content-Type-Options'
+          value: 'nosniff'
+        - key: 'X-XSS-Protection'
+          value: '1; mode=block'
+        - key: 'Referrer-Policy'
+          value: 'strict-origin-when-cross-origin'
+        - key: 'Content-Security-Policy'
+          value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.yourservice.com;"
