@@ -21,6 +21,7 @@
     <!-- Roboto Font -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
     
+    <!-- Base Styles -->
     <style>
         * {
             margin: 0;
@@ -31,12 +32,15 @@
         body {
             font-family: 'Roboto', sans-serif;
             background-color: #f5f5f5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         #root {
             min-height: 100vh;
         }
 
+        /* Transitions */
         .fade-enter {
             opacity: 0;
         }
@@ -55,12 +59,13 @@
             transition: opacity 300ms ease-in;
         }
 
+        /* Notifications */
         .notification {
             position: fixed;
             top: 20px;
             right: 20px;
             padding: 16px;
-            border-radius: 4px;
+            border-radius: 8px;
             background-color: white;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             z-index: 2000;
@@ -83,506 +88,1093 @@
         .notification.error {
             border-left: 4px solid #f44336;
         }
+
+        .notification.warning {
+            border-left: 4px solid #ff9800;
+        }
+
+        .notification.info {
+            border-left: 4px solid #2196f3;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid #4F46E5;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
-    <script type="text/babel">
-        // Destructure Material-UI components
-        const {
-            AppBar,
-            Toolbar,
-            Typography,
-            Button,
-            IconButton,
-            Avatar,
-            Menu,
-            MenuItem,
-            CircularProgress,
-            Drawer,
-            List,
-            ListItem,
-            ListItemIcon,
-            ListItemText,
-            Divider,
-            Box,
-            CssBaseline,
-            ThemeProvider,
-            createTheme,
-            Collapse,
-            Paper,
-            Grid,
-            Card,
-            CardContent,
-            Chip
-        } = MaterialUI;
+    <!-- Include page components -->
+    <script type="text/babel" src="pages/RolesAndPermissions.js"></script>
 
-        // Utility function for notifications
-        const showNotification = (message, type = 'success') => {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.innerHTML = `
-                <span class="material-icons">${type === 'success' ? 'check_circle' : 'error'}</span>
-                <span>${message}</span>
-            `;
-            document.body.appendChild(notification);
-            setTimeout(() => notification.classList.add('show'), 100);
+    <script type="text/babel">
+        // Component implementations will follow in next parts
+    </script>
+    <script type="text/babel">
+    // Destructure Material-UI components
+    const {
+        AppBar,
+        Toolbar,
+        Typography,
+        Button,
+        IconButton,
+        Avatar,
+        Menu,
+        MenuItem,
+        CircularProgress,
+        Drawer,
+        List,
+        ListItem,
+        ListItemIcon,
+        ListItemText,
+        Divider,
+        Box,
+        CssBaseline,
+        ThemeProvider,
+        createTheme,
+        Collapse,
+        Paper,
+        Grid,
+        Card,
+        CardContent,
+        Table,
+        TableBody,
+        TableCell,
+        TableContainer,
+        TableHead,
+        TableRow,
+        Switch,
+        Dialog,
+        DialogTitle,
+        DialogContent,
+        DialogActions,
+        TextField,
+        FormControlLabel,
+        Checkbox,
+        Alert,
+        Tooltip,
+        Chip,
+        Badge
+    } = MaterialUI;
+
+    // Utility Functions
+    const showNotification = (message, type = 'success') => {
+        // Remove existing notifications
+        const existingNotifications = document.querySelectorAll('.notification');
+        existingNotifications.forEach(n => n.remove());
+
+        // Create new notification
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <span class="material-icons">
+                ${type === 'success' ? 'check_circle' : 
+                  type === 'error' ? 'error' :
+                  type === 'warning' ? 'warning' : 'info'}
+            </span>
+            <span>${message}</span>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Show notification with animation
+        setTimeout(() => {
+            notification.classList.add('show');
             setTimeout(() => {
                 notification.classList.remove('show');
                 setTimeout(() => notification.remove(), 300);
             }, 3000);
-        };
+        }, 100);
+    };
 
-        // Header Component
-        const Header = () => {
-            const [anchorEl, setAnchorEl] = React.useState(null);
-            const [notifications, setNotifications] = React.useState([]);
-            const userEmail = localStorage.getItem('userEmail');
-            const userName = localStorage.getItem('userName');
-
-            const handleMenu = (event) => {
-                setAnchorEl(event.currentTarget);
-            };
-
-            const handleClose = () => {
-                setAnchorEl(null);
-            };
-
-            const handleLogout = () => {
-                localStorage.clear();
-                window.location.href = '/login.html';
-            };
-
-            return (
-                <AppBar 
-                    position="fixed" 
-                    sx={{ 
-                        zIndex: (theme) => theme.zIndex.drawer + 1,
-                        backgroundColor: 'white',
-                        color: 'text.primary',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.12)'
-                    }}
-                >
-                    <Toolbar>
-                        <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: 'primary.main' }}>
-                            WorkWise Pro
-                        </Typography>
-                        
-                        {/* Notifications */}
-                        <IconButton 
-                            size="large" 
-                            sx={{ mr: 2 }}
-                            onClick={() => showNotification('No new notifications', 'info')}
-                        >
-                            <span className="material-icons">notifications</span>
-                        </IconButton>
-
-                        {/* User Menu */}
-                        <IconButton
-                            onClick={handleMenu}
-                            size="small"
-                            sx={{ ml: 2 }}
-                        >
-                            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
-                                {userName ? userName[0] : userEmail ? userEmail[0] : 'U'}
-                            </Avatar>
-                        </IconButton>
-                        <Menu
-                            anchorEl={anchorEl}
-                            open={Boolean(anchorEl)}
-                            onClose={handleClose}
-                            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                        >
-                            <MenuItem onClick={handleClose}>
-                                <ListItemIcon>
-                                    <span className="material-icons">account_circle</span>
-                                </ListItemIcon>
-                                <ListItemText primary="My Profile" />
-                            </MenuItem>
-                            <MenuItem onClick={handleClose}>
-                                <ListItemIcon>
-                                    <span className="material-icons">settings</span>
-                                </ListItemIcon>
-                                <ListItemText primary="Settings" />
-                            </MenuItem>
-                            <Divider />
-                            <MenuItem onClick={handleLogout}>
-                                <ListItemIcon>
-                                    <span className="material-icons">logout</span>
-                                </ListItemIcon>
-                                <ListItemText primary="Logout" />
-                            </MenuItem>
-                        </Menu>
-                    </Toolbar>
-                </AppBar>
-            );
-        };
-
-        // Sidebar Component
-        const Sidebar = ({ onPageChange }) => {
-            const [openMenus, setOpenMenus] = React.useState({});
-
-            const menuItems = [
-                {
-                    text: 'Dashboard Overview',
-                    icon: 'dashboard',
-                    path: 'dashboard'
-                },
-                {
-                    text: 'Companies/Organizations',
-                    icon: 'business',
-                    children: [
-                        { text: 'Management', icon: 'manage_accounts', path: 'companies-management' },
-                        { text: 'Companies List', icon: 'list', path: 'companies-list' }
-                    ]
-                },
-                {
-                    text: 'System Settings',
-                    icon: 'settings',
-                    children: [
-                        { text: 'General Settings', icon: 'tune', path: 'general-settings' },
-                        { text: 'Pricing & Plans', icon: 'payments', path: 'pricing-plans' },
-                        { text: 'Security Settings', icon: 'security', path: 'security-settings' }
-                    ]
-                },
-                {
-                    text: 'Modules Management',
-                    icon: 'extension',
-                    children: [
-                        { text: 'Modules List', icon: 'view_module', path: 'modules-list' },
-                        { text: 'Module Settings', icon: 'settings_applications', path: 'module-settings' }
-                    ]
-                },
-                {
-                    text: 'User Management',
-                    icon: 'people',
-                    children: [
-                        { text: 'Users List', icon: 'group', path: 'users-list' },
-                        { text: 'Roles & Permissions', icon: 'admin_panel_settings', path: 'roles-permissions' },
-                        { text: 'Organization Chart', icon: 'account_tree', path: 'org-chart' }
-                    ]
-                },
-                {
-                    text: 'Tools',
-                    icon: 'build',
-                    children: [
-                        { text: 'Analytics & Reports', icon: 'analytics', path: 'analytics' },
-                        { text: 'Backup & Restore', icon: 'backup', path: 'backup' },
-                        { text: 'Audit Logs', icon: 'fact_check', path: 'audit-logs' },
-                        { text: 'API Management', icon: 'api', path: 'api-management' }
-                    ]
-                },
-                {
-                    text: 'Support',
-                    icon: 'help',
-                    children: [
-                        { text: 'Support Center', icon: 'support', path: 'support-center' }
-                    ]
-                }
-            ];
-
-            const handleMenuClick = (item) => {
-                if (item.children) {
-                    setOpenMenus(prev => ({
-                        ...prev,
-                        [item.text]: !prev[item.text]
-                    }));
-                } else {
-                    onPageChange(item.path);
+    // API utility function
+    const apiRequest = async (endpoint, options = {}) => {
+        try {
+            const token = localStorage.getItem('token');
+            const defaultOptions = {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
             };
 
-            const renderMenuItem = (item) => {
-                const isOpen = openMenus[item.text];
-
-                return (
-                    <React.Fragment key={item.text}>
-                        <ListItem 
-                            button 
-                            onClick={() => handleMenuClick(item)}
-                            sx={{
-                                borderRadius: '8px',
-                                mx: 1,
-                                my: 0.5,
-                                '&:hover': {
-                                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                                }
-                            }}
-                        >
-                            <ListItemIcon>
-                                <span className="material-icons">{item.icon}</span>
-                            </ListItemIcon>
-                            <ListItemText 
-                                primary={item.text}
-                                sx={{
-                                    '& .MuiTypography-root': {
-                                        fontSize: '0.9rem',
-                                        fontWeight: 500
-                                    }
-                                }}
-                            />
-                            {item.children && (
-                                <span className="material-icons">
-                                    {isOpen ? 'expand_less' : 'expand_more'}
-                                </span>
-                            )}
-                        </ListItem>
-                        {item.children && (
-                            <Collapse in={isOpen} timeout="auto" unmountOnExit>
-                                <List component="div" disablePadding>
-                                    {item.children.map((child) => (
-                                        <ListItem 
-                                            button 
-                                            key={child.text}
-                                            onClick={() => handleMenuClick(child)}
-                                            sx={{ 
-                                                pl: 4,
-                                                borderRadius: '8px',
-                                                mx: 1,
-                                                my: 0.5,
-                                                '&:hover': {
-                                                    backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                                                }
-                                            }}
-                                        >
-                                            <ListItemIcon>
-                                                <span className="material-icons">{child.icon}</span>
-                                            </ListItemIcon>
-                                            <ListItemText 
-                                                primary={child.text}
-                                                sx={{
-                                                    '& .MuiTypography-root': {
-                                                        fontSize: '0.875rem'
-                                                    }
-                                                }}
-                                            />
-                                        </ListItem>
-                                    ))}
-                                </List>
-                            </Collapse>
-                        )}
-                    </React.Fragment>
-                );
-            };
-
-            return (
-                <Drawer
-                    variant="permanent"
-                    sx={{
-                        width: 280,
-                        flexShrink: 0,
-                        '& .MuiDrawer-paper': {
-                            width: 280,
-                            boxSizing: 'border-box',
-                            marginTop: '64px',
-                            backgroundColor: '#ffffff',
-                            borderRight: '1px solid rgba(0, 0, 0, 0.12)'
-                        },
-                    }}
-                >
-                    <Box sx={{ 
-                        p: 2, 
-                        borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1
-                    }}>
-                        <Avatar 
-                            sx={{ 
-                                bgcolor: 'primary.main',
-                                width: 40,
-                                height: 40
-                            }}
-                        >
-                            <span className="material-icons">work</span>
-                        </Avatar>
-                        <Typography variant="h6" color="primary">
-                            WorkWise Pro
-                        </Typography>
-                    </Box>
-                    <List>
-                        {menuItems.map(renderMenuItem)}
-                    </List>
-                </Drawer>
+            const response = await fetch(
+                `https://18.215.160.136.nip.io/api${endpoint}`,
+                { ...defaultOptions, ...options }
             );
-        };
 
-        // Dashboard Component
-        const Dashboard = () => {
-            const stats = [
-                { title: 'Total Users', value: '1,234', icon: 'people', color: '#4F46E5' },
-                { title: 'Active Companies', value: '56', icon: 'business', color: '#10B981' },
-                { title: 'Total Revenue', value: '$12,345', icon: 'attach_money', color: '#F59E0B' },
-                { title: 'Active Projects', value: '89', icon: 'assignment', color: '#EF4444' }
-            ];
+            const data = await response.json();
 
-            return (
-                <Box sx={{ p: 3 }}>
-                    <Typography variant="h4" gutterBottom>
-                        Dashboard Overview
-                    </Typography>
-
-                    <Grid container spacing={3}>
-                        {stats.map((stat) => (
-                            <Grid item xs={12} sm={6} md={3} key={stat.title}>
-                                <Card sx={{ height: '100%' }}>
-                                    <CardContent>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                            <Avatar sx={{ bgcolor: stat.color, mr: 2 }}>
-                                                <span className="material-icons">{stat.icon}</span>
-                                            </Avatar>
-                                            <Typography color="textSecondary" variant="h6">
-                                                {stat.title}
-                                            </Typography>
-                                        </Box>
-                                        <Typography variant="h4">
-                                            {stat.value}
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                        ))}
-                    </Grid>
-
-                    {/* Recent Activity Section */}
-                    <Grid container spacing={3} sx={{ mt: 2 }}>
-                        <Grid item xs={12} md={6}>
-                            <Paper sx={{ p: 2 }}>
-                                <Typography variant="h6" gutterBottom>
-                                    Recent Activity
-                                </Typography>
-                                <List>
-                                    {[1, 2, 3].map((item) => (
-                                        <ListItem key={item}>
-                                            <ListItemIcon>
-                                                <Avatar sx={{ bgcolor: 'primary.main' }}>
-                                                    <span className="material-icons">notification_important</span>
-                                                </Avatar>
-                                            </ListItemIcon>
-                                            <ListItemText
-                                                primary="New user registered"
-                                                secondary="2 minutes ago"
-                                            />
-                                        </ListItem>
-                                    ))}
-                                </List>
-                            </Paper>
-                        </Grid>
-                        
-                        {/* Quick Actions Section */}
-                        <Grid item xs={12} md={6}>
-                            <Paper sx={{ p: 2 }}>
-                                <Typography variant="h6" gutterBottom>
-                                    Quick Actions
-                                </Typography>
-                                <Grid container spacing={2}>
-                                    {['Add User', 'New Company', 'Generate Report', 'System Backup'].map((action) => (
-                                        <Grid item xs={6} key={action}>
-                                            <Button
-                                                variant="outlined"
-                                                fullWidth
-                                                sx={{ height: '100%', minHeight: 80 }}
-                                            >
-                                                {action}
-                                            </Button>
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                            </Paper>
-                        </Grid>
-                    </Grid>
-                </Box>
-            );
-        };
-
-        // Main App Component
-        const App = () => {
-            const [loading, setLoading] = React.useState(true);
-            const [currentPage, setCurrentPage] = React.useState('dashboard');
-
-            React.useEffect(() => {
-                // Verify authentication
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    window.location.href = '/login.html';
-                    return;
-                }
-
-                // Simulate loading
-                setTimeout(() => setLoading(false), 1000);
-            }, []);
-
-            const theme = createTheme({
-                palette: {
-                    primary: {
-                        main: '#4F46E5',
-                    },
-                    secondary: {
-                        main: '#4338CA',
-                    },
-                    background: {
-                        default: '#F8FAFC',
-                    },
-                },
-                typography: {
-                    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-                },
-                components: {
-                    MuiButton: {
-                        styleOverrides: {
-                            root: {
-                                textTransform: 'none',
-                                borderRadius: 8,
-                            },
-                        },
-                    },
-                },
-            });
-
-            if (loading) {
-                return (
-                    <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'center', 
-                        alignItems: 'center', 
-                        height: '100vh' 
-                    }}>
-                        <CircularProgress />
-                    </Box>
-                );
+            if (!response.ok) {
+                throw new Error(data.message || 'API request failed');
             }
 
-            return (
-                <ThemeProvider theme={theme}>
-                    <Box sx={{ display: 'flex' }}>
-                        <CssBaseline />
-                        <Header />
-                        <Sidebar onPageChange={setCurrentPage} />
-                        <Box
-                            component="main"
-                            sx={{
-                                flexGrow: 1,
-                                p: 3,
-                                marginLeft: '280px',
-                                marginTop: '64px',
-                                backgroundColor: 'background.default',
-                                minHeight: '100vh'
+            return data;
+        } catch (error) {
+            console.error('API Request Error:', error);
+            showNotification(error.message, 'error');
+            throw error;
+        }
+    };
+
+    // Date formatting utility
+    const formatDate = (date) => {
+        return new Intl.DateTimeFormat('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }).format(new Date(date));
+    };
+
+    // Permission checking utility
+    const checkPermission = (requiredPermission) => {
+        const userRole = localStorage.getItem('userRole');
+        if (userRole === 'superadmin') return true;
+        
+        const userPermissions = JSON.parse(localStorage.getItem('userPermissions') || '[]');
+        return userPermissions.includes(requiredPermission);
+    };
+
+    // Theme configuration
+    const theme = createTheme({
+        palette: {
+            primary: {
+                main: '#4F46E5',
+                light: '#818CF8',
+                dark: '#4338CA',
+                contrastText: '#ffffff'
+            },
+            secondary: {
+                main: '#10B981',
+                light: '#34D399',
+                dark: '#059669',
+                contrastText: '#ffffff'
+            },
+            error: {
+                main: '#EF4444',
+                light: '#F87171',
+                dark: '#DC2626'
+            },
+            warning: {
+                main: '#F59E0B',
+                light: '#FBBF24',
+                dark: '#D97706'
+            },
+            info: {
+                main: '#3B82F6',
+                light: '#60A5FA',
+                dark: '#2563EB'
+            },
+            success: {
+                main: '#10B981',
+                light: '#34D399',
+                dark: '#059669'
+            },
+            background: {
+                default: '#F8FAFC',
+                paper: '#FFFFFF'
+            },
+            text: {
+                primary: '#1F2937',
+                secondary: '#6B7280'
+            }
+        },
+        typography: {
+            fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+            h1: {
+                fontSize: '2.5rem',
+                fontWeight: 600
+            },
+            h2: {
+                fontSize: '2rem',
+                fontWeight: 600
+            },
+            h3: {
+                fontSize: '1.75rem',
+                fontWeight: 600
+            },
+            h4: {
+                fontSize: '1.5rem',
+                fontWeight: 500
+            },
+            h5: {
+                fontSize: '1.25rem',
+                fontWeight: 500
+            },
+            h6: {
+                fontSize: '1rem',
+                fontWeight: 500
+            }
+        },
+        components: {
+            MuiButton: {
+                styleOverrides: {
+                    root: {
+                        borderRadius: 8,
+                        textTransform: 'none',
+                        fontWeight: 500
+                    }
+                }
+            },
+            MuiCard: {
+                styleOverrides: {
+                    root: {
+                        borderRadius: 12,
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    }
+                }
+            },
+            MuiDrawer: {
+                styleOverrides: {
+                    paper: {
+                        borderRight: '1px solid rgba(0, 0, 0, 0.12)'
+                    }
+                }
+            }
+        }
+    });
+
+    // Session management
+    const checkSession = () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login.html';
+            return false;
+        }
+        return true;
+    };
+
+    // Initialize session timeout
+    let sessionTimeout;
+    const resetSessionTimeout = () => {
+        clearTimeout(sessionTimeout);
+        sessionTimeout = setTimeout(() => {
+            localStorage.clear();
+            window.location.href = '/login.html';
+        }, 30 * 60 * 1000); // 30 minutes
+    };
+
+    // Add session timeout listeners
+    document.addEventListener('mousemove', resetSessionTimeout);
+    document.addEventListener('keypress', resetSessionTimeout);
+    document.addEventListener('click', resetSessionTimeout);
+
+    // Continue with components in next part...
+        // Header Component
+const Header = () => {
+    const [anchorEl, setAnchorEl] = React.useState(null);
+    const [notificationsAnchor, setNotificationsAnchor] = React.useState(null);
+    const [notifications, setNotifications] = React.useState([]);
+    const [unreadCount, setUnreadCount] = React.useState(0);
+    const userEmail = localStorage.getItem('userEmail');
+    const userName = localStorage.getItem('userName');
+    const userRole = localStorage.getItem('userRole');
+
+    React.useEffect(() => {
+        fetchNotifications();
+    }, []);
+
+    const fetchNotifications = async () => {
+        try {
+            const response = await apiRequest('/notifications');
+            setNotifications(response.notifications || []);
+            setUnreadCount(response.notifications.filter(n => !n.read).length);
+        } catch (error) {
+            console.error('Failed to fetch notifications:', error);
+        }
+    };
+
+    const handleNotificationClick = async (notificationId) => {
+        try {
+            await apiRequest(`/notifications/${notificationId}/read`, { method: 'PUT' });
+            setNotifications(prev => 
+                prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+            );
+            setUnreadCount(prev => Math.max(0, prev - 1));
+        } catch (error) {
+            console.error('Failed to mark notification as read:', error);
+        }
+    };
+
+    const handleMenu = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleNotificationsMenu = (event) => {
+        setNotificationsAnchor(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleNotificationsClose = () => {
+        setNotificationsAnchor(null);
+    };
+
+    const handleLogout = () => {
+        try {
+            // Clear session
+            localStorage.clear();
+            // Clear any running timers
+            clearTimeout(sessionTimeout);
+            // Redirect to login
+            window.location.href = '/login.html';
+        } catch (error) {
+            console.error('Logout error:', error);
+            showNotification('Failed to logout properly', 'error');
+        }
+    };
+
+    const handleProfile = () => {
+        handleClose();
+        // Navigate to profile page
+        // This will be implemented when we add routing
+    };
+
+    return (
+        <AppBar 
+            position="fixed" 
+            sx={{ 
+                zIndex: (theme) => theme.zIndex.drawer + 1,
+                backgroundColor: 'white',
+                color: 'text.primary',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.12)'
+            }}
+        >
+            <Toolbar>
+                {/* Logo and Brand */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Avatar 
+                        sx={{ 
+                            bgcolor: 'primary.main',
+                            width: 40,
+                            height: 40
+                        }}
+                    >
+                        <span className="material-icons">work</span>
+                    </Avatar>
+                    <Typography 
+                        variant="h6" 
+                        component="div" 
+                        sx={{ 
+                            color: 'primary.main',
+                            fontWeight: 600,
+                            display: { xs: 'none', sm: 'block' }
+                        }}
+                    >
+                        WorkWise Pro
+                    </Typography>
+                </Box>
+
+                <Box sx={{ flexGrow: 1 }} />
+
+                {/* Notifications */}
+                <IconButton 
+                    size="large" 
+                    color="inherit"
+                    onClick={handleNotificationsMenu}
+                    sx={{ mr: 2 }}
+                >
+                    <Badge badgeContent={unreadCount} color="error">
+                        <span className="material-icons">notifications</span>
+                    </Badge>
+                </IconButton>
+
+                {/* Notifications Menu */}
+                <Menu
+                    anchorEl={notificationsAnchor}
+                    open={Boolean(notificationsAnchor)}
+                    onClose={handleNotificationsClose}
+                    PaperProps={{
+                        sx: { 
+                            width: 320,
+                            maxHeight: 400
+                        }
+                    }}
+                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                >
+                    <Box sx={{ p: 2, borderBottom: '1px solid rgba(0,0,0,0.12)' }}>
+                        <Typography variant="h6">Notifications</Typography>
+                    </Box>
+                    {notifications.length === 0 ? (
+                        <Box sx={{ p: 2, textAlign: 'center' }}>
+                            <Typography color="textSecondary">
+                                No notifications
+                            </Typography>
+                        </Box>
+                    ) : (
+                        notifications.map((notification) => (
+                            <MenuItem 
+                                key={notification.id}
+                                onClick={() => handleNotificationClick(notification.id)}
+                                sx={{
+                                    py: 1.5,
+                                    px: 2,
+                                    borderLeft: notification.read ? 'none' : '4px solid',
+                                    borderLeftColor: 'primary.main'
+                                }}
+                            >
+                                <Box sx={{ width: '100%' }}>
+                                    <Typography variant="subtitle2">
+                                        {notification.title}
+                                    </Typography>
+                                    <Typography variant="body2" color="textSecondary">
+                                        {notification.message}
+                                    </Typography>
+                                    <Typography 
+                                        variant="caption" 
+                                        color="textSecondary"
+                                        sx={{ display: 'block', mt: 0.5 }}
+                                    >
+                                        {formatDate(notification.timestamp)}
+                                    </Typography>
+                                </Box>
+                            </MenuItem>
+                        ))
+                    )}
+                </Menu>
+
+                {/* User Menu */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                        <Typography variant="subtitle1">
+                            {userName || userEmail}
+                        </Typography>
+                        <Typography 
+                            variant="caption" 
+                            color="textSecondary"
+                            sx={{ display: 'block', lineHeight: 1 }}
+                        >
+                            {userRole}
+                        </Typography>
+                    </Box>
+                    <IconButton
+                        onClick={handleMenu}
+                        size="small"
+                        sx={{ ml: 1 }}
+                    >
+                        <Avatar 
+                            sx={{ 
+                                width: 32, 
+                                height: 32,
+                                bgcolor: 'primary.main',
+                                fontSize: '1rem'
                             }}
                         >
-                            <Dashboard />
-                        </Box>
-                    </Box>
-                </ThemeProvider>
-            );
-        };
+                            {userName ? userName[0].toUpperCase() : 
+                             userEmail ? userEmail[0].toUpperCase() : 'U'}
+                        </Avatar>
+                    </IconButton>
+                </Box>
 
-        // Render the App
-        ReactDOM.render(
-            <App />,
-            document.getElementById('root')
+                {/* User Menu Items */}
+                <Menu
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl)}
+                    onClose={handleClose}
+                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                >
+                    <MenuItem onClick={handleProfile}>
+                        <ListItemIcon>
+                            <span className="material-icons">account_circle</span>
+                        </ListItemIcon>
+                        <ListItemText primary="My Profile" />
+                    </MenuItem>
+                    <MenuItem onClick={handleClose}>
+                        <ListItemIcon>
+                            <span className="material-icons">settings</span>
+                        </ListItemIcon>
+                        <ListItemText primary="Settings" />
+                    </MenuItem>
+                    <Divider />
+                    <MenuItem onClick={handleLogout}>
+                        <ListItemIcon>
+                            <span className="material-icons" style={{ color: '#EF4444' }}>
+                                logout
+                            </span>
+                        </ListItemIcon>
+                        <ListItemText 
+                            primary="Logout" 
+                            primaryTypographyProps={{ color: 'error' }}
+                        />
+                    </MenuItem>
+                </Menu>
+            </Toolbar>
+        </AppBar>
+    );
+};
+        // Sidebar Component
+const Sidebar = ({ onPageChange }) => {
+    const [openMenus, setOpenMenus] = React.useState({});
+    const [selectedPath, setSelectedPath] = React.useState('dashboard');
+
+    const menuItems = [
+        {
+            text: 'Dashboard Overview',
+            icon: 'dashboard',
+            path: 'dashboard'
+        },
+        {
+            text: 'Companies/Organizations',
+            icon: 'business',
+            children: [
+                { 
+                    text: 'Management', 
+                    icon: 'manage_accounts', 
+                    path: 'companies-management' 
+                },
+                { 
+                    text: 'Companies List', 
+                    icon: 'list', 
+                    path: 'companies-list' 
+                }
+            ]
+        },
+        {
+            text: 'System Settings',
+            icon: 'settings',
+            children: [
+                { 
+                    text: 'General Settings', 
+                    icon: 'tune', 
+                    path: 'general-settings' 
+                },
+                { 
+                    text: 'Pricing & Plans', 
+                    icon: 'payments', 
+                    path: 'pricing-plans' 
+                },
+                { 
+                    text: 'Security Settings', 
+                    icon: 'security', 
+                    path: 'security-settings' 
+                }
+            ]
+        },
+        {
+            text: 'Modules Management',
+            icon: 'extension',
+            children: [
+                { 
+                    text: 'Modules List', 
+                    icon: 'view_module', 
+                    path: 'modules-list' 
+                },
+                { 
+                    text: 'Module Settings', 
+                    icon: 'settings_applications', 
+                    path: 'module-settings' 
+                }
+            ]
+        },
+        {
+            text: 'User Management',
+            icon: 'people',
+            children: [
+                { 
+                    text: 'Users List', 
+                    icon: 'group', 
+                    path: 'users-list' 
+                },
+                { 
+                    text: 'Roles & Permissions', 
+                    icon: 'admin_panel_settings', 
+                    path: 'roles-permissions' 
+                },
+                { 
+                    text: 'Organization Chart', 
+                    icon: 'account_tree', 
+                    path: 'org-chart' 
+                }
+            ]
+        },
+        {
+            text: 'Tools',
+            icon: 'build',
+            children: [
+                { 
+                    text: 'Analytics & Reports', 
+                    icon: 'analytics', 
+                    path: 'analytics' 
+                },
+                { 
+                    text: 'Backup & Restore', 
+                    icon: 'backup', 
+                    path: 'backup' 
+                },
+                { 
+                    text: 'Audit Logs', 
+                    icon: 'fact_check', 
+                    path: 'audit-logs' 
+                },
+                { 
+                    text: 'API Management', 
+                    icon: 'api', 
+                    path: 'api-management' 
+                }
+            ]
+        },
+        {
+            text: 'Support',
+            icon: 'help',
+            children: [
+                { 
+                    text: 'Support Center', 
+                    icon: 'support', 
+                    path: 'support-center' 
+                }
+            ]
+        }
+    ];
+
+    const handleMenuClick = (item) => {
+        if (item.children) {
+            setOpenMenus(prev => ({
+                ...prev,
+                [item.text]: !prev[item.text]
+            }));
+        } else {
+            setSelectedPath(item.path);
+            onPageChange(item.path);
+        }
+    };
+
+    const handleChildClick = (childItem, parentText) => {
+        setSelectedPath(childItem.path);
+        onPageChange(childItem.path);
+    };
+
+    const isItemSelected = (path) => selectedPath === path;
+
+    const renderMenuItem = (item) => {
+        const isOpen = openMenus[item.text];
+        const isSelected = isItemSelected(item.path);
+
+        return (
+            <React.Fragment key={item.text}>
+                <ListItem 
+                    button 
+                    onClick={() => handleMenuClick(item)}
+                    sx={{
+                        borderRadius: '8px',
+                        mx: 1,
+                        my: 0.5,
+                        backgroundColor: isSelected ? 'rgba(79, 70, 229, 0.08)' : 'transparent',
+                        color: isSelected ? 'primary.main' : 'text.primary',
+                        '&:hover': {
+                            backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                        }
+                    }}
+                >
+                    <ListItemIcon sx={{ 
+                        color: isSelected ? 'primary.main' : 'inherit',
+                        minWidth: 40 
+                    }}>
+                        <span className="material-icons">{item.icon}</span>
+                    </ListItemIcon>
+                    <ListItemText 
+                        primary={item.text}
+                        sx={{
+                            '& .MuiTypography-root': {
+                                fontSize: '0.9rem',
+                                fontWeight: isSelected ? 600 : 400
+                            }
+                        }}
+                    />
+                    {item.children && (
+                        <span className="material-icons">
+                            {isOpen ? 'expand_less' : 'expand_more'}
+                        </span>
+                    )}
+                </ListItem>
+
+                {item.children && (
+                    <Collapse in={isOpen} timeout="auto" unmountOnExit>
+                        <List component="div" disablePadding>
+                            {item.children.map((child) => {
+                                const isChildSelected = isItemSelected(child.path);
+                                return (
+                                    <ListItem 
+                                        button 
+                                        key={child.text}
+                                        onClick={() => handleChildClick(child, item.text)}
+                                        sx={{ 
+                                            pl: 4,
+                                            borderRadius: '8px',
+                                            mx: 1,
+                                            my: 0.5,
+                                            backgroundColor: isChildSelected ? 
+                                                'rgba(79, 70, 229, 0.08)' : 'transparent',
+                                            color: isChildSelected ? 'primary.main' : 'text.primary',
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                                            }
+                                        }}
+                                    >
+                                        <ListItemIcon sx={{ 
+                                            color: isChildSelected ? 'primary.main' : 'inherit',
+                                            minWidth: 40 
+                                        }}>
+                                            <span className="material-icons">{child.icon}</span>
+                                        </ListItemIcon>
+                                        <ListItemText 
+                                            primary={child.text}
+                                            sx={{
+                                                '& .MuiTypography-root': {
+                                                    fontSize: '0.875rem',
+                                                    fontWeight: isChildSelected ? 600 : 400
+                                                }
+                                            }}
+                                        />
+                                    </ListItem>
+                                );
+                            })}
+                        </List>
+                    </Collapse>
+                )}
+            </React.Fragment>
         );
-    </script>
+    };
+
+    return (
+        <Drawer
+            variant="permanent"
+            sx={{
+                width: 280,
+                flexShrink: 0,
+                '& .MuiDrawer-paper': {
+                    width: 280,
+                    boxSizing: 'border-box',
+                    marginTop: '64px',
+                    backgroundColor: '#ffffff',
+                    borderRight: '1px solid rgba(0, 0, 0, 0.12)',
+                    height: 'calc(100vh - 64px)'
+                },
+            }}
+        >
+            <Box
+                sx={{
+                    overflow: 'auto',
+                    height: '100%',
+                    '&::-webkit-scrollbar': {
+                        width: '4px',
+                    },
+                    '&::-webkit-scrollbar-track': {
+                        backgroundColor: 'transparent',
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                        borderRadius: '2px',
+                    }
+                }}
+            >
+                <List>
+                    {menuItems.map(renderMenuItem)}
+                </List>
+            </Box>
+        </Drawer>
+    );
+};
+        // Dashboard Component
+const Dashboard = () => {
+    const [stats, setStats] = React.useState({
+        totalUsers: 0,
+        activeCompanies: 0,
+        totalRevenue: 0,
+        activeProjects: 0
+    });
+    const [recentActivities, setRecentActivities] = React.useState([]);
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        fetchDashboardData();
+    }, []);
+
+    const fetchDashboardData = async () => {
+        try {
+            const [statsData, activitiesData] = await Promise.all([
+                apiRequest('/dashboard/stats'),
+                apiRequest('/dashboard/activities')
+            ]);
+
+            setStats(statsData);
+            setRecentActivities(activitiesData.activities);
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error);
+            showNotification('Failed to load dashboard data', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const StatCard = ({ title, value, icon, color }) => (
+        <Card sx={{ height: '100%' }}>
+            <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Avatar sx={{ bgcolor: color, mr: 2 }}>
+                        <span className="material-icons">{icon}</span>
+                    </Avatar>
+                    <Typography color="textSecondary" variant="h6">
+                        {title}
+                    </Typography>
+                </Box>
+                <Typography variant="h4" sx={{ fontWeight: 600 }}>
+                    {value}
+                </Typography>
+            </CardContent>
+        </Card>
+    );
+
+    const QuickAction = ({ title, icon, onClick }) => (
+        <Button
+            variant="outlined"
+            startIcon={<span className="material-icons">{icon}</span>}
+            onClick={onClick}
+            sx={{
+                height: '100%',
+                minHeight: 80,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1,
+                p: 2,
+                borderRadius: 2,
+                borderColor: 'rgba(0, 0, 0, 0.12)',
+                '&:hover': {
+                    borderColor: 'primary.main',
+                    backgroundColor: 'rgba(79, 70, 229, 0.04)'
+                }
+            }}
+        >
+            {title}
+        </Button>
+    );
+
+    const ActivityItem = ({ activity }) => (
+        <ListItem 
+            sx={{ 
+                borderRadius: 1,
+                mb: 1,
+                '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.02)'
+                }
+            }}
+        >
+            <ListItemIcon>
+                <Avatar 
+                    sx={{ 
+                        bgcolor: activity.type === 'user' ? 'primary.main' :
+                                activity.type === 'company' ? 'secondary.main' :
+                                'warning.main'
+                    }}
+                >
+                    <span className="material-icons">{activity.icon}</span>
+                </Avatar>
+            </ListItemIcon>
+            <ListItemText
+                primary={activity.description}
+                secondary={formatDate(activity.timestamp)}
+                primaryTypographyProps={{
+                    variant: 'body1',
+                    fontWeight: 500
+                }}
+                secondaryTypographyProps={{
+                    variant: 'caption',
+                    color: 'textSecondary'
+                }}
+            />
+            {activity.status && (
+                <Chip
+                    label={activity.status}
+                    size="small"
+                    color={
+                        activity.status === 'completed' ? 'success' :
+                        activity.status === 'pending' ? 'warning' : 'default'
+                    }
+                    sx={{ ml: 1 }}
+                />
+            )}
+        </ListItem>
+    );
+
+    if (loading) {
+        return (
+            <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center',
+                height: '100%',
+                p: 3 
+            }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    return (
+        <Box sx={{ p: 3 }}>
+            {/* Page Header */}
+            <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                mb: 3 
+            }}>
+                <Typography variant="h4" sx={{ fontWeight: 600 }}>
+                    Dashboard Overview
+                </Typography>
+                <Button
+                    variant="contained"
+                    startIcon={<span className="material-icons">download</span>}
+                >
+                    Export Report
+                </Button>
+            </Box>
+
+            {/* Statistics Cards */}
+            <Grid container spacing={3} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={6} md={3}>
+                    <StatCard
+                        title="Total Users"
+                        value={stats.totalUsers.toLocaleString()}
+                        icon="people"
+                        color="#4F46E5"
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                    <StatCard
+                        title="Active Companies"
+                        value={stats.activeCompanies.toLocaleString()}
+                        icon="business"
+                        color="#10B981"
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                    <StatCard
+                        title="Total Revenue"
+                        value={`$${stats.totalRevenue.toLocaleString()}`}
+                        icon="attach_money"
+                        color="#F59E0B"
+                    />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                    <StatCard
+                        title="Active Projects"
+                        value={stats.activeProjects.toLocaleString()}
+                        icon="assignment"
+                        color="#EF4444"
+                    />
+                </Grid>
+            </Grid>
+
+            {/* Main Content */}
+            <Grid container spacing={3}>
+                {/* Recent Activity */}
+                <Grid item xs={12} md={8}>
+                    <Card>
+                        <CardContent>
+                            <Box sx={{ 
+                                display: 'flex', 
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                mb: 2
+                            }}>
+                                <Typography variant="h6">Recent Activity</Typography>
+                                <Button 
+                                    size="small"
+                                    endIcon={<span className="material-icons">arrow_forward</span>}
+                                >
+                                    View All
+                                </Button>
+                            </Box>
+                            <List>
+                                {recentActivities.map((activity, index) => (
+                                    <ActivityItem key={index} activity={activity} />
+                                ))}
+                            </List>
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                {/* Quick Actions */}
+                <Grid item xs={12} md={4}>
+                    <Card>
+                        <CardContent>
+                            <Typography variant="h6" sx={{ mb: 2 }}>
+                                Quick Actions
+                            </Typography>
+                            <Grid container spacing={2}>
+                                <Grid item xs={6}>
+                                    <QuickAction
+                                        title="Add User"
+                                        icon="person_add"
+                                        onClick={() => onPageChange('users-list')}
+                                    />
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <QuickAction
+                                        title="New Company"
+                                        icon="business"
+                                        onClick={() => onPageChange('companies-list')}
+                                    />
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <QuickAction
+                                        title="Generate Report"
+                                        icon="assessment"
+                                        onClick={() => onPageChange('analytics')}
+                                    />
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <QuickAction
+                                        title="System Backup"
+                                        icon="backup"
+                                        onClick={() => onPageChange('backup')}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </CardContent>
+                    </Card>
+                </Grid>
+            </Grid>
+        </Box>
+    );
+};
+</script>
 </body>
 </html>
