@@ -6,13 +6,16 @@ applications:
         preBuild:
           commands:
             - npm install
+            - cd dashboard && npm install
         build:
           commands:
-            - echo "Build completed"
+            - cd dashboard && npm run build
       artifacts:
         baseDirectory: public
         files:
           - '**/*'
+        discard-paths: no
       cache:
         paths:
           - node_modules/**/*
+          - dashboard/node_modules/**/*
