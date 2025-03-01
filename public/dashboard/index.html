@@ -175,83 +175,165 @@
         };
 
         // Simple API service
-        const apiService = {
-            baseUrl: 'https://18.215.160.136.nip.io/api',
-            
-            async fetch(endpoint, options = {}) {
-                const token = localStorage.getItem('token');
-                const defaultOptions = {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
+       // API Service with actual user endpoints and mock data for others
+const apiService = {
+    baseUrl: 'https://18.215.160.136.nip.io/api',
+    
+    async fetch(endpoint, options = {}) {
+        const token = localStorage.getItem('token');
+        const defaultOptions = {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        };
+
+        try {
+            // User-related endpoints from your server.js
+            if (endpoint.startsWith('/users') || 
+                endpoint === '/verify-token' || 
+                endpoint === '/login' || 
+                endpoint === '/register') {
+                
+                const response = await fetch(
+                    `${this.baseUrl}${endpoint}`,
+                    { ...defaultOptions, ...options }
+                );
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                return await response.json();
+            }
+
+            // Mock data for other endpoints
+            return this.getMockData(endpoint);
+        } catch (error) {
+            console.error('API Error:', error);
+            throw error;
+        }
+    },
+
+    // Mock data provider
+    getMockData(endpoint) {
+        switch (endpoint) {
+            case '/dashboard/stats':
+                return {
+                    success: true,
+                    stats: {
+                        totalCompanies: 150,
+                        activeUsers: 1250,
+                        totalRevenue: 125000,
+                        activeModules: 25
+                    }
                 };
 
-                try {
-                    const response = await fetch(
-                        `${this.baseUrl}${endpoint}`,
-                        { ...defaultOptions, ...options }
-                    );
-                    const data = await response.json();
-                    
-                    if (!response.ok) {
-                        throw new Error(data.message || 'API request failed');
-                    }
-                    
-                    return data;
-                } catch (error) {
-                    console.error('API Error:', error);
-                    throw error;
+            case '/activities':
+                return {
+                    success: true,
+                    activities: [
+                        {
+                            id: 1,
+                            action: 'New company registered',
+                            timestamp: '2 minutes ago',
+                            icon: 'building'
+                        },
+                        {
+                            id: 2,
+                            action: 'User role updated',
+                            timestamp: '5 minutes ago',
+                            icon: 'user-cog'
+                        },
+                        {
+                            id: 3,
+                            action: 'System backup completed',
+                            timestamp: '15 minutes ago',
+                            icon: 'database'
+                        },
+                        {
+                            id: 4,
+                            action: 'New module activated',
+                            timestamp: '1 hour ago',
+                            icon: 'puzzle-piece'
+                        }
+                    ]
+                };
+
+            case '/notifications':
+                return {
+                    success: true,
+                    notifications: [
+                        {
+                            id: 1,
+                            message: 'System update available',
+                            type: 'info',
+                            timestamp: new Date().toISOString()
+                        },
+                        {
+                            id: 2,
+                            message: 'New user registration',
+                            type: 'success',
+                            timestamp: new Date().toISOString()
+                        }
+                    ]
+                };
+
+            default:
+                return {
+                    success: false,
+                    message: 'Endpoint not implemented'
+                };
+        }
+    }
+};
+
+        // DashboardStats Component
+       const DashboardStats = () => {
+    const [stats, setStats] = useState({
+        totalCompanies: 0,
+        activeUsers: 0,
+        totalRevenue: 0,
+        activeModules: 0
+    });
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const data = await apiService.fetch('/dashboard/stats');
+                if (data.success) {
+                    setStats(data.stats);
                 }
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+                // Keep using initial state if API fails
             }
         };
 
-        // DashboardStats Component
-        const DashboardStats = () => {
-            const [stats, setStats] = useState({
-                totalCompanies: 0,
-                activeUsers: 0,
-                totalRevenue: 0,
-                activeModules: 0
-            });
+        fetchStats();
+    }, []);
 
-            useEffect(() => {
-                const fetchStats = async () => {
-                    try {
-                        const data = await apiService.fetch('/dashboard/stats');
-                        if (data.success) {
-                            setStats(data.stats);
-                        }
-                    } catch (error) {
-                        console.error('Error fetching stats:', error);
-                    }
-                };
-
-                fetchStats();
-            }, []);
-
-            return (
-                <div className="stats-grid">
-                    <div className="stat-card">
-                        <h3>Total Companies</h3>
-                        <div className="value">{formatNumber(stats.totalCompanies)}</div>
-                    </div>
-                    <div className="stat-card">
-                        <h3>Active Users</h3>
-                        <div className="value">{formatNumber(stats.activeUsers)}</div>
-                    </div>
-                    <div className="stat-card">
-                        <h3>Total Revenue</h3>
-                        <div className="value">${formatNumber(stats.totalRevenue)}</div>
-                    </div>
-                    <div className="stat-card">
-                        <h3>Active Modules</h3>
-                        <div className="value">{formatNumber(stats.activeModules)}</div>
-                    </div>
-                </div>
-            );
-        };
-
+    return (
+        <div className="stats-grid">
+            <div className="stat-card">
+                <h3>Total Companies</h3>
+                <div className="value">{formatNumber(stats.totalCompanies)}</div>
+            </div>
+            <div className="stat-card">
+                <h3>Active Users</h3>
+                <div className="value">{formatNumber(stats.activeUsers)}</div>
+            </div>
+            <div className="stat-card">
+                <h3>Total Revenue</h3>
+                <div className="value">${formatNumber(stats.totalRevenue)}</div>
+            </div>
+            <div className="stat-card">
+                <h3>Active Modules</h3>
+                <div className="value">{formatNumber(stats.activeModules)}</div>
+            </div>
+        </div>
+    );
+};
         // Sidebar Component
    const Sidebar = () => {
     const [isCollapsed, setIsCollapsed] = useState(false);
