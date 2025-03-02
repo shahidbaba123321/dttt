@@ -67,47 +67,71 @@ class RolesPermissionsManager {
     }
 
     async fetchWithAuth(endpoint, options = {}) {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            throw new Error('No authentication token found');
+    const token = localStorage.getItem('token');
+    if (!token) {
+        throw new Error('No authentication token found');
+    }
+
+    const defaultOptions = {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+    };
+
+    const finalOptions = {
+        ...defaultOptions,
+        ...options,
+        headers: {
+            ...defaultOptions.headers,
+            ...(options.headers || {})
         }
+    };
 
-        const defaultOptions = {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-        };
+    try {
+        const response = await fetch(
+            `${this.baseUrl}${endpoint}`,
+            finalOptions
+        );
 
-        const finalOptions = {
-            ...defaultOptions,
-            ...options,
-            headers: {
-                ...defaultOptions.headers,
-                ...(options.headers || {})
-            }
-        };
-
-        try {
-            const response = await fetch(
-                `${this.baseUrl}${endpoint}`,
-                finalOptions
-            );
-
-            if (response.status === 401) {
-                // Handle unauthorized access
+        // Handle specific HTTP status codes
+        switch (response.status) {
+            case 401:
                 localStorage.clear();
                 window.location.href = '/login.html';
                 throw new Error('Session expired. Please login again.');
-            }
-
-            return response;
-        } catch (error) {
-            console.error('API request failed:', error);
-            throw error;
+            case 403:
+                throw new Error('You do not have permission to perform this action');
+            case 404:
+                throw new Error('Resource not found');
+            case 409:
+                throw new Error('Conflict with existing data');
         }
-    }
 
+        // Try to parse response as JSON
+        try {
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.message || `HTTP error! status: ${response.status}`);
+                }
+                return data;
+            } else {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response;
+            }
+        } catch (parseError) {
+            console.error('Error parsing response:', parseError);
+            throw new Error('Invalid response from server');
+        }
+    } catch (error) {
+        console.error('API request failed:', error);
+        throw error;
+    }
+}
     initializeEventListeners() {
         // Create Role Button
         const createRoleBtn = document.getElementById('createRoleBtn');
@@ -505,67 +529,85 @@ class RolesPermissionsManager {
     }
 
     async deleteRole(roleId) {
-        try {
-            const role = this.roles.find(r => r._id === roleId);
-            if (!role) {
-                throw new Error('Role not found');
-            }
+    try {
+        const role = this.roles.find(r => r._id === roleId);
+        if (!role) {
+            throw new Error('Role not found');
+        }
 
-            if (role.name.toLowerCase() === 'superadmin') {
-                this.showNotification('Super Admin role cannot be deleted', 'error');
-                return;
-            }
+        if (role.name.toLowerCase() === 'superadmin') {
+            this.showNotification('Super Admin role cannot be deleted', 'error');
+            return;
+        }
 
-            // Check if role has assigned users
-            if (role.userCount > 0) {
-                const confirmed = await this.showConfirmDialog(
-                    'Delete Role',
-                    `This role is assigned to ${role.userCount} user(s). These users will lose their permissions. Are you sure you want to continue?`
-                );
-                if (!confirmed) return;
-            } else {
-                const confirmed = await this.showConfirmDialog(
-                    'Delete Role',
-                    `Are you sure you want to delete the role "${role.name}"? This action cannot be undone.`
-                );
-                if (!confirmed) return;
-            }
+        // Check if role has assigned users
+        if (role.userCount > 0) {
+            const confirmed = await this.showConfirmDialog(
+                'Delete Role',
+                `This role is assigned to ${role.userCount} user(s). These users will lose their permissions. Are you sure you want to continue?`
+            );
+            if (!confirmed) return;
+        } else {
+            const confirmed = await this.showConfirmDialog(
+                'Delete Role',
+                `Are you sure you want to delete the role "${role.name}"? This action cannot be undone.`
+            );
+            if (!confirmed) return;
+        }
 
-            const response = await this.fetchWithAuth(`/roles/${roleId}`, {
-                method: 'DELETE'
+        // First, move the role to deleted_roles collection
+        const deleteResponse = await this.fetchWithAuth(`/roles/${roleId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                reason: 'User requested deletion',
+                deletedBy: localStorage.getItem('userEmail')
+            })
+        });
+
+        if (!deleteResponse.ok) {
+            const errorData = await deleteResponse.json();
+            throw new Error(errorData.message || 'Failed to delete role');
+        }
+
+        const data = await deleteResponse.json();
+
+        if (data.success) {
+            // Create audit log
+            await this.createAuditLog('ROLE_DELETED', {
+                roleId,
+                roleName: role.name,
+                deletedRole: {
+                    name: role.name,
+                    description: role.description,
+                    permissions: role.permissions,
+                    userCount: role.userCount
+                },
+                deletedBy: localStorage.getItem('userEmail'),
+                timestamp: new Date().toISOString()
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to delete role');
-            }
-
-            const data = await response.json();
-
-            if (data.success) {
-                // Create audit log
-                await this.createAuditLog('ROLE_DELETED', {
-                    roleId,
-                    roleName: role.name,
-                    deletedRole: {
-                        name: role.name,
-                        description: role.description,
-                        permissions: role.permissions,
-                        userCount: role.userCount
-                    },
-                    deletedBy: localStorage.getItem('userEmail'),
-                    timestamp: new Date().toISOString()
-                });
-
-                this.showNotification('Role deleted successfully', 'success');
-                await this.loadRoles();
-            } else {
-                throw new Error(data.message || 'Failed to delete role');
-            }
-        } catch (error) {
-            console.error('Error deleting role:', error);
-            this.showNotification(error.message || 'Failed to delete role', 'error');
+            // Remove role from local array
+            this.roles = this.roles.filter(r => r._id !== roleId);
+            
+            // Update the UI
+            this.renderRoles();
+            
+            this.showNotification('Role deleted successfully', 'success');
+        } else {
+            throw new Error(data.message || 'Failed to delete role');
         }
+    } catch (error) {
+        console.error('Error deleting role:', error);
+        this.showNotification(
+            error.message || 'Failed to delete role. Please try again.',
+            'error'
+        );
     }
+}
 
     async createAuditLog(action, details) {
         try {
