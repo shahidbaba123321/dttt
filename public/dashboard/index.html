@@ -1,1687 +1,576 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <meta charset="UTF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SuperAdmin Dashboard - WorkWise Pro</title>
-
-   <!-- React Dependencies -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <title>WorkWise Pro - Superadmin Dashboard</title>
     
-    <!-- Material UI -->
-    <script src="https://unpkg.com/@mui/material@5.14.13/umd/material-ui.production.min.js"></script>
-    
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- Fonts and Icons -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
- 
-   <style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    body {
-        font-family: 'Roboto', sans-serif;
-        background-color: #f8fafc;
-    }
-
-    /* Modern Dashboard Cards */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 24px;
-        margin-bottom: 32px;
-    }
-
-    .stat-card {
-        background: linear-gradient(145deg, #ffffff, #f8fafc);
-        padding: 24px;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        border: 1px solid rgba(255, 255, 255, 0.8);
-    }
-
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    }
-
-    .stat-card h3 {
-        color: #64748b;
-        font-size: 0.95rem;
-        font-weight: 500;
-        margin-bottom: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .stat-card .value {
-        font-size: 2.2rem;
-        font-weight: 600;
-        color: #1e293b;
-        margin-bottom: 8px;
-    }
-
-    /* Roles Grid */
-       .roles-header {
-    background: white;
-    border-radius: 16px;
-    padding: 24px;
-    margin-bottom: 24px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-       
-    .roles-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 24px;
-        margin-bottom: 32px;
-    }
-
-    .role-card {
-        background: white;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s ease;
-        border: 1px solid #f1f5f9;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .role-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    }
-
-    .role-card.superadmin {
-        background: linear-gradient(145deg, #4F46E5, #4338CA);
-        color: white;
-    }
-
-    .role-card.superadmin .MuiTypography-root {
-        color: white;
-    }
-      .role-card .role-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-}
-       .role-card .role-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #1e293b;
-}
-       
- 
-
-    .role-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 4px;
-        height: 100%;
-        background: #4F46E5;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    .role-card:hover::before {
-        opacity: 1;
-    }
-
-    .role-card.superadmin::before {
-        display: none;
-    }
-       .role-card.superadmin .role-title {
-    color: white;
-}
-
-.role-card .role-description {
-    color: #64748b;
-    font-size: 0.95rem;
-    margin-bottom: 16px;
-    line-height: 1.5;
-}
-
-.role-card.superadmin .role-description {
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.role-card .role-stats {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding-top: 16px;
-    border-top: 1px solid #f1f5f9;
-}
-
-.role-card.superadmin .role-stats {
-    border-top-color: rgba(255, 255, 255, 0.1);
-}
-
-.role-stat-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.role-stat-item i {
-    color: #4F46E5;
-    font-size: 1.1rem;
-}
-
-.role-card.superadmin .role-stat-item i {
-    color: white;
-}
-
-    /* Permission Groups */
-       .permission-dialog {
-    border-radius: 16px;
-    overflow: hidden;
-}
-
-.permission-dialog-title {
-    background: #f8fafc;
-    padding: 24px;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.permission-groups-container {
-    padding: 24px;
-}
-    .permission-group {
-        background: #f8fafc;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 24px;
-        border: 1px solid #e2e8f0;
-    }
-       .permission-group {
-    background: #f8fafc;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 20px;
-    border: 1px solid #e2e8f0;
-}
-
-.permission-group-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #1e293b;
-    margin-bottom: 16px;
-}
-
-    .permission-item {
-        background: white;
-        border-radius: 8px;
-        padding: 12px 16px;
-        margin: 8px 0;
-        display: flex;
-        align-items: center;
-        transition: all 0.2s ease;
-        border: 1px solid #f1f5f9;
-    }
-
-    .permission-item:hover {
-        background: #f8fafc;
-        transform: translateX(5px);
-    }
-       .create-role-button {
-    background: linear-gradient(145deg, #4F46E5, #4338CA) !important;
-    color: white !important;
-    padding: 10px 24px !important;
-    border-radius: 8px !important;
-    text-transform: none !important;
-    font-weight: 500 !important;
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2) !important;
-    transition: all 0.3s ease !important;
-}
-
-.create-role-button:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3) !important;
-}
-
-.edit-role-button {
-    color: #4F46E5 !important;
-    background: rgba(79, 70, 229, 0.1) !important;
-    border-radius: 8px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
-    transition: all 0.3s ease !important;
-}
-
-.edit-role-button:hover {
-    background: rgba(79, 70, 229, 0.2) !important;
-}
-
-.role-card.superadmin .edit-role-button {
-    color: white !important;
-    background: rgba(255, 255, 255, 0.1) !important;
-}
-
-.role-card.superadmin .edit-role-button:hover {
-    background: rgba(255, 255, 255, 0.2) !important;
-}
-
-    /* Audit Logs */
-    .audit-log-item {
-        padding: 16px;
-        border-radius: 12px;
-        margin-bottom: 12px;
-        background: white;
-        border: 1px solid #f1f5f9;
-        transition: all 0.2s ease;
-    }
-
-    .audit-log-item:hover {
-        background: #f8fafc;
-        transform: translateX(5px);
-    }
-
-    .audit-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #e0e7ff;
-        color: #4F46E5;
-        font-size: 1.2rem;
-    }
-
-    /* Sidebar Styling */
-    .menu-item {
-        display: flex;
-        align-items: center;
-        padding: 12px 24px;
-        color: #e2e8f0;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border-radius: 12px;
-        margin: 4px 8px;
-    }
-
-    .menu-item:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: white;
-        transform: translateX(5px);
-    }
-
-    .menu-item i {
-        margin-right: 12px;
-        width: 20px;
-        text-align: center;
-        font-size: 1.1rem;
-    }
-
-    .menu-item.active {
-        background: rgba(255, 255, 255, 0.1);
-        color: white;
-    }
-
-    .submenu {
-        margin-left: 24px;
-        padding: 4px 0;
-    }
-
-    .submenu .menu-item {
-        padding: 10px 20px;
-        font-size: 0.95rem;
-        border-left: 2px solid rgba(255, 255, 255, 0.1);
-    }
-
-    /* Dialog Styling */
-    .MuiDialog-paper {
-        border-radius: 16px !important;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
-    }
-
-    .MuiDialogTitle-root {
-        background: #f8fafc;
-        padding: 20px 24px !important;
-    }
-
-    .MuiDialogContent-root {
-        padding: 24px !important;
-    }
-
-    .MuiDialogActions-root {
-        padding: 16px 24px !important;
-        background: #f8fafc;
-    }
-
-    /* Loading Spinner */
-    .loading-spinner {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 200px;
-    }
-
-    .loading-spinner::after {
-        content: '';
-        width: 50px;
-        height: 50px;
-        border: 3px solid #f3f3f3;
-        border-top: 3px solid #4F46E5;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-        width: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: #f1f5f9;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: #94a3b8;
-        border-radius: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background: #64748b;
-    }
-
-    /* Notifications */
-    .notification-badge {
-        background: #ef4444;
-        color: white;
-        border-radius: 30px;
-        padding: 2px 8px;
-        font-size: 0.75rem;
-        position: absolute;
-        top: 0;
-        right: 0;
-        transform: translate(50%, -50%);
-        border: 2px solid white;
-    }
-
-    /* Charts Container */
-    .chart-container {
-        background: white;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        border: 1px solid #f1f5f9;
-        height: 400px;
-        margin-bottom: 32px;
-    }
-       /* Add these styles to your existing CSS */
-.sidebar-container {
-    background: linear-gradient(180deg, #1a237e 0%, #0d1642 100%);
-    position: fixed;
-    height: 100vh;
-    transition: all 0.3s ease;
-    overflow-x: hidden;
-    overflow-y: auto;
-    z-index: 1200;
-}
-
-.sidebar-header {
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(0, 0, 0, 0.1);
-}
-
-.sidebar-logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: white;
-}
-
-.sidebar-logo img {
-    width: 32px;
-    height: 32px;
-}
-
-.sidebar-toggle {
-    color: rgba(255, 255, 255, 0.7);
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-.sidebar-toggle:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-.sidebar-menu {
-    padding: 16px 12px;
-}
-
-.menu-section {
-    margin-bottom: 16px;
-}
-
-.menu-section-title {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 0.75rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 0 12px;
-    margin-bottom: 8px;
-}
-
-.menu-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
-    color: rgba(255, 255, 255, 0.7);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border-radius: 8px;
-    margin-bottom: 4px;
-    position: relative;
-}
-
-.menu-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-.menu-item.active {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-.menu-item i {
-    width: 20px;
-    text-align: center;
-    font-size: 1.1rem;
-    margin-right: 12px;
-}
-
-.menu-item .menu-text {
-    flex-grow: 1;
-    font-weight: 500;
-}
-
-.menu-item .menu-arrow {
-    font-size: 0.8rem;
-    transition: transform 0.3s ease;
-}
-
-.menu-item.expanded .menu-arrow {
-    transform: rotate(180deg);
-}
-
-.submenu {
-    margin: 4px 0;
-    padding-left: 48px;
-    position: relative;
-}
-
-.submenu::before {
-    content: '';
-    position: absolute;
-    left: 22px;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.submenu-item {
-    padding: 10px 16px;
-    color: rgba(255, 255, 255, 0.7);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.submenu-item::before {
-    content: '';
-    position: absolute;
-    left: -26px;
-    top: 50%;
-    width: 12px;
-    height: 2px;
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.submenu-item:hover {
-    color: white;
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.submenu-item.active {
-    color: white;
-    background: rgba(255, 255, 255, 0.05);
-}
-       /* Users List Specific Styles */
-        .users-header {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #4F46E5;
+            --secondary-color: #4338CA;
+            --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --danger-color: #EF4444;
+            --background-color: #F9FAFB;
+            --sidebar-bg: #1E293B;
+            --header-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --border-color: #E5E7EB;
+            --hover-bg: #F3F4F6;
+            --active-menu-bg: #2D3748;
+            --transition: all 0.3s ease;
         }
 
-        .users-filters {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        /* Layout */
+        .dashboard-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
+            grid-template-columns: 280px 1fr;
+            grid-template-rows: 70px 1fr;
+            min-height: 100vh;
         }
 
-        .users-table-container {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
+        /* Sidebar Styles */
+        .sidebar {
+            grid-row: 1 / -1;
+            background-color: var(--sidebar-bg);
+            color: white;
+            padding: 1.5rem;
+            overflow-y: auto;
+            transition: var(--transition);
         }
 
-        .users-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .users-table th {
-            background: #f8fafc;
-            padding: 12px 16px;
-            text-align: left;
-            font-weight: 600;
-            color: #1e293b;
-            border-bottom: 2px solid #e2e8f0;
-        }
-
-        .users-table td {
-            padding: 16px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .user-status {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            text-align: center;
-            display: inline-block;
-        }
-
-        .user-status.active {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .user-status.inactive {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .action-buttons {
+        .sidebar-logo {
             display: flex;
-            gap: 8px;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem;
+            margin-bottom: 2rem;
         }
 
-        .action-button {
-            padding: 6px !important;
-            min-width: unset !important;
-            border-radius: 8px !important;
+        .sidebar-logo img {
+            width: 40px;
+            height: 40px;
         }
 
-        .user-dialog {
-            border-radius: 16px;
-            overflow: hidden;
+        .sidebar-logo h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: white;
         }
 
-        .user-dialog-content {
-            padding: 24px;
+        .sidebar-menu {
+            list-style: none;
         }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-            margin-bottom: 24px;
+        .menu-section {
+            margin-bottom: 2rem;
         }
 
-        .form-grid .full-width {
-            grid-column: 1 / -1;
-        }
-       
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .stats-grid {
-            grid-template-columns: 1fr;
+        .menu-section-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #64748B;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
         }
 
-        .roles-grid {
-            grid-template-columns: 1fr;
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+            color: #E2E8F0;
+            text-decoration: none;
         }
 
-        .stat-card {
-            padding: 20px;
+        .menu-item:hover {
+            background-color: var(--active-menu-bg);
         }
 
-        .role-card {
-            padding: 20px;
+        .menu-item.active {
+            background-color: var(--primary-color);
+            color: white;
         }
-    }
-</style>
+
+        .menu-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Header Styles */
+        .header {
+            grid-column: 2;
+            background-color: var(--header-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-search {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 2rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background-color: var(--background-color);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .user-menu {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            min-width: 200px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-menu:hover .user-info {
+            display: block;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            grid-column: 2;
+            padding: 2rem;
+        }
+     /* Add these styles to your existing CSS */
+.user-details {
+    display: flex;
+    flex-direction: column;
+    margin: 0 0.5rem;
+}
+
+.user-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.user-role {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.user-info {
+    width: 250px;
+}
+
+.user-info-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.user-info-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.user-info-details strong {
+    color: var(--text-primary);
+}
+
+.user-info-details span {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.user-info-menu {
+    padding: 0.5rem;
+}
+
+.menu-divider {
+    margin: 0.5rem 0;
+    border: none;
+    border-top: 1px solid var(--border-color);
+}
+
+.user-info .menu-item {
+    color: var(--text-primary);
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+}
+
+.user-info .menu-item:hover {
+    background-color: var(--hover-bg);
+}
+
+.user-info .menu-item i {
+    color: var(--text-secondary);
+}
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .dashboard-container {
+                grid-template-columns: 80px 1fr;
+            }
+
+            .sidebar-logo h1,
+            .menu-item span {
+                display: none;
+            }
+
+            .menu-item {
+                justify-content: center;
+            }
+
+            .menu-item i {
+                margin: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .header {
+                grid-column: 1;
+            }
+
+            .main-content {
+                grid-column: 1;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div id="root"></div>
-
-    <script type="text/babel">
-       // React Hooks
-        // React Hooks
-    const { useState, useEffect } = React;
-
-    // Material UI Components
-    const {
-        Box,
-        Typography,
-        Button,
-        Dialog: MuiDialog,
-        DialogTitle: MuiDialogTitle,
-        DialogContent: MuiDialogContent,
-        DialogActions: MuiDialogActions,
-        TextField,
-        Checkbox,
-        FormControlLabel,
-        Alert,
-        Snackbar,
-        Paper,
-        Divider,
-        IconButton,
-        Tooltip,
-        List,
-        ListItem,
-        ListItemText,
-        ListItemIcon,
-        Switch,
-        Tab,
-        Tabs,
-        Drawer,
-        CssBaseline,
-        Toolbar,
-        AppBar,
-        Avatar,
-        Menu,
-        MenuItem,
-        Badge,
-        Grid,
-        Collapse,
-        Table,
-        TableBody,
-        TableCell,
-        TableHead,
-        TableRow,
-        TablePagination,
-        InputLabel,
-        Select,
-        FormControl,
-        InputAdornment,
-        CircularProgress
-    } = MaterialUI;
-
-    // Utility Functions
-    const generateTempPassword = (length = 8) => {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-        return Array.from(crypto.getRandomValues(new Uint8Array(length)))
-            .map(x => chars[x % chars.length])
-            .join('');
-    };
-
-    const validateEmail = (email) => {
-        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return re.test(email);
-    };
-
-    // API Service
-    const apiService = {
-        baseUrl: 'https://18.215.160.136.nip.io/api',
-        
-        async fetch(endpoint, options = {}) {
-            const token = localStorage.getItem('token');
-            if (!token && !endpoint.includes('login')) {
-                throw new Error('No authentication token found');
-            }
-
-            const defaultOptions = {
-                headers: {
-                    'Authorization': token ? `Bearer ${token}` : '',
-                    'Content-Type': 'application/json',
-                },
-            };
-
-            try {
-                const response = await fetch(
-                    `${this.baseUrl}${endpoint}`,
-                    { 
-                        ...defaultOptions, 
-                        ...options,
-                        headers: {
-                            ...defaultOptions.headers,
-                            ...options.headers
-                        }
-                    }
-                );
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.message || `HTTP error! status: ${response.status}`);
-                }
-
-                return data;
-            } catch (error) {
-                console.error('API Error:', error);
-                throw error;
-            }
-        }
-    };
-
-    // Loading Spinner Component
-    const LoadingSpinner = () => (
-        <Box 
-            sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
-                height: '200px' 
-            }}
-        >
-            <CircularProgress />
-        </Box>
-    );
-
-     // Header Component
-const Header = () => {
-    const [anchorEl, setAnchorEl] = useState(null);
-    const [notifications] = useState([
-        {
-            id: 1,
-            message: 'System update available',
-            type: 'info'
-        },
-        {
-            id: 2,
-            message: 'New user registration',
-            type: 'success'
-        }
-    ]);
-
-    const handleMenu = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
-
-    const handleLogout = async () => {
-        try {
-            await apiService.fetch('/logout', { method: 'POST' });
-        } catch (error) {
-            console.error('Logout error:', error);
-        } finally {
-            localStorage.clear();
-            window.location.href = '/login.html';
-        }
-    };
-
-    return (
-        <AppBar 
-            position="fixed" 
-            sx={{ 
-                zIndex: theme => theme.zIndex.drawer + 1,
-                backgroundColor: 'white',
-                color: '#333'
-            }}
-        >
-            <Toolbar>
-                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                    Super Admin Dashboard
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <IconButton color="inherit" sx={{ position: 'relative' }}>
-                        <Badge badgeContent={notifications.length} color="error">
-                            <i className="fas fa-bell"></i>
-                        </Badge>
-                    </IconButton>
-                    <IconButton
-                        onClick={handleMenu}
-                        color="inherit"
-                    >
-                        <Avatar sx={{ bgcolor: '#1a237e' }}>
-                            {(() => {
-                                const email = localStorage.getItem('userEmail');
-                                return email ? email.charAt(0).toUpperCase() : 'SA';
-                            })()}
-                        </Avatar>
-                    </IconButton>
-                    <Menu
-                        anchorEl={anchorEl}
-                        open={Boolean(anchorEl)}
-                        onClose={handleClose}
-                        PaperProps={{
-                            sx: {
-                                mt: 1,
-                                '& .MuiMenuItem-root': {
-                                    py: 1,
-                                    px: 2
-                                }
-                            }
-                        }}
-                    >
-                        <MenuItem onClick={() => {
-                            handleClose();
-                            window.location.href = '/account.html';
-                        }}>
-                            <i className="fas fa-user" style={{marginRight: '10px'}}></i>
-                            My Account
-                        </MenuItem>
-                        <MenuItem onClick={() => {
-                            handleClose();
-                            handleLogout();
-                        }}>
-                            <i className="fas fa-sign-out-alt" style={{marginRight: '10px'}}></i>
-                            Sign Out
-                        </MenuItem>
-                    </Menu>
-                </Box>
-            </Toolbar>
-        </AppBar>
-    );
-};
-
-    // DashboardStats Component
-    const DashboardStats = () => {
-        const [stats, setStats] = useState({
-            totalCompanies: 150,
-            activeUsers: 1250,
-            totalRevenue: 125000,
-            activeModules: 25
-        });
-
-        return (
-            <div className="stats-grid">
-                <div className="stat-card">
-                    <h3>Total Companies</h3>
-                    <div className="value">{stats.totalCompanies.toLocaleString()}</div>
-                </div>
-                <div className="stat-card">
-                    <h3>Active Users</h3>
-                    <div className="value">{stats.activeUsers.toLocaleString()}</div>
-                </div>
-                <div className="stat-card">
-                    <h3>Total Revenue</h3>
-                    <div className="value">${stats.totalRevenue.toLocaleString()}</div>
-                </div>
-                <div className="stat-card">
-                    <h3>Active Modules</h3>
-                    <div className="value">{stats.activeModules.toLocaleString()}</div>
-                </div>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <img src="logo.png" alt="WorkWise Pro">
+                <h1>WorkWise Pro</h1>
             </div>
-        );
-    };
-         // UsersList Component
-    const UsersList = () => {
-        const [users, setUsers] = useState([]);
-        const [loading, setLoading] = useState(true);
-        const [submitting, setSubmitting] = useState(false);
-        const [page, setPage] = useState(0);
-        const [rowsPerPage, setRowsPerPage] = useState(10);
-        const [totalUsers, setTotalUsers] = useState(0);
-        const [openDialog, setOpenDialog] = useState(false);
-        const [selectedUser, setSelectedUser] = useState(null);
-        const [roles, setRoles] = useState([]);
-        const [filters, setFilters] = useState({
-            search: '',
-            status: 'all',
-            role: 'all'
-        });
-        const [notification, setNotification] = useState({
-            open: false,
-            message: '',
-            type: 'success'
-        });
-        const [formData, setFormData] = useState({
-            name: '',
-            email: '',
-            department: '',
-            role: '',
-            requires2FA: false
-        });
-        const [formErrors, setFormErrors] = useState({});
 
-        useEffect(() => {
-            fetchUsers();
-            fetchRoles();
-        }, [page, rowsPerPage, filters]);
+            <nav class="sidebar-menu">
+                <!-- Dashboard Section -->
+                <div class="menu-section">
+                    <a href="#dashboard" class="menu-item active">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard Overview</span>
+                    </a>
+                </div>
 
-        useEffect(() => {
-            if (selectedUser) {
-                setFormData({
-                    name: selectedUser.name || '',
-                    email: selectedUser.email || '',
-                    department: selectedUser.department || '',
-                    role: selectedUser.role || '',
-                    requires2FA: selectedUser.requires2FA || false
-                });
-                setFormErrors({});
-            } else {
-                setFormData({
-                    name: '',
-                    email: '',
-                    department: '',
-                    role: '',
-                    requires2FA: false
-                });
-                setFormErrors({});
-            }
-        }, [selectedUser]);
+                <!-- Companies Section -->
+                <div class="menu-section">
+                    <h3 class="menu-section-title">Organizations</h3>
+                    <a href="#companies" class="menu-item">
+                        <i class="fas fa-building"></i>
+                        <span>Companies/Organizations</span>
+                    </a>
+                </div>
 
-        const validateForm = () => {
-            const errors = {};
-            if (!formData.name.trim()) {
-                errors.name = 'Name is required';
-            }
-            if (!formData.email.trim()) {
-                errors.email = 'Email is required';
-            } else if (!validateEmail(formData.email)) {
-                errors.email = 'Invalid email format';
-            }
-            if (!formData.department.trim()) {
-                errors.department = 'Department is required';
-            }
-            if (!formData.role) {
-                errors.role = 'Role is required';
-            }
-            setFormErrors(errors);
-            return Object.keys(errors).length === 0;
-        };
+                <!-- System Section -->
+                <div class="menu-section">
+                    <h3 class="menu-section-title">System</h3>
+                    <a href="#settings" class="menu-item">
+                        <i class="fas fa-cog"></i>
+                        <span>System Settings</span>
+                    </a>
+                    <a href="#pricing" class="menu-item">
+                        <i class="fas fa-tags"></i>
+                        <span>Pricing & Plans</span>
+                    </a>
+                    <a href="#security" class="menu-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Security Settings</span>
+                    </a>
+                </div>
 
-        const fetchUsers = async () => {
-            try {
-                setLoading(true);
-                const queryParams = new URLSearchParams({
-                    page: page + 1,
-                    limit: rowsPerPage,
-                    search: filters.search,
-                    status: filters.status !== 'all' ? filters.status : '',
-                    role: filters.role !== 'all' ? filters.role : ''
-                }).toString();
+                <!-- Management Section -->
+                <div class="menu-section">
+                    <h3 class="menu-section-title">Management</h3>
+                    <a href="#modules" class="menu-item">
+                        <i class="fas fa-cube"></i>
+                        <span>Modules Management</span>
+                    </a>
+                    <a href="#users" class="menu-item">
+                        <i class="fas fa-users"></i>
+                        <span>User Management</span>
+                    </a>
+                </div>
 
-                const response = await apiService.fetch(`/users?${queryParams}`);
-                
-                if (response.success) {
-                    setUsers(response.users);
-                    setTotalUsers(response.pagination.total);
-                }
-            } catch (error) {
-                console.error('Error fetching users:', error);
-                showNotification('Error fetching users', 'error');
-            } finally {
-                setLoading(false);
-            }
-        };
+                <!-- Tools Section -->
+                <div class="menu-section">
+                    <h3 class="menu-section-title">Tools</h3>
+                    <a href="#analytics" class="menu-item">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Analytics & Reports</span>
+                    </a>
+                    <a href="#backup" class="menu-item">
+                        <i class="fas fa-database"></i>
+                        <span>Backup & Restore</span>
+                    </a>
+                    <a href="#audit" class="menu-item">
+                        <i class="fas fa-history"></i>
+                        <span>Audit Logs</span>
+                    </a>
+                    <a href="#api" class="menu-item">
+                        <i class="fas fa-code"></i>
+                        <span>API Management</span>
+                    </a>
+                </div>
 
-        const fetchRoles = async () => {
-            try {
-                const response = await apiService.fetch('/roles');
-                if (response.success) {
-                    setRoles(response.roles);
-                }
-            } catch (error) {
-                console.error('Error fetching roles:', error);
-                showNotification('Error fetching roles', 'error');
-            }
-        };
+                <!-- Support Section -->
+                <div class="menu-section">
+                    <h3 class="menu-section-title">Support</h3>
+                    <a href="#support" class="menu-item">
+                        <i class="fas fa-headset"></i>
+                        <span>Support Center</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
 
-        const handleFormChange = (e) => {
-            const { name, value, type, checked } = e.target;
-            setFormData(prev => ({
-                ...prev,
-                [name]: type === 'checkbox' ? checked : value
-            }));
-            // Clear error for the field being changed
-            if (formErrors[name]) {
-                setFormErrors(prev => ({
-                    ...prev,
-                    [name]: undefined
-                }));
-            }
-        };
+        <!-- Header -->
+       
+<header class="header">
+    <div class="header-search">
+        <input type="text" class="search-input" placeholder="Search...">
+    </div>
 
-        const handleFormSubmit = async (e) => {
-            e.preventDefault();
-            if (!validateForm()) return;
+    <div class="header-right">
+        <div class="user-menu">
+            <div class="user-avatar" id="userInitials"></div>
+            <div class="user-details">
+                <span class="user-name" id="userName"></span>
+                <span class="user-role" id="userRole"></span>
+            </div>
+            <i class="fas fa-chevron-down"></i>
 
-            setSubmitting(true);
-            try {
-                if (selectedUser) {
-                    await handleUpdateUser(formData);
-                } else {
-                    await handleCreateUser(formData);
-                }
-            } finally {
-                setSubmitting(false);
-            }
-        };
-
-        const handleCreateUser = async (userData) => {
-            try {
-                const tempPassword = generateTempPassword();
-                const response = await apiService.fetch('/users', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        ...userData,
-                        password: tempPassword
-                    })
-                });
-
-                if (response.success) {
-                    showNotification('User created successfully');
-                    setTimeout(() => {
-                        showNotification(`Temporary password: ${tempPassword}`, 'info');
-                    }, 1000);
-                    handleCloseDialog();
-                    fetchUsers();
-                }
-            } catch (error) {
-                showNotification(error.message || 'Error creating user', 'error');
-            }
-        };
-
-        const handleUpdateUser = async (userData) => {
-            try {
-                const response = await apiService.fetch(`/users/${selectedUser._id}`, {
-                    method: 'PUT',
-                    body: JSON.stringify(userData)
-                });
-
-                if (response.success) {
-                    showNotification('User updated successfully');
-                    handleCloseDialog();
-                    fetchUsers();
-                }
-            } catch (error) {
-                showNotification(error.message || 'Error updating user', 'error');
-            }
-        };
-
-        const handleToggleStatus = async (userId, currentStatus) => {
-            try {
-                const response = await apiService.fetch(`/users/${userId}/status`, {
-                    method: 'PUT',
-                    body: JSON.stringify({
-                        status: currentStatus === 'active' ? 'inactive' : 'active'
-                    })
-                });
-
-                if (response.success) {
-                    showNotification(`User ${currentStatus === 'active' ? 'deactivated' : 'activated'} successfully`);
-                    fetchUsers();
-                }
-            } catch (error) {
-                showNotification(error.message || 'Error updating user status', 'error');
-            }
-        };
-
-        const handleToggle2FA = async (userId, current2FAStatus) => {
-            try {
-                const response = await apiService.fetch(`/users/${userId}/2fa`, {
-                    method: 'PUT',
-                    body: JSON.stringify({
-                        requires2FA: !current2FAStatus
-                    })
-                });
-
-                if (response.success) {
-                    showNotification(`2FA ${current2FAStatus ? 'disabled' : 'enabled'} successfully`);
-                    fetchUsers();
-                }
-            } catch (error) {
-                showNotification(error.message || 'Error updating 2FA status', 'error');
-            }
-        };
-
-        const handleDeleteUser = async (userId) => {
-            if (!window.confirm('Are you sure you want to delete this user?')) {
-                return;
-            }
-
-            try {
-                const response = await apiService.fetch(`/users/${userId}`, {
-                    method: 'DELETE'
-                });
-
-                if (response.success) {
-                    showNotification('User deleted successfully');
-                    fetchUsers();
-                }
-            } catch (error) {
-                showNotification(error.message || 'Error deleting user', 'error');
-            }
-        };
-
-        const handleCloseDialog = () => {
-            setOpenDialog(false);
-            setSelectedUser(null);
-            setFormData({
-                name: '',
-                email: '',
-                department: '',
-                role: '',
-                requires2FA: false
-            });
-            setFormErrors({});
-        };
-
-        const showNotification = (message, type = 'success') => {
-            setNotification({ open: true, message, type });
-        };
-
-             return (
-            <Box sx={{ p: 3 }}>
-                {/* Header */}
-                <div className="users-header">
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                            <Typography variant="h5" sx={{ fontWeight: 600, color: '#1e293b' }}>
-                                User Management
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: '#64748b', mt: 1 }}>
-                                Manage internal users and their access permissions
-                            </Typography>
-                        </div>
-                        <Button
-                            className="create-button"
-                            startIcon={<i className="fas fa-plus"></i>}
-                            onClick={() => setOpenDialog(true)}
-                        >
-                            Add New User
-                        </Button>
-                    </Box>
-
-                    {/* Filters */}
-                    <div className="users-filters">
-                        <TextField
-                            placeholder="Search users..."
-                            variant="outlined"
-                            size="small"
-                            fullWidth
-                            value={filters.search}
-                            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <i className="fas fa-search" />
-                                    </InputAdornment>
-                                )
-                            }}
-                        />
-                        <FormControl size="small" fullWidth>
-                            <InputLabel>Status</InputLabel>
-                            <Select
-                                value={filters.status}
-                                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                                label="Status"
-                            >
-                                <MenuItem value="all">All Status</MenuItem>
-                                <MenuItem value="active">Active</MenuItem>
-                                <MenuItem value="inactive">Inactive</MenuItem>
-                            </Select>
-                        </FormControl>
-                        <FormControl size="small" fullWidth>
-                            <InputLabel>Role</InputLabel>
-                            <Select
-                                value={filters.role}
-                                onChange={(e) => setFilters({ ...filters, role: e.target.value })}
-                                label="Role"
-                            >
-                                <MenuItem value="all">All Roles</MenuItem>
-                                {roles.map(role => (
-                                    <MenuItem key={role._id} value={role._id}>
-                                        {role.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
+            <div class="user-info">
+                <div class="user-info-header">
+                    <div class="user-info-details">
+                        <strong id="userEmailDisplay"></strong>
+                        <span id="userRoleDisplay"></span>
                     </div>
                 </div>
-
-                {/* Users Table */}
-                <div className="users-table-container">
-                    {loading ? (
-                        <LoadingSpinner />
-                    ) : (
-                        <>
-                            <Table className="users-table">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell>User</TableCell>
-                                        <TableCell>Email</TableCell>
-                                        <TableCell>Department</TableCell>
-                                        <TableCell>Role</TableCell>
-                                        <TableCell>Status</TableCell>
-                                        <TableCell>2FA</TableCell>
-                                        <TableCell>Actions</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {users.map((user) => (
-                                        <TableRow key={user._id}>
-                                            <TableCell>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                    <Avatar sx={{ bgcolor: '#4F46E5' }}>
-                                                        {user.name?.charAt(0) || 'U'}
-                                                    </Avatar>
-                                                    <div>
-                                                        <Typography variant="subtitle2">
-                                                            {user.name}
-                                                        </Typography>
-                                                    </div>
-                                                </Box>
-                                            </TableCell>
-                                            <TableCell>{user.email}</TableCell>
-                                            <TableCell>{user.department}</TableCell>
-                                            <TableCell>
-                                                {roles.find(r => r._id === user.role)?.name || user.role}
-                                            </TableCell>
-                                            <TableCell>
-                                                <span className={`user-status ${user.status}`}>
-                                                    {user.status}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Switch
-                                                    checked={user.requires2FA}
-                                                    onChange={() => handleToggle2FA(user._id, user.requires2FA)}
-                                                    color="primary"
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="action-buttons">
-                                                    <Tooltip title="Edit User">
-                                                        <IconButton
-                                                            className="action-button"
-                                                            onClick={() => setSelectedUser(user)}
-                                                            size="small"
-                                                        >
-                                                            <i className="fas fa-edit" />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                    <Tooltip title={user.status === 'active' ? 'Deactivate' : 'Activate'}>
-                                                        <IconButton
-                                                            className="action-button"
-                                                            onClick={() => handleToggleStatus(user._id, user.status)}
-                                                            size="small"
-                                                        >
-                                                            <i className={`fas fa-${user.status === 'active' ? 'ban' : 'check'}`} />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                    <Tooltip title="Delete User">
-                                                        <IconButton
-                                                            className="action-button"
-                                                            onClick={() => handleDeleteUser(user._id)}
-                                                            size="small"
-                                                        >
-                                                            <i className="fas fa-trash" />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                            <TablePagination
-                                component="div"
-                                count={totalUsers}
-                                page={page}
-                                onPageChange={(e, newPage) => setPage(newPage)}
-                                rowsPerPage={rowsPerPage}
-                                onRowsPerPageChange={(e) => {
-                                    setRowsPerPage(parseInt(e.target.value, 10));
-                                    setPage(0);
-                                }}
-                            />
-                        </>
-                    )}
+                <div class="user-info-menu">
+                    <a href="#account" class="menu-item">
+                        <i class="fas fa-user"></i>
+                        <span>My Account</span>
+                    </a>
+                    <a href="#settings" class="menu-item">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                    <hr class="menu-divider">
+                    <a href="#" class="menu-item" id="signOutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Sign Out</span>
+                    </a>
                 </div>
+            </div>
+        </div>
+    </div>
+</header>
 
-                {/* Create/Edit User Dialog */}
-                <MuiDialog
-                    open={openDialog || Boolean(selectedUser)}
-                    onClose={handleCloseDialog}
-                    maxWidth="md"
-                    fullWidth
-                    className="user-dialog"
-                >
-                    <MuiDialogTitle sx={{ px: 3, py: 2, background: '#f8fafc' }}>
-                        {selectedUser ? 'Edit User' : 'Create New User'}
-                    </MuiDialogTitle>
-                    <MuiDialogContent className="user-dialog-content">
-                        <form onSubmit={handleFormSubmit}>
-                            <div className="form-grid">
-                                <TextField
-                                    name="name"
-                                    label="Full Name"
-                                    value={formData.name}
-                                    onChange={handleFormChange}
-                                    fullWidth
-                                    required
-                                    error={Boolean(formErrors.name)}
-                                    helperText={formErrors.name}
-                                />
-                                <TextField
-                                    name="email"
-                                    label="Email"
-                                    type="email"
-                                    value={formData.email}
-                                    onChange={handleFormChange}
-                                    fullWidth
-                                    required
-                                    error={Boolean(formErrors.email)}
-                                    helperText={formErrors.email}
-                                />
-                                <TextField
-                                    name="department"
-                                    label="Department"
-                                    value={formData.department}
-                                    onChange={handleFormChange}
-                                    fullWidth
-                                    required
-                                    error={Boolean(formErrors.department)}
-                                    helperText={formErrors.department}
-                                />
-                                <FormControl 
-                                    fullWidth 
-                                    required
-                                    error={Boolean(formErrors.role)}
-                                >
-                                    <InputLabel>Role</InputLabel>
-                                    <Select
-                                        name="role"
-                                        value={formData.role}
-                                        onChange={handleFormChange}
-                                        label="Role"
-                                    >
-                                        {roles.map(role => (
-                                            <MenuItem key={role._id} value={role._id}>
-                                                {role.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                    {formErrors.role && (
-                                        <Typography className="error-text" variant="caption">
-                                            {formErrors.role}
-                                        </Typography>
-                                    )}
-                                </FormControl>
-                                <FormControlLabel
-                                    control={
-                                        <Switch
-                                            name="requires2FA"
-                                            checked={formData.requires2FA}
-                                            onChange={handleFormChange}
-                                        />
-                                    }
-                                    label="Require 2FA"
-                                />
-                            </div>
-                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-                                <Button
-                                    onClick={handleCloseDialog}
-                                    disabled={submitting}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    variant="contained"
-                                    className="create-button"
-                                    disabled={submitting}
-                                >
-                                    {submitting ? (
-                                        <CircularProgress size={24} />
-                                    ) : selectedUser ? 'Update User' : 'Create User'}
-                                </Button>
-                            </Box>
-                        </form>
-                    </MuiDialogContent>
-                </MuiDialog>
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <!-- Content will be dynamically loaded here -->
+        </main>
+    </div>
 
-                {/* Notification */}
-                <Snackbar
-                    open={notification.open}
-                    autoHideDuration={6000}
-                    onClose={() => setNotification({ ...notification, open: false })}
-                >
-                    <Alert
-                        onClose={() => setNotification({ ...notification, open: false })}
-                        severity={notification.type}
-                        sx={{ width: '100%' }}
-                    >
-                        {notification.message}
-                    </Alert>
-                </Snackbar>
-            </Box>
-        );
-    };
+ 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check for authentication
+    checkAuthentication();
 
-         // Main Dashboard Component
-    const Dashboard = () => {
-        const [isCollapsed, setIsCollapsed] = useState(false);
-        const [currentPage, setCurrentPage] = useState('dashboard');
-        const [pageContent, setPageContent] = useState(null);
-        const [loading, setLoading] = useState(true);
+    // Initialize user information
+    initializeUserInfo();
 
-        useEffect(() => {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = '/login.html';
-                return;
+    // Setup event listeners
+    setupEventListeners();
+});
+
+function checkAuthentication() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        redirectToLogin();
+        return;
+    }
+
+    // Verify token with backend
+    verifyToken(token);
+}
+
+async function verifyToken(token) {
+    try {
+        const response = await fetch('https://18.215.160.136.nip.io/api/verify-token', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
+        });
 
-            const verifyToken = async () => {
-                try {
-                    const response = await apiService.fetch('/verify-token', {
-                        method: 'POST'
-                    });
-                    if (!response.success) {
-                        throw new Error('Token verification failed');
-                    }
-                    setLoading(false);
-                } catch (error) {
-                    console.error('Token verification error:', error);
-                    localStorage.clear();
-                    window.location.href = '/login.html';
-                }
-            };
-
-            verifyToken();
-        }, []);
-
-        useEffect(() => {
-            if (currentPage === 'dashboard') {
-                const initializeChart = () => {
-                    const ctx = document.getElementById('systemAnalytics');
-                    if (ctx) {
-                        // Destroy existing chart if it exists
-                        const existingChart = Chart.getChart(ctx);
-                        if (existingChart) {
-                            existingChart.destroy();
-                        }
-
-                        new Chart(ctx, {
-                            type: 'line',
-                            data: {
-                                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                                datasets: [{
-                                    label: 'System Usage',
-                                    data: [65, 59, 80, 81, 56, 55],
-                                    fill: false,
-                                    borderColor: '#4F46E5',
-                                    tension: 0.1
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: {
-                                        position: 'top',
-                                    }
-                                },
-                                scales: {
-                                    y: {
-                                        beginAtZero: true,
-                                        grid: {
-                                            color: '#e2e8f0'
-                                        }
-                                    },
-                                    x: {
-                                        grid: {
-                                            color: '#e2e8f0'
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    }
-                };
-
-                // Initialize chart after a short delay to ensure DOM is ready
-                setTimeout(initializeChart, 100);
-            }
-        }, [currentPage]);
-
-        const loadPage = (pageName) => {
-            setCurrentPage(pageName);
-            
-            switch(pageName) {
-                case 'roles':
-                    setPageContent(<RoleManagement />);
-                    break;
-                case 'users-list':
-                    setPageContent(<UsersList />);
-                    break;
-                case 'dashboard':
-                    setPageContent(null);
-                    break;
-                default:
-                    setPageContent(
-                        <Box sx={{ p: 3 }}>
-                            <Typography variant="h5">
-                                {pageName.split('-').map(word => 
-                                    word.charAt(0).toUpperCase() + word.slice(1)
-                                ).join(' ')}
-                            </Typography>
-                            <Typography variant="body1" sx={{ mt: 2 }}>
-                                This page is under development.
-                            </Typography>
-                        </Box>
-                    );
-            }
-        };
-
-        if (loading) {
-            return <LoadingSpinner />;
+        const data = await response.json();
+        
+        if (!data.success || data.user.role !== 'superadmin') {
+            redirectToLogin();
         }
+    } catch (error) {
+        console.error('Token verification failed:', error);
+        redirectToLogin();
+    }
+}
 
-        return (
-            <Box sx={{ display: 'flex' }}>
-                <CssBaseline />
-                <Header />
-                <Sidebar 
-                    isCollapsed={isCollapsed} 
-                    setIsCollapsed={setIsCollapsed}
-                    onMenuClick={loadPage}
-                />
-                <Box
-                    component="main"
-                    sx={{
-                        flexGrow: 1,
-                        p: 3,
-                        mt: 8,
-                        ml: isCollapsed ? '65px' : '240px',
-                        transition: 'margin-left 0.3s ease'
-                    }}
-                >
-                    {currentPage === 'dashboard' ? (
-                        <>
-                            <DashboardStats />
-                            <Grid container spacing={3}>
-                                <Grid item xs={12}>
-                                    <Paper 
-                                        sx={{ 
-                                            p: 2, 
-                                            height: '400px',
-                                            borderRadius: '16px',
-                                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)'
-                                        }}
-                                    >
-                                        <Typography variant="h6" gutterBottom>
-                                            System Analytics
-                                        </Typography>
-                                        <Box sx={{ height: 'calc(100% - 40px)' }}>
-                                            <canvas id="systemAnalytics"></canvas>
-                                        </Box>
-                                    </Paper>
-                                </Grid>
-                            </Grid>
-                        </>
-                    ) : (
-                        pageContent
-                    )}
-                </Box>
-            </Box>
-        );
-    };
+function initializeUserInfo() {
+    const userEmail = localStorage.getItem('userEmail');
+    const userRole = localStorage.getItem('userRole');
+    const userName = localStorage.getItem('userName') || userEmail.split('@')[0];
 
-    // Initialize the app
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<Dashboard />);
+    // Set user initials
+    const initials = getInitials(userName);
+    document.getElementById('userInitials').textContent = initials;
 
-    </script>
+    // Set user name and role in header
+    document.getElementById('userName').textContent = userName;
+    document.getElementById('userRole').textContent = userRole;
+
+    // Set user details in dropdown
+    document.getElementById('userEmailDisplay').textContent = userEmail;
+    document.getElementById('userRoleDisplay').textContent = userRole;
+}
+
+function getInitials(name) {
+    return name
+        .split(' ')
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+}
+
+function setupEventListeners() {
+    // Sign out button click handler
+    document.getElementById('signOutBtn').addEventListener('click', handleSignOut);
+
+    // Session timeout handler
+    setupSessionTimeout();
+}
+
+async function handleSignOut(e) {
+    e.preventDefault();
+
+    try {
+        const token = localStorage.getItem('token');
+        
+        // Optional: Notify backend about logout
+        await fetch('https://18.215.160.136.nip.io/api/logout', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+    } catch (error) {
+        console.error('Logout error:', error);
+    } finally {
+        // Clear local storage and redirect
+        localStorage.clear();
+        redirectToLogin();
+    }
+}
+
+function setupSessionTimeout() {
+    let sessionTimeout;
+    const TIMEOUT_DURATION = 30 * 60 * 1000; // 30 minutes
+
+    function resetTimeout() {
+        clearTimeout(sessionTimeout);
+        sessionTimeout = setTimeout(() => {
+            handleSignOut(new Event('timeout'));
+        }, TIMEOUT_DURATION);
+    }
+
+    // Reset timeout on user activity
+    ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+        document.addEventListener(event, resetTimeout);
+    });
+
+    // Initial timeout setup
+    resetTimeout();
+}
+
+function redirectToLogin() {
+    window.location.href = '/login.html';
+}
+
+// Add this to handle browser back button
+window.addEventListener('popstate', function(event) {
+    checkAuthentication();
+});
+</script>
 </body>
 </html>
