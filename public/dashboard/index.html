@@ -695,52 +695,508 @@ body {
     </div>
 
     <script>
-        // Main JavaScript for Superadmin Dashboard
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize all components
-    initializeApplication();
+       // Main Application Initialization
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        // First initialize the SidebarManager
+        await SidebarManager.init();
+        
+        // Then initialize the DashboardApp
+        await DashboardApp.init();
+        
+        // Setup global event handlers
+        setupGlobalEventHandlers();
+        
+        console.log('Application initialized successfully');
+    } catch (error) {
+        console.error('Application initialization failed:', error);
+        showFallbackError();
+    }
 });
 
-// Application initialization and core functionality
+// Global Event Handlers
+function setupGlobalEventHandlers() {
+    // Handle browser navigation
+    window.addEventListener('popstate', function(event) {
+        if (event.state && event.state.page) {
+            DashboardApp.loadPage(event.state.page).catch(error => {
+                console.error('Navigation error:', error);
+                DashboardApp.showNotification('Navigation failed', 'error');
+            });
+        }
+    });
+
+    // Handle browser refresh/close
+    window.addEventListener('beforeunload', function() {
+        DashboardApp.clearSessionTimers();
+    });
+
+    // Handle resize events
+    window.addEventListener('resize', debounce(() => {
+        SidebarManager.handleResize();
+        DashboardApp.handleResize();
+    }, 250));
+}
+
+// Utility Functions
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function showFallbackError() {
+    document.body.innerHTML = `
+        <div class="error-page">
+            <h1>Application Error</h1>
+            <p>Failed to initialize the application. Please try refreshing the page.</p>
+            <button onclick="window.location.reload()">Refresh Page</button>
+        </div>
+    `;
+}
+
+// Event Bus for component communication
+const EventBus = {
+    events: {},
+    
+    subscribe(event, callback) {
+        if (!this.events[event]) {
+            this.events[event] = [];
+        }
+        this.events[event].push(callback);
+        return () => this.unsubscribe(event, callback);
+    },
+    
+    publish(event, data) {
+        if (!this.events[event]) return;
+        this.events[event].forEach(callback => callback(data));
+    },
+    
+    unsubscribe(event, callback) {
+        if (!this.events[event]) return;
+        this.events[event] = this.events[event].filter(cb => cb !== callback);
+    }
+};
+        // Sidebar Manager Implementation
+const SidebarManager = {
+    // Configuration
+    config: {
+        selectors: {
+            sidebar: '.sidebar',
+            mainContent: '.main-content',
+            toggleButton: '#sidebarToggle',
+            menuItems: '.menu-item',
+            submenuTriggers: '.menu-item.has-submenu',
+            submenuArrow: '.submenu-arrow',
+            nestedSubmenu: '.nested-submenu'
+        },
+        classes: {
+            collapsed: 'collapsed',
+            expanded: 'expanded',
+            active: 'active'
+        },
+        breakpoints: {
+            tablet: 1024,
+            mobile: 768
+        },
+        animations: {
+            duration: '0.3s',
+            expand: 'expandAnimation',
+            collapse: 'collapseAnimation'
+        }
+    },
+
+    // State
+    state: {
+        initialized: false,
+        isCollapsed: false,
+        activeSubmenu: null,
+        elements: {},
+        sidebarState: 'expanded'
+    },
+
+    // Initialize the sidebar
+    async init() {
+        try {
+            // Cache DOM elements
+            this.cacheElements();
+            
+            // Load saved state
+            this.loadSavedState();
+            
+            // Setup event listeners
+            this.setupEventListeners();
+            
+            // Initialize sidebar state
+            this.initializeSidebarState();
+            
+            // Handle initial resize
+            this.handleResize();
+            
+            // Mark as initialized
+            this.state.initialized = true;
+            
+            // Publish initialized event
+            EventBus.publish('sidebar:initialized', { 
+                isCollapsed: this.state.isCollapsed 
+            });
+
+            return true;
+        } catch (error) {
+            console.error('Sidebar initialization failed:', error);
+            throw error;
+        }
+    },
+
+    cacheElements() {
+        const { selectors } = this.config;
+        this.state.elements = {
+            sidebar: document.querySelector(selectors.sidebar),
+            mainContent: document.querySelector(selectors.mainContent),
+            toggleButton: document.querySelector(selectors.toggleButton),
+            menuItems: document.querySelectorAll(selectors.menuItems),
+            submenuTriggers: document.querySelectorAll(selectors.submenuTriggers)
+        };
+
+        // Validate required elements
+        if (!this.state.elements.sidebar || !this.state.elements.mainContent) {
+            throw new Error('Required sidebar elements not found');
+        }
+    },
+
+    loadSavedState() {
+        this.state.sidebarState = localStorage.getItem('sidebarState') || 'expanded';
+        this.state.isCollapsed = this.state.sidebarState === 'collapsed';
+    },
+
+    setupEventListeners() {
+        const { elements } = this.state;
+
+        // Toggle button click handler
+        elements.toggleButton?.addEventListener('click', () => this.toggleSidebar());
+
+        // Setup menu item tooltips
+        elements.menuItems.forEach(item => {
+            this.setupMenuItemTooltip(item);
+        });
+
+        // Setup submenu handlers
+        elements.submenuTriggers.forEach(trigger => {
+            trigger.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.toggleSubmenu(trigger);
+            });
+        });
+
+        // Subscribe to relevant events
+        EventBus.subscribe('app:pageChanged', () => this.handlePageChange());
+        EventBus.subscribe('app:contentLoaded', () => this.updateActiveStates());
+    },
+
+    setupMenuItemTooltip(item) {
+        const text = item.querySelector('span')?.textContent || 
+                    item.getAttribute('data-page');
+        if (text) {
+            item.setAttribute('data-tooltip', text);
+        }
+    },
+
+    initializeSidebarState() {
+        const { elements, isCollapsed } = this.state;
+        const { classes } = this.config;
+
+        if (isCollapsed) {
+            elements.sidebar.classList.add(classes.collapsed);
+            elements.mainContent.classList.add(classes.expanded);
+        }
+
+        // Ensure proper initial states
+        this.updateTooltipVisibility();
+        this.updateSubmenuStates();
+    },
+
+    toggleSidebar() {
+        const { elements, isCollapsed } = this.state;
+        const { classes, animations } = this.config;
+
+        // Add animation
+        elements.sidebar.style.animation = isCollapsed
+            ? `${animations.expand} ${animations.duration} forwards`
+            : `${animations.collapse} ${animations.duration} forwards`;
+
+        // Toggle classes
+        elements.sidebar.classList.toggle(classes.collapsed);
+        elements.mainContent.classList.toggle(classes.expanded);
+
+        // Update state
+        this.state.isCollapsed = !isCollapsed;
+        this.state.sidebarState = this.state.isCollapsed ? 'collapsed' : 'expanded';
+
+        // Save state
+        localStorage.setItem('sidebarState', this.state.sidebarState);
+
+        // Update UI
+        this.updateTooltipVisibility();
+        this.updateSubmenuStates();
+
+        // Publish state change
+        EventBus.publish('sidebar:stateChanged', {
+            isCollapsed: this.state.isCollapsed
+        });
+
+        // Trigger resize event for any dependent components
+        window.dispatchEvent(new Event('resize'));
+    },
+
+    toggleSubmenu(trigger) {
+        const { classes } = this.config;
+        const submenu = trigger.nextElementSibling;
+        const arrow = trigger.querySelector(this.config.selectors.submenuArrow);
+
+        // Toggle active state
+        trigger.classList.toggle(classes.active);
+
+        // Handle submenu visibility
+        if (submenu?.classList.contains('nested-submenu')) {
+            const isActive = trigger.classList.contains(classes.active);
+            
+            // Animate submenu
+            submenu.style.maxHeight = isActive
+                ? `${submenu.scrollHeight}px`
+                : '0';
+
+            // Rotate arrow
+            if (arrow) {
+                arrow.style.transform = isActive
+                    ? 'rotate(90deg)'
+                    : 'rotate(0)';
+            }
+
+            // Update active submenu reference
+            this.state.activeSubmenu = isActive ? trigger : null;
+
+            // Publish submenu state change
+            EventBus.publish('sidebar:submenuToggled', {
+                trigger,
+                isActive
+            });
+        }
+    },
+
+    handleResize() {
+        const { breakpoints } = this.config;
+        const windowWidth = window.innerWidth;
+
+        // Auto-collapse on tablet
+        if (windowWidth <= breakpoints.tablet && windowWidth > breakpoints.mobile) {
+            this.collapseSidebar();
+        } 
+        // Restore saved state on desktop
+        else if (windowWidth > breakpoints.tablet) {
+            this.restoreSavedState();
+        }
+
+        // Publish resize event
+        EventBus.publish('sidebar:resized', {
+            windowWidth,
+            isCollapsed: this.state.isCollapsed
+        });
+    },
+
+    collapseSidebar() {
+        if (!this.state.isCollapsed) {
+            this.toggleSidebar();
+        }
+    },
+
+    expandSidebar() {
+        if (this.state.isCollapsed) {
+            this.toggleSidebar();
+        }
+    },
+
+    restoreSavedState() {
+        const savedStateIsCollapsed = this.state.sidebarState === 'collapsed';
+        if (this.state.isCollapsed !== savedStateIsCollapsed) {
+            this.toggleSidebar();
+        }
+    },
+
+    updateTooltipVisibility() {
+        const { elements, isCollapsed } = this.state;
+
+        elements.menuItems.forEach(item => {
+            if (isCollapsed) {
+                const text = item.querySelector('span')?.textContent || 
+                            item.getAttribute('data-page');
+                item.setAttribute('data-tooltip', text);
+            } else {
+                item.removeAttribute('data-tooltip');
+            }
+        });
+    },
+
+    updateSubmenuStates() {
+        const { elements, isCollapsed } = this.state;
+
+        elements.submenuTriggers.forEach(trigger => {
+            const submenu = trigger.nextElementSibling;
+            if (submenu && isCollapsed) {
+                submenu.style.maxHeight = '0';
+                trigger.classList.remove(this.config.classes.active);
+            }
+        });
+    },
+
+    handlePageChange() {
+        // Close any open submenus when page changes
+        if (this.state.activeSubmenu) {
+            this.toggleSubmenu(this.state.activeSubmenu);
+        }
+    },
+
+    updateActiveStates() {
+        // Update active states based on current route
+        const currentPath = window.location.hash.slice(1) || 'dashboard';
+        
+        this.state.elements.menuItems.forEach(item => {
+            const itemPath = item.getAttribute('data-page');
+            if (itemPath === currentPath) {
+                item.classList.add(this.config.classes.active);
+            } else {
+                item.classList.remove(this.config.classes.active);
+            }
+        });
+    }
+};
+        // Dashboard Application Implementation
 const DashboardApp = {
     // Configuration
     config: {
-        apiBaseUrl: 'https://18.215.160.136.nip.io/api',
-        sessionTimeout: 30 * 60 * 1000, // 30 minutes
-        refreshTokenInterval: 5 * 60 * 1000, // 5 minutes
-        contentContainer: '#mainContent',
-        defaultPage: 'dashboard'
+        api: {
+            baseUrl: 'https://18.215.160.136.nip.io/api',
+            endpoints: {
+                verifyToken: '/verify-token',
+                refreshToken: '/refresh-token',
+                dashboard: '/dashboard/stats',
+                users: '/users',
+                roles: '/roles',
+                audit: '/audit-logs'
+            }
+        },
+        timing: {
+            sessionTimeout: 30 * 60 * 1000, // 30 minutes
+            refreshTokenInterval: 5 * 60 * 1000, // 5 minutes
+            notificationDuration: 3000
+        },
+        selectors: {
+            contentContainer: '#mainContent',
+            userInfo: {
+                initials: '#userInitials',
+                name: '#userName',
+                role: '#userRole',
+                email: '#userEmailDisplay',
+                roleDisplay: '#userRoleDisplay'
+            }
+        },
+        templates: {
+            basePath: '/templates',
+            extension: '.html'
+        }
     },
 
-    // State management
+    // State Management
     state: {
+        initialized: false,
         currentPage: null,
         userInfo: null,
-        sessionTimer: null,
-        refreshTokenTimer: null,
+        timers: {
+            session: null,
+            refreshToken: null
+        },
         lastActivity: Date.now()
     },
 
-    // Initialize application
+    // Initialize Application
     async init() {
         try {
             // Check authentication first
             await this.checkAuthentication();
-            
+
             // Initialize components
-            this.initializeUserInterface();
+            await this.initializeComponents();
+
+            // Setup event listeners
             this.setupEventListeners();
+
+            // Start session monitoring
             this.startSessionMonitoring();
-            this.initializeRouter();
 
             // Load default page
-            await this.loadPage(this.config.defaultPage);
+            await this.loadPage('dashboard');
 
-            console.log('Application initialized successfully');
+            // Mark as initialized
+            this.state.initialized = true;
+
+            // Subscribe to sidebar events
+            this.subscribeSidebarEvents();
+
+            EventBus.publish('app:initialized', { success: true });
+            return true;
         } catch (error) {
             console.error('Application initialization failed:', error);
             this.handleError(error);
+            EventBus.publish('app:initialized', { success: false, error });
+            throw error;
         }
+    },
+
+    // Component Initialization
+    async initializeComponents() {
+        await Promise.all([
+            this.initializeUserInterface(),
+            this.initializeNotifications(),
+            this.initializeRouter()
+        ]);
+    },
+
+    // Event Listeners Setup
+    setupEventListeners() {
+        // Activity monitoring
+        ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+            document.addEventListener(event, () => this.updateLastActivity());
+        });
+
+        // User menu events
+        document.getElementById('signOutBtn')?.addEventListener('click', 
+            (e) => this.handleSignOut(e)
+        );
+
+        // Global error handling
+        window.addEventListener('error', (event) => {
+            this.handleError(event.error);
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            this.handleError(event.reason);
+        });
+    },
+
+    // Sidebar Event Subscriptions
+    subscribeSidebarEvents() {
+        EventBus.subscribe('sidebar:stateChanged', 
+            (data) => this.handleSidebarStateChange(data)
+        );
+        
+        EventBus.subscribe('sidebar:initialized', 
+            () => this.handleSidebarInitialized()
+        );
     },
 
     // Authentication and Session Management
@@ -748,21 +1204,26 @@ const DashboardApp = {
         const token = localStorage.getItem('token');
         if (!token) {
             this.redirectToLogin();
-            return;
+            return false;
         }
 
         try {
-            const response = await this.makeAuthenticatedRequest('/verify-token', 'POST');
-            
+            const response = await this.makeAuthenticatedRequest(
+                this.config.api.endpoints.verifyToken,
+                'POST'
+            );
+
             if (!response.success || response.user.role !== 'superadmin') {
                 throw new Error('Invalid user role or session');
             }
 
             this.state.userInfo = response.user;
             this.updateUserInterface();
+            return true;
         } catch (error) {
             console.error('Authentication check failed:', error);
             this.redirectToLogin();
+            return false;
         }
     },
 
@@ -770,7 +1231,7 @@ const DashboardApp = {
     async makeAuthenticatedRequest(endpoint, method = 'GET', data = null) {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`${this.config.apiBaseUrl}${endpoint}`, {
+            const response = await fetch(`${this.config.api.baseUrl}${endpoint}`, {
                 method,
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -795,146 +1256,34 @@ const DashboardApp = {
         }
     },
 
-    // User Interface Management
-    initializeUserInterface() {
-        // Initialize sidebar
-        this.initializeSidebar();
-        
-        // Initialize user menu
-        this.initializeUserMenu();
-        
-        // Update user information displays
-        this.updateUserInterface();
-    },
-
-    updateUserInterface() {
-        if (!this.state.userInfo) return;
-
-        // Update user display elements
-        const userElements = {
-            'userInitials': this.getInitials(this.state.userInfo.email),
-            'userName': this.state.userInfo.email.split('@')[0],
-            'userRole': this.state.userInfo.role,
-            'userEmailDisplay': this.state.userInfo.email,
-            'userRoleDisplay': this.state.userInfo.role
-        };
-
-        Object.entries(userElements).forEach(([id, value]) => {
-            const element = document.getElementById(id);
-            if (element) element.textContent = value;
-        });
-    },
-
-    // Sidebar Management
-    initializeSidebar() {
-        const submenuTriggers = document.querySelectorAll('.menu-item.has-submenu');
-        
-        submenuTriggers.forEach(trigger => {
-            trigger.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.toggleSubmenu(trigger);
-            });
-        });
-
-        // Initialize menu item click handlers
-        document.querySelectorAll('.menu-item:not(.has-submenu)').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.handleMenuItemClick(item);
-            });
-        });
-    },
-
-    toggleSubmenu(trigger) {
-        // Toggle active state
-        trigger.classList.toggle('active');
-        
-        // Find and toggle nested submenu
-        const nestedSubmenu = trigger.nextElementSibling;
-        if (nestedSubmenu?.classList.contains('nested-submenu')) {
-            nestedSubmenu.classList.toggle('active');
-            
-            // Animate submenu arrow
-            const arrow = trigger.querySelector('.submenu-arrow');
-            if (arrow) {
-                arrow.style.transform = nestedSubmenu.classList.contains('active') 
-                    ? 'rotate(90deg)' 
-                    : 'rotate(0deg)';
-            }
-        }
-    },
-
-    async handleMenuItemClick(item) {
-        // Remove active class from all menu items
-        document.querySelectorAll('.menu-item:not(.has-submenu)').forEach(mi => {
-            mi.classList.remove('active');
-        });
-        
-        // Add active class to clicked item
-        item.classList.add('active');
-        
-        // Load content based on data-page attribute
-        const page = item.getAttribute('data-page');
-        if (page) {
-            await this.loadPage(page);
-        }
-    },
-
-    // Content Loading
-    async loadPage(page) {
-        try {
-            this.showLoadingIndicator();
-            
-            // Update state and URL
-            this.state.currentPage = page;
-            window.history.pushState({ page }, '', `#${page}`);
-
-            // Fetch and load content
-            const content = await this.fetchPageContent(page);
-            this.updateMainContent(content);
-
-            // Initialize page-specific functionality
-            await this.initializePageFunctionality(page);
-
-        } catch (error) {
-            console.error('Error loading page:', error);
-            this.showErrorMessage('Failed to load page content');
-        } finally {
-            this.hideLoadingIndicator();
-        }
-    },
-
-        // Session Monitoring and Management
+    // Session Management
     startSessionMonitoring() {
-        // Monitor user activity
-        ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
-            document.addEventListener(event, () => {
-                this.state.lastActivity = Date.now();
-            });
-        });
-
-        // Set up session check interval
-        this.state.sessionTimer = setInterval(() => {
+        this.state.timers.session = setInterval(() => {
             const inactiveTime = Date.now() - this.state.lastActivity;
-            
-            if (inactiveTime >= this.config.sessionTimeout) {
+            if (inactiveTime >= this.config.timing.sessionTimeout) {
                 this.handleSessionExpired();
             }
-        }, 60000); // Check every minute
+        }, 60000);
 
-        // Set up token refresh interval
-        this.state.refreshTokenTimer = setInterval(() => {
+        this.state.timers.refreshToken = setInterval(() => {
             this.refreshToken();
-        }, this.config.refreshTokenInterval);
+        }, this.config.timing.refreshTokenInterval);
+    },
+
+    updateLastActivity() {
+        this.state.lastActivity = Date.now();
     },
 
     async refreshToken() {
         try {
-            const response = await this.makeAuthenticatedRequest('/refresh-token', 'POST');
-            
+            const response = await this.makeAuthenticatedRequest(
+                this.config.api.endpoints.refreshToken,
+                'POST'
+            );
+
             if (response.success && response.token) {
                 localStorage.setItem('token', response.token);
-                console.log('Token refreshed successfully');
+                EventBus.publish('app:tokenRefreshed', { success: true });
             }
         } catch (error) {
             console.error('Token refresh failed:', error);
@@ -949,367 +1298,13 @@ const DashboardApp = {
     },
 
     clearSessionTimers() {
-        if (this.state.sessionTimer) {
-            clearInterval(this.state.sessionTimer);
-        }
-        if (this.state.refreshTokenTimer) {
-            clearInterval(this.state.refreshTokenTimer);
-        }
-    },
-
-    // Page Content Management
-    async fetchPageContent(page) {
-        // Define page content structure
-        const pageStructure = {
-            dashboard: {
-                endpoint: '/dashboard/stats',
-                template: 'dashboard'
-            },
-            'companies-management': {
-                endpoint: '/companies',
-                template: 'companies'
-            },
-            'system-settings': {
-                endpoint: '/system/settings',
-                template: 'settings'
-            },
-            'users-list': {
-                endpoint: '/users',
-                template: 'users'
-            },
-            'roles-permissions': {
-                endpoint: '/roles',
-                template: 'roles'
-            },
-            'audit': {
-                endpoint: '/audit-logs',
-                template: 'audit'
-            }
-            // Add other page definitions here
-        };
-
-        const pageConfig = pageStructure[page];
-        if (!pageConfig) {
-            throw new Error(`Page configuration not found for: ${page}`);
-        }
-
-        try {
-            // Fetch data from API
-            const data = await this.makeAuthenticatedRequest(pageConfig.endpoint);
-            
-            // Load and populate template
-            const template = await this.loadTemplate(pageConfig.template);
-            return this.populateTemplate(template, data);
-        } catch (error) {
-            console.error('Error fetching page content:', error);
-            throw error;
-        }
-    },
-
-    async loadTemplate(templateName) {
-        try {
-            const response = await fetch(`/templates/${templateName}.html`);
-            if (!response.ok) throw new Error('Template not found');
-            return await response.text();
-        } catch (error) {
-            console.error('Error loading template:', error);
-            throw error;
-        }
-    },
-
-    populateTemplate(template, data) {
-        // Basic template population
-        let populated = template;
-        Object.entries(data).forEach(([key, value]) => {
-            const regex = new RegExp(`{{${key}}}`, 'g');
-            populated = populated.replace(regex, value);
+        Object.values(this.state.timers).forEach(timer => {
+            if (timer) clearInterval(timer);
         });
-        return populated;
+        this.state.timers = { session: null, refreshToken: null };
     },
 
-    updateMainContent(content) {
-        const mainContent = document.querySelector(this.config.contentContainer);
-        if (mainContent) {
-            mainContent.innerHTML = content;
-        }
-    },
-
-    // Page-specific Functionality
-    async initializePageFunctionality(page) {
-        const pageHandlers = {
-            dashboard: () => this.initializeDashboard(),
-            'users-list': () => this.initializeUsersList(),
-            'roles-permissions': () => this.initializeRolesPermissions(),
-            'audit': () => this.initializeAuditLogs()
-            // Add other page initializers here
-        };
-
-        if (pageHandlers[page]) {
-            await pageHandlers[page]();
-        }
-    },
-
-    // Page-specific Initializers
-    async initializeDashboard() {
-        try {
-            // Initialize dashboard charts
-            await this.initializeDashboardCharts();
-            
-            // Initialize real-time updates
-            this.initializeRealTimeUpdates();
-            
-            // Initialize dashboard event handlers
-            this.initializeDashboardEvents();
-        } catch (error) {
-            console.error('Dashboard initialization failed:', error);
-            this.showErrorMessage('Failed to initialize dashboard');
-        }
-    },
-
-    async initializeUsersList() {
-        try {
-            // Initialize users data table
-            await this.initializeDataTable('#usersTable', {
-                pageLength: 10,
-                order: [[1, 'asc']],
-                ajax: {
-                    url: `${this.config.apiBaseUrl}/users`,
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                },
-                columns: [
-                    { data: 'name' },
-                    { data: 'email' },
-                    { data: 'role' },
-                    { data: 'status' },
-                    {
-                        data: null,
-                        render: function(data, type, row) {
-                            return `
-                                <button class="btn-edit" data-id="${row.id}">Edit</button>
-                                <button class="btn-delete" data-id="${row.id}">Delete</button>
-                            `;
-                        }
-                    }
-                ]
-            });
-
-            // Initialize user management event handlers
-            this.initializeUserManagementEvents();
-        } catch (error) {
-            console.error('Users list initialization failed:', error);
-            this.showErrorMessage('Failed to initialize users list');
-        }
-    },
-
-    // Utility Functions
-    showLoadingIndicator() {
-        const loader = document.createElement('div');
-        loader.className = 'loading-indicator';
-        loader.innerHTML = '<div class="spinner"></div>';
-        document.body.appendChild(loader);
-    },
-
-    hideLoadingIndicator() {
-        const loader = document.querySelector('.loading-indicator');
-        if (loader) {
-            loader.remove();
-        }
-    },
-
-    showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.innerHTML = `
-            <i class="fas fa-${this.getNotificationIcon(type)}"></i>
-            <span>${message}</span>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.classList.add('show');
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }, 100);
-    },
-
-    getNotificationIcon(type) {
-        const icons = {
-            success: 'check-circle',
-            error: 'exclamation-circle',
-            warning: 'exclamation-triangle',
-            info: 'info-circle'
-        };
-        return icons[type] || icons.info;
-    },
-
-    getInitials(name) {
-        return name
-            .split(' ')
-            .map(word => word[0])
-            .join('')
-            .toUpperCase()
-            .substring(0, 2);
-    },
-
-    handleError(error) {
-        console.error('Application error:', error);
-        this.showNotification(
-            error.message || 'An unexpected error occurred',
-            'error'
-        );
-    },
-
-    redirectToLogin() {
-        localStorage.clear();
-        window.location.href = '/login.html';
-    }
-};
-
-// Initialize the application
-function initializeApplication() {
-    DashboardApp.init().catch(error => {
-        console.error('Application initialization failed:', error);
-        // Show error page or fallback content
-        document.body.innerHTML = `
-            <div class="error-page">
-                <h1>Application Error</h1>
-                <p>Failed to initialize the application. Please try refreshing the page.</p>
-                <button onclick="window.location.reload()">Refresh Page</button>
-            </div>
-        `;
-    });
-}
-        
-// Sidebar Manager Implementation
-const SidebarManager = {
-    init() {
-        this.sidebar = document.querySelector('.sidebar');
-        this.mainContent = document.querySelector('.main-content');
-        this.toggleButton = document.getElementById('sidebarToggle');
-        this.sidebarState = localStorage.getItem('sidebarState') || 'expanded';
-        
-        this.setupEventListeners();
-        this.initializeSidebarState();
-        this.handleResize();
-    },
-
-    setupEventListeners() {
-        // Toggle button click handler
-        this.toggleButton.addEventListener('click', () => this.toggleSidebar());
-
-        // Handle window resize
-        window.addEventListener('resize', () => this.handleResize());
-
-        // Setup tooltips for menu items
-        document.querySelectorAll('.menu-item').forEach(item => {
-            const text = item.querySelector('span')?.textContent || item.getAttribute('data-page');
-            item.setAttribute('data-tooltip', text);
-        });
-
-        // Handle submenu toggles
-        document.querySelectorAll('.menu-item.has-submenu').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.toggleSubmenu(item);
-            });
-        });
-    },
-
-    initializeSidebarState() {
-        if (this.sidebarState === 'collapsed') {
-            this.sidebar.classList.add('collapsed');
-            this.mainContent.classList.add('expanded');
-        }
-    },
-
-    toggleSidebar() {
-        // Add animation class
-        this.sidebar.style.animation = this.sidebar.classList.contains('collapsed') 
-            ? 'expandAnimation 0.3s forwards'
-            : 'collapseAnimation 0.3s forwards';
-
-        // Toggle classes
-        this.sidebar.classList.toggle('collapsed');
-        this.mainContent.classList.toggle('expanded');
-
-        // Store state
-        this.sidebarState = this.sidebar.classList.contains('collapsed') ? 'collapsed' : 'expanded';
-        localStorage.setItem('sidebarState', this.sidebarState);
-
-        // Update tooltip visibility
-        this.updateTooltipVisibility();
-
-        // Trigger window resize event to update any charts or tables
-        window.dispatchEvent(new Event('resize'));
-    },
-
-    toggleSubmenu(item) {
-        const submenu = item.nextElementSibling;
-        const arrow = item.querySelector('.submenu-arrow');
-
-        item.classList.toggle('active');
-        if (submenu) {
-            submenu.style.maxHeight = item.classList.contains('active') 
-                ? `${submenu.scrollHeight}px` 
-                : '0';
-        }
-        if (arrow) {
-            arrow.style.transform = item.classList.contains('active')
-                ? 'rotate(90deg)'
-                : 'rotate(0)';
-        }
-    },
-
-    handleResize() {
-        // Auto-collapse sidebar on smaller screens
-        if (window.innerWidth <= 1024 && window.innerWidth > 768) {
-            this.sidebar.classList.add('collapsed');
-            this.mainContent.classList.add('expanded');
-        } else if (window.innerWidth > 1024) {
-            // Restore saved state on larger screens
-            if (this.sidebarState === 'expanded') {
-                this.sidebar.classList.remove('collapsed');
-                this.mainContent.classList.remove('expanded');
-            }
-        }
-    },
-
-    updateTooltipVisibility() {
-        const isCollapsed = this.sidebar.classList.contains('collapsed');
-        document.querySelectorAll('.menu-item').forEach(item => {
-            if (isCollapsed) {
-                const text = item.querySelector('span')?.textContent || item.getAttribute('data-page');
-                item.setAttribute('data-tooltip', text);
-            } else {
-                item.removeAttribute('data-tooltip');
-            }
-        });
-    }
-};
-
-// Initialize Sidebar Manager when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    SidebarManager.init();
-});
-// Router Implementation
-window.addEventListener('popstate', function(event) {
-    if (event.state && event.state.page) {
-        DashboardApp.loadPage(event.state.page).catch(error => {
-            console.error('Navigation error:', error);
-            DashboardApp.showNotification('Navigation failed', 'error');
-        });
-    }
-});
-
-// Handle browser refresh
-window.addEventListener('beforeunload', function() {
-    DashboardApp.clearSessionTimers();
-});
+    // Continue with Part 4...
     </script>
 </body>
 </html>
