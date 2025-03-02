@@ -1,287 +1,45 @@
-<!-- roles-permission.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roles & Permissions - WorkWise Pro</title>
-    <style>
-        /* Roles & Permissions specific styles */
-        .roles-container {
-            background: var(--bg-card);
-            border-radius: var(--border-radius-lg);
-            padding: 1.5rem;
-            box-shadow: var(--shadow-sm);
-        }
+<!-- public/dashboard/roles-permissions.html -->
+<div class="roles-permissions-container">
+    <!-- Header Section -->
+    <div class="page-header">
+        <h2>Roles & Permissions Management</h2>
+        <button class="btn btn-primary" id="createRoleBtn">
+            <i class="fas fa-plus"></i> Create New Role
+        </button>
+    </div>
 
-        .roles-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
+    <!-- Roles List Section -->
+    <div class="roles-list-container">
+        <div class="roles-grid">
+            <!-- System Roles (Non-editable) -->
+            <div class="role-card system-role">
+                <div class="role-header">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>Superadmin</h3>
+                    <span class="role-badge system">System Role</span>
+                </div>
+                <div class="role-description">
+                    Full system access with unrestricted permissions
+                </div>
+                <div class="role-stats">
+                    <div class="stat">
+                        <span class="stat-value" id="superadminUserCount">0</span>
+                        <span class="stat-label">Users</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">All</span>
+                        <span class="stat-label">Permissions</span>
+                    </div>
+                </div>
+                <div class="role-actions">
+                    <button class="btn btn-secondary" disabled>
+                        <i class="fas fa-lock"></i> System Protected
+                    </button>
+                </div>
+            </div>
 
-        .roles-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .btn-create-role {
-            padding: 0.75rem 1.5rem;
-            background-color: var(--primary-color);
-            color: var(--text-white);
-            border: none;
-            border-radius: var(--border-radius-md);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: var(--transition);
-        }
-
-        .btn-create-role:hover {
-            background-color: var(--primary-dark);
-        }
-
-        .roles-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-        }
-
-        .role-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-lg);
-            padding: 1.5rem;
-            transition: var(--transition);
-        }
-
-        .role-card:hover {
-            box-shadow: var(--shadow-md);
-            transform: translateY(-2px);
-        }
-
-        .role-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
-        }
-
-        .role-name {
-            font-weight: 600;
-            color: var(--text-primary);
-            font-size: 1.125rem;
-        }
-
-        .role-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .role-action-btn {
-            padding: 0.5rem;
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            border-radius: var(--border-radius-sm);
-            transition: var(--transition);
-        }
-
-        .role-action-btn:hover {
-            background-color: var(--bg-hover);
-            color: var(--primary-color);
-        }
-
-        .role-description {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            margin-bottom: 1rem;
-        }
-
-        .role-stats {
-            display: flex;
-            gap: 1rem;
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }
-
-        .role-stat {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: var(--bg-card);
-            border-radius: var(--border-radius-lg);
-            padding: 2rem;
-            width: 100%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .modal-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            font-size: 1.5rem;
-            padding: 0.5rem;
-            transition: var(--transition);
-        }
-
-        .modal-close:hover {
-            color: var(--danger-color);
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--text-primary);
-            font-weight: 500;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-md);
-            transition: var(--transition);
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
-
-        .permissions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .permission-group {
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-md);
-            padding: 1rem;
-        }
-
-        .permission-group-title {
-            font-weight: 600;
-            margin-bottom: 0.75rem;
-            color: var(--text-primary);
-        }
-
-        .permission-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .permission-checkbox {
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-        }
-
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 1rem;
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: var(--border-radius-md);
-            cursor: pointer;
-            transition: var(--transition);
-            font-weight: 500;
-        }
-
-        .btn-secondary {
-            background-color: var(--bg-hover);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: var(--text-white);
-            border: none;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-        }
-
-        .btn-secondary:hover {
-            background-color: var(--border-color);
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
-        }
-    </style>
-</head>
-<body>
-    <div class="roles-container">
-        <div class="roles-header">
-            <h1 class="roles-title">Roles & Permissions</h1>
-            <button class="btn-create-role" onclick="showCreateRoleModal()">
-                <i class="fas fa-plus"></i>
-                <span>Create New Role</span>
-            </button>
-        </div>
-
-        <div class="roles-grid" id="rolesGrid">
-            <!-- Roles will be dynamically populated here -->
+            <!-- Dynamic Roles List -->
+            <div id="customRolesList"></div>
         </div>
     </div>
 
@@ -289,605 +47,86 @@
     <div class="modal" id="roleModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title" id="modalTitle">Create New Role</h2>
-                <button class="modal-close" onclick="closeModal()">&times;</button>
+                <h3 id="modalTitle">Create New Role</h3>
+                <button class="close-modal" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <form id="roleForm" onsubmit="handleRoleSubmit(event)">
-                <div class="form-group">
-                    <label class="form-label" for="roleName">Role Name</label>
-                    <input type="text" id="roleName" class="form-input" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="roleDescription">Description</label>
-                    <textarea id="roleDescription" class="form-input" rows="3"></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Permissions</label>
-                    <div class="permissions-grid" id="permissionsGrid">
-                        <!-- Permission groups will be dynamically populated here -->
+            <div class="modal-body">
+                <form id="roleForm">
+                    <div class="form-group">
+                        <label for="roleName">Role Name</label>
+                        <input type="text" id="roleName" required>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Role</button>
-                </div>
-            </form>
+                    <div class="form-group">
+                        <label for="roleDescription">Description</label>
+                        <textarea id="roleDescription" rows="3"></textarea>
+                    </div>
+                    
+                    <!-- Permissions Section -->
+                    <div class="permissions-section">
+                        <h4>Permissions</h4>
+                        
+                        <!-- UI Access -->
+                        <div class="permission-group">
+                            <h5>UI Access</h5>
+                            <div class="permissions-grid" id="uiPermissions">
+                                <!-- Dynamically populated -->
+                            </div>
+                        </div>
+
+                        <!-- Module Access -->
+                        <div class="permission-group">
+                            <h5>Module Access</h5>
+                            <div class="permissions-grid" id="modulePermissions">
+                                <!-- Dynamically populated -->
+                            </div>
+                        </div>
+
+                        <!-- User Management -->
+                        <div class="permission-group">
+                            <h5>User Management</h5>
+                            <div class="permissions-grid" id="userManagementPermissions">
+                                <!-- Dynamically populated -->
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelRole">Cancel</button>
+                <button class="btn btn-primary" id="saveRole">Save Role</button>
+            </div>
         </div>
     </div>
+</div>
 
-<script>
-// Configuration and State Management
-const RolesManager = {
-    config: {
-        apiBaseUrl: 'https://18.215.160.136.nip.io/api',
-        endpoints: {
-            roles: '/roles',
-            rolePermissions: '/role_permissions',
-            userRoles: '/user_role_assignments',
-            auditLogs: '/audit-logs'
-        },
-        defaultPermissions: {
-            dashboard: ['view', 'manage'],
-            users: ['view', 'create', 'edit', 'delete'],
-            roles: ['view', 'create', 'edit', 'delete'],
-            settings: ['view', 'manage']
-        }
-    },
-
-    state: {
-        roles: [],
-        permissions: [],
-        editingRole: null,
-        isLoading: false,
-        initialized: false
-    },
-
-    // Initialize the Roles Manager
-    async init() {
-        try {
-            if (this.state.initialized) return;
-            
-            this.showLoading();
-            await this.validateSession();
-            await Promise.all([
-                this.fetchRoles(),
-                this.initializePermissions()
-            ]);
-            
-            this.renderRoles();
-            this.renderPermissionGroups();
-            this.setupEventListeners();
-            
-            this.state.initialized = true;
-            this.hideLoading();
-        } catch (error) {
-            console.error('Initialization failed:', error);
-            this.showError('Failed to initialize roles and permissions');
-            this.hideLoading();
-        }
-    },
-
-    // Session Validation
-    async validateSession() {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            window.location.href = '/login.html';
-            throw new Error('No authentication token found');
-        }
-
-        try {
-            const response = await this.makeRequest('/verify-token', 'POST');
-            if (!response.success || response.user.role !== 'superadmin') {
-                throw new Error('Invalid user role or session');
-            }
-        } catch (error) {
-            localStorage.clear();
-            window.location.href = '/login.html';
-            throw error;
-        }
-    },
-
-    // Event Listeners
-    setupEventListeners() {
-        // Create Role Button
-        const createRoleBtn = document.querySelector('.btn-create-role');
-        if (createRoleBtn) {
-            createRoleBtn.addEventListener('click', () => this.showCreateRoleModal());
-        }
-
-        // Form Submission
-        const roleForm = document.getElementById('roleForm');
-        if (roleForm) {
-            roleForm.addEventListener('submit', (e) => this.handleRoleSubmit(e));
-        }
-
-        // Modal Close Button
-        const modalClose = document.querySelector('.modal-close');
-        if (modalClose) {
-            modalClose.addEventListener('click', () => this.closeModal());
-        }
-
-        // Close modal on outside click
-        const modal = document.getElementById('roleModal');
-        if (modal) {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    this.closeModal();
-                }
-            });
-        }
-
-        // Escape key to close modal
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal.classList.contains('active')) {
-                this.closeModal();
-            }
-        });
-    },
-
-    // API Calls
-    async makeRequest(endpoint, method = 'GET', data = null) {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${this.config.apiBaseUrl}${endpoint}`, {
-                method,
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                    'X-User-Role': 'superadmin'
-                },
-                ...(data && { body: JSON.stringify(data) })
-            });
-
-            const responseData = await response.json();
-
-            if (!response.ok) {
-                throw new Error(responseData.message || `API request failed: ${response.statusText}`);
-            }
-
-            return responseData;
-        } catch (error) {
-            console.error('API request failed:', error);
-            throw error;
-        }
-    },
-
-    async fetchRoles() {
-        try {
-            const response = await this.makeRequest(this.config.endpoints.roles);
-            this.state.roles = response.roles || [];
-        } catch (error) {
-            console.error('Error fetching roles:', error);
-            throw error;
-        }
-    },
-
-    async initializePermissions() {
-        try {
-            // First try to fetch permissions from the server
-            const response = await this.makeRequest(this.config.endpoints.rolePermissions);
-            if (response.permissions && response.permissions.length > 0) {
-                this.state.permissions = response.permissions;
-            } else {
-                // If no permissions exist, use default permissions
-                this.state.permissions = this.generateDefaultPermissions();
-            }
-        } catch (error) {
-            console.error('Error initializing permissions:', error);
-            // Fallback to default permissions
-            this.state.permissions = this.generateDefaultPermissions();
-        }
-    },
-
-    generateDefaultPermissions() {
-        const permissions = [];
-        Object.entries(this.config.defaultPermissions).forEach(([module, actions]) => {
-            actions.forEach(action => {
-                permissions.push({
-                    id: `${module}_${action}`,
-                    name: `${this.capitalizeFirst(action)} ${this.capitalizeFirst(module)}`,
-                    group: this.capitalizeFirst(module),
-                    description: `Permission to ${action} ${module}`
-                });
-            });
-        });
-        return permissions;
-    },
-
-        // UI Rendering
-    renderRoles() {
-        const rolesGrid = document.getElementById('rolesGrid');
-        if (!rolesGrid) return;
-
-        if (this.state.roles.length === 0) {
-            rolesGrid.innerHTML = `
-                <div class="no-roles-message">
-                    <i class="fas fa-users-cog"></i>
-                    <p>No roles have been created yet.</p>
-                    <button class="btn-create-role" onclick="RolesManager.showCreateRoleModal()">
-                        <i class="fas fa-plus"></i>
-                        Create First Role
-                    </button>
-                </div>
-            `;
-            return;
-        }
-
-        rolesGrid.innerHTML = this.state.roles
-            .map(role => this.createRoleCard(role))
-            .join('');
-    },
-
-    createRoleCard(role) {
-        const isSystemRole = role.isSystem || role.name.toLowerCase() === 'superadmin';
-        const userCount = role.userCount || 0;
-        const permissionCount = role.permissions?.length || 0;
-
-        return `
-            <div class="role-card ${isSystemRole ? 'system-role' : ''}" data-role-id="${role._id}">
-                <div class="role-header">
-                    <div class="role-title">
-                        <h3 class="role-name">
-                            ${role.name}
-                            ${isSystemRole ? '<span class="system-badge">System Role</span>' : ''}
-                        </h3>
-                        <span class="role-date">Created ${this.formatDate(role.createdAt)}</span>
-                    </div>
-                    <div class="role-actions">
-                        ${!isSystemRole ? `
-                            <button class="role-action-btn" onclick="RolesManager.editRole('${role._id}')" title="Edit Role">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="role-action-btn delete" onclick="RolesManager.deleteRole('${role._id}')" title="Delete Role">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        ` : `
-                            <span class="system-role-label" title="System roles cannot be modified">
-                                <i class="fas fa-lock"></i>
-                            </span>
-                        `}
-                    </div>
-                </div>
-                <p class="role-description">${role.description || 'No description provided'}</p>
-                <div class="role-stats">
-                    <div class="role-stat" title="Number of permissions">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>${permissionCount} Permission${permissionCount !== 1 ? 's' : ''}</span>
-                    </div>
-                    <div class="role-stat" title="Number of users with this role">
-                        <i class="fas fa-users"></i>
-                        <span>${userCount} User${userCount !== 1 ? 's' : ''}</span>
-                    </div>
-                    <div class="role-stat" title="Last updated">
-                        <i class="fas fa-clock"></i>
-                        <span>Updated ${this.formatDate(role.updatedAt)}</span>
-                    </div>
-                </div>
+<!-- Role Card Template -->
+<template id="roleCardTemplate">
+    <div class="role-card" data-role-id="">
+        <div class="role-header">
+            <i class="fas fa-user-shield"></i>
+            <h3 class="role-name"></h3>
+            <span class="role-badge custom">Custom Role</span>
+        </div>
+        <div class="role-description"></div>
+        <div class="role-stats">
+            <div class="stat">
+                <span class="stat-value user-count">0</span>
+                <span class="stat-label">Users</span>
             </div>
-        `;
-    },
-
-    renderPermissionGroups() {
-        const permissionsGrid = document.getElementById('permissionsGrid');
-        if (!permissionsGrid) return;
-
-        const groupedPermissions = this.groupPermissions(this.state.permissions);
-        
-        permissionsGrid.innerHTML = Object.entries(groupedPermissions)
-            .map(([group, permissions]) => `
-                <div class="permission-group">
-                    <div class="permission-group-header">
-                        <h4 class="permission-group-title">${group}</h4>
-                        <button type="button" class="btn-toggle-group" onclick="RolesManager.togglePermissionGroup(this)">
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
-                    </div>
-                    <div class="permission-group-content">
-                        <div class="permission-group-select-all">
-                            <label class="checkbox-wrapper">
-                                <input type="checkbox" 
-                                    class="permission-group-checkbox" 
-                                    onchange="RolesManager.toggleGroupPermissions(this, '${group}')"
-                                    ${this.areAllGroupPermissionsSelected(group) ? 'checked' : ''}>
-                                <span class="checkbox-label">Select All</span>
-                            </label>
-                        </div>
-                        ${permissions.map(permission => `
-                            <div class="permission-item">
-                                <label class="checkbox-wrapper">
-                                    <input type="checkbox" 
-                                        class="permission-checkbox"
-                                        data-group="${group}"
-                                        id="${permission.id}" 
-                                        value="${permission.id}"
-                                        ${this.state.editingRole?.permissions?.includes(permission.id) ? 'checked' : ''}>
-                                    <span class="checkbox-label">${permission.name}</span>
-                                </label>
-                                ${permission.description ? `
-                                    <span class="permission-description" title="${permission.description}">
-                                        <i class="fas fa-info-circle"></i>
-                                    </span>
-                                ` : ''}
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `).join('');
-    },
-
-    groupPermissions(permissions) {
-        return permissions.reduce((groups, permission) => {
-            const group = permission.group || 'General';
-            if (!groups[group]) {
-                groups[group] = [];
-            }
-            groups[group].push(permission);
-            return groups;
-        }, {});
-    },
-
-    togglePermissionGroup(button) {
-        const groupContent = button.closest('.permission-group').querySelector('.permission-group-content');
-        const icon = button.querySelector('i');
-        
-        if (groupContent.style.maxHeight) {
-            groupContent.style.maxHeight = null;
-            icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
-        } else {
-            groupContent.style.maxHeight = groupContent.scrollHeight + "px";
-            icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
-        }
-    },
-
-    toggleGroupPermissions(checkbox, group) {
-        const groupCheckboxes = document.querySelectorAll(`.permission-checkbox[data-group="${group}"]`);
-        groupCheckboxes.forEach(cb => {
-            cb.checked = checkbox.checked;
-        });
-    },
-
-    areAllGroupPermissionsSelected(group) {
-        if (!this.state.editingRole) return false;
-        
-        const groupPermissions = this.state.permissions.filter(p => p.group === group);
-        return groupPermissions.every(p => 
-            this.state.editingRole.permissions?.includes(p.id)
-        );
-    },
-
-        // Role Management
-    async createRole(roleData) {
-        try {
-            const payload = {
-                name: roleData.name,
-                description: roleData.description,
-                permissions: roleData.permissions,
-                isDefault: false,
-                isSystem: false,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            };
-
-            const response = await this.makeRequest(
-                this.config.endpoints.roles,
-                'POST',
-                payload
-            );
-            
-            await this.fetchRoles();
-            this.renderRoles();
-            this.showSuccess('Role created successfully');
-            return response;
-        } catch (error) {
-            this.showError(`Failed to create role: ${error.message}`);
-            throw error;
-        }
-    },
-
-    async updateRole(roleId, roleData) {
-        try {
-            const payload = {
-                name: roleData.name,
-                description: roleData.description,
-                permissions: roleData.permissions,
-                updatedAt: new Date()
-            };
-
-            const response = await this.makeRequest(
-                `${this.config.endpoints.roles}/${roleId}`,
-                'PUT',
-                payload
-            );
-            
-            await this.fetchRoles();
-            this.renderRoles();
-            this.showSuccess('Role updated successfully');
-            return response;
-        } catch (error) {
-            this.showError(`Failed to update role: ${error.message}`);
-            throw error;
-        }
-    },
-
-    async deleteRole(roleId) {
-        const role = this.state.roles.find(r => r._id === roleId);
-        if (!role) return;
-
-        if (role.userCount > 0) {
-            this.showError('Cannot delete role with assigned users. Please reassign users first.');
-            return;
-        }
-
-        if (!confirm(`Are you sure you want to delete the role "${role.name}"? This action cannot be undone.`)) {
-            return;
-        }
-
-        try {
-            await this.makeRequest(
-                `${this.config.endpoints.roles}/${roleId}`,
-                'DELETE'
-            );
-            
-            await this.fetchRoles();
-            this.renderRoles();
-            this.showSuccess('Role deleted successfully');
-        } catch (error) {
-            this.showError(`Failed to delete role: ${error.message}`);
-        }
-    },
-
-    // Modal Management
-    showCreateRoleModal() {
-        this.state.editingRole = null;
-        document.getElementById('modalTitle').textContent = 'Create New Role';
-        document.getElementById('roleForm').reset();
-        document.getElementById('roleModal').classList.add('active');
-        document.body.classList.add('modal-open');
-        this.renderPermissionGroups();
-    },
-
-    async editRole(roleId) {
-        const role = this.state.roles.find(r => r._id === roleId);
-        if (!role) {
-            this.showError('Role not found');
-            return;
-        }
-
-        this.state.editingRole = role;
-        document.getElementById('modalTitle').textContent = 'Edit Role';
-        document.getElementById('roleName').value = role.name;
-        document.getElementById('roleDescription').value = role.description || '';
-        document.getElementById('roleModal').classList.add('active');
-        document.body.classList.add('modal-open');
-        this.renderPermissionGroups();
-    },
-
-    closeModal() {
-        document.getElementById('roleModal').classList.remove('active');
-        document.body.classList.remove('modal-open');
-        this.state.editingRole = null;
-        document.getElementById('roleForm').reset();
-    },
-
-    // Form Handling
-    async handleRoleSubmit(event) {
-        event.preventDefault();
-        
-        const formData = {
-            name: document.getElementById('roleName').value.trim(),
-            description: document.getElementById('roleDescription').value.trim(),
-            permissions: Array.from(document.querySelectorAll('.permission-checkbox:checked'))
-                .map(checkbox => checkbox.value)
-        };
-
-        // Validation
-        if (!formData.name) {
-            this.showError('Role name is required');
-            return;
-        }
-
-        if (formData.permissions.length === 0) {
-            this.showError('Please select at least one permission');
-            return;
-        }
-
-        try {
-            this.showLoading();
-            if (this.state.editingRole) {
-                await this.updateRole(this.state.editingRole._id, formData);
-            } else {
-                await this.createRole(formData);
-            }
-            this.closeModal();
-        } catch (error) {
-            console.error('Form submission failed:', error);
-        } finally {
-            this.hideLoading();
-        }
-    },
-
-    // Utility Functions
-    showLoading() {
-        this.state.isLoading = true;
-        const existingLoader = document.querySelector('.loading-indicator');
-        if (existingLoader) return;
-
-        const loader = document.createElement('div');
-        loader.className = 'loading-indicator';
-        loader.innerHTML = '<div class="spinner"></div>';
-        document.body.appendChild(loader);
-    },
-
-    hideLoading() {
-        this.state.isLoading = false;
-        const loader = document.querySelector('.loading-indicator');
-        if (loader) {
-            loader.remove();
-        }
-    },
-
-    showSuccess(message) {
-        this.showNotification(message, 'success');
-    },
-
-    showError(message) {
-        this.showNotification(message, 'error');
-    },
-
-    showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.innerHTML = `
-            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-            <span>${message}</span>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // Trigger reflow for animation
-        notification.offsetHeight;
-        
-        setTimeout(() => {
-            notification.classList.add('show');
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }, 100);
-    },
-
-    formatDate(dateString) {
-        if (!dateString) return 'N/A';
-        const date = new Date(dateString);
-        return new Intl.DateTimeFormat('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        }).format(date);
-    },
-
-    capitalizeFirst(string) {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    }
-};
-
-// Initialize when the page loads
-document.addEventListener('DOMContentLoaded', () => {
-    RolesManager.init().catch(error => {
-        console.error('Failed to initialize RolesManager:', error);
-    });
-});
-
-// Export functions for global access
-window.RolesManager = RolesManager;
-window.showCreateRoleModal = () => RolesManager.showCreateRoleModal();
-window.closeModal = () => RolesManager.closeModal();
-window.handleRoleSubmit = (event) => RolesManager.handleRoleSubmit(event);
-
-    
-
-</script>
-</body>
-</html>
+            <div class="stat">
+                <span class="stat-value permission-count">0</span>
+                <span class="stat-label">Permissions</span>
+            </div>
+        </div>
+        <div class="role-actions">
+            <button class="btn btn-icon edit-role">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-icon delete-role">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    </div>
+</template>
