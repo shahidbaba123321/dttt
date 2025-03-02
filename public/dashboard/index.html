@@ -1214,7 +1214,7 @@ const PageLoader = {
             this.showLoadingIndicator();
 
             // Fetch the roles-permission.html content
-            const response = await fetch(`${this.config.pagesPath}roles-permission.html`);
+            const response = await fetch(`${this.config.pagesPath}roles-permissions.html`);
             if (!response.ok) throw new Error('Failed to load page content');
             
             const content = await response.text();
