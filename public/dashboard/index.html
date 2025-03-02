@@ -994,25 +994,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            async loadPage(page) {
-                try {
-                    this.showLoading();
-                    this.updatePageTitle(page);
+           async loadPage(page) {
+    try {
+        this.showLoading();
+        this.updatePageTitle(page);
 
-                    const content = await this.fetchPageContent(page);
-                    this.contentContainer.innerHTML = content;
+        const content = await this.fetchPageContent(page);
+        this.contentContainer.innerHTML = content;
 
-                    // Initialize page-specific functionality
-                    if (page === 'roles') {
-                        const rolesManager = new RolesPermissionsManager();
-                        rolesManager.initialize();
-                    }
+       
+        if (page === 'roles') {
+            // Wait for a brief moment to ensure DOM is updated
+            setTimeout(() => {
+                const rolesManager = new RolesPermissionsManager();
+                rolesManager.initialize();
+            }, 0);
+        }
 
-                } catch (error) {
-                    console.error('Error loading page:', error);
-                    this.showError();
-                }
-            }
+    } catch (error) {
+        console.error('Error loading page:', error);
+        this.showError();
+    }
+}
 
             showLoading() {
                 this.contentContainer.innerHTML = `
