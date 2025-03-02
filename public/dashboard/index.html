@@ -794,7 +794,43 @@ body {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
+/* Add these to your existing dashboard styles */
+.error-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    padding: 2rem;
+}
 
+.error-content {
+    text-align: center;
+    color: var(--danger-color);
+}
+
+.error-content i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.error-content p {
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+}
+
+.error-content button {
+    padding: 0.75rem 1.5rem;
+    background-color: var(--primary-color);
+    color: var(--text-white);
+    border: none;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.error-content button:hover {
+    background-color: var(--primary-dark);
+}
 /* Utility Classes */
 .hidden {
     display: none !important;
@@ -928,10 +964,13 @@ body {
                                     <i class="fas fa-user-friends"></i>
                                     <span>Users List</span>
                                 </a>
-                                <a href="#users/roles" class="menu-item" data-page="roles-permissions">
-                                    <i class="fas fa-user-lock"></i>
-                                    <span>Roles & Permissions</span>
-                                </a>
+                                <!-- In your sidebar navigation -->
+<a href="#roles-permissions" class="menu-item" data-page="roles-permissions">
+    <i class="fas fa-user-lock"></i>
+    <span>Roles & Permissions</span>
+</a>
+                               
+</a>
                                 <a href="#users/organization" class="menu-item" data-page="org-chart">
                                     <i class="fas fa-sitemap"></i>
                                     <span>Organization Chart</span>
@@ -1158,6 +1197,128 @@ function updateUserInfo(user) {
         : user.email[0].toUpperCase();
     document.getElementById('userInitials').textContent = initials;
 }
+        // Add this to your existing dashboard JavaScript (where page loading is handled)
+
+const PageLoader = {
+    // Configuration
+    config: {
+        contentContainer: '#mainContent',
+        pagesPath: '/dashboard/',
+        currentPage: null
+    },
+
+    // Load roles and permissions page
+    async loadRolesPermissionsPage() {
+        try {
+            // Show loading state
+            this.showLoadingIndicator();
+
+            // Fetch the roles-permission.html content
+            const response = await fetch(`${this.config.pagesPath}roles-permission.html`);
+            if (!response.ok) throw new Error('Failed to load page content');
+            
+            const content = await response.text();
+
+            // Update the main content area
+            const mainContent = document.querySelector(this.config.contentContainer);
+            if (!mainContent) throw new Error('Content container not found');
+
+            // Clear existing content and load new content
+            mainContent.innerHTML = content;
+
+            // Initialize the roles manager after content is loaded
+            if (typeof RolesManager !== 'undefined') {
+                await RolesManager.init();
+            }
+
+            // Update active menu item
+            this.updateActiveMenuItem('roles-permissions');
+
+            // Update page title and URL
+            document.title = 'Roles & Permissions - WorkWise Pro';
+            window.history.pushState({ page: 'roles-permissions' }, '', '#roles-permissions');
+
+            // Hide loading indicator
+            this.hideLoadingIndicator();
+
+        } catch (error) {
+            console.error('Error loading roles and permissions page:', error);
+            this.showErrorMessage('Failed to load roles and permissions page');
+        }
+    },
+
+    // Show loading indicator
+    showLoadingIndicator() {
+        const loader = document.createElement('div');
+        loader.className = 'loading-indicator';
+        loader.innerHTML = '<div class="spinner"></div>';
+        document.body.appendChild(loader);
+    },
+
+    // Hide loading indicator
+    hideLoadingIndicator() {
+        const loader = document.querySelector('.loading-indicator');
+        if (loader) {
+            loader.remove();
+        }
+    },
+
+    // Update active menu item in sidebar
+    updateActiveMenuItem(pageId) {
+        // Remove active class from all menu items
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.classList.remove('active');
+        });
+
+        // Add active class to current menu item
+        const activeItem = document.querySelector(`[data-page="${pageId}"]`);
+        if (activeItem) {
+            activeItem.classList.add('active');
+            
+            // If item is in a submenu, expand the parent
+            const parentSubmenu = activeItem.closest('.submenu-group');
+            if (parentSubmenu) {
+                const parentItem = parentSubmenu.previousElementSibling;
+                if (parentItem && parentItem.classList.contains('has-submenu')) {
+                    parentItem.classList.add('active');
+                    parentSubmenu.classList.add('active');
+                }
+            }
+        }
+    },
+
+    // Show error message
+    showErrorMessage(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.innerHTML = `
+            <div class="error-content">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>${message}</p>
+                <button onclick="PageLoader.loadRolesPermissionsPage()">Try Again</button>
+            </div>
+        `;
+        
+        const mainContent = document.querySelector(this.config.contentContainer);
+        if (mainContent) {
+            mainContent.innerHTML = '';
+            mainContent.appendChild(errorDiv);
+        }
+    }
+};
+
+// Add this to your sidebar menu item click handler
+document.querySelector('[data-page="roles-permissions"]').addEventListener('click', (e) => {
+    e.preventDefault();
+    PageLoader.loadRolesPermissionsPage();
+});
+
+// Handle browser back/forward buttons
+window.addEventListener('popstate', (event) => {
+    if (event.state && event.state.page === 'roles-permissions') {
+        PageLoader.loadRolesPermissionsPage();
+    }
+});
 
 // Sign out functionality
 function signOut() {
