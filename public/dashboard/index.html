@@ -15,6 +15,8 @@
     
     <!-- Material UI Icons -->
     <script src="https://unpkg.com/@mui/icons-material@5.14.13/index.js"></script>
+    <!-- Add this in the head section -->
+<script src="https://unpkg.com/formik/dist/formik.umd.production.min.js"></script>
     
     <!-- Emotion (Required for Material UI) -->
     <script src="https://unpkg.com/@emotion/react@11.11.1/dist/emotion-react.umd.min.js"></script>
@@ -658,7 +660,25 @@
         Badge,
         Grid,
         Collapse,
-        CircularProgress
+        CircularProgress,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableRow,
+    TablePagination,
+    InputLabel,
+    Select,
+    MenuItem,
+    FormControl,
+    InputAdornment,
+    Switch,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Avatar,
+    FormControlLabel
     } = MaterialUI;
 
     // Utility function to format numbers
@@ -2034,6 +2054,9 @@ const UsersList = () => {
                 case 'roles':
                     setPageContent(<RoleManagement />);
                     break;
+                    case 'users-list':  // Add this case
+            setPageContent(<UsersList />);
+            break;
                 case 'dashboard':
                     setPageContent(null); // Reset to default dashboard
                     break;
