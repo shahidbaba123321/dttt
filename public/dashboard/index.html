@@ -595,6 +595,102 @@
     color: white;
     background: rgba(255, 255, 255, 0.05);
 }
+       /* Users List Specific Styles */
+        .users-header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .users-filters {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .users-table-container {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .users-table th {
+            background: #f8fafc;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #1e293b;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .users-table td {
+            padding: 16px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .user-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-align: center;
+            display: inline-block;
+        }
+
+        .user-status.active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .user-status.inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-button {
+            padding: 6px !important;
+            min-width: unset !important;
+            border-radius: 8px !important;
+        }
+
+        .user-dialog {
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .user-dialog-content {
+            padding: 24px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .form-grid .full-width {
+            grid-column: 1 / -1;
+        }
        
 
     /* Responsive Design */
@@ -621,11 +717,12 @@
     <div id="root"></div>
 
     <script type="text/babel">
-            const { 
+     const { 
         useState, 
         useEffect 
     } = React;
 
+    // Material UI Components
     const {
         Box,
         Typography,
@@ -660,26 +757,32 @@
         Badge,
         Grid,
         Collapse,
-        CircularProgress,
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableRow,
-    TablePagination,
-    InputLabel,
-    Select,
-    MenuItem,
-    FormControl,
-    InputAdornment,
-    Switch,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Avatar,
-    FormControlLabel
+        Table,
+        TableBody,
+        TableCell,
+        TableHead,
+        TableRow,
+        TablePagination,
+        InputLabel,
+        Select,
+        FormControl,
+        InputAdornment,
+        CircularProgress
     } = MaterialUI;
+
+    // Formik Components
+    const { Formik, Form } = Formik;
+
+    // Replace crypto random bytes with a simple random string generator
+    const generateTempPassword = (length = 8) => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        return Array.from(crypto.getRandomValues(new Uint8Array(length)))
+            .map(x => chars[x % chars.length])
+            .join('');
+    };
+        const formatDate = (date) => {
+        return new Date(date).toLocaleString();
+    };
 
     // Utility function to format numbers
     const formatNumber = (num) => {
@@ -687,7 +790,7 @@
     };
 
     // API Service with enhanced error handling
-    const apiService = {
+   const apiService = {
         baseUrl: 'https://18.215.160.136.nip.io/api',
         
         async fetch(endpoint, options = {}) {
@@ -730,10 +833,495 @@
         }
     };
 
+
     // Loading Component
-    const LoadingSpinner = () => (
-        <Box className="loading-spinner" />
+   const LoadingSpinner = () => (
+        <Box 
+            sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: '200px' 
+            }}
+        >
+            <CircularProgress />
+        </Box>
     );
+
+         // Users List Component
+    const UsersList = () => {
+        const [users, setUsers] = useState([]);
+        const [loading, setLoading] = useState(true);
+        const [page, setPage] = useState(0);
+        const [rowsPerPage, setRowsPerPage] = useState(10);
+        const [totalUsers, setTotalUsers] = useState(0);
+        const [openDialog, setOpenDialog] = useState(false);
+        const [selectedUser, setSelectedUser] = useState(null);
+        const [roles, setRoles] = useState([]);
+        const [filters, setFilters] = useState({
+            search: '',
+            status: 'all',
+            role: 'all',
+            department: 'all'
+        });
+        const [notification, setNotification] = useState({
+            open: false,
+            message: '',
+            type: 'success'
+        });
+            
+
+        useEffect(() => {
+            fetchUsers();
+            fetchRoles();
+        }, [page, rowsPerPage, filters]);
+
+        const fetchUsers = async () => {
+            try {
+                setLoading(true);
+                const queryParams = new URLSearchParams({
+                    page: page + 1,
+                    limit: rowsPerPage,
+                    search: filters.search,
+                    status: filters.status !== 'all' ? filters.status : '',
+                    role: filters.role !== 'all' ? filters.role : ''
+                }).toString();
+
+                const response = await apiService.fetch(`/users?${queryParams}`);
+                
+                if (response.success) {
+                    setUsers(response.users);
+                    setTotalUsers(response.pagination.total);
+                }
+            } catch (error) {
+                console.error('Error fetching users:', error);
+                showNotification('Error fetching users', 'error');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const fetchRoles = async () => {
+            try {
+                const response = await apiService.fetch('/roles');
+                if (response.success) {
+                    setRoles(response.roles);
+                }
+            } catch (error) {
+                console.error('Error fetching roles:', error);
+                showNotification('Error fetching roles', 'error');
+            }
+        };
+
+        const handleCreateUser = async (values, { setSubmitting }) => {
+            try {
+                const tempPassword = generateTempPassword();
+                const response = await apiService.fetch('/users', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        ...values,
+                        password: tempPassword
+                    })
+                });
+
+                if (response.success) {
+                    showNotification('User created successfully');
+                    setOpenDialog(false);
+                    fetchUsers();
+                    
+                    // Show temporary password in a separate notification
+                    setTimeout(() => {
+                        showNotification(`Temporary password: ${tempPassword}`, 'info');
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('Error creating user:', error);
+                showNotification(error.message || 'Error creating user', 'error');
+            } finally {
+                setSubmitting(false);
+            }
+        };
+
+        const handleUpdateUser = async (values, { setSubmitting }) => {
+            try {
+                const response = await apiService.fetch(`/users/${selectedUser._id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(values)
+                });
+
+                if (response.success) {
+                    showNotification('User updated successfully');
+                    setSelectedUser(null);
+                    fetchUsers();
+                }
+            } catch (error) {
+                console.error('Error updating user:', error);
+                showNotification(error.message || 'Error updating user', 'error');
+            } finally {
+                setSubmitting(false);
+            }
+        };
+
+        const handleToggleStatus = async (userId, currentStatus) => {
+            try {
+                const response = await apiService.fetch(`/users/${userId}/status`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        status: currentStatus === 'active' ? 'inactive' : 'active'
+                    })
+                });
+
+                if (response.success) {
+                    showNotification(`User ${currentStatus === 'active' ? 'deactivated' : 'activated'} successfully`);
+                    fetchUsers();
+                }
+            } catch (error) {
+                console.error('Error toggling user status:', error);
+                showNotification(error.message || 'Error updating user status', 'error');
+            }
+        };
+
+        const handleToggle2FA = async (userId, current2FAStatus) => {
+            try {
+                const response = await apiService.fetch(`/users/${userId}/2fa`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        requires2FA: !current2FAStatus
+                    })
+                });
+
+                if (response.success) {
+                    showNotification(`2FA ${current2FAStatus ? 'disabled' : 'enabled'} successfully`);
+                    fetchUsers();
+                }
+            } catch (error) {
+                console.error('Error toggling 2FA:', error);
+                showNotification(error.message || 'Error updating 2FA status', 'error');
+            }
+        };
+
+        const handleDeleteUser = async (userId) => {
+            if (!window.confirm('Are you sure you want to delete this user?')) {
+                return;
+            }
+
+            try {
+                const response = await apiService.fetch(`/users/${userId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.success) {
+                    showNotification('User deleted successfully');
+                    fetchUsers();
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showNotification(error.message || 'Error deleting user', 'error');
+            }
+        };
+
+        const showNotification = (message, type = 'success') => {
+            setNotification({ open: true, message, type });
+        };
+
+        return (
+            <Box sx={{ p: 3 }}>
+                {/* Header */}
+                <div className="users-header">
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <Typography variant="h5" sx={{ fontWeight: 600, color: '#1e293b' }}>
+                                User Management
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: '#64748b', mt: 1 }}>
+                                Manage internal users and their access permissions
+                            </Typography>
+                        </div>
+                        <Button
+                            className="create-role-button"
+                            startIcon={<i className="fas fa-plus"></i>}
+                            onClick={() => setOpenDialog(true)}
+                        >
+                            Add New User
+                        </Button>
+                    </Box>
+
+                    {/* Filters */}
+                    <div className="users-filters">
+                        <TextField
+                            placeholder="Search users..."
+                            variant="outlined"
+                            size="small"
+                            fullWidth
+                            value={filters.search}
+                            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <i className="fas fa-search" />
+                                    </InputAdornment>
+                                )
+                            }}
+                        />
+                        <FormControl size="small" fullWidth>
+                            <InputLabel>Status</InputLabel>
+                            <Select
+                                value={filters.status}
+                                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                                label="Status"
+                            >
+                                <MenuItem value="all">All Status</MenuItem>
+                                <MenuItem value="active">Active</MenuItem>
+                                <MenuItem value="inactive">Inactive</MenuItem>
+                            </Select>
+                        </FormControl>
+                        <FormControl size="small" fullWidth>
+                            <InputLabel>Role</InputLabel>
+                            <Select
+                                value={filters.role}
+                                onChange={(e) => setFilters({ ...filters, role: e.target.value })}
+                                label="Role"
+                            >
+                                <MenuItem value="all">All Roles</MenuItem>
+                                {roles.map(role => (
+                                    <MenuItem key={role._id} value={role._id}>
+                                        {role.name}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </div>
+                </div>
+                        {/* Users Table */}
+                <div className="users-table-container">
+                    {loading ? (
+                        <LoadingSpinner />
+                    ) : (
+                        <>
+                            <Table className="users-table">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>User</TableCell>
+                                        <TableCell>Email</TableCell>
+                                        <TableCell>Department</TableCell>
+                                        <TableCell>Role</TableCell>
+                                        <TableCell>Status</TableCell>
+                                        <TableCell>2FA</TableCell>
+                                        <TableCell>Actions</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {users.map((user) => (
+                                        <TableRow key={user._id}>
+                                            <TableCell>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                    <Avatar sx={{ bgcolor: '#4F46E5' }}>
+                                                        {user.name?.charAt(0) || 'U'}
+                                                    </Avatar>
+                                                    <div>
+                                                        <Typography variant="subtitle2">
+                                                            {user.name}
+                                                        </Typography>
+                                                    </div>
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell>{user.email}</TableCell>
+                                            <TableCell>{user.department}</TableCell>
+                                            <TableCell>
+                                                {roles.find(r => r._id === user.role)?.name || user.role}
+                                            </TableCell>
+                                            <TableCell>
+                                                <span className={`user-status ${user.status}`}>
+                                                    {user.status}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Switch
+                                                    checked={user.requires2FA}
+                                                    onChange={() => handleToggle2FA(user._id, user.requires2FA)}
+                                                    color="primary"
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="action-buttons">
+                                                    <Tooltip title="Edit User">
+                                                        <IconButton
+                                                            className="action-button"
+                                                            onClick={() => setSelectedUser(user)}
+                                                            size="small"
+                                                        >
+                                                            <i className="fas fa-edit" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title={user.status === 'active' ? 'Deactivate' : 'Activate'}>
+                                                        <IconButton
+                                                            className="action-button"
+                                                            onClick={() => handleToggleStatus(user._id, user.status)}
+                                                            size="small"
+                                                        >
+                                                            <i className={`fas fa-${user.status === 'active' ? 'ban' : 'check'}`} />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title="Delete User">
+                                                        <IconButton
+                                                            className="action-button"
+                                                            onClick={() => handleDeleteUser(user._id)}
+                                                            size="small"
+                                                        >
+                                                            <i className="fas fa-trash" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                            <TablePagination
+                                component="div"
+                                count={totalUsers}
+                                page={page}
+                                onPageChange={(e, newPage) => setPage(newPage)}
+                                rowsPerPage={rowsPerPage}
+                                onRowsPerPageChange={(e) => {
+                                    setRowsPerPage(parseInt(e.target.value, 10));
+                                    setPage(0);
+                                }}
+                            />
+                        </>
+                    )}
+                </div>
+
+                {/* Create/Edit User Dialog */}
+                <MuiDialog
+                    open={openDialog || Boolean(selectedUser)}
+                    onClose={() => {
+                        setOpenDialog(false);
+                        setSelectedUser(null);
+                    }}
+                    maxWidth="md"
+                    fullWidth
+                    className="user-dialog"
+                >
+                    <MuiDialogTitle sx={{ px: 3, py: 2, background: '#f8fafc' }}>
+                        {selectedUser ? 'Edit User' : 'Create New User'}
+                    </MuiDialogTitle>
+                    <MuiDialogContent className="user-dialog-content">
+                        <Formik
+                            initialValues={{
+                                name: selectedUser?.name || '',
+                                email: selectedUser?.email || '',
+                                department: selectedUser?.department || '',
+                                role: selectedUser?.role || '',
+                                requires2FA: selectedUser?.requires2FA || false
+                            }}
+                            onSubmit={async (values, formikHelpers) => {
+                                if (selectedUser) {
+                                    await handleUpdateUser(values, formikHelpers);
+                                } else {
+                                    await handleCreateUser(values, formikHelpers);
+                                }
+                            }}
+                        >
+                            {({ values, handleChange, handleSubmit, isSubmitting }) => (
+                                <form onSubmit={handleSubmit}>
+                                    <div className="form-grid">
+                                        <TextField
+                                            name="name"
+                                            label="Full Name"
+                                            value={values.name}
+                                            onChange={handleChange}
+                                            fullWidth
+                                            required
+                                        />
+                                        <TextField
+                                            name="email"
+                                            label="Email"
+                                            type="email"
+                                            value={values.email}
+                                            onChange={handleChange}
+                                            fullWidth
+                                            required
+                                        />
+                                        <TextField
+                                            name="department"
+                                            label="Department"
+                                            value={values.department}
+                                            onChange={handleChange}
+                                            fullWidth
+                                            required
+                                        />
+                                        <FormControl fullWidth required>
+                                            <InputLabel>Role</InputLabel>
+                                            <Select
+                                                name="role"
+                                                value={values.role}
+                                                onChange={handleChange}
+                                                label="Role"
+                                            >
+                                                {roles.map(role => (
+                                                    <MenuItem key={role._id} value={role._id}>
+                                                        {role.name}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                        <FormControlLabel
+                                            control={
+                                                <Switch
+                                                    name="requires2FA"
+                                                    checked={values.requires2FA}
+                                                    onChange={handleChange}
+                                                />
+                                            }
+                                            label="Require 2FA"
+                                        />
+                                    </div>
+                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                                        <Button
+                                            onClick={() => {
+                                                setOpenDialog(false);
+                                                setSelectedUser(null);
+                                            }}
+                                            disabled={isSubmitting}
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            type="submit"
+                                            variant="contained"
+                                            className="create-role-button"
+                                            disabled={isSubmitting}
+                                        >
+                                            {isSubmitting ? (
+                                                <CircularProgress size={24} />
+                                            ) : selectedUser ? 'Update User' : 'Create User'}
+                                        </Button>
+                                    </Box>
+                                </form>
+                            )}
+                        </Formik>
+                    </MuiDialogContent>
+                </MuiDialog>
+
+                {/* Notification */}
+                <Snackbar
+                    open={notification.open}
+                    autoHideDuration={6000}
+                    onClose={() => setNotification({ ...notification, open: false })}
+                >
+                    <Alert
+                        onClose={() => setNotification({ ...notification, open: false })}
+                        severity={notification.type}
+                        sx={{ width: '100%' }}
+                    >
+                        {notification.message}
+                    </Alert>
+                </Snackbar>
+            </Box>
+        );
+    };
+        
 
     // DashboardStats Component
     const DashboardStats = () => {
@@ -1326,553 +1914,7 @@ const handleUpdatePermissions = async (roleId, permissions) => {
     );
 };
 
-        // Add this to your existing components in index.html
-
-const UsersList = () => {
-    const [users, setUsers] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [totalUsers, setTotalUsers] = useState(0);
-    const [openDialog, setOpenDialog] = useState(false);
-    const [selectedUser, setSelectedUser] = useState(null);
-    const [roles, setRoles] = useState([]);
-    const [filters, setFilters] = useState({
-        search: '',
-        status: 'all',
-        role: 'all',
-        department: 'all'
-    });
-    const [notification, setNotification] = useState({
-        open: false,
-        message: '',
-        type: 'success'
-    });
-
-    // Add these styles to your existing styles section
-    const styles = `
-        .users-header {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        }
-
-        .users-filters {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-        }
-
-        .users-table-container {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-        }
-
-        .users-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .users-table th {
-            background: #f8fafc;
-            padding: 12px 16px;
-            text-align: left;
-            font-weight: 600;
-            color: #1e293b;
-            border-bottom: 2px solid #e2e8f0;
-        }
-
-        .users-table td {
-            padding: 16px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .user-status {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            text-align: center;
-            display: inline-block;
-        }
-
-        .user-status.active {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .user-status.inactive {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-        }
-
-        .action-button {
-            padding: 6px !important;
-            min-width: unset !important;
-            border-radius: 8px !important;
-        }
-
-        .user-dialog {
-            border-radius: 16px;
-            overflow: hidden;
-        }
-
-        .user-dialog-content {
-            padding: 24px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .form-grid .full-width {
-            grid-column: 1 / -1;
-        }
-    `;
-
-    useEffect(() => {
-        fetchUsers();
-        fetchRoles();
-    }, [page, rowsPerPage, filters]);
-
-    const fetchUsers = async () => {
-        try {
-            setLoading(true);
-            const response = await apiService.fetch('/users', {
-                params: {
-                    page: page + 1,
-                    limit: rowsPerPage,
-                    ...filters
-                }
-            });
-
-            if (response.success) {
-                setUsers(response.users);
-                setTotalUsers(response.pagination.total);
-            }
-        } catch (error) {
-            console.error('Error fetching users:', error);
-            showNotification('Error fetching users', 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchRoles = async () => {
-        try {
-            const response = await apiService.fetch('/roles');
-            if (response.success) {
-                setRoles(response.roles);
-            }
-        } catch (error) {
-            console.error('Error fetching roles:', error);
-        }
-    };
-
-    const handleCreateUser = async (userData) => {
-        try {
-            const response = await apiService.fetch('/users', {
-                method: 'POST',
-                body: JSON.stringify(userData)
-            });
-
-            if (response.success) {
-                showNotification('User created successfully');
-                fetchUsers();
-                setOpenDialog(false);
-            }
-        } catch (error) {
-            console.error('Error creating user:', error);
-            showNotification(error.message || 'Error creating user', 'error');
-        }
-    };
-
-    const handleUpdateUser = async (userId, userData) => {
-        try {
-            const response = await apiService.fetch(`/users/${userId}`, {
-                method: 'PUT',
-                body: JSON.stringify(userData)
-            });
-
-            if (response.success) {
-                showNotification('User updated successfully');
-                fetchUsers();
-                setSelectedUser(null);
-            }
-        } catch (error) {
-            console.error('Error updating user:', error);
-            showNotification(error.message || 'Error updating user', 'error');
-        }
-    };
-
-    const handleToggleStatus = async (userId, currentStatus) => {
-        try {
-            const response = await apiService.fetch(`/users/${userId}/status`, {
-                method: 'PUT',
-                body: JSON.stringify({
-                    status: currentStatus === 'active' ? 'inactive' : 'active'
-                })
-            });
-
-            if (response.success) {
-                showNotification(`User ${currentStatus === 'active' ? 'deactivated' : 'activated'} successfully`);
-                fetchUsers();
-            }
-        } catch (error) {
-            console.error('Error toggling user status:', error);
-            showNotification(error.message || 'Error updating user status', 'error');
-        }
-    };
-
-    const handleToggle2FA = async (userId, current2FAStatus) => {
-        try {
-            const response = await apiService.fetch(`/users/${userId}/2fa`, {
-                method: 'PUT',
-                body: JSON.stringify({
-                    requires2FA: !current2FAStatus
-                })
-            });
-
-            if (response.success) {
-                showNotification(`2FA ${current2FAStatus ? 'disabled' : 'enabled'} successfully`);
-                fetchUsers();
-            }
-        } catch (error) {
-            console.error('Error toggling 2FA:', error);
-            showNotification(error.message || 'Error updating 2FA status', 'error');
-        }
-    };
-
-    const handleDeleteUser = async (userId) => {
-        try {
-            const response = await apiService.fetch(`/users/${userId}`, {
-                method: 'DELETE'
-            });
-
-            if (response.success) {
-                showNotification('User deleted successfully');
-                fetchUsers();
-            }
-        } catch (error) {
-            console.error('Error deleting user:', error);
-            showNotification(error.message || 'Error deleting user', 'error');
-        }
-    };
-
-    const showNotification = (message, type = 'success') => {
-        setNotification({ open: true, message, type });
-    };
-
-    return (
-        <Box sx={{ p: 3 }}>
-            <style>{styles}</style>
-
-            {/* Header */}
-            <div className="users-header">
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <div>
-                        <Typography variant="h5" sx={{ fontWeight: 600, color: '#1e293b' }}>
-                            User Management
-                        </Typography>
-                        <Typography variant="body2" sx={{ color: '#64748b', mt: 1 }}>
-                            Manage internal users and their access permissions
-                        </Typography>
-                    </div>
-                    <Button
-                        className="create-role-button"
-                        startIcon={<i className="fas fa-plus"></i>}
-                        onClick={() => setOpenDialog(true)}
-                    >
-                        Add New User
-                    </Button>
-                </Box>
-
-                {/* Filters */}
-                <div className="users-filters">
-                    <TextField
-                        placeholder="Search users..."
-                        variant="outlined"
-                        size="small"
-                        fullWidth
-                        InputProps={{
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <i className="fas fa-search" />
-                                </InputAdornment>
-                            )
-                        }}
-                        value={filters.search}
-                        onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                    />
-                    <FormControl size="small" fullWidth>
-                        <InputLabel>Status</InputLabel>
-                        <Select
-                            value={filters.status}
-                            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                            label="Status"
-                        >
-                            <MenuItem value="all">All Status</MenuItem>
-                            <MenuItem value="active">Active</MenuItem>
-                            <MenuItem value="inactive">Inactive</MenuItem>
-                        </Select>
-                    </FormControl>
-                    <FormControl size="small" fullWidth>
-                        <InputLabel>Role</InputLabel>
-                        <Select
-                            value={filters.role}
-                            onChange={(e) => setFilters({ ...filters, role: e.target.value })}
-                            label="Role"
-                        >
-                            <MenuItem value="all">All Roles</MenuItem>
-                            {roles.map(role => (
-                                <MenuItem key={role._id} value={role._id}>
-                                    {role.name}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                </div>
-            </div>
-
-            {/* Users Table */}
-            <div className="users-table-container">
-                {loading ? (
-                    <LoadingSpinner />
-                ) : (
-                    <>
-                        <Table className="users-table">
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell>User</TableCell>
-                                    <TableCell>Email</TableCell>
-                                    <TableCell>Department</TableCell>
-                                    <TableCell>Role</TableCell>
-                                    <TableCell>Status</TableCell>
-                                    <TableCell>2FA</TableCell>
-                                    <TableCell>Actions</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {users.map((user) => (
-                                    <TableRow key={user._id}>
-                                        <TableCell>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                <Avatar sx={{ bgcolor: '#4F46E5' }}>
-                                                    {user.name.charAt(0)}
-                                                </Avatar>
-                                                <div>
-                                                    <Typography variant="subtitle2">
-                                                        {user.name}
-                                                    </Typography>
-                                                </div>
-                                            </Box>
-                                        </TableCell>
-                                        <TableCell>{user.email}</TableCell>
-                                        <TableCell>{user.department}</TableCell>
-                                        <TableCell>{user.role}</TableCell>
-                                        <TableCell>
-                                            <span className={`user-status ${user.status}`}>
-                                                {user.status}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Switch
-                                                checked={user.requires2FA}
-                                                onChange={() => handleToggle2FA(user._id, user.requires2FA)}
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="action-buttons">
-                                                <IconButton
-                                                    className="action-button"
-                                                    onClick={() => setSelectedUser(user)}
-                                                >
-                                                    <i className="fas fa-edit" />
-                                                </IconButton>
-                                                <IconButton
-                                                    className="action-button"
-                                                    onClick={() => handleToggleStatus(user._id, user.status)}
-                                                >
-                                                    <i className={`fas fa-${user.status === 'active' ? 'ban' : 'check'}`} />
-                                                </IconButton>
-                                                <IconButton
-                                                    className="action-button"
-                                                    onClick={() => handleDeleteUser(user._id)}
-                                                >
-                                                    <i className="fas fa-trash" />
-                                                </IconButton>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                        <TablePagination
-                            component="div"
-                            count={totalUsers}
-                            page={page}
-                            onPageChange={(e, newPage) => setPage(newPage)}
-                            rowsPerPage={rowsPerPage}
-                            onRowsPerPageChange={(e) => {
-                                setRowsPerPage(parseInt(e.target.value, 10));
-                                setPage(0);
-                            }}
-                        />
-                    </>
-                )}
-            </div>
-
-            {/* Create/Edit User Dialog */}
-            <Dialog
-                open={openDialog || Boolean(selectedUser)}
-                onClose={() => {
-                    setOpenDialog(false);
-                    setSelectedUser(null);
-                }}
-                maxWidth="md"
-                fullWidth
-                className="user-dialog"
-            >
-                <DialogTitle sx={{ px: 3, py: 2, background: '#f8fafc' }}>
-                    {selectedUser ? 'Edit User' : 'Create New User'}
-                </DialogTitle>
-                <DialogContent className="user-dialog-content">
-                    <Formik
-                        initialValues={{
-                            name: selectedUser?.name || '',
-                            email: selectedUser?.email || '',
-                            department: selectedUser?.department || '',
-                            role: selectedUser?.role || '',
-                            password: '',
-                            requires2FA: selectedUser?.requires2FA || false
-                        }}
-                        onSubmit={async (values) => {
-                            if (selectedUser) {
-                                await handleUpdateUser(selectedUser._id, values);
-                            } else {
-                                await handleCreateUser(values);
-                            }
-                        }}
-                    >
-                        {({ values, handleChange, handleSubmit }) => (
-                            <form onSubmit={handleSubmit}>
-                                <div className="form-grid">
-                                    <TextField
-                                        name="name"
-                                        label="Full Name"
-                                        value={values.name}
-                                        onChange={handleChange}
-                                        fullWidth
-                                    />
-                                    <TextField
-                                        name="email"
-                                        label="Email"
-                                        type="email"
-                                        value={values.email}
-                                        onChange={handleChange}
-                                        fullWidth
-                                    />
-                                    <TextField
-                                        name="department"
-                                        label="Department"
-                                        value={values.department}
-                                        onChange={handleChange}
-                                        fullWidth
-                                    />
-                                    <FormControl fullWidth>
-                                        <InputLabel>Role</InputLabel>
-                                        <Select
-                                            name="role"
-                                            value={values.role}
-                                            onChange={handleChange}
-                                            label="Role"
-                                        >
-                                            {roles.map(role => (
-                                                <MenuItem key={role._id} value={role._id}>
-                                                    {role.name}
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-                                    {!selectedUser && (
-                                        <TextField
-                                            name="password"
-                                            label="Password"
-                                            type="password"
-                                            value={values.password}
-                                            onChange={handleChange}
-                                            fullWidth
-                                        />
-                                    )}
-                                    <FormControlLabel
-                                        control={
-                                            <Switch
-                                                name="requires2FA"
-                                                checked={values.requires2FA}
-                                                onChange={handleChange}
-                                            />
-                                        }
-                                        label="Require 2FA"
-                                    />
-                                </div>
-                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-                                    <Button
-                                        onClick={() => {
-                                            setOpenDialog(false);
-                                            setSelectedUser(null);
-                                        }}
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        type="submit"
-                                        variant="contained"
-                                        className="create-role-button"
-                                    >
-                                        {selectedUser ? 'Update User' : 'Create User'}
-                                    </Button>
-                                </Box>
-                            </form>
-                        )}
-                    </Formik>
-                </DialogContent>
-            </Dialog>
-
-            {/* Notification */}
-            <Snackbar
-                open={notification.open}
-                autoHideDuration={6000}
-                onClose={() => setNotification({ ...notification, open: false })}
-            >
-                <Alert
-                    onClose={() => setNotification({ ...notification, open: false })}
-                    severity={notification.type}
-                    sx={{ width: '100%' }}
-                >
-                    {notification.message}
-                </Alert>
-            </Snackbar>
-        </Box>
-    );
-};
+     
         
             // Header Component
     const Header = () => {
@@ -1975,6 +2017,7 @@ const UsersList = () => {
     };
 
     // Main Dashboard Component
+       // Main Dashboard Component
     const Dashboard = () => {
         const [isCollapsed, setIsCollapsed] = useState(false);
         const [currentPage, setCurrentPage] = useState('dashboard');
@@ -2042,7 +2085,6 @@ const UsersList = () => {
                     }
                 };
 
-                // Initialize chart after a short delay to ensure DOM is ready
                 setTimeout(initializeChart, 100);
             }
         }, [currentPage]);
@@ -2054,11 +2096,11 @@ const UsersList = () => {
                 case 'roles':
                     setPageContent(<RoleManagement />);
                     break;
-                    case 'users-list':  // Add this case
-            setPageContent(<UsersList />);
-            break;
+                case 'users-list':
+                    setPageContent(<UsersList />);
+                    break;
                 case 'dashboard':
-                    setPageContent(null); // Reset to default dashboard
+                    setPageContent(null);
                     break;
                 default:
                     setPageContent(
