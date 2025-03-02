@@ -699,7 +699,7 @@
     </div>
 
     <script>
-       // Configuration
+      // Configuration
 const CONFIG = {
     API_BASE_URL: 'https://18.215.160.136.nip.io/api',
     TOKEN_REFRESH_INTERVAL: 1800000, // 30 minutes
@@ -712,7 +712,8 @@ const utils = {
     async fetchWithAuth(endpoint, options = {}) {
         const token = localStorage.getItem('token');
         if (!token) {
-            throw new Error('No authentication token found');
+            auth.redirectToLogin();
+            return;
         }
 
         const defaultOptions = {
@@ -751,11 +752,9 @@ const utils = {
     },
 
     showNotification(message, type = 'success') {
-        // Remove existing notifications
         const existingNotifications = document.querySelectorAll('.notification');
         existingNotifications.forEach(n => n.remove());
 
-        // Create new notification
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
         notification.innerHTML = `
@@ -765,7 +764,6 @@ const utils = {
         
         document.body.appendChild(notification);
         
-        // Show and hide notification with animation
         setTimeout(() => {
             notification.classList.add('show');
             setTimeout(() => {
@@ -781,8 +779,12 @@ const auth = {
     token: null,
     user: null,
     sessionTimer: null,
+    initialized: false,
 
     async initialize() {
+        if (this.initialized) return;
+        this.initialized = true;
+
         try {
             this.token = this.getTokenFromUrl() || localStorage.getItem('token');
             if (!this.token) {
@@ -791,18 +793,19 @@ const auth = {
             }
 
             const userData = await this.verifyToken();
-            if (!userData.success) {
+            if (!userData || !userData.success) {
                 this.redirectToLogin();
                 return;
             }
 
             if (userData.user.role.toLowerCase() !== 'superadmin') {
+                utils.showNotification('Access denied. Superadmin privileges required.', 'error');
                 this.redirectToLogin();
                 return;
             }
 
             this.user = userData.user;
-            this.initializeUI();
+            await this.initializeUI();
             this.startSessionTimer();
 
         } catch (error) {
@@ -816,7 +819,6 @@ const auth = {
         const token = urlParams.get('token');
         if (token) {
             localStorage.setItem('token', token);
-            // Clean URL
             window.history.replaceState({}, document.title, window.location.pathname);
         }
         return token;
@@ -824,14 +826,28 @@ const auth = {
 
     async verifyToken() {
         try {
-            return await utils.fetchWithAuth('/verify-token');
+            const response = await fetch(`${CONFIG.API_BASE_URL}/verify-token`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Token verification failed');
+            }
+
+            return await response.json();
         } catch (error) {
             console.error('Token verification failed:', error);
-            throw error;
+            return null;
         }
     },
 
-    initializeUI() {
+    async initializeUI() {
+        if (!this.user) return;
+
         // Set user information
         const userInitials = utils.getInitials(this.user.email);
         document.getElementById('userInitials').textContent = userInitials;
@@ -894,17 +910,23 @@ const auth = {
     signOut() {
         localStorage.clear();
         sessionStorage.clear();
+        this.initialized = false;
         this.redirectToLogin();
     },
 
     redirectToLogin() {
-        window.location.href = '/login.html';
+        if (window.location.pathname !== '/login.html') {
+            window.location.href = '/login.html';
+        }
     }
 };
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    auth.initialize();
+    // Only initialize if we're not on the login page
+    if (window.location.pathname !== '/login.html') {
+        auth.initialize();
+    }
 });
     </script>
 </body>
