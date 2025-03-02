@@ -31,118 +31,170 @@ class RolesPermissionsManager {
         this.baseUrl = 'https://18.215.160.136.nip.io/api';
         this.initialized = false;
     }
-        async initialize() {
+
+    async initialize() {
         if (this.initialized) return;
         
         try {
+            console.log('Initializing roles manager...');
             await this.loadRoles();
             this.initializeEventListeners();
             this.setupModal();
             this.initialized = true;
+            console.log('Roles manager initialized successfully');
         } catch (error) {
             console.error('Failed to initialize roles manager:', error);
-            this.showNotification('Failed to initialize roles manager', 'error');
+            this.showNotification('Failed to initialize roles manager. Please refresh the page.', 'error');
+            throw error;
         }
     }
 
     async loadRoles() {
         try {
-            const response = await this.fetchWithAuth('/roles');
-            
-            if (!response.ok) {
-                throw new Error('Failed to load roles');
-            }
+            console.log('Loading roles...');
+            const response = await this.fetchWithAuth('/roles', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
 
-            const data = await response.json();
-            if (data.success) {
-                this.roles = data.roles;
+            console.log('Roles response:', response);
+
+            if (response.success) {
+                this.roles = Array.isArray(response.roles) ? response.roles : [];
+                console.log('Loaded roles:', this.roles);
+
+                if (this.roles.length === 0) {
+                    await this.initializeDefaultRoles();
+                }
+
                 this.renderRoles();
             } else {
-                throw new Error(data.message || 'Failed to load roles');
+                throw new Error(response.message || 'Failed to load roles');
             }
         } catch (error) {
             console.error('Error loading roles:', error);
+            throw new Error('Failed to load roles');
+        }
+    }
+
+    async initializeDefaultRoles() {
+        const defaultRoles = [
+            {
+                name: 'Superadmin',
+                description: 'Full system access with no restrictions',
+                permissions: ['all'],
+                isDefault: true,
+                isSystem: true
+            },
+            {
+                name: 'Admin',
+                description: 'System administrator with extensive access rights',
+                permissions: ['all_except_superadmin'],
+                isDefault: true
+            }
+        ];
+
+        try {
+            console.log('Initializing default roles...');
+            for (const role of defaultRoles) {
+                const response = await this.fetchWithAuth('/roles', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(role)
+                });
+
+                if (!response.success) {
+                    throw new Error(`Failed to create default role: ${role.name}`);
+                }
+            }
+            console.log('Default roles initialized successfully');
+            await this.loadRoles();
+        } catch (error) {
+            console.error('Error initializing default roles:', error);
             throw error;
         }
     }
 
     async fetchWithAuth(endpoint, options = {}) {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        throw new Error('No authentication token found');
-    }
-
-    const defaultOptions = {
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
-    };
-
-    const finalOptions = {
-        ...defaultOptions,
-        ...options,
-        headers: {
-            ...defaultOptions.headers,
-            ...(options.headers || {})
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('No authentication token found');
         }
-    };
 
-    try {
-        const response = await fetch(
-            `${this.baseUrl}${endpoint}`,
-            finalOptions
-        );
+        const defaultOptions = {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        };
 
-        // Handle specific HTTP status codes
-        switch (response.status) {
-            case 401:
+        const finalOptions = {
+            ...defaultOptions,
+            ...options,
+            headers: {
+                ...defaultOptions.headers,
+                ...(options.headers || {})
+            }
+        };
+
+        try {
+            console.log(`Fetching ${endpoint} with options:`, finalOptions);
+
+            const response = await fetch(`${this.baseUrl}${endpoint}`, finalOptions);
+            console.log(`Response status:`, response.status);
+
+            if (response.status === 401) {
                 localStorage.clear();
                 window.location.href = '/login.html';
                 throw new Error('Session expired. Please login again.');
-            case 403:
-                throw new Error('You do not have permission to perform this action');
-            case 404:
-                throw new Error('Resource not found');
-            case 409:
-                throw new Error('Conflict with existing data');
-        }
+            }
 
-        // Try to parse response as JSON
-        try {
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 const data = await response.json();
+                console.log(`Response data:`, data);
+
                 if (!response.ok) {
                     throw new Error(data.message || `HTTP error! status: ${response.status}`);
                 }
                 return data;
-            } else {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response;
             }
-        } catch (parseError) {
-            console.error('Error parsing response:', parseError);
-            throw new Error('Invalid response from server');
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return response;
+        } catch (error) {
+            console.error('API request failed:', error);
+            throw error;
         }
-    } catch (error) {
-        console.error('API request failed:', error);
-        throw error;
     }
-}
-    initializeEventListeners() {
+        initializeEventListeners() {
+        console.log('Initializing event listeners...');
+
         // Create Role Button
         const createRoleBtn = document.getElementById('createRoleBtn');
         if (createRoleBtn) {
-            createRoleBtn.addEventListener('click', () => this.openModal());
+            createRoleBtn.addEventListener('click', () => {
+                console.log('Create role button clicked');
+                this.openModal();
+            });
         }
 
         // Modal Close Button
         const closeModalBtn = document.getElementById('closeModal');
         if (closeModalBtn) {
-            closeModalBtn.addEventListener('click', () => this.closeModal());
+            closeModalBtn.addEventListener('click', () => {
+                console.log('Close modal button clicked');
+                this.closeModal();
+            });
         }
 
         // Save Role Button
@@ -150,6 +202,7 @@ class RolesPermissionsManager {
         if (saveRoleBtn) {
             saveRoleBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                console.log('Save role button clicked');
                 this.saveRole();
             });
         }
@@ -157,7 +210,10 @@ class RolesPermissionsManager {
         // Cancel Button
         const cancelRoleBtn = document.getElementById('cancelRole');
         if (cancelRoleBtn) {
-            cancelRoleBtn.addEventListener('click', () => this.closeModal());
+            cancelRoleBtn.addEventListener('click', () => {
+                console.log('Cancel button clicked');
+                this.closeModal();
+            });
         }
 
         // Modal Outside Click
@@ -165,6 +221,7 @@ class RolesPermissionsManager {
         if (roleModal) {
             roleModal.addEventListener('click', (e) => {
                 if (e.target.id === 'roleModal') {
+                    console.log('Modal outside click detected');
                     this.closeModal();
                 }
             });
@@ -182,9 +239,11 @@ class RolesPermissionsManager {
 
                 if (e.target.closest('.edit-role')) {
                     e.preventDefault();
+                    console.log('Edit role clicked for roleId:', roleId);
                     this.editRole(roleId);
                 } else if (e.target.closest('.delete-role')) {
                     e.preventDefault();
+                    console.log('Delete role clicked for roleId:', roleId);
                     this.deleteRole(roleId);
                 }
             });
@@ -201,52 +260,22 @@ class RolesPermissionsManager {
         // Select All Permissions
         const selectAllBtn = document.getElementById('selectAllPermissions');
         if (selectAllBtn) {
-            selectAllBtn.addEventListener('click', () => this.toggleAllPermissions());
-        }
-    }
-
-    async validateRoleName(name) {
-        const nameError = document.getElementById('roleNameError');
-        if (!nameError) return true;
-
-        if (!name) {
-            nameError.textContent = 'Role name is required';
-            return false;
+            selectAllBtn.addEventListener('click', () => {
+                console.log('Select all permissions clicked');
+                this.toggleAllPermissions();
+            });
         }
 
-        // Check if name exists (excluding current role when editing)
-        const nameExists = this.roles.some(role => 
-            role.name.toLowerCase() === name.toLowerCase() && 
-            role._id !== this.currentEditingRole?._id
-        );
-
-        if (nameExists) {
-            nameError.textContent = 'Role name already exists';
-            return false;
-        }
-
-        nameError.textContent = '';
-        return true;
+        console.log('Event listeners initialized');
     }
 
-    toggleAllPermissions() {
-        const form = document.getElementById('roleForm');
-        if (!form) return;
-
-        const checkboxes = form.querySelectorAll('input[type="checkbox"]');
-        const selectAllBtn = document.getElementById('selectAllPermissions');
-        const isChecked = selectAllBtn.dataset.selected === 'true';
-
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = !isChecked;
-        });
-
-        selectAllBtn.dataset.selected = (!isChecked).toString();
-        selectAllBtn.textContent = isChecked ? 'Select All' : 'Deselect All';
-    }
-        renderRoles() {
+    renderRoles() {
+        console.log('Rendering roles...');
         const customRolesList = document.getElementById('customRolesList');
-        if (!customRolesList) return;
+        if (!customRolesList) {
+            console.error('Custom roles list container not found');
+            return;
+        }
 
         customRolesList.innerHTML = '';
 
@@ -263,9 +292,12 @@ class RolesPermissionsManager {
         if (superadminRole && superadminCount) {
             superadminCount.textContent = superadminRole.userCount || 0;
         }
+
+        console.log('Roles rendered successfully');
     }
 
     createRoleCard(role) {
+        console.log('Creating role card for:', role.name);
         const template = document.getElementById('roleCardTemplate');
         if (!template) {
             console.error('Role card template not found');
@@ -318,8 +350,12 @@ class RolesPermissionsManager {
     }
 
     setupModal() {
+        console.log('Setting up modal...');
         const modalBody = document.querySelector('.modal-body form');
-        if (!modalBody) return;
+        if (!modalBody) {
+            console.error('Modal body form not found');
+            return;
+        }
 
         // Create permissions section
         const permissionsSection = document.createElement('div');
@@ -340,9 +376,9 @@ class RolesPermissionsManager {
         });
 
         modalBody.appendChild(permissionsSection);
+        console.log('Modal setup completed');
     }
-
-    createPermissionSection(category, permissions) {
+        createPermissionSection(category, permissions) {
         const section = document.createElement('div');
         section.className = 'permission-group';
         
@@ -380,8 +416,49 @@ class RolesPermissionsManager {
             .join(' ');
     }
 
+    async validateRoleName(name) {
+        const nameError = document.getElementById('roleNameError');
+        if (!nameError) return true;
+
+        if (!name) {
+            nameError.textContent = 'Role name is required';
+            return false;
+        }
+
+        // Check if name exists (excluding current role when editing)
+        const nameExists = this.roles.some(role => 
+            role.name.toLowerCase() === name.toLowerCase() && 
+            role._id !== this.currentEditingRole?._id
+        );
+
+        if (nameExists) {
+            nameError.textContent = 'Role name already exists';
+            return false;
+        }
+
+        nameError.textContent = '';
+        return true;
+    }
+
+    toggleAllPermissions() {
+        const form = document.getElementById('roleForm');
+        if (!form) return;
+
+        const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+        const selectAllBtn = document.getElementById('selectAllPermissions');
+        const isChecked = selectAllBtn.dataset.selected === 'true';
+
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = !isChecked;
+        });
+
+        selectAllBtn.dataset.selected = (!isChecked).toString();
+        selectAllBtn.textContent = isChecked ? 'Select All' : 'Deselect All';
+    }
+
     async editRole(roleId) {
         try {
+            console.log('Editing role:', roleId);
             const role = this.roles.find(r => r._id === roleId);
             if (!role) {
                 throw new Error('Role not found');
@@ -394,16 +471,11 @@ class RolesPermissionsManager {
 
             // Fetch fresh role data
             const response = await this.fetchWithAuth(`/roles/${roleId}`);
-            if (!response.ok) {
-                throw new Error('Failed to fetch role details');
+            if (!response.success) {
+                throw new Error(response.message || 'Failed to fetch role details');
             }
 
-            const data = await response.json();
-            if (!data.success) {
-                throw new Error(data.message || 'Failed to fetch role details');
-            }
-
-            this.currentEditingRole = data.role;
+            this.currentEditingRole = response.role;
             this.openModal(roleId);
 
         } catch (error) {
@@ -413,11 +485,15 @@ class RolesPermissionsManager {
     }
 
     openModal(roleId = null) {
+        console.log('Opening modal for roleId:', roleId);
         const modal = document.getElementById('roleModal');
         const modalTitle = document.getElementById('modalTitle');
         const form = document.getElementById('roleForm');
 
-        if (!modal || !modalTitle || !form) return;
+        if (!modal || !modalTitle || !form) {
+            console.error('Required modal elements not found');
+            return;
+        }
 
         this.currentEditingRole = roleId ? this.roles.find(r => r._id === roleId) : null;
         modalTitle.textContent = roleId ? 'Edit Role' : 'Create New Role';
@@ -438,6 +514,7 @@ class RolesPermissionsManager {
     }
 
     closeModal() {
+        console.log('Closing modal');
         const modal = document.getElementById('roleModal');
         if (modal) {
             modal.classList.remove('active');
@@ -448,10 +525,14 @@ class RolesPermissionsManager {
             }
         }
     }
-        async saveRole() {
+
+    async saveRole() {
         try {
+            console.log('Saving role...');
             const form = document.getElementById('roleForm');
-            if (!form) return;
+            if (!form) {
+                throw new Error('Form not found');
+            }
 
             const roleName = document.getElementById('roleName')?.value.trim();
             const roleDescription = document.getElementById('roleDescription')?.value.trim();
@@ -489,18 +570,12 @@ class RolesPermissionsManager {
                 body: JSON.stringify(roleData)
             });
 
-            if (!response.ok) {
-                throw new Error(`Failed to ${isEditing ? 'update' : 'create'} role`);
-            }
-
-            const data = await response.json();
-
-            if (data.success) {
+            if (response.success) {
                 // Create audit log
                 await this.createAuditLog(
                     isEditing ? 'ROLE_UPDATED' : 'ROLE_CREATED',
                     {
-                        roleId: isEditing ? this.currentEditingRole._id : data.roleId,
+                        roleId: isEditing ? this.currentEditingRole._id : response.roleId,
                         roleName,
                         previousState: isEditing ? {
                             name: this.currentEditingRole.name,
@@ -520,97 +595,78 @@ class RolesPermissionsManager {
                 await this.loadRoles();
                 this.closeModal();
             } else {
-                throw new Error(data.message || `Failed to ${isEditing ? 'update' : 'create'} role`);
+                throw new Error(response.message || `Failed to ${isEditing ? 'update' : 'create'} role`);
             }
         } catch (error) {
             console.error('Error saving role:', error);
             this.showNotification(error.message || 'Failed to save role', 'error');
         }
     }
+        async deleteRole(roleId) {
+        try {
+            console.log('Deleting role:', roleId);
+            const role = this.roles.find(r => r._id === roleId);
+            if (!role) {
+                throw new Error('Role not found');
+            }
 
-    async deleteRole(roleId) {
-    try {
-        const role = this.roles.find(r => r._id === roleId);
-        if (!role) {
-            throw new Error('Role not found');
-        }
+            if (role.name.toLowerCase() === 'superadmin') {
+                this.showNotification('Super Admin role cannot be deleted', 'error');
+                return;
+            }
 
-        if (role.name.toLowerCase() === 'superadmin') {
-            this.showNotification('Super Admin role cannot be deleted', 'error');
-            return;
-        }
+            // Check if role has assigned users
+            if (role.userCount > 0) {
+                const confirmed = await this.showConfirmDialog(
+                    'Delete Role',
+                    `This role is assigned to ${role.userCount} user(s). These users will lose their permissions. Are you sure you want to continue?`
+                );
+                if (!confirmed) return;
+            } else {
+                const confirmed = await this.showConfirmDialog(
+                    'Delete Role',
+                    `Are you sure you want to delete the role "${role.name}"? This action cannot be undone.`
+                );
+                if (!confirmed) return;
+            }
 
-        // Check if role has assigned users
-        if (role.userCount > 0) {
-            const confirmed = await this.showConfirmDialog(
-                'Delete Role',
-                `This role is assigned to ${role.userCount} user(s). These users will lose their permissions. Are you sure you want to continue?`
-            );
-            if (!confirmed) return;
-        } else {
-            const confirmed = await this.showConfirmDialog(
-                'Delete Role',
-                `Are you sure you want to delete the role "${role.name}"? This action cannot be undone.`
-            );
-            if (!confirmed) return;
-        }
-
-        // First, move the role to deleted_roles collection
-        const deleteResponse = await this.fetchWithAuth(`/roles/${roleId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                reason: 'User requested deletion',
-                deletedBy: localStorage.getItem('userEmail')
-            })
-        });
-
-        if (!deleteResponse.ok) {
-            const errorData = await deleteResponse.json();
-            throw new Error(errorData.message || 'Failed to delete role');
-        }
-
-        const data = await deleteResponse.json();
-
-        if (data.success) {
-            // Create audit log
-            await this.createAuditLog('ROLE_DELETED', {
-                roleId,
-                roleName: role.name,
-                deletedRole: {
-                    name: role.name,
-                    description: role.description,
-                    permissions: role.permissions,
-                    userCount: role.userCount
-                },
-                deletedBy: localStorage.getItem('userEmail'),
-                timestamp: new Date().toISOString()
+            const response = await this.fetchWithAuth(`/roles/${roleId}`, {
+                method: 'DELETE',
+                body: JSON.stringify({
+                    reason: 'User requested deletion',
+                    deletedBy: localStorage.getItem('userEmail')
+                })
             });
 
-            // Remove role from local array
-            this.roles = this.roles.filter(r => r._id !== roleId);
-            
-            // Update the UI
-            this.renderRoles();
-            
-            this.showNotification('Role deleted successfully', 'success');
-        } else {
-            throw new Error(data.message || 'Failed to delete role');
+            if (response.success) {
+                // Create audit log
+                await this.createAuditLog('ROLE_DELETED', {
+                    roleId,
+                    roleName: role.name,
+                    deletedRole: {
+                        name: role.name,
+                        description: role.description,
+                        permissions: role.permissions,
+                        userCount: role.userCount
+                    },
+                    deletedBy: localStorage.getItem('userEmail'),
+                    timestamp: new Date().toISOString()
+                });
+
+                this.showNotification('Role deleted successfully', 'success');
+                await this.loadRoles();
+            } else {
+                throw new Error(response.message || 'Failed to delete role');
+            }
+        } catch (error) {
+            console.error('Error deleting role:', error);
+            this.showNotification(error.message || 'Failed to delete role', 'error');
         }
-    } catch (error) {
-        console.error('Error deleting role:', error);
-        this.showNotification(
-            error.message || 'Failed to delete role. Please try again.',
-            'error'
-        );
     }
-}
 
     async createAuditLog(action, details) {
         try {
+            console.log('Creating audit log:', { action, details });
             const response = await this.fetchWithAuth('/audit-logs', {
                 method: 'POST',
                 body: JSON.stringify({
@@ -621,13 +677,8 @@ class RolesPermissionsManager {
                 })
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to create audit log');
-            }
-
-            const data = await response.json();
-            if (!data.success) {
-                throw new Error(data.message || 'Failed to create audit log');
+            if (!response.success) {
+                console.error('Failed to create audit log:', response);
             }
         } catch (error) {
             console.error('Error creating audit log:', error);
@@ -637,12 +688,14 @@ class RolesPermissionsManager {
 
     showConfirmDialog(title, message) {
         return new Promise((resolve) => {
+            // You can replace this with a custom modal if needed
             const confirmed = window.confirm(message);
             resolve(confirmed);
         });
     }
 
     showNotification(message, type = 'success') {
+        console.log('Showing notification:', { message, type });
         const existingNotifications = document.querySelectorAll('.notification');
         existingNotifications.forEach(notification => notification.remove());
 
@@ -663,13 +716,26 @@ class RolesPermissionsManager {
             }, 3000);
         }, 100);
     }
+
+    handleError(error, defaultMessage = 'An error occurred') {
+        console.error('Error:', error);
+        this.showNotification(error.message || defaultMessage, 'error');
+    }
 }
 
 // Initialize the Roles & Permissions Manager
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('Initializing Roles & Permissions Manager...');
     const rolesManager = new RolesPermissionsManager();
     rolesManager.initialize().catch(error => {
         console.error('Failed to initialize roles manager:', error);
+        // Show error notification to user
+        if (rolesManager.showNotification) {
+            rolesManager.showNotification(
+                'Failed to initialize roles manager. Please refresh the page.',
+                'error'
+            );
+        }
     });
 });
 
