@@ -1,4 +1,4 @@
-<!-- public/dashboard/index.html -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -967,6 +967,148 @@ document.addEventListener('DOMContentLoaded', () => {
         auth.initialize();
     }
 });
+    </script>
+    <script>
+        // Add this to your existing dashboard.js or where you handle sidebar navigation
+
+class DashboardContentManager {
+    constructor() {
+        this.currentPage = 'dashboard';
+        this.contentContainer = document.getElementById('dashboardContent');
+        this.initializeEventListeners();
+    }
+
+    initializeEventListeners() {
+        // Add click event listeners to all sidebar menu items
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = item.getAttribute('data-page');
+                this.loadPage(page);
+
+                // Update active state in sidebar
+                document.querySelectorAll('.menu-item').forEach(menuItem => {
+                    menuItem.classList.remove('active');
+                });
+                item.classList.add('active');
+            });
+        });
+    }
+
+    async loadPage(page) {
+        try {
+            // Show loading state
+            this.showLoading();
+
+            // Update page title
+            this.updatePageTitle(page);
+
+            // Load page content
+            const content = await this.fetchPageContent(page);
+            this.contentContainer.innerHTML = content;
+
+            // Initialize page-specific functionality
+            this.initializePageFunctionality(page);
+
+        } catch (error) {
+            console.error('Error loading page:', error);
+            this.showError();
+        }
+    }
+
+    showLoading() {
+        this.contentContainer.innerHTML = `
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <p>Loading content...</p>
+            </div>
+        `;
+    }
+
+    showError() {
+        this.contentContainer.innerHTML = `
+            <div class="error-container">
+                <i class="fas fa-exclamation-circle"></i>
+                <h2>Error Loading Content</h2>
+                <p>There was a problem loading the page. Please try again.</p>
+                <button onclick="dashboardContent.loadPage('${this.currentPage}')">Retry</button>
+            </div>
+        `;
+    }
+
+    updatePageTitle(page) {
+        const pageTitles = {
+            dashboard: 'Dashboard Overview',
+            roles: 'Roles & Permissions',
+            users: 'User Management',
+            companies: 'Companies',
+            settings: 'System Settings',
+            // Add more page titles as needed
+        };
+
+        const pageTitle = document.querySelector('.page-title');
+        if (pageTitle) {
+            pageTitle.textContent = pageTitles[page] || 'Dashboard';
+        }
+    }
+
+    async fetchPageContent(page) {
+        try {
+            // Map pages to their HTML files
+            const pageUrls = {
+                dashboard: '/dashboard/dashboard-content.html',
+                roles: '/dashboard/roles-permissions.html',
+                users: '/dashboard/user-management.html',
+                // Add more page mappings as needed
+            };
+
+            const url = pageUrls[page];
+            if (!url) {
+                throw new Error('Page not found');
+            }
+
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.text();
+
+        } catch (error) {
+            console.error('Error fetching page content:', error);
+            throw error;
+        }
+    }
+
+    initializePageFunctionality(page) {
+        switch (page) {
+            case 'roles':
+                // Initialize Roles & Permissions functionality
+                if (typeof RolesPermissionsManager !== 'undefined') {
+                    const rolesManager = new RolesPermissionsManager();
+                    rolesManager.initialize();
+                }
+                break;
+
+            case 'users':
+                // Initialize User Management functionality
+                // Add user management initialization here
+                break;
+
+            case 'dashboard':
+                // Initialize Dashboard functionality
+                // Add dashboard initialization here
+                break;
+
+            // Add more cases for other pages
+        }
+    }
+}
+
+// Initialize the Dashboard Content Manager
+const dashboardContent = new DashboardContentManager();
+
+
     </script>
     <script src="/js/roles-permissions.js"></script>
 </body>
