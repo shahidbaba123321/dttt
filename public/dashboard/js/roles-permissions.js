@@ -54,7 +54,7 @@ class RolesPermissionsManager {
             const data = await response.json();
             if (data.success) {
                 this.roles = data.roles;
-                await this.loadModulePermissions();
+                this.loadModulePermissions().catch(console.error);
                 this.renderRoles();
             } else {
                 throw new Error(data.message || 'Failed to load roles');
@@ -67,7 +67,8 @@ class RolesPermissionsManager {
 
     async loadModulePermissions() {
         try {
-            const response = await this.fetchWithAuth('/permissions/modules');
+            return this.permissions.modules;
+           /* const response = await this.fetchWithAuth('/permissions/modules');
             
             if (!response.ok) {
                 throw new Error('Failed to load module permissions');
@@ -76,10 +77,11 @@ class RolesPermissionsManager {
             const data = await response.json();
             if (data.success && Array.isArray(data.permissions)) {
                 this.permissions.modules = data.permissions;
-            }
+            }*/
         } catch (error) {
             console.error('Error loading module permissions:', error);
-            this.showNotification('Failed to load module permissions', 'error');
+            return this.permissions.modules;
+            /*this.showNotification('Failed to load module permissions', 'error');*/
         }
     }
 
