@@ -184,21 +184,22 @@
     }
 
     .sidebar-header {
-        height: var(--header-height);
-        padding: 0 var(--spacing-lg);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
+    height: var(--header-height);
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative; /* Add this */
+}
     .logo-container {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-md);
-        color: white;
-        text-decoration: none;
-    }
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: white;
+    text-decoration: none;
+}
+
 
     .logo-icon {
         font-size: 1.5rem;
@@ -218,7 +219,7 @@
         width: 0;
     }
 
-    .toggle-sidebar {
+   .toggle-sidebar {
     width: 30px;
     height: 30px;
     display: flex;
@@ -227,6 +228,10 @@
     cursor: pointer;
     color: white;
     transition: transform 0.3s ease;
+    position: absolute; /* Add this */
+    right: 10px; /* Add this */
+    top: 50%; /* Add this */
+    transform: translateY(-50%); /* Add this */
 }
         
     .toggle-sidebar:hover {
@@ -237,8 +242,8 @@
     .sidebar-menu {
         padding: var(--spacing-md) 0;
     }
-        .sidebar.collapsed .toggle-sidebar {
-    transform: rotate(180deg);
+       .sidebar.collapsed .toggle-sidebar {
+    transform: translateY(-50%) rotate(180deg); /* Update this */
 }
 
     .menu-section {
@@ -339,6 +344,19 @@
     }
 
     /* User Profile Styles */
+
+        .user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* Space between avatar and text */
+    padding: 8px 32px 8px 12px; /* Adjust padding to accommodate dropdown arrow */
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+    position: relative;
+}
+
+        
     .user-profile::after {
     content: '\f107'; /* Font Awesome down arrow */
     font-family: 'Font Awesome 6 Free';
@@ -359,33 +377,39 @@
     }
 
     .user-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background-color: var(--primary-color);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: 600;
-        font-size: 1rem;
-    }
+    width: 40px;
+    height: 40px;
+    min-width: 40px; /* Add this to prevent shrinking */
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+}
 
-    .user-info {
-        display: flex;
-        flex-direction: column;
-    }
+.user-info {
+    flex: 1;
+    min-width: 0; /* Add this to prevent text overflow */
+}
 
     .user-name {
-        font-weight: 600;
-        color: var(--text-primary);
-        font-size: 0.875rem;
-    }
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
-    .user-role {
-        color: var(--text-secondary);
-        font-size: 0.75rem;
-    }
+.user-role {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
     /* Dropdown Menu Styles */
     .dropdown-menu {
@@ -676,8 +700,8 @@
                         <span id="userInitials">SA</span>
                     </div>
                     <div class="user-info">
-                        <span class="user-name" id="userName">Loading...</span>
-                        <span class="user-role" id="userRole">Loading...</span>
+                        <div class="user-name" id="userName">Loading...</div>
+                        <div class="user-role" id="userRole">Loading...</div>
                     </div>
                 </div>
                 <!-- User Dropdown Menu -->
