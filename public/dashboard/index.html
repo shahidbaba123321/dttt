@@ -695,616 +695,142 @@ body {
     </div>
 
     <script>
-       // Main Application Initialization
-document.addEventListener('DOMContentLoaded', async function() {
-    try {
-        // First initialize the SidebarManager
-        await SidebarManager.init();
-        
-        // Then initialize the DashboardApp
-        await DashboardApp.init();
-        
-        // Setup global event handlers
-        setupGlobalEventHandlers();
-        
-        console.log('Application initialized successfully');
-    } catch (error) {
-        console.error('Application initialization failed:', error);
-        showFallbackError();
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+    // Initialize components
+    initializeSidebar();
+    initializeUserMenu();
+    checkAuthentication();
+    startSessionTimer();
 });
 
-// Global Event Handlers
-function setupGlobalEventHandlers() {
-    // Handle browser navigation
-    window.addEventListener('popstate', function(event) {
-        if (event.state && event.state.page) {
-            DashboardApp.loadPage(event.state.page).catch(error => {
-                console.error('Navigation error:', error);
-                DashboardApp.showNotification('Navigation failed', 'error');
-            });
-        }
-    });
+// Sidebar functionality
+function initializeSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+    const toggleButton = document.getElementById('sidebarToggle');
 
-    // Handle browser refresh/close
-    window.addEventListener('beforeunload', function() {
-        DashboardApp.clearSessionTimers();
-    });
-
-    // Handle resize events
-    window.addEventListener('resize', debounce(() => {
-        SidebarManager.handleResize();
-        DashboardApp.handleResize();
-    }, 250));
-}
-
-// Utility Functions
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-function showFallbackError() {
-    document.body.innerHTML = `
-        <div class="error-page">
-            <h1>Application Error</h1>
-            <p>Failed to initialize the application. Please try refreshing the page.</p>
-            <button onclick="window.location.reload()">Refresh Page</button>
-        </div>
-    `;
-}
-
-// Event Bus for component communication
-const EventBus = {
-    events: {},
-    
-    subscribe(event, callback) {
-        if (!this.events[event]) {
-            this.events[event] = [];
-        }
-        this.events[event].push(callback);
-        return () => this.unsubscribe(event, callback);
-    },
-    
-    publish(event, data) {
-        if (!this.events[event]) return;
-        this.events[event].forEach(callback => callback(data));
-    },
-    
-    unsubscribe(event, callback) {
-        if (!this.events[event]) return;
-        this.events[event] = this.events[event].filter(cb => cb !== callback);
+    // Load saved state
+    const sidebarState = localStorage.getItem('sidebarState') || 'expanded';
+    if (sidebarState === 'collapsed') {
+        sidebar.classList.add('collapsed');
+        mainContent.classList.add('expanded');
     }
-};
-        // Sidebar Manager Implementation
-const SidebarManager = {
-    // Configuration
-    config: {
-        selectors: {
-            sidebar: '.sidebar',
-            mainContent: '.main-content',
-            toggleButton: '#sidebarToggle',
-            menuItems: '.menu-item',
-            submenuTriggers: '.menu-item.has-submenu',
-            submenuArrow: '.submenu-arrow',
-            nestedSubmenu: '.nested-submenu'
-        },
-        classes: {
-            collapsed: 'collapsed',
-            expanded: 'expanded',
-            active: 'active'
-        },
-        breakpoints: {
-            tablet: 1024,
-            mobile: 768
-        },
-        animations: {
-            duration: '0.3s',
-            expand: 'expandAnimation',
-            collapse: 'collapseAnimation'
-        }
-    },
 
-    // State
-    state: {
-        initialized: false,
-        isCollapsed: false,
-        activeSubmenu: null,
-        elements: {},
-        sidebarState: 'expanded'
-    },
-
-    // Initialize the sidebar
-    async init() {
-        try {
-            // Cache DOM elements
-            this.cacheElements();
-            
-            // Load saved state
-            this.loadSavedState();
-            
-            // Setup event listeners
-            this.setupEventListeners();
-            
-            // Initialize sidebar state
-            this.initializeSidebarState();
-            
-            // Handle initial resize
-            this.handleResize();
-            
-            // Mark as initialized
-            this.state.initialized = true;
-            
-            // Publish initialized event
-            EventBus.publish('sidebar:initialized', { 
-                isCollapsed: this.state.isCollapsed 
-            });
-
-            return true;
-        } catch (error) {
-            console.error('Sidebar initialization failed:', error);
-            throw error;
-        }
-    },
-
-    cacheElements() {
-        const { selectors } = this.config;
-        this.state.elements = {
-            sidebar: document.querySelector(selectors.sidebar),
-            mainContent: document.querySelector(selectors.mainContent),
-            toggleButton: document.querySelector(selectors.toggleButton),
-            menuItems: document.querySelectorAll(selectors.menuItems),
-            submenuTriggers: document.querySelectorAll(selectors.submenuTriggers)
-        };
-
-        // Validate required elements
-        if (!this.state.elements.sidebar || !this.state.elements.mainContent) {
-            throw new Error('Required sidebar elements not found');
-        }
-    },
-
-    loadSavedState() {
-        this.state.sidebarState = localStorage.getItem('sidebarState') || 'expanded';
-        this.state.isCollapsed = this.state.sidebarState === 'collapsed';
-    },
-
-    setupEventListeners() {
-        const { elements } = this.state;
-
-        // Toggle button click handler
-        elements.toggleButton?.addEventListener('click', () => this.toggleSidebar());
-
-        // Setup menu item tooltips
-        elements.menuItems.forEach(item => {
-            this.setupMenuItemTooltip(item);
-        });
-
-        // Setup submenu handlers
-        elements.submenuTriggers.forEach(trigger => {
-            trigger.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.toggleSubmenu(trigger);
-            });
-        });
-
-        // Subscribe to relevant events
-        EventBus.subscribe('app:pageChanged', () => this.handlePageChange());
-        EventBus.subscribe('app:contentLoaded', () => this.updateActiveStates());
-    },
-
-    setupMenuItemTooltip(item) {
-        const text = item.querySelector('span')?.textContent || 
-                    item.getAttribute('data-page');
-        if (text) {
-            item.setAttribute('data-tooltip', text);
-        }
-    },
-
-    initializeSidebarState() {
-        const { elements, isCollapsed } = this.state;
-        const { classes } = this.config;
-
-        if (isCollapsed) {
-            elements.sidebar.classList.add(classes.collapsed);
-            elements.mainContent.classList.add(classes.expanded);
-        }
-
-        // Ensure proper initial states
-        this.updateTooltipVisibility();
-        this.updateSubmenuStates();
-    },
-
-    toggleSidebar() {
-        const { elements, isCollapsed } = this.state;
-        const { classes, animations } = this.config;
-
-        // Add animation
-        elements.sidebar.style.animation = isCollapsed
-            ? `${animations.expand} ${animations.duration} forwards`
-            : `${animations.collapse} ${animations.duration} forwards`;
-
-        // Toggle classes
-        elements.sidebar.classList.toggle(classes.collapsed);
-        elements.mainContent.classList.toggle(classes.expanded);
-
-        // Update state
-        this.state.isCollapsed = !isCollapsed;
-        this.state.sidebarState = this.state.isCollapsed ? 'collapsed' : 'expanded';
-
+    // Toggle button click handler
+    toggleButton.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        mainContent.classList.toggle('expanded');
+        
         // Save state
-        localStorage.setItem('sidebarState', this.state.sidebarState);
+        localStorage.setItem('sidebarState', 
+            sidebar.classList.contains('collapsed') ? 'collapsed' : 'expanded'
+        );
+    });
 
-        // Update UI
-        this.updateTooltipVisibility();
-        this.updateSubmenuStates();
-
-        // Publish state change
-        EventBus.publish('sidebar:stateChanged', {
-            isCollapsed: this.state.isCollapsed
-        });
-
-        // Trigger resize event for any dependent components
-        window.dispatchEvent(new Event('resize'));
-    },
-
-    toggleSubmenu(trigger) {
-        const { classes } = this.config;
-        const submenu = trigger.nextElementSibling;
-        const arrow = trigger.querySelector(this.config.selectors.submenuArrow);
-
-        // Toggle active state
-        trigger.classList.toggle(classes.active);
-
-        // Handle submenu visibility
-        if (submenu?.classList.contains('nested-submenu')) {
-            const isActive = trigger.classList.contains(classes.active);
+    // Handle submenu toggles
+    document.querySelectorAll('.menu-item.has-submenu').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            item.classList.toggle('active');
             
-            // Animate submenu
-            submenu.style.maxHeight = isActive
-                ? `${submenu.scrollHeight}px`
-                : '0';
-
-            // Rotate arrow
-            if (arrow) {
-                arrow.style.transform = isActive
-                    ? 'rotate(90deg)'
-                    : 'rotate(0)';
-            }
-
-            // Update active submenu reference
-            this.state.activeSubmenu = isActive ? trigger : null;
-
-            // Publish submenu state change
-            EventBus.publish('sidebar:submenuToggled', {
-                trigger,
-                isActive
-            });
-        }
-    },
-
-    handleResize() {
-        const { breakpoints } = this.config;
-        const windowWidth = window.innerWidth;
-
-        // Auto-collapse on tablet
-        if (windowWidth <= breakpoints.tablet && windowWidth > breakpoints.mobile) {
-            this.collapseSidebar();
-        } 
-        // Restore saved state on desktop
-        else if (windowWidth > breakpoints.tablet) {
-            this.restoreSavedState();
-        }
-
-        // Publish resize event
-        EventBus.publish('sidebar:resized', {
-            windowWidth,
-            isCollapsed: this.state.isCollapsed
-        });
-    },
-
-    collapseSidebar() {
-        if (!this.state.isCollapsed) {
-            this.toggleSidebar();
-        }
-    },
-
-    expandSidebar() {
-        if (this.state.isCollapsed) {
-            this.toggleSidebar();
-        }
-    },
-
-    restoreSavedState() {
-        const savedStateIsCollapsed = this.state.sidebarState === 'collapsed';
-        if (this.state.isCollapsed !== savedStateIsCollapsed) {
-            this.toggleSidebar();
-        }
-    },
-
-    updateTooltipVisibility() {
-        const { elements, isCollapsed } = this.state;
-
-        elements.menuItems.forEach(item => {
-            if (isCollapsed) {
-                const text = item.querySelector('span')?.textContent || 
-                            item.getAttribute('data-page');
-                item.setAttribute('data-tooltip', text);
-            } else {
-                item.removeAttribute('data-tooltip');
+            const submenu = item.nextElementSibling;
+            if (submenu) {
+                submenu.classList.toggle('active');
             }
         });
-    },
+    });
+}
 
-    updateSubmenuStates() {
-        const { elements, isCollapsed } = this.state;
-
-        elements.submenuTriggers.forEach(trigger => {
-            const submenu = trigger.nextElementSibling;
-            if (submenu && isCollapsed) {
-                submenu.style.maxHeight = '0';
-                trigger.classList.remove(this.config.classes.active);
-            }
-        });
-    },
-
-    handlePageChange() {
-        // Close any open submenus when page changes
-        if (this.state.activeSubmenu) {
-            this.toggleSubmenu(this.state.activeSubmenu);
-        }
-    },
-
-    updateActiveStates() {
-        // Update active states based on current route
-        const currentPath = window.location.hash.slice(1) || 'dashboard';
-        
-        this.state.elements.menuItems.forEach(item => {
-            const itemPath = item.getAttribute('data-page');
-            if (itemPath === currentPath) {
-                item.classList.add(this.config.classes.active);
-            } else {
-                item.classList.remove(this.config.classes.active);
-            }
-        });
+// User authentication and session management
+function checkAuthentication() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login.html';
+        return;
     }
-};
-        // Dashboard Application Implementation
-const DashboardApp = {
-    // Configuration
-    config: {
-        api: {
-            baseUrl: 'https://18.215.160.136.nip.io/api',
-            endpoints: {
-                verifyToken: '/verify-token',
-                refreshToken: '/refresh-token',
-                dashboard: '/dashboard/stats',
-                users: '/users',
-                roles: '/roles',
-                audit: '/audit-logs'
-            }
-        },
-        timing: {
-            sessionTimeout: 30 * 60 * 1000, // 30 minutes
-            refreshTokenInterval: 5 * 60 * 1000, // 5 minutes
-            notificationDuration: 3000
-        },
-        selectors: {
-            contentContainer: '#mainContent',
-            userInfo: {
-                initials: '#userInitials',
-                name: '#userName',
-                role: '#userRole',
-                email: '#userEmailDisplay',
-                roleDisplay: '#userRoleDisplay'
-            }
-        },
-        templates: {
-            basePath: '/templates',
-            extension: '.html'
+
+    // Verify token with backend
+    fetch('https://18.215.160.136.nip.io/api/verify-token', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
         }
-    },
-
-    // State Management
-    state: {
-        initialized: false,
-        currentPage: null,
-        userInfo: null,
-        timers: {
-            session: null,
-            refreshToken: null
-        },
-        lastActivity: Date.now()
-    },
-
-    // Initialize Application
-    async init() {
-        try {
-            // Check authentication first
-            await this.checkAuthentication();
-
-            // Initialize components
-            await this.initializeComponents();
-
-            // Setup event listeners
-            this.setupEventListeners();
-
-            // Start session monitoring
-            this.startSessionMonitoring();
-
-            // Load default page
-            await this.loadPage('dashboard');
-
-            // Mark as initialized
-            this.state.initialized = true;
-
-            // Subscribe to sidebar events
-            this.subscribeSidebarEvents();
-
-            EventBus.publish('app:initialized', { success: true });
-            return true;
-        } catch (error) {
-            console.error('Application initialization failed:', error);
-            this.handleError(error);
-            EventBus.publish('app:initialized', { success: false, error });
-            throw error;
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success || data.user.role !== 'superadmin') {
+            signOut();
+        } else {
+            updateUserInfo(data.user);
         }
-    },
+    })
+    .catch(() => signOut());
+}
 
-    // Component Initialization
-    async initializeComponents() {
-        await Promise.all([
-            this.initializeUserInterface(),
-            this.initializeNotifications(),
-            this.initializeRouter()
-        ]);
-    },
-
-    // Event Listeners Setup
-    setupEventListeners() {
-        // Activity monitoring
-        ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
-            document.addEventListener(event, () => this.updateLastActivity());
-        });
-
-        // User menu events
-        document.getElementById('signOutBtn')?.addEventListener('click', 
-            (e) => this.handleSignOut(e)
-        );
-
-        // Global error handling
-        window.addEventListener('error', (event) => {
-            this.handleError(event.error);
-        });
-
-        window.addEventListener('unhandledrejection', (event) => {
-            this.handleError(event.reason);
-        });
-    },
-
-    // Sidebar Event Subscriptions
-    subscribeSidebarEvents() {
-        EventBus.subscribe('sidebar:stateChanged', 
-            (data) => this.handleSidebarStateChange(data)
-        );
+// Session timer
+function startSessionTimer() {
+    // Check session every minute
+    setInterval(() => {
+        const lastActivity = localStorage.getItem('lastActivity');
+        const now = Date.now();
         
-        EventBus.subscribe('sidebar:initialized', 
-            () => this.handleSidebarInitialized()
-        );
-    },
-
-    // Authentication and Session Management
-    async checkAuthentication() {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            this.redirectToLogin();
-            return false;
+        // Session timeout after 30 minutes
+        if (now - lastActivity > 30 * 60 * 1000) {
+            signOut();
         }
+    }, 60000);
 
-        try {
-            const response = await this.makeAuthenticatedRequest(
-                this.config.api.endpoints.verifyToken,
-                'POST'
-            );
-
-            if (!response.success || response.user.role !== 'superadmin') {
-                throw new Error('Invalid user role or session');
-            }
-
-            this.state.userInfo = response.user;
-            this.updateUserInterface();
-            return true;
-        } catch (error) {
-            console.error('Authentication check failed:', error);
-            this.redirectToLogin();
-            return false;
-        }
-    },
-
-    // API Request Handler
-    async makeAuthenticatedRequest(endpoint, method = 'GET', data = null) {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${this.config.api.baseUrl}${endpoint}`, {
-                method,
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                    'X-User-Role': 'superadmin'
-                },
-                ...(data && { body: JSON.stringify(data) })
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    this.handleSessionExpired();
-                    throw new Error('Session expired');
-                }
-                throw new Error(`API request failed: ${response.statusText}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('API request failed:', error);
-            throw error;
-        }
-    },
-
-    // Session Management
-    startSessionMonitoring() {
-        this.state.timers.session = setInterval(() => {
-            const inactiveTime = Date.now() - this.state.lastActivity;
-            if (inactiveTime >= this.config.timing.sessionTimeout) {
-                this.handleSessionExpired();
-            }
-        }, 60000);
-
-        this.state.timers.refreshToken = setInterval(() => {
-            this.refreshToken();
-        }, this.config.timing.refreshTokenInterval);
-    },
-
-    updateLastActivity() {
-        this.state.lastActivity = Date.now();
-    },
-
-    async refreshToken() {
-        try {
-            const response = await this.makeAuthenticatedRequest(
-                this.config.api.endpoints.refreshToken,
-                'POST'
-            );
-
-            if (response.success && response.token) {
-                localStorage.setItem('token', response.token);
-                EventBus.publish('app:tokenRefreshed', { success: true });
-            }
-        } catch (error) {
-            console.error('Token refresh failed:', error);
-            this.handleSessionExpired();
-        }
-    },
-
-    handleSessionExpired() {
-        this.clearSessionTimers();
-        this.showNotification('Session expired. Please log in again.', 'warning');
-        this.redirectToLogin();
-    },
-
-    clearSessionTimers() {
-        Object.values(this.state.timers).forEach(timer => {
-            if (timer) clearInterval(timer);
+    // Update last activity on user interaction
+    ['click', 'keypress', 'scroll', 'mousemove'].forEach(event => {
+        document.addEventListener(event, () => {
+            localStorage.setItem('lastActivity', Date.now());
         });
-        this.state.timers = { session: null, refreshToken: null };
-    },
+    });
+}
 
-    // Continue with Part 4...
+// User menu functionality
+function initializeUserMenu() {
+    const userMenu = document.querySelector('.user-menu');
+    const userInfo = document.querySelector('.user-info');
+
+    // Toggle user menu on click
+    userMenu.addEventListener('click', () => {
+        userInfo.classList.toggle('show');
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!userMenu.contains(e.target)) {
+            userInfo.classList.remove('show');
+        }
+    });
+
+    // Sign out button handler
+    document.getElementById('signOutBtn').addEventListener('click', signOut);
+}
+
+// Update user information in the UI
+function updateUserInfo(user) {
+    document.getElementById('userName').textContent = user.name || user.email.split('@')[0];
+    document.getElementById('userRole').textContent = user.role;
+    document.getElementById('userEmailDisplay').textContent = user.email;
+    
+    // Set user initials in avatar
+    const initials = user.name 
+        ? user.name.split(' ').map(n => n[0]).join('').toUpperCase()
+        : user.email[0].toUpperCase();
+    document.getElementById('userInitials').textContent = initials;
+}
+
+// Sign out functionality
+function signOut() {
+    // Clear local storage
+    localStorage.clear();
+    
+    // Redirect to login page
+    window.location.href = '/login.html';
+}
     </script>
 </body>
 </html>
