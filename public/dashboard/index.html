@@ -219,13 +219,16 @@
     }
 
     .toggle-sidebar {
-        color: white;
-        cursor: pointer;
-        padding: var(--spacing-sm);
-        border-radius: 50%;
-        transition: background-color var(--transition-speed) var(--transition-ease);
-    }
-
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: white;
+    transition: transform 0.3s ease;
+}
+        
     .toggle-sidebar:hover {
         background-color: rgba(255, 255, 255, 0.1);
     }
@@ -234,6 +237,9 @@
     .sidebar-menu {
         padding: var(--spacing-md) 0;
     }
+        .sidebar.collapsed .toggle-sidebar {
+    transform: rotate(180deg);
+}
 
     .menu-section {
         margin-bottom: var(--spacing-lg);
@@ -333,16 +339,20 @@
     }
 
     /* User Profile Styles */
-    .user-profile {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-sm);
-        cursor: pointer;
-        padding: var(--spacing-sm);
-        border-radius: 0.5rem;
-        transition: background-color var(--transition-speed) var(--transition-ease);
-        position: relative;
-    }
+    .user-profile::after {
+    content: '\f107'; /* Font Awesome down arrow */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    transition: transform 0.3s ease;
+}
+        .user-profile.active::after {
+    transform: translateY(-50%) rotate(180deg);
+}
 
     .user-profile:hover {
         background-color: var(--border-light);
@@ -560,8 +570,8 @@
                 <span class="logo-text">WorkWise Pro</span>
             </a>
             <div class="toggle-sidebar" id="toggleSidebar">
-                <i class="fas fa-bars"></i>
-            </div>
+    <i class="fas fa-chevron-left"></i>
+</div>
         </div>
 
         <nav class="sidebar-menu">
@@ -859,14 +869,16 @@ const auth = {
         const userDropdown = document.getElementById('userDropdown');
         
         userProfile.addEventListener('click', (e) => {
-            e.stopPropagation();
-            userDropdown.classList.toggle('active');
-        });
+        e.stopPropagation();
+        userDropdown.classList.toggle('active');
+        userProfile.classList.toggle('active'); // Toggle active class for arrow rotation
+    });
 
         // Close dropdown when clicking outside
-        document.addEventListener('click', () => {
-            userDropdown.classList.remove('active');
-        });
+         document.addEventListener('click', () => {
+        userDropdown.classList.remove('active');
+        userProfile.classList.remove('active');
+    });
 
         // Setup sign out button
         document.getElementById('signOutBtn').addEventListener('click', (e) => {
@@ -878,10 +890,13 @@ const auth = {
         const sidebar = document.getElementById('sidebar');
         const toggleBtn = document.getElementById('toggleSidebar');
         
-        toggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-        });
+         // Update the toggle button icon
+    toggleBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    
+    toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+    });
 
         // Restore sidebar state
         if (localStorage.getItem('sidebarCollapsed') === 'true') {
