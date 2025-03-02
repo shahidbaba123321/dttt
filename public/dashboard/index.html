@@ -1,27 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+ <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SuperAdmin Dashboard - WorkWise Pro</title>
 
-    <!-- Dependencies -->
+    <!-- React Dependencies -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    
-    <!-- Material UI Core -->
+    <!-- Material UI -->
     <script src="https://unpkg.com/@mui/material@5.14.13/umd/material-ui.production.min.js"></script>
     
-    <!-- Material UI Icons -->
-    <script src="https://unpkg.com/@mui/icons-material@5.14.13/index.js"></script>
-    <!-- Add this in the head section -->
-    <script src="https://unpkg.com/formik/dist/formik.umd.production.min.js"></script>
-    
-    <!-- Emotion (Required for Material UI) -->
-    <script src="https://unpkg.com/@emotion/react@11.11.1/dist/emotion-react.umd.min.js"></script>
-    <script src="https://unpkg.com/@emotion/styled@11.11.0/dist/emotion-styled.umd.min.js"></script>
+    <!-- Formik -->
+    <script src="https://unpkg.com/formik@2.2.9/dist/formik.umd.production.min.js"></script>
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -718,7 +711,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-    // React Hooks
+       // React Hooks
     const { useState, useEffect } = React;
 
     // Material UI Components
@@ -772,35 +765,31 @@
     // Formik Components
     const { Formik } = window.Formik;
 
-    // Replace require with a simple random string generator
+    // Utility Functions
     const generateTempPassword = (length = 8) => {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
         return Array.from(crypto.getRandomValues(new Uint8Array(length)))
             .map(x => chars[x % chars.length])
             .join('');
     };
-        const formatDate = (date) => {
+
+    const formatDate = (date) => {
         return new Date(date).toLocaleString();
     };
 
-    // Utility function to format numbers
-    const formatNumber = (num) => {
-        return new Intl.NumberFormat('en-US').format(num);
-    };
-
-    // API Service with enhanced error handling
-   const apiService = {
+    // API Service
+    const apiService = {
         baseUrl: 'https://18.215.160.136.nip.io/api',
         
         async fetch(endpoint, options = {}) {
             const token = localStorage.getItem('token');
-            if (!token && endpoint !== '/login') {
+            if (!token && !endpoint.includes('login')) {
                 throw new Error('No authentication token found');
             }
 
             const defaultOptions = {
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    'Authorization': token ? `Bearer ${token}` : '',
                     'Content-Type': 'application/json',
                 },
             };
@@ -832,9 +821,8 @@
         }
     };
 
-
-    // Loading Component
-   const LoadingSpinner = () => (
+    // Loading Spinner Component
+    const LoadingSpinner = () => (
         <Box 
             sx={{ 
                 display: 'flex', 
@@ -847,7 +835,37 @@
         </Box>
     );
 
-         // Users List Component
+    // DashboardStats Component
+    const DashboardStats = () => {
+        const [stats, setStats] = useState({
+            totalCompanies: 150,
+            activeUsers: 1250,
+            totalRevenue: 125000,
+            activeModules: 25
+        });
+
+        return (
+            <div className="stats-grid">
+                <div className="stat-card">
+                    <h3>Total Companies</h3>
+                    <div className="value">{stats.totalCompanies.toLocaleString()}</div>
+                </div>
+                <div className="stat-card">
+                    <h3>Active Users</h3>
+                    <div className="value">{stats.activeUsers.toLocaleString()}</div>
+                </div>
+                <div className="stat-card">
+                    <h3>Total Revenue</h3>
+                    <div className="value">${stats.totalRevenue.toLocaleString()}</div>
+                </div>
+                <div className="stat-card">
+                    <h3>Active Modules</h3>
+                    <div className="value">{stats.activeModules.toLocaleString()}</div>
+                </div>
+            </div>
+        );
+    };
+            // UsersList Component
     const UsersList = () => {
         const [users, setUsers] = useState([]);
         const [loading, setLoading] = useState(true);
@@ -860,15 +878,13 @@
         const [filters, setFilters] = useState({
             search: '',
             status: 'all',
-            role: 'all',
-            department: 'all'
+            role: 'all'
         });
         const [notification, setNotification] = useState({
             open: false,
             message: '',
             type: 'success'
         });
-            
 
         useEffect(() => {
             fetchUsers();
@@ -908,7 +924,6 @@
                 }
             } catch (error) {
                 console.error('Error fetching roles:', error);
-                showNotification('Error fetching roles', 'error');
             }
         };
 
@@ -925,16 +940,13 @@
 
                 if (response.success) {
                     showNotification('User created successfully');
-                    setOpenDialog(false);
-                    fetchUsers();
-                    
-                    // Show temporary password in a separate notification
                     setTimeout(() => {
                         showNotification(`Temporary password: ${tempPassword}`, 'info');
                     }, 1000);
+                    setOpenDialog(false);
+                    fetchUsers();
                 }
             } catch (error) {
-                console.error('Error creating user:', error);
                 showNotification(error.message || 'Error creating user', 'error');
             } finally {
                 setSubmitting(false);
@@ -954,7 +966,6 @@
                     fetchUsers();
                 }
             } catch (error) {
-                console.error('Error updating user:', error);
                 showNotification(error.message || 'Error updating user', 'error');
             } finally {
                 setSubmitting(false);
@@ -975,7 +986,6 @@
                     fetchUsers();
                 }
             } catch (error) {
-                console.error('Error toggling user status:', error);
                 showNotification(error.message || 'Error updating user status', 'error');
             }
         };
@@ -994,7 +1004,6 @@
                     fetchUsers();
                 }
             } catch (error) {
-                console.error('Error toggling 2FA:', error);
                 showNotification(error.message || 'Error updating 2FA status', 'error');
             }
         };
@@ -1014,7 +1023,6 @@
                     fetchUsers();
                 }
             } catch (error) {
-                console.error('Error deleting user:', error);
                 showNotification(error.message || 'Error deleting user', 'error');
             }
         };
@@ -1037,7 +1045,7 @@
                             </Typography>
                         </div>
                         <Button
-                            className="create-role-button"
+                            className="create-button"
                             startIcon={<i className="fas fa-plus"></i>}
                             onClick={() => setOpenDialog(true)}
                         >
@@ -1091,7 +1099,7 @@
                         </FormControl>
                     </div>
                 </div>
-                        {/* Users Table */}
+           
                 <div className="users-table-container">
                     {loading ? (
                         <LoadingSpinner />
@@ -1289,7 +1297,7 @@
                                         <Button
                                             type="submit"
                                             variant="contained"
-                                            className="create-role-button"
+                                            className="create-button"
                                             disabled={isSubmitting}
                                         >
                                             {isSubmitting ? (
@@ -1320,703 +1328,7 @@
             </Box>
         );
     };
-        
-
-    // DashboardStats Component
-    const DashboardStats = () => {
-        const [stats, setStats] = useState({
-            totalCompanies: 0,
-            activeUsers: 0,
-            totalRevenue: 0,
-            activeModules: 0
-        });
-        const [loading, setLoading] = useState(true);
-
-        useEffect(() => {
-            const fetchStats = async () => {
-                try {
-                    // For now, using mock data as the endpoint isn't ready
-                    setTimeout(() => {
-                        setStats({
-                            totalCompanies: 150,
-                            activeUsers: 1250,
-                            totalRevenue: 125000,
-                            activeModules: 25
-                        });
-                        setLoading(false);
-                    }, 1000);
-                } catch (error) {
-                    console.error('Error fetching stats:', error);
-                    setLoading(false);
-                }
-            };
-
-            fetchStats();
-        }, []);
-
-        if (loading) {
-            return <LoadingSpinner />;
-        }
-
-        return (
-            <div className="stats-grid">
-                <div className="stat-card">
-                    <h3>Total Companies</h3>
-                    <div className="value">{formatNumber(stats.totalCompanies)}</div>
-                </div>
-                <div className="stat-card">
-                    <h3>Active Users</h3>
-                    <div className="value">{formatNumber(stats.activeUsers)}</div>
-                </div>
-                <div className="stat-card">
-                    <h3>Total Revenue</h3>
-                    <div className="value">${formatNumber(stats.totalRevenue)}</div>
-                </div>
-                <div className="stat-card">
-                    <h3>Active Modules</h3>
-                    <div className="value">{formatNumber(stats.activeModules)}</div>
-                </div>
-            </div>
-        );
-    };
-
-    // Permission Groups Definition
-    const permissionGroups = {
-        ui: {
-            name: 'UI Access',
-            permissions: [
-                'dashboard_view',
-                'companies_view',
-                'settings_view',
-                'modules_view',
-                'users_view',
-                'tools_view',
-                'support_view'
-            ]
-        },
-        users: {
-            name: 'User Management',
-            permissions: [
-                'users_create',
-                'users_edit',
-                'users_delete',
-                'users_activate',
-                'users_2fa'
-            ]
-        },
-        roles: {
-            name: 'Role Management',
-            permissions: [
-                'roles_view',
-                'roles_create',
-                'roles_edit',
-                'roles_delete'
-            ]
-        },
-        settings: {
-            name: 'System Settings',
-            permissions: [
-                'settings_general',
-                'settings_security',
-                'settings_backup',
-                'settings_api'
-            ]
-        }
-    };
-
-    // RoleManagement Component
-    const RoleManagement = () => {
-        const [roles, setRoles] = useState([]);
-        const [openDialog, setOpenDialog] = useState(false);
-        const [newRole, setNewRole] = useState({ name: '', description: '' });
-        const [selectedRole, setSelectedRole] = useState(null);
-        const [notification, setNotification] = useState({ open: false, message: '', type: 'success' });
-        const [loading, setLoading] = useState(true);
-        const [submitting, setSubmitting] = useState(false);
-
-        useEffect(() => {
-            fetchRoles();
-        }, []);
-
-        const fetchRoles = async () => {
-            try {
-                setLoading(true);
-                const response = await apiService.fetch('/roles');
-                if (response.success) {
-                    setRoles(response.roles || []);
-                }
-            } catch (error) {
-                console.error('Error fetching roles:', error);
-                showNotification('Error fetching roles', 'error');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        const handleCreateRole = async () => {
-            try {
-                if (!newRole.name.trim()) {
-                    showNotification('Role name is required', 'error');
-                    return;
-                }
-
-                setSubmitting(true);
-                const response = await apiService.fetch('/roles', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        name: newRole.name,
-                        description: newRole.description,
-                        permissions: [],
-                        isDefault: false,
-                        isSystem: false
-                    })
-                });
-
-                if (response.success) {
-                    showNotification('Role created successfully');
-                    fetchRoles();
-                    setOpenDialog(false);
-                    setNewRole({ name: '', description: '' });
-                }
-            } catch (error) {
-                console.error('Error creating role:', error);
-                showNotification(error.message || 'Error creating role', 'error');
-            } finally {
-                setSubmitting(false);
-            }
-        };
-
-        // Update this function in the RoleManagement component
-const handleUpdatePermissions = async (roleId, permissions) => {
-    try {
-        if (!selectedRole.name || !selectedRole.description) {
-            showNotification('Role name and description are required', 'error');
-            return;
-        }
-
-        setSubmitting(true);
-        const updateData = {
-            name: selectedRole.name,
-            description: selectedRole.description,
-            permissions: permissions,
-            updatedAt: new Date(),
-            updatedBy: localStorage.getItem('userId')
-        };
-
-        console.log('Updating role with data:', updateData);
-
-        const response = await apiService.fetch(`/roles/${roleId}`, {
-            method: 'PUT',
-            body: JSON.stringify(updateData)
-        });
-
-        if (response.success) {
-            showNotification('Permissions updated successfully');
-            await fetchRoles(); // Await the fetch to ensure we have updated data
-            setSelectedRole(null);
-        }
-    } catch (error) {
-        console.error('Error updating permissions:', error);
-        showNotification(error.message || 'Error updating permissions', 'error');
-    } finally {
-        setSubmitting(false);
-    }
-};
-        const showNotification = (message, type = 'success') => {
-            setNotification({ open: true, message, type });
-        };
-                // Continue RoleManagement Component's render method
-       return (
-        <Box sx={{ p: 3 }}>
-            <div className="roles-header">
-                <div>
-                    <Typography variant="h5" sx={{ fontWeight: 600, color: '#1e293b' }}>
-                        Roles & Permissions
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: '#64748b', mt: 1 }}>
-                        Manage user roles and their associated permissions
-                    </Typography>
-                </div>
-                <Button
-                    className="create-role-button"
-                    startIcon={<i className="fas fa-plus"></i>}
-                    onClick={() => setOpenDialog(true)}
-                    disabled={submitting}
-                >
-                    Create New Role
-                </Button>
-            </div>
-
-            {loading ? (
-                <LoadingSpinner />
-            ) : (
-                <div className="roles-grid">
-                    {roles.map(role => (
-                        <div 
-                            key={role._id} 
-                            className={`role-card ${role.name === 'Superadmin' ? 'superadmin' : ''}`}
-                        >
-                            <div className="role-header">
-                                <div className="role-title">{role.name}</div>
-                                {role.name !== 'Superadmin' && (
-                                    <IconButton 
-                                        className="edit-role-button"
-                                        onClick={() => setSelectedRole(role)}
-                                        disabled={submitting}
-                                    >
-                                        <i className="fas fa-edit"></i>
-                                    </IconButton>
-                                )}
-                            </div>
-                            <div className="role-description">
-                                {role.description}
-                            </div>
-                            <div className="role-stats">
-                                <div className="role-stat-item">
-                                    <i className="fas fa-shield-alt"></i>
-                                    <span>{role.permissions?.length || 0} Permissions</span>
-                                </div>
-                                <div className="role-stat-item">
-                                    <i className="fas fa-users"></i>
-                                    <span>{role.userCount || 0} Users</span>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            {/* Create Role Dialog */}
-            <MuiDialog 
-                open={openDialog} 
-                onClose={() => !submitting && setOpenDialog(false)}
-                maxWidth="sm"
-                fullWidth
-                classes={{ paper: 'permission-dialog' }}
-            >
-                <MuiDialogTitle className="permission-dialog-title">
-                    Create New Role
-                </MuiDialogTitle>
-                <MuiDialogContent>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        label="Role Name"
-                        fullWidth
-                        value={newRole.name}
-                        onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
-                        disabled={submitting}
-                        sx={{ mb: 2 }}
-                    />
-                    <TextField
-                        margin="dense"
-                        label="Description"
-                        fullWidth
-                        multiline
-                        rows={3}
-                        value={newRole.description}
-                        onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
-                        disabled={submitting}
-                    />
-                </MuiDialogContent>
-                <MuiDialogActions sx={{ padding: '16px 24px', background: '#f8fafc' }}>
-                    <Button 
-                        onClick={() => setOpenDialog(false)} 
-                        disabled={submitting}
-                        sx={{ color: '#64748b' }}
-                    >
-                        Cancel
-                    </Button>
-                    <Button 
-                        className="create-role-button"
-                        onClick={handleCreateRole}
-                        disabled={submitting || !newRole.name.trim()}
-                    >
-                        {submitting ? <CircularProgress size={24} /> : 'Create Role'}
-                    </Button>
-                </MuiDialogActions>
-            </MuiDialog>
-
-            {/* Edit Permissions Dialog */}
-            <MuiDialog 
-                open={Boolean(selectedRole)} 
-                onClose={() => !submitting && setSelectedRole(null)}
-                maxWidth="md"
-                fullWidth
-                classes={{ paper: 'permission-dialog' }}
-            >
-                <MuiDialogTitle className="permission-dialog-title">
-                    Edit Permissions - {selectedRole?.name}
-                </MuiDialogTitle>
-                <MuiDialogContent className="permission-groups-container">
-                    {Object.entries(permissionGroups).map(([key, group]) => (
-                        <div key={key} className="permission-group">
-                            <div className="permission-group-title">
-                                {group.name}
-                            </div>
-                            {group.permissions.map(permission => (
-                                <div key={permission} className="permission-item">
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                checked={selectedRole?.permissions?.includes(permission)}
-                                                onChange={(e) => {
-                                                    const newPermissions = e.target.checked
-                                                        ? [...(selectedRole.permissions || []), permission]
-                                                        : selectedRole.permissions.filter(p => p !== permission);
-                                                    setSelectedRole({
-                                                        ...selectedRole,
-                                                        permissions: newPermissions
-                                                    });
-                                                }}
-                                                disabled={submitting}
-                                            />
-                                        }
-                                        label={permission.replace(/_/g, ' ').toUpperCase()}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    ))}
-                </MuiDialogContent>
-                <MuiDialogActions sx={{ padding: '16px 24px', background: '#f8fafc' }}>
-                    <Button 
-                        onClick={() => setSelectedRole(null)}
-                        disabled={submitting}
-                        sx={{ color: '#64748b' }}
-                    >
-                        Cancel
-                    </Button>
-                    <Button 
-                        className="create-role-button"
-                        onClick={() => {
-                            handleUpdatePermissions(selectedRole._id, selectedRole.permissions);
-                        }}
-                        disabled={submitting}
-                    >
-                        {submitting ? <CircularProgress size={24} /> : 'Save Changes'}
-                    </Button>
-                </MuiDialogActions>
-            </MuiDialog>
-
-            <Snackbar
-                open={notification.open}
-                autoHideDuration={6000}
-                onClose={() => setNotification({ ...notification, open: false })}
-            >
-                <Alert 
-                    onClose={() => setNotification({ ...notification, open: false })}
-                    severity={notification.type}
-                    sx={{ 
-                        width: '100%',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-                    }}
-                >
-                    {notification.message}
-                </Alert>
-            </Snackbar>
-        </Box>
-    );
-};
-            // Sidebar Component
-    const Sidebar = ({ isCollapsed, setIsCollapsed, onMenuClick }) => {
-    const [menuItems, setMenuItems] = useState({
-        dashboard: false,
-        companies: false,
-        'system-settings': false,
-        modules: false,
-        users: false,
-        tools: false,
-        support: false
-    });
-
-    const menuSections = [
-        {
-            title: "Main",
-            items: [
-                {
-                    id: 'dashboard',
-                    title: 'Dashboard Overview',
-                    icon: 'tachometer-alt',
-                    path: 'dashboard'
-                }
-            ]
-        },
-        {
-            title: "Organization",
-            items: [
-                {
-                    id: 'companies',
-                    title: 'Companies/Organizations',
-                    icon: 'building',
-                    submenu: [
-                        { title: 'Management', path: 'companies-management' },
-                        { title: 'Companies List', path: 'companies-list' }
-                    ]
-                }
-            ]
-        },
-        {
-            title: "Administration",
-            items: [
-                {
-                    id: 'system-settings',
-                    title: 'System Settings',
-                    icon: 'cogs',
-                    submenu: [
-                        { title: 'General Settings', path: 'settings-general' },
-                        { title: 'Pricing & Plans', path: 'settings-pricing' },
-                        { title: 'Security Settings', path: 'settings-security' }
-                    ]
-                },
-                {
-                    id: 'modules',
-                    title: 'Modules Management',
-                    icon: 'puzzle-piece',
-                    submenu: [
-                        { title: 'Modules List', path: 'modules-list' },
-                        { title: 'Module Settings', path: 'modules-settings' }
-                    ]
-                },
-                {
-                    id: 'users',
-                    title: 'User Management',
-                    icon: 'users',
-                    submenu: [
-                        { title: 'Users List', path: 'users-list' },
-                        { title: 'Roles & Permissions', path: 'roles' },
-                        { title: 'Organization Chart', path: 'org-chart' }
-                    ]
-                }
-            ]
-        },
-        {
-            title: "Tools & Support",
-            items: [
-                {
-                    id: 'tools',
-                    title: 'Tools',
-                    icon: 'tools',
-                    submenu: [
-                        { title: 'Analytics & Reports', path: 'tools-analytics' },
-                        { title: 'Backup & Restore', path: 'tools-backup' },
-                        { title: 'Audit Logs', path: 'tools-audit' },
-                        { title: 'API Management', path: 'tools-api' }
-                    ]
-                },
-                {
-                    id: 'support',
-                    title: 'Support',
-                    icon: 'headset',
-                    submenu: [
-                        { title: 'Support Center', path: 'support-center' }
-                    ]
-                }
-            ]
-        }
-    ];
-
-        const handleMenuClick = (item, path = null) => {
-        if (!isCollapsed) {
-            setMenuItems(prev => ({
-                ...prev,
-                [item]: !prev[item]
-            }));
-
-            if (path) {
-                onMenuClick(path);
-            }
-        }
-    };
-
-        const handleSubMenuClick = (path) => {
-            onMenuClick(path);
-        };
-
-        const drawerWidth = isCollapsed ? 65 : 260;
-
-       return (
-        <Drawer
-            variant="permanent"
-            sx={{
-                width: drawerWidth,
-                flexShrink: 0,
-                '& .MuiDrawer-paper': {
-                    width: drawerWidth,
-                    boxSizing: 'border-box',
-                    overflow: 'hidden',
-                    transition: 'width 0.3s ease'
-                }
-            }}
-        >
-            <div className="sidebar-container">
-                <div className="sidebar-header">
-                    {!isCollapsed && (
-                        <div className="sidebar-logo">
-                            <i className="fas fa-cube"></i>
-                            <Typography variant="h6">WorkWise Pro</Typography>
-                        </div>
-                    )}
-                    <div 
-                        className="sidebar-toggle"
-                        onClick={() => setIsCollapsed(!isCollapsed)}
-                    >
-                        <i className={`fas fa-chevron-${isCollapsed ? 'right' : 'left'}`} />
-                    </div>
-                </div>
-
-                <div className="sidebar-menu">
-                    {menuSections.map((section, index) => (
-                        <div key={index} className="menu-section">
-                            {!isCollapsed && (
-                                <div className="menu-section-title">
-                                    {section.title}
-                                </div>
-                            )}
-                            {section.items.map((item) => (
-                                <div key={item.id}>
-                                    <div 
-                                        className={`menu-item ${menuItems[item.id] ? 'expanded' : ''}`}
-                                        onClick={() => handleMenuClick(item.id, item.path)}
-                                    >
-                                        <i className={`fas fa-${item.icon}`} />
-                                        {!isCollapsed && (
-                                            <>
-                                                <span className="menu-text">{item.title}</span>
-                                                {item.submenu && (
-                                                    <i className="fas fa-chevron-down menu-arrow" />
-                                                )}
-                                            </>
-                                        )}
-                                    </div>
-                                    {!isCollapsed && item.submenu && menuItems[item.id] && (
-                                        <div className="submenu">
-                                            {item.submenu.map((subItem, subIndex) => (
-                                                <div
-                                                    key={subIndex}
-                                                    className="submenu-item"
-                                                    onClick={() => onMenuClick(subItem.path)}
-                                                >
-                                                    {subItem.title}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </Drawer>
-    );
-};
-
-     
-        
-            // Header Component
-    const Header = () => {
-        const [anchorEl, setAnchorEl] = useState(null);
-        const [notifications] = useState([
-            {
-                id: 1,
-                message: 'System update available',
-                type: 'info'
-            },
-            {
-                id: 2,
-                message: 'New user registration',
-                type: 'success'
-            }
-        ]);
-
-        const handleMenu = (event) => {
-            setAnchorEl(event.currentTarget);
-        };
-
-        const handleClose = () => {
-            setAnchorEl(null);
-        };
-
-        const handleLogout = async () => {
-            try {
-                await apiService.fetch('/logout', { method: 'POST' });
-            } catch (error) {
-                console.error('Logout error:', error);
-            } finally {
-                localStorage.clear();
-                window.location.href = '/login.html';
-            }
-        };
-
-        return (
-            <AppBar 
-                position="fixed" 
-                sx={{ 
-                    zIndex: theme => theme.zIndex.drawer + 1,
-                    backgroundColor: 'white',
-                    color: '#333'
-                }}
-            >
-                <Toolbar>
-                    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                        Super Admin Dashboard
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <IconButton color="inherit" sx={{ position: 'relative' }}>
-                            <Badge badgeContent={notifications.length} color="error">
-                                <i className="fas fa-bell"></i>
-                            </Badge>
-                        </IconButton>
-                        <IconButton
-                            onClick={handleMenu}
-                            color="inherit"
-                        >
-                            <Avatar sx={{ bgcolor: '#1a237e' }}>
-                                {(() => {
-                                    const email = localStorage.getItem('userEmail');
-                                    return email ? email.charAt(0).toUpperCase() : 'SA';
-                                })()}
-                            </Avatar>
-                        </IconButton>
-                        <Menu
-                            anchorEl={anchorEl}
-                            open={Boolean(anchorEl)}
-                            onClose={handleClose}
-                            PaperProps={{
-                                sx: {
-                                    mt: 1,
-                                    '& .MuiMenuItem-root': {
-                                        py: 1,
-                                        px: 2
-                                    }
-                                }
-                            }}
-                        >
-                            <MenuItem onClick={() => {
-                                handleClose();
-                                window.location.href = '/account.html';
-                            }}>
-                                <i className="fas fa-user" style={{marginRight: '10px'}}></i>
-                                My Account
-                            </MenuItem>
-                            <MenuItem onClick={() => {
-                                handleClose();
-                                handleLogout();
-                            }}>
-                                <i className="fas fa-sign-out-alt" style={{marginRight: '10px'}}></i>
-                                Sign Out
-                            </MenuItem>
-                        </Menu>
-                    </Box>
-                </Toolbar>
-            </AppBar>
-        );
-    };
-
-    // Main Dashboard Component
-       // Main Dashboard Component
+            // Main Dashboard Component
     const Dashboard = () => {
         const [isCollapsed, setIsCollapsed] = useState(false);
         const [currentPage, setCurrentPage] = useState('dashboard');
@@ -2062,7 +1374,7 @@ const handleUpdatePermissions = async (roleId, permissions) => {
                                     label: 'System Usage',
                                     data: [65, 59, 80, 81, 56, 55],
                                     fill: false,
-                                    borderColor: '#1a237e',
+                                    borderColor: '#4F46E5',
                                     tension: 0.1
                                 }]
                             },
