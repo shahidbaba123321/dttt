@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SuperAdmin Dashboard - WorkWise Pro</title>
 
-    <!-- React Dependencies -->
+   <!-- React Dependencies -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -13,8 +13,8 @@
     <!-- Material UI -->
     <script src="https://unpkg.com/@mui/material@5.14.13/umd/material-ui.production.min.js"></script>
     
-    <!-- Formik -->
-    <script src="https://unpkg.com/formik@2.2.9/dist/formik.umd.production.min.js"></script>
+    <!-- Formik - Update to use the correct UMD build -->
+    <script src="https://unpkg.com/formik@2.4.5/dist/formik.umd.production.min.js" crossorigin></script>
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -712,6 +712,7 @@
 
     <script type="text/babel">
        // React Hooks
+        // React Hooks
     const { useState, useEffect } = React;
 
     // Material UI Components
@@ -762,9 +763,6 @@
         CircularProgress
     } = MaterialUI;
 
-    // Formik Components
-    const { Formik } = window.Formik;
-
     // Utility Functions
     const generateTempPassword = (length = 8) => {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
@@ -773,8 +771,9 @@
             .join('');
     };
 
-    const formatDate = (date) => {
-        return new Date(date).toLocaleString();
+    const validateEmail = (email) => {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
     };
 
     // API Service
@@ -865,10 +864,11 @@
             </div>
         );
     };
-            // UsersList Component
+         // UsersList Component
     const UsersList = () => {
         const [users, setUsers] = useState([]);
         const [loading, setLoading] = useState(true);
+        const [submitting, setSubmitting] = useState(false);
         const [page, setPage] = useState(0);
         const [rowsPerPage, setRowsPerPage] = useState(10);
         const [totalUsers, setTotalUsers] = useState(0);
@@ -885,11 +885,61 @@
             message: '',
             type: 'success'
         });
+        const [formData, setFormData] = useState({
+            name: '',
+            email: '',
+            department: '',
+            role: '',
+            requires2FA: false
+        });
+        const [formErrors, setFormErrors] = useState({});
 
         useEffect(() => {
             fetchUsers();
             fetchRoles();
         }, [page, rowsPerPage, filters]);
+
+        useEffect(() => {
+            if (selectedUser) {
+                setFormData({
+                    name: selectedUser.name || '',
+                    email: selectedUser.email || '',
+                    department: selectedUser.department || '',
+                    role: selectedUser.role || '',
+                    requires2FA: selectedUser.requires2FA || false
+                });
+                setFormErrors({});
+            } else {
+                setFormData({
+                    name: '',
+                    email: '',
+                    department: '',
+                    role: '',
+                    requires2FA: false
+                });
+                setFormErrors({});
+            }
+        }, [selectedUser]);
+
+        const validateForm = () => {
+            const errors = {};
+            if (!formData.name.trim()) {
+                errors.name = 'Name is required';
+            }
+            if (!formData.email.trim()) {
+                errors.email = 'Email is required';
+            } else if (!validateEmail(formData.email)) {
+                errors.email = 'Invalid email format';
+            }
+            if (!formData.department.trim()) {
+                errors.department = 'Department is required';
+            }
+            if (!formData.role) {
+                errors.role = 'Role is required';
+            }
+            setFormErrors(errors);
+            return Object.keys(errors).length === 0;
+        };
 
         const fetchUsers = async () => {
             try {
@@ -924,16 +974,48 @@
                 }
             } catch (error) {
                 console.error('Error fetching roles:', error);
+                showNotification('Error fetching roles', 'error');
             }
         };
 
-        const handleCreateUser = async (values, { setSubmitting }) => {
+        const handleFormChange = (e) => {
+            const { name, value, type, checked } = e.target;
+            setFormData(prev => ({
+                ...prev,
+                [name]: type === 'checkbox' ? checked : value
+            }));
+            // Clear error for the field being changed
+            if (formErrors[name]) {
+                setFormErrors(prev => ({
+                    ...prev,
+                    [name]: undefined
+                }));
+            }
+        };
+
+        const handleFormSubmit = async (e) => {
+            e.preventDefault();
+            if (!validateForm()) return;
+
+            setSubmitting(true);
+            try {
+                if (selectedUser) {
+                    await handleUpdateUser(formData);
+                } else {
+                    await handleCreateUser(formData);
+                }
+            } finally {
+                setSubmitting(false);
+            }
+        };
+
+        const handleCreateUser = async (userData) => {
             try {
                 const tempPassword = generateTempPassword();
                 const response = await apiService.fetch('/users', {
                     method: 'POST',
                     body: JSON.stringify({
-                        ...values,
+                        ...userData,
                         password: tempPassword
                     })
                 });
@@ -943,32 +1025,28 @@
                     setTimeout(() => {
                         showNotification(`Temporary password: ${tempPassword}`, 'info');
                     }, 1000);
-                    setOpenDialog(false);
+                    handleCloseDialog();
                     fetchUsers();
                 }
             } catch (error) {
                 showNotification(error.message || 'Error creating user', 'error');
-            } finally {
-                setSubmitting(false);
             }
         };
 
-        const handleUpdateUser = async (values, { setSubmitting }) => {
+        const handleUpdateUser = async (userData) => {
             try {
                 const response = await apiService.fetch(`/users/${selectedUser._id}`, {
                     method: 'PUT',
-                    body: JSON.stringify(values)
+                    body: JSON.stringify(userData)
                 });
 
                 if (response.success) {
                     showNotification('User updated successfully');
-                    setSelectedUser(null);
+                    handleCloseDialog();
                     fetchUsers();
                 }
             } catch (error) {
                 showNotification(error.message || 'Error updating user', 'error');
-            } finally {
-                setSubmitting(false);
             }
         };
 
@@ -1027,11 +1105,24 @@
             }
         };
 
+        const handleCloseDialog = () => {
+            setOpenDialog(false);
+            setSelectedUser(null);
+            setFormData({
+                name: '',
+                email: '',
+                department: '',
+                role: '',
+                requires2FA: false
+            });
+            setFormErrors({});
+        };
+
         const showNotification = (message, type = 'success') => {
             setNotification({ open: true, message, type });
         };
 
-        return (
+             return (
             <Box sx={{ p: 3 }}>
                 {/* Header */}
                 <div className="users-header">
@@ -1099,7 +1190,8 @@
                         </FormControl>
                     </div>
                 </div>
-           
+
+                {/* Users Table */}
                 <div className="users-table-container">
                     {loading ? (
                         <LoadingSpinner />
@@ -1202,10 +1294,7 @@
                 {/* Create/Edit User Dialog */}
                 <MuiDialog
                     open={openDialog || Boolean(selectedUser)}
-                    onClose={() => {
-                        setOpenDialog(false);
-                        setSelectedUser(null);
-                    }}
+                    onClose={handleCloseDialog}
                     maxWidth="md"
                     fullWidth
                     className="user-dialog"
@@ -1214,100 +1303,93 @@
                         {selectedUser ? 'Edit User' : 'Create New User'}
                     </MuiDialogTitle>
                     <MuiDialogContent className="user-dialog-content">
-                        <Formik
-                            initialValues={{
-                                name: selectedUser?.name || '',
-                                email: selectedUser?.email || '',
-                                department: selectedUser?.department || '',
-                                role: selectedUser?.role || '',
-                                requires2FA: selectedUser?.requires2FA || false
-                            }}
-                            onSubmit={async (values, formikHelpers) => {
-                                if (selectedUser) {
-                                    await handleUpdateUser(values, formikHelpers);
-                                } else {
-                                    await handleCreateUser(values, formikHelpers);
-                                }
-                            }}
-                        >
-                            {({ values, handleChange, handleSubmit, isSubmitting }) => (
-                                <form onSubmit={handleSubmit}>
-                                    <div className="form-grid">
-                                        <TextField
-                                            name="name"
-                                            label="Full Name"
-                                            value={values.name}
-                                            onChange={handleChange}
-                                            fullWidth
-                                            required
+                        <form onSubmit={handleFormSubmit}>
+                            <div className="form-grid">
+                                <TextField
+                                    name="name"
+                                    label="Full Name"
+                                    value={formData.name}
+                                    onChange={handleFormChange}
+                                    fullWidth
+                                    required
+                                    error={Boolean(formErrors.name)}
+                                    helperText={formErrors.name}
+                                />
+                                <TextField
+                                    name="email"
+                                    label="Email"
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={handleFormChange}
+                                    fullWidth
+                                    required
+                                    error={Boolean(formErrors.email)}
+                                    helperText={formErrors.email}
+                                />
+                                <TextField
+                                    name="department"
+                                    label="Department"
+                                    value={formData.department}
+                                    onChange={handleFormChange}
+                                    fullWidth
+                                    required
+                                    error={Boolean(formErrors.department)}
+                                    helperText={formErrors.department}
+                                />
+                                <FormControl 
+                                    fullWidth 
+                                    required
+                                    error={Boolean(formErrors.role)}
+                                >
+                                    <InputLabel>Role</InputLabel>
+                                    <Select
+                                        name="role"
+                                        value={formData.role}
+                                        onChange={handleFormChange}
+                                        label="Role"
+                                    >
+                                        {roles.map(role => (
+                                            <MenuItem key={role._id} value={role._id}>
+                                                {role.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                    {formErrors.role && (
+                                        <Typography className="error-text" variant="caption">
+                                            {formErrors.role}
+                                        </Typography>
+                                    )}
+                                </FormControl>
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            name="requires2FA"
+                                            checked={formData.requires2FA}
+                                            onChange={handleFormChange}
                                         />
-                                        <TextField
-                                            name="email"
-                                            label="Email"
-                                            type="email"
-                                            value={values.email}
-                                            onChange={handleChange}
-                                            fullWidth
-                                            required
-                                        />
-                                        <TextField
-                                            name="department"
-                                            label="Department"
-                                            value={values.department}
-                                            onChange={handleChange}
-                                            fullWidth
-                                            required
-                                        />
-                                        <FormControl fullWidth required>
-                                            <InputLabel>Role</InputLabel>
-                                            <Select
-                                                name="role"
-                                                value={values.role}
-                                                onChange={handleChange}
-                                                label="Role"
-                                            >
-                                                {roles.map(role => (
-                                                    <MenuItem key={role._id} value={role._id}>
-                                                        {role.name}
-                                                    </MenuItem>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
-                                        <FormControlLabel
-                                            control={
-                                                <Switch
-                                                    name="requires2FA"
-                                                    checked={values.requires2FA}
-                                                    onChange={handleChange}
-                                                />
-                                            }
-                                            label="Require 2FA"
-                                        />
-                                    </div>
-                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-                                        <Button
-                                            onClick={() => {
-                                                setOpenDialog(false);
-                                                setSelectedUser(null);
-                                            }}
-                                            disabled={isSubmitting}
-                                        >
-                                            Cancel
-                                        </Button>
-                                        <Button
-                                            type="submit"
-                                            variant="contained"
-                                            className="create-button"
-                                            disabled={isSubmitting}
-                                        >
-                                            {isSubmitting ? (
-                                                <CircularProgress size={24} />
-                                            ) : selectedUser ? 'Update User' : 'Create User'}
-                                        </Button>
-                                    </Box>
-                                </form>
-                            )}
-                        </Formik>
+                                    }
+                                    label="Require 2FA"
+                                />
+                            </div>
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                                <Button
+                                    onClick={handleCloseDialog}
+                                    disabled={submitting}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    variant="contained"
+                                    className="create-button"
+                                    disabled={submitting}
+                                >
+                                    {submitting ? (
+                                        <CircularProgress size={24} />
+                                    ) : selectedUser ? 'Update User' : 'Create User'}
+                                </Button>
+                            </Box>
+                        </form>
                     </MuiDialogContent>
                 </MuiDialog>
 
@@ -1328,7 +1410,8 @@
             </Box>
         );
     };
-            // Main Dashboard Component
+
+         // Main Dashboard Component
     const Dashboard = () => {
         const [isCollapsed, setIsCollapsed] = useState(false);
         const [currentPage, setCurrentPage] = useState('dashboard');
@@ -1366,6 +1449,12 @@
                 const initializeChart = () => {
                     const ctx = document.getElementById('systemAnalytics');
                     if (ctx) {
+                        // Destroy existing chart if it exists
+                        const existingChart = Chart.getChart(ctx);
+                        if (existingChart) {
+                            existingChart.destroy();
+                        }
+
                         new Chart(ctx, {
                             type: 'line',
                             data: {
@@ -1388,7 +1477,15 @@
                                 },
                                 scales: {
                                     y: {
-                                        beginAtZero: true
+                                        beginAtZero: true,
+                                        grid: {
+                                            color: '#e2e8f0'
+                                        }
+                                    },
+                                    x: {
+                                        grid: {
+                                            color: '#e2e8f0'
+                                        }
                                     }
                                 }
                             }
@@ -1396,6 +1493,7 @@
                     }
                 };
 
+                // Initialize chart after a short delay to ensure DOM is ready
                 setTimeout(initializeChart, 100);
             }
         }, [currentPage]);
@@ -1457,7 +1555,14 @@
                             <DashboardStats />
                             <Grid container spacing={3}>
                                 <Grid item xs={12}>
-                                    <Paper sx={{ p: 2, height: '400px' }}>
+                                    <Paper 
+                                        sx={{ 
+                                            p: 2, 
+                                            height: '400px',
+                                            borderRadius: '16px',
+                                            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)'
+                                        }}
+                                    >
                                         <Typography variant="h6" gutterBottom>
                                             System Analytics
                                         </Typography>
