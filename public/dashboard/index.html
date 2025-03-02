@@ -1,1333 +1,911 @@
+<!-- public/dashboard/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="WorkWise Pro Superadmin Dashboard">
     <title>WorkWise Pro - Superadmin Dashboard</title>
-    
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../images/favicon.png">
+
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <!-- DataTables JS -->
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <!-- ApexCharts for Dashboard Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
     <style>
-     :root {
-    /* Colors */
-    --primary-color: #4F46E5;
-    --primary-dark: #4338CA;
-    --primary-light: #818CF8;
-    --secondary-color: #1F2937;
-    --success-color: #10B981;
-    --warning-color: #F59E0B;
-    --danger-color: #EF4444;
-    --info-color: #3B82F6;
-    
-    /* Background Colors */
-    --bg-main: #F9FAFB;
-    --bg-sidebar: #1E293B;
-    --bg-card: #FFFFFF;
-    --bg-hover: #F3F4F6;
-    --bg-active: #E5E7EB;
-    
-    /* Text Colors */
-    --text-primary: #1F2937;
-    --text-secondary: #6B7280;
-    --text-light: #9CA3AF;
-    --text-white: #FFFFFF;
-    
-    /* Border Colors */
-    --border-color: #E5E7EB;
-    --border-dark: #D1D5DB;
-    
-    /* Layout */
-    --sidebar-width: 280px;
-    --sidebar-collapsed-width: 70px;
-    --header-height: 70px;
-    --content-padding: 2rem;
-    
-    /* Transitions */
-    --transition-speed: 0.3s;
-    --transition: all 0.3s ease;
-    
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    
-    /* Border Radius */
-    --border-radius-sm: 0.375rem;
-    --border-radius-md: 0.5rem;
-    --border-radius-lg: 0.75rem;
-    --border-radius-full: 9999px;
-}
+        /* Core Variables */
+        :root {
+            /* Colors */
+            --primary-color: #4F46E5;
+            --primary-dark: #4338CA;
+            --primary-light: #818CF8;
+            --secondary-color: #3B82F6;
+            --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --danger-color: #EF4444;
+            --info-color: #3B82F6;
+            
+            /* Background Colors */
+            --bg-primary: #F8FAFC;
+            --bg-secondary: #FFFFFF;
+            --bg-sidebar: #1E293B;
+            --bg-card: #FFFFFF;
+            
+            /* Text Colors */
+            --text-primary: #1F2937;
+            --text-secondary: #64748B;
+            --text-muted: #94A3B8;
+            --text-light: #E2E8F0;
+            
+            /* Border Colors */
+            --border-color: #E2E8F0;
+            --border-light: #F1F5F9;
+            
+            /* Shadow */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            
+            /* Spacing */
+            --spacing-xs: 0.25rem;
+            --spacing-sm: 0.5rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+            
+            /* Layout */
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 70px;
+            --header-height: 70px;
+            --content-padding: 2rem;
+            
+            /* Transitions */
+            --transition-speed: 0.3s;
+            --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-/* Reset and Base Styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
+        /* Reset & Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
 
-html {
-    font-size: 16px;
-    height: 100%;
-}
+        html {
+            font-size: 16px;
+            height: 100%;
+            scroll-behavior: smooth;
+        }
 
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: var(--bg-main);
-    color: var(--text-primary);
-    line-height: 1.5;
-    height: 100%;
-    overflow-x: hidden;
-}
+        body {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+            position: relative;
+        }
 
-/* Layout */
-.dashboard-container {
-    display: grid;
-    grid-template-columns: var(--sidebar-width) 1fr;
-    grid-template-rows: var(--header-height) 1fr;
-    min-height: 100vh;
-    position: relative;
-}
+        /* Typography */
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
 
-/* Main Content Area */
-.main-content {
-    grid-column: 2;
-    padding: var(--content-padding);
-    margin-left: var(--sidebar-width);
-    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+        h1 { font-size: 2.25rem; }
+        h2 { font-size: 1.875rem; }
+        h3 { font-size: 1.5rem; }
+        h4 { font-size: 1.25rem; }
+        h5 { font-size: 1.125rem; }
+        h6 { font-size: 1rem; }
 
-.main-content.expanded {
-    margin-left: var(--sidebar-collapsed-width);
-}
+        p {
+            margin-bottom: 1rem;
+        }
+
+        /* Utility Classes */
+        .text-primary { color: var(--primary-color); }
+        .text-success { color: var(--success-color); }
+        .text-warning { color: var(--warning-color); }
+        .text-danger { color: var(--danger-color); }
+        .text-info { color: var(--info-color); }
+        .text-muted { color: var(--text-muted); }
+
+        .bg-primary { background-color: var(--primary-color); }
+        .bg-success { background-color: var(--success-color); }
+        .bg-warning { background-color: var(--warning-color); }
+        .bg-danger { background-color: var(--danger-color); }
+        .bg-info { background-color: var(--info-color); }
+
+        .d-flex { display: flex; }
+        .flex-column { flex-direction: column; }
+        .align-items-center { align-items: center; }
+        .justify-content-between { justify-content: space-between; }
+        .justify-content-center { justify-content: center; }
+
+        .w-100 { width: 100%; }
+        .h-100 { height: 100%; }
+
+        .m-0 { margin: 0; }
+        .mb-1 { margin-bottom: var(--spacing-sm); }
+        .mb-2 { margin-bottom: var(--spacing-md); }
+        .mb-3 { margin-bottom: var(--spacing-lg); }
+        .mb-4 { margin-bottom: var(--spacing-xl); }
+
+        .p-0 { padding: 0; }
+        .p-1 { padding: var(--spacing-sm); }
+        .p-2 { padding: var(--spacing-md); }
+        .p-3 { padding: var(--spacing-lg); }
+        .p-4 { padding: var(--spacing-xl); }
+
         /* Sidebar Styles */
-.sidebar {
-    grid-row: 1 / -1;
-    background-color: var(--bg-sidebar);
-    color: var(--text-white);
-    padding: 1.5rem 1rem;
-    overflow-y: auto;
-    overflow-x: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    width: var(--sidebar-width);
-    position: fixed;
-    height: 100vh;
-    z-index: 1000;
-    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.sidebar-logo {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.5rem;
-    margin-bottom: 2rem;
-    position: relative;
-}
-
-.sidebar-logo img {
-    width: 40px;
-    height: 40px;
-    object-fit: contain;
-}
-
-.sidebar-logo h1 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--text-white);
-    transition: opacity var(--transition-speed) ease;
-}
-
-/* Sidebar Toggle Button */
-.sidebar-toggle {
-    position: absolute;
-    top: 1.25rem;
-    right: -12px;
-    width: 24px;
-    height: 24px;
-    background-color: var(--primary-color);
-    border: none;
-    border-radius: 50%;
-    color: var(--text-white);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    z-index: 100;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    border: 2px solid var(--bg-card);
-}
-
-.sidebar-toggle:hover {
-    background-color: var(--primary-dark);
-    transform: scale(1.1);
-}
-
-.sidebar-toggle .toggle-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.3s ease;
-    font-size: 0.8rem;
-}
-
-.sidebar.collapsed .sidebar-toggle .toggle-icon {
-    transform: rotate(180deg);
-}
-
-/* Sidebar Menu */
-.sidebar-menu {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.menu-section {
-    margin-bottom: 2rem;
-}
-
-.menu-section-title {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    color: var(--text-light);
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
-    transition: opacity var(--transition-speed) ease;
-}
-
-.menu-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.75rem 1rem;
-    border-radius: var(--border-radius-md);
-    cursor: pointer;
-    transition: var(--transition);
-    color: var(--text-white);
-    text-decoration: none;
-    position: relative;
-}
-
-.menu-item.active {
-    background-color: var(--primary-color);
-    color: var(--text-white);
-    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.2);
-}
-
-.menu-item:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    transform: translateX(5px);
-}
-
-.menu-item i {
-    width: 20px;
-    text-align: center;
-    font-size: 1rem;
-}
-
-/* Submenu Styles */
-.submenu {
-    margin-left: 0.5rem;
-    transition: var(--transition);
-}
-
-.submenu-group {
-    margin-bottom: 0.5rem;
-}
-
-.menu-item.has-submenu {
-    justify-content: space-between;
-}
-
-.submenu-arrow {
-    font-size: 0.75rem;
-    transition: transform var(--transition-speed) ease;
-}
-
-.nested-submenu {
-    margin-left: 1.5rem;
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height var(--transition-speed) ease;
-}
-
-.nested-submenu.active {
-    max-height: 500px;
-}
-
-/* Collapsed Sidebar Styles */
-.sidebar.collapsed {
-    width: var(--sidebar-collapsed-width);
-    padding: 1.5rem 0.5rem;
-}
-
-.sidebar.collapsed .sidebar-logo {
-    justify-content: center;
-    margin-bottom: 2rem;
-}
-
-.sidebar.collapsed .sidebar-logo img {
-    width: 35px;
-    height: 35px;
-}
-
-.sidebar.collapsed .sidebar-logo h1,
-.sidebar.collapsed .menu-section-title,
-.sidebar.collapsed .menu-item span,
-.sidebar.collapsed .submenu-arrow {
-    display: none;
-}
-
-.sidebar.collapsed .menu-item {
-    padding: 0.75rem;
-    justify-content: center;
-    width: 100%;
-}
-
-.sidebar.collapsed .menu-item i {
-    margin: 0;
-    font-size: 1.2rem;
-}
-
-.sidebar.collapsed .menu-item:hover {
-    transform: translateX(0);
-}
-
-/* Tooltip for Collapsed Sidebar */
-.sidebar.collapsed .menu-item::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    left: calc(100% + 5px);
-    top: 50%;
-    transform: translateY(-50%) translateX(5px);
-    background-color: var(--bg-sidebar);
-    color: var(--text-white);
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1000;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.sidebar.collapsed .menu-item::before {
-    content: '';
-    position: absolute;
-    left: calc(100% + 4px);
-    top: 50%;
-    transform: translateY(-50%);
-    border: 6px solid transparent;
-    border-right-color: var(--bg-sidebar);
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.2s ease;
-    z-index: 1000;
-}
-
-.sidebar.collapsed .menu-item:hover::after {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(-50%) translateX(0);
-}
-
-.sidebar.collapsed .menu-item:hover::before {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* Collapsed State Submenu */
-.sidebar.collapsed .submenu {
-    position: absolute;
-    left: 100%;
-    top: 0;
-    width: 200px;
-    background-color: var(--bg-sidebar);
-    border-radius: 0 8px 8px 0;
-    padding: 0.5rem;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-    box-shadow: 4px 0 8px rgba(0, 0, 0, 0.1);
-    margin-top: 0;
-    padding-top: 0.5rem;
-}
-
-.sidebar.collapsed .menu-item.has-submenu:hover .submenu {
-    opacity: 1;
-    visibility: visible;
-    transform: translateX(0);
-}
-        /* Header Styles */
-.header {
-    grid-column: 2;
-    background-color: var(--bg-card);
-    border-bottom: 1px solid var(--border-color);
-    padding: 1rem 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    margin-left: var(--sidebar-width);
-    transition: margin-left var(--transition-speed) ease;
-}
-
-.header-search {
-    flex: 1;
-    max-width: 400px;
-    margin: 0 2rem;
-}
-
-.search-input {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-md);
-    background-color: var(--bg-main);
-    color: var(--text-primary);
-    font-size: 0.875rem;
-    transition: var(--transition);
-}
-
-.search-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-}
-
-/* User Menu Styles */
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
-
-.user-menu {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: var(--border-radius-md);
-    transition: var(--transition);
-}
-
-.user-menu:hover {
-    background-color: var(--bg-hover);
-}
-
-.user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--border-radius-full);
-    background-color: var(--primary-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-white);
-    font-weight: 600;
-    font-size: 1rem;
-}
-
-.user-details {
-    display: flex;
-    flex-direction: column;
-}
-
-.user-name {
-    font-weight: 600;
-    color: var(--text-primary);
-    font-size: 0.875rem;
-}
-
-.user-role {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-}
-
-/* User Dropdown Menu */
-.user-info {
-    position: absolute;
-    top: calc(100% + 0.5rem);
-    right: 0;
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-lg);
-    width: 250px;
-    box-shadow: var(--shadow-lg);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.user-menu:hover .user-info,
-.user-info.show {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-.user-info-header {
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.user-info-details {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.user-info-details strong {
-    color: var(--text-primary);
-    font-size: 0.875rem;
-}
-
-.user-info-details span {
-    color: var(--text-secondary);
-    font-size: 0.75rem;
-}
-
-.user-info-menu {
-    padding: 0.5rem;
-}
-
-.menu-divider {
-    margin: 0.5rem 0;
-    border: none;
-    border-top: 1px solid var(--border-color);
-}
-
-.user-info .menu-item {
-    color: var(--text-primary);
-    padding: 0.75rem;
-    border-radius: var(--border-radius-md);
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    transition: var(--transition);
-}
-
-.user-info .menu-item:hover {
-    background-color: var(--bg-hover);
-    transform: translateX(0);
-}
-
-.user-info .menu-item i {
-    color: var(--text-secondary);
-    width: 20px;
-    text-align: center;
-}
-
-/* Notifications */
-.notification {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-    padding: 1rem 1.5rem;
-    border-radius: var(--border-radius-md);
-    background-color: var(--bg-card);
-    box-shadow: var(--shadow-lg);
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    transform: translateX(120%);
-    transition: transform 0.3s ease;
-    z-index: 1000;
-}
-
-.notification.show {
-    transform: translateX(0);
-}
-
-.notification.success {
-    border-left: 4px solid var(--success-color);
-}
-
-.notification.error {
-    border-left: 4px solid var(--danger-color);
-}
-
-.notification.warning {
-    border-left: 4px solid var(--warning-color);
-}
-
-.notification.info {
-    border-left: 4px solid var(--info-color);
-}
-        /* Loading Indicator */
-.loading-indicator {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(255, 255, 255, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-}
-
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid var(--border-color);
-    border-top-color: var(--primary-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-/* Animations */
-@keyframes collapseAnimation {
-    from { 
-        width: var(--sidebar-width);
-        padding: 1.5rem 1rem;
-    }
-    to { 
-        width: var(--sidebar-collapsed-width);
-        padding: 1.5rem 0.5rem;
-    }
-}
-
-@keyframes expandAnimation {
-    from { 
-        width: var(--sidebar-collapsed-width);
-        padding: 1.5rem 0.5rem;
-    }
-    to { 
-        width: var(--sidebar-width);
-        padding: 1.5rem 1rem;
-    }
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-@keyframes fadeIn {
-    from { 
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to { 
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes slideIn {
-    from { 
-        transform: translateX(-10px);
-        opacity: 0;
-    }
-    to { 
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-/* Responsive Design */
-@media (max-width: 1024px) {
-    :root {
-        --sidebar-width: 240px;
-        --content-padding: 1.5rem;
-    }
-
-    .header-search {
-        max-width: 300px;
-        margin: 0 1rem;
-    }
-
-    .sidebar-logo h1 {
-        font-size: 1.25rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .dashboard-container {
-        grid-template-columns: 1fr;
-    }
-
     .sidebar {
-        transform: translateX(-100%);
+        width: var(--sidebar-width);
+        height: 100vh;
         position: fixed;
-        width: 240px;
-        z-index: 1001;
+        left: 0;
+        top: 0;
+        background-color: var(--bg-sidebar);
+        transition: width var(--transition-speed) var(--transition-ease);
+        z-index: 1000;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .sidebar::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
     }
 
     .sidebar.collapsed {
-        transform: translateX(-100%);
+        width: var(--sidebar-collapsed-width);
     }
 
-    .sidebar.active {
-        transform: translateX(0);
-        width: 240px;
-        padding: 1.5rem 1rem;
+    .sidebar-header {
+        height: var(--header-height);
+        padding: 0 var(--spacing-lg);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    .header,
-    .main-content {
-        margin-left: 0 !important;
-        width: 100%;
+    .logo-container {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        color: white;
+        text-decoration: none;
     }
 
-    .sidebar-toggle {
-        display: none;
+    .logo-icon {
+        font-size: 1.5rem;
+        min-width: 1.5rem;
     }
 
-    .header-search {
-        display: none;
+    .logo-text {
+        font-size: 1.25rem;
+        font-weight: 600;
+        white-space: nowrap;
+        opacity: 1;
+        transition: opacity var(--transition-speed) var(--transition-ease);
     }
 
-    .user-menu {
-        padding: 0.25rem;
+    .sidebar.collapsed .logo-text {
+        opacity: 0;
+        width: 0;
     }
 
-    /* Mobile Menu Overlay */
-    .sidebar.active::after {
-        content: '';
+    .toggle-sidebar {
+        color: white;
+        cursor: pointer;
+        padding: var(--spacing-sm);
+        border-radius: 50%;
+        transition: background-color var(--transition-speed) var(--transition-ease);
+    }
+
+    .toggle-sidebar:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Sidebar Menu Styles */
+    .sidebar-menu {
+        padding: var(--spacing-md) 0;
+    }
+
+    .menu-section {
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .menu-section-title {
+        color: var(--text-muted);
+        padding: var(--spacing-sm) var(--spacing-xl);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+        opacity: 1;
+        transition: opacity var(--transition-speed) var(--transition-ease);
+    }
+
+    .sidebar.collapsed .menu-section-title {
+        opacity: 0;
+    }
+
+    .menu-item {
+        padding: var(--spacing-sm) var(--spacing-xl);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+        color: var(--text-light);
+        text-decoration: none;
+        transition: all var(--transition-speed) var(--transition-ease);
+        cursor: pointer;
+        position: relative;
+    }
+
+    .menu-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+
+    .menu-item.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .menu-item i {
+        font-size: 1.25rem;
+        min-width: 1.5rem;
+        text-align: center;
+    }
+
+    .menu-text {
+        white-space: nowrap;
+        opacity: 1;
+        transition: opacity var(--transition-speed) var(--transition-ease);
+    }
+
+    .sidebar.collapsed .menu-text {
+        opacity: 0;
+        width: 0;
+    }
+
+    /* Header Styles */
+    .header {
         position: fixed;
         top: 0;
-        left: 0;
         right: 0;
-        bottom: 0;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: -1;
+        left: var(--sidebar-width);
+        height: var(--header-height);
+        background-color: var(--bg-secondary);
+        box-shadow: var(--shadow-sm);
+        transition: left var(--transition-speed) var(--transition-ease);
+        z-index: 999;
+        padding: 0 var(--spacing-xl);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
 
-    /* Adjust notifications for mobile */
-    .notification {
-        width: calc(100% - 2rem);
-        left: 1rem;
-        right: 1rem;
-    }
-}
-
-@media (max-width: 480px) {
-    :root {
-        --content-padding: 1rem;
+    .sidebar.collapsed ~ .main-content .header {
+        left: var(--sidebar-collapsed-width);
     }
 
-    .user-details {
-        display: none;
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
     }
 
-    .header {
-        padding: 0.75rem;
+    .page-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
     }
 
-    .main-content {
-        padding: 1rem;
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+
+    /* User Profile Styles */
+    .user-profile {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        cursor: pointer;
+        padding: var(--spacing-sm);
+        border-radius: 0.5rem;
+        transition: background-color var(--transition-speed) var(--transition-ease);
+        position: relative;
+    }
+
+    .user-profile:hover {
+        background-color: var(--border-light);
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 1rem;
     }
 
     .user-info {
-        width: 200px;
-        right: -0.75rem;
+        display: flex;
+        flex-direction: column;
     }
-}
 
-/* Error Page */
-.error-page {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 2rem;
-    text-align: center;
-    background-color: var(--bg-main);
-}
+    .user-name {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.875rem;
+    }
 
-.error-page h1 {
-    color: var(--danger-color);
-    font-size: 2rem;
-    margin-bottom: 1rem;
-    animation: fadeIn 0.5s ease;
-}
+    .user-role {
+        color: var(--text-secondary);
+        font-size: 0.75rem;
+    }
 
-.error-page p {
-    color: var(--text-secondary);
-    margin-bottom: 2rem;
-    max-width: 500px;
-    animation: fadeIn 0.5s ease 0.2s both;
-}
+    /* Dropdown Menu Styles */
+    .dropdown-menu {
+        position: absolute;
+        top: calc(100% + 0.5rem);
+        right: 0;
+        background-color: var(--bg-secondary);
+        border-radius: 0.5rem;
+        box-shadow: var(--shadow-lg);
+        min-width: 200px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(10px);
+        transition: all var(--transition-speed) var(--transition-ease);
+        z-index: 1000;
+    }
 
-.error-page button {
-    padding: 0.75rem 1.5rem;
-    background-color: var(--primary-color);
-    color: var(--text-white);
-    border: none;
-    border-radius: var(--border-radius-md);
-    cursor: pointer;
-    transition: var(--transition);
-    animation: fadeIn 0.5s ease 0.4s both;
-    font-weight: 500;
-}
+    .dropdown-menu.active {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
 
-.error-page button:hover {
-    background-color: var(--primary-dark);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
-/* Add these to your existing dashboard styles */
-.error-message {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 400px;
-    padding: 2rem;
-}
+    .dropdown-item {
+        padding: var(--spacing-md);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: background-color var(--transition-speed) var(--transition-ease);
+    }
 
-.error-content {
-    text-align: center;
-    color: var(--danger-color);
-}
+    .dropdown-item:hover {
+        background-color: var(--border-light);
+    }
 
-.error-content i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-}
+    .dropdown-item i {
+        font-size: 1rem;
+        color: var(--text-secondary);
+    }
 
-.error-content p {
-    margin-bottom: 1rem;
-    color: var(--text-secondary);
-}
+    .dropdown-divider {
+        height: 1px;
+        background-color: var(--border-color);
+        margin: var(--spacing-xs) 0;
+    }
 
-.error-content button {
-    padding: 0.75rem 1.5rem;
-    background-color: var(--primary-color);
-    color: var(--text-white);
-    border: none;
-    border-radius: var(--border-radius-md);
-    cursor: pointer;
-    transition: var(--transition);
-}
+    /* Main Content Styles */
+    .main-content {
+        margin-left: var(--sidebar-width);
+        padding-top: var(--header-height);
+        min-height: 100vh;
+        transition: margin-left var(--transition-speed) var(--transition-ease);
+        background-color: var(--bg-primary);
+    }
 
-.error-content button:hover {
-    background-color: var(--primary-dark);
-}
-/* Utility Classes */
-.hidden {
-    display: none !important;
-}
+    .sidebar.collapsed ~ .main-content {
+        margin-left: var(--sidebar-collapsed-width);
+    }
 
-.invisible {
-    visibility: hidden !important;
-}
+    .content-wrapper {
+        padding: var(--spacing-xl);
+    }
 
-.no-scroll {
-    overflow: hidden !important;
-}
+    /* Dashboard Cards */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: var(--spacing-lg);
+        margin-bottom: var(--spacing-xl);
+    }
 
-/* Focus Styles */
-:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
-}
+    .card {
+        background-color: var(--bg-secondary);
+        border-radius: 0.5rem;
+        box-shadow: var(--shadow-sm);
+        padding: var(--spacing-lg);
+        transition: transform var(--transition-speed) var(--transition-ease),
+                    box-shadow var(--transition-speed) var(--transition-ease);
+    }
 
-/* Scrollbar Styles */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
 
-::-webkit-scrollbar-track {
-    background: var(--bg-main);
-}
+    .stat-card {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-lg);
+    }
 
-::-webkit-scrollbar-thumb {
-    background: var(--border-dark);
-    border-radius: 4px;
-}
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
 
-::-webkit-scrollbar-thumb:hover {
-    background: var(--text-secondary);
-}
-    </style>
-</head>
+    .stat-info {
+        flex: 1;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .stat-label {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+        .sidebar {
+            transform: translateX(-100%);
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .main-content {
+            margin-left: 0;
+        }
+
+        .header {
+            left: 0;
+        }
+
+        .sidebar.collapsed ~ .main-content {
+            margin-left: 0;
+        }
+
+        .sidebar.collapsed ~ .main-content .header {
+            left: 0;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .content-wrapper {
+            padding: var(--spacing-md);
+        }
+
+        .user-info {
+            display: none;
+        }
+    }
+
+    /* Loading Spinner */
+    .loading-spinner {
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+
 <body>
-    <div class="dashboard-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-logo">
-                <img src="logo.png" alt="WorkWise Pro">
-                <h1>WorkWise Pro</h1>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="#" class="logo-container">
+                <i class="fas fa-briefcase logo-icon"></i>
+                <span class="logo-text">WorkWise Pro</span>
+            </a>
+            <div class="toggle-sidebar" id="toggleSidebar">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+
+        <nav class="sidebar-menu">
+            <!-- Dashboard Section -->
+            <div class="menu-section">
+                <div class="menu-section-title">Main</div>
+                <a href="#dashboard" class="menu-item active" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span class="menu-text">Dashboard Overview</span>
+                </a>
             </div>
 
-            <!-- Sidebar Toggle Button -->
-            <button class="sidebar-toggle" id="sidebarToggle" title="Toggle Sidebar">
-                <span class="toggle-icon">
-                    <i class="fas fa-chevron-left"></i>
-                </span>
-            </button>
+            <!-- Organizations Section -->
+            <div class="menu-section">
+                <div class="menu-section-title">Organizations</div>
+                <a href="#companies" class="menu-item" data-page="companies">
+                    <i class="fas fa-building"></i>
+                    <span class="menu-text">Companies</span>
+                </a>
+                <a href="#departments" class="menu-item" data-page="departments">
+                    <i class="fas fa-sitemap"></i>
+                    <span class="menu-text">Departments</span>
+                </a>
+            </div>
 
-            <nav class="sidebar-menu">
-                <!-- Dashboard Section -->
-                <div class="menu-section">
-                    <a href="#dashboard" class="menu-item active" data-page="dashboard">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span>Dashboard Overview</span>
-                    </a>
-                </div>
+            <!-- System Section -->
+            <div class="menu-section">
+                <div class="menu-section-title">System</div>
+                <a href="#settings" class="menu-item" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span class="menu-text">System Settings</span>
+                </a>
+                <a href="#security" class="menu-item" data-page="security">
+                    <i class="fas fa-shield-alt"></i>
+                    <span class="menu-text">Security Settings</span>
+                </a>
+                <a href="#plans" class="menu-item" data-page="plans">
+                    <i class="fas fa-tags"></i>
+                    <span class="menu-text">Pricing & Plans</span>
+                </a>
+            </div>
 
-                <!-- Companies/Organizations Section -->
-                <div class="menu-section">
-                    <h3 class="menu-section-title">Companies/Organizations</h3>
-                    <div class="submenu">
-                        <a href="#companies/management" class="menu-item" data-page="companies-management">
-                            <i class="fas fa-building"></i>
-                            <span>Companies/Organizations</span>
-                        </a>
-                    </div>
-                </div>
+            <!-- Management Section -->
+            <div class="menu-section">
+                <div class="menu-section-title">Management</div>
+                <a href="#users" class="menu-item" data-page="users">
+                    <i class="fas fa-users"></i>
+                    <span class="menu-text">User Management</span>
+                </a>
+                <a href="#roles" class="menu-item" data-page="roles">
+                    <i class="fas fa-user-shield"></i>
+                    <span class="menu-text">Roles & Permissions</span>
+                </a>
+                <a href="#modules" class="menu-item" data-page="modules">
+                    <i class="fas fa-cube"></i>
+                    <span class="menu-text">Modules</span>
+                </a>
+            </div>
 
-                <!-- System Section -->
-                <div class="menu-section">
-                    <h3 class="menu-section-title">System</h3>
-                    <div class="submenu">
-                        <a href="#system/settings" class="menu-item" data-page="system-settings">
-                            <i class="fas fa-cog"></i>
-                            <span>System Settings</span>
-                        </a>
-                        <a href="#system/general" class="menu-item" data-page="general-settings">
-                            <i class="fas fa-sliders-h"></i>
-                            <span>General Settings</span>
-                        </a>
-                        <a href="#system/pricing" class="menu-item" data-page="pricing-plans">
-                            <i class="fas fa-tags"></i>
-                            <span>Pricing & Plans</span>
-                        </a>
-                        <a href="#system/security" class="menu-item" data-page="security-settings">
-                            <i class="fas fa-shield-alt"></i>
-                            <span>Security Settings</span>
-                        </a>
-                    </div>
-                </div>
+            <!-- Tools Section -->
+            <div class="menu-section">
+                <div class="menu-section-title">Tools</div>
+                <a href="#analytics" class="menu-item" data-page="analytics">
+                    <i class="fas fa-chart-line"></i>
+                    <span class="menu-text">Analytics & Reports</span>
+                </a>
+                <a href="#backup" class="menu-item" data-page="backup">
+                    <i class="fas fa-database"></i>
+                    <span class="menu-text">Backup & Restore</span>
+                </a>
+                <a href="#audit" class="menu-item" data-page="audit">
+                    <i class="fas fa-history"></i>
+                    <span class="menu-text">Audit Logs</span>
+                </a>
+                <a href="#api" class="menu-item" data-page="api">
+                    <i class="fas fa-code"></i>
+                    <span class="menu-text">API Management</span>
+                </a>
+            </div>
 
-                <!-- Management Section -->
-                <div class="menu-section">
-                    <h3 class="menu-section-title">Management</h3>
-                    <div class="submenu">
-                        <!-- Modules Management Subsection -->
-                        <div class="submenu-group">
-                            <a href="#modules" class="menu-item has-submenu" data-page="modules">
-                                <i class="fas fa-cube"></i>
-                                <span>Modules Management</span>
-                                <i class="fas fa-chevron-right submenu-arrow"></i>
-                            </a>
-                            <div class="nested-submenu">
-                                <a href="#modules/list" class="menu-item" data-page="modules-list">
-                                    <i class="fas fa-list"></i>
-                                    <span>Modules List</span>
-                                </a>
-                                <a href="#modules/settings" class="menu-item" data-page="module-settings">
-                                    <i class="fas fa-cogs"></i>
-                                    <span>Module Settings</span>
-                                </a>
-                            </div>
-                        </div>
+            <!-- Support Section -->
+            <div class="menu-section">
+                <div class="menu-section-title">Support</div>
+                <a href="#support" class="menu-item" data-page="support">
+                    <i class="fas fa-headset"></i>
+                    <span class="menu-text">Support Center</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
 
-                        <!-- User Management Subsection -->
-                        <div class="submenu-group">
-                            <a href="#users" class="menu-item has-submenu" data-page="users">
-                                <i class="fas fa-users"></i>
-                                <span>User Management</span>
-                                <i class="fas fa-chevron-right submenu-arrow"></i>
-                            </a>
-                            <div class="nested-submenu">
-                                <a href="#users/list" class="menu-item" data-page="users-list">
-                                    <i class="fas fa-user-friends"></i>
-                                    <span>Users List</span>
-                                </a>
-                                <!-- In your sidebar navigation -->
-<a href="#roles-permissions" class="menu-item" data-page="roles-permissions">
-    <i class="fas fa-user-lock"></i>
-    <span>Roles & Permissions</span>
-</a>
-                               
-</a>
-                                <a href="#users/organization" class="menu-item" data-page="org-chart">
-                                    <i class="fas fa-sitemap"></i>
-                                    <span>Organization Chart</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tools Section -->
-                <div class="menu-section">
-                    <h3 class="menu-section-title">Tools</h3>
-                    <div class="submenu">
-                        <a href="#tools/analytics" class="menu-item" data-page="analytics">
-                            <i class="fas fa-chart-line"></i>
-                            <span>Analytics & Reports</span>
-                        </a>
-                        <a href="#tools/backup" class="menu-item" data-page="backup">
-                            <i class="fas fa-database"></i>
-                            <span>Backup & Restore</span>
-                        </a>
-                        <a href="#tools/audit" class="menu-item" data-page="audit">
-                            <i class="fas fa-history"></i>
-                            <span>Audit Logs</span>
-                        </a>
-                        <a href="#tools/api" class="menu-item" data-page="api">
-                            <i class="fas fa-code"></i>
-                            <span>API Management</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Support Section -->
-                <div class="menu-section">
-                    <h3 class="menu-section-title">Support</h3>
-                    <div class="submenu">
-                        <a href="#support/center" class="menu-item" data-page="support">
-                            <i class="fas fa-headset"></i>
-                            <span>Support Center</span>
-                        </a>
-                    </div>
-                </div>
-            </nav>
-        </aside>
-
+    <!-- Main Content -->
+    <div class="main-content">
         <!-- Header -->
         <header class="header">
-            <div class="header-search">
-                <input type="text" class="search-input" placeholder="Search...">
+            <div class="header-left">
+                <h1 class="page-title">Dashboard Overview</h1>
             </div>
-
             <div class="header-right">
-                <div class="user-menu">
-                    <div class="user-avatar" id="userInitials"></div>
-                    <div class="user-details">
-                        <span class="user-name" id="userName"></span>
-                        <span class="user-role" id="userRole"></span>
+                <div class="user-profile" id="userProfile">
+                    <div class="user-avatar">
+                        <span id="userInitials">SA</span>
                     </div>
-                    <i class="fas fa-chevron-down"></i>
-
                     <div class="user-info">
-                        <div class="user-info-header">
-                            <div class="user-info-details">
-                                <strong id="userEmailDisplay"></strong>
-                                <span id="userRoleDisplay"></span>
-                            </div>
-                        </div>
-                        <div class="user-info-menu">
-                            <a href="#account" class="menu-item">
-                                <i class="fas fa-user"></i>
-                                <span>My Account</span>
-                            </a>
-                            <a href="#settings" class="menu-item">
-                                <i class="fas fa-cog"></i>
-                                <span>Settings</span>
-                            </a>
-                            <hr class="menu-divider">
-                            <a href="#" class="menu-item" id="signOutBtn">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>Sign Out</span>
-                            </a>
-                        </div>
+                        <span class="user-name" id="userName">Loading...</span>
+                        <span class="user-role" id="userRole">Loading...</span>
                     </div>
+                </div>
+                <!-- User Dropdown Menu -->
+                <div class="dropdown-menu" id="userDropdown">
+                    <a href="#profile" class="dropdown-item" data-page="profile">
+                        <i class="fas fa-user"></i>
+                        <span>My Profile</span>
+                    </a>
+                    <a href="#account" class="dropdown-item" data-page="account">
+                        <i class="fas fa-user-cog"></i>
+                        <span>Account Settings</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item" id="signOutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Sign Out</span>
+                    </a>
                 </div>
             </div>
         </header>
 
-        <!-- Main Content -->
-        <main class="main-content" id="mainContent">
-            <!-- Content will be dynamically loaded here -->
-        </main>
-
-        <!-- Loading Indicator -->
-        <div class="loading-indicator" style="display: none;">
-            <div class="spinner"></div>
+        <!-- Content Wrapper -->
+        <div class="content-wrapper">
+            <!-- Dynamic Content Container -->
+            <div id="dashboardContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
         </div>
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-    // Initialize components
-    initializeSidebar();
-    initializeUserMenu();
-    checkAuthentication();
-    startSessionTimer();
-});
+       // Configuration
+const CONFIG = {
+    API_BASE_URL: 'https://18.215.160.136.nip.io/api',
+    TOKEN_REFRESH_INTERVAL: 1800000, // 30 minutes
+    SESSION_TIMEOUT: 1800000, // 30 minutes
+    ANIMATION_DURATION: 300,
+};
 
-// Sidebar functionality
-function initializeSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    const mainContent = document.querySelector('.main-content');
-    const toggleButton = document.getElementById('sidebarToggle');
-
-    // Load saved state
-    const sidebarState = localStorage.getItem('sidebarState') || 'expanded';
-    if (sidebarState === 'collapsed') {
-        sidebar.classList.add('collapsed');
-        mainContent.classList.add('expanded');
-    }
-
-    // Toggle button click handler
-    toggleButton.addEventListener('click', () => {
-        sidebar.classList.toggle('collapsed');
-        mainContent.classList.toggle('expanded');
-        
-        // Save state
-        localStorage.setItem('sidebarState', 
-            sidebar.classList.contains('collapsed') ? 'collapsed' : 'expanded'
-        );
-    });
-
-    // Handle submenu toggles
-    document.querySelectorAll('.menu-item.has-submenu').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            item.classList.toggle('active');
-            
-            const submenu = item.nextElementSibling;
-            if (submenu) {
-                submenu.classList.toggle('active');
-            }
-        });
-    });
-}
-
-// User authentication and session management
-function checkAuthentication() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        window.location.href = '/login.html';
-        return;
-    }
-
-    // Verify token with backend
-    fetch('https://18.215.160.136.nip.io/api/verify-token', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+// Utility Functions
+const utils = {
+    async fetchWithAuth(endpoint, options = {}) {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('No authentication token found');
         }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (!data.success || data.user.role !== 'superadmin') {
-            signOut();
-        } else {
-            updateUserInfo(data.user);
-        }
-    })
-    .catch(() => signOut());
-}
 
-// Session timer
-function startSessionTimer() {
-    // Check session every minute
-    setInterval(() => {
-        const lastActivity = localStorage.getItem('lastActivity');
-        const now = Date.now();
-        
-        // Session timeout after 30 minutes
-        if (now - lastActivity > 30 * 60 * 1000) {
-            signOut();
-        }
-    }, 60000);
+        const defaultOptions = {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        };
 
-    // Update last activity on user interaction
-    ['click', 'keypress', 'scroll', 'mousemove'].forEach(event => {
-        document.addEventListener(event, () => {
-            localStorage.setItem('lastActivity', Date.now());
-        });
-    });
-}
-
-// User menu functionality
-function initializeUserMenu() {
-    const userMenu = document.querySelector('.user-menu');
-    const userInfo = document.querySelector('.user-info');
-
-    // Toggle user menu on click
-    userMenu.addEventListener('click', () => {
-        userInfo.classList.toggle('show');
-    });
-
-    // Close menu when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!userMenu.contains(e.target)) {
-            userInfo.classList.remove('show');
-        }
-    });
-
-    // Sign out button handler
-    document.getElementById('signOutBtn').addEventListener('click', signOut);
-}
-
-// Update user information in the UI
-function updateUserInfo(user) {
-    document.getElementById('userName').textContent = user.name || user.email.split('@')[0];
-    document.getElementById('userRole').textContent = user.role;
-    document.getElementById('userEmailDisplay').textContent = user.email;
-    
-    // Set user initials in avatar
-    const initials = user.name 
-        ? user.name.split(' ').map(n => n[0]).join('').toUpperCase()
-        : user.email[0].toUpperCase();
-    document.getElementById('userInitials').textContent = initials;
-}
-        // Add this to your existing dashboard JavaScript (where page loading is handled)
-
-const PageLoader = {
-    // Configuration
-    config: {
-        contentContainer: '#mainContent',
-        pagesPath: '/dashboard/',
-        currentPage: null
-    },
-
-    // Load roles and permissions page
-    async loadRolesPermissionsPage() {
         try {
-            // Show loading state
-            this.showLoadingIndicator();
+            const response = await fetch(
+                `${CONFIG.API_BASE_URL}${endpoint}`,
+                { ...defaultOptions, ...options }
+            );
 
-            // Fetch the roles-permission.html content
-            const response = await fetch(`${this.config.pagesPath}roles-permissions.html`);
-            if (!response.ok) throw new Error('Failed to load page content');
-            
-            const content = await response.text();
-
-            // Update the main content area
-            const mainContent = document.querySelector(this.config.contentContainer);
-            if (!mainContent) throw new Error('Content container not found');
-
-            // Clear existing content and load new content
-            mainContent.innerHTML = content;
-
-            // Initialize the roles manager after content is loaded
-            if (typeof RolesManager !== 'undefined') {
-                await RolesManager.init();
-            }
-
-            // Update active menu item
-            this.updateActiveMenuItem('roles-permissions');
-
-            // Update page title and URL
-            document.title = 'Roles & Permissions - WorkWise Pro';
-            window.history.pushState({ page: 'roles-permissions' }, '', '#roles-permissions');
-
-            // Hide loading indicator
-            this.hideLoadingIndicator();
-
-        } catch (error) {
-            console.error('Error loading roles and permissions page:', error);
-            this.showErrorMessage('Failed to load roles and permissions page');
-        }
-    },
-
-    // Show loading indicator
-    showLoadingIndicator() {
-        const loader = document.createElement('div');
-        loader.className = 'loading-indicator';
-        loader.innerHTML = '<div class="spinner"></div>';
-        document.body.appendChild(loader);
-    },
-
-    // Hide loading indicator
-    hideLoadingIndicator() {
-        const loader = document.querySelector('.loading-indicator');
-        if (loader) {
-            loader.remove();
-        }
-    },
-
-    // Update active menu item in sidebar
-    updateActiveMenuItem(pageId) {
-        // Remove active class from all menu items
-        document.querySelectorAll('.menu-item').forEach(item => {
-            item.classList.remove('active');
-        });
-
-        // Add active class to current menu item
-        const activeItem = document.querySelector(`[data-page="${pageId}"]`);
-        if (activeItem) {
-            activeItem.classList.add('active');
-            
-            // If item is in a submenu, expand the parent
-            const parentSubmenu = activeItem.closest('.submenu-group');
-            if (parentSubmenu) {
-                const parentItem = parentSubmenu.previousElementSibling;
-                if (parentItem && parentItem.classList.contains('has-submenu')) {
-                    parentItem.classList.add('active');
-                    parentSubmenu.classList.add('active');
+            if (!response.ok) {
+                if (response.status === 401) {
+                    auth.signOut();
+                    return;
                 }
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+
+            return await response.json();
+        } catch (error) {
+            console.error('API request failed:', error);
+            throw error;
         }
     },
 
-    // Show error message
-    showErrorMessage(message) {
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'error-message';
-        errorDiv.innerHTML = `
-            <div class="error-content">
-                <i class="fas fa-exclamation-circle"></i>
-                <p>${message}</p>
-                <button onclick="PageLoader.loadRolesPermissionsPage()">Try Again</button>
-            </div>
+    getInitials(name) {
+        const nameParts = name.split('@')[0].split(/[._-]/);
+        return nameParts.length > 1 
+            ? (nameParts[0][0] + nameParts[1][0]).toUpperCase()
+            : nameParts[0].slice(0, 2).toUpperCase();
+    },
+
+    showNotification(message, type = 'success') {
+        // Remove existing notifications
+        const existingNotifications = document.querySelectorAll('.notification');
+        existingNotifications.forEach(n => n.remove());
+
+        // Create new notification
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            <span>${message}</span>
         `;
         
-        const mainContent = document.querySelector(this.config.contentContainer);
-        if (mainContent) {
-            mainContent.innerHTML = '';
-            mainContent.appendChild(errorDiv);
-        }
+        document.body.appendChild(notification);
+        
+        // Show and hide notification with animation
+        setTimeout(() => {
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), CONFIG.ANIMATION_DURATION);
+            }, 3000);
+        }, 100);
     }
 };
 
-// Add this to your sidebar menu item click handler
-document.querySelector('[data-page="roles-permissions"]').addEventListener('click', (e) => {
-    e.preventDefault();
-    PageLoader.loadRolesPermissionsPage();
-});
+// Authentication and Session Management
+const auth = {
+    token: null,
+    user: null,
+    sessionTimer: null,
 
-// Handle browser back/forward buttons
-window.addEventListener('popstate', (event) => {
-    if (event.state && event.state.page === 'roles-permissions') {
-        PageLoader.loadRolesPermissionsPage();
+    async initialize() {
+        try {
+            this.token = this.getTokenFromUrl() || localStorage.getItem('token');
+            if (!this.token) {
+                this.redirectToLogin();
+                return;
+            }
+
+            const userData = await this.verifyToken();
+            if (!userData.success) {
+                this.redirectToLogin();
+                return;
+            }
+
+            if (userData.user.role.toLowerCase() !== 'superadmin') {
+                this.redirectToLogin();
+                return;
+            }
+
+            this.user = userData.user;
+            this.initializeUI();
+            this.startSessionTimer();
+
+        } catch (error) {
+            console.error('Authentication initialization failed:', error);
+            this.redirectToLogin();
+        }
+    },
+
+    getTokenFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        if (token) {
+            localStorage.setItem('token', token);
+            // Clean URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        return token;
+    },
+
+    async verifyToken() {
+        try {
+            return await utils.fetchWithAuth('/verify-token');
+        } catch (error) {
+            console.error('Token verification failed:', error);
+            throw error;
+        }
+    },
+
+    initializeUI() {
+        // Set user information
+        const userInitials = utils.getInitials(this.user.email);
+        document.getElementById('userInitials').textContent = userInitials;
+        document.getElementById('userName').textContent = this.user.name || this.user.email;
+        document.getElementById('userRole').textContent = this.user.role;
+
+        // Setup user dropdown
+        const userProfile = document.getElementById('userProfile');
+        const userDropdown = document.getElementById('userDropdown');
+        
+        userProfile.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('active');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', () => {
+            userDropdown.classList.remove('active');
+        });
+
+        // Setup sign out button
+        document.getElementById('signOutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            this.signOut();
+        });
+
+        // Setup sidebar toggle
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('toggleSidebar');
+        
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        });
+
+        // Restore sidebar state
+        if (localStorage.getItem('sidebarCollapsed') === 'true') {
+            sidebar.classList.add('collapsed');
+        }
+
+        // Setup session monitoring
+        ['click', 'mousemove', 'keypress'].forEach(event => {
+            document.addEventListener(event, () => this.resetSessionTimer());
+        });
+    },
+
+    startSessionTimer() {
+        if (this.sessionTimer) {
+            clearTimeout(this.sessionTimer);
+        }
+        this.sessionTimer = setTimeout(() => {
+            this.signOut();
+        }, CONFIG.SESSION_TIMEOUT);
+    },
+
+    resetSessionTimer() {
+        this.startSessionTimer();
+    },
+
+    signOut() {
+        localStorage.clear();
+        sessionStorage.clear();
+        this.redirectToLogin();
+    },
+
+    redirectToLogin() {
+        window.location.href = '/login.html';
     }
-});
+};
 
-// Sign out functionality
-function signOut() {
-    // Clear local storage
-    localStorage.clear();
-    
-    // Redirect to login page
-    window.location.href = '/login.html';
-}
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    auth.initialize();
+});
     </script>
 </body>
 </html>
