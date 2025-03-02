@@ -309,6 +309,160 @@
         height: 400px;
         margin-bottom: 32px;
     }
+       /* Add these styles to your existing CSS */
+.sidebar-container {
+    background: linear-gradient(180deg, #1a237e 0%, #0d1642 100%);
+    position: fixed;
+    height: 100vh;
+    transition: all 0.3s ease;
+    overflow-x: hidden;
+    overflow-y: auto;
+    z-index: 1200;
+}
+
+.sidebar-header {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: white;
+}
+
+.sidebar-logo img {
+    width: 32px;
+    height: 32px;
+}
+
+.sidebar-toggle {
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.sidebar-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.sidebar-menu {
+    padding: 16px 12px;
+}
+
+.menu-section {
+    margin-bottom: 16px;
+}
+
+.menu-section-title {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 0 12px;
+    margin-bottom: 8px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    position: relative;
+}
+
+.menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.menu-item.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.menu-item i {
+    width: 20px;
+    text-align: center;
+    font-size: 1.1rem;
+    margin-right: 12px;
+}
+
+.menu-item .menu-text {
+    flex-grow: 1;
+    font-weight: 500;
+}
+
+.menu-item .menu-arrow {
+    font-size: 0.8rem;
+    transition: transform 0.3s ease;
+}
+
+.menu-item.expanded .menu-arrow {
+    transform: rotate(180deg);
+}
+
+.submenu {
+    margin: 4px 0;
+    padding-left: 48px;
+    position: relative;
+}
+
+.submenu::before {
+    content: '';
+    position: absolute;
+    left: 22px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.submenu-item {
+    padding: 10px 16px;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.submenu-item::before {
+    content: '';
+    position: absolute;
+    left: -26px;
+    top: 50%;
+    width: 12px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.submenu-item:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.submenu-item.active {
+    color: white;
+    background: rgba(255, 255, 255, 0.05);
+}
+       
 
     /* Responsive Design */
     @media (max-width: 768px) {
@@ -810,208 +964,197 @@ const handleUpdatePermissions = async (roleId, permissions) => {
     };
             // Sidebar Component
     const Sidebar = ({ isCollapsed, setIsCollapsed, onMenuClick }) => {
-        const [menuItems, setMenuItems] = useState({
-            dashboard: true,
-            companies: false,
-            'system-settings': false,
-            modules: false,
-            users: false,
-            tools: false,
-            support: false
-        });
+    const [menuItems, setMenuItems] = useState({
+        dashboard: false,
+        companies: false,
+        'system-settings': false,
+        modules: false,
+        users: false,
+        tools: false,
+        support: false
+    });
 
-        const menuStructure = [
-            {
-                id: 'dashboard',
-                title: 'Dashboard Overview',
-                icon: 'tachometer-alt',
-                path: 'dashboard'
-            },
-            {
-                id: 'companies',
-                title: 'Companies/Organizations',
-                icon: 'building',
-                submenu: [
-                    { title: 'Management', path: 'companies-management' },
-                    { title: 'Companies/Organizations', path: 'companies-list' }
-                ]
-            },
-            {
-                id: 'system-settings',
-                title: 'System Settings',
-                icon: 'cogs',
-                submenu: [
-                    { title: 'General Settings', path: 'settings-general' },
-                    { title: 'Pricing & Plans', path: 'settings-pricing' },
-                    { title: 'Security Settings', path: 'settings-security' }
-                ]
-            },
-            {
-                id: 'modules',
-                title: 'Modules Management',
-                icon: 'puzzle-piece',
-                submenu: [
-                    { title: 'Modules List', path: 'modules-list' },
-                    { title: 'Module Settings', path: 'modules-settings' }
-                ]
-            },
-            {
-                id: 'users',
-                title: 'User Management',
-                icon: 'users',
-                submenu: [
-                    { title: 'Users List', path: 'users-list' },
-                    { title: 'Roles & Permissions', path: 'roles' },
-                    { title: 'Organization Chart', path: 'org-chart' }
-                ]
-            },
-            {
-                id: 'tools',
-                title: 'Tools',
-                icon: 'tools',
-                submenu: [
-                    { title: 'Analytics & Reports', path: 'tools-analytics' },
-                    { title: 'Backup & Restore', path: 'tools-backup' },
-                    { title: 'Audit Logs', path: 'tools-audit' },
-                    { title: 'API Management', path: 'tools-api' }
-                ]
-            },
-            {
-                id: 'support',
-                title: 'Support',
-                icon: 'headset',
-                submenu: [
-                    { title: 'Support Center', path: 'support-center' }
-                ]
-            }
-        ];
+    const menuSections = [
+        {
+            title: "Main",
+            items: [
+                {
+                    id: 'dashboard',
+                    title: 'Dashboard Overview',
+                    icon: 'tachometer-alt',
+                    path: 'dashboard'
+                }
+            ]
+        },
+        {
+            title: "Organization",
+            items: [
+                {
+                    id: 'companies',
+                    title: 'Companies/Organizations',
+                    icon: 'building',
+                    submenu: [
+                        { title: 'Management', path: 'companies-management' },
+                        { title: 'Companies List', path: 'companies-list' }
+                    ]
+                }
+            ]
+        },
+        {
+            title: "Administration",
+            items: [
+                {
+                    id: 'system-settings',
+                    title: 'System Settings',
+                    icon: 'cogs',
+                    submenu: [
+                        { title: 'General Settings', path: 'settings-general' },
+                        { title: 'Pricing & Plans', path: 'settings-pricing' },
+                        { title: 'Security Settings', path: 'settings-security' }
+                    ]
+                },
+                {
+                    id: 'modules',
+                    title: 'Modules Management',
+                    icon: 'puzzle-piece',
+                    submenu: [
+                        { title: 'Modules List', path: 'modules-list' },
+                        { title: 'Module Settings', path: 'modules-settings' }
+                    ]
+                },
+                {
+                    id: 'users',
+                    title: 'User Management',
+                    icon: 'users',
+                    submenu: [
+                        { title: 'Users List', path: 'users-list' },
+                        { title: 'Roles & Permissions', path: 'roles' },
+                        { title: 'Organization Chart', path: 'org-chart' }
+                    ]
+                }
+            ]
+        },
+        {
+            title: "Tools & Support",
+            items: [
+                {
+                    id: 'tools',
+                    title: 'Tools',
+                    icon: 'tools',
+                    submenu: [
+                        { title: 'Analytics & Reports', path: 'tools-analytics' },
+                        { title: 'Backup & Restore', path: 'tools-backup' },
+                        { title: 'Audit Logs', path: 'tools-audit' },
+                        { title: 'API Management', path: 'tools-api' }
+                    ]
+                },
+                {
+                    id: 'support',
+                    title: 'Support',
+                    icon: 'headset',
+                    submenu: [
+                        { title: 'Support Center', path: 'support-center' }
+                    ]
+                }
+            ]
+        }
+    ];
 
         const handleMenuClick = (item, path = null) => {
-            if (!isCollapsed) {
-                setMenuItems(prev => ({
-                    ...prev,
-                    [item]: !prev[item]
-                }));
+        if (!isCollapsed) {
+            setMenuItems(prev => ({
+                ...prev,
+                [item]: !prev[item]
+            }));
 
-                if (path) {
-                    onMenuClick(path);
-                }
+            if (path) {
+                onMenuClick(path);
             }
-        };
+        }
+    };
 
         const handleSubMenuClick = (path) => {
             onMenuClick(path);
         };
 
-        const drawerWidth = isCollapsed ? 65 : 240;
+        const drawerWidth = isCollapsed ? 65 : 260;
 
-        return (
-            <Drawer
-                variant="permanent"
-                sx={{
+       return (
+        <Drawer
+            variant="permanent"
+            sx={{
+                width: drawerWidth,
+                flexShrink: 0,
+                '& .MuiDrawer-paper': {
                     width: drawerWidth,
-                    flexShrink: 0,
-                    '& .MuiDrawer-paper': {
-                        width: drawerWidth,
-                        boxSizing: 'border-box',
-                        backgroundColor: '#1a237e',
-                        color: 'white',
-                        transition: 'width 0.3s ease'
-                    }
-                }}
-            >
-                <Box sx={{ 
-                    p: 2, 
-                    textAlign: 'center', 
-                    borderBottom: '1px solid rgba(255,255,255,0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: isCollapsed ? 'center' : 'space-between'
-                }}>
-                    {!isCollapsed && <Typography variant="h6">WorkWise Pro</Typography>}
-                    <IconButton 
+                    boxSizing: 'border-box',
+                    overflow: 'hidden',
+                    transition: 'width 0.3s ease'
+                }
+            }}
+        >
+            <div className="sidebar-container">
+                <div className="sidebar-header">
+                    {!isCollapsed && (
+                        <div className="sidebar-logo">
+                            <i className="fas fa-cube"></i>
+                            <Typography variant="h6">WorkWise Pro</Typography>
+                        </div>
+                    )}
+                    <div 
+                        className="sidebar-toggle"
                         onClick={() => setIsCollapsed(!isCollapsed)}
-                        sx={{ 
-                            color: 'white',
-                            padding: '4px',
-                            '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
-                        }}
                     >
                         <i className={`fas fa-chevron-${isCollapsed ? 'right' : 'left'}`} />
-                    </IconButton>
-                </Box>
-                <List sx={{ pt: 0 }}>
-                    {menuStructure.map((item) => (
-                        <React.Fragment key={item.id}>
-                            <ListItem 
-                                button 
-                                onClick={() => handleMenuClick(item.id, item.path)}
-                                sx={{
-                                    py: 1.5,
-                                    minHeight: 48,
-                                    px: 2.5,
-                                    '&:hover': {
-                                        backgroundColor: 'rgba(255,255,255,0.1)'
-                                    }
-                                }}
-                            >
-                                <ListItemIcon 
-                                    sx={{ 
-                                        minWidth: isCollapsed ? 'auto' : 40, 
-                                        color: 'white',
-                                        justifyContent: 'center'
-                                    }}
-                                >
-                                    <i className={`fas fa-${item.icon}`} />
-                                </ListItemIcon>
-                                {!isCollapsed && (
-                                    <>
-                                        <ListItemText primary={item.title} />
-                                        {item.submenu && (
-                                            <i 
-                                                className={`fas fa-chevron-${menuItems[item.id] ? 'down' : 'right'}`}
-                                                style={{ fontSize: '12px' }}
-                                            />
-                                        )}
-                                    </>
-                                )}
-                            </ListItem>
-                            {!isCollapsed && item.submenu && (
-                                <Collapse in={menuItems[item.id]} timeout="auto" unmountOnExit>
-                                    <List component="div" disablePadding>
-                                        {item.submenu.map((subItem, index) => (
-                                            <ListItem 
-                                                button 
-                                                key={index}
-                                                onClick={() => handleSubMenuClick(subItem.path)}
-                                                sx={{
-                                                    pl: 4,
-                                                    py: 1,
-                                                    backgroundColor: 'rgba(0,0,0,0.1)',
-                                                    '&:hover': {
-                                                        backgroundColor: 'rgba(255,255,255,0.1)'
-                                                    }
-                                                }}
-                                            >
-                                                <ListItemText 
-                                                    primary={subItem.title} 
-                                                    sx={{ 
-                                                        '& .MuiTypography-root': { 
-                                                            fontSize: '0.9rem' 
-                                                        } 
-                                                    }}
-                                                />
-                                            </ListItem>
-                                        ))}
-                                    </List>
-                                </Collapse>
+                    </div>
+                </div>
+
+                <div className="sidebar-menu">
+                    {menuSections.map((section, index) => (
+                        <div key={index} className="menu-section">
+                            {!isCollapsed && (
+                                <div className="menu-section-title">
+                                    {section.title}
+                                </div>
                             )}
-                        </React.Fragment>
+                            {section.items.map((item) => (
+                                <div key={item.id}>
+                                    <div 
+                                        className={`menu-item ${menuItems[item.id] ? 'expanded' : ''}`}
+                                        onClick={() => handleMenuClick(item.id, item.path)}
+                                    >
+                                        <i className={`fas fa-${item.icon}`} />
+                                        {!isCollapsed && (
+                                            <>
+                                                <span className="menu-text">{item.title}</span>
+                                                {item.submenu && (
+                                                    <i className="fas fa-chevron-down menu-arrow" />
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+                                    {!isCollapsed && item.submenu && menuItems[item.id] && (
+                                        <div className="submenu">
+                                            {item.submenu.map((subItem, subIndex) => (
+                                                <div
+                                                    key={subIndex}
+                                                    className="submenu-item"
+                                                    onClick={() => onMenuClick(subItem.path)}
+                                                >
+                                                    {subItem.title}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
                     ))}
-                </List>
-            </Drawer>
-        );
-    };
+                </div>
+            </div>
+        </Drawer>
+    );
+};
             // Header Component
     const Header = () => {
         const [anchorEl, setAnchorEl] = useState(null);
