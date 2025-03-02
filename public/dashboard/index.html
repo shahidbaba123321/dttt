@@ -79,6 +79,18 @@
     }
 
     /* Roles Grid */
+       .roles-header {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+       
     .roles-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -110,6 +122,19 @@
     .role-card.superadmin .MuiTypography-root {
         color: white;
     }
+      .role-card .role-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+       .role-card .role-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+       
+ 
 
     .role-card::before {
         content: '';
@@ -130,8 +155,63 @@
     .role-card.superadmin::before {
         display: none;
     }
+       .role-card.superadmin .role-title {
+    color: white;
+}
+
+.role-card .role-description {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.role-card.superadmin .role-description {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.role-card .role-stats {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.role-card.superadmin .role-stats {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.role-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.role-stat-item i {
+    color: #4F46E5;
+    font-size: 1.1rem;
+}
+
+.role-card.superadmin .role-stat-item i {
+    color: white;
+}
 
     /* Permission Groups */
+       .permission-dialog {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.permission-dialog-title {
+    background: #f8fafc;
+    padding: 24px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.permission-groups-container {
+    padding: 24px;
+}
     .permission-group {
         background: #f8fafc;
         border-radius: 12px;
@@ -139,6 +219,20 @@
         margin-bottom: 24px;
         border: 1px solid #e2e8f0;
     }
+       .permission-group {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+.permission-group-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 16px;
+}
 
     .permission-item {
         background: white;
@@ -155,6 +249,43 @@
         background: #f8fafc;
         transform: translateX(5px);
     }
+       .create-role-button {
+    background: linear-gradient(145deg, #4F46E5, #4338CA) !important;
+    color: white !important;
+    padding: 10px 24px !important;
+    border-radius: 8px !important;
+    text-transform: none !important;
+    font-weight: 500 !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2) !important;
+    transition: all 0.3s ease !important;
+}
+
+.create-role-button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3) !important;
+}
+
+.edit-role-button {
+    color: #4F46E5 !important;
+    background: rgba(79, 70, 229, 0.1) !important;
+    border-radius: 8px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    transition: all 0.3s ease !important;
+}
+
+.edit-role-button:hover {
+    background: rgba(79, 70, 229, 0.2) !important;
+}
+
+.role-card.superadmin .edit-role-button {
+    color: white !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.role-card.superadmin .edit-role-button:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
 
     /* Audit Logs */
     .audit-log-item {
@@ -788,180 +919,199 @@ const handleUpdatePermissions = async (roleId, permissions) => {
             setNotification({ open: true, message, type });
         };
                 // Continue RoleManagement Component's render method
-        return (
-            <Box sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                    <Typography variant="h5">Roles & Permissions</Typography>
+       return (
+        <Box sx={{ p: 3 }}>
+            <div className="roles-header">
+                <div>
+                    <Typography variant="h5" sx={{ fontWeight: 600, color: '#1e293b' }}>
+                        Roles & Permissions
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#64748b', mt: 1 }}>
+                        Manage user roles and their associated permissions
+                    </Typography>
+                </div>
+                <Button
+                    className="create-role-button"
+                    startIcon={<i className="fas fa-plus"></i>}
+                    onClick={() => setOpenDialog(true)}
+                    disabled={submitting}
+                >
+                    Create New Role
+                </Button>
+            </div>
+
+            {loading ? (
+                <LoadingSpinner />
+            ) : (
+                <div className="roles-grid">
+                    {roles.map(role => (
+                        <div 
+                            key={role._id} 
+                            className={`role-card ${role.name === 'Superadmin' ? 'superadmin' : ''}`}
+                        >
+                            <div className="role-header">
+                                <div className="role-title">{role.name}</div>
+                                {role.name !== 'Superadmin' && (
+                                    <IconButton 
+                                        className="edit-role-button"
+                                        onClick={() => setSelectedRole(role)}
+                                        disabled={submitting}
+                                    >
+                                        <i className="fas fa-edit"></i>
+                                    </IconButton>
+                                )}
+                            </div>
+                            <div className="role-description">
+                                {role.description}
+                            </div>
+                            <div className="role-stats">
+                                <div className="role-stat-item">
+                                    <i className="fas fa-shield-alt"></i>
+                                    <span>{role.permissions?.length || 0} Permissions</span>
+                                </div>
+                                <div className="role-stat-item">
+                                    <i className="fas fa-users"></i>
+                                    <span>{role.userCount || 0} Users</span>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Create Role Dialog */}
+            <MuiDialog 
+                open={openDialog} 
+                onClose={() => !submitting && setOpenDialog(false)}
+                maxWidth="sm"
+                fullWidth
+                classes={{ paper: 'permission-dialog' }}
+            >
+                <MuiDialogTitle className="permission-dialog-title">
+                    Create New Role
+                </MuiDialogTitle>
+                <MuiDialogContent>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Role Name"
+                        fullWidth
+                        value={newRole.name}
+                        onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
+                        disabled={submitting}
+                        sx={{ mb: 2 }}
+                    />
+                    <TextField
+                        margin="dense"
+                        label="Description"
+                        fullWidth
+                        multiline
+                        rows={3}
+                        value={newRole.description}
+                        onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
+                        disabled={submitting}
+                    />
+                </MuiDialogContent>
+                <MuiDialogActions sx={{ padding: '16px 24px', background: '#f8fafc' }}>
                     <Button 
-                        variant="contained" 
-                        startIcon={<i className="fas fa-plus"></i>}
-                        onClick={() => setOpenDialog(true)}
+                        onClick={() => setOpenDialog(false)} 
+                        disabled={submitting}
+                        sx={{ color: '#64748b' }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        className="create-role-button"
+                        onClick={handleCreateRole}
+                        disabled={submitting || !newRole.name.trim()}
+                    >
+                        {submitting ? <CircularProgress size={24} /> : 'Create Role'}
+                    </Button>
+                </MuiDialogActions>
+            </MuiDialog>
+
+            {/* Edit Permissions Dialog */}
+            <MuiDialog 
+                open={Boolean(selectedRole)} 
+                onClose={() => !submitting && setSelectedRole(null)}
+                maxWidth="md"
+                fullWidth
+                classes={{ paper: 'permission-dialog' }}
+            >
+                <MuiDialogTitle className="permission-dialog-title">
+                    Edit Permissions - {selectedRole?.name}
+                </MuiDialogTitle>
+                <MuiDialogContent className="permission-groups-container">
+                    {Object.entries(permissionGroups).map(([key, group]) => (
+                        <div key={key} className="permission-group">
+                            <div className="permission-group-title">
+                                {group.name}
+                            </div>
+                            {group.permissions.map(permission => (
+                                <div key={permission} className="permission-item">
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                checked={selectedRole?.permissions?.includes(permission)}
+                                                onChange={(e) => {
+                                                    const newPermissions = e.target.checked
+                                                        ? [...(selectedRole.permissions || []), permission]
+                                                        : selectedRole.permissions.filter(p => p !== permission);
+                                                    setSelectedRole({
+                                                        ...selectedRole,
+                                                        permissions: newPermissions
+                                                    });
+                                                }}
+                                                disabled={submitting}
+                                            />
+                                        }
+                                        label={permission.replace(/_/g, ' ').toUpperCase()}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    ))}
+                </MuiDialogContent>
+                <MuiDialogActions sx={{ padding: '16px 24px', background: '#f8fafc' }}>
+                    <Button 
+                        onClick={() => setSelectedRole(null)}
+                        disabled={submitting}
+                        sx={{ color: '#64748b' }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        className="create-role-button"
+                        onClick={() => {
+                            handleUpdatePermissions(selectedRole._id, selectedRole.permissions);
+                        }}
                         disabled={submitting}
                     >
-                        Create New Role
+                        {submitting ? <CircularProgress size={24} /> : 'Save Changes'}
                     </Button>
-                </Box>
+                </MuiDialogActions>
+            </MuiDialog>
 
-                {loading ? (
-                    <LoadingSpinner />
-                ) : (
-                    <div className="roles-grid">
-                        {roles.map(role => (
-                            <Paper 
-                                key={role._id} 
-                                className={`role-card ${role.name === 'Superadmin' ? 'superadmin' : ''}`}
-                            >
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                                    <Typography variant="h6">{role.name}</Typography>
-                                    {role.name !== 'Superadmin' && (
-                                        <IconButton 
-                                            size="small"
-                                            onClick={() => setSelectedRole(role)}
-                                            disabled={submitting}
-                                        >
-                                            <i className="fas fa-edit"></i>
-                                        </IconButton>
-                                    )}
-                                </Box>
-                                <Typography variant="body2" color="textSecondary" gutterBottom>
-                                    {role.description}
-                                </Typography>
-                                <Divider sx={{ my: 2 }} />
-                                <Typography variant="subtitle2" gutterBottom>
-                                    Permissions: {role.permissions?.length || 0}
-                                </Typography>
-                            </Paper>
-                        ))}
-                    </div>
-                )}
-
-                {/* Create Role Dialog */}
-                <MuiDialog 
-                    open={openDialog} 
-                    onClose={() => !submitting && setOpenDialog(false)}
-                    maxWidth="sm"
-                    fullWidth
-                >
-                    <MuiDialogTitle>Create New Role</MuiDialogTitle>
-                    <MuiDialogContent>
-                        <TextField
-                            autoFocus
-                            margin="dense"
-                            label="Role Name"
-                            fullWidth
-                            value={newRole.name}
-                            onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
-                            disabled={submitting}
-                            error={!newRole.name.trim() && newRole.name !== ''}
-                            helperText={!newRole.name.trim() && newRole.name !== '' ? 'Role name is required' : ''}
-                        />
-                        <TextField
-                            margin="dense"
-                            label="Description"
-                            fullWidth
-                            multiline
-                            rows={3}
-                            value={newRole.description}
-                            onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
-                            disabled={submitting}
-                        />
-                    </MuiDialogContent>
-                    <MuiDialogActions>
-                        <Button 
-                            onClick={() => setOpenDialog(false)} 
-                            disabled={submitting}
-                        >
-                            Cancel
-                        </Button>
-                        <Button 
-                            onClick={handleCreateRole} 
-                            variant="contained"
-                            disabled={submitting || !newRole.name.trim()}
-                        >
-                            {submitting ? <CircularProgress size={24} /> : 'Create'}
-                        </Button>
-                    </MuiDialogActions>
-                </MuiDialog>
-
-                {/* Edit Permissions Dialog */}
-                <MuiDialog 
-                    open={Boolean(selectedRole)} 
-                    onClose={() => !submitting && setSelectedRole(null)}
-                    maxWidth="md"
-                    fullWidth
-                >
-                    <MuiDialogTitle>
-                        Edit Permissions - {selectedRole?.name}
-                    </MuiDialogTitle>
-                    <MuiDialogContent>
-                        {Object.entries(permissionGroups).map(([key, group]) => (
-                            <div key={key} className="permission-group">
-                                <Typography variant="subtitle1" gutterBottom>
-                                    {group.name}
-                                </Typography>
-                                {group.permissions.map(permission => (
-                                    <div key={permission} className="permission-item">
-                                        
-<FormControlLabel
-    control={
-        <Checkbox
-            checked={selectedRole?.permissions?.includes(permission)}
-            onChange={(e) => {
-                const newPermissions = e.target.checked
-                    ? [...(selectedRole.permissions || []), permission]
-                    : selectedRole.permissions.filter(p => p !== permission);
-                // Maintain all role data while updating permissions
-                setSelectedRole(prevRole => ({
-                    ...prevRole,
-                    permissions: newPermissions
-                }));
-            }}
-            disabled={submitting}
-        />
-    }
-    label={permission.replace(/_/g, ' ').toUpperCase()}
-/>
-                                    </div>
-                                ))}
-                            </div>
-                        ))}
-                    </MuiDialogContent>
-                    <MuiDialogActions>
-                        <Button 
-                            onClick={() => setSelectedRole(null)}
-                            disabled={submitting}
-                        >
-                            Cancel
-                        </Button>
-                        <Button 
-                            onClick={() => {
-                                handleUpdatePermissions(selectedRole._id, selectedRole.permissions);
-                            }}
-                            variant="contained"
-                            disabled={submitting}
-                        >
-                            {submitting ? <CircularProgress size={24} /> : 'Save Changes'}
-                        </Button>
-                    </MuiDialogActions>
-                </MuiDialog>
-
-                {/* Notification */}
-                <Snackbar
-                    open={notification.open}
-                    autoHideDuration={6000}
+            <Snackbar
+                open={notification.open}
+                autoHideDuration={6000}
+                onClose={() => setNotification({ ...notification, open: false })}
+            >
+                <Alert 
                     onClose={() => setNotification({ ...notification, open: false })}
+                    severity={notification.type}
+                    sx={{ 
+                        width: '100%',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                    }}
                 >
-                    <Alert 
-                        onClose={() => setNotification({ ...notification, open: false })}
-                        severity={notification.type}
-                        sx={{ width: '100%' }}
-                    >
-                        {notification.message}
-                    </Alert>
-                </Snackbar>
-            </Box>
-        );
-    };
+                    {notification.message}
+                </Alert>
+            </Snackbar>
+        </Box>
+    );
+};
             // Sidebar Component
     const Sidebar = ({ isCollapsed, setIsCollapsed, onMenuClick }) => {
     const [menuItems, setMenuItems] = useState({
