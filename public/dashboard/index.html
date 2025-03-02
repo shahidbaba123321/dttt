@@ -13,9 +13,6 @@
     <!-- Material UI -->
     <script src="https://unpkg.com/@mui/material@5.14.13/umd/material-ui.production.min.js"></script>
     
-    <!-- Formik - Update to use the correct UMD build -->
-    <script src="https://unpkg.com/formik@2.4.5/dist/formik.umd.production.min.js" crossorigin></script>
-
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -23,7 +20,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
+ 
    <style>
     * {
         margin: 0;
@@ -833,6 +830,106 @@
             <CircularProgress />
         </Box>
     );
+
+     // Header Component
+const Header = () => {
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [notifications] = useState([
+        {
+            id: 1,
+            message: 'System update available',
+            type: 'info'
+        },
+        {
+            id: 2,
+            message: 'New user registration',
+            type: 'success'
+        }
+    ]);
+
+    const handleMenu = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleLogout = async () => {
+        try {
+            await apiService.fetch('/logout', { method: 'POST' });
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            localStorage.clear();
+            window.location.href = '/login.html';
+        }
+    };
+
+    return (
+        <AppBar 
+            position="fixed" 
+            sx={{ 
+                zIndex: theme => theme.zIndex.drawer + 1,
+                backgroundColor: 'white',
+                color: '#333'
+            }}
+        >
+            <Toolbar>
+                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                    Super Admin Dashboard
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <IconButton color="inherit" sx={{ position: 'relative' }}>
+                        <Badge badgeContent={notifications.length} color="error">
+                            <i className="fas fa-bell"></i>
+                        </Badge>
+                    </IconButton>
+                    <IconButton
+                        onClick={handleMenu}
+                        color="inherit"
+                    >
+                        <Avatar sx={{ bgcolor: '#1a237e' }}>
+                            {(() => {
+                                const email = localStorage.getItem('userEmail');
+                                return email ? email.charAt(0).toUpperCase() : 'SA';
+                            })()}
+                        </Avatar>
+                    </IconButton>
+                    <Menu
+                        anchorEl={anchorEl}
+                        open={Boolean(anchorEl)}
+                        onClose={handleClose}
+                        PaperProps={{
+                            sx: {
+                                mt: 1,
+                                '& .MuiMenuItem-root': {
+                                    py: 1,
+                                    px: 2
+                                }
+                            }
+                        }}
+                    >
+                        <MenuItem onClick={() => {
+                            handleClose();
+                            window.location.href = '/account.html';
+                        }}>
+                            <i className="fas fa-user" style={{marginRight: '10px'}}></i>
+                            My Account
+                        </MenuItem>
+                        <MenuItem onClick={() => {
+                            handleClose();
+                            handleLogout();
+                        }}>
+                            <i className="fas fa-sign-out-alt" style={{marginRight: '10px'}}></i>
+                            Sign Out
+                        </MenuItem>
+                    </Menu>
+                </Box>
+            </Toolbar>
+        </AppBar>
+    );
+};
 
     // DashboardStats Component
     const DashboardStats = () => {
