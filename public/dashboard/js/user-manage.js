@@ -273,77 +273,77 @@ class UserManagementSystem {
     }
 
     renderUsers() {
-        this.tableBody.innerHTML = '';
-        if (this.users.length === 0) {
-            this.tableBody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="no-data">
-                        <i class="fas fa-search"></i>
-                        <p>No users found</p>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        this.users.forEach(user => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>
-                    <div class="user-info">
-                        <div class="user-avatar">${this.getInitials(user.name || user.email)}</div>
-                        <div class="user-details">
-                            <div class="user-name">${user.name || 'N/A'}</div>
-                            <div class="user-email">${user.email}</div>
-                        </div>
-                    </div>
+    this.tableBody.innerHTML = '';
+    if (this.users.length === 0) {
+        this.tableBody.innerHTML = `
+            <tr>
+                <td colspan="6" class="no-data">
+                    <i class="fas fa-search"></i>
+                    <p>No users found</p>
                 </td>
-                <td>${user.department || 'N/A'}</td>
-                <td>
-                    <span class="role-badge ${user.role.toLowerCase()}">${user.role}</span>
-                </td>
-                <td>
-                    <span class="status-badge status-${user.status.toLowerCase()}">
-                        ${this.capitalizeFirst(user.status)}
-                    </span>
-                </td>
-                <td>
-                    <label class="switch">
-                        <input type="checkbox" ${user.requires2FA ? 'checked' : ''} 
-                               class="tfa-toggle" data-userid="${user._id}">
-                        <span class="slider round"></span>
-                    </label>
-                </td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="btn-icon btn-edit" data-userid="${user._id}" title="Edit User">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-icon btn-status" data-userid="${user._id}" 
-                                title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User">
-                            <i class="fas fa-${user.status === 'active' ? 'ban' : 'check-circle'}"></i>
-                        </button>
-                        <button class="btn-icon btn-delete" data-userid="${user._id}" title="Delete User">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            `;
-
-            // Add event listeners
-            const editBtn = row.querySelector('.btn-edit');
-            const deleteBtn = row.querySelector('.btn-delete');
-            const statusBtn = row.querySelector('.btn-status');
-            const twoFAToggle = row.querySelector('.tfa-toggle');
-
-            editBtn.addEventListener('click', () => this.editUser(user._id));
-            deleteBtn.addEventListener('click', () => this.showDeleteModal(user._id));
-            statusBtn.addEventListener('click', () => this.toggleUserStatus(user._id, user.status));
-            twoFAToggle.addEventListener('change', (e) => this.toggle2FA(user._id, e.target.checked));
-
-            this.tableBody.appendChild(row);
-        });
+            </tr>
+        `;
+        return;
     }
+
+    this.users.forEach(user => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <div class="user-info">
+                    <div class="user-avatar">${this.getInitials(user.name || user.email)}</div>
+                    <div class="user-details">
+                        <div class="user-name">${user.name || 'N/A'}</div>
+                        <div class="user-email">${user.email}</div>
+                    </div>
+                </div>
+            </td>
+            <td>${user.department || 'N/A'}</td>
+            <td>
+                <span class="role-badge ${user.role.toLowerCase()}">${user.role}</span>
+            </td>
+            <td>
+                <span class="status-badge status-${user.status.toLowerCase()}">
+                    ${this.capitalizeFirst(user.status)}
+                </span>
+            </td>
+            <td>
+                <label class="switch">
+                    <input type="checkbox" ${user.requires2FA ? 'checked' : ''} 
+                           class="tfa-toggle" data-userid="${user._id}">
+                    <span class="slider round"></span>
+                </label>
+            </td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn-icon btn-edit" data-userid="${user._id}" title="Edit User">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-icon btn-status" data-userid="${user._id}" 
+                            title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User">
+                        <i class="fas fa-${user.status === 'active' ? 'ban' : 'check-circle'}"></i>
+                    </button>
+                    <button class="btn-icon btn-delete" data-userid="${user._id}" title="Delete User">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+
+        // Add event listeners
+        const editBtn = row.querySelector('.btn-edit');
+        const deleteBtn = row.querySelector('.btn-delete');
+        const statusBtn = row.querySelector('.btn-status');
+        const twoFAToggle = row.querySelector('.tfa-toggle');
+
+        editBtn.addEventListener('click', () => this.editUser(user._id));
+        deleteBtn.addEventListener('click', () => this.showDeleteModal(user._id));
+        statusBtn.addEventListener('click', () => this.toggleUserStatus(user._id, user.status));
+        twoFAToggle.addEventListener('change', (e) => this.toggle2FA(user._id, e.target.checked));
+
+        this.tableBody.appendChild(row);
+    });
+}
         updatePagination(pagination) {
         const { total, page, pages } = pagination;
         
