@@ -110,6 +110,19 @@ class UserManagementSystem {
         return true;
     }
 
+     debounce(func, wait) {
+        let timeout;
+        return (...args) => {
+            const later = () => {
+                clearTimeout(timeout);
+                func.apply(this, args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+
     initializeEventListeners() {
         // Search input with debounce
         this.searchInput.addEventListener('input', debounce(() => {
