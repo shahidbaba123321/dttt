@@ -744,10 +744,10 @@ const CONFIG = {
 // Utility Functions
 const utils = {
     async fetchWithAuth(endpoint, options = {}) {
+    try {
         const token = localStorage.getItem('token');
         if (!token) {
-            auth.redirectToLogin();
-            return;
+            throw new Error('No authentication token found');
         }
 
         const defaultOptions = {
@@ -757,25 +757,34 @@ const utils = {
             },
         };
 
-        try {
-            const response = await fetch(
-                `${CONFIG.API_BASE_URL}${endpoint}`,
-                { ...defaultOptions, ...options }
-            );
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    auth.signOut();
-                    return;
-                }
-                throw new Error(`HTTP error! status: ${response.status}`);
+        const finalOptions = {
+            ...defaultOptions,
+            ...options,
+            headers: {
+                ...defaultOptions.headers,
+                ...(options.headers || {})
             }
+        };
 
-            return await response.json();
-        } catch (error) {
-            console.error('API request failed:', error);
-            throw error;
+        console.log('Making API request:', {
+            endpoint,
+            options: finalOptions
+        });
+
+        const response = await fetch(`${CONFIG.API_BASE_URL}${endpoint}`, finalOptions);
+        const data = await response.json();
+
+        if (!response.ok) {
+            // Log the error response for debugging
+            console.error('API Error Response:', data);
+            throw new Error(data.message || `HTTP error! status: ${response.status}`);
         }
+
+        return data;
+    } catch (error) {
+        console.error('API request failed:', error);
+        throw error;
+    }
     },
 
     getInitials(name) {
