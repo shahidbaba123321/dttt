@@ -23,41 +23,44 @@ class UserManagementSystem {
             console.log('User Management System initialized successfully');
         } catch (error) {
             console.error('Failed to initialize User Management System:', error);
-            utils.showNotification('Failed to load user management system', 'error');
+            this.showNotification('Failed to load user management system', 'error');
         }
     }
 
     async initializeElements() {
         try {
             // Search and filter elements
-            this.searchInput = document.getElementById('userSearchInput');
-            this.roleFilter = document.getElementById('roleFilter');
-            this.statusFilter = document.getElementById('statusFilter');
+            this.searchInput = document.getElementById('userManageSearchInput');
+            this.roleFilter = document.getElementById('userManageRoleFilter');
+            this.statusFilter = document.getElementById('userManageStatusFilter');
 
             // Table and pagination elements
-            this.tableBody = document.getElementById('usersTableBody');
-            this.paginationControls = document.getElementById('paginationControls');
-            this.currentRangeElement = document.getElementById('currentRange');
-            this.totalUsersElement = document.getElementById('totalUsers');
+            this.tableBody = document.getElementById('userManageTableBody');
+            this.paginationControls = document.getElementById('userManagePaginationControls');
+            this.currentRangeElement = document.getElementById('userManageCurrentRange');
+            this.totalUsersElement = document.getElementById('userManageTotalUsers');
 
             // Modal elements
-            this.userModal = document.getElementById('userModal');
-            this.deleteModal = document.getElementById('deleteModal');
-            this.userForm = document.getElementById('userForm');
-            this.addUserBtn = document.getElementById('addUserBtn');
-            this.saveUserBtn = document.getElementById('saveUserBtn');
-            this.cancelUserBtn = document.getElementById('cancelUserBtn');
-            this.confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-            this.cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
-            this.closeUserModalBtn = document.getElementById('closeUserModal');
-            this.closeDeleteModalBtn = document.getElementById('closeDeleteModal');
+            this.userModal = document.getElementById('userManageModal');
+            this.deleteModal = document.getElementById('userManageDeleteModal');
+            this.userForm = document.getElementById('userManageForm');
+            this.modalTitle = document.getElementById('userManageModalTitle');
 
             // Form elements
-            this.userNameInput = document.getElementById('userName');
-            this.userEmailInput = document.getElementById('userEmail');
-            this.userDepartmentInput = document.getElementById('userDepartment');
-            this.userRoleSelect = document.getElementById('userRole');
-            this.user2FACheckbox = document.getElementById('user2FA');
+            this.nameInput = document.getElementById('userManageName');
+            this.emailInput = document.getElementById('userManageEmail');
+            this.departmentInput = document.getElementById('userManageDepartment');
+            this.roleSelect = document.getElementById('userManageRole');
+            this.twoFACheckbox = document.getElementById('userManage2FA');
+
+            // Buttons
+            this.addUserBtn = document.getElementById('addUserManageBtn');
+            this.saveUserBtn = document.getElementById('saveUserManageBtn');
+            this.cancelUserBtn = document.getElementById('cancelUserManageBtn');
+            this.closeUserModalBtn = document.getElementById('closeUserManageModal');
+            this.confirmDeleteBtn = document.getElementById('confirmUserManageDeleteBtn');
+            this.cancelDeleteBtn = document.getElementById('cancelUserManageDeleteBtn');
+            this.closeDeleteModalBtn = document.getElementById('closeUserManageDeleteModal');
 
             if (!this.validateElements()) {
                 throw new Error('Required elements not found in the DOM');
@@ -80,18 +83,19 @@ class UserManagementSystem {
             userModal: this.userModal,
             deleteModal: this.deleteModal,
             userForm: this.userForm,
+            modalTitle: this.modalTitle,
+            nameInput: this.nameInput,
+            emailInput: this.emailInput,
+            departmentInput: this.departmentInput,
+            roleSelect: this.roleSelect,
+            twoFACheckbox: this.twoFACheckbox,
             addUserBtn: this.addUserBtn,
             saveUserBtn: this.saveUserBtn,
             cancelUserBtn: this.cancelUserBtn,
+            closeUserModalBtn: this.closeUserModalBtn,
             confirmDeleteBtn: this.confirmDeleteBtn,
             cancelDeleteBtn: this.cancelDeleteBtn,
-            closeUserModalBtn: this.closeUserModalBtn,
-            closeDeleteModalBtn: this.closeDeleteModalBtn,
-            userNameInput: this.userNameInput,
-            userEmailInput: this.userEmailInput,
-            userDepartmentInput: this.userDepartmentInput,
-            userRoleSelect: this.userRoleSelect,
-            user2FACheckbox: this.user2FACheckbox
+            closeDeleteModalBtn: this.closeDeleteModalBtn
         };
 
         const missingElements = Object.entries(requiredElements)
@@ -130,7 +134,7 @@ class UserManagementSystem {
         // Modal handlers
         this.addUserBtn.addEventListener('click', () => {
             this.currentEditUserId = null;
-            document.getElementById('modalTitle').textContent = 'Add New User';
+            this.modalTitle.textContent = 'Add New User';
             this.showUserModal();
         });
 
@@ -185,7 +189,7 @@ class UserManagementSystem {
 
         } catch (error) {
             console.error('Error loading filters:', error);
-            utils.showNotification('Failed to load filters', 'error');
+            this.showNotification('Failed to load filters', 'error');
             throw error;
         }
     }
@@ -210,15 +214,15 @@ class UserManagementSystem {
     }
 
     populateRoleSelect() {
-        if (!this.userRoleSelect) return;
+        if (!this.roleSelect) return;
 
-        this.userRoleSelect.innerHTML = '<option value="">Select Role</option>';
+        this.roleSelect.innerHTML = '<option value="">Select Role</option>';
         
         this.availableRoles.forEach(role => {
             const option = document.createElement('option');
             option.value = role._id;
             option.textContent = role.name;
-            this.userRoleSelect.appendChild(option);
+            this.roleSelect.appendChild(option);
         });
     }
 
@@ -244,7 +248,7 @@ class UserManagementSystem {
             }
         } catch (error) {
             console.error('Error loading users:', error);
-            utils.showNotification('Failed to load users', 'error');
+            this.showNotification('Failed to load users', 'error');
         } finally {
             this.hideLoadingState();
         }
@@ -422,37 +426,37 @@ class UserManagementSystem {
         try {
             const user = this.users.find(u => u._id === userId);
             if (!user) {
-                utils.showNotification('User not found', 'error');
+                this.showNotification('User not found', 'error');
                 return;
             }
 
             this.currentEditUserId = userId;
 
             // Populate form fields
-            this.userNameInput.value = user.name || '';
-            this.userEmailInput.value = user.email;
-            this.userDepartmentInput.value = user.department || '';
+            this.nameInput.value = user.name || '';
+            this.emailInput.value = user.email;
+            this.departmentInput.value = user.department || '';
             
             // Ensure roles are populated and set the correct role
             this.populateRoleSelect();
             if (user.roleId) {
-                this.userRoleSelect.value = user.roleId;
+                this.roleSelect.value = user.roleId;
             } else {
                 const roleObj = this.availableRoles.find(r => r.name === user.role);
                 if (roleObj) {
-                    this.userRoleSelect.value = roleObj._id;
+                    this.roleSelect.value = roleObj._id;
                 }
             }
             
-            this.user2FACheckbox.checked = user.requires2FA;
+            this.twoFACheckbox.checked = user.requires2FA;
 
             // Update modal title and show
-            document.getElementById('modalTitle').textContent = 'Edit User';
+            this.modalTitle.textContent = 'Edit User';
             this.showUserModal();
 
         } catch (error) {
             console.error('Error preparing user edit:', error);
-            utils.showNotification('Failed to load user data', 'error');
+            this.showNotification('Failed to load user data', 'error');
         }
     }
 
@@ -463,17 +467,17 @@ class UserManagementSystem {
                 return;
             }
 
-            if (!this.userRoleSelect.value) {
-                utils.showNotification('Please select a role', 'error');
+            if (!this.roleSelect.value) {
+                this.showNotification('Please select a role', 'error');
                 return;
             }
 
             const formData = {
-                name: this.userNameInput.value.trim(),
-                email: this.userEmailInput.value.trim(),
-                department: this.userDepartmentInput.value.trim(),
-                roleId: this.userRoleSelect.value,
-                requires2FA: this.user2FACheckbox.checked
+                name: this.nameInput.value.trim(),
+                email: this.emailInput.value.trim(),
+                department: this.departmentInput.value.trim(),
+                roleId: this.roleSelect.value,
+                requires2FA: this.twoFACheckbox.checked
             };
 
             const isEdit = !!this.currentEditUserId;
@@ -486,7 +490,7 @@ class UserManagementSystem {
             });
 
             if (response.success) {
-                utils.showNotification(
+                this.showNotification(
                     `User successfully ${isEdit ? 'updated' : 'created'}`,
                     'success'
                 );
@@ -498,7 +502,7 @@ class UserManagementSystem {
 
         } catch (error) {
             console.error('Error saving user:', error);
-            utils.showNotification(
+            this.showNotification(
                 `Failed to ${this.currentEditUserId ? 'update' : 'create'} user: ${error.message}`,
                 'error'
             );
@@ -512,14 +516,14 @@ class UserManagementSystem {
             });
 
             if (response.success) {
-                utils.showNotification(`2FA ${enabled ? 'enabled' : 'disabled'} successfully`);
+                this.showNotification(`2FA ${enabled ? 'enabled' : 'disabled'} successfully`);
                 await this.loadUsers();
             } else {
                 throw new Error(response.message || 'Failed to update 2FA settings');
             }
         } catch (error) {
             console.error('Error toggling 2FA:', error);
-            utils.showNotification('Failed to update 2FA settings', 'error');
+            this.showNotification('Failed to update 2FA settings', 'error');
             // Revert toggle state
             const toggle = document.querySelector(`input[data-userid="${userId}"]`);
             if (toggle) toggle.checked = !enabled;
@@ -535,14 +539,14 @@ class UserManagementSystem {
             });
 
             if (response.success) {
-                utils.showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
+                this.showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
                 await this.loadUsers();
             } else {
                 throw new Error(response.message || 'Failed to update user status');
             }
         } catch (error) {
             console.error('Error toggling user status:', error);
-            utils.showNotification('Failed to update user status', 'error');
+            this.showNotification('Failed to update user status', 'error');
         }
     }
 
@@ -550,16 +554,16 @@ class UserManagementSystem {
         try {
             const user = this.users.find(u => u._id === userId);
             if (!user) {
-                utils.showNotification('User not found', 'error');
+                this.showNotification('User not found', 'error');
                 return;
             }
 
             this.currentEditUserId = userId;
 
-            const confirmMessage = document.querySelector('#deleteModal .modal-body p');
+            const confirmMessage = document.querySelector('#userManageDeleteModal .modal-body p');
             confirmMessage.textContent = `Are you sure you want to delete ${user.name || user.email}? This action cannot be undone.`;
             
-            const reasonInput = document.getElementById('deleteReason');
+            const reasonInput = document.getElementById('userManageDeleteReason');
             reasonInput.value = '';
             
             this.deleteModal.style.display = 'block';
@@ -567,15 +571,15 @@ class UserManagementSystem {
 
         } catch (error) {
             console.error('Error showing delete modal:', error);
-            utils.showNotification('Failed to prepare delete operation', 'error');
+            this.showNotification('Failed to prepare delete operation', 'error');
         }
     }
 
     async handleDeleteUser() {
         try {
-            const reason = document.getElementById('deleteReason').value.trim();
+            const reason = document.getElementById('userManageDeleteReason').value.trim();
             if (!reason) {
-                utils.showNotification('Please provide a reason for deletion', 'error');
+                this.showNotification('Please provide a reason for deletion', 'error');
                 return;
             }
 
@@ -585,7 +589,7 @@ class UserManagementSystem {
             });
 
             if (response.success) {
-                utils.showNotification('User deleted successfully');
+                this.showNotification('User deleted successfully');
                 this.hideDeleteModal();
                 await this.loadUsers();
             } else {
@@ -593,13 +597,13 @@ class UserManagementSystem {
             }
         } catch (error) {
             console.error('Error deleting user:', error);
-            utils.showNotification('Failed to delete user', 'error');
+            this.showNotification('Failed to delete user', 'error');
         }
     }
 
     showUserModal() {
         this.userModal.style.display = 'block';
-        this.userNameInput.focus();
+        this.nameInput.focus();
     }
 
     hideUserModal() {
@@ -610,7 +614,7 @@ class UserManagementSystem {
 
     hideDeleteModal() {
         this.deleteModal.style.display = 'none';
-        document.getElementById('deleteReason').value = '';
+        document.getElementById('userManageDeleteReason').value = '';
         this.currentEditUserId = null;
     }
 
@@ -663,15 +667,5 @@ function debounce(func, wait) {
     };
 }
 
-// Initialize the User Management System
-let userManagement;
-document.addEventListener('DOMContentLoaded', () => {
-    userManagement = new UserManagementSystem();
-    userManagement.initialize().catch(error => {
-        console.error('Failed to initialize User Management System:', error);
-        utils.showNotification('System initialization failed', 'error');
-    });
-});
-
-// Export the class for use in other modules if needed
+// Initialize the User Management System when the page content is loaded
 window.UserManagementSystem = UserManagementSystem;
