@@ -182,6 +182,57 @@
     min-width: 150px;
 }
 
+/* Notifications */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 9999;
+    transform: translateX(120%);
+    transition: transform 0.3s ease-in-out;
+    max-width: 400px;
+}
+
+.notification.show {
+    transform: translateX(0);
+}
+
+.notification.success {
+    border-left: 4px solid var(--success-color);
+}
+
+.notification.error {
+    border-left: 4px solid var(--danger-color);
+}
+
+.notification.warning {
+    border-left: 4px solid var(--warning-color);
+}
+
+.notification i {
+    font-size: 20px;
+}
+
+.notification.success i {
+    color: var(--success-color);
+}
+
+.notification.error i {
+    color: var(--danger-color);
+}
+
+.notification.warning i {
+    color: var(--warning-color);
+}
+
+
 /* Table Styles */
 .table-container {
     background: white;
@@ -418,18 +469,36 @@ input:checked + .slider:before {
 .modal-content {
     position: relative;
     background-color: white;
-    margin: 10% auto;
-    padding: 20px;
-    border-radius: 8px;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 12px;
     max-width: 500px;
     width: 90%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transform: scale(0.7);
+    opacity: 0;
+    transition: all 0.3s ease-in-out;
+}
+    
+.modal.active .modal-content {
+    transform: scale(1);
+    opacity: 1;
 }
 
 .modal-header {
+    padding: 20px 25px;
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    border-radius: 12px 12px 0 0;
+    background-color: var(--bg-secondary);
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.25rem;
 }
 
 .close-modal {
@@ -438,47 +507,71 @@ input:checked + .slider:before {
     font-size: 24px;
     cursor: pointer;
     color: var(--text-secondary);
+    transition: color 0.2s ease;
+}
+
+.close-modal:hover {
+    color: var(--danger-color);
 }
 
 .modal-body {
-    margin-bottom: 20px;
+    padding: 25px;
 }
 
 .form-group {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
 .form-group label {
     display: block;
     margin-bottom: 8px;
     color: var(--text-primary);
+    font-weight: 500;
 }
+
 
 .form-group input,
 .form-group select,
 .form-group textarea {
     width: 100%;
-    padding: 8px 12px;
+    padding: 10px 12px;
     border: 1px solid var(--border-color);
-    border-radius: 4px;
+    border-radius: 6px;
     font-size: 14px;
+    transition: border-color 0.2s ease;
+}
+
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
 .checkbox-label {
     display: flex;
     align-items: center;
     gap: 8px;
+    cursor: pointer;
 }
 
 .checkbox-label input[type="checkbox"] {
-    width: auto;
+    width: 18px;
+    height: 18px;
 }
 
 .modal-footer {
+    padding: 20px 25px;
+    border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: flex-end;
     gap: 12px;
+    border-radius: 0 0 12px 12px;
+    background-color: var(--bg-secondary);
 }
+
 
 /* Loading State */
 .loading-state {
@@ -495,6 +588,70 @@ input:checked + .slider:before {
     border-top-color: var(--primary-color);
     animation: spin 1s ease-in-out infinite;
 }
+
+/* Buttons */
+
+.btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    font-size: 14px;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+}
+
+.btn-secondary {
+    background-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background-color: var(--text-secondary);
+    color: white;
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #dc2626;
+}
+
+/* Delete Modal Specific Styles */
+#userManageDeleteModal .modal-body {
+    text-align: center;
+    padding: 30px 25px;
+}
+
+#userManageDeleteModal .modal-body i {
+    font-size: 48px;
+    color: var(--danger-color);
+    margin-bottom: 20px;
+}
+
+#userManageDeleteModal .modal-body p {
+    color: var(--text-primary);
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+#userManageDeleteReason {
+    min-height: 100px;
+    resize: vertical;
+}
+
 
 @keyframes spin {
     to { transform: rotate(360deg); }
