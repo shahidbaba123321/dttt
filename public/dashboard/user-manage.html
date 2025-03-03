@@ -25,11 +25,6 @@
             </select>
             <select id="statusFilter" class="filter-select">
                 <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-            </select>
-            <select id="departmentFilter" class="filter-select">
-                <option value="">All Departments</option>
             </select>
         </div>
     </div>
@@ -59,7 +54,7 @@
         <div class="pagination-info">
             Showing <span id="currentRange">0-0</span> of <span id="totalUsers">0</span> users
         </div>
-        <div class="pagination-controls" id="paginationControls">
+        <div id="paginationControls" class="pagination-controls">
             <!-- Pagination buttons will be dynamically populated -->
         </div>
     </div>
@@ -69,7 +64,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modalTitle">Add New User</h3>
-                <button class="close-modal">&times;</button>
+                <button id="closeUserModal" class="close-modal">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="userForm">
@@ -81,11 +76,10 @@
                         <label for="userEmail">Email</label>
                         <input type="email" id="userEmail" required>
                     </div>
-                    <!-- Change this in the user modal form -->
-<div class="form-group">
-    <label for="userDepartment">Department</label>
-    <input type="text" id="userDepartment" placeholder="Enter department name" required>
-</div>
+                    <div class="form-group">
+                        <label for="userDepartment">Department</label>
+                        <input type="text" id="userDepartment" required>
+                    </div>
                     <div class="form-group">
                         <label for="userRole">Role</label>
                         <select id="userRole" required>
@@ -101,8 +95,8 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancelUserBtn">Cancel</button>
-                <button class="btn btn-primary" id="saveUserBtn">Save User</button>
+                <button id="cancelUserBtn" class="btn btn-secondary">Cancel</button>
+                <button id="saveUserBtn" class="btn btn-primary">Save User</button>
             </div>
         </div>
     </div>
@@ -112,7 +106,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Delete User</h3>
-                <button class="close-modal">&times;</button>
+                <button id="closeDeleteModal" class="close-modal">&times;</button>
             </div>
             <div class="modal-body">
                 <p>Are you sure you want to delete this user? This action cannot be undone.</p>
@@ -122,13 +116,12 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button>
-                <button class="btn btn-danger" id="confirmDeleteBtn">Delete User</button>
+                <button id="cancelDeleteBtn" class="btn btn-secondary">Cancel</button>
+                <button id="confirmDeleteBtn" class="btn btn-danger">Delete User</button>
             </div>
         </div>
     </div>
 </div>
-
 <style>
 /* User Management Styles */
 .user-management-container {
