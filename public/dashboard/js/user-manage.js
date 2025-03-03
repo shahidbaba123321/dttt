@@ -165,7 +165,7 @@ class UserManagementSystem {
     }
 
     populateRoleSelect() {
-        const roleSelect = document.getElementById('userRoleSelect'); // Updated ID
+        const roleSelect = document.getElementById('userRoleSelect');
         if (roleSelect && this.roles.length) {
             roleSelect.innerHTML = `
                 <option value="">Select Role</option>
@@ -176,6 +176,8 @@ class UserManagementSystem {
         }
     }
         initializeEventListeners() {
+        console.log('Initializing event listeners...');
+
         // Create User Button
         const createUserBtn = document.getElementById('createUserBtn');
         if (createUserBtn) {
@@ -183,6 +185,8 @@ class UserManagementSystem {
                 console.log('Create user button clicked');
                 this.openModal();
             });
+        } else {
+            console.warn('Create user button not found');
         }
 
         // Modal Close Button
@@ -274,11 +278,16 @@ class UserManagementSystem {
                 this.validateField('userRoleSelect', 'Role is required');
             });
         }
+
+        console.log('Event listeners initialized');
     }
 
     renderUsers() {
         const tbody = document.getElementById('usersTableBody');
-        if (!tbody) return;
+        if (!tbody) {
+            console.error('Users table body not found');
+            return;
+        }
 
         if (this.users.length === 0) {
             tbody.innerHTML = `
@@ -294,54 +303,59 @@ class UserManagementSystem {
             return;
         }
 
-        tbody.innerHTML = this.users.map(user => `
-            <tr>
-                <td>
-                    <div class="user-info">
-                        <div class="user-avatar">
-                            ${this.getInitials(user.name || user.email)}
+        console.log('Rendering users:', this.users);
+
+        tbody.innerHTML = this.users.map(user => {
+            console.log('Rendering user:', user);
+            return `
+                <tr>
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                ${this.getInitials(user.name || user.email)}
+                            </div>
+                            <div class="user-details">
+                                <div class="user-name">${user.name || 'N/A'}</div>
+                                <div class="user-email">${user.email}</div>
+                            </div>
                         </div>
-                        <div class="user-details">
-                            <div class="user-name">${user.name || 'N/A'}</div>
-                            <div class="user-email">${user.email}</div>
+                    </td>
+                    <td>${user.email}</td>
+                    <td>${user.department || 'N/A'}</td>
+                    <td>${this.getRoleName(user.role)}</td>
+                    <td>
+                        <span class="status-badge ${user.status || 'active'}">
+                            ${user.status || 'active'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="2fa_${user._id}" 
+                                ${user.requires2FA ? 'checked' : ''} 
+                                onchange="userManagement.toggle2FA('${user._id}')">
+                            <label for="2fa_${user._id}"></label>
                         </div>
-                    </div>
-                </td>
-                <td>${user.email}</td>
-                <td>${user.department || 'N/A'}</td>
-                <td>${this.getRoleName(user.role)}</td>
-                <td>
-                    <span class="status-badge ${user.status}">
-                        ${user.status}
-                    </span>
-                </td>
-                <td>
-                    <div class="toggle-switch">
-                        <input type="checkbox" id="2fa_${user._id}" 
-                            ${user.requires2FA ? 'checked' : ''} 
-                            onchange="userManagement.toggle2FA('${user._id}')">
-                        <label for="2fa_${user._id}"></label>
-                    </div>
-                </td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="action-btn edit" onclick="userManagement.editUser('${user._id}')" title="Edit User">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="action-btn" onclick="userManagement.resetPassword('${user._id}')" title="Reset Password">
-                            <i class="fas fa-key"></i>
-                        </button>
-                        <button class="action-btn" onclick="userManagement.toggleUserStatus('${user._id}')" 
-                            title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User">
-                            <i class="fas fa-${user.status === 'active' ? 'ban' : 'check-circle'}"></i>
-                        </button>
-                        <button class="action-btn delete" onclick="userManagement.deleteUser('${user._id}')" title="Delete User">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn edit" onclick="userManagement.editUser('${user._id}')" title="Edit User">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn" onclick="userManagement.resetPassword('${user._id}')" title="Reset Password">
+                                <i class="fas fa-key"></i>
+                            </button>
+                            <button class="action-btn" onclick="userManagement.toggleUserStatus('${user._id}')" 
+                                title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User">
+                                <i class="fas fa-${user.status === 'active' ? 'ban' : 'check-circle'}"></i>
+                            </button>
+                            <button class="action-btn delete" onclick="userManagement.deleteUser('${user._id}')" title="Delete User">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
 
         this.updatePaginationInfo();
     }
@@ -419,15 +433,34 @@ class UserManagementSystem {
     async saveUser() {
         try {
             const form = document.getElementById('userForm');
-            if (!form) return;
+            if (!form) {
+                console.error('User form not found');
+                return;
+            }
+
+            // Get form elements
+            const nameInput = document.getElementById('userName');
+            const emailInput = document.getElementById('userEmail');
+            const departmentInput = document.getElementById('userDepartment');
+            const roleSelect = document.getElementById('userRoleSelect');
+            const twoFACheckbox = document.getElementById('user2FA');
+
+            // Check if all elements exist
+            if (!nameInput || !emailInput || !departmentInput || !roleSelect || !twoFACheckbox) {
+                console.error('Required form elements not found');
+                this.showNotification('Form elements missing', 'error');
+                return;
+            }
 
             const userData = {
-                name: document.getElementById('userName').value.trim(),
-                email: document.getElementById('userEmail').value.trim(),
-                department: document.getElementById('userDepartment').value.trim(),
-                role: document.getElementById('userRoleSelect').value,
-                requires2FA: document.getElementById('user2FA').checked
+                name: nameInput.value.trim(),
+                email: emailInput.value.trim(),
+                department: departmentInput.value.trim(),
+                role: roleSelect.value,
+                requires2FA: twoFACheckbox.checked
             };
+
+            console.log('Saving user data:', userData);
 
             if (!this.validateUserData(userData)) {
                 return;
@@ -446,12 +479,11 @@ class UserManagementSystem {
             if (response.success) {
                 await this.createAuditLog(
                     isEditing ? 'USER_UPDATED' : 'USER_CREATED',
+                    localStorage.getItem('userId'),
+                    isEditing ? this.currentUser._id : response.userId,
                     {
-                        targetUser: isEditing ? this.currentUser._id : response.userId,
-                        details: {
-                            previousState: isEditing ? this.currentUser : null,
-                            newState: userData
-                        }
+                        previousState: isEditing ? this.currentUser : null,
+                        newState: userData
                     }
                 );
 
@@ -551,14 +583,30 @@ class UserManagementSystem {
         form.reset();
 
         if (isEditing && this.currentUser) {
-            document.getElementById('userName').value = this.currentUser.name || '';
-            document.getElementById('userEmail').value = this.currentUser.email;
-            document.getElementById('userDepartment').value = this.currentUser.department || '';
-            document.getElementById('userRoleSelect').value = this.currentUser.role || '';
-            document.getElementById('user2FA').checked = this.currentUser.requires2FA || false;
-            document.getElementById('userEmail').disabled = true;
+            console.log('Populating form with user data:', this.currentUser);
+            
+            // Get form elements
+            const nameInput = document.getElementById('userName');
+            const emailInput = document.getElementById('userEmail');
+            const departmentInput = document.getElementById('userDepartment');
+            const roleSelect = document.getElementById('userRoleSelect');
+            const twoFACheckbox = document.getElementById('user2FA');
+
+            // Check if elements exist before setting values
+            if (nameInput) nameInput.value = this.currentUser.name || '';
+            if (emailInput) {
+                emailInput.value = this.currentUser.email;
+                emailInput.disabled = true;
+            }
+            if (departmentInput) departmentInput.value = this.currentUser.department || '';
+            if (roleSelect) roleSelect.value = this.currentUser.role || '';
+            if (twoFACheckbox) twoFACheckbox.checked = this.currentUser.requires2FA || false;
         } else {
-            document.getElementById('userEmail').disabled = false;
+            // Reset form for new user
+            const emailInput = document.getElementById('userEmail');
+            if (emailInput) {
+                emailInput.disabled = false;
+            }
             this.currentUser = null;
         }
 
@@ -566,9 +614,15 @@ class UserManagementSystem {
         const errorMessages = form.querySelectorAll('.error-message');
         errorMessages.forEach(error => error.remove());
 
+        // Show modal
         modal.style.display = 'flex';
         modal.classList.add('active');
-        document.getElementById('userName').focus();
+
+        // Focus on name input
+        const nameInput = document.getElementById('userName');
+        if (nameInput) {
+            nameInput.focus();
+        }
     }
 
     closeModal() {
@@ -596,6 +650,23 @@ class UserManagementSystem {
         }
     }
 
+    async editUser(userId) {
+        try {
+            console.log('Editing user:', userId);
+            const response = await this.fetchWithAuth(`/users/${userId}`);
+            
+            if (response.success) {
+                this.currentUser = response.user;
+                this.openModal(true);
+            } else {
+                throw new Error('Failed to fetch user details');
+            }
+        } catch (error) {
+            console.error('Error editing user:', error);
+            this.showNotification('Failed to load user details', 'error');
+        }
+    }
+
     async toggle2FA(userId) {
         try {
             const user = this.users.find(u => u._id === userId);
@@ -612,13 +683,15 @@ class UserManagementSystem {
             });
 
             if (response.success) {
-                await this.createAuditLog('TWO_FA_SETTING_CHANGED', {
-                    targetUser: userId,
-                    details: {
-                        previous2FAStatus: !newState,
+                await this.createAuditLog(
+                    'TWO_FA_SETTING_CHANGED',
+                    localStorage.getItem('userId'),
+                    userId,
+                    {
+                        previous2FAStatus: user.requires2FA,
                         new2FAStatus: newState
                     }
-                });
+                );
 
                 this.showNotification(
                     `2FA ${newState ? 'enabled' : 'disabled'} successfully`,
@@ -659,13 +732,15 @@ class UserManagementSystem {
             });
 
             if (response.success) {
-                await this.createAuditLog('USER_STATUS_CHANGED', {
-                    targetUser: userId,
-                    details: {
+                await this.createAuditLog(
+                    'USER_STATUS_CHANGED',
+                    localStorage.getItem('userId'),
+                    userId,
+                    {
                         previousStatus: user.status,
                         newStatus
                     }
-                });
+                );
 
                 this.showNotification(`User ${action}d successfully`, 'success');
                 await this.loadUsers();
@@ -692,9 +767,14 @@ class UserManagementSystem {
             });
 
             if (response.success) {
-                await this.createAuditLog('USER_DELETED', {
-                    targetUser: userId
-                });
+                await this.createAuditLog(
+                    'USER_DELETED',
+                    localStorage.getItem('userId'),
+                    userId,
+                    {
+                        deletedBy: localStorage.getItem('userEmail')
+                    }
+                );
 
                 this.showNotification('User deleted successfully', 'success');
                 await this.loadUsers();
@@ -721,9 +801,14 @@ class UserManagementSystem {
             });
 
             if (response.success) {
-                await this.createAuditLog('USER_PASSWORD_RESET', {
-                    targetUser: userId
-                });
+                await this.createAuditLog(
+                    'USER_PASSWORD_RESET',
+                    localStorage.getItem('userId'),
+                    userId,
+                    {
+                        resetBy: localStorage.getItem('userEmail')
+                    }
+                );
 
                 this.showNotification('Password reset successfully', 'success');
             } else {
@@ -735,15 +820,15 @@ class UserManagementSystem {
         }
     }
 
-    async createAuditLog(action, details) {
+    async createAuditLog(action, performedBy, targetUser, details) {
         try {
             const response = await this.fetchWithAuth('/audit-logs', {
                 method: 'POST',
                 body: JSON.stringify({
                     action,
-                    performedBy: localStorage.getItem('userId'),
-                    targetUser: details.targetUser,
-                    details: details.details || {},
+                    performedBy,
+                    targetUser,
+                    details,
                     timestamp: new Date().toISOString()
                 })
             });
