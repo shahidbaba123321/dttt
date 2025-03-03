@@ -38,34 +38,39 @@ class UserManagementSystem {
         }
     }
 
-    initializeElements() {
-        // Search and filter elements
-        this.searchInput = document.getElementById('userSearchInput');
-        this.roleFilter = document.getElementById('roleFilter');
-        this.statusFilter = document.getElementById('statusFilter');
-        this.departmentFilter = document.getElementById('departmentFilter');
+        initializeElements() {
+        try {
+            // Search and filter elements
+            this.searchInput = document.getElementById('userSearchInput');
+            this.roleFilter = document.getElementById('roleFilter');
+            this.statusFilter = document.getElementById('statusFilter');
+            this.departmentFilter = document.getElementById('departmentFilter');
 
-        // Table and pagination elements
-        this.tableBody = document.getElementById('usersTableBody');
-        this.paginationControls = document.getElementById('paginationControls');
-        this.currentRangeElement = document.getElementById('currentRange');
-        this.totalUsersElement = document.getElementById('totalUsers');
+            // Table and pagination elements
+            this.tableBody = document.getElementById('usersTableBody');
+            this.paginationControls = document.getElementById('paginationControls');
+            this.currentRangeElement = document.getElementById('currentRange');
+            this.totalUsersElement = document.getElementById('totalUsers');
 
-        // Modal elements
-        this.userModal = document.getElementById('userModal');
-        this.deleteModal = document.getElementById('deleteModal');
-        this.userForm = document.getElementById('userForm');
-        this.addUserBtn = document.getElementById('addUserBtn');
-        this.saveUserBtn = document.getElementById('saveUserBtn');
-        this.cancelUserBtn = document.getElementById('cancelUserBtn');
-        this.confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-        this.cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+            // Modal elements
+            this.userModal = document.getElementById('userModal');
+            this.deleteModal = document.getElementById('deleteModal');
+            this.userForm = document.getElementById('userForm');
+            this.addUserBtn = document.getElementById('addUserBtn');
+            this.saveUserBtn = document.getElementById('saveUserBtn');
+            this.cancelUserBtn = document.getElementById('cancelUserBtn');
+            this.confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            this.cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
 
-        if (!this.validateElements()) {
-            throw new Error('Required elements not found in the DOM');
+            // Validate required elements
+            if (!this.validateElements()) {
+                throw new Error('Required elements not found in the DOM');
+            }
+        } catch (error) {
+            console.error('Error initializing elements:', error);
+            throw error;
         }
     }
-
     validateElements() {
         const requiredElements = [
             this.searchInput,
@@ -138,20 +143,13 @@ class UserManagementSystem {
         });
     }
 
-    async loadFilters() {
+        async loadFilters() {
         try {
             // Load roles
             const rolesResponse = await utils.fetchWithAuth('/roles');
             if (rolesResponse.success) {
                 this.populateSelect(this.roleFilter, rolesResponse.roles, 'name');
             }
-
-            // Load departments
-            this.populateSelect(
-                this.departmentFilter, 
-                this.departments.map(d => ({ name: d })), 
-                'name'
-            );
 
             // Status filter is static
             this.statusFilter.innerHTML = `
@@ -168,7 +166,7 @@ class UserManagementSystem {
             throw error;
         }
     }
-
+    
     populateSelect(selectElement, items, valueKey) {
         const currentValue = selectElement.value;
         const defaultOption = document.createElement('option');
@@ -235,7 +233,7 @@ class UserManagementSystem {
         }
     }
 
-    renderUsers() {
+            renderUsers() {
         this.tableBody.innerHTML = '';
         if (this.users.length === 0) {
             this.tableBody.innerHTML = `
@@ -273,7 +271,7 @@ class UserManagementSystem {
                 <td>
                     <label class="switch">
                         <input type="checkbox" ${user.requires2FA ? 'checked' : ''} 
-                               class="2fa-toggle" data-userid="${user._id}">
+                               class="tfa-toggle" data-userid="${user._id}">
                         <span class="slider round"></span>
                     </label>
                 </td>
@@ -297,7 +295,7 @@ class UserManagementSystem {
             const editBtn = row.querySelector('.btn-edit');
             const deleteBtn = row.querySelector('.btn-delete');
             const statusBtn = row.querySelector('.btn-status');
-            const twoFAToggle = row.querySelector('.2fa-toggle');
+            const twoFAToggle = row.querySelector('.tfa-toggle'); // Changed from 2fa-toggle to tfa-toggle
 
             editBtn.addEventListener('click', () => this.editUser(user._id));
             deleteBtn.addEventListener('click', () => this.showDeleteModal(user._id));
