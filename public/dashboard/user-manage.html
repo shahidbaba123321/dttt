@@ -196,6 +196,21 @@
     font-size: 0.75rem;
     color: var(--text-secondary);
 }
+    #userRoleSelect {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+#userRoleSelect:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    outline: none;
+}
 
 /* Status Badge */
 .status-badge {
@@ -678,8 +693,8 @@
                         <input type="text" id="userDepartment" required>
                     </div>
                     <div class="form-group">
-                        <label for="userRole">Role</label>
-                        <select id="userRole" required>
+                        <label for="userRoleSelect">Role</label>
+                        <select id="userRoleSelect" required>
                             <!-- Roles will be dynamically loaded -->
                         </select>
                     </div>
