@@ -972,137 +972,132 @@ document.addEventListener('DOMContentLoaded', () => {
     <script>
        
  class DashboardContentManager {
-            constructor() {
-                this.currentPage = 'dashboard';
-                this.contentContainer = document.getElementById('dashboardContent');
-                this.initializeEventListeners();
-            }
+    constructor() {
+        this.currentPage = 'dashboard';
+        this.contentContainer = document.getElementById('dashboardContent');
+        this.baseUrl = '/dashboard'; // Add base URL
+        this.initializeEventListeners();
+    }
 
-            initializeEventListeners() {
-                document.querySelectorAll('.menu-item').forEach(item => {
-                    item.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        const page = item.getAttribute('data-page');
-                        this.loadPage(page);
+    initializeEventListeners() {
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = item.getAttribute('data-page');
+                this.loadPage(page);
 
-                        // Update active state in sidebar
-                        document.querySelectorAll('.menu-item').forEach(menuItem => {
-                            menuItem.classList.remove('active');
-                        });
-                        item.classList.add('active');
-                    });
+                // Update active state in sidebar
+                document.querySelectorAll('.menu-item').forEach(menuItem => {
+                    menuItem.classList.remove('active');
                 });
+                item.classList.add('active');
+            });
+        });
+    }
+
+    async loadPage(page) {
+        try {
+            console.log('Loading page:', page); // Debug log
+            this.currentPage = page;
+            this.showLoading();
+            this.updatePageTitle(page);
+
+            const content = await this.fetchPageContent(page);
+            this.contentContainer.innerHTML = content;
+
+            // Initialize page-specific functionality
+            switch(page) {
+                case 'roles':
+                    if (typeof RolesPermissionsManager !== 'undefined') {
+                        const rolesManager = new RolesPermissionsManager();
+                        await rolesManager.initialize();
+                    }
+                    break;
+                case 'users':
+                    if (typeof UserManagementSystem !== 'undefined') {
+                        const userManager = new UserManagementSystem();
+                        await userManager.initialize();
+                    }
+                    break;
             }
 
-           // In your DashboardContentManager class (in index.html)
+        } catch (error) {
+            console.error('Error loading page:', error);
+            this.showError();
+        }
+    }
 
-async loadPage(page) {
-    try {
-        this.showLoading();
-        this.updatePageTitle(page);
+    showLoading() {
+        this.contentContainer.innerHTML = `
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <p>Loading content...</p>
+            </div>
+        `;
+    }
 
-        const pageUrls = {
-            dashboard: '/dashboard/dashboard.html',
-            roles: '/dashboard/roles-permissions.html',
-            users: '/dashboard/user-manage.html'  // Add this line
+    showError() {
+        this.contentContainer.innerHTML = `
+            <div class="error-container">
+                <i class="fas fa-exclamation-circle"></i>
+                <h2>Error Loading Content</h2>
+                <p>There was a problem loading the page. Please try again.</p>
+                <button onclick="dashboardContent.loadPage('${this.currentPage}')">Retry</button>
+            </div>
+        `;
+    }
+
+    updatePageTitle(page) {
+        const pageTitles = {
+            dashboard: 'Dashboard Overview',
+            roles: 'Roles & Permissions',
+            users: 'User Management',
+            companies: 'Companies',
+            settings: 'System Settings'
         };
 
-        const url = pageUrls[page];
-        if (!url) {
-            throw new Error('Page not found');
+        const pageTitle = document.querySelector('.page-title');
+        if (pageTitle) {
+            pageTitle.textContent = pageTitles[page] || 'Dashboard';
         }
+    }
 
-        const content = await this.fetchPageContent(url);
-        this.contentContainer.innerHTML = content;
+    async fetchPageContent(page) {
+        try {
+            // Define page mappings
+            const pageUrls = {
+                dashboard: `${this.baseUrl}/dashboard.html`,
+                roles: `${this.baseUrl}/roles-permissions.html`,
+                users: `${this.baseUrl}/user-manage.html`
+            };
 
-        // Initialize page-specific functionality
-        switch(page) {
-            case 'roles':
-                if (typeof RolesPermissionsManager !== 'undefined') {
-                    const rolesManager = new RolesPermissionsManager();
-                    rolesManager.initialize();
-                }
-                break;
-            case 'users':
-                if (typeof UserManagementSystem !== 'undefined') {
-                    const userManager = new UserManagementSystem();
-                    userManager.initialize();
-                }
-                break;
+            const url = pageUrls[page];
+            if (!url) {
+                throw new Error(`Page not found: ${page}`);
+            }
+
+            console.log('Fetching page content from:', url); // Debug log
+
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const content = await response.text();
+            console.log('Content loaded successfully'); // Debug log
+            return content;
+
+        } catch (error) {
+            console.error('Error fetching page content:', error);
+            throw error;
         }
-
-    } catch (error) {
-        console.error('Error loading page:', error);
-        this.showError();
     }
 }
 
-            showLoading() {
-                this.contentContainer.innerHTML = `
-                    <div class="loading-container">
-                        <div class="loading-spinner"></div>
-                        <p>Loading content...</p>
-                    </div>
-                `;
-            }
-
-            showError() {
-                this.contentContainer.innerHTML = `
-                    <div class="error-container">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <h2>Error Loading Content</h2>
-                        <p>There was a problem loading the page. Please try again.</p>
-                        <button onclick="dashboardContent.loadPage('${this.currentPage}')">Retry</button>
-                    </div>
-                `;
-            }
-
-            updatePageTitle(page) {
-                const pageTitles = {
-                    dashboard: 'Dashboard Overview',
-                    roles: 'Roles & Permissions',
-                    users: 'User Management',
-                    companies: 'Companies',
-                    settings: 'System Settings'
-                };
-
-                const pageTitle = document.querySelector('.page-title');
-                if (pageTitle) {
-                    pageTitle.textContent = pageTitles[page] || 'Dashboard';
-                }
-            }
-
-            async fetchPageContent(page) {
-                try {
-                    const pageUrls = {
-                        dashboard: '/dashboard/index.html',
-                        roles: '/dashboard/roles-permissions.html',
-                        users: '/dashboard/user-manage.html'
-                    };
-
-                    const url = pageUrls[page];
-                    if (!url) {
-                        throw new Error('Page not found');
-                    }
-
-                    console.log('Fetching page:', url); // Debug log
-
-                    const response = await fetch(url);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    return await response.text();
-
-                } catch (error) {
-                    console.error('Error fetching page content:', error);
-                    throw error;
-                }
-            }
-        }
-
-        // Initialize the Dashboard Content Manager
-        const dashboardContent = new DashboardContentManager();
+// Initialize the Dashboard Content Manager
+document.addEventListener('DOMContentLoaded', () => {
+    window.dashboardContent = new DashboardContentManager();
+});
 
     </script>
     <script src="js/roles-permissions.js"></script>
