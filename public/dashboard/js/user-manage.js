@@ -33,60 +33,29 @@ class UserManagementSystem {
         }
     }
 
-    async fetchWithAuth(endpoint, options = {}) {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            throw new Error('No authentication token found');
-        }
-
-        const defaultOptions = {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-        };
-
-        const finalOptions = {
-            ...defaultOptions,
-            ...options,
-            headers: {
-                ...defaultOptions.headers,
-                ...(options.headers || {})
-            }
-        };
-
+    async loadUsers() {
         try {
-            console.log(`Fetching ${endpoint} with options:`, finalOptions);
+            console.log('Loading users...');
+            const queryParams = new URLSearchParams({
+                page: this.currentPage,
+                limit: this.itemsPerPage,
+                ...this.filters
+            });
 
-            const response = await fetch(`${this.baseUrl}${endpoint}`, finalOptions);
+            const response = await this.fetchWithAuth('/users');
             
-            console.log(`Response status:`, response.status);
-
-            if (response.status === 401) {
-                localStorage.clear();
-                window.location.href = '/login.html';
-                throw new Error('Session expired. Please login again.');
+            if (response.success) {
+                this.users = response.users;
+                this.totalUsers = response.pagination?.total || response.users.length;
+                this.renderUsers();
+                this.updatePagination();
+                console.log('Users loaded successfully:', this.users);
+            } else {
+                throw new Error('Failed to load users');
             }
-
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                const data = await response.json();
-                console.log('Response data:', data);
-
-                if (!response.ok) {
-                    throw new Error(data.message || `HTTP error! status: ${response.status}`);
-                }
-                return data;
-            }
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            return response;
         } catch (error) {
-            console.error('API request failed:', error);
-            throw error;
+            console.error('Error loading users:', error);
+            this.showNotification('Failed to load users', 'error');
         }
     }
 
@@ -106,32 +75,6 @@ class UserManagementSystem {
         } catch (error) {
             console.error('Error loading roles:', error);
             this.showNotification('Failed to load roles', 'error');
-        }
-    }
-
-    async loadUsers() {
-        try {
-            console.log('Loading users...');
-            const queryParams = new URLSearchParams({
-                page: this.currentPage,
-                limit: this.itemsPerPage,
-                ...this.filters
-            });
-
-            const response = await this.fetchWithAuth(`/users?${queryParams}`);
-            
-            if (response.success) {
-                this.users = response.users;
-                this.totalUsers = response.pagination.total;
-                this.renderUsers();
-                this.updatePagination();
-                console.log('Users loaded successfully:', this.users);
-            } else {
-                throw new Error('Failed to load users');
-            }
-        } catch (error) {
-            console.error('Error loading users:', error);
-            this.showNotification('Failed to load users', 'error');
         }
     }
 
@@ -173,6 +116,16 @@ class UserManagementSystem {
             });
         }
 
+        // Modal Outside Click
+        const userModal = document.getElementById('userModal');
+        if (userModal) {
+            userModal.addEventListener('click', (e) => {
+                if (e.target.id === 'userModal') {
+                    this.closeModal();
+                }
+            });
+        }
+
         // Search Input
         const searchInput = document.getElementById('userSearch');
         if (searchInput) {
@@ -194,213 +147,9 @@ class UserManagementSystem {
                 });
             }
         });
-
-        // Modal Outside Click
-        const userModal = document.getElementById('userModal');
-        if (userModal) {
-            userModal.addEventListener('click', (e) => {
-                if (e.target.id === 'userModal') {
-                    this.closeModal();
-                }
-            });
-        }
-            setupFilters() {
-        // Populate department filter with unique departments
-        const departments = [...new Set(this.users.map(user => user.department).filter(Boolean))];
-        const departmentFilter = document.getElementById('departmentFilter');
-        if (departmentFilter) {
-            departmentFilter.innerHTML = `
-                <option value="">All Departments</option>
-                ${departments.map(dept => `
-                    <option value="${dept}">${dept}</option>
-                `).join('')}
-            `;
-        }
-
-        // Populate role filter
-        this.populateRoleFilter();
     }
 
-    populateRoleFilter() {
-        const roleFilter = document.getElementById('roleFilter');
-        if (roleFilter && this.roles.length) {
-            roleFilter.innerHTML = `
-                <option value="">All Roles</option>
-                ${this.roles.map(role => `
-                    <option value="${role._id}">${role.name}</option>
-                `).join('')}
-            `;
-        }
-    }
-
-    populateRoleSelect() {
-        const roleSelect = document.getElementById('userRole');
-        if (roleSelect && this.roles.length) {
-            roleSelect.innerHTML = `
-                <option value="">Select Role</option>
-                ${this.roles.map(role => `
-                    <option value="${role._id}">${role.name}</option>
-                `).join('')}
-            `;
-        }
-    }
-
-    renderUsers() {
-        const tbody = document.getElementById('usersTableBody');
-        if (!tbody) return;
-
-        if (this.users.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="no-data">
-                        <div class="no-data-message">
-                            <i class="fas fa-users-slash"></i>
-                            <p>No users found</p>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        tbody.innerHTML = this.users.map(user => `
-            <tr>
-                <td>
-                    <div class="user-info">
-                        <div class="user-avatar">
-                            ${this.getInitials(user.name || user.email)}
-                        </div>
-                        <div class="user-details">
-                            <div class="user-name">${user.name || 'N/A'}</div>
-                            <div class="user-id">${user.email}</div>
-                        </div>
-                    </div>
-                </td>
-                <td>${user.email}</td>
-                <td>${user.department || 'N/A'}</td>
-                <td>${this.getRoleName(user.role)}</td>
-                <td>
-                    <span class="status-badge ${user.status}">
-                        ${user.status}
-                    </span>
-                </td>
-                <td>
-                    <div class="toggle-switch">
-                        <input type="checkbox" id="2fa_${user._id}" 
-                            ${user.requires2FA ? 'checked' : ''} 
-                            onchange="userManagement.toggle2FA('${user._id}')">
-                        <label for="2fa_${user._id}"></label>
-                    </div>
-                </td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="action-btn edit" onclick="userManagement.editUser('${user._id}')" title="Edit User">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="action-btn" onclick="userManagement.resetPassword('${user._id}')" title="Reset Password">
-                            <i class="fas fa-key"></i>
-                        </button>
-                        <button class="action-btn" onclick="userManagement.toggleUserStatus('${user._id}')" 
-                            title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User">
-                            <i class="fas fa-${user.status === 'active' ? 'ban' : 'check-circle'}"></i>
-                        </button>
-                        <button class="action-btn delete" onclick="userManagement.deleteUser('${user._id}')" title="Delete User">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-
-        this.updatePaginationInfo();
-    }
-
-    updatePaginationInfo() {
-        const startRange = document.getElementById('startRange');
-        const endRange = document.getElementById('endRange');
-        const totalUsers = document.getElementById('totalUsers');
-
-        if (startRange && endRange && totalUsers) {
-            const start = (this.currentPage - 1) * this.itemsPerPage + 1;
-            const end = Math.min(start + this.itemsPerPage - 1, this.totalUsers);
-            
-            startRange.textContent = this.totalUsers ? start : 0;
-            endRange.textContent = end;
-            totalUsers.textContent = this.totalUsers;
-        }
-    }
-
-    updatePagination() {
-        const pagination = document.getElementById('pagination');
-        if (!pagination) return;
-
-        const totalPages = Math.ceil(this.totalUsers / this.itemsPerPage);
-        let paginationHTML = '';
-
-        // Previous button
-        paginationHTML += `
-            <button class="pagination-btn" 
-                ${this.currentPage === 1 ? 'disabled' : ''} 
-                onclick="userManagement.changePage(${this.currentPage - 1})">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-        `;
-
-        // Page numbers
-        for (let i = 1; i <= totalPages; i++) {
-            if (
-                i === 1 || 
-                i === totalPages || 
-                (i >= this.currentPage - 1 && i <= this.currentPage + 1)
-            ) {
-                paginationHTML += `
-                    <button class="pagination-btn ${i === this.currentPage ? 'active' : ''}" 
-                        onclick="userManagement.changePage(${i})">
-                        ${i}
-                    </button>
-                `;
-            } else if (
-                i === this.currentPage - 2 || 
-                i === this.currentPage + 2
-            ) {
-                paginationHTML += `<span class="pagination-ellipsis">...</span>`;
-            }
-        }
-
-        // Next button
-        paginationHTML += `
-            <button class="pagination-btn" 
-                ${this.currentPage === totalPages ? 'disabled' : ''} 
-                onclick="userManagement.changePage(${this.currentPage + 1})">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-        `;
-
-        pagination.innerHTML = paginationHTML;
-    }
-
-    async changePage(page) {
-        if (page < 1 || page > Math.ceil(this.totalUsers / this.itemsPerPage)) return;
-        
-        this.currentPage = page;
-        await this.loadUsers();
-    }
-
-    getInitials(name) {
-        return name
-            .split(' ')
-            .map(word => word[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2);
-    }
-
-    getRoleName(roleId) {
-        const role = this.roles.find(r => r._id === roleId);
-        return role ? role.name : 'N/A';
-    }
-
-            async saveUser() {
+    async saveUser() {
         try {
             const form = document.getElementById('userForm');
             if (!form) return;
@@ -454,81 +203,97 @@ class UserManagementSystem {
         }
     }
 
-    validateUserData(userData) {
-        if (!userData.name) {
-            this.showNotification('Name is required', 'error');
-            return false;
+    openModal(isEditing = false) {
+        const modal = document.getElementById('userModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const form = document.getElementById('userForm');
+
+        if (!modal || !modalTitle || !form) {
+            console.error('Required modal elements not found');
+            return;
         }
 
-        if (!userData.email || !this.isValidEmail(userData.email)) {
-            this.showNotification('Valid email is required', 'error');
-            return false;
+        modalTitle.textContent = isEditing ? 'Edit User' : 'Add New User';
+        form.reset();
+
+        if (isEditing && this.currentUser) {
+            document.getElementById('userName').value = this.currentUser.name || '';
+            document.getElementById('userEmail').value = this.currentUser.email;
+            document.getElementById('userDepartment').value = this.currentUser.department || '';
+            document.getElementById('userRole').value = this.currentUser.role || '';
+            document.getElementById('user2FA').checked = this.currentUser.requires2FA || false;
+            document.getElementById('userEmail').disabled = true;
+        } else {
+            document.getElementById('userEmail').disabled = false;
+            this.currentUser = null;
         }
 
-        if (!userData.department) {
-            this.showNotification('Department is required', 'error');
-            return false;
-        }
-
-        if (!userData.role) {
-            this.showNotification('Role is required', 'error');
-            return false;
-        }
-
-        return true;
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+        document.getElementById('userName').focus();
     }
 
-    isValidEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-
-    async editUser(userId) {
-        try {
-            console.log('Editing user:', userId);
-            const response = await this.fetchWithAuth(`/users/${userId}`);
+    closeModal() {
+        const modal = document.getElementById('userModal');
+        if (modal) {
+            modal.style.display = 'none';
+            modal.classList.remove('active');
+            this.currentUser = null;
             
-            if (response.success) {
-                this.currentUser = response.user;
-                this.openModal(true);
-            } else {
-                throw new Error('Failed to fetch user details');
+            const form = document.getElementById('userForm');
+            if (form) {
+                form.reset();
+                const errorMessages = form.querySelectorAll('.error-message');
+                errorMessages.forEach(error => error.remove());
             }
-        } catch (error) {
-            console.error('Error editing user:', error);
-            this.showNotification('Failed to load user details', 'error');
+
+            const emailInput = document.getElementById('userEmail');
+            if (emailInput) {
+                emailInput.disabled = false;
+            }
         }
     }
+}
 
-    async deleteUser(userId) {
+    async toggle2FA(userId) {
         try {
-            const confirmed = await this.showConfirmDialog(
-                'Delete User',
-                'Are you sure you want to delete this user? This action cannot be undone.'
-            );
+            const user = this.users.find(u => u._id === userId);
+            if (!user) return;
 
-            if (!confirmed) return;
+            const checkbox = document.getElementById(`2fa_${userId}`);
+            const newState = checkbox.checked;
 
-            const response = await this.fetchWithAuth(`/users/${userId}`, {
-                method: 'DELETE'
+            const response = await this.fetchWithAuth(`/users/${userId}/2fa`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                    requires2FA: newState
+                })
             });
 
             if (response.success) {
-                await this.createAuditLog('USER_DELETED', {
+                await this.createAuditLog('TWO_FA_SETTING_CHANGED', {
                     targetUser: userId,
                     details: {
-                        deletedBy: localStorage.getItem('userEmail'),
-                        timestamp: new Date().toISOString()
+                        previous2FAStatus: !newState,
+                        new2FAStatus: newState
                     }
                 });
 
-                this.showNotification('User deleted successfully', 'success');
-                await this.loadUsers();
+                this.showNotification(
+                    `2FA ${newState ? 'enabled' : 'disabled'} successfully`,
+                    'success'
+                );
             } else {
-                throw new Error(response.message || 'Failed to delete user');
+                checkbox.checked = !newState;
+                throw new Error(response.message || 'Failed to update 2FA status');
             }
         } catch (error) {
-            console.error('Error deleting user:', error);
-            this.showNotification(error.message || 'Failed to delete user', 'error');
+            console.error('Error toggling 2FA:', error);
+            this.showNotification(error.message || 'Failed to update 2FA status', 'error');
+            const checkbox = document.getElementById(`2fa_${userId}`);
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+            }
         }
     }
 
@@ -557,8 +322,7 @@ class UserManagementSystem {
                     targetUser: userId,
                     details: {
                         previousStatus: user.status,
-                        newStatus,
-                        modifiedBy: localStorage.getItem('userEmail')
+                        newStatus
                     }
                 });
 
@@ -573,50 +337,36 @@ class UserManagementSystem {
         }
     }
 
-    async toggle2FA(userId) {
+    async deleteUser(userId) {
         try {
-            const user = this.users.find(u => u._id === userId);
-            if (!user) return;
+            const confirmed = await this.showConfirmDialog(
+                'Delete User',
+                'Are you sure you want to delete this user? This action cannot be undone.'
+            );
 
-            const checkbox = document.getElementById(`2fa_${userId}`);
-            const newState = checkbox.checked;
+            if (!confirmed) return;
 
-            const response = await this.fetchWithAuth(`/users/${userId}/2fa`, {
-                method: 'PUT',
-                body: JSON.stringify({ requires2FA: newState })
+            const response = await this.fetchWithAuth(`/users/${userId}`, {
+                method: 'DELETE'
             });
 
             if (response.success) {
-                await this.createAuditLog('USER_2FA_CHANGED', {
-                    targetUser: userId,
-                    details: {
-                        previous2FAStatus: !newState,
-                        new2FAStatus: newState,
-                        modifiedBy: localStorage.getItem('userEmail')
-                    }
+                await this.createAuditLog('USER_DELETED', {
+                    targetUser: userId
                 });
 
-                this.showNotification(
-                    `2FA ${newState ? 'enabled' : 'disabled'} successfully`,
-                    'success'
-                );
+                this.showNotification('User deleted successfully', 'success');
+                await this.loadUsers();
             } else {
-                // Revert checkbox state
-                checkbox.checked = !newState;
-                throw new Error(response.message || 'Failed to update 2FA status');
+                throw new Error(response.message || 'Failed to delete user');
             }
         } catch (error) {
-            console.error('Error toggling 2FA:', error);
-            this.showNotification(error.message || 'Failed to update 2FA status', 'error');
-            // Revert checkbox state on error
-            const checkbox = document.getElementById(`2fa_${userId}`);
-            if (checkbox) {
-                checkbox.checked = !checkbox.checked;
-            }
+            console.error('Error deleting user:', error);
+            this.showNotification(error.message || 'Failed to delete user', 'error');
         }
     }
 
-            async resetPassword(userId) {
+    async resetPassword(userId) {
         try {
             const confirmed = await this.showConfirmDialog(
                 'Reset Password',
@@ -631,11 +381,7 @@ class UserManagementSystem {
 
             if (response.success) {
                 await this.createAuditLog('USER_PASSWORD_RESET', {
-                    targetUser: userId,
-                    details: {
-                        resetBy: localStorage.getItem('userEmail'),
-                        timestamp: new Date().toISOString()
-                    }
+                    targetUser: userId
                 });
 
                 this.showNotification('Password reset successfully', 'success');
@@ -648,62 +394,6 @@ class UserManagementSystem {
         }
     }
 
-    openModal(isEditing = false) {
-        const modal = document.getElementById('userModal');
-        const modalTitle = document.getElementById('modalTitle');
-        const form = document.getElementById('userForm');
-
-        if (!modal || !modalTitle || !form) {
-            console.error('Required modal elements not found');
-            return;
-        }
-
-        modalTitle.textContent = isEditing ? 'Edit User' : 'Add New User';
-        form.reset();
-
-        if (isEditing && this.currentUser) {
-            // Populate form with user data
-            document.getElementById('userName').value = this.currentUser.name || '';
-            document.getElementById('userEmail').value = this.currentUser.email;
-            document.getElementById('userDepartment').value = this.currentUser.department || '';
-            document.getElementById('userRole').value = this.currentUser.role || '';
-            document.getElementById('user2FA').checked = this.currentUser.requires2FA || false;
-
-            // Disable email field for existing users
-            document.getElementById('userEmail').disabled = true;
-        } else {
-            // Enable email field for new users
-            document.getElementById('userEmail').disabled = false;
-            this.currentUser = null;
-        }
-
-        modal.classList.add('active');
-        // Focus on first input
-        document.getElementById('userName').focus();
-    }
-
-    closeModal() {
-        const modal = document.getElementById('userModal');
-        if (modal) {
-            modal.classList.remove('active');
-            this.currentUser = null;
-            
-            // Reset form validation states
-            const form = document.getElementById('userForm');
-            if (form) {
-                form.reset();
-                const errorMessages = form.querySelectorAll('.error-message');
-                errorMessages.forEach(error => error.remove());
-            }
-
-            // Enable email field
-            const emailInput = document.getElementById('userEmail');
-            if (emailInput) {
-                emailInput.disabled = false;
-            }
-        }
-    }
-
     async createAuditLog(action, details) {
         try {
             const response = await this.fetchWithAuth('/audit-logs', {
@@ -712,7 +402,7 @@ class UserManagementSystem {
                     action,
                     performedBy: localStorage.getItem('userId'),
                     targetUser: details.targetUser,
-                    details: details.details,
+                    details: details.details || {},
                     timestamp: new Date().toISOString()
                 })
             });
@@ -722,32 +412,32 @@ class UserManagementSystem {
             }
         } catch (error) {
             console.error('Error creating audit log:', error);
-            // Don't throw the error as audit log failure shouldn't break the main functionality
         }
     }
 
     showConfirmDialog(title, message) {
         return new Promise((resolve) => {
             const confirmationModal = document.getElementById('confirmationModal');
+            if (!confirmationModal) {
+                resolve(window.confirm(message));
+                return;
+            }
+
             const confirmationTitle = document.getElementById('confirmationTitle');
             const confirmationMessage = document.getElementById('confirmationMessage');
             const confirmButton = document.getElementById('confirmAction');
             const cancelButton = document.getElementById('cancelAction');
             const closeButton = document.getElementById('closeConfirmationModal');
 
-            if (!confirmationModal || !confirmationTitle || !confirmationMessage) {
-                resolve(window.confirm(message));
-                return;
-            }
-
             confirmationTitle.textContent = title;
             confirmationMessage.textContent = message;
 
+            confirmationModal.style.display = 'flex';
+            confirmationModal.classList.add('active');
+
             const cleanup = () => {
+                confirmationModal.style.display = 'none';
                 confirmationModal.classList.remove('active');
-                confirmButton.onclick = null;
-                cancelButton.onclick = null;
-                closeButton.onclick = null;
             };
 
             confirmButton.onclick = () => {
@@ -759,8 +449,6 @@ class UserManagementSystem {
                 cleanup();
                 resolve(false);
             };
-
-            confirmationModal.classList.add('active');
         });
     }
 
@@ -786,6 +474,34 @@ class UserManagementSystem {
         }, 100);
     }
 
+    validateUserData(userData) {
+        if (!userData.name) {
+            this.showNotification('Name is required', 'error');
+            return false;
+        }
+
+        if (!userData.email || !this.isValidEmail(userData.email)) {
+            this.showNotification('Valid email is required', 'error');
+            return false;
+        }
+
+        if (!userData.department) {
+            this.showNotification('Department is required', 'error');
+            return false;
+        }
+
+        if (!userData.role) {
+            this.showNotification('Role is required', 'error');
+            return false;
+        }
+
+        return true;
+    }
+
+    isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
     debounce(func, wait) {
         let timeout;
         return function executedFunction(...args) {
@@ -796,11 +512,6 @@ class UserManagementSystem {
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
         };
-    }
-
-    handleError(error, defaultMessage = 'An error occurred') {
-        console.error('Error:', error);
-        this.showNotification(error.message || defaultMessage, 'error');
     }
 }
 
@@ -815,4 +526,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Export the class for use in other modules if needed
 window.UserManagementSystem = UserManagementSystem;
-    }
