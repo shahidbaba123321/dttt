@@ -431,76 +431,86 @@ class UserManagementSystem {
     }
 
     async saveUser() {
-        try {
-            const form = document.getElementById('userForm');
-            if (!form) {
-                console.error('User form not found');
-                return;
-            }
-
-            // Get form elements
-            const nameInput = document.getElementById('userName');
-            const emailInput = document.getElementById('userEmail');
-            const departmentInput = document.getElementById('userDepartment');
-            const roleSelect = document.getElementById('userRoleSelect');
-            const twoFACheckbox = document.getElementById('user2FA');
-
-            // Check if all elements exist
-            if (!nameInput || !emailInput || !departmentInput || !roleSelect || !twoFACheckbox) {
-                console.error('Required form elements not found');
-                this.showNotification('Form elements missing', 'error');
-                return;
-            }
-
-            const userData = {
-                name: nameInput.value.trim(),
-                email: emailInput.value.trim(),
-                department: departmentInput.value.trim(),
-                role: roleSelect.value,
-                requires2FA: twoFACheckbox.checked
-            };
-
-            console.log('Saving user data:', userData);
-
-            if (!this.validateUserData(userData)) {
-                return;
-            }
-
-            const isEditing = !!this.currentUser;
-            const endpoint = isEditing 
-                ? `/users/${this.currentUser._id}`
-                : '/users';
-
-            const response = await this.fetchWithAuth(endpoint, {
-                method: isEditing ? 'PUT' : 'POST',
-                body: JSON.stringify(userData)
-            });
-
-            if (response.success) {
-                await this.createAuditLog(
-                    isEditing ? 'USER_UPDATED' : 'USER_CREATED',
-                    localStorage.getItem('userId'),
-                    isEditing ? this.currentUser._id : response.userId,
-                    {
-                        previousState: isEditing ? this.currentUser : null,
-                        newState: userData
-                    }
-                );
-
-                this.showNotification(
-                    `User ${isEditing ? 'updated' : 'created'} successfully`,
-                    'success'
-                );
-                await this.loadUsers();
-                this.closeModal();
-            } else {
-                throw new Error(response.message || `Failed to ${isEditing ? 'update' : 'create'} user`);
-            }
-        } catch (error) {
-            console.error('Error saving user:', error);
-            this.showNotification(error.message || 'Failed to save user', 'error');
+    try {
+        // Get the form and validate its existence
+        const form = document.getElementById('userForm');
+        if (!form) {
+            console.error('User form not found');
+            return;
         }
+
+        // Get all required form elements
+        const formElements = {
+            name: document.getElementById('userName'),
+            email: document.getElementById('userEmail'),
+            department: document.getElementById('userDepartment'),
+            role: document.getElementById('userRoleSelect'),
+            requires2FA: document.getElementById('user2FA')
+        };
+
+        // Validate all form elements exist
+        for (const [key, element] of Object.entries(formElements)) {
+            if (!element) {
+                console.error(`Form element ${key} not found`);
+                this.showNotification(`Required field ${key} is missing`, 'error');
+                return;
+            }
+        }
+
+        // Create user data object
+        const userData = {
+            name: formElements.name.value.trim(),
+            email: formElements.email.value.trim(),
+            department: formElements.department.value.trim(),
+            role: formElements.role.value,
+            requires2FA: formElements.requires2FA.checked
+        };
+
+        console.log('Form data:', userData);
+
+        // Validate the data
+        if (!this.validateUserData(userData)) {
+            return;
+        }
+
+        const isEditing = !!this.currentUser;
+        const endpoint = isEditing 
+            ? `/users/${this.currentUser._id}`
+            : '/users';
+
+        console.log(`${isEditing ? 'Updating' : 'Creating'} user:`, userData);
+
+        const response = await this.fetchWithAuth(endpoint, {
+            method: isEditing ? 'PUT' : 'POST',
+            body: JSON.stringify(userData)
+        });
+
+        if (response.success) {
+            // Create audit log
+            await this.createAuditLog(
+                isEditing ? 'USER_UPDATED' : 'USER_CREATED',
+                localStorage.getItem('userId'),
+                isEditing ? this.currentUser._id : response.userId,
+                {
+                    previousState: isEditing ? this.currentUser : null,
+                    newState: userData
+                }
+            );
+
+            this.showNotification(
+                `User ${isEditing ? 'updated' : 'created'} successfully`,
+                'success'
+            );
+            await this.loadUsers();
+            this.closeModal();
+        } else {
+            throw new Error(response.message || `Failed to ${isEditing ? 'update' : 'create'} user`);
+        }
+    } catch (error) {
+        console.error('Error saving user:', error);
+        this.showNotification(error.message || 'Failed to save user', 'error');
     }
+}
 
     validateUserData(userData) {
         const validations = [
@@ -570,60 +580,62 @@ class UserManagementSystem {
         return role ? role.name : 'N/A';
     }
         openModal(isEditing = false) {
-        const modal = document.getElementById('userModal');
-        const modalTitle = document.getElementById('modalTitle');
-        const form = document.getElementById('userForm');
+    const modal = document.getElementById('userModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const form = document.getElementById('userForm');
 
-        if (!modal || !modalTitle || !form) {
-            console.error('Required modal elements not found');
-            return;
-        }
-
-        modalTitle.textContent = isEditing ? 'Edit User' : 'Add New User';
-        form.reset();
-
-        if (isEditing && this.currentUser) {
-            console.log('Populating form with user data:', this.currentUser);
-            
-            // Get form elements
-            const nameInput = document.getElementById('userName');
-            const emailInput = document.getElementById('userEmail');
-            const departmentInput = document.getElementById('userDepartment');
-            const roleSelect = document.getElementById('userRoleSelect');
-            const twoFACheckbox = document.getElementById('user2FA');
-
-            // Check if elements exist before setting values
-            if (nameInput) nameInput.value = this.currentUser.name || '';
-            if (emailInput) {
-                emailInput.value = this.currentUser.email;
-                emailInput.disabled = true;
-            }
-            if (departmentInput) departmentInput.value = this.currentUser.department || '';
-            if (roleSelect) roleSelect.value = this.currentUser.role || '';
-            if (twoFACheckbox) twoFACheckbox.checked = this.currentUser.requires2FA || false;
-        } else {
-            // Reset form for new user
-            const emailInput = document.getElementById('userEmail');
-            if (emailInput) {
-                emailInput.disabled = false;
-            }
-            this.currentUser = null;
-        }
-
-        // Clear any existing error messages
-        const errorMessages = form.querySelectorAll('.error-message');
-        errorMessages.forEach(error => error.remove());
-
-        // Show modal
-        modal.style.display = 'flex';
-        modal.classList.add('active');
-
-        // Focus on name input
-        const nameInput = document.getElementById('userName');
-        if (nameInput) {
-            nameInput.focus();
-        }
+    if (!modal || !modalTitle || !form) {
+        console.error('Required modal elements not found');
+        return;
     }
+
+    modalTitle.textContent = isEditing ? 'Edit User' : 'Add New User';
+    form.reset();
+
+    if (isEditing && this.currentUser) {
+        console.log('Populating form with user data:', this.currentUser);
+        
+        // Get form elements
+        const formElements = {
+            name: document.getElementById('userName'),
+            email: document.getElementById('userEmail'),
+            department: document.getElementById('userDepartment'),
+            role: document.getElementById('userRoleSelect'),
+            requires2FA: document.getElementById('user2FA')
+        };
+
+        // Set form values if elements exist
+        if (formElements.name) formElements.name.value = this.currentUser.name || '';
+        if (formElements.email) {
+            formElements.email.value = this.currentUser.email;
+            formElements.email.disabled = true;
+        }
+        if (formElements.department) formElements.department.value = this.currentUser.department || '';
+        if (formElements.role) formElements.role.value = this.currentUser.role || '';
+        if (formElements.requires2FA) formElements.requires2FA.checked = this.currentUser.requires2FA || false;
+    } else {
+        // Reset form for new user
+        const emailInput = document.getElementById('userEmail');
+        if (emailInput) {
+            emailInput.disabled = false;
+        }
+        this.currentUser = null;
+    }
+
+    // Clear any existing error messages
+    const errorMessages = form.querySelectorAll('.error-message');
+    errorMessages.forEach(error => error.remove());
+
+    // Show modal
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+
+    // Focus on name input
+    const nameInput = document.getElementById('userName');
+    if (nameInput) {
+        nameInput.focus();
+    }
+}
 
     closeModal() {
         const modal = document.getElementById('userModal');
@@ -651,21 +663,23 @@ class UserManagementSystem {
     }
 
     async editUser(userId) {
-        try {
-            console.log('Editing user:', userId);
-            const response = await this.fetchWithAuth(`/users/${userId}`);
-            
-            if (response.success) {
-                this.currentUser = response.user;
-                this.openModal(true);
-            } else {
-                throw new Error('Failed to fetch user details');
-            }
-        } catch (error) {
-            console.error('Error editing user:', error);
-            this.showNotification('Failed to load user details', 'error');
+    try {
+        console.log('Editing user:', userId);
+        // First, find the user in the current users array
+        const user = this.users.find(u => u._id === userId);
+        if (!user) {
+            throw new Error('User not found');
         }
+
+        // Set the current user and open modal
+        this.currentUser = user;
+        this.openModal(true);
+    } catch (error) {
+        console.error('Error editing user:', error);
+        this.showNotification('Failed to load user details', 'error');
     }
+}
+
 
     async toggle2FA(userId) {
         try {
