@@ -5,29 +5,18 @@ class UserManagementSystem {
         this.totalUsers = 0;
         this.users = [];
         this.currentEditUserId = null;
+        this.availableRoles = [];
         this.filters = {
             search: '',
             role: '',
             status: '',
             department: ''
         };
-        this.departments = [
-            'Information Technology',
-            'Human Resources',
-            'Finance',
-            'Marketing',
-            'Operations',
-            'Sales',
-            'Research & Development',
-            'Legal',
-            'Customer Support',
-            'Administration'
-        ];
     }
 
     async initialize() {
         try {
-            this.initializeElements();
+            await this.initializeElements();
             await this.loadFilters();
             await this.loadUsers();
             this.initializeEventListeners();
@@ -38,13 +27,12 @@ class UserManagementSystem {
         }
     }
 
-        initializeElements() {
+    async initializeElements() {
         try {
             // Search and filter elements
             this.searchInput = document.getElementById('userSearchInput');
             this.roleFilter = document.getElementById('roleFilter');
             this.statusFilter = document.getElementById('statusFilter');
-            this.departmentFilter = document.getElementById('departmentFilter');
 
             // Table and pagination elements
             this.tableBody = document.getElementById('usersTableBody');
@@ -61,8 +49,16 @@ class UserManagementSystem {
             this.cancelUserBtn = document.getElementById('cancelUserBtn');
             this.confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
             this.cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+            this.closeUserModalBtn = document.getElementById('closeUserModal');
+            this.closeDeleteModalBtn = document.getElementById('closeDeleteModal');
 
-            // Validate required elements
+            // Form elements
+            this.userNameInput = document.getElementById('userName');
+            this.userEmailInput = document.getElementById('userEmail');
+            this.userDepartmentInput = document.getElementById('userDepartment');
+            this.userRoleSelect = document.getElementById('userRole');
+            this.user2FACheckbox = document.getElementById('user2FA');
+
             if (!this.validateElements()) {
                 throw new Error('Required elements not found in the DOM');
             }
@@ -71,27 +67,43 @@ class UserManagementSystem {
             throw error;
         }
     }
-    validateElements() {
-        const requiredElements = [
-            this.searchInput,
-            this.roleFilter,
-            this.statusFilter,
-            this.departmentFilter,
-            this.tableBody,
-            this.paginationControls,
-            this.currentRangeElement,
-            this.totalUsersElement,
-            this.userModal,
-            this.deleteModal,
-            this.userForm,
-            this.addUserBtn,
-            this.saveUserBtn,
-            this.cancelUserBtn,
-            this.confirmDeleteBtn,
-            this.cancelDeleteBtn
-        ];
 
-        return requiredElements.every(element => element !== null);
+    validateElements() {
+        const requiredElements = {
+            searchInput: this.searchInput,
+            roleFilter: this.roleFilter,
+            statusFilter: this.statusFilter,
+            tableBody: this.tableBody,
+            paginationControls: this.paginationControls,
+            currentRangeElement: this.currentRangeElement,
+            totalUsersElement: this.totalUsersElement,
+            userModal: this.userModal,
+            deleteModal: this.deleteModal,
+            userForm: this.userForm,
+            addUserBtn: this.addUserBtn,
+            saveUserBtn: this.saveUserBtn,
+            cancelUserBtn: this.cancelUserBtn,
+            confirmDeleteBtn: this.confirmDeleteBtn,
+            cancelDeleteBtn: this.cancelDeleteBtn,
+            closeUserModalBtn: this.closeUserModalBtn,
+            closeDeleteModalBtn: this.closeDeleteModalBtn,
+            userNameInput: this.userNameInput,
+            userEmailInput: this.userEmailInput,
+            userDepartmentInput: this.userDepartmentInput,
+            userRoleSelect: this.userRoleSelect,
+            user2FACheckbox: this.user2FACheckbox
+        };
+
+        const missingElements = Object.entries(requiredElements)
+            .filter(([, element]) => !element)
+            .map(([name]) => name);
+
+        if (missingElements.length > 0) {
+            console.error('Missing elements:', missingElements);
+            return false;
+        }
+
+        return true;
     }
 
     initializeEventListeners() {
@@ -115,40 +127,51 @@ class UserManagementSystem {
             this.loadUsers();
         });
 
-        this.departmentFilter.addEventListener('change', () => {
-            this.filters.department = this.departmentFilter.value;
-            this.currentPage = 1;
-            this.loadUsers();
+        // Modal handlers
+        this.addUserBtn.addEventListener('click', () => {
+            this.currentEditUserId = null;
+            document.getElementById('modalTitle').textContent = 'Add New User';
+            this.showUserModal();
         });
 
-        // Modal handlers
-        this.addUserBtn.addEventListener('click', () => this.showUserModal());
         this.saveUserBtn.addEventListener('click', (e) => {
             e.preventDefault();
             this.handleUserFormSubmit();
         });
-        this.cancelUserBtn.addEventListener('click', () => this.hideUserModal());
-        this.cancelDeleteBtn.addEventListener('click', () => this.hideDeleteModal());
 
-        // Close modal on outside click
-        window.addEventListener('click', (e) => {
-            if (e.target === this.userModal) this.hideUserModal();
-            if (e.target === this.deleteModal) this.hideDeleteModal();
-        });
-
-        // Form submission
         this.userForm.addEventListener('submit', (e) => {
             e.preventDefault();
             this.handleUserFormSubmit();
         });
-    }
 
+        // Modal close handlers
+        this.closeUserModalBtn.addEventListener('click', () => this.hideUserModal());
+        this.cancelUserBtn.addEventListener('click', () => this.hideUserModal());
+        this.closeDeleteModalBtn.addEventListener('click', () => this.hideDeleteModal());
+        this.cancelDeleteBtn.addEventListener('click', () => this.hideDeleteModal());
+        this.confirmDeleteBtn.addEventListener('click', () => this.handleDeleteUser());
+
+        // Close modals on outside click
+        window.addEventListener('click', (e) => {
+            if (e.target === this.userModal) this.hideUserModal();
+            if (e.target === this.deleteModal) this.hideDeleteModal();
+        });
+    }
         async loadFilters() {
         try {
-            // Load roles
+            // Load roles for both filter and user form
             const rolesResponse = await utils.fetchWithAuth('/roles');
             if (rolesResponse.success) {
-                this.populateSelect(this.roleFilter, rolesResponse.roles, 'name');
+                // Store roles for later use
+                this.availableRoles = rolesResponse.roles.filter(role => 
+                    role.name.toLowerCase() !== 'superadmin'
+                );
+                
+                // Populate role filter in search
+                this.populateSelect(this.roleFilter, this.availableRoles, 'name');
+                
+                // Populate role select in user form
+                this.populateRoleSelect();
             }
 
             // Status filter is static
@@ -166,7 +189,7 @@ class UserManagementSystem {
             throw error;
         }
     }
-    
+
     populateSelect(selectElement, items, valueKey) {
         const currentValue = selectElement.value;
         const defaultOption = document.createElement('option');
@@ -186,6 +209,19 @@ class UserManagementSystem {
         selectElement.value = currentValue;
     }
 
+    populateRoleSelect() {
+        if (!this.userRoleSelect) return;
+
+        this.userRoleSelect.innerHTML = '<option value="">Select Role</option>';
+        
+        this.availableRoles.forEach(role => {
+            const option = document.createElement('option');
+            option.value = role._id;
+            option.textContent = role.name;
+            this.userRoleSelect.appendChild(option);
+        });
+    }
+
     async loadUsers() {
         try {
             this.showLoadingState();
@@ -194,8 +230,7 @@ class UserManagementSystem {
                 limit: this.itemsPerPage,
                 search: this.filters.search,
                 role: this.filters.role,
-                status: this.filters.status,
-                department: this.filters.department
+                status: this.filters.status
             });
 
             const response = await utils.fetchWithAuth(`/users?${queryParams}`);
@@ -233,7 +268,7 @@ class UserManagementSystem {
         }
     }
 
-            renderUsers() {
+    renderUsers() {
         this.tableBody.innerHTML = '';
         if (this.users.length === 0) {
             this.tableBody.innerHTML = `
@@ -295,7 +330,7 @@ class UserManagementSystem {
             const editBtn = row.querySelector('.btn-edit');
             const deleteBtn = row.querySelector('.btn-delete');
             const statusBtn = row.querySelector('.btn-status');
-            const twoFAToggle = row.querySelector('.tfa-toggle'); // Changed from 2fa-toggle to tfa-toggle
+            const twoFAToggle = row.querySelector('.tfa-toggle');
 
             editBtn.addEventListener('click', () => this.editUser(user._id));
             deleteBtn.addEventListener('click', () => this.showDeleteModal(user._id));
@@ -305,8 +340,7 @@ class UserManagementSystem {
             this.tableBody.appendChild(row);
         });
     }
-
-    updatePagination(pagination) {
+        updatePagination(pagination) {
         const { total, page, pages } = pagination;
         
         // Update range and total display
@@ -393,14 +427,24 @@ class UserManagementSystem {
             }
 
             this.currentEditUserId = userId;
-            const form = this.userForm;
 
             // Populate form fields
-            form.elements.userName.value = user.name || '';
-            form.elements.userEmail.value = user.email;
-            form.elements.userDepartment.value = user.department || '';
-            form.elements.userRole.value = user.role;
-            form.elements.user2FA.checked = user.requires2FA;
+            this.userNameInput.value = user.name || '';
+            this.userEmailInput.value = user.email;
+            this.userDepartmentInput.value = user.department || '';
+            
+            // Ensure roles are populated and set the correct role
+            this.populateRoleSelect();
+            if (user.roleId) {
+                this.userRoleSelect.value = user.roleId;
+            } else {
+                const roleObj = this.availableRoles.find(r => r.name === user.role);
+                if (roleObj) {
+                    this.userRoleSelect.value = roleObj._id;
+                }
+            }
+            
+            this.user2FACheckbox.checked = user.requires2FA;
 
             // Update modal title and show
             document.getElementById('modalTitle').textContent = 'Edit User';
@@ -419,12 +463,17 @@ class UserManagementSystem {
                 return;
             }
 
+            if (!this.userRoleSelect.value) {
+                utils.showNotification('Please select a role', 'error');
+                return;
+            }
+
             const formData = {
-                name: this.userForm.elements.userName.value.trim(),
-                email: this.userForm.elements.userEmail.value.trim(),
-                department: this.userForm.elements.userDepartment.value,
-                role: this.userForm.elements.userRole.value,
-                requires2FA: this.userForm.elements.user2FA.checked
+                name: this.userNameInput.value.trim(),
+                email: this.userEmailInput.value.trim(),
+                department: this.userDepartmentInput.value.trim(),
+                roleId: this.userRoleSelect.value,
+                requires2FA: this.user2FACheckbox.checked
             };
 
             const isEdit = !!this.currentEditUserId;
@@ -455,8 +504,7 @@ class UserManagementSystem {
             );
         }
     }
-
-    async toggle2FA(userId, enabled) {
+        async toggle2FA(userId, enabled) {
         try {
             const response = await utils.fetchWithAuth(`/users/${userId}/2fa`, {
                 method: 'PUT',
@@ -499,23 +547,28 @@ class UserManagementSystem {
     }
 
     async showDeleteModal(userId) {
-        this.currentEditUserId = userId;
-        const user = this.users.find(u => u._id === userId);
-        
-        if (!user) {
-            utils.showNotification('User not found', 'error');
-            return;
-        }
+        try {
+            const user = this.users.find(u => u._id === userId);
+            if (!user) {
+                utils.showNotification('User not found', 'error');
+                return;
+            }
 
-        const confirmMessage = document.querySelector('#deleteModal .modal-body p');
-        confirmMessage.textContent = `Are you sure you want to delete ${user.name || user.email}? This action cannot be undone.`;
-        
-        this.deleteModal.style.display = 'block';
-        
-        // Reset and focus on reason input
-        const reasonInput = document.getElementById('deleteReason');
-        reasonInput.value = '';
-        reasonInput.focus();
+            this.currentEditUserId = userId;
+
+            const confirmMessage = document.querySelector('#deleteModal .modal-body p');
+            confirmMessage.textContent = `Are you sure you want to delete ${user.name || user.email}? This action cannot be undone.`;
+            
+            const reasonInput = document.getElementById('deleteReason');
+            reasonInput.value = '';
+            
+            this.deleteModal.style.display = 'block';
+            reasonInput.focus();
+
+        } catch (error) {
+            console.error('Error showing delete modal:', error);
+            utils.showNotification('Failed to prepare delete operation', 'error');
+        }
     }
 
     async handleDeleteUser() {
@@ -546,7 +599,7 @@ class UserManagementSystem {
 
     showUserModal() {
         this.userModal.style.display = 'block';
-        this.userForm.elements.userName.focus();
+        this.userNameInput.focus();
     }
 
     hideUserModal() {
@@ -573,6 +626,28 @@ class UserManagementSystem {
     capitalizeFirst(string) {
         return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
     }
+
+    showNotification(message, type = 'success') {
+        const existingNotifications = document.querySelectorAll('.notification');
+        existingNotifications.forEach(notification => notification.remove());
+
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            <span>${message}</span>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }, 100);
+    }
 }
 
 // Utility function for debouncing
@@ -597,3 +672,6 @@ document.addEventListener('DOMContentLoaded', () => {
         utils.showNotification('System initialization failed', 'error');
     });
 });
+
+// Export the class for use in other modules if needed
+window.UserManagementSystem = UserManagementSystem;
