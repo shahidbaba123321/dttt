@@ -1,3 +1,15 @@
+const debounce = (func, wait) => {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+};
+
 class UserManagementSystem {
     constructor() {
         this.currentPage = 1;
@@ -110,17 +122,6 @@ class UserManagementSystem {
         return true;
     }
 
-     debounce(func, wait) {
-        let timeout;
-        return (...args) => {
-            const later = () => {
-                clearTimeout(timeout);
-                func.apply(this, args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
 
 
     initializeEventListeners() {
