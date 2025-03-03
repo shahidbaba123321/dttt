@@ -994,21 +994,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-           async loadPage(page) {
+           // In your DashboardContentManager class (in index.html)
+
+async loadPage(page) {
     try {
         this.showLoading();
         this.updatePageTitle(page);
 
-        const content = await this.fetchPageContent(page);
+        const pageUrls = {
+            dashboard: '/dashboard/dashboard.html',
+            roles: '/dashboard/roles-permissions.html',
+            users: '/dashboard/user-manage.html'  // Add this line
+        };
+
+        const url = pageUrls[page];
+        if (!url) {
+            throw new Error('Page not found');
+        }
+
+        const content = await this.fetchPageContent(url);
         this.contentContainer.innerHTML = content;
 
-       
-        if (page === 'roles') {
-            // Wait for a brief moment to ensure DOM is updated
-            setTimeout(() => {
-                const rolesManager = new RolesPermissionsManager();
-                rolesManager.initialize();
-            }, 0);
+        // Initialize page-specific functionality
+        switch(page) {
+            case 'roles':
+                if (typeof RolesPermissionsManager !== 'undefined') {
+                    const rolesManager = new RolesPermissionsManager();
+                    rolesManager.initialize();
+                }
+                break;
+            case 'users':
+                if (typeof UserManagementSystem !== 'undefined') {
+                    const userManager = new UserManagementSystem();
+                    userManager.initialize();
+                }
+                break;
         }
 
     } catch (error) {
