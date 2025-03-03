@@ -1,14 +1,13 @@
-const debounce = (func, wait) => {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
+(function() {
+    // Utility function defined first
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            const context = this;
             clearTimeout(timeout);
-            func(...args);
+            timeout = setTimeout(() => func.apply(context, args), wait);
         };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-};
+    }
 
 class UserManagementSystem {
     constructor() {
@@ -125,12 +124,15 @@ class UserManagementSystem {
 
 
     initializeEventListeners() {
-        // Search input with debounce
-        this.searchInput.addEventListener('input', debounce(() => {
-            this.filters.search = this.searchInput.value;
-            this.currentPage = 1;
-            this.loadUsers();
-        }, 300));
+        // Use the debounce function defined above
+            const debouncedSearch = debounce(() => {
+                this.filters.search = this.searchInput.value;
+                this.currentPage = 1;
+                this.loadUsers();
+            }, 300);
+
+            this.searchInput.addEventListener('input', debouncedSearch);
+
 
         // Filter change handlers
         this.roleFilter.addEventListener('change', () => {
