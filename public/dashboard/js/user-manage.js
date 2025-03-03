@@ -60,6 +60,8 @@ class UserManagementSystem {
 
             const response = await fetch(`${this.baseUrl}${endpoint}`, finalOptions);
             
+            console.log(`Response status:`, response.status);
+
             if (response.status === 401) {
                 localStorage.clear();
                 window.location.href = '/login.html';
@@ -69,6 +71,8 @@ class UserManagementSystem {
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 const data = await response.json();
+                console.log('Response data:', data);
+
                 if (!response.ok) {
                     throw new Error(data.message || `HTTP error! status: ${response.status}`);
                 }
@@ -135,13 +139,19 @@ class UserManagementSystem {
         // Create User Button
         const createUserBtn = document.getElementById('createUserBtn');
         if (createUserBtn) {
-            createUserBtn.addEventListener('click', () => this.openModal());
+            createUserBtn.addEventListener('click', () => {
+                console.log('Create user button clicked');
+                this.openModal();
+            });
         }
 
         // Modal Close Button
         const closeModalBtn = document.getElementById('closeModal');
         if (closeModalBtn) {
-            closeModalBtn.addEventListener('click', () => this.closeModal());
+            closeModalBtn.addEventListener('click', () => {
+                console.log('Close modal button clicked');
+                this.closeModal();
+            });
         }
 
         // Save User Button
@@ -149,6 +159,7 @@ class UserManagementSystem {
         if (saveUserBtn) {
             saveUserBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                console.log('Save user button clicked');
                 this.saveUser();
             });
         }
@@ -156,7 +167,10 @@ class UserManagementSystem {
         // Cancel Button
         const cancelUserBtn = document.getElementById('cancelUser');
         if (cancelUserBtn) {
-            cancelUserBtn.addEventListener('click', () => this.closeModal());
+            cancelUserBtn.addEventListener('click', () => {
+                console.log('Cancel button clicked');
+                this.closeModal();
+            });
         }
 
         // Search Input
@@ -190,10 +204,9 @@ class UserManagementSystem {
                 }
             });
         }
-    }
-      setupFilters() {
+            setupFilters() {
         // Populate department filter with unique departments
-        const departments = [...new Set(this.users.map(user => user.department))];
+        const departments = [...new Set(this.users.map(user => user.department).filter(Boolean))];
         const departmentFilter = document.getElementById('departmentFilter');
         if (departmentFilter) {
             departmentFilter.innerHTML = `
@@ -236,7 +249,21 @@ class UserManagementSystem {
         const tbody = document.getElementById('usersTableBody');
         if (!tbody) return;
 
-        tbody.innerHTML = this.users.length ? this.users.map(user => `
+        if (this.users.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="no-data">
+                        <div class="no-data-message">
+                            <i class="fas fa-users-slash"></i>
+                            <p>No users found</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = this.users.map(user => `
             <tr>
                 <td>
                     <div class="user-info">
@@ -245,7 +272,7 @@ class UserManagementSystem {
                         </div>
                         <div class="user-details">
                             <div class="user-name">${user.name || 'N/A'}</div>
-                            <div class="user-id">${user._id}</div>
+                            <div class="user-id">${user.email}</div>
                         </div>
                     </div>
                 </td>
@@ -283,16 +310,7 @@ class UserManagementSystem {
                     </div>
                 </td>
             </tr>
-        `).join('') : `
-            <tr>
-                <td colspan="7" class="no-data">
-                    <div class="no-data-message">
-                        <i class="fas fa-users-slash"></i>
-                        <p>No users found</p>
-                    </div>
-                </td>
-            </tr>
-        `;
+        `).join('');
 
         this.updatePaginationInfo();
     }
@@ -381,7 +399,8 @@ class UserManagementSystem {
         const role = this.roles.find(r => r._id === roleId);
         return role ? role.name : 'N/A';
     }
-      async saveUser() {
+
+            async saveUser() {
         try {
             const form = document.getElementById('userForm');
             if (!form) return;
@@ -394,7 +413,6 @@ class UserManagementSystem {
                 requires2FA: document.getElementById('user2FA').checked
             };
 
-            // Validation
             if (!this.validateUserData(userData)) {
                 return;
             }
@@ -410,14 +428,14 @@ class UserManagementSystem {
             });
 
             if (response.success) {
-                // Create audit log
                 await this.createAuditLog(
                     isEditing ? 'USER_UPDATED' : 'USER_CREATED',
                     {
-                        userId: isEditing ? this.currentUser._id : response.userId,
-                        previousState: isEditing ? this.currentUser : null,
-                        newState: userData,
-                        modifiedBy: localStorage.getItem('userEmail')
+                        targetUser: isEditing ? this.currentUser._id : response.userId,
+                        details: {
+                            previousState: isEditing ? this.currentUser : null,
+                            newState: userData
+                        }
                     }
                 );
 
@@ -496,8 +514,11 @@ class UserManagementSystem {
 
             if (response.success) {
                 await this.createAuditLog('USER_DELETED', {
-                    userId,
-                    deletedBy: localStorage.getItem('userEmail')
+                    targetUser: userId,
+                    details: {
+                        deletedBy: localStorage.getItem('userEmail'),
+                        timestamp: new Date().toISOString()
+                    }
                 });
 
                 this.showNotification('User deleted successfully', 'success');
@@ -533,10 +554,12 @@ class UserManagementSystem {
 
             if (response.success) {
                 await this.createAuditLog('USER_STATUS_CHANGED', {
-                    userId,
-                    previousStatus: user.status,
-                    newStatus,
-                    modifiedBy: localStorage.getItem('userEmail')
+                    targetUser: userId,
+                    details: {
+                        previousStatus: user.status,
+                        newStatus,
+                        modifiedBy: localStorage.getItem('userEmail')
+                    }
                 });
 
                 this.showNotification(`User ${action}d successfully`, 'success');
@@ -565,10 +588,12 @@ class UserManagementSystem {
 
             if (response.success) {
                 await this.createAuditLog('USER_2FA_CHANGED', {
-                    userId,
-                    previous2FAState: !newState,
-                    new2FAState: newState,
-                    modifiedBy: localStorage.getItem('userEmail')
+                    targetUser: userId,
+                    details: {
+                        previous2FAStatus: !newState,
+                        new2FAStatus: newState,
+                        modifiedBy: localStorage.getItem('userEmail')
+                    }
                 });
 
                 this.showNotification(
@@ -583,10 +608,15 @@ class UserManagementSystem {
         } catch (error) {
             console.error('Error toggling 2FA:', error);
             this.showNotification(error.message || 'Failed to update 2FA status', 'error');
+            // Revert checkbox state on error
+            const checkbox = document.getElementById(`2fa_${userId}`);
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+            }
         }
     }
 
-    async resetPassword(userId) {
+            async resetPassword(userId) {
         try {
             const confirmed = await this.showConfirmDialog(
                 'Reset Password',
@@ -601,8 +631,11 @@ class UserManagementSystem {
 
             if (response.success) {
                 await this.createAuditLog('USER_PASSWORD_RESET', {
-                    userId,
-                    resetBy: localStorage.getItem('userEmail')
+                    targetUser: userId,
+                    details: {
+                        resetBy: localStorage.getItem('userEmail'),
+                        timestamp: new Date().toISOString()
+                    }
                 });
 
                 this.showNotification('Password reset successfully', 'success');
@@ -614,12 +647,16 @@ class UserManagementSystem {
             this.showNotification(error.message || 'Failed to reset password', 'error');
         }
     }
-      openModal(isEditing = false) {
+
+    openModal(isEditing = false) {
         const modal = document.getElementById('userModal');
         const modalTitle = document.getElementById('modalTitle');
         const form = document.getElementById('userForm');
 
-        if (!modal || !modalTitle || !form) return;
+        if (!modal || !modalTitle || !form) {
+            console.error('Required modal elements not found');
+            return;
+        }
 
         modalTitle.textContent = isEditing ? 'Edit User' : 'Add New User';
         form.reset();
@@ -641,6 +678,8 @@ class UserManagementSystem {
         }
 
         modal.classList.add('active');
+        // Focus on first input
+        document.getElementById('userName').focus();
     }
 
     closeModal() {
@@ -656,6 +695,12 @@ class UserManagementSystem {
                 const errorMessages = form.querySelectorAll('.error-message');
                 errorMessages.forEach(error => error.remove());
             }
+
+            // Enable email field
+            const emailInput = document.getElementById('userEmail');
+            if (emailInput) {
+                emailInput.disabled = false;
+            }
         }
     }
 
@@ -665,8 +710,9 @@ class UserManagementSystem {
                 method: 'POST',
                 body: JSON.stringify({
                     action,
-                    details,
                     performedBy: localStorage.getItem('userId'),
+                    targetUser: details.targetUser,
+                    details: details.details,
                     timestamp: new Date().toISOString()
                 })
             });
@@ -676,6 +722,7 @@ class UserManagementSystem {
             }
         } catch (error) {
             console.error('Error creating audit log:', error);
+            // Don't throw the error as audit log failure shouldn't break the main functionality
         }
     }
 
@@ -768,3 +815,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Export the class for use in other modules if needed
 window.UserManagementSystem = UserManagementSystem;
+    }
