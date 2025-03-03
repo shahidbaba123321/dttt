@@ -1,9 +1,31 @@
 <style>
 
-.user-management-container {
+.user-management-container,
+    .user-management-container .data-table,
+.user-management-container .form-group,
+.user-management-container .modal,
+.user-management-container .btn{
     padding: 24px;
     max-width: 1400px;
     margin: 0 auto;
+}
+    .user-management-container {
+    padding: 24px !important;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+}
+
+/* Ensure modal z-index is higher than other elements */
+.user-management-container .modal {
+    z-index: 1100 !important;
+}
+
+/* Add specific styling for user management tables */
+.user-management-container .data-table {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    margin-bottom: 24px !important;
 }
 
 /* Header Section */
