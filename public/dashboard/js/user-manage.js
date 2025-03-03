@@ -521,8 +521,9 @@ class UserManagementSystem {
         });
 
         if (response.success) {
+            const action = this.currentEditUserId ? 'updated' : 'created';
             this.showNotification(
-                `User successfully ${isEdit ? 'updated' : 'created'}`,
+                `<strong>${formData.name}</strong> has been successfully ${action}!`,
                 'success'
             );
             this.hideUserModal();
@@ -548,8 +549,11 @@ class UserManagementSystem {
             });
 
             if (response.success) {
-                this.showNotification(`2FA ${enabled ? 'enabled' : 'disabled'} successfully`);
-                await this.loadUsers();
+            this.showNotification(
+                `Two-factor authentication has been ${enabled ? 'enabled' : 'disabled'}!`,
+                'success'
+            );
+            await this.loadUsers();
             } else {
                 throw new Error(response.message || 'Failed to update 2FA settings');
             }
@@ -571,8 +575,12 @@ class UserManagementSystem {
             });
 
             if (response.success) {
-                this.showNotification(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
-                await this.loadUsers();
+            const status = newStatus === 'active' ? 'activated' : 'deactivated';
+            this.showNotification(
+                `User has been successfully ${status}!`,
+                'success'
+            );
+            await this.loadUsers();
             } else {
                 throw new Error(response.message || 'Failed to update user status');
             }
@@ -621,9 +629,12 @@ class UserManagementSystem {
             });
 
             if (response.success) {
-                this.showNotification('User deleted successfully');
-                this.hideDeleteModal();
-                await this.loadUsers();
+            this.showNotification(
+                'User has been successfully deleted!',
+                'success'
+            );
+            this.hideDeleteModal();
+            await this.loadUsers();
             } else {
                 throw new Error(response.message || 'Failed to delete user');
             }
@@ -634,20 +645,37 @@ class UserManagementSystem {
     }
 
     showUserModal() {
-        this.userModal.style.display = 'block';
+         this.userModal.style.display = 'block';
+    requestAnimationFrame(() => {
+        this.userModal.classList.add('active');
         this.nameInput.focus();
+    });
     }
 
     hideUserModal() {
+         this.userModal.classList.remove('active');
+    setTimeout(() => {
         this.userModal.style.display = 'none';
         this.userForm.reset();
         this.currentEditUserId = null;
+    }, 300);
     }
 
+    showDeleteModal(userId) {
+    this.deleteModal.style.display = 'block';
+    requestAnimationFrame(() => {
+        this.deleteModal.classList.add('active');
+        document.getElementById('userManageDeleteReason').focus();
+    });
+}
+
     hideDeleteModal() {
+        this.deleteModal.classList.remove('active');
+    setTimeout(() => {
         this.deleteModal.style.display = 'none';
         document.getElementById('userManageDeleteReason').value = '';
         this.currentEditUserId = null;
+    }, 300);
     }
 
     getInitials(name) {
@@ -664,27 +692,42 @@ class UserManagementSystem {
     }
 
     showNotification(message, type = 'success') {
-        const existingNotifications = document.querySelectorAll('.notification');
-        existingNotifications.forEach(notification => notification.remove());
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notification => notification.remove());
 
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.innerHTML = `
-            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-            <span>${message}</span>
-        `;
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    
+    // Enhanced icons and messages
+    const icons = {
+        success: 'check-circle',
+        error: 'exclamation-circle',
+        warning: 'exclamation-triangle'
+    };
+
+    const icon = icons[type] || icons.success;
+    
+    notification.innerHTML = `
+        <i class="fas fa-${icon}"></i>
+        <div class="notification-content">
+            <div class="notification-message">${message}</div>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Trigger animation
+    setTimeout(() => {
+        notification.classList.add('show');
         
-        document.body.appendChild(notification);
-        
+        // Remove notification after delay
         setTimeout(() => {
-            notification.classList.add('show');
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }, 100);
-    }
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }, 100);
 }
+
 
 // Utility function for debouncing
 function debounce(func, wait) {
