@@ -33,6 +33,63 @@ class UserManagementSystem {
         }
     }
 
+    async fetchWithAuth(endpoint, options = {}) {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const defaultOptions = {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        };
+
+        const finalOptions = {
+            ...defaultOptions,
+            ...options,
+            headers: {
+                ...defaultOptions.headers,
+                ...(options.headers || {})
+            }
+        };
+
+        try {
+            console.log(`Fetching ${endpoint} with options:`, finalOptions);
+
+            const response = await fetch(`${this.baseUrl}${endpoint}`, finalOptions);
+            
+            console.log(`Response status:`, response.status);
+
+            if (response.status === 401) {
+                localStorage.clear();
+                window.location.href = '/login.html';
+                throw new Error('Session expired. Please login again.');
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                if (!response.ok) {
+                    throw new Error(data.message || `HTTP error! status: ${response.status}`);
+                }
+                return data;
+            }
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return response;
+        } catch (error) {
+            console.error('API request failed:', error);
+            throw error;
+        }
+    }
+
     async loadUsers() {
         try {
             console.log('Loading users...');
@@ -78,7 +135,47 @@ class UserManagementSystem {
         }
     }
 
-    initializeEventListeners() {
+    setupFilters() {
+        // Populate department filter with unique departments
+        const departments = [...new Set(this.users.map(user => user.department).filter(Boolean))];
+        const departmentFilter = document.getElementById('departmentFilter');
+        if (departmentFilter) {
+            departmentFilter.innerHTML = `
+                <option value="">All Departments</option>
+                ${departments.map(dept => `
+                    <option value="${dept}">${dept}</option>
+                `).join('')}
+            `;
+        }
+
+        // Populate role filter
+        this.populateRoleFilter();
+    }
+
+    populateRoleFilter() {
+        const roleFilter = document.getElementById('roleFilter');
+        if (roleFilter && this.roles.length) {
+            roleFilter.innerHTML = `
+                <option value="">All Roles</option>
+                ${this.roles.map(role => `
+                    <option value="${role._id}">${role.name}</option>
+                `).join('')}
+            `;
+        }
+    }
+
+    populateRoleSelect() {
+        const roleSelect = document.getElementById('userRoleSelect'); // Updated ID
+        if (roleSelect && this.roles.length) {
+            roleSelect.innerHTML = `
+                <option value="">Select Role</option>
+                ${this.roles.map(role => `
+                    <option value="${role._id}">${role.name}</option>
+                `).join('')}
+            `;
+        }
+    }
+        initializeEventListeners() {
         // Create User Button
         const createUserBtn = document.getElementById('createUserBtn');
         if (createUserBtn) {
@@ -116,16 +213,6 @@ class UserManagementSystem {
             });
         }
 
-        // Modal Outside Click
-        const userModal = document.getElementById('userModal');
-        if (userModal) {
-            userModal.addEventListener('click', (e) => {
-                if (e.target.id === 'userModal') {
-                    this.closeModal();
-                }
-            });
-        }
-
         // Search Input
         const searchInput = document.getElementById('userSearch');
         if (searchInput) {
@@ -147,6 +234,186 @@ class UserManagementSystem {
                 });
             }
         });
+
+        // Modal Outside Click
+        const userModal = document.getElementById('userModal');
+        if (userModal) {
+            userModal.addEventListener('click', (e) => {
+                if (e.target.id === 'userModal') {
+                    this.closeModal();
+                }
+            });
+        }
+
+        // Form Validation
+        const userNameInput = document.getElementById('userName');
+        const userEmailInput = document.getElementById('userEmail');
+        const userDepartmentInput = document.getElementById('userDepartment');
+        const userRoleSelect = document.getElementById('userRoleSelect');
+
+        if (userNameInput) {
+            userNameInput.addEventListener('blur', () => {
+                this.validateField('userName', 'Name is required');
+            });
+        }
+
+        if (userEmailInput) {
+            userEmailInput.addEventListener('blur', () => {
+                this.validateField('userEmail', 'Valid email is required', this.isValidEmail);
+            });
+        }
+
+        if (userDepartmentInput) {
+            userDepartmentInput.addEventListener('blur', () => {
+                this.validateField('userDepartment', 'Department is required');
+            });
+        }
+
+        if (userRoleSelect) {
+            userRoleSelect.addEventListener('change', () => {
+                this.validateField('userRoleSelect', 'Role is required');
+            });
+        }
+    }
+
+    renderUsers() {
+        const tbody = document.getElementById('usersTableBody');
+        if (!tbody) return;
+
+        if (this.users.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="no-data">
+                        <div class="no-data-message">
+                            <i class="fas fa-users-slash"></i>
+                            <p>No users found</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = this.users.map(user => `
+            <tr>
+                <td>
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            ${this.getInitials(user.name || user.email)}
+                        </div>
+                        <div class="user-details">
+                            <div class="user-name">${user.name || 'N/A'}</div>
+                            <div class="user-email">${user.email}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>${user.email}</td>
+                <td>${user.department || 'N/A'}</td>
+                <td>${this.getRoleName(user.role)}</td>
+                <td>
+                    <span class="status-badge ${user.status}">
+                        ${user.status}
+                    </span>
+                </td>
+                <td>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="2fa_${user._id}" 
+                            ${user.requires2FA ? 'checked' : ''} 
+                            onchange="userManagement.toggle2FA('${user._id}')">
+                        <label for="2fa_${user._id}"></label>
+                    </div>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="action-btn edit" onclick="userManagement.editUser('${user._id}')" title="Edit User">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn" onclick="userManagement.resetPassword('${user._id}')" title="Reset Password">
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <button class="action-btn" onclick="userManagement.toggleUserStatus('${user._id}')" 
+                            title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User">
+                            <i class="fas fa-${user.status === 'active' ? 'ban' : 'check-circle'}"></i>
+                        </button>
+                        <button class="action-btn delete" onclick="userManagement.deleteUser('${user._id}')" title="Delete User">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+        this.updatePaginationInfo();
+    }
+
+    updatePaginationInfo() {
+        const startRange = document.getElementById('startRange');
+        const endRange = document.getElementById('endRange');
+        const totalUsers = document.getElementById('totalUsers');
+
+        if (startRange && endRange && totalUsers) {
+            const start = (this.currentPage - 1) * this.itemsPerPage + 1;
+            const end = Math.min(start + this.itemsPerPage - 1, this.totalUsers);
+            
+            startRange.textContent = this.totalUsers ? start : 0;
+            endRange.textContent = end;
+            totalUsers.textContent = this.totalUsers;
+        }
+    }
+        updatePagination() {
+        const pagination = document.getElementById('pagination');
+        if (!pagination) return;
+
+        const totalPages = Math.ceil(this.totalUsers / this.itemsPerPage);
+        let paginationHTML = '';
+
+        // Previous button
+        paginationHTML += `
+            <button class="pagination-btn" 
+                ${this.currentPage === 1 ? 'disabled' : ''} 
+                onclick="userManagement.changePage(${this.currentPage - 1})">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+        `;
+
+        // Page numbers
+        for (let i = 1; i <= totalPages; i++) {
+            if (
+                i === 1 || 
+                i === totalPages || 
+                (i >= this.currentPage - 1 && i <= this.currentPage + 1)
+            ) {
+                paginationHTML += `
+                    <button class="pagination-btn ${i === this.currentPage ? 'active' : ''}" 
+                        onclick="userManagement.changePage(${i})">
+                        ${i}
+                    </button>
+                `;
+            } else if (
+                i === this.currentPage - 2 || 
+                i === this.currentPage + 2
+            ) {
+                paginationHTML += `<span class="pagination-ellipsis">...</span>`;
+            }
+        }
+
+        // Next button
+        paginationHTML += `
+            <button class="pagination-btn" 
+                ${this.currentPage === totalPages ? 'disabled' : ''} 
+                onclick="userManagement.changePage(${this.currentPage + 1})">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        `;
+
+        pagination.innerHTML = paginationHTML;
+    }
+
+    async changePage(page) {
+        if (page < 1 || page > Math.ceil(this.totalUsers / this.itemsPerPage)) return;
+        
+        this.currentPage = page;
+        await this.loadUsers();
     }
 
     async saveUser() {
@@ -158,7 +425,7 @@ class UserManagementSystem {
                 name: document.getElementById('userName').value.trim(),
                 email: document.getElementById('userEmail').value.trim(),
                 department: document.getElementById('userDepartment').value.trim(),
-                role: document.getElementById('userRole').value,
+                role: document.getElementById('userRoleSelect').value,
                 requires2FA: document.getElementById('user2FA').checked
             };
 
@@ -203,7 +470,74 @@ class UserManagementSystem {
         }
     }
 
-    openModal(isEditing = false) {
+    validateUserData(userData) {
+        const validations = [
+            { field: 'userName', value: userData.name, message: 'Name is required' },
+            { 
+                field: 'userEmail', 
+                value: userData.email, 
+                message: 'Valid email is required',
+                validator: this.isValidEmail 
+            },
+            { field: 'userDepartment', value: userData.department, message: 'Department is required' },
+            { field: 'userRoleSelect', value: userData.role, message: 'Role is required' }
+        ];
+
+        let isValid = true;
+
+        validations.forEach(({ field, value, message, validator }) => {
+            if (!this.validateField(field, message, validator)) {
+                isValid = false;
+            }
+        });
+
+        return isValid;
+    }
+
+    validateField(fieldId, message, validator = null) {
+        const field = document.getElementById(fieldId);
+        if (!field) return false;
+
+        const value = field.value.trim();
+        const isValid = validator ? validator(value) : value.length > 0;
+
+        const errorDiv = field.parentElement.querySelector('.error-message');
+        if (!isValid) {
+            if (!errorDiv) {
+                const error = document.createElement('div');
+                error.className = 'error-message';
+                error.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+                field.parentElement.appendChild(error);
+            }
+            field.classList.add('error');
+        } else {
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+            field.classList.remove('error');
+        }
+
+        return isValid;
+    }
+
+    isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    getInitials(name) {
+        return name
+            .split(' ')
+            .map(word => word[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+    }
+
+    getRoleName(roleId) {
+        const role = this.roles.find(r => r._id === roleId);
+        return role ? role.name : 'N/A';
+    }
+        openModal(isEditing = false) {
         const modal = document.getElementById('userModal');
         const modalTitle = document.getElementById('modalTitle');
         const form = document.getElementById('userForm');
@@ -220,13 +554,17 @@ class UserManagementSystem {
             document.getElementById('userName').value = this.currentUser.name || '';
             document.getElementById('userEmail').value = this.currentUser.email;
             document.getElementById('userDepartment').value = this.currentUser.department || '';
-            document.getElementById('userRole').value = this.currentUser.role || '';
+            document.getElementById('userRoleSelect').value = this.currentUser.role || '';
             document.getElementById('user2FA').checked = this.currentUser.requires2FA || false;
             document.getElementById('userEmail').disabled = true;
         } else {
             document.getElementById('userEmail').disabled = false;
             this.currentUser = null;
         }
+
+        // Clear any existing error messages
+        const errorMessages = form.querySelectorAll('.error-message');
+        errorMessages.forEach(error => error.remove());
 
         modal.style.display = 'flex';
         modal.classList.add('active');
@@ -245,6 +583,10 @@ class UserManagementSystem {
                 form.reset();
                 const errorMessages = form.querySelectorAll('.error-message');
                 errorMessages.forEach(error => error.remove());
+
+                // Remove error classes from inputs
+                const inputs = form.querySelectorAll('input, select');
+                inputs.forEach(input => input.classList.remove('error'));
             }
 
             const emailInput = document.getElementById('userEmail');
@@ -253,7 +595,6 @@ class UserManagementSystem {
             }
         }
     }
-}
 
     async toggle2FA(userId) {
         try {
@@ -472,34 +813,6 @@ class UserManagementSystem {
                 setTimeout(() => notification.remove(), 300);
             }, 3000);
         }, 100);
-    }
-
-    validateUserData(userData) {
-        if (!userData.name) {
-            this.showNotification('Name is required', 'error');
-            return false;
-        }
-
-        if (!userData.email || !this.isValidEmail(userData.email)) {
-            this.showNotification('Valid email is required', 'error');
-            return false;
-        }
-
-        if (!userData.department) {
-            this.showNotification('Department is required', 'error');
-            return false;
-        }
-
-        if (!userData.role) {
-            this.showNotification('Role is required', 'error');
-            return false;
-        }
-
-        return true;
-    }
-
-    isValidEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
 
     debounce(func, wait) {
