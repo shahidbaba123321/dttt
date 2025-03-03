@@ -461,53 +461,85 @@ class UserManagementSystem {
     }
 
     async handleUserFormSubmit() {
-        try {
-            if (!this.userForm.checkValidity()) {
-                this.userForm.reportValidity();
-                return;
-            }
-
-            if (!this.roleSelect.value) {
-                this.showNotification('Please select a role', 'error');
-                return;
-            }
-
-            const formData = {
-                name: this.nameInput.value.trim(),
-                email: this.emailInput.value.trim(),
-                department: this.departmentInput.value.trim(),
-                roleId: this.roleSelect.value,
-                requires2FA: this.twoFACheckbox.checked
-            };
-
-            const isEdit = !!this.currentEditUserId;
-            const endpoint = isEdit ? `/users/${this.currentEditUserId}` : '/users';
-            const method = isEdit ? 'PUT' : 'POST';
-
-            const response = await utils.fetchWithAuth(endpoint, {
-                method: method,
-                body: JSON.stringify(formData)
-            });
-
-            if (response.success) {
-                this.showNotification(
-                    `User successfully ${isEdit ? 'updated' : 'created'}`,
-                    'success'
-                );
-                this.hideUserModal();
-                await this.loadUsers();
-            } else {
-                throw new Error(response.message || 'Operation failed');
-            }
-
-        } catch (error) {
-            console.error('Error saving user:', error);
-            this.showNotification(
-                `Failed to ${this.currentEditUserId ? 'update' : 'create'} user: ${error.message}`,
-                'error'
-            );
+    try {
+        if (!this.userForm.checkValidity()) {
+            this.userForm.reportValidity();
+            return;
         }
+
+        if (!this.roleSelect.value) {
+            this.showNotification('Please select a role', 'error');
+            return;
+        }
+
+        // Get the selected role details
+        const selectedRole = this.availableRoles.find(role => role._id === this.roleSelect.value);
+        if (!selectedRole) {
+            this.showNotification('Invalid role selected', 'error');
+            return;
+        }
+
+        const formData = {
+            name: this.nameInput.value.trim(),
+            email: this.emailInput.value.trim(),
+            department: this.departmentInput.value.trim(),
+            role: selectedRole.name, // Send role name instead of ID
+            requires2FA: this.twoFACheckbox.checked,
+            status: 'active' // Add default status for new users
+        };
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+            this.showNotification('Please enter a valid email address', 'error');
+            return;
+        }
+
+        // Validate required fields
+        if (!formData.name || !formData.email || !formData.department || !formData.role) {
+            this.showNotification('Please fill in all required fields', 'error');
+            return;
+        }
+
+        const isEdit = !!this.currentEditUserId;
+        const endpoint = isEdit ? `/users/${this.currentEditUserId}` : '/users';
+        const method = isEdit ? 'PUT' : 'POST';
+
+        // Log the request data for debugging
+        console.log('Sending request:', {
+            endpoint,
+            method,
+            formData
+        });
+
+        const response = await utils.fetchWithAuth(endpoint, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        if (response.success) {
+            this.showNotification(
+                `User successfully ${isEdit ? 'updated' : 'created'}`,
+                'success'
+            );
+            this.hideUserModal();
+            await this.loadUsers();
+        } else {
+            throw new Error(response.message || 'Operation failed');
+        }
+
+    } catch (error) {
+        console.error('Error saving user:', error);
+        this.showNotification(
+            `Failed to ${this.currentEditUserId ? 'update' : 'create'} user: ${error.message}`,
+            'error'
+        );
     }
+}
+    
         async toggle2FA(userId, enabled) {
         try {
             const response = await utils.fetchWithAuth(`/users/${userId}/2fa`, {
