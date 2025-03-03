@@ -34,61 +34,57 @@ class UserManagementSystem {
     }
 
     async fetchWithAuth(endpoint, options = {}) {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            throw new Error('No authentication token found');
+    const token = localStorage.getItem('token');
+    if (!token) {
+        throw new Error('No authentication token found');
+    }
+
+    const defaultOptions = {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+    };
+
+    const finalOptions = {
+        ...defaultOptions,
+        ...options,
+        headers: {
+            ...defaultOptions.headers,
+            ...(options.headers || {})
         }
+    };
 
-        const defaultOptions = {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-        };
+    try {
+        console.log(`Fetching ${endpoint} with options:`, finalOptions);
 
-        const finalOptions = {
-            ...defaultOptions,
-            ...options,
-            headers: {
-                ...defaultOptions.headers,
-                ...(options.headers || {})
-            }
-        };
+        const response = await fetch(`${this.baseUrl}${endpoint}`, finalOptions);
+        
+        console.log(`Response status:`, response.status);
 
-        try {
-            console.log(`Fetching ${endpoint} with options:`, finalOptions);
-
-            const response = await fetch(`${this.baseUrl}${endpoint}`, finalOptions);
-            
-            console.log(`Response status:`, response.status);
-
-            if (response.status === 401) {
-                localStorage.clear();
-                window.location.href = '/login.html';
-                throw new Error('Session expired. Please login again.');
-            }
-
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                const data = await response.json();
-                console.log('Response data:', data);
-
-                if (!response.ok) {
-                    throw new Error(data.message || `HTTP error! status: ${response.status}`);
-                }
-                return data;
-            }
+        // Handle different response types
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            console.log('Response data:', data);
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(data.message || `HTTP error! status: ${response.status}`);
             }
-
-            return response;
-        } catch (error) {
-            console.error('API request failed:', error);
-            throw error;
+            return data;
         }
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error('API request failed:', error);
+        throw error;
     }
+}
+
 
     async loadUsers() {
         try {
@@ -486,31 +482,38 @@ class UserManagementSystem {
         });
 
         if (response.success) {
+          
             // Create audit log
-            await this.createAuditLog(
-                isEditing ? 'USER_UPDATED' : 'USER_CREATED',
-                localStorage.getItem('userId'),
-                isEditing ? this.currentUser._id : response.userId,
-                {
-                    previousState: isEditing ? this.currentUser : null,
-                    newState: userData
-                }
-            );
+           async createAuditLog(action, performedBy, targetUser = null, details = {}) {
+    try {
+        const auditLog = {
+            action,
+            performedBy: performedBy,  // Your server will handle ObjectId conversion
+            targetUser: targetUser,    // Your server will handle ObjectId conversion
+            details,
+            timestamp: new Date().toISOString()
+        };
 
-            this.showNotification(
-                `User ${isEditing ? 'updated' : 'created'} successfully`,
-                'success'
-            );
-            await this.loadUsers();
-            this.closeModal();
-        } else {
-            throw new Error(response.message || `Failed to ${isEditing ? 'update' : 'create'} user`);
+        console.log('Creating audit log:', auditLog);
+
+        const response = await this.fetchWithAuth('/audit-logs', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(auditLog)
+        });
+
+        if (!response.success) {
+            console.error('Failed to create audit log:', response);
         }
     } catch (error) {
-        console.error('Error saving user:', error);
-        this.showNotification(error.message || 'Failed to save user', 'error');
+        console.error('Error creating audit log:', error);
+        // Don't throw the error as audit log failure shouldn't break the main functionality
     }
 }
+
 
     validateUserData(userData) {
         const validations = [
@@ -682,48 +685,54 @@ class UserManagementSystem {
 
 
     async toggle2FA(userId) {
-        try {
-            const user = this.users.find(u => u._id === userId);
-            if (!user) return;
+    try {
+        const user = this.users.find(u => u._id === userId);
+        if (!user) return;
 
-            const checkbox = document.getElementById(`2fa_${userId}`);
-            const newState = checkbox.checked;
+        const checkbox = document.getElementById(`2fa_${userId}`);
+        const newState = checkbox.checked;
 
-            const response = await this.fetchWithAuth(`/users/${userId}/2fa`, {
-                method: 'PUT',
-                body: JSON.stringify({
-                    requires2FA: newState
-                })
-            });
+        const response = await this.fetchWithAuth(`/users/${userId}/2fa`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                requires2FA: newState
+            })
+        });
 
-            if (response.success) {
-                await this.createAuditLog(
-                    'TWO_FA_SETTING_CHANGED',
-                    localStorage.getItem('userId'),
-                    userId,
-                    {
-                        previous2FAStatus: user.requires2FA,
-                        new2FAStatus: newState
-                    }
-                );
+        if (response.success) {
+            // Create audit log with correct parameters
+            await this.createAuditLog(
+                'TWO_FA_SETTING_CHANGED',
+                localStorage.getItem('userId'),
+                userId,
+                {
+                    previous2FAStatus: user.requires2FA,
+                    new2FAStatus: newState,
+                    timestamp: new Date().toISOString()
+                }
+            );
 
-                this.showNotification(
-                    `2FA ${newState ? 'enabled' : 'disabled'} successfully`,
-                    'success'
-                );
-            } else {
-                checkbox.checked = !newState;
-                throw new Error(response.message || 'Failed to update 2FA status');
-            }
-        } catch (error) {
-            console.error('Error toggling 2FA:', error);
-            this.showNotification(error.message || 'Failed to update 2FA status', 'error');
-            const checkbox = document.getElementById(`2fa_${userId}`);
-            if (checkbox) {
-                checkbox.checked = !checkbox.checked;
-            }
+            this.showNotification(
+                `2FA ${newState ? 'enabled' : 'disabled'} successfully`,
+                'success'
+            );
+        } else {
+            checkbox.checked = !newState;
+            throw new Error(response.message || 'Failed to update 2FA status');
+        }
+    } catch (error) {
+        console.error('Error toggling 2FA:', error);
+        this.showNotification(error.message || 'Failed to update 2FA status', 'error');
+        const checkbox = document.getElementById(`2fa_${userId}`);
+        if (checkbox) {
+            checkbox.checked = !checkbox.checked;
         }
     }
+}
 
     async toggleUserStatus(userId) {
         try {
