@@ -26,6 +26,8 @@
                 status: '',
                 department: ''
             };
+
+            this.apiBaseUrl = CONFIG.API_BASE_URL;
         }
 
         async initialize() {
@@ -179,11 +181,12 @@
         }
 
          async loadFilters() {
+        async loadFilters() {
         try {
-            // Load roles for both filter and user form
-            const rolesResponse = await utils.fetchWithAuth('/api/roles');
+            // Load roles
+            const rolesResponse = await utils.fetchWithAuth(`${this.apiBaseUrl}/roles`);
             if (rolesResponse.success) {
-                this.availableRoles = rolesResponse.data.roles.filter(role => 
+                this.availableRoles = rolesResponse.roles.filter(role => 
                     role.name.toLowerCase() !== 'superadmin'
                 );
                 
@@ -191,14 +194,7 @@
                 this.populateRoleSelect();
             }
 
-            // Load departments
-            const departmentsResponse = await utils.fetchWithAuth('/api/departments');
-            if (departmentsResponse.success) {
-                this.departments = departmentsResponse.data.departments;
-                this.populateSelect(this.departmentFilter, this.departments, 'name');
-            }
-
-            // Status filter remains static
+            // Status filter is static
             this.statusFilter.innerHTML = `
                 <option value="">All Status</option>
                 <option value="active">Active</option>
@@ -212,6 +208,7 @@
             throw error;
         }
     }
+
 
 
         populateSelect(selectElement, items, valueKey) {
@@ -254,16 +251,15 @@
                 limit: this.itemsPerPage,
                 search: this.filters.search,
                 role: this.filters.role,
-                status: this.filters.status,
-                department: this.filters.department // Add department filter
+                status: this.filters.status
             });
 
-            const response = await utils.fetchWithAuth(`/api/users?${queryParams}`);
+            const response = await utils.fetchWithAuth(`${this.apiBaseUrl}/users?${queryParams}`);
             if (response.success) {
-                this.users = response.data.users; // Updated response structure
-                this.totalUsers = response.data.pagination.total;
+                this.users = response.users;
+                this.totalUsers = response.pagination.total;
                 this.renderUsers();
-                this.updatePagination(response.data.pagination);
+                this.updatePagination(response.pagination);
             } else {
                 throw new Error(response.message || 'Failed to load users');
             }
@@ -274,6 +270,7 @@
             this.hideLoadingState();
         }
     }
+
 
         showLoadingState() {
             this.tableBody.innerHTML = `
@@ -482,17 +479,25 @@
             }
         }
 
-        async handleUserFormSubmit() {
+       async handleUserFormSubmit() {
         try {
-            if (!this.validateForm()) {
+            if (!this.userForm.checkValidity()) {
+                this.userForm.reportValidity();
                 return;
             }
 
-            const formData = this.getFormData();
+            const formData = {
+                name: this.nameInput.value.trim(),
+                email: this.emailInput.value.trim(),
+                department: this.departmentInput.value.trim(),
+                role: this.roleSelect.value,
+                requires2FA: this.twoFACheckbox.checked
+            };
+
             const isEdit = !!this.currentEditUserId;
             const endpoint = isEdit ? 
-                `/api/users/${this.currentEditUserId}` : 
-                '/api/users';
+                `${this.apiBaseUrl}/users/${this.currentEditUserId}` : 
+                `${this.apiBaseUrl}/users`;
             const method = isEdit ? 'PUT' : 'POST';
 
             const response = await utils.fetchWithAuth(endpoint, {
@@ -504,9 +509,8 @@
             });
 
             if (response.success) {
-                const action = isEdit ? 'updated' : 'created';
                 this.showNotification(
-                    `User ${formData.name} has been successfully ${action}!`,
+                    `User ${isEdit ? 'updated' : 'created'} successfully`,
                     'success'
                 );
                 this.hideUserModal();
@@ -517,12 +521,10 @@
 
         } catch (error) {
             console.error('Error saving user:', error);
-            this.showNotification(
-                `Failed to ${this.currentEditUserId ? 'update' : 'create'} user: ${error.message}`,
-                'error'
-            );
+            this.showNotification(error.message, 'error');
         }
     }
+
         validateForm() {
         if (!this.userForm.checkValidity()) {
             this.userForm.reportValidity();
@@ -573,17 +575,17 @@
 
         async toggle2FA(userId, enabled) {
         try {
-            const response = await utils.fetchWithAuth(`/api/users/${userId}/2fa`, {
-                method: 'PATCH',
+            const response = await utils.fetchWithAuth(`${this.apiBaseUrl}/users/${userId}/2fa`, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ enabled })
+                body: JSON.stringify({ requires2FA: enabled })
             });
 
             if (response.success) {
                 this.showNotification(
-                    `Two-factor authentication has been ${enabled ? 'enabled' : 'disabled'}`,
+                    `Two-factor authentication ${enabled ? 'enabled' : 'disabled'}`,
                     'success'
                 );
                 await this.loadUsers();
@@ -593,29 +595,24 @@
         } catch (error) {
             console.error('Error toggling 2FA:', error);
             this.showNotification('Failed to update 2FA settings', 'error');
-            // Revert toggle state
             const toggle = document.querySelector(`input[data-userid="${userId}"]`);
             if (toggle) toggle.checked = !enabled;
         }
     }
-
           async toggleUserStatus(userId, currentStatus) {
         try {
             const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-            const response = await utils.fetchWithAuth(`/api/users/${userId}/status`, {
-                method: 'PATCH',
+            const response = await utils.fetchWithAuth(`${this.apiBaseUrl}/users/${userId}/status`, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ 
-                    status: newStatus,
-                    reason: `Status changed by administrator`
-                })
+                body: JSON.stringify({ status: newStatus })
             });
 
             if (response.success) {
                 this.showNotification(
-                    `User has been ${newStatus === 'active' ? 'activated' : 'deactivated'}`,
+                    `User status updated successfully`,
                     'success'
                 );
                 await this.loadUsers();
@@ -627,6 +624,7 @@
             this.showNotification('Failed to update user status', 'error');
         }
     }
+
 
         async showDeleteModal(userId) {
             try {
@@ -657,33 +655,34 @@
         }
 
         async handleDeleteUser() {
-            try {
-                const reason = document.getElementById('userManageDeleteReason').value.trim();
-                if (!reason) {
-                    this.showNotification('Please provide a reason for deletion', 'error');
-                    return;
-                }
-
-                const response = await utils.fetchWithAuth(`/users/${this.currentEditUserId}`, {
-                    method: 'DELETE',
-                    body: JSON.stringify({ reason })
-                });
-
-                if (response.success) {
-                    this.showNotification(
-                        'User has been successfully deleted!',
-                        'success'
-                    );
-                    this.hideDeleteModal();
-                    await this.loadUsers();
-                } else {
-                    throw new Error(response.message || 'Failed to delete user');
-                }
-            } catch (error) {
-                console.error('Error deleting user:', error);
-                this.showNotification('Failed to delete user', 'error');
+        try {
+            const reason = document.getElementById('userManageDeleteReason').value.trim();
+            if (!reason) {
+                this.showNotification('Please provide a reason for deletion', 'error');
+                return;
             }
+
+            const response = await utils.fetchWithAuth(`${this.apiBaseUrl}/users/${this.currentEditUserId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ reason })
+            });
+
+            if (response.success) {
+                this.showNotification('User deleted successfully', 'success');
+                this.hideDeleteModal();
+                await this.loadUsers();
+            } else {
+                throw new Error(response.message || 'Failed to delete user');
+            }
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            this.showNotification('Failed to delete user', 'error');
         }
+    }
+}
 
         showUserModal() {
             this.userModal.style.display = 'block';
