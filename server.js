@@ -4,72 +4,66 @@ const { MongoClient, ObjectId } = require('mongodb');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
-const RedisStore = require('rate-limit-redis');
-const Redis = require('ioredis');
-const crypto = require('crypto');
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
+const { validationResult } = require('express-validator');
 require('dotenv').config();
+
+// Redis Configuration
+let Redis, RedisStore, redis;
+
+// Try to initialize Redis if available
+try {
+    Redis = require('ioredis');
+    RedisStore = require('rate-limit-redis');
+    redis = new Redis({
+        host: process.env.REDIS_HOST || 'localhost',
+        port: process.env.REDIS_PORT || 6379,
+        password: process.env.REDIS_PASSWORD,
+        retryStrategy: (times) => {
+            const delay = Math.min(times * 50, 2000);
+            return delay;
+        }
+    });
+    console.log('Redis connected successfully');
+} catch (error) {
+    console.warn('Redis not available, using memory store:', error.message);
+}
 
 const app = express();
 
-// Redis client setup
-const redis = new Redis({
-    host: process.env.REDIS_HOST || 'localhost',
-    port: process.env.REDIS_PORT || 6379,
-    password: process.env.REDIS_PASSWORD,
-    retryStrategy: (times) => {
-        const delay = Math.min(times * 50, 2000);
-        return delay;
-    }
-});
-
-// Rate limiters setup
-const globalLimiter = rateLimit({
-    store: new RedisStore({
-        client: redis,
-        prefix: 'rl:global:'
-    }),
-    windowMs: 15 * 60 * 1000,
-    max: 100,
+// Rate limiter configuration
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
     message: {
         success: false,
         message: 'Too many requests, please try again later.'
-    }
-});
-
-const apiLimiter = rateLimit({
-    store: new RedisStore({
+    },
+    store: redis && RedisStore ? new RedisStore({
         client: redis,
-        prefix: 'rl:api:'
-    }),
-    windowMs: 60 * 1000,
-    max: 30,
-    message: {
-        success: false,
-        message: 'API rate limit exceeded'
-    }
+        prefix: 'rl:'
+    }) : undefined
 });
 
+// Authentication rate limiter
 const authLimiter = rateLimit({
-    store: new RedisStore({
-        client: redis,
-        prefix: 'rl:auth:'
-    }),
-    windowMs: 60 * 60 * 1000,
-    max: 5,
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5, // 5 failed attempts per hour
     message: {
         success: false,
         message: 'Too many failed attempts, please try again later'
-    }
+    },
+    store: redis && RedisStore ? new RedisStore({
+        client: redis,
+        prefix: 'auth_rl:'
+    }) : undefined
 });
-
-// Apply rate limiters
-app.use(globalLimiter);
-app.use('/api/', apiLimiter);
-app.use('/api/login', authLimiter);
 
 // Define CORS options
 const corsOptions = {
-    origin: 'https://main.d1cfw592vg73f.amplifyapp.com',
+    origin: process.env.FRONTEND_URL || 'https://main.d1cfw592vg73f.amplifyapp.com',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: [
         'Content-Type', 
@@ -90,55 +84,72 @@ const corsOptions = {
     optionsSuccessStatus: 204
 };
 
-// Apply CORS configuration
+// Middleware
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
 app.use(express.json());
+app.use(helmet());
+app.use(compression());
+app.use(morgan('combined'));
+app.use(limiter);
+app.use('/api/login', authLimiter);
 
-// Security headers middleware
-const securityHeaders = (req, res, next) => {
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
-    res.setHeader('X-XSS-Protection', '1; mode=block');
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';");
-    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    next();
-};
+// Cache middleware
+const cacheMiddleware = (duration) => {
+    const memoryCache = new Map();
 
-// Request sanitization middleware
-const sanitizeRequest = (req, res, next) => {
-    const sanitize = (obj) => {
-        for (let key in obj) {
-            if (typeof obj[key] === 'string') {
-                obj[key] = obj[key]
-                    .replace(/[<>]/g, '')
-                    .trim();
-            } else if (typeof obj[key] === 'object') {
-                sanitize(obj[key]);
+    return async (req, res, next) => {
+        if (req.method !== 'GET') {
+            return next();
+        }
+
+        const key = `cache:${req.originalUrl}`;
+        try {
+            let cachedResponse;
+
+            if (redis) {
+                cachedResponse = await redis.get(key);
+            } else {
+                cachedResponse = memoryCache.get(key);
             }
+
+            if (cachedResponse) {
+                return res.json(JSON.parse(cachedResponse));
+            }
+
+            res.sendResponse = res.json;
+            res.json = (body) => {
+                const stringifiedBody = JSON.stringify(body);
+                if (redis) {
+                    redis.setex(key, duration, stringifiedBody);
+                } else {
+                    memoryCache.set(key, stringifiedBody);
+                    setTimeout(() => memoryCache.delete(key), duration * 1000);
+                }
+                res.sendResponse(body);
+            };
+
+            next();
+        } catch (error) {
+            console.error('Cache error:', error);
+            next();
         }
     };
-
-    if (req.body) sanitize(req.body);
-    if (req.query) sanitize(req.query);
-    if (req.params) sanitize(req.params);
-
-    next();
 };
 
-// Apply security middlewares
-app.use(securityHeaders);
-app.use(sanitizeRequest);
-
-// Global error handler
-app.use((err, req, res, next) => {
-    console.error('Global error handler:', err);
-    res.status(500).json({
-        success: false,
-        message: 'Internal server error'
-    });
-});
+// Cache invalidation helper
+async function invalidateCache(pattern) {
+    try {
+        if (redis) {
+            const keys = await redis.keys(pattern);
+            if (keys.length) {
+                await redis.del(keys);
+            }
+        }
+        console.log(`Cache invalidation requested for pattern: ${pattern}`);
+    } catch (error) {
+        console.error('Cache invalidation error:', error);
+    }
+}
 
 // MongoDB connection
 const uri = process.env.MONGODB_URI;
@@ -148,7 +159,6 @@ const client = new MongoClient(uri, {
     serverSelectionTimeoutMS: 5000,
     maxPoolSize: 10
 });
-
 // Database and Collections initialization
 let database;
 let users;
@@ -169,6 +179,7 @@ let notifications;
 let system_config;
 let migration_jobs;
 let security_logs;
+let sessions;
 
 // Initialize database connection and collections
 async function initializeDatabase() {
@@ -197,6 +208,7 @@ async function initializeDatabase() {
         system_config = database.collection('system_config');
         migration_jobs = database.collection('migration_jobs');
         security_logs = database.collection('security_logs');
+        sessions = database.collection('sessions');
 
         // Function to check and create index if needed
         const ensureIndex = async (collection, indexSpec, options = {}) => {
@@ -225,12 +237,13 @@ async function initializeDatabase() {
         const indexPromises = [
             // User-related indexes
             ensureIndex(users, { email: 1 }, { unique: true }),
+            ensureIndex(users, { status: 1 }),
+            ensureIndex(users, { role: 1 }),
             ensureIndex(audit_logs, { timestamp: -1 }),
+            ensureIndex(audit_logs, { 'performedBy': 1 }),
             ensureIndex(deleted_users, { originalId: 1 }),
+            ensureIndex(deleted_users, { email: 1 }),
             ensureIndex(user_permissions, { userId: 1 }, { unique: true }),
-            ensureIndex(roles, { name: 1 }, { unique: true }),
-            ensureIndex(role_permissions, { roleId: 1 }, { unique: true }),
-            ensureIndex(user_role_assignments, { userId: 1 }, { unique: true }),
 
             // Company-related indexes
             ensureIndex(companies, { name: 1 }, { unique: true }),
@@ -239,45 +252,39 @@ async function initializeDatabase() {
             ensureIndex(companies, { 'subscription.plan': 1 }),
             ensureIndex(company_users, { companyId: 1 }),
             ensureIndex(company_users, { email: 1 }, { unique: true }),
+            ensureIndex(company_users, { status: 1 }),
             ensureIndex(company_subscriptions, { companyId: 1 }, { unique: true }),
             ensureIndex(company_audit_logs, { companyId: 1 }),
             ensureIndex(company_audit_logs, { timestamp: -1 }),
 
+            // Role and permission indexes
+            ensureIndex(roles, { name: 1 }, { unique: true }),
+            ensureIndex(role_permissions, { roleId: 1 }, { unique: true }),
+            ensureIndex(user_role_assignments, { userId: 1 }, { unique: true }),
+
             // Integration and security indexes
             ensureIndex(webhooks, { companyId: 1 }),
+            ensureIndex(webhooks, { url: 1 }),
             ensureIndex(api_keys, { companyId: 1 }),
+            ensureIndex(api_keys, { key: 1 }, { unique: true }),
             ensureIndex(notifications, { companyId: 1 }),
+            ensureIndex(notifications, { timestamp: -1 }),
             ensureIndex(security_logs, { timestamp: -1 }),
+            ensureIndex(security_logs, { type: 1 }),
             ensureIndex(security_logs, { ip: 1 }),
+            ensureIndex(sessions, { userId: 1 }),
+            ensureIndex(sessions, { expires: 1 }),
+
+            // System indexes
             ensureIndex(migration_jobs, { companyId: 1 }),
-            ensureIndex(migration_jobs, { status: 1 })
+            ensureIndex(migration_jobs, { status: 1 }),
+            ensureIndex(system_config, { type: 1 }, { unique: true })
         ];
 
         await Promise.all(indexPromises);
         
-        // Verify and initialize default data
-        console.log('Verifying collections and initializing default data...');
-        
-        const [rolesCount, plansCount] = await Promise.all([
-            roles.countDocuments(),
-            subscription_plans.countDocuments()
-        ]);
-
-        if (rolesCount === 0) {
-            console.log('Initializing default roles...');
-            await initializeDefaultRoles();
-        }
-
-        if (plansCount === 0) {
-            console.log('Initializing default subscription plans...');
-            await initializeDefaultPlans();
-        }
-
-        // Initialize system configuration if not exists
-        const configExists = await system_config.findOne({ type: 'global' });
-        if (!configExists) {
-            await initializeSystemConfig();
-        }
+        // Initialize default data
+        await initializeDefaultData();
 
         console.log("Database collections and indexes initialized");
         
@@ -300,7 +307,8 @@ async function initializeDatabase() {
             notifications,
             system_config,
             migration_jobs,
-            security_logs
+            security_logs,
+            sessions
         };
     } catch (err) {
         console.error("MongoDB connection error:", err);
@@ -308,7 +316,186 @@ async function initializeDatabase() {
     }
 }
 
-// Initialize default system configuration
+// Initialize default data
+async function initializeDefaultData() {
+    try {
+        // Check and initialize default roles
+        const rolesCount = await roles.countDocuments();
+        if (rolesCount === 0) {
+            console.log('Initializing default roles...');
+            await initializeDefaultRoles();
+        }
+
+        // Check and initialize default subscription plans
+        const plansCount = await subscription_plans.countDocuments();
+        if (plansCount === 0) {
+            console.log('Initializing default subscription plans...');
+            await initializeDefaultPlans();
+        }
+
+        // Check and initialize system configuration
+        const configExists = await system_config.findOne({ type: 'global' });
+        if (!configExists) {
+            console.log('Initializing system configuration...');
+            await initializeSystemConfig();
+        }
+    } catch (error) {
+        console.error('Error initializing default data:', error);
+        throw error;
+    }
+}
+// Initialize default roles
+async function initializeDefaultRoles() {
+    const defaultRoles = {
+        superadmin: {
+            name: 'Superadmin',
+            description: 'Full system access with no restrictions',
+            permissions: ['all'],
+            isDefault: true,
+            isSystem: true
+        },
+        admin: {
+            name: 'Admin',
+            description: 'System administrator with extensive access rights',
+            permissions: ['all_except_superadmin'],
+            isDefault: true
+        },
+        hr_admin: {
+            name: 'HR Admin',
+            description: 'Manages HR functions and user accounts',
+            permissions: [
+                'users_view',
+                'users_create',
+                'users_edit',
+                'users_delete',
+                'departments_manage',
+                'attendance_manage'
+            ],
+            isDefault: true
+        },
+        manager: {
+            name: 'Manager',
+            description: 'Department or team manager',
+            permissions: [
+                'team_view',
+                'team_manage',
+                'attendance_view',
+                'reports_view'
+            ],
+            isDefault: true
+        },
+        employee: {
+            name: 'Employee',
+            description: 'Regular employee access',
+            permissions: [
+                'profile_view',
+                'profile_edit',
+                'attendance_submit'
+            ],
+            isDefault: true
+        }
+    };
+
+    try {
+        for (const [key, role] of Object.entries(defaultRoles)) {
+            await roles.updateOne(
+                { name: role.name },
+                { 
+                    $setOnInsert: { 
+                        ...role,
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                    }
+                },
+                { upsert: true }
+            );
+        }
+        console.log('Default roles initialized');
+    } catch (error) {
+        console.error('Error initializing default roles:', error);
+        throw error;
+    }
+}
+
+// Initialize default subscription plans
+async function initializeDefaultPlans() {
+    const defaultPlans = [
+        {
+            name: 'Basic',
+            description: 'Essential HRMS features for small businesses',
+            price: 99.99,
+            billingCycle: 'monthly',
+            features: [
+                'Employee Management',
+                'Basic Leave Management',
+                'Basic Attendance Tracking',
+                'Standard Reports'
+            ],
+            limits: {
+                users: 50,
+                departments: 5,
+                storage: 5 // GB
+            },
+            status: 'active',
+            createdAt: new Date()
+        },
+        {
+            name: 'Professional',
+            description: 'Advanced features for growing companies',
+            price: 199.99,
+            billingCycle: 'monthly',
+            features: [
+                'All Basic Features',
+                'Advanced Leave Management',
+                'Time Tracking',
+                'Performance Management',
+                'Custom Reports',
+                'API Access'
+            ],
+            limits: {
+                users: 200,
+                departments: 15,
+                storage: 20 // GB
+            },
+            status: 'active',
+            createdAt: new Date()
+        },
+        {
+            name: 'Enterprise',
+            description: 'Complete HRMS solution for large organizations',
+            price: 499.99,
+            billingCycle: 'monthly',
+            features: [
+                'All Professional Features',
+                'Unlimited Users',
+                'Unlimited Departments',
+                'Custom Integrations',
+                'Dedicated Support',
+                'Data Analytics',
+                'Multi-branch Management'
+            ],
+            limits: {
+                users: null, // unlimited
+                departments: null, // unlimited
+                storage: 100 // GB
+            },
+            status: 'active',
+            createdAt: new Date()
+        }
+    ];
+
+    try {
+        await subscription_plans.insertMany(defaultPlans, { ordered: false });
+        console.log('Default subscription plans initialized');
+    } catch (error) {
+        if (error.code !== 11000) { // Ignore duplicate key errors
+            console.error('Error initializing subscription plans:', error);
+            throw error;
+        }
+    }
+}
+
+// Initialize system configuration
 async function initializeSystemConfig() {
     const defaultConfig = {
         type: 'global',
@@ -320,66 +507,64 @@ async function initializeSystemConfig() {
                 requireNumbers: true,
                 requireSpecialChars: true,
                 requireUppercase: true,
-                requireLowercase: true
+                requireLowercase: true,
+                passwordHistory: 5,
+                passwordExpiry: 90 // days
+            },
+            mfaPolicy: {
+                required: false,
+                allowedMethods: ['email', 'authenticator']
+            }
+        },
+        email: {
+            fromName: 'WorkWise Pro',
+            fromEmail: 'noreply@workwisepro.com',
+            templates: {
+                welcome: {
+                    subject: 'Welcome to WorkWise Pro',
+                    enabled: true
+                },
+                passwordReset: {
+                    subject: 'Password Reset Request',
+                    enabled: true
+                },
+                accountLocked: {
+                    subject: 'Account Security Alert',
+                    enabled: true
+                }
             }
         },
         backup: {
             frequency: 'daily',
-            retentionDays: 30
+            retentionDays: 30,
+            time: '00:00',
+            includeAttachments: true
         },
         notifications: {
             enabled: true,
-            types: ['email', 'in-app']
+            channels: ['email', 'in-app'],
+            batchProcessing: true,
+            batchInterval: 300 // 5 minutes
         },
         maintenance: {
             window: 'sunday',
-            time: '00:00'
+            time: '00:00',
+            duration: 120 // minutes
+        },
+        audit: {
+            enabled: true,
+            retentionDays: 365,
+            detailedLogging: true
         },
         createdAt: new Date()
     };
 
-    await system_config.insertOne(defaultConfig);
-    console.log('Default system configuration initialized');
-}
-
-// Cache middleware
-const cacheMiddleware = (duration) => {
-    return async (req, res, next) => {
-        if (req.method !== 'GET') {
-            return next();
-        }
-
-        const key = `cache:${req.originalUrl}`;
-        try {
-            const cachedResponse = await redis.get(key);
-            
-            if (cachedResponse) {
-                return res.json(JSON.parse(cachedResponse));
-            }
-
-            res.sendResponse = res.json;
-            res.json = (body) => {
-                redis.setex(key, duration, JSON.stringify(body));
-                res.sendResponse(body);
-            };
-            
-            next();
-        } catch (error) {
-            console.error('Cache error:', error);
-            next();
-        }
-    };
-};
-
-// Cache invalidation helper
-async function invalidateCache(pattern) {
     try {
-        const keys = await redis.keys(pattern);
-        if (keys.length) {
-            await redis.del(keys);
-        }
+        await system_config.insertOne(defaultConfig);
+        console.log('Default system configuration initialized');
     } catch (error) {
-        console.error('Cache invalidation error:', error);
+        console.error('Error initializing system configuration:', error);
+        throw error;
     }
 }
 
@@ -393,7 +578,7 @@ function isValidCompanyEmail(email) {
     return !genericDomains.includes(domain);
 }
 
-// Audit log functions
+// Audit logging functions
 async function createAuditLog(action, performedBy, targetUser = null, details = {}) {
     try {
         const auditLog = {
@@ -401,7 +586,9 @@ async function createAuditLog(action, performedBy, targetUser = null, details = 
             performedBy: performedBy ? new ObjectId(performedBy) : null,
             targetUser: targetUser ? new ObjectId(targetUser) : null,
             details,
-            timestamp: new Date()
+            timestamp: new Date(),
+            ip: details.ip || null,
+            userAgent: details.userAgent || null
         };
 
         await audit_logs.insertOne(auditLog);
@@ -409,7 +596,7 @@ async function createAuditLog(action, performedBy, targetUser = null, details = 
         console.error('Error creating audit log:', error);
     }
 }
-
+// Company audit log function
 async function createCompanyAuditLog(action, companyId, performedBy, details = {}) {
     try {
         const auditLog = {
@@ -425,6 +612,40 @@ async function createCompanyAuditLog(action, companyId, performedBy, details = {
         console.error('Error creating company audit log:', error);
     }
 }
+
+// Create notification
+async function createNotification(companyId, type, message, metadata = {}) {
+    try {
+        const notification = {
+            companyId: new ObjectId(companyId),
+            type,
+            message,
+            metadata,
+            status: 'unread',
+            createdAt: new Date()
+        };
+
+        await notifications.insertOne(notification);
+
+        // Trigger webhooks if configured
+        const webhook = await webhooks.findOne({
+            companyId: new ObjectId(companyId),
+            events: { $in: [type, 'all'] },
+            status: 'active'
+        });
+
+        if (webhook) {
+            await triggerWebhook(webhook, notification);
+        }
+
+        return notification;
+    } catch (error) {
+        console.error('Error creating notification:', error);
+        throw error;
+    }
+}
+
+// Middleware Functions
 
 // Token verification middleware
 const verifyToken = async (req, res, next) => {
@@ -454,34 +675,28 @@ const verifyToken = async (req, res, next) => {
             });
         }
 
+        // Check if token is in blacklist
+        const isBlacklisted = await redis?.get(`blacklist:${token}`);
+        if (isBlacklisted) {
+            return res.status(401).json({
+                success: false,
+                message: 'Token has been invalidated'
+            });
+        }
+
         // Add user permissions to request
         const userPerms = await user_permissions.findOne({ userId: user._id });
         req.user.permissions = userPerms?.permissions || [];
 
-        // Log security relevant information
-        await security_logs.insertOne({
-            type: 'TOKEN_VERIFICATION',
-            userId: user._id,
-            timestamp: new Date(),
-            ip: req.ip,
-            userAgent: req.get('user-agent'),
-            success: true
-        });
+        // Update last activity
+        await users.updateOne(
+            { _id: user._id },
+            { $set: { lastActivity: new Date() } }
+        );
 
         next();
     } catch (error) {
         console.error('Token verification error:', error);
-        
-        // Log failed verification attempt
-        await security_logs.insertOne({
-            type: 'TOKEN_VERIFICATION_FAILED',
-            timestamp: new Date(),
-            ip: req.ip,
-            userAgent: req.get('user-agent'),
-            error: error.message,
-            success: false
-        });
-
         return res.status(401).json({ 
             success: false, 
             message: 'Invalid token' 
@@ -501,10 +716,14 @@ const verifyAdmin = async (req, res, next) => {
 
         if (!['superadmin', 'admin'].includes(req.user.role.toLowerCase())) {
             await createAuditLog(
-                'UNAUTHORIZED_ADMIN_ACCESS_ATTEMPT',
+                'UNAUTHORIZED_ACCESS_ATTEMPT',
                 req.user.userId,
                 null,
-                { endpoint: req.originalUrl }
+                {
+                    requiredRole: 'admin',
+                    userRole: req.user.role,
+                    endpoint: req.originalUrl
+                }
             );
 
             return res.status(403).json({
@@ -561,10 +780,13 @@ const verifyCompanyAccess = async (req, res, next) => {
 
         if (!companyUser) {
             await createAuditLog(
-                'UNAUTHORIZED_COMPANY_ACCESS_ATTEMPT',
+                'UNAUTHORIZED_COMPANY_ACCESS',
                 req.user.userId,
                 null,
-                { companyId, endpoint: req.originalUrl }
+                {
+                    companyId,
+                    endpoint: req.originalUrl
+                }
             );
 
             return res.status(403).json({
@@ -584,131 +806,30 @@ const verifyCompanyAccess = async (req, res, next) => {
     }
 };
 
-// Security monitoring middleware
-const monitorSecurity = async (req, res, next) => {
-    const startTime = Date.now();
-    const requestId = crypto.randomBytes(16).toString('hex');
+// Request validation middleware
+const validateRequest = (validations) => {
+    return async (req, res, next) => {
+        await Promise.all(validations.map(validation => validation.run(req)));
 
-    req.requestId = requestId;
-
-    res.on('finish', async () => {
-        try {
-            const duration = Date.now() - startTime;
-            
-            await security_logs.insertOne({
-                requestId,
-                timestamp: new Date(),
-                method: req.method,
-                path: req.path,
-                ip: req.ip,
-                userAgent: req.get('user-agent'),
-                userId: req.user?.userId,
-                duration,
-                statusCode: res.statusCode,
-                headers: {
-                    ...req.headers,
-                    authorization: undefined
-                }
-            });
-
-            // Check for security anomalies
-            if (duration > 5000 || res.statusCode >= 400) {
-                await redis.incr(`anomaly:${req.ip}`);
-            }
-
-        } catch (error) {
-            console.error('Security monitoring error:', error);
-        }
-    });
-
-    next();
-};
-
-// IP blocking middleware
-const ipBlockingSystem = async (req, res, next) => {
-    try {
-        const ip = req.ip;
-        const blockedIP = await redis.get(`blocked:${ip}`);
-
-        if (blockedIP) {
-            return res.status(403).json({
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
                 success: false,
-                message: 'Access denied'
+                message: 'Validation error',
+                errors: errors.array()
             });
         }
-
-        const suspiciousCount = await redis.incr(`suspicious:${req.ip}`);
-        await redis.expire(`suspicious:${req.ip}`, 3600);
-
-        if (suspiciousCount > 10) {
-            await redis.setex(`blocked:${ip}`, 86400, 'blocked');
-            
-            await security_logs.insertOne({
-                type: 'IP_BLOCKED',
-                ip,
-                reason: 'Suspicious activity threshold exceeded',
-                timestamp: new Date()
-            });
-
-            return res.status(403).json({
-                success: false,
-                message: 'Access denied due to suspicious activity'
-            });
-        }
-
         next();
-    } catch (error) {
-        console.error('IP blocking system error:', error);
-        next();
-    }
+    };
 };
 
-// Error handling middleware
-const errorHandler = (err, req, res, next) => {
-    console.error('Global error handler:', err);
-    
-    if (err.name === 'ValidationError') {
-        return res.status(400).json({
-            success: false,
-            message: 'Validation Error',
-            errors: err.errors
-        });
-    }
+// API Routes Start Here
 
-    if (err.name === 'MongoError' && err.code === 11000) {
-        return res.status(409).json({
-            success: false,
-            message: 'Duplicate key error'
-        });
-    }
-
-    // Log error to security logs
-    security_logs.insertOne({
-        type: 'ERROR',
-        timestamp: new Date(),
-        error: {
-            name: err.name,
-            message: err.message,
-            stack: err.stack
-        },
-        requestInfo: {
-            method: req.method,
-            path: req.path,
-            ip: req.ip,
-            userId: req.user?.userId
-        }
-    }).catch(console.error);
-
-    res.status(500).json({
-        success: false,
-        message: 'Internal server error'
-    });
-};
-
-// Apply security middleware
-app.use(monitorSecurity);
-app.use(ipBlockingSystem);
-app.use(errorHandler);
+// Test route
+app.get('/', (req, res) => {
+    res.json({ message: 'Server is running!' });
+});
+// Authentication Routes
 
 // Registration endpoint
 app.post('/api/register', async (req, res) => {
@@ -763,7 +884,20 @@ app.post('/api/register', async (req, res) => {
             securityQuestions: [],
             lastPasswordChange: new Date(),
             passwordHistory: [],
-            loginHistory: []
+            loginHistory: [],
+            profile: {
+                emailVerified: false,
+                phoneVerified: false,
+                lastProfileUpdate: new Date()
+            },
+            settings: {
+                notifications: {
+                    email: true,
+                    inApp: true
+                },
+                timezone: 'UTC',
+                language: 'en'
+            }
         };
 
         const result = await users.insertOne(newUser);
@@ -796,12 +930,16 @@ app.post('/api/register', async (req, res) => {
             timestamp: new Date(),
             ip: req.ip,
             userAgent: req.get('user-agent'),
-            success: true
+            details: {
+                email,
+                role
+            }
         });
 
         res.status(201).json({ 
             success: true, 
-            message: 'User registered successfully' 
+            message: 'User registered successfully',
+            userId: result.insertedId
         });
 
     } catch (error) {
@@ -812,8 +950,7 @@ app.post('/api/register', async (req, res) => {
             timestamp: new Date(),
             ip: req.ip,
             userAgent: req.get('user-agent'),
-            error: error.message,
-            success: false
+            error: error.message
         });
 
         res.status(500).json({ 
@@ -824,7 +961,7 @@ app.post('/api/register', async (req, res) => {
 });
 
 // Login endpoint
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', authLimiter, async (req, res) => {
     try {
         const { email, password } = req.body;
 
@@ -936,6 +1073,18 @@ app.post('/api/login', async (req, res) => {
             { expiresIn: '24h' }
         );
 
+        // Create session
+        const session = {
+            userId: user._id,
+            token,
+            ip: req.ip,
+            userAgent: req.get('user-agent'),
+            createdAt: new Date(),
+            expires: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+        };
+
+        await sessions.insertOne(session);
+
         // Reset failed login attempts and update last login
         await users.updateOne(
             { _id: user._id },
@@ -948,7 +1097,8 @@ app.post('/api/login', async (req, res) => {
                     loginHistory: {
                         timestamp: new Date(),
                         ip: req.ip,
-                        userAgent: req.get('user-agent')
+                        userAgent: req.get('user-agent'),
+                        success: true
                     }
                 }
             }
@@ -966,7 +1116,7 @@ app.post('/api/login', async (req, res) => {
             }
         );
 
-        // Create security log for successful login
+        // Create security log
         await security_logs.insertOne({
             type: 'SUCCESSFUL_LOGIN',
             timestamp: new Date(),
@@ -978,10 +1128,13 @@ app.post('/api/login', async (req, res) => {
         res.json({ 
             success: true, 
             token,
-            role: user.role,
-            email: user.email,
-            requires2FA: user.requires2FA,
-            passwordResetRequired: user.passwordResetRequired,
+            user: {
+                id: user._id,
+                email: user.email,
+                role: user.role,
+                requires2FA: user.requires2FA,
+                passwordResetRequired: user.passwordResetRequired
+            },
             message: 'Login successful'
         });
 
@@ -1002,6 +1155,48 @@ app.post('/api/login', async (req, res) => {
         });
     }
 });
+// Logout endpoint
+app.post('/api/logout', verifyToken, async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+
+        // Add token to blacklist with expiry
+        if (redis) {
+            const decoded = jwt.decode(token);
+            const expiryTime = decoded.exp - Math.floor(Date.now() / 1000);
+            await redis.setex(`blacklist:${token}`, expiryTime, 'true');
+        }
+
+        // Remove session
+        await sessions.deleteOne({
+            userId: new ObjectId(req.user.userId),
+            token: token
+        });
+
+        // Create audit log
+        await createAuditLog(
+            'USER_LOGOUT',
+            req.user.userId,
+            req.user.userId,
+            {
+                ip: req.ip,
+                userAgent: req.get('user-agent')
+            }
+        );
+
+        res.json({
+            success: true,
+            message: 'Logged out successfully'
+        });
+
+    } catch (error) {
+        console.error('Logout error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error during logout'
+        });
+    }
+});
 
 // Token verification endpoint
 app.post('/api/verify-token', async (req, res) => {
@@ -1013,6 +1208,17 @@ app.post('/api/verify-token', async (req, res) => {
                 success: false, 
                 message: 'No token provided' 
             });
+        }
+
+        // Check if token is blacklisted
+        if (redis) {
+            const isBlacklisted = await redis.get(`blacklist:${token}`);
+            if (isBlacklisted) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Token has been invalidated'
+                });
+            }
         }
 
         // Verify the token
@@ -1034,43 +1240,490 @@ app.post('/api/verify-token', async (req, res) => {
         // Get current permissions
         const userPerms = await user_permissions.findOne({ userId: user._id });
 
-        // Log verification attempt
-        await security_logs.insertOne({
-            type: 'TOKEN_VERIFICATION',
+        // Check if session exists
+        const session = await sessions.findOne({
             userId: user._id,
-            timestamp: new Date(),
-            ip: req.ip,
-            userAgent: req.get('user-agent'),
-            success: true
+            token: token
         });
+
+        if (!session) {
+            return res.status(401).json({
+                success: false,
+                message: 'Session not found'
+            });
+        }
 
         res.json({ 
             success: true, 
             user: {
+                id: user._id,
                 email: user.email,
                 role: user.role,
                 permissions: userPerms?.permissions || [],
-                requires2FA: user.requires2FA
+                requires2FA: user.requires2FA,
+                lastLogin: user.lastLogin
             }
         });
 
     } catch (error) {
         console.error('Token verification error:', error);
-        
-        await security_logs.insertOne({
-            type: 'TOKEN_VERIFICATION_FAILED',
-            timestamp: new Date(),
-            ip: req.ip,
-            userAgent: req.get('user-agent'),
-            error: error.message
-        });
-
         res.status(401).json({ 
             success: false, 
             message: 'Invalid token' 
         });
     }
 });
+
+// Password reset request
+app.post('/api/reset-password-request', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        const user = await users.findOne({ 
+            email: { $regex: new RegExp(`^${email}$`, 'i') },
+            status: 'active'
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: 'If the email exists, reset instructions will be sent'
+            });
+        }
+
+        // Generate reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const hashedToken = await bcrypt.hash(resetToken, 12);
+
+        // Save reset token
+        await users.updateOne(
+            { _id: user._id },
+            {
+                $set: {
+                    resetToken: hashedToken,
+                    resetTokenExpires: new Date(Date.now() + 3600000) // 1 hour
+                }
+            }
+        );
+
+        // Create audit log
+        await createAuditLog(
+            'PASSWORD_RESET_REQUESTED',
+            user._id,
+            user._id,
+            {
+                ip: req.ip,
+                userAgent: req.get('user-agent')
+            }
+        );
+
+        // In a production environment, send email here
+        console.log('Reset token for development:', resetToken);
+
+        res.json({
+            success: true,
+            message: 'If the email exists, reset instructions will be sent',
+            // Only include token in development
+            ...(process.env.NODE_ENV === 'development' && { resetToken })
+        });
+
+    } catch (error) {
+        console.error('Password reset request error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error processing password reset request'
+        });
+    }
+});
+
+// Reset password
+app.post('/api/reset-password', async (req, res) => {
+    try {
+        const { token, password } = req.body;
+
+        // Validate password strength
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!passwordRegex.test(password)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Password must meet security requirements'
+            });
+        }
+
+        // Find user with valid reset token
+        const user = await users.findOne({
+            resetTokenExpires: { $gt: new Date() }
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired reset token'
+            });
+        }
+
+        // Verify token
+        const validToken = await bcrypt.compare(token, user.resetToken);
+        if (!validToken) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired reset token'
+            });
+        }
+
+        // Check password history
+        const passwordHistory = user.passwordHistory || [];
+        for (const oldPassword of passwordHistory) {
+            const matchesOld = await bcrypt.compare(password, oldPassword.password);
+            if (matchesOld) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Cannot reuse recent passwords'
+                });
+            }
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        // Update user
+        await users.updateOne(
+            { _id: user._id },
+            {
+                $set: {
+                    password: hashedPassword,
+                    resetToken: null,
+                    resetTokenExpires: null,
+                    passwordLastChanged: new Date(),
+                    passwordResetRequired: false
+                },
+                $push: {
+                    passwordHistory: {
+                        $each: [{
+                            password: user.password,
+                            changedAt: new Date()
+                        }],
+                        $slice: -5 // Keep last 5 passwords
+                    }
+                }
+            }
+        );
+
+        // Invalidate all existing sessions
+        await sessions.deleteMany({ userId: user._id });
+
+        // Create audit log
+        await createAuditLog(
+            'PASSWORD_RESET_COMPLETED',
+            user._id,
+            user._id,
+            {
+                ip: req.ip,
+                userAgent: req.get('user-agent')
+            }
+        );
+
+        res.json({
+            success: true,
+            message: 'Password reset successful'
+        });
+
+    } catch (error) {
+        console.error('Password reset error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error resetting password'
+        });
+    }
+});
+// User Profile Management Routes
+
+// Get user profile
+app.get('/api/users/profile', verifyToken, async (req, res) => {
+    try {
+        const user = await users.findOne(
+            { _id: new ObjectId(req.user.userId) },
+            { projection: { password: 0, resetToken: 0, resetTokenExpires: 0 } }
+        );
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Get user's company information if exists
+        const companyUser = await company_users.findOne({
+            userId: new ObjectId(req.user.userId)
+        });
+
+        let companyInfo = null;
+        if (companyUser) {
+            companyInfo = await companies.findOne(
+                { _id: companyUser.companyId },
+                { projection: { name: 1, industry: 1 } }
+            );
+        }
+
+        // Get user permissions
+        const userPerms = await user_permissions.findOne({ userId: user._id });
+
+        // Get recent activity
+        const recentActivity = await audit_logs
+            .find({ performedBy: user._id })
+            .sort({ timestamp: -1 })
+            .limit(10)
+            .toArray();
+
+        res.json({
+            success: true,
+            profile: {
+                ...user,
+                company: companyInfo,
+                permissions: userPerms?.permissions || [],
+                recentActivity
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching user profile:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching user profile'
+        });
+    }
+});
+
+// Update user profile
+app.put('/api/users/profile', verifyToken, async (req, res) => {
+    try {
+        const {
+            name,
+            phone,
+            address,
+            settings,
+            notifications
+        } = req.body;
+
+        // Validate phone format if provided
+        if (phone && !/^\+?[\d\s-]{10,}$/.test(phone)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid phone number format'
+            });
+        }
+
+        const updateDoc = {
+            $set: {
+                ...(name && { name }),
+                ...(phone && { phone }),
+                ...(address && { address }),
+                ...(settings && { settings }),
+                ...(notifications && { 'settings.notifications': notifications }),
+                updatedAt: new Date()
+            }
+        };
+
+        const result = await users.updateOne(
+            { _id: new ObjectId(req.user.userId) },
+            updateDoc
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Create audit log
+        await createAuditLog(
+            'PROFILE_UPDATED',
+            req.user.userId,
+            req.user.userId,
+            {
+                changes: req.body,
+                ip: req.ip,
+                userAgent: req.get('user-agent')
+            }
+        );
+
+        res.json({
+            success: true,
+            message: 'Profile updated successfully'
+        });
+
+    } catch (error) {
+        console.error('Error updating user profile:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating user profile'
+        });
+    }
+});
+
+// Change password
+app.post('/api/users/change-password', verifyToken, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        const user = await users.findOne({ _id: new ObjectId(req.user.userId) });
+
+        // Verify current password
+        const validPassword = await bcrypt.compare(currentPassword, user.password);
+        if (!validPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Current password is incorrect'
+            });
+        }
+
+        // Validate new password
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!passwordRegex.test(newPassword)) {
+            return res.status(400).json({
+                success: false,
+                message: 'New password does not meet security requirements'
+            });
+        }
+
+        // Check password history
+        const passwordHistory = user.passwordHistory || [];
+        for (const oldPassword of passwordHistory) {
+            const matchesOld = await bcrypt.compare(newPassword, oldPassword.password);
+            if (matchesOld) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Cannot reuse recent passwords'
+                });
+            }
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+        // Update password
+        await users.updateOne(
+            { _id: user._id },
+            {
+                $set: {
+                    password: hashedPassword,
+                    passwordLastChanged: new Date(),
+                    passwordResetRequired: false
+                },
+                $push: {
+                    passwordHistory: {
+                        $each: [{
+                            password: user.password,
+                            changedAt: new Date()
+                        }],
+                        $slice: -5 // Keep last 5 passwords
+                    }
+                }
+            }
+        );
+
+        // Invalidate all other sessions
+        await sessions.deleteMany({
+            userId: user._id,
+            token: { $ne: req.headers.authorization?.split(' ')[1] }
+        });
+
+        // Create audit log
+        await createAuditLog(
+            'PASSWORD_CHANGED',
+            user._id,
+            user._id,
+            {
+                ip: req.ip,
+                userAgent: req.get('user-agent')
+            }
+        );
+
+        res.json({
+            success: true,
+            message: 'Password changed successfully'
+        });
+
+    } catch (error) {
+        console.error('Error changing password:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error changing password'
+        });
+    }
+});
+
+// Enable/Disable 2FA
+app.post('/api/users/2fa/toggle', verifyToken, async (req, res) => {
+    try {
+        const { enable } = req.body;
+
+        const user = await users.findOne({ _id: new ObjectId(req.user.userId) });
+
+        if (enable) {
+            // Generate 2FA secret
+            const secret = crypto.randomBytes(20).toString('hex');
+            const qrCode = await generateQRCode(secret, user.email);
+
+            await users.updateOne(
+                { _id: user._id },
+                {
+                    $set: {
+                        '2fa.secret': secret,
+                        '2fa.enabled': false,
+                        '2fa.pending': true
+                    }
+                }
+            );
+
+            res.json({
+                success: true,
+                message: '2FA setup initiated',
+                data: {
+                    secret,
+                    qrCode
+                }
+            });
+        } else {
+            await users.updateOne(
+                { _id: user._id },
+                {
+                    $set: {
+                        '2fa.enabled': false,
+                        '2fa.secret': null,
+                        '2fa.pending': false
+                    }
+                }
+            );
+
+            // Create audit log
+            await createAuditLog(
+                'TWO_FA_DISABLED',
+                user._id,
+                user._id,
+                {
+                    ip: req.ip,
+                    userAgent: req.get('user-agent')
+                }
+            );
+
+            res.json({
+                success: true,
+                message: '2FA disabled successfully'
+            });
+        }
+
+    } catch (error) {
+        console.error('Error toggling 2FA:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error toggling 2FA'
+        });
+    }
+});
+// Company Management Routes
 
 // Create new company
 app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
@@ -1124,115 +1777,154 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
             });
         }
 
-        // Create company
-        const company = {
-            name,
-            industry,
-            size: parseInt(size),
-            contactDetails: {
-                email: contactEmail,
-                phone: contactPhone,
-                address
-            },
-            subscription: {
-                plan: subscriptionPlan,
-                startDate: new Date(),
-                status: 'active'
-            },
-            status: 'active',
-            createdAt: new Date(),
-            createdBy: new ObjectId(req.user.userId),
-            updatedAt: new Date(),
-            settings: {
-                dataRetentionDays: 365,
-                securitySettings: {
-                    passwordPolicy: {
-                        minLength: 8,
-                        requireSpecialChar: true,
-                        requireNumber: true
+        // Start MongoDB transaction
+        const session = client.startSession();
+        let companyId;
+
+        try {
+            await session.withTransaction(async () => {
+                // Create company
+                const company = {
+                    name,
+                    industry,
+                    size: parseInt(size),
+                    contactDetails: {
+                        email: contactEmail,
+                        phone: contactPhone,
+                        address
                     },
-                    sessionTimeout: 30, // minutes
-                    maxLoginAttempts: 5
+                    subscription: {
+                        plan: subscriptionPlan,
+                        startDate: new Date(),
+                        status: 'active'
+                    },
+                    status: 'active',
+                    createdAt: new Date(),
+                    createdBy: new ObjectId(req.user.userId),
+                    updatedAt: new Date(),
+                    settings: {
+                        dataRetentionDays: 365,
+                        securitySettings: {
+                            passwordPolicy: {
+                                minLength: 8,
+                                requireSpecialChar: true,
+                                requireNumber: true
+                            },
+                            sessionTimeout: 30,
+                            maxLoginAttempts: 5
+                        }
+                    }
+                };
+
+                const companyResult = await companies.insertOne(company, { session });
+                companyId = companyResult.insertedId;
+
+                // Create company admin account
+                const adminPassword = crypto.randomBytes(12).toString('base64url');
+                const hashedPassword = await bcrypt.hash(adminPassword, 12);
+
+                const adminUser = {
+                    companyId: companyId,
+                    name: adminName,
+                    email: adminEmail,
+                    password: hashedPassword,
+                    role: 'admin',
+                    status: 'active',
+                    createdAt: new Date(),
+                    createdBy: new ObjectId(req.user.userId),
+                    passwordResetRequired: true,
+                    lastLogin: null,
+                    failedLoginAttempts: 0
+                };
+
+                await company_users.insertOne(adminUser, { session });
+
+                // Create subscription record
+                const subscription = {
+                    companyId: companyId,
+                    plan: plan._id,
+                    startDate: new Date(),
+                    status: 'active',
+                    billingCycle: plan.billingCycle,
+                    price: plan.price,
+                    features: plan.features,
+                    createdAt: new Date(),
+                    nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                };
+
+                await company_subscriptions.insertOne(subscription, { session });
+
+                // Initialize company-specific collections
+                await Promise.all([
+                    database.createCollection(`company_${companyId}_employees`, { session }),
+                    database.createCollection(`company_${companyId}_departments`, { session }),
+                    database.createCollection(`company_${companyId}_attendance`, { session })
+                ]);
+
+                // Create initial department
+                await database.collection(`company_${companyId}_departments`).insertOne({
+                    name: 'Administration',
+                    description: 'Main administrative department',
+                    createdAt: new Date(),
+                    createdBy: new ObjectId(req.user.userId),
+                    status: 'active'
+                }, { session });
+            });
+
+            // Create audit log
+            await createCompanyAuditLog(
+                'COMPANY_CREATED',
+                companyId,
+                req.user.userId,
+                {
+                    companyName: name,
+                    adminEmail,
+                    subscriptionPlan
                 }
-            }
-        };
+            );
 
-        const result = await companies.insertOne(company);
+            // Create notification
+            await createNotification(
+                companyId,
+                'COMPANY_WELCOME',
+                `Welcome to WorkWise Pro! Your company ${name} has been successfully registered.`,
+                {
+                    companyName: name,
+                    adminEmail: adminEmail
+                }
+            );
 
-        // Create company admin account
-        const adminPassword = crypto.randomBytes(12).toString('base64url');
-        const hashedPassword = await bcrypt.hash(adminPassword, 12);
+            // Send welcome email (commented out for sandbox)
+            /*
+            await sendEmail({
+                to: adminEmail,
+                subject: 'Welcome to WorkWise Pro',
+                template: 'company-welcome',
+                data: {
+                    companyName: name,
+                    adminName,
+                    tempPassword: adminPassword
+                }
+            });
+            */
 
-        const adminUser = {
-            companyId: result.insertedId,
-            name: adminName,
-            email: adminEmail,
-            password: hashedPassword,
-            role: 'admin',
-            status: 'active',
-            createdAt: new Date(),
-            createdBy: new ObjectId(req.user.userId),
-            passwordResetRequired: true,
-            lastLogin: null,
-            failedLoginAttempts: 0
-        };
+            res.status(201).json({
+                success: true,
+                message: 'Company created successfully',
+                data: {
+                    companyId,
+                    adminCredentials: {
+                        email: adminEmail,
+                        temporaryPassword: adminPassword
+                    }
+                }
+            });
 
-        await company_users.insertOne(adminUser);
-
-        // Create subscription record
-        const subscription = {
-            companyId: result.insertedId,
-            plan: plan._id,
-            startDate: new Date(),
-            status: 'active',
-            billingCycle: plan.billingCycle,
-            price: plan.price,
-            features: plan.features,
-            createdAt: new Date(),
-            nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
-        };
-
-        await company_subscriptions.insertOne(subscription);
-
-        // Initialize company-specific collections
-        await Promise.all([
-            database.createCollection(`company_${result.insertedId}_employees`),
-            database.createCollection(`company_${result.insertedId}_departments`),
-            database.createCollection(`company_${result.insertedId}_attendance`)
-        ]);
-
-        // Create audit log
-        await createCompanyAuditLog(
-            'COMPANY_CREATED',
-            result.insertedId,
-            req.user.userId,
-            {
-                companyName: name,
-                adminEmail,
-                subscriptionPlan
-            }
-        );
-
-        // Create notification
-        await createNotification(
-            result.insertedId,
-            'COMPANY_WELCOME',
-            `Welcome to WorkWise Pro! Your company ${name} has been successfully registered.`,
-            {
-                companyName: name,
-                adminEmail: adminEmail
-            }
-        );
-
-        res.status(201).json({
-            success: true,
-            message: 'Company created successfully',
-            companyId: result.insertedId,
-            adminCredentials: {
-                email: adminEmail,
-                temporaryPassword: adminPassword
-            }
-        });
+        } catch (error) {
+            throw error;
+        } finally {
+            await session.endSession();
+        }
 
     } catch (error) {
         console.error('Error creating company:', error);
@@ -1246,14 +1938,18 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
 // Get all companies with filtering and pagination
 app.get('/api/companies', verifyToken, verifyAdmin, cacheMiddleware(300), async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const search = req.query.search;
-        const industry = req.query.industry;
-        const status = req.query.status;
-        const plan = req.query.plan;
-        const sortField = req.query.sortField || 'createdAt';
-        const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
+        const {
+            page = 1,
+            limit = 10,
+            search,
+            industry,
+            status,
+            plan,
+            sortField = 'createdAt',
+            sortOrder = 'desc',
+            dateFrom,
+            dateTo
+        } = req.query;
 
         // Build filter
         const filter = {};
@@ -1269,18 +1965,24 @@ app.get('/api/companies', verifyToken, verifyAdmin, cacheMiddleware(300), async 
         if (status) filter.status = status;
         if (plan) filter['subscription.plan'] = plan;
 
+        if (dateFrom || dateTo) {
+            filter.createdAt = {};
+            if (dateFrom) filter.createdAt.$gte = new Date(dateFrom);
+            if (dateTo) filter.createdAt.$lte = new Date(dateTo);
+        }
+
         // Get total count
         const total = await companies.countDocuments(filter);
 
         // Get companies with pagination and sorting
         const companiesList = await companies
             .find(filter)
-            .sort({ [sortField]: sortOrder })
-            .skip((page - 1) * limit)
-            .limit(limit)
+            .sort({ [sortField]: sortOrder === 'desc' ? -1 : 1 })
+            .skip((parseInt(page) - 1) * parseInt(limit))
+            .limit(parseInt(limit))
             .toArray();
 
-        // Get additional data for each company
+        // Enrich company data
         const enrichedCompanies = await Promise.all(companiesList.map(async (company) => {
             const [
                 userCount,
@@ -1300,29 +2002,34 @@ app.get('/api/companies', verifyToken, verifyAdmin, cacheMiddleware(300), async 
 
             return {
                 ...company,
-                userCount,
+                metrics: {
+                    users: userCount,
+                    storage: storageUsage,
+                    activity: recentActivity.length
+                },
                 subscription: {
                     ...company.subscription,
                     details: subscription
                 },
                 recentActivity,
-                storageUsage,
                 health: await checkCompanyHealth(company._id)
             };
         }));
 
         res.json({
             success: true,
-            companies: enrichedCompanies,
-            pagination: {
-                total,
-                page,
-                pages: Math.ceil(total / limit)
-            },
-            filters: {
-                industries: await getUniqueIndustries(),
-                plans: await getSubscriptionPlans(),
-                statuses: ['active', 'inactive', 'suspended']
+            data: {
+                companies: enrichedCompanies,
+                pagination: {
+                    total,
+                    page: parseInt(page),
+                    pages: Math.ceil(total / parseInt(limit))
+                },
+                filters: {
+                    industries: await getUniqueIndustries(),
+                    plans: await getSubscriptionPlans(),
+                    statuses: ['active', 'inactive', 'suspended']
+                }
             }
         });
 
@@ -1334,70 +2041,11 @@ app.get('/api/companies', verifyToken, verifyAdmin, cacheMiddleware(300), async 
         });
     }
 });
-
-// Helper function to calculate company storage usage
-async function calculateCompanyStorageUsage(companyId) {
-    try {
-        const collections = [
-            `company_${companyId}_employees`,
-            `company_${companyId}_departments`,
-            `company_${companyId}_attendance`
-        ];
-
-        let totalSize = 0;
-        for (const collectionName of collections) {
-            const stats = await database.collection(collectionName).stats();
-            totalSize += stats.size;
-        }
-
-        return {
-            sizeInBytes: totalSize,
-            sizeInMB: (totalSize / (1024 * 1024)).toFixed(2)
-        };
-    } catch (error) {
-        console.error('Error calculating storage usage:', error);
-        return null;
-    }
-}
-
-// Helper function to check company health
-async function checkCompanyHealth(companyId) {
-    try {
-        const [
-            userActivity,
-            subscriptionStatus,
-            securityIssues
-        ] = await Promise.all([
-            company_users.countDocuments({
-                companyId,
-                lastLogin: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
-            }),
-            company_subscriptions.findOne({ companyId }),
-            security_logs.countDocuments({
-                companyId,
-                type: { $in: ['FAILED_LOGIN', 'SUSPICIOUS_ACTIVITY'] },
-                timestamp: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
-            })
-        ]);
-
-        return {
-            status: 'healthy',
-            metrics: {
-                activeUsers: userActivity,
-                subscriptionStatus: subscriptionStatus?.status || 'unknown',
-                securityIssues
-            }
-        };
-    } catch (error) {
-        console.error('Error checking company health:', error);
-        return null;
-    }
-}
-
 // Get company details
 app.get('/api/companies/:companyId', verifyToken, verifyCompanyAccess, cacheMiddleware(60), async (req, res) => {
     try {
         const { companyId } = req.params;
+        const { includeMetrics = true } = req.query;
 
         const company = await companies.findOne({
             _id: new ObjectId(companyId)
@@ -1415,8 +2063,8 @@ app.get('/api/companies/:companyId', verifyToken, verifyCompanyAccess, cacheMidd
             users,
             subscription,
             activityLogs,
-            storageUsage,
             departments,
+            storageUsage,
             analytics
         ] = await Promise.all([
             company_users.find({ companyId: company._id })
@@ -1428,48 +2076,53 @@ app.get('/api/companies/:companyId', verifyToken, verifyCompanyAccess, cacheMidd
                 .sort({ timestamp: -1 })
                 .limit(50)
                 .toArray(),
-            calculateCompanyStorageUsage(company._id),
             database.collection(`company_${companyId}_departments`).find().toArray(),
-            getCompanyAnalytics(company._id)
+            calculateCompanyStorageUsage(company._id),
+            includeMetrics ? getCompanyAnalytics(company._id) : null
         ]);
-
-        // Get user activity statistics
-        const userStats = await getUserActivityStats(company._id);
 
         // Get subscription usage metrics
         const usageMetrics = await getSubscriptionUsageMetrics(company._id, subscription);
 
+        // Calculate department statistics
+        const departmentStats = departments.reduce((acc, dept) => {
+            acc.total++;
+            acc.activeUsers += dept.userCount || 0;
+            return acc;
+        }, { total: 0, activeUsers: 0 });
+
         const enrichedCompany = {
             ...company,
-            users: {
-                total: users.length,
-                active: users.filter(u => u.status === 'active').length,
-                lastActive: userStats.lastActive,
-                roleDistribution: userStats.roleDistribution
+            metrics: {
+                users: {
+                    total: users.length,
+                    active: users.filter(u => u.status === 'active').length,
+                    byRole: users.reduce((acc, user) => {
+                        acc[user.role] = (acc[user.role] || 0) + 1;
+                        return acc;
+                    }, {})
+                },
+                departments: departmentStats,
+                storage: storageUsage,
+                activity: {
+                    total: activityLogs.length,
+                    recent: activityLogs.slice(0, 10)
+                }
             },
             subscription: {
                 ...subscription,
                 usage: usageMetrics,
-                nextBillingDate: subscription.nextBillingDate,
-                features: subscription.features
+                status: subscription.status,
+                nextBillingDate: subscription.nextBillingDate
             },
-            departments: {
-                total: departments.length,
-                list: departments
-            },
-            activity: {
-                recent: activityLogs,
-                statistics: await getActivityStatistics(company._id)
-            },
-            storage: storageUsage,
+            departments: departments,
             analytics: analytics,
-            health: await checkCompanyHealth(company._id),
             security: await getCompanySecurityMetrics(company._id)
         };
 
         res.json({
             success: true,
-            company: enrichedCompany
+            data: enrichedCompany
         });
 
     } catch (error) {
@@ -1481,7 +2134,7 @@ app.get('/api/companies/:companyId', verifyToken, verifyCompanyAccess, cacheMidd
     }
 });
 
-// Update company details
+// Update company
 app.put('/api/companies/:companyId', verifyToken, verifyCompanyAccess, async (req, res) => {
     try {
         const { companyId } = req.params;
@@ -1495,6 +2148,18 @@ app.put('/api/companies/:companyId', verifyToken, verifyCompanyAccess, async (re
             settings
         } = req.body;
 
+        // Get current company data for comparison
+        const currentCompany = await companies.findOne({ 
+            _id: new ObjectId(companyId) 
+        });
+
+        if (!currentCompany) {
+            return res.status(404).json({
+                success: false,
+                message: 'Company not found'
+            });
+        }
+
         // Validate company email if being updated
         if (contactEmail && !isValidCompanyEmail(contactEmail)) {
             return res.status(400).json({
@@ -1504,7 +2169,7 @@ app.put('/api/companies/:companyId', verifyToken, verifyCompanyAccess, async (re
         }
 
         // Check if new name conflicts with existing companies
-        if (name) {
+        if (name && name !== currentCompany.name) {
             const nameExists = await companies.findOne({
                 name: { $regex: new RegExp(`^${name}$`, 'i') },
                 _id: { $ne: new ObjectId(companyId) }
@@ -1517,11 +2182,6 @@ app.put('/api/companies/:companyId', verifyToken, verifyCompanyAccess, async (re
                 });
             }
         }
-
-        // Get current company data for comparison
-        const currentCompany = await companies.findOne({ 
-            _id: new ObjectId(companyId) 
-        });
 
         // Prepare update document
         const updateDoc = {
@@ -1538,15 +2198,13 @@ app.put('/api/companies/:companyId', verifyToken, verifyCompanyAccess, async (re
             }
         };
 
+        // Update company
         const result = await companies.updateOne(
             { _id: new ObjectId(companyId) },
             updateDoc
         );
 
-        // Invalidate cache
-        await invalidateCache(`cache:/api/companies/${companyId}`);
-
-        // Create audit log with detailed changes
+        // Track changes for audit log
         const changes = {};
         Object.keys(updateDoc.$set).forEach(key => {
             if (key !== 'updatedAt' && key !== 'updatedBy') {
@@ -1563,6 +2221,7 @@ app.put('/api/companies/:companyId', verifyToken, verifyCompanyAccess, async (re
             }
         });
 
+        // Create audit log
         await createCompanyAuditLog(
             'COMPANY_UPDATED',
             companyId,
@@ -1573,7 +2232,7 @@ app.put('/api/companies/:companyId', verifyToken, verifyCompanyAccess, async (re
             }
         );
 
-        // Create notification if significant changes were made
+        // Create notification if significant changes
         if (Object.keys(changes).length > 0) {
             await createNotification(
                 companyId,
@@ -1582,6 +2241,12 @@ app.put('/api/companies/:companyId', verifyToken, verifyCompanyAccess, async (re
                 { changes }
             );
         }
+
+        // Invalidate relevant caches
+        await Promise.all([
+            invalidateCache(`cache:/api/companies/${companyId}`),
+            invalidateCache(`cache:/api/companies`)
+        ]);
 
         res.json({
             success: true,
@@ -1598,130 +2263,81 @@ app.put('/api/companies/:companyId', verifyToken, verifyCompanyAccess, async (re
     }
 });
 
-// Update company subscription
-app.put('/api/companies/:companyId/subscription', verifyToken, verifyAdmin, async (req, res) => {
+// Helper function to calculate company storage usage
+async function calculateCompanyStorageUsage(companyId) {
     try {
-        const { companyId } = req.params;
-        const {
-            plan,
-            startDate,
-            customFeatures,
-            billingCycle,
-            price
-        } = req.body;
+        const collections = [
+            `company_${companyId}_employees`,
+            `company_${companyId}_departments`,
+            `company_${companyId}_attendance`
+        ];
 
-        // Validate subscription plan
-        const subscriptionPlan = await subscription_plans.findOne({ name: plan });
-        if (!plan) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid subscription plan'
-            });
+        let totalSize = 0;
+        let documentCount = 0;
+
+        for (const collectionName of collections) {
+            const stats = await database.collection(collectionName).stats();
+            totalSize += stats.size;
+            documentCount += stats.count;
         }
 
-        // Get current subscription for comparison
-        const currentSubscription = await company_subscriptions.findOne({
-            companyId: new ObjectId(companyId)
-        });
-
-        // Calculate next billing date
-        const billingDays = {
-            monthly: 30,
-            quarterly: 90,
-            annual: 365
+        return {
+            totalSize: totalSize,
+            sizeInMB: (totalSize / (1024 * 1024)).toFixed(2),
+            documentCount,
+            collections: collections.length
         };
+    } catch (error) {
+        console.error('Error calculating storage usage:', error);
+        return null;
+    }
+}
 
-        const nextBillingDate = new Date(
-            startDate || Date.now() + (billingDays[billingCycle] * 24 * 60 * 60 * 1000)
-        );
-
-        // Update subscription
-        const subscriptionUpdate = {
-            plan: subscriptionPlan.name,
-            startDate: new Date(startDate || Date.now()),
-            nextBillingDate,
-            billingCycle: billingCycle || 'monthly',
-            price: price || subscriptionPlan.price,
-            status: 'active',
-            features: {
-                ...subscriptionPlan.features,
-                ...(customFeatures || {})
-            },
-            updatedAt: new Date(),
-            updatedBy: new ObjectId(req.user.userId)
-        };
-
-        await company_subscriptions.updateOne(
-            { companyId: new ObjectId(companyId) },
-            { $set: subscriptionUpdate },
-            { upsert: true }
-        );
-
-        // Update company document
-        await companies.updateOne(
-            { _id: new ObjectId(companyId) },
-            {
-                $set: {
-                    'subscription.plan': plan,
-                    'subscription.status': 'active',
-                    'subscription.updatedAt': new Date()
-                }
-            }
-        );
-
-        // Create audit log
-        await createCompanyAuditLog(
-            'SUBSCRIPTION_UPDATED',
-            companyId,
-            req.user.userId,
-            {
-                previousPlan: currentSubscription?.plan,
-                newPlan: plan,
-                changes: {
-                    from: currentSubscription,
-                    to: subscriptionUpdate
-                }
-            }
-        );
-
-        // Create notification
-        await createNotification(
-            companyId,
-            'SUBSCRIPTION_UPDATED',
-            `Your subscription has been updated to ${plan}`,
-            {
-                plan,
-                startDate: new Date(startDate || Date.now()),
-                nextBillingDate
-            }
-        );
-
-        // Invalidate relevant caches
-        await Promise.all([
-            invalidateCache(`cache:/api/companies/${companyId}`),
-            invalidateCache(`cache:/api/companies/${companyId}/subscription`)
+// Helper function to get subscription usage metrics
+async function getSubscriptionUsageMetrics(companyId, subscription) {
+    try {
+        const [
+            userCount,
+            storageUsage,
+            apiUsage
+        ] = await Promise.all([
+            company_users.countDocuments({ companyId: new ObjectId(companyId) }),
+            calculateCompanyStorageUsage(companyId),
+            getCompanyApiUsage(companyId)
         ]);
 
-        res.json({
-            success: true,
-            message: 'Subscription updated successfully',
-            subscription: subscriptionUpdate
-        });
-
+        return {
+            users: {
+                current: userCount,
+                limit: subscription.limits?.users || 'unlimited',
+                utilizationPercentage: subscription.limits?.users ? 
+                    (userCount / subscription.limits.users * 100).toFixed(2) : null
+            },
+            storage: {
+                current: parseFloat(storageUsage.sizeInMB),
+                limit: subscription.limits?.storage || 'unlimited',
+                utilizationPercentage: subscription.limits?.storage ?
+                    (parseFloat(storageUsage.sizeInMB) / (subscription.limits.storage * 1024) * 100).toFixed(2) : null
+            },
+            api: apiUsage
+        };
     } catch (error) {
-        console.error('Error updating subscription:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error updating subscription'
-        });
+        console.error('Error calculating subscription metrics:', error);
+        return null;
     }
-});
+}
+// Company Analytics and Metrics Routes
 
 // Get company analytics
 app.get('/api/companies/:companyId/analytics', verifyToken, verifyCompanyAccess, cacheMiddleware(300), async (req, res) => {
     try {
         const { companyId } = req.params;
-        const { startDate, endDate, type } = req.query;
+        const { 
+            startDate, 
+            endDate, 
+            type = 'all',
+            interval = 'daily' 
+        } = req.query;
 
         const dateFilter = {};
         if (startDate || endDate) {
@@ -1730,10 +2346,11 @@ app.get('/api/companies/:companyId/analytics', verifyToken, verifyCompanyAccess,
             if (endDate) dateFilter.timestamp.$lte = new Date(endDate);
         }
 
-        const analytics = await getCompanyAnalytics(companyId, type, dateFilter);
+        const analytics = await getCompanyAnalytics(companyId, type, dateFilter, interval);
+
         res.json({
             success: true,
-            analytics
+            data: analytics
         });
 
     } catch (error) {
@@ -1745,52 +2362,820 @@ app.get('/api/companies/:companyId/analytics', verifyToken, verifyCompanyAccess,
     }
 });
 
-// Helper function to get company analytics
-async function getCompanyAnalytics(companyId, type = 'all', dateFilter = {}) {
+// Get company security metrics
+app.get('/api/companies/:companyId/security', verifyToken, verifyCompanyAccess, async (req, res) => {
+    try {
+        const { companyId } = req.params;
+        const securityMetrics = await getCompanySecurityMetrics(companyId);
+
+        res.json({
+            success: true,
+            data: securityMetrics
+        });
+
+    } catch (error) {
+        console.error('Error fetching security metrics:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching security metrics'
+        });
+    }
+});
+
+// Analytics Helper Functions
+
+async function getCompanyAnalytics(companyId, type, dateFilter, interval = 'daily') {
     try {
         const baseFilter = {
             companyId: new ObjectId(companyId),
             ...dateFilter
         };
 
-        const [
-            userMetrics,
-            activityMetrics,
-            resourceUsage,
-            securityMetrics
-        ] = await Promise.all([
-            getUserMetrics(companyId, baseFilter),
-            getActivityMetrics(companyId, baseFilter),
-            getResourceUsageMetrics(companyId),
-            getSecurityMetrics(companyId, baseFilter)
-        ]);
+        let analytics = {};
 
-        // Return specific analytics based on type
-        switch (type) {
-            case 'users':
-                return userMetrics;
-            case 'activity':
-                return activityMetrics;
-            case 'resources':
-                return resourceUsage;
-            case 'security':
-                return securityMetrics;
-            default:
-                return {
-                    users: userMetrics,
-                    activity: activityMetrics,
-                    resources: resourceUsage,
-                    security: securityMetrics
-                };
+        if (type === 'all' || type === 'users') {
+            analytics.users = await getUserAnalytics(companyId, baseFilter, interval);
         }
+
+        if (type === 'all' || type === 'activity') {
+            analytics.activity = await getActivityAnalytics(companyId, baseFilter, interval);
+        }
+
+        if (type === 'all' || type === 'departments') {
+            analytics.departments = await getDepartmentAnalytics(companyId, baseFilter);
+        }
+
+        if (type === 'all' || type === 'security') {
+            analytics.security = await getSecurityAnalytics(companyId, baseFilter, interval);
+        }
+
+        return analytics;
     } catch (error) {
         console.error('Error generating analytics:', error);
         throw error;
     }
 }
 
-// Analytics helper functions
-async function getUserMetrics(companyId, filter) {
+async function getUserAnalytics(companyId, filter, interval) {
+    const users = await company_users.find({
+        companyId: new ObjectId(companyId)
+    }).toArray();
+
+    const timeSeriesData = await company_audit_logs.aggregate([
+        { 
+            $match: { 
+                ...filter,
+                action: { $regex: /^USER_/ }
+            }
+        },
+        {
+            $group: {
+                _id: {
+                    $switch: {
+                        branches: [
+                            { 
+                                case: { $eq: [interval, 'hourly'] },
+                                then: {
+                                    year: { $year: '$timestamp' },
+                                    month: { $month: '$timestamp' },
+                                    day: { $dayOfMonth: '$timestamp' },
+                                    hour: { $hour: '$timestamp' }
+                                }
+                            },
+                            {
+                                case: { $eq: [interval, 'daily'] },
+                                then: {
+                                    year: { $year: '$timestamp' },
+                                    month: { $month: '$timestamp' },
+                                    day: { $dayOfMonth: '$timestamp' }
+                                }
+                            },
+                            {
+                                case: { $eq: [interval, 'monthly'] },
+                                then: {
+                                    year: { $year: '$timestamp' },
+                                    month: { $month: '$timestamp' }
+                                }
+                            }
+                        ],
+                        default: {
+                            year: { $year: '$timestamp' },
+                            month: { $month: '$timestamp' }
+                        }
+                    }
+                },
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { '_id': 1 } }
+    ]).toArray();
+
+    return {
+        summary: {
+            total: users.length,
+            active: users.filter(u => u.status === 'active').length,
+            inactive: users.filter(u => u.status === 'inactive').length,
+            locked: users.filter(u => u.failedLoginAttempts >= 5).length
+        },
+        roleDistribution: await company_users.aggregate([
+            { $match: { companyId: new ObjectId(companyId) } },
+            { $group: { _id: '$role', count: { $sum: 1 } } }
+        ]).toArray(),
+        activityTrends: timeSeriesData,
+        recentActivities: await company_audit_logs
+            .find({ ...filter, action: { $regex: /^USER_/ } })
+            .sort({ timestamp: -1 })
+            .limit(10)
+            .toArray()
+    };
+}
+
+async function getActivityAnalytics(companyId, filter, interval) {
+    const activityData = await company_audit_logs.aggregate([
+        { $match: { ...filter, companyId: new ObjectId(companyId) } },
+        {
+            $group: {
+                _id: {
+                    interval: {
+                        $switch: {
+                            branches: [
+                                { 
+                                    case: { $eq: [interval, 'hourly'] },
+                                    then: {
+                                        year: { $year: '$timestamp' },
+                                        month: { $month: '$timestamp' },
+                                        day: { $dayOfMonth: '$timestamp' },
+                                        hour: { $hour: '$timestamp' }
+                                    }
+                                },
+                                {
+                                    case: { $eq: [interval, 'daily'] },
+                                    then: {
+                                        year: { $year: '$timestamp' },
+                                        month: { $month: '$timestamp' },
+                                        day: { $dayOfMonth: '$timestamp' }
+                                    }
+                                },
+                                {
+                                    case: { $eq: [interval, 'monthly'] },
+                                    then: {
+                                        year: { $year: '$timestamp' },
+                                        month: { $month: '$timestamp' }
+                                    }
+                                }
+                            ],
+                            default: {
+                                year: { $year: '$timestamp' },
+                                month: { $month: '$timestamp' }
+                            }
+                        }
+                    },
+                    action: '$action'
+                },
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { '_id.interval': 1 } }
+    ]).toArray();
+
+    return {
+        timeline: activityData,
+        summary: {
+            total: await company_audit_logs.countDocuments(filter),
+            byAction: await company_audit_logs.aggregate([
+                { $match: filter },
+                { $group: { _id: '$action', count: { $sum: 1 } } }
+            ]).toArray(),
+            byUser: await company_audit_logs.aggregate([
+                { $match: filter },
+                { $group: { _id: '$performedBy', count: { $sum: 1 } } },
+                { $sort: { count: -1 } },
+                { $limit: 10 }
+            ]).toArray()
+        }
+    };
+}
+
+async function getDepartmentAnalytics(companyId, filter) {
+    const departments = await database.collection(`company_${companyId}_departments`).find().toArray();
+    
+    const departmentMetrics = await Promise.all(departments.map(async (dept) => {
+        const userCount = await company_users.countDocuments({
+            companyId: new ObjectId(companyId),
+            department: dept.name
+        });
+
+        const activityCount = await company_audit_logs.countDocuments({
+            ...filter,
+            'details.department': dept.name
+        });
+
+        return {
+            ...dept,
+            metrics: {
+                users: userCount,
+                activity: activityCount
+            }
+        };
+    }));
+
+    return {
+        departments: departmentMetrics,
+        summary: {
+            total: departments.length,
+            activeUsers: departmentMetrics.reduce((sum, dept) => sum + dept.metrics.users, 0),
+            totalActivity: departmentMetrics.reduce((sum, dept) => sum + dept.metrics.activity, 0)
+        }
+    };
+}
+
+async function getSecurityAnalytics(companyId, filter, interval) {
+    const securityEvents = await security_logs.aggregate([
+        { 
+            $match: { 
+                ...filter,
+                companyId: new ObjectId(companyId)
+            }
+        },
+        {
+            $group: {
+                _id: {
+                    interval: {
+                        $switch: {
+                            branches: [
+                                { 
+                                    case: { $eq: [interval, 'hourly'] },
+                                    then: {
+                                        year: { $year: '$timestamp' },
+                                        month: { $month: '$timestamp' },
+                                        day: { $dayOfMonth: '$timestamp' },
+                                        hour: { $hour: '$timestamp' }
+                                    }
+                                },
+                                {
+                                    case: { $eq: [interval, 'daily'] },
+                                    then: {
+                                        year: { $year: '$timestamp' },
+                                        month: { $month: '$timestamp' },
+                                        day: { $dayOfMonth: '$timestamp' }
+                                    }
+                                }
+                            ],
+                            default: {
+                                year: { $year: '$timestamp' },
+                                month: { $month: '$timestamp' }
+                            }
+                        }
+                    },
+                    type: '$type'
+                },
+                count: { $sum: 1 }
+            }
+        },
+        { $sort: { '_id.interval': 1 } }
+    ]).toArray();
+
+    return {
+        timeline: securityEvents,
+        summary: await getCompanySecurityMetrics(companyId)
+    };
+}
+// Security Metrics and Backup Routes
+
+// Get company security metrics
+async function getCompanySecurityMetrics(companyId) {
+    try {
+        const [
+            loginAttempts,
+            suspiciousActivities,
+            passwordResets,
+            userSecurityStats,
+            accessPatterns
+        ] = await Promise.all([
+            security_logs.aggregate([
+                { 
+                    $match: { 
+                        companyId: new ObjectId(companyId),
+                        type: { $in: ['LOGIN_SUCCESS', 'LOGIN_FAILED'] },
+                        timestamp: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
+                    }
+                },
+                { $group: { _id: '$type', count: { $sum: 1 } } }
+            ]).toArray(),
+            security_logs.aggregate([
+                {
+                    $match: {
+                        companyId: new ObjectId(companyId),
+                        type: 'SUSPICIOUS_ACTIVITY',
+                        timestamp: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
+                    }
+                },
+                { $group: { _id: '$details.reason', count: { $sum: 1 } } }
+            ]).toArray(),
+            security_logs.countDocuments({
+                companyId: new ObjectId(companyId),
+                type: 'PASSWORD_RESET',
+                timestamp: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
+            }),
+            company_users.aggregate([
+                { $match: { companyId: new ObjectId(companyId) } },
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: 1 },
+                        mfaEnabled: {
+                            $sum: { $cond: [{ $eq: ['$requires2FA', true] }, 1, 0] }
+                        },
+                        passwordResetRequired: {
+                            $sum: { $cond: [{ $eq: ['$passwordResetRequired', true] }, 1, 0] }
+                        },
+                        lockedAccounts: {
+                            $sum: { $cond: [{ $gte: ['$failedLoginAttempts', 5] }, 1, 0] }
+                        }
+                    }
+                }
+            ]).toArray(),
+            security_logs.aggregate([
+                {
+                    $match: {
+                        companyId: new ObjectId(companyId),
+                        timestamp: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            ip: '$ip',
+                            userAgent: '$userAgent'
+                        },
+                        count: { $sum: 1 },
+                        lastAccess: { $max: '$timestamp' }
+                    }
+                },
+                { $sort: { count: -1 } },
+                { $limit: 10 }
+            ]).toArray()
+        ]);
+
+        return {
+            authentication: {
+                successfulLogins: loginAttempts.find(l => l._id === 'LOGIN_SUCCESS')?.count || 0,
+                failedLogins: loginAttempts.find(l => l._id === 'LOGIN_FAILED')?.count || 0,
+                passwordResets
+            },
+            userSecurity: userSecurityStats[0] || {
+                total: 0,
+                mfaEnabled: 0,
+                passwordResetRequired: 0,
+                lockedAccounts: 0
+            },
+            threats: {
+                suspiciousActivities,
+                unusualAccessPatterns: accessPatterns
+            },
+            recommendations: await generateSecurityRecommendations(companyId)
+        };
+    } catch (error) {
+        console.error('Error getting security metrics:', error);
+        throw error;
+    }
+}
+
+// Generate security recommendations
+async function generateSecurityRecommendations(companyId) {
+    try {
+        const recommendations = [];
+        const company = await companies.findOne({ _id: new ObjectId(companyId) });
+        const users = await company_users.find({ companyId: new ObjectId(companyId) }).toArray();
+
+        // Check MFA adoption
+        const mfaUsers = users.filter(u => u.requires2FA).length;
+        const mfaPercentage = (mfaUsers / users.length) * 100;
+        if (mfaPercentage < 80) {
+            recommendations.push({
+                type: 'security',
+                priority: 'high',
+                message: 'Enable 2FA for more users',
+                details: `Only ${mfaPercentage.toFixed(1)}% of users have 2FA enabled`
+            });
+        }
+
+        // Check password age
+        const oldPasswords = users.filter(u => {
+            const lastChanged = u.passwordLastChanged || u.createdAt;
+            const daysSinceChange = (Date.now() - lastChanged.getTime()) / (1000 * 60 * 60 * 24);
+            return daysSinceChange > 90;
+        }).length;
+
+        if (oldPasswords > 0) {
+            recommendations.push({
+                type: 'security',
+                priority: 'medium',
+                message: 'Password update required',
+                details: `${oldPasswords} users have passwords older than 90 days`
+            });
+        }
+
+        // Check recent security incidents
+        const recentIncidents = await security_logs.countDocuments({
+            companyId: new ObjectId(companyId),
+            type: 'SUSPICIOUS_ACTIVITY',
+            timestamp: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
+        });
+
+        if (recentIncidents > 0) {
+            recommendations.push({
+                type: 'security',
+                priority: 'high',
+                message: 'Review recent security incidents',
+                details: `${recentIncidents} suspicious activities detected in the last 7 days`
+            });
+        }
+
+        return recommendations;
+    } catch (error) {
+        console.error('Error generating security recommendations:', error);
+        return [];
+    }
+}
+
+// Backup company data
+app.post('/api/companies/:companyId/backup', verifyToken, verifyCompanyAccess, async (req, res) => {
+    try {
+        const { companyId } = req.params;
+        const { includeAttachments = true } = req.body;
+
+        // Create backup record
+        const backup = {
+            companyId: new ObjectId(companyId),
+            startTime: new Date(),
+            status: 'in_progress',
+            type: 'manual',
+            initiatedBy: new ObjectId(req.user.userId),
+            includeAttachments,
+            metadata: {
+                version: process.env.APP_VERSION,
+                timestamp: new Date()
+            }
+        };
+
+        const backupRecord = await database.collection('backups').insertOne(backup);
+
+        // Start backup process asynchronously
+        performCompanyBackup(backupRecord.insertedId, companyId, includeAttachments)
+            .catch(error => console.error('Backup error:', error));
+
+        res.json({
+            success: true,
+            message: 'Backup initiated successfully',
+            backupId: backupRecord.insertedId
+        });
+
+    } catch (error) {
+        console.error('Error initiating backup:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error initiating backup'
+        });
+    }
+});
+
+// Perform company backup
+async function performCompanyBackup(backupId, companyId, includeAttachments) {
+    try {
+        const backupPath = `backups/company_${companyId}_${Date.now()}`;
+        await fs.promises.mkdir(backupPath, { recursive: true });
+
+        // Backup company data
+        const company = await companies.findOne({ _id: new ObjectId(companyId) });
+        await fs.promises.writeFile(
+            `${backupPath}/company.json`,
+            JSON.stringify(company, null, 2)
+        );
+
+        // Backup collections
+        const collections = [
+            'company_users',
+            'company_audit_logs',
+            `company_${companyId}_departments`,
+            `company_${companyId}_employees`,
+            `company_${companyId}_attendance`
+        ];
+
+        for (const collection of collections) {
+            const data = await database.collection(collection)
+                .find({ companyId: new ObjectId(companyId) })
+                .toArray();
+
+            await fs.promises.writeFile(
+                `${backupPath}/${collection}.json`,
+                JSON.stringify(data, null, 2)
+            );
+        }
+
+        // Backup attachments if requested
+        if (includeAttachments) {
+            // Implementation depends on your file storage solution
+            // This is a placeholder for the attachment backup logic
+        }
+
+        // Update backup record
+        await database.collection('backups').updateOne(
+            { _id: backupId },
+            {
+                $set: {
+                    status: 'completed',
+                    completedAt: new Date(),
+                    path: backupPath,
+                    size: await calculateDirectorySize(backupPath)
+                }
+            }
+        );
+
+        // Create audit log
+        await createCompanyAuditLog(
+            'BACKUP_COMPLETED',
+            companyId,
+            null,
+            {
+                backupId,
+                path: backupPath
+            }
+        );
+
+    } catch (error) {
+        console.error('Backup error:', error);
+        await database.collection('backups').updateOne(
+            { _id: backupId },
+            {
+                $set: {
+                    status: 'failed',
+                    error: error.message,
+                    completedAt: new Date()
+                }
+            }
+        );
+    }
+}
+// Restore company data
+app.post('/api/companies/:companyId/restore', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { companyId } = req.params;
+        const { backupId } = req.body;
+
+        // Start MongoDB session for transaction
+        const session = client.startSession();
+
+        try {
+            await session.withTransaction(async () => {
+                // Get backup record
+                const backup = await database.collection('backups').findOne({
+                    _id: new ObjectId(backupId),
+                    status: 'completed'
+                });
+
+                if (!backup) {
+                    throw new Error('Valid backup not found');
+                }
+
+                // Create restore record
+                const restore = {
+                    companyId: new ObjectId(companyId),
+                    backupId: new ObjectId(backupId),
+                    startTime: new Date(),
+                    status: 'in_progress',
+                    initiatedBy: new ObjectId(req.user.userId)
+                };
+
+                const restoreRecord = await database.collection('restores').insertOne(restore, { session });
+
+                // Read backup files
+                const backupFiles = await fs.promises.readdir(backup.path);
+
+                // Restore each collection
+                for (const file of backupFiles) {
+                    if (file.endsWith('.json')) {
+                        const data = JSON.parse(
+                            await fs.promises.readFile(`${backup.path}/${file}`, 'utf8')
+                        );
+
+                        const collectionName = file.replace('.json', '');
+
+                        // Delete existing data
+                        await database.collection(collectionName).deleteMany({
+                            companyId: new ObjectId(companyId)
+                        }, { session });
+
+                        // Insert backup data
+                        if (Array.isArray(data) && data.length > 0) {
+                            await database.collection(collectionName).insertMany(
+                                data.map(item => ({
+                                    ...item,
+                                    _id: new ObjectId(item._id)
+                                })),
+                                { session }
+                            );
+                        }
+                    }
+                }
+
+                // Update restore record
+                await database.collection('restores').updateOne(
+                    { _id: restoreRecord.insertedId },
+                    {
+                        $set: {
+                            status: 'completed',
+                            completedAt: new Date()
+                        }
+                    },
+                    { session }
+                );
+
+                // Create audit log
+                await createCompanyAuditLog(
+                    'RESTORE_COMPLETED',
+                    companyId,
+                    req.user.userId,
+                    {
+                        backupId,
+                        restoreId: restoreRecord.insertedId
+                    }
+                );
+            });
+
+            // Invalidate all caches for this company
+            await invalidateCache(`cache:/api/companies/${companyId}*`);
+
+            res.json({
+                success: true,
+                message: 'Company data restored successfully'
+            });
+
+        } catch (error) {
+            throw error;
+        } finally {
+            await session.endSession();
+        }
+
+    } catch (error) {
+        console.error('Error restoring company data:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error restoring company data'
+        });
+    }
+});
+
+// Delete company
+app.delete('/api/companies/:companyId', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { companyId } = req.params;
+            const { reason, createBackup = true } = req.body;
+
+            // Verify company exists
+            const company = await companies.findOne({ 
+                _id: new ObjectId(companyId) 
+            });
+
+            if (!company) {
+                throw new Error('Company not found');
+            }
+
+            // Create backup if requested
+            let backupId = null;
+            if (createBackup) {
+                const backup = {
+                    companyId: new ObjectId(companyId),
+                    type: 'pre_deletion',
+                    startTime: new Date(),
+                    status: 'in_progress',
+                    initiatedBy: new ObjectId(req.user.userId)
+                };
+
+                const backupRecord = await database.collection('backups').insertOne(backup, { session });
+                backupId = backupRecord.insertedId;
+
+                await performCompanyBackup(backupId, companyId, true);
+            }
+
+            // Archive company data
+            const archivedCompany = {
+                ...company,
+                deletedAt: new Date(),
+                deletedBy: new ObjectId(req.user.userId),
+                deletionReason: reason,
+                backupId
+            };
+
+            await database.collection('deleted_companies').insertOne(archivedCompany, { session });
+
+            // Delete company-specific collections
+            const collections = [
+                `company_${companyId}_departments`,
+                `company_${companyId}_employees`,
+                `company_${companyId}_attendance`
+            ];
+
+            for (const collection of collections) {
+                await database.collection(collection).drop({ session });
+            }
+
+            // Delete company users
+            await company_users.deleteMany({
+                companyId: new ObjectId(companyId)
+            }, { session });
+
+            // Delete company subscriptions
+            await company_subscriptions.deleteMany({
+                companyId: new ObjectId(companyId)
+            }, { session });
+
+            // Delete company
+            await companies.deleteOne({
+                _id: new ObjectId(companyId)
+            }, { session });
+
+            // Create audit log
+            await createAuditLog(
+                'COMPANY_DELETED',
+                req.user.userId,
+                null,
+                {
+                    companyId,
+                    companyName: company.name,
+                    reason,
+                    backupId
+                }
+            );
+
+            // Invalidate all caches related to this company
+            await invalidateCache(`cache:/api/companies/${companyId}*`);
+        });
+
+        res.json({
+            success: true,
+            message: 'Company deleted successfully'
+        });
+
+    } catch (error) {
+        console.error('Error deleting company:', error);
+        res.status(error.message === 'Company not found' ? 404 : 500).json({
+            success: false,
+            message: error.message || 'Error deleting company'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Get company statistics
+app.get('/api/companies/:companyId/statistics', verifyToken, verifyCompanyAccess, cacheMiddleware(300), async (req, res) => {
+    try {
+        const { companyId } = req.params;
+        const { startDate, endDate } = req.query;
+
+        const dateFilter = {};
+        if (startDate || endDate) {
+            dateFilter.timestamp = {};
+            if (startDate) dateFilter.timestamp.$gte = new Date(startDate);
+            if (endDate) dateFilter.timestamp.$lte = new Date(endDate);
+        }
+
+        const [
+            userStats,
+            activityStats,
+            resourceStats,
+            securityStats
+        ] = await Promise.all([
+            getUserStatistics(companyId, dateFilter),
+            getActivityStatistics(companyId, dateFilter),
+            getResourceStatistics(companyId),
+            getSecurityStatistics(companyId, dateFilter)
+        ]);
+
+        res.json({
+            success: true,
+            statistics: {
+                users: userStats,
+                activity: activityStats,
+                resources: resourceStats,
+                security: securityStats
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching company statistics:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching company statistics'
+        });
+    }
+});
+
+// Statistics Helper Functions
+async function getUserStatistics(companyId, dateFilter) {
     const users = await company_users.find({
         companyId: new ObjectId(companyId)
     }).toArray();
@@ -1798,107 +3183,266 @@ async function getUserMetrics(companyId, filter) {
     return {
         total: users.length,
         active: users.filter(u => u.status === 'active').length,
-        roleDistribution: await company_users.aggregate([
-            { $match: { companyId: new ObjectId(companyId) } },
-            { $group: { _id: '$role', count: { $sum: 1 } } }
+        roleDistribution: users.reduce((acc, user) => {
+            acc[user.role] = (acc[user.role] || 0) + 1;
+            return acc;
+        }, {}),
+        departmentDistribution: users.reduce((acc, user) => {
+            acc[user.department] = (acc[user.department] || 0) + 1;
+            return acc;
+        }, {}),
+        recentActivity: await company_audit_logs
+            .find({ 
+                companyId: new ObjectId(companyId),
+                ...dateFilter 
+            })
+            .sort({ timestamp: -1 })
+            .limit(10)
+            .toArray()
+    };
+}
+// Continue Statistics Helper Functions
+
+async function getActivityStatistics(companyId, dateFilter) {
+    const baseFilter = { 
+        companyId: new ObjectId(companyId),
+        ...dateFilter
+    };
+
+    const [
+        activityByType,
+        activityByUser,
+        activityTimeline,
+        peakUsageTimes
+    ] = await Promise.all([
+        company_audit_logs.aggregate([
+            { $match: baseFilter },
+            { $group: { _id: '$action', count: { $sum: 1 } } },
+            { $sort: { count: -1 } }
         ]).toArray(),
-        activityTrends: await company_audit_logs.aggregate([
-            { $match: { ...filter, action: { $regex: /^USER_/ } } },
-            {
+        company_audit_logs.aggregate([
+            { $match: baseFilter },
+            { $group: { 
+                _id: '$performedBy',
+                count: { $sum: 1 },
+                lastActivity: { $max: '$timestamp' }
+            }},
+            { $sort: { count: -1 } },
+            { $limit: 10 }
+        ]).toArray(),
+        company_audit_logs.aggregate([
+            { $match: baseFilter },
+            { 
                 $group: {
                     _id: {
-                        action: '$action',
-                        day: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } }
+                        year: { $year: '$timestamp' },
+                        month: { $month: '$timestamp' },
+                        day: { $dayOfMonth: '$timestamp' }
                     },
                     count: { $sum: 1 }
                 }
-            }
-        ]).toArray()
-    };
-}
-
-async function getActivityMetrics(companyId, filter) {
-    return {
-        overview: await company_audit_logs.aggregate([
-            { $match: { companyId: new ObjectId(companyId), ...filter } },
-            { $group: { _id: '$action', count: { $sum: 1 } } }
+            },
+            { $sort: { '_id': 1 } }
         ]).toArray(),
-        timeDistribution: await company_audit_logs.aggregate([
-            { $match: { companyId: new ObjectId(companyId), ...filter } },
+        company_audit_logs.aggregate([
+            { $match: baseFilter },
             {
                 $group: {
                     _id: {
                         hour: { $hour: '$timestamp' },
-                        day: { $dayOfWeek: '$timestamp' }
+                        dayOfWeek: { $dayOfWeek: '$timestamp' }
                     },
                     count: { $sum: 1 }
                 }
-            }
-        ]).toArray(),
-        userActivity: await company_audit_logs.aggregate([
-            { $match: { companyId: new ObjectId(companyId), ...filter } },
-            { 
-                $group: {
-                    _id: '$performedBy',
-                    actions: { $sum: 1 },
-                    lastActivity: { $max: '$timestamp' }
-                }
             },
-            { $limit: 10 },
-            { $sort: { actions: -1 } }
+            { $sort: { count: -1 } }
         ]).toArray()
-    };
-}
+    ]);
 
-async function getResourceUsageMetrics(companyId) {
-    const collections = [
-        `company_${companyId}_employees`,
-        `company_${companyId}_departments`,
-        `company_${companyId}_attendance`
-    ];
-
-    const usage = await Promise.all(collections.map(async (collection) => {
-        const stats = await database.collection(collection).stats();
+    // Enrich user activity data with user details
+    const enrichedUserActivity = await Promise.all(activityByUser.map(async (activity) => {
+        const user = await company_users.findOne(
+            { _id: activity._id },
+            { projection: { name: 1, email: 1, role: 1 } }
+        );
         return {
-            collection: collection.split('_').pop(),
-            size: stats.size,
-            documents: stats.count
+            ...activity,
+            user: user || { name: 'Deleted User' }
         };
     }));
 
     return {
-        storage: usage,
         summary: {
-            totalSize: usage.reduce((acc, curr) => acc + curr.size, 0),
-            totalDocuments: usage.reduce((acc, curr) => acc + curr.documents, 0)
+            totalActivities: await company_audit_logs.countDocuments(baseFilter),
+            uniqueUsers: await company_audit_logs.distinct('performedBy', baseFilter).length,
+            activityByType,
+            mostActiveUsers: enrichedUserActivity
+        },
+        timeline: {
+            daily: activityTimeline,
+            peakUsage: peakUsageTimes
         }
     };
 }
 
-async function getSecurityMetrics(companyId, filter) {
+async function getResourceStatistics(companyId) {
+    const [
+        storageUsage,
+        databaseStats,
+        apiUsage
+    ] = await Promise.all([
+        calculateCompanyStorageUsage(companyId),
+        getDatabaseStatistics(companyId),
+        getApiUsageStatistics(companyId)
+    ]);
+
     return {
-        loginAttempts: await security_logs.aggregate([
+        storage: storageUsage,
+        database: databaseStats,
+        api: apiUsage
+    };
+}
+
+async function getDatabaseStatistics(companyId) {
+    const collections = [
+        `company_${companyId}_departments`,
+        `company_${companyId}_employees`,
+        `company_${companyId}_attendance`
+    ];
+
+    const stats = await Promise.all(collections.map(async (collection) => {
+        const collStats = await database.collection(collection).stats();
+        return {
+            collection: collection.split('_').pop(),
+            documentCount: collStats.count,
+            size: collStats.size,
+            avgDocumentSize: collStats.avgObjSize
+        };
+    }));
+
+    return {
+        collections: stats,
+        total: {
+            documentCount: stats.reduce((sum, stat) => sum + stat.documentCount, 0),
+            size: stats.reduce((sum, stat) => sum + stat.size, 0)
+        }
+    };
+}
+
+async function getApiUsageStatistics(companyId) {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const [
+        totalRequests,
+        endpointUsage,
+        errorRates,
+        responseTimeStats
+    ] = await Promise.all([
+        api_keys.aggregate([
+            { $match: { companyId: new ObjectId(companyId) } },
+            { $group: { _id: null, total: { $sum: '$usageStats.totalCalls' } } }
+        ]).toArray(),
+        security_logs.aggregate([
             { 
                 $match: { 
                     companyId: new ObjectId(companyId),
-                    type: { $in: ['LOGIN_SUCCESS', 'LOGIN_FAILED'] },
-                    ...filter
+                    type: 'API_REQUEST',
+                    timestamp: { $gte: thirtyDaysAgo }
+                }
+            },
+            { $group: { _id: '$details.endpoint', count: { $sum: 1 } } },
+            { $sort: { count: -1 } }
+        ]).toArray(),
+        security_logs.aggregate([
+            {
+                $match: {
+                    companyId: new ObjectId(companyId),
+                    type: 'API_ERROR',
+                    timestamp: { $gte: thirtyDaysAgo }
+                }
+            },
+            { 
+                $group: {
+                    _id: '$details.errorType',
+                    count: { $sum: 1 }
+                }
+            }
+        ]).toArray(),
+        security_logs.aggregate([
+            {
+                $match: {
+                    companyId: new ObjectId(companyId),
+                    type: 'API_REQUEST',
+                    timestamp: { $gte: thirtyDaysAgo }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    avgResponseTime: { $avg: '$details.responseTime' },
+                    maxResponseTime: { $max: '$details.responseTime' },
+                    minResponseTime: { $min: '$details.responseTime' }
+                }
+            }
+        ]).toArray()
+    ]);
+
+    return {
+        totalRequests: totalRequests[0]?.total || 0,
+        endpoints: {
+            usage: endpointUsage,
+            mostUsed: endpointUsage[0]?._id || 'N/A'
+        },
+        errors: {
+            distribution: errorRates,
+            total: errorRates.reduce((sum, rate) => sum + rate.count, 0)
+        },
+        performance: responseTimeStats[0] || {
+            avgResponseTime: 0,
+            maxResponseTime: 0,
+            minResponseTime: 0
+        }
+    };
+}
+
+async function getSecurityStatistics(companyId, dateFilter) {
+    const baseFilter = {
+        companyId: new ObjectId(companyId),
+        ...dateFilter
+    };
+
+    const [
+        loginStats,
+        securityIncidents,
+        accessPatterns,
+        userSecurityStatus
+    ] = await Promise.all([
+        security_logs.aggregate([
+            {
+                $match: {
+                    ...baseFilter,
+                    type: { $in: ['LOGIN_SUCCESS', 'LOGIN_FAILED'] }
                 }
             },
             { $group: { _id: '$type', count: { $sum: 1 } } }
         ]).toArray(),
-        suspiciousActivities: await security_logs.aggregate([
+        security_logs.aggregate([
             {
                 $match: {
-                    companyId: new ObjectId(companyId),
-                    type: 'SUSPICIOUS_ACTIVITY',
-                    ...filter
+                    ...baseFilter,
+                    type: 'SECURITY_INCIDENT'
                 }
             },
-            { $group: { _id: '$details.reason', count: { $sum: 1 } } }
+            {
+                $group: {
+                    _id: '$details.incidentType',
+                    count: { $sum: 1 },
+                    latestOccurrence: { $max: '$timestamp' }
+                }
+            }
         ]).toArray(),
-        accessPatterns: await security_logs.aggregate([
-            { $match: { companyId: new ObjectId(companyId), ...filter } },
+        security_logs.aggregate([
+            { $match: baseFilter },
             {
                 $group: {
                     _id: {
@@ -1911,1842 +3455,67 @@ async function getSecurityMetrics(companyId, filter) {
             },
             { $sort: { count: -1 } },
             { $limit: 10 }
-        ]).toArray()
-    };
-}
-
-// Generate company report
-app.post('/api/companies/:companyId/reports', verifyToken, verifyCompanyAccess, async (req, res) => {
-    try {
-        const { companyId } = req.params;
-        const { 
-            type, 
-            startDate, 
-            endDate, 
-            format = 'json',
-            sections = ['all']
-        } = req.body;
-
-        // Validate date range
-        if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid date range'
-            });
-        }
-
-        // Get company details
-        const company = await companies.findOne({ _id: new ObjectId(companyId) });
-        
-        // Generate report data based on type
-        const reportData = await generateReportData(
-            companyId, 
-            type, 
-            { startDate, endDate }, 
-            sections
-        );
-
-        // Format report based on requested format
-        const formattedReport = await formatReport(
-            reportData,
-            format,
-            {
-                companyName: company.name,
-                generatedAt: new Date(),
-                dateRange: { startDate, endDate }
-            }
-        );
-
-        // Log report generation
-        await createCompanyAuditLog(
-            'REPORT_GENERATED',
-            companyId,
-            req.user.userId,
-            {
-                type,
-                format,
-                sections,
-                dateRange: { startDate, endDate }
-            }
-        );
-
-        // Send response based on format
-        if (format === 'json') {
-            res.json({
-                success: true,
-                report: formattedReport
-            });
-        } else {
-            // For other formats (PDF, CSV, etc.)
-            res.setHeader('Content-Type', getContentType(format));
-            res.setHeader(
-                'Content-Disposition',
-                `attachment; filename=report_${companyId}_${Date.now()}.${format}`
-            );
-            res.send(formattedReport);
-        }
-
-    } catch (error) {
-        console.error('Error generating report:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error generating report'
-        });
-    }
-});
-
-// Helper function to generate report data
-async function generateReportData(companyId, type, dateRange, sections) {
-    const reportData = {};
-
-    if (sections.includes('all') || sections.includes('overview')) {
-        reportData.overview = await getCompanyOverview(companyId);
-    }
-
-    if (sections.includes('all') || sections.includes('users')) {
-        reportData.users = await getUserMetrics(companyId, dateRange);
-    }
-
-    if (sections.includes('all') || sections.includes('activity')) {
-        reportData.activity = await getActivityMetrics(companyId, dateRange);
-    }
-
-    if (sections.includes('all') || sections.includes('resources')) {
-        reportData.resources = await getResourceUsageMetrics(companyId);
-    }
-
-    if (sections.includes('all') || sections.includes('security')) {
-        reportData.security = await getSecurityMetrics(companyId, dateRange);
-    }
-
-    return reportData;
-}
-
-// Helper function to format report
-async function formatReport(data, format, metadata) {
-    switch (format.toLowerCase()) {
-        case 'json':
-            return {
-                metadata,
-                data
-            };
-
-        case 'csv':
-            return convertToCSV(data, metadata);
-
-        case 'pdf':
-            return generatePDFReport(data, metadata);
-
-        default:
-            throw new Error('Unsupported format');
-    }
-}
-
-// Helper function to get content type
-function getContentType(format) {
-    const contentTypes = {
-        json: 'application/json',
-        csv: 'text/csv',
-        pdf: 'application/pdf'
-    };
-    return contentTypes[format.toLowerCase()] || 'application/octet-stream';
-}
-
-// Add user to company
-app.post('/api/companies/:companyId/users', verifyToken, verifyCompanyAccess, async (req, res) => {
-    try {
-        const { companyId } = req.params;
-        const {
-            name,
-            email,
-            role,
-            department,
-            position,
-            permissions = []
-        } = req.body;
-
-        // Validate email domain
-        if (!isValidCompanyEmail(email)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Generic email domains are not allowed'
-            });
-        }
-
-        // Check if email exists
-        const existingUser = await company_users.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({
-                success: false,
-                message: 'Email already registered'
-            });
-        }
-
-        // Check company subscription limits
-        const company = await companies.findOne({ _id: new ObjectId(companyId) });
-        const plan = await subscription_plans.findOne({ name: company.subscription.plan });
-        const currentUserCount = await company_users.countDocuments({ 
-            companyId: new ObjectId(companyId) 
-        });
-
-        if (plan.maxUsers && currentUserCount >= plan.maxUsers) {
-            return res.status(400).json({
-                success: false,
-                message: 'Company has reached maximum user limit for current plan'
-            });
-        }
-
-        // Generate secure temporary password
-        const tempPassword = crypto.randomBytes(12).toString('base64url');
-        const hashedPassword = await bcrypt.hash(tempPassword, 12);
-
-        // Create user document
-        const newUser = {
-            companyId: new ObjectId(companyId),
-            name,
-            email,
-            password: hashedPassword,
-            role,
-            department,
-            position,
-            permissions,
-            status: 'active',
-            createdAt: new Date(),
-            createdBy: new ObjectId(req.user.userId),
-            passwordResetRequired: true,
-            lastLogin: null,
-            failedLoginAttempts: 0,
-            securitySettings: {
-                requires2FA: false,
-                lastPasswordChange: new Date(),
-                passwordHistory: []
-            },
-            profile: {
-                joinDate: new Date(),
-                contactInfo: {},
-                preferences: {
-                    notifications: true,
-                    language: 'en'
-                }
-            }
-        };
-
-        const result = await company_users.insertOne(newUser);
-
-        // Update department user count if department exists
-        if (department) {
-            await database.collection(`company_${companyId}_departments`)
-                .updateOne(
-                    { name: department },
-                    { $inc: { userCount: 1 } }
-                );
-        }
-
-        // Create audit log
-        await createCompanyAuditLog(
-            'USER_ADDED',
-            companyId,
-            req.user.userId,
-            {
-                userId: result.insertedId,
-                email,
-                role,
-                department
-            }
-        );
-
-        // Create notification for company admins
-        await createNotification(
-            companyId,
-            'NEW_USER_ADDED',
-            `New user ${name} (${email}) has been added to the company`,
-            {
-                userName: name,
-                userEmail: email,
-                role,
-                department
-            }
-        );
-
-        // Invalidate relevant caches
-        await Promise.all([
-            invalidateCache(`cache:/api/companies/${companyId}/users`),
-            invalidateCache(`cache:/api/companies/${companyId}`)
-        ]);
-
-        res.status(201).json({
-            success: true,
-            message: 'User added successfully',
-            userId: result.insertedId,
-            temporaryPassword: tempPassword
-        });
-
-    } catch (error) {
-        console.error('Error adding company user:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error adding company user'
-        });
-    }
-});
-
-// Get company users with advanced filtering and sorting
-app.get('/api/companies/:companyId/users', verifyToken, verifyCompanyAccess, cacheMiddleware(60), async (req, res) => {
-    try {
-        const { companyId } = req.params;
-        const {
-            page = 1,
-            limit = 10,
-            search,
-            department,
-            role,
-            status,
-            sortBy = 'createdAt',
-            sortOrder = 'desc',
-            active,
-            dateRange
-        } = req.query;
-
-        // Build filter
-        const filter = { companyId: new ObjectId(companyId) };
-
-        if (search) {
-            filter.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } }
-            ];
-        }
-
-        if (department) filter.department = department;
-        if (role) filter.role = role;
-        if (status) filter.status = status;
-        if (active === 'true') {
-            filter.lastLogin = {
-                $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-            };
-        }
-
-        if (dateRange) {
-            const [start, end] = dateRange.split(',');
-            filter.createdAt = {
-                $gte: new Date(start),
-                $lte: new Date(end)
-            };
-        }
-
-        // Get total count
-        const total = await company_users.countDocuments(filter);
-
-        // Get users with pagination and sorting
-        const users = await company_users
-            .find(filter)
-            .project({ password: 0 })
-            .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
-            .skip((parseInt(page) - 1) * parseInt(limit))
-            .limit(parseInt(limit))
-            .toArray();
-
-        // Enrich user data
-        const enrichedUsers = await Promise.all(users.map(async (user) => {
-            const [
-                activityLogs,
-                loginHistory,
-                permissions
-            ] = await Promise.all([
-                company_audit_logs
-                    .find({ 
-                        companyId: new ObjectId(companyId),
-                        'details.userId': user._id 
-                    })
-                    .sort({ timestamp: -1 })
-                    .limit(5)
-                    .toArray(),
-                security_logs
-                    .find({
-                        companyId: new ObjectId(companyId),
-                        userId: user._id,
-                        type: 'LOGIN_SUCCESS'
-                    })
-                    .sort({ timestamp: -1 })
-                    .limit(5)
-                    .toArray(),
-                user_permissions.findOne({ userId: user._id })
-            ]);
-
-            return {
-                ...user,
-                recentActivity: activityLogs,
-                loginHistory,
-                permissions: permissions?.permissions || [],
-                status: {
-                    current: user.status,
-                    lastActive: user.lastLogin,
-                    loginCount: await security_logs.countDocuments({
-                        userId: user._id,
-                        type: 'LOGIN_SUCCESS'
-                    })
-                }
-            };
-        }));
-
-        // Get department statistics
-        const departmentStats = await company_users.aggregate([
-            { $match: { companyId: new ObjectId(companyId) } },
-            { $group: { _id: '$department', count: { $sum: 1 } } }
-        ]).toArray();
-
-        // Get role statistics
-        const roleStats = await company_users.aggregate([
-            { $match: { companyId: new ObjectId(companyId) } },
-            { $group: { _id: '$role', count: { $sum: 1 } } }
-        ]).toArray();
-
-        res.json({
-            success: true,
-            users: enrichedUsers,
-            statistics: {
-                departments: departmentStats,
-                roles: roleStats,
-                total,
-                active: await company_users.countDocuments({
-                    companyId: new ObjectId(companyId),
-                    status: 'active'
-                })
-            },
-            pagination: {
-                total,
-                page: parseInt(page),
-                pages: Math.ceil(total / parseInt(limit))
-            }
-        });
-
-    } catch (error) {
-        console.error('Error fetching company users:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching company users'
-        });
-    }
-});
-
-// Update company user
-app.put('/api/companies/:companyId/users/:userId', verifyToken, verifyCompanyAccess, async (req, res) => {
-    try {
-        const { companyId, userId } = req.params;
-        const {
-            name,
-            email,
-            role,
-            department,
-            position,
-            permissions,
-            status,
-            securitySettings
-        } = req.body;
-
-        // Verify user exists
-        const existingUser = await company_users.findOne({
-            _id: new ObjectId(userId),
-            companyId: new ObjectId(companyId)
-        });
-
-        if (!existingUser) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
-        }
-
-        // Check email uniqueness if being changed
-        if (email && email !== existingUser.email) {
-            if (!isValidCompanyEmail(email)) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Generic email domains are not allowed'
-                });
-            }
-
-            const emailExists = await company_users.findOne({
-                email: email.toLowerCase(),
-                _id: { $ne: new ObjectId(userId) }
-            });
-
-            if (emailExists) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Email already in use'
-                });
-            }
-        }
-
-        // Handle department change
-        if (department && department !== existingUser.department) {
-            // Decrease count in old department
-            if (existingUser.department) {
-                await database.collection(`company_${companyId}_departments`)
-                    .updateOne(
-                        { name: existingUser.department },
-                        { $inc: { userCount: -1 } }
-                    );
-            }
-            // Increase count in new department
-            await database.collection(`company_${companyId}_departments`)
-                .updateOne(
-                    { name: department },
-                    { $inc: { userCount: 1 } }
-                );
-        }
-
-        // Prepare update document
-        const updateDoc = {
-            $set: {
-                ...(name && { name }),
-                ...(email && { email: email.toLowerCase() }),
-                ...(role && { role }),
-                ...(department && { department }),
-                ...(position && { position }),
-                ...(permissions && { permissions }),
-                ...(status && { status }),
-                ...(securitySettings && { securitySettings }),
-                updatedAt: new Date(),
-                updatedBy: new ObjectId(req.user.userId)
-            }
-        };
-
-        // Update user
-        await company_users.updateOne(
-            { _id: new ObjectId(userId) },
-            updateDoc
-        );
-
-        // Track changes for audit log
-        const changes = {};
-        Object.keys(updateDoc.$set).forEach(key => {
-            if (existingUser[key] !== updateDoc.$set[key]) {
-                changes[key] = {
-                    from: existingUser[key],
-                    to: updateDoc.$set[key]
-                };
-            }
-        });
-
-        // Create audit log
-        await createCompanyAuditLog(
-            'USER_UPDATED',
-            companyId,
-            req.user.userId,
-            {
-                userId,
-                changes,
-                previousState: existingUser
-            }
-        );
-
-        // Create notification if significant changes
-        if (Object.keys(changes).length > 0) {
-            await createNotification(
-                companyId,
-                'USER_UPDATED',
-                `User ${existingUser.name} has been updated`,
-                { changes }
-            );
-        }
-
-        // Invalidate relevant caches
-        await Promise.all([
-            invalidateCache(`cache:/api/companies/${companyId}/users`),
-            invalidateCache(`cache:/api/companies/${companyId}/users/${userId}`)
-        ]);
-
-        res.json({
-            success: true,
-            message: 'User updated successfully',
-            changes
-        });
-
-    } catch (error) {
-        console.error('Error updating company user:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error updating company user'
-        });
-    }
-});
-
-// Reset user password
-app.post('/api/companies/:companyId/users/:userId/reset-password', verifyToken, verifyCompanyAccess, async (req, res) => {
-    try {
-        const { companyId, userId } = req.params;
-        const { sendEmail = true } = req.body;
-
-        const user = await company_users.findOne({
-            _id: new ObjectId(userId),
-            companyId: new ObjectId(companyId)
-        });
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
-        }
-
-        // Generate new temporary password
-        const tempPassword = crypto.randomBytes(12).toString('base64url');
-        const hashedPassword = await bcrypt.hash(tempPassword, 12);
-
-        // Update user password
-        await company_users.updateOne(
-            { _id: new ObjectId(userId) },
-            {
-                $set: {
-                    password: hashedPassword,
-                    passwordResetRequired: true,
-                    lastPasswordChange: new Date(),
-                    updatedAt: new Date(),
-                    updatedBy: new ObjectId(req.user.userId)
-                },
-                $push: {
-                    'securitySettings.passwordHistory': {
-                        password: user.password,
-                        changedAt: new Date(),
-                        changedBy: new ObjectId(req.user.userId)
-                    }
-                }
-            }
-        );
-
-        // Create audit log
-        await createCompanyAuditLog(
-            'PASSWORD_RESET',
-            companyId,
-            req.user.userId,
-            {
-                userId,
-                userEmail: user.email,
-                resetBy: req.user.email
-            }
-        );
-
-        // Create security log
-        await security_logs.insertOne({
-            type: 'PASSWORD_RESET',
-            companyId: new ObjectId(companyId),
-            userId: new ObjectId(userId),
-            performedBy: new ObjectId(req.user.userId),
-            timestamp: new Date(),
-            ip: req.ip,
-            userAgent: req.get('user-agent')
-        });
-
-        // Create notification
-        await createNotification(
-            companyId,
-            'PASSWORD_RESET',
-            `Password has been reset for user ${user.name}`,
-            {
-                userEmail: user.email,
-                resetBy: req.user.email
-            }
-        );
-
-        res.json({
-            success: true,
-            message: 'Password reset successful',
-            temporaryPassword: tempPassword
-        });
-
-    } catch (error) {
-        console.error('Error resetting password:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error resetting password'
-        });
-    }
-});
-
-// Manage user permissions
-app.put('/api/companies/:companyId/users/:userId/permissions', verifyToken, verifyCompanyAccess, async (req, res) => {
-    try {
-        const { companyId, userId } = req.params;
-        const { permissions } = req.body;
-
-        // Verify user exists
-        const user = await company_users.findOne({
-            _id: new ObjectId(userId),
-            companyId: new ObjectId(companyId)
-        });
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
-        }
-
-        // Get current permissions for comparison
-        const currentPermissions = user.permissions || [];
-
-        // Update permissions
-        await company_users.updateOne(
-            { _id: new ObjectId(userId) },
-            {
-                $set: {
-                    permissions,
-                    updatedAt: new Date(),
-                    updatedBy: new ObjectId(req.user.userId)
-                }
-            }
-        );
-
-        // Create audit log
-        await createCompanyAuditLog(
-            'PERMISSIONS_UPDATED',
-            companyId,
-            req.user.userId,
-            {
-                userId,
-                previousPermissions: currentPermissions,
-                newPermissions: permissions,
-                changes: {
-                    added: permissions.filter(p => !currentPermissions.includes(p)),
-                    removed: currentPermissions.filter(p => !permissions.includes(p))
-                }
-            }
-        );
-
-        // Create notification
-        await createNotification(
-            companyId,
-            'PERMISSIONS_UPDATED',
-            `Permissions updated for user ${user.name}`,
-            {
-                userEmail: user.email,
-                updatedBy: req.user.email
-            }
-        );
-
-        // Invalidate relevant caches
-        await invalidateCache(`cache:/api/companies/${companyId}/users/${userId}`);
-
-        res.json({
-            success: true,
-            message: 'Permissions updated successfully',
-            permissions
-        });
-
-    } catch (error) {
-        console.error('Error updating user permissions:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error updating user permissions'
-        });
-    }
-});
-
-// Deactivate/Activate user
-app.patch('/api/companies/:companyId/users/:userId/status', verifyToken, verifyCompanyAccess, async (req, res) => {
-    try {
-        const { companyId, userId } = req.params;
-        const { status, reason } = req.body;
-
-        if (!['active', 'inactive', 'suspended'].includes(status)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid status value'
-            });
-        }
-
-        const user = await company_users.findOne({
-            _id: new ObjectId(userId),
-            companyId: new ObjectId(companyId)
-        });
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
-        }
-
-        // Update user status
-        await company_users.updateOne(
-            { _id: new ObjectId(userId) },
-            {
-                $set: {
-                    status,
-                    statusReason: reason,
-                    statusUpdatedAt: new Date(),
-                    statusUpdatedBy: new ObjectId(req.user.userId)
-                }
-            }
-        );
-
-        // If deactivating, terminate all active sessions
-        if (status !== 'active') {
-            await invalidateUserSessions(userId);
-        }
-
-        // Create audit log
-        await createCompanyAuditLog(
-            'USER_STATUS_CHANGED',
-            companyId,
-            req.user.userId,
-            {
-                userId,
-                previousStatus: user.status,
-                newStatus: status,
-                reason
-            }
-        );
-
-        // Create notification
-        await createNotification(
-            companyId,
-            'USER_STATUS_CHANGED',
-            `Status changed to ${status} for user ${user.name}`,
-            {
-                userEmail: user.email,
-                status,
-                reason
-            }
-        );
-
-        // Invalidate caches
-        await invalidateUserRelatedCaches(companyId, userId);
-
-        res.json({
-            success: true,
-            message: `User ${status === 'active' ? 'activated' : 'deactivated'} successfully`
-        });
-
-    } catch (error) {
-        console.error('Error updating user status:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error updating user status'
-        });
-    }
-});
-
-// Delete user
-app.delete('/api/companies/:companyId/users/:userId', verifyToken, verifyCompanyAccess, async (req, res) => {
-    const session = client.startSession();
-    try {
-        await session.withTransaction(async () => {
-            const { companyId, userId } = req.params;
-            const { transferDataTo, reason } = req.body;
-
-            const user = await company_users.findOne({
-                _id: new ObjectId(userId),
-                companyId: new ObjectId(companyId)
-            });
-
-            if (!user) {
-                throw new Error('User not found');
-            }
-
-            // If data transfer is requested, verify target user
-            if (transferDataTo) {
-                const targetUser = await company_users.findOne({
-                    _id: new ObjectId(transferDataTo),
-                    companyId: new ObjectId(companyId),
-                    status: 'active'
-                });
-
-                if (!targetUser) {
-                    throw new Error('Target user for data transfer not found or inactive');
-                }
-            }
-
-            // Backup user data
-            const userBackup = {
-                ...user,
-                deletedAt: new Date(),
-                deletedBy: new ObjectId(req.user.userId),
-                deletionReason: reason,
-                originalId: user._id
-            };
-
-            await database.collection('deleted_company_users').insertOne(userBackup, { session });
-
-            // Transfer or archive user data
-            if (transferDataTo) {
-                await transferUserData(userId, transferDataTo, session);
-            } else {
-                await archiveUserData(userId, session);
-            }
-
-            // Remove user from departments
-            if (user.department) {
-                await database.collection(`company_${companyId}_departments`)
-                    .updateOne(
-                        { name: user.department },
-                        { $inc: { userCount: -1 } },
-                        { session }
-                    );
-            }
-
-            // Delete user
-            await company_users.deleteOne(
-                { _id: new ObjectId(userId) },
-                { session }
-            );
-
-            // Create audit log
-            await createCompanyAuditLog(
-                'USER_DELETED',
-                companyId,
-                req.user.userId,
-                {
-                    deletedUser: user,
-                    transferredTo: transferDataTo,
-                    reason
-                }
-            );
-
-            // Create notification
-            await createNotification(
-                companyId,
-                'USER_DELETED',
-                `User ${user.name} has been deleted`,
-                {
-                    userEmail: user.email,
-                    deletedBy: req.user.email,
-                    reason
-                }
-            );
-        });
-
-        // Invalidate caches
-        await invalidateUserRelatedCaches(companyId, userId);
-
-        res.json({
-            success: true,
-            message: 'User deleted successfully'
-        });
-
-    } catch (error) {
-        console.error('Error deleting user:', error);
-        res.status(error.message === 'User not found' ? 404 : 500).json({
-            success: false,
-            message: error.message || 'Error deleting user'
-        });
-    } finally {
-        await session.endSession();
-    }
-});
-
-// Bulk user operations
-app.post('/api/companies/:companyId/users/bulk', verifyToken, verifyCompanyAccess, async (req, res) => {
-    const session = client.startSession();
-    try {
-        await session.withTransaction(async () => {
-            const { companyId } = req.params;
-            const { operation, userIds, data } = req.body;
-
-            if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
-                throw new Error('Invalid user IDs provided');
-            }
-
-            const users = await company_users
-                .find({ 
-                    _id: { $in: userIds.map(id => new ObjectId(id)) },
-                    companyId: new ObjectId(companyId)
-                })
-                .toArray();
-
-            if (users.length !== userIds.length) {
-                throw new Error('Some users not found');
-            }
-
-            const results = {
-                successful: [],
-                failed: []
-            };
-
-            switch (operation) {
-                case 'updateStatus':
-                    for (const user of users) {
-                        try {
-                            await company_users.updateOne(
-                                { _id: user._id },
-                                {
-                                    $set: {
-                                        status: data.status,
-                                        statusReason: data.reason,
-                                        statusUpdatedAt: new Date(),
-                                        statusUpdatedBy: new ObjectId(req.user.userId)
-                                    }
-                                },
-                                { session }
-                            );
-                            results.successful.push(user._id);
-                        } catch (error) {
-                            results.failed.push({ id: user._id, error: error.message });
-                        }
-                    }
-                    break;
-
-                case 'updateDepartment':
-                    for (const user of users) {
-                        try {
-                            await company_users.updateOne(
-                                { _id: user._id },
-                                {
-                                    $set: {
-                                        department: data.department,
-                                        updatedAt: new Date(),
-                                        updatedBy: new ObjectId(req.user.userId)
-                                    }
-                                },
-                                { session }
-                            );
-                            results.successful.push(user._id);
-                        } catch (error) {
-                            results.failed.push({ id: user._id, error: error.message });
-                        }
-                    }
-                    break;
-
-                case 'updatePermissions':
-                    for (const user of users) {
-                        try {
-                            await company_users.updateOne(
-                                { _id: user._id },
-                                {
-                                    $set: {
-                                        permissions: data.permissions,
-                                        updatedAt: new Date(),
-                                        updatedBy: new ObjectId(req.user.userId)
-                                    }
-                                },
-                                { session }
-                            );
-                            results.successful.push(user._id);
-                        } catch (error) {
-                            results.failed.push({ id: user._id, error: error.message });
-                        }
-                    }
-                    break;
-
-                default:
-                    throw new Error('Invalid operation');
-            }
-
-            // Create audit log
-            await createCompanyAuditLog(
-                'BULK_USER_OPERATION',
-                companyId,
-                req.user.userId,
-                {
-                    operation,
-                    affected: results.successful,
-                    failed: results.failed,
-                    data
-                }
-            );
-
-            // Invalidate relevant caches
-            await invalidateCache(`cache:/api/companies/${companyId}/users`);
-
-            return results;
-        });
-
-        res.json({
-            success: true,
-            message: 'Bulk operation completed',
-            results
-        });
-
-    } catch (error) {
-        console.error('Error in bulk operation:', error);
-        res.status(500).json({
-            success: false,
-            message: error.message || 'Error performing bulk operation'
-        });
-    } finally {
-        await session.endSession();
-    }
-});
-
-// Create department
-app.post('/api/companies/:companyId/departments', verifyToken, verifyCompanyAccess, async (req, res) => {
-    try {
-        const { companyId } = req.params;
-        const {
-            name,
-            description,
-            parentDepartmentId,
-            managerId,
-            settings = {}
-        } = req.body;
-
-        // Validate department name
-        if (!name || typeof name !== 'string') {
-            return res.status(400).json({
-                success: false,
-                message: 'Valid department name is required'
-            });
-        }
-
-        // Check if department exists
-        const existingDepartment = await database
-            .collection(`company_${companyId}_departments`)
-            .findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
-
-        if (existingDepartment) {
-            return res.status(400).json({
-                success: false,
-                message: 'Department already exists'
-            });
-        }
-
-        // Verify manager if provided
-        if (managerId) {
-            const manager = await company_users.findOne({
-                _id: new ObjectId(managerId),
-                companyId: new ObjectId(companyId),
-                status: 'active'
-            });
-
-            if (!manager) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid manager ID'
-                });
-            }
-        }
-
-        // Verify parent department if provided
-        if (parentDepartmentId) {
-            const parentDept = await database
-                .collection(`company_${companyId}_departments`)
-                .findOne({ _id: new ObjectId(parentDepartmentId) });
-
-            if (!parentDept) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Parent department not found'
-                });
-            }
-        }
-
-        const department = {
-            name,
-            description,
-            parentDepartmentId: parentDepartmentId ? new ObjectId(parentDepartmentId) : null,
-            managerId: managerId ? new ObjectId(managerId) : null,
-            settings,
-            status: 'active',
-            userCount: 0,
-            hierarchy: [],
-            createdAt: new Date(),
-            createdBy: new ObjectId(req.user.userId),
-            updatedAt: new Date()
-        };
-
-        // Set department hierarchy
-        if (parentDepartmentId) {
-            const parentDept = await database
-                .collection(`company_${companyId}_departments`)
-                .findOne({ _id: new ObjectId(parentDepartmentId) });
-            
-            department.hierarchy = [...parentDept.hierarchy, parentDepartmentId];
-        }
-
-        const result = await database
-            .collection(`company_${companyId}_departments`)
-            .insertOne(department);
-
-        // Update company structure version
-        await companies.updateOne(
-            { _id: new ObjectId(companyId) },
-            { 
-                $inc: { 'structure.version': 1 },
-                $set: { 'structure.lastUpdated': new Date() }
-            }
-        );
-
-        // Create audit log
-        await createCompanyAuditLog(
-            'DEPARTMENT_CREATED',
-            companyId,
-            req.user.userId,
-            {
-                departmentId: result.insertedId,
-                departmentName: name,
-                parentDepartmentId,
-                managerId
-            }
-        );
-
-        // Create notification
-        await createNotification(
-            companyId,
-            'DEPARTMENT_CREATED',
-            `New department "${name}" has been created`,
-            {
-                departmentName: name,
-                createdBy: req.user.email
-            }
-        );
-
-        // Invalidate relevant caches
-        await Promise.all([
-            invalidateCache(`cache:/api/companies/${companyId}/departments`),
-            invalidateCache(`cache:/api/companies/${companyId}/structure`)
-        ]);
-
-        res.status(201).json({
-            success: true,
-            message: 'Department created successfully',
-            departmentId: result.insertedId
-        });
-
-    } catch (error) {
-        console.error('Error creating department:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error creating department'
-        });
-    }
-});
-
-// Get department structure
-app.get('/api/companies/:companyId/departments', verifyToken, verifyCompanyAccess, cacheMiddleware(300), async (req, res) => {
-    try {
-        const { companyId } = req.params;
-        const { includeUsers = false, includeMetrics = false } = req.query;
-
-        // Get all departments
-        const departments = await database
-            .collection(`company_${companyId}_departments`)
-            .find()
-            .toArray();
-
-        // Build department tree
-        const departmentTree = await buildDepartmentTree(companyId, departments, includeUsers, includeMetrics);
-
-        // Get department statistics
-        const statistics = await getDepartmentStatistics(companyId, departments);
-
-        res.json({
-            success: true,
-            structure: {
-                tree: departmentTree,
-                statistics,
-                totalDepartments: departments.length
-            }
-        });
-
-    } catch (error) {
-        console.error('Error fetching department structure:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching department structure'
-        });
-    }
-});
-
-// Helper function to build department tree
-async function buildDepartmentTree(companyId, departments, includeUsers, includeMetrics) {
-    const departmentMap = new Map();
-    const rootDepartments = [];
-
-    // First pass: Create department nodes
-    for (const dept of departments) {
-        const deptNode = {
-            ...dept,
-            children: [],
-            users: includeUsers ? [] : undefined,
-            metrics: includeMetrics ? await getDepartmentMetrics(companyId, dept._id) : undefined
-        };
-        departmentMap.set(dept._id.toString(), deptNode);
-    }
-
-    // Second pass: Build tree structure
-    for (const dept of departments) {
-        const deptNode = departmentMap.get(dept._id.toString());
-        
-        if (dept.parentDepartmentId) {
-            const parentNode = departmentMap.get(dept.parentDepartmentId.toString());
-            if (parentNode) {
-                parentNode.children.push(deptNode);
-            }
-        } else {
-            rootDepartments.push(deptNode);
-        }
-
-        // Add users if requested
-        if (includeUsers) {
-            const users = await company_users.find({
-                companyId: new ObjectId(companyId),
-                department: dept.name
-            }).project({ password: 0 }).toArray();
-            
-            deptNode.users = users;
-        }
-    }
-
-    return rootDepartments;
-}
-
-// Helper function to get department metrics
-async function getDepartmentMetrics(companyId, departmentId) {
-    const department = await database
-        .collection(`company_${companyId}_departments`)
-        .findOne({ _id: departmentId });
-
-    const [
-        activeUsers,
-        recentActivity,
-        resourceUtilization
-    ] = await Promise.all([
-        company_users.countDocuments({
-            companyId: new ObjectId(companyId),
-            department: department.name,
-            status: 'active'
-        }),
-        company_audit_logs.find({
-            companyId: new ObjectId(companyId),
-            'details.department': department.name
-        })
-        .sort({ timestamp: -1 })
-        .limit(10)
-        .toArray(),
-        calculateDepartmentResourceUsage(companyId, department.name)
-    ]);
-
-    return {
-        userMetrics: {
-            total: department.userCount,
-            active: activeUsers
-        },
-        activity: {
-            recent: recentActivity,
-            lastUpdated: department.updatedAt
-        },
-        resources: resourceUtilization
-    };
-}
-
-// Helper function to get department statistics
-async function getDepartmentStatistics(companyId, departments) {
-    const stats = {
-        totalDepartments: departments.length,
-        totalUsers: 0,
-        departmentDistribution: [],
-        averageUsersPerDepartment: 0,
-        maxDepth: 0
-    };
-
-    // Calculate department metrics
-    for (const dept of departments) {
-        stats.totalUsers += dept.userCount;
-        stats.maxDepth = Math.max(stats.maxDepth, dept.hierarchy.length);
-        
-        stats.departmentDistribution.push({
-            name: dept.name,
-            userCount: dept.userCount,
-            level: dept.hierarchy.length
-        });
-    }
-
-    stats.averageUsersPerDepartment = stats.totalUsers / stats.totalDepartments;
-
-    return stats;
-}
-
-// Helper function to calculate department resource usage
-async function calculateDepartmentResourceUsage(companyId, departmentName) {
-    // This would be implemented based on your specific resource tracking needs
-    // Example implementation:
-    return {
-        storage: {
-            used: 0,
-            allocated: 0
-        },
-        bandwidth: {
-            monthly: 0,
-            average: 0
-        },
-        applications: {
-            total: 0,
-            active: 0
-        }
-    };
-}
-
-// Get company activity logs
-app.get('/api/companies/:companyId/activity', verifyToken, verifyCompanyAccess, async (req, res) => {
-    try {
-        const { companyId } = req.params;
-        const {
-            startDate,
-            endDate,
-            type,
-            userId,
-            department,
-            page = 1,
-            limit = 50,
-            sortBy = 'timestamp',
-            sortOrder = 'desc'
-        } = req.query;
-
-        // Build filter
-        const filter = { companyId: new ObjectId(companyId) };
-
-        if (startDate || endDate) {
-            filter.timestamp = {};
-            if (startDate) filter.timestamp.$gte = new Date(startDate);
-            if (endDate) filter.timestamp.$lte = new Date(endDate);
-        }
-
-        if (type) filter.action = type;
-        if (userId) filter['details.userId'] = new ObjectId(userId);
-        if (department) filter['details.department'] = department;
-
-        // Get total count
-        const total = await company_audit_logs.countDocuments(filter);
-
-        // Get activity logs with pagination and sorting
-        const logs = await company_audit_logs
-            .find(filter)
-            .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
-            .skip((parseInt(page) - 1) * parseInt(limit))
-            .limit(parseInt(limit))
-            .toArray();
-
-        // Enrich logs with user details
-        const enrichedLogs = await Promise.all(logs.map(async (log) => {
-            const [performer, targetUser] = await Promise.all([
-                company_users.findOne(
-                    { _id: log.performedBy },
-                    { projection: { name: 1, email: 1, role: 1 } }
-                ),
-                log.details.userId ? company_users.findOne(
-                    { _id: log.details.userId },
-                    { projection: { name: 1, email: 1, role: 1 } }
-                ) : null
-            ]);
-
-            return {
-                ...log,
-                performer: performer || { name: 'System', email: 'system' },
-                targetUser: targetUser || null
-            };
-        }));
-
-        // Get activity statistics
-        const statistics = await getActivityStatistics(companyId, filter);
-
-        res.json({
-            success: true,
-            activity: {
-                logs: enrichedLogs,
-                statistics,
-                pagination: {
-                    total,
-                    page: parseInt(page),
-                    pages: Math.ceil(total / parseInt(limit))
-                }
-            }
-        });
-
-    } catch (error) {
-        console.error('Error fetching activity logs:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching activity logs'
-        });
-    }
-});
-
-// Get security alerts
-app.get('/api/companies/:companyId/security/alerts', verifyToken, verifyCompanyAccess, async (req, res) => {
-    try {
-        const { companyId } = req.params;
-        const { status, severity, page = 1, limit = 20 } = req.query;
-
-        const filter = { companyId: new ObjectId(companyId) };
-        if (status) filter.status = status;
-        if (severity) filter.severity = severity;
-
-        const alerts = await security_logs
-            .find(filter)
-            .sort({ timestamp: -1 })
-            .skip((parseInt(page) - 1) * parseInt(limit))
-            .limit(parseInt(limit))
-            .toArray();
-
-        // Get alert statistics
-        const statistics = await getSecurityStatistics(companyId);
-
-        res.json({
-            success: true,
-            alerts,
-            statistics
-        });
-
-    } catch (error) {
-        console.error('Error fetching security alerts:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching security alerts'
-        });
-    }
-});
-
-// Monitor user sessions
-app.get('/api/companies/:companyId/sessions', verifyToken, verifyCompanyAccess, async (req, res) => {
-    try {
-        const { companyId } = req.params;
-        
-        const activeSessions = await database.collection('sessions')
-            .find({
-                companyId: new ObjectId(companyId),
-                expires: { $gt: new Date() }
-            })
-            .toArray();
-
-        // Enrich session data
-        const enrichedSessions = await Promise.all(activeSessions.map(async (session) => {
-            const user = await company_users.findOne(
-                { _id: session.userId },
-                { projection: { name: 1, email: 1, role: 1 } }
-            );
-
-            return {
-                ...session,
-                user
-            };
-        }));
-
-        // Get session statistics
-        const statistics = await getSessionStatistics(companyId);
-
-        res.json({
-            success: true,
-            sessions: enrichedSessions,
-            statistics
-        });
-
-    } catch (error) {
-        console.error('Error monitoring sessions:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error monitoring sessions'
-        });
-    }
-});
-
-// Real-time activity monitoring (WebSocket endpoint)
-const WebSocket = require('ws');
-const wss = new WebSocket.Server({ noServer: true });
-
-// Upgrade HTTP connection to WebSocket
-server.on('upgrade', (request, socket, head) => {
-    wss.handleUpgrade(request, socket, head, (ws) => {
-        wss.emit('connection', ws, request);
-    });
-});
-
-// Handle WebSocket connections
-wss.on('connection', async (ws, request) => {
-    try {
-        // Verify token from request headers
-        const token = request.headers['sec-websocket-protocol'];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-        // Set up activity monitoring
-        const activityStream = company_audit_logs.watch();
-        
-        activityStream.on('change', async (change) => {
-            if (change.operationType === 'insert') {
-                const activity = change.fullDocument;
-                
-                // Enrich activity data
-                const enrichedActivity = await enrichActivityData(activity);
-                
-                // Send to WebSocket client
-                ws.send(JSON.stringify({
-                    type: 'activity',
-                    data: enrichedActivity
-                }));
-            }
-        });
-
-        // Set up security alert monitoring
-        const securityStream = security_logs.watch();
-        
-        securityStream.on('change', async (change) => {
-            if (change.operationType === 'insert') {
-                const alert = change.fullDocument;
-                
-                // Send to WebSocket client
-                ws.send(JSON.stringify({
-                    type: 'security',
-                    data: alert
-                }));
-            }
-        });
-
-        // Handle WebSocket closure
-        ws.on('close', () => {
-            activityStream.close();
-            securityStream.close();
-        });
-
-    } catch (error) {
-        console.error('WebSocket error:', error);
-        ws.close();
-    }
-});
-
-// Helper function to get activity statistics
-async function getActivityStatistics(companyId, filter) {
-    const baseFilter = { companyId: new ObjectId(companyId), ...filter };
-
-    const [
-        actionTypes,
-        userActivity,
-        timeDistribution,
-        departmentActivity
-    ] = await Promise.all([
-        company_audit_logs.aggregate([
-            { $match: baseFilter },
-            { $group: { _id: '$action', count: { $sum: 1 } } }
         ]).toArray(),
-        company_audit_logs.aggregate([
-            { $match: baseFilter },
-            { $group: { _id: '$performedBy', count: { $sum: 1 } } },
-            { $sort: { count: -1 } },
-            { $limit: 10 }
-        ]).toArray(),
-        company_audit_logs.aggregate([
-            { $match: baseFilter },
-            {
-                $group: {
-                    _id: {
-                        hour: { $hour: '$timestamp' },
-                        day: { $dayOfWeek: '$timestamp' }
-                    },
-                    count: { $sum: 1 }
-                }
-            }
-        ]).toArray(),
-        company_audit_logs.aggregate([
-            { $match: baseFilter },
-            { $group: { _id: '$details.department', count: { $sum: 1 } } }
-        ]).toArray()
-    ]);
-
-    return {
-        actionTypes,
-        userActivity,
-        timeDistribution,
-        departmentActivity
-    };
-}
-
-// Helper function to get security statistics
-async function getSecurityStatistics(companyId) {
-    const [
-        alertsByType,
-        alertsBySeverity,
-        alertTrends,
-        topIPs
-    ] = await Promise.all([
-        security_logs.aggregate([
-            { $match: { companyId: new ObjectId(companyId) } },
-            { $group: { _id: '$type', count: { $sum: 1 } } }
-        ]).toArray(),
-        security_logs.aggregate([
-            { $match: { companyId: new ObjectId(companyId) } },
-            { $group: { _id: '$severity', count: { $sum: 1 } } }
-        ]).toArray(),
-        security_logs.aggregate([
+        company_users.aggregate([
             { $match: { companyId: new ObjectId(companyId) } },
             {
                 $group: {
-                    _id: {
-                        date: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } }
+                    _id: null,
+                    totalUsers: { $sum: 1 },
+                    mfaEnabled: {
+                        $sum: { $cond: [{ $eq: ['$requires2FA', true] }, 1, 0] }
                     },
-                    count: { $sum: 1 }
+                    passwordResetRequired: {
+                        $sum: { $cond: [{ $eq: ['$passwordResetRequired', true] }, 1, 0] }
+                    },
+                    lockedAccounts: {
+                        $sum: { $cond: [{ $gte: ['$failedLoginAttempts', 5] }, 1, 0] }
+                    }
                 }
-            },
-            { $sort: { '_id.date': 1 } }
-        ]).toArray(),
-        security_logs.aggregate([
-            { $match: { companyId: new ObjectId(companyId) } },
-            { $group: { _id: '$ip', count: { $sum: 1 } } },
-            { $sort: { count: -1 } },
-            { $limit: 10 }
+            }
         ]).toArray()
     ]);
 
     return {
-        alertsByType,
-        alertsBySeverity,
-        alertTrends,
-        topIPs
+        authentication: {
+            successful: loginStats.find(s => s._id === 'LOGIN_SUCCESS')?.count || 0,
+            failed: loginStats.find(s => s._id === 'LOGIN_FAILED')?.count || 0
+        },
+        incidents: {
+            total: securityIncidents.reduce((sum, incident) => sum + incident.count, 0),
+            byType: securityIncidents
+        },
+        access: {
+            patterns: accessPatterns,
+            unusualActivity: accessPatterns.filter(p => p.count > 100)
+        },
+        userSecurity: userSecurityStatus[0] || {
+            totalUsers: 0,
+            mfaEnabled: 0,
+            passwordResetRequired: 0,
+            lockedAccounts: 0
+        }
     };
 }
+// System Health and Maintenance Endpoints
 
-// API Key Management
-app.post('/api/companies/:companyId/api-keys', verifyToken, verifyCompanyAccess, async (req, res) => {
-    try {
-        const { companyId } = req.params;
-        const { name, permissions, expiryDays, allowedIPs = [] } = req.body;
-
-        // Validate subscription plan allows API access
-        const company = await companies.findOne({ _id: new ObjectId(companyId) });
-        const plan = await subscription_plans.findOne({ name: company.subscription.plan });
-
-        if (!plan.features.includes('API Access')) {
-            return res.status(403).json({
-                success: false,
-                message: 'Current subscription plan does not include API access'
-            });
-        }
-
-        // Generate API key
-        const apiKey = crypto.randomBytes(32).toString('hex');
-        const hashedKey = await bcrypt.hash(apiKey, 12);
-
-        const apiKeyDoc = {
-            companyId: new ObjectId(companyId),
-            name,
-            key: hashedKey,
-            permissions: permissions || ['read'],
-            allowedIPs,
-            createdAt: new Date(),
-            createdBy: new ObjectId(req.user.userId),
-            expiresAt: expiryDays ? new Date(Date.now() + (expiryDays * 86400000)) : null,
-            status: 'active',
-            lastUsed: null,
-            usageStats: {
-                totalCalls: 0,
-                lastCall: null,
-                errorCount: 0
-            }
-        };
-
-        const result = await api_keys.insertOne(apiKeyDoc);
-
-        // Create audit log
-        await createCompanyAuditLog(
-            'API_KEY_GENERATED',
-            companyId,
-            req.user.userId,
-            {
-                keyId: result.insertedId,
-                name,
-                permissions,
-                expiryDays
-            }
-        );
-
-        res.json({
-            success: true,
-            message: 'API key generated successfully',
-            apiKey: apiKey,
-            keyId: result.insertedId
-        });
-
-    } catch (error) {
-        console.error('Error generating API key:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error generating API key'
-        });
-    }
-});
-
-// Webhook Configuration
-app.post('/api/companies/:companyId/webhooks', verifyToken, verifyCompanyAccess, async (req, res) => {
-    try {
-        const { companyId } = req.params;
-        const { url, events, secret, description } = req.body;
-
-        // Validate URL
-        if (!url || !url.startsWith('https://')) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid webhook URL. HTTPS required.'
-            });
-        }
-
-        // Generate webhook secret if not provided
-        const webhookSecret = secret || crypto.randomBytes(32).toString('hex');
-
-        const webhook = {
-            companyId: new ObjectId(companyId),
-            url,
-            events: events || ['all'],
-            secret: await bcrypt.hash(webhookSecret, 12),
-            description,
-            status: 'active',
-            createdAt: new Date(),
-            createdBy: new ObjectId(req.user.userId),
-            lastTriggered: null,
-            failureCount: 0,
-            stats: {
-                successCount: 0,
-                failureCount: 0,
-                lastSuccess: null,
-                lastFailure: null,
-                averageResponseTime: 0
-            }
-        };
-
-        const result = await webhooks.insertOne(webhook);
-
-        // Create audit log
-        await createCompanyAuditLog(
-            'WEBHOOK_CONFIGURED',
-            companyId,
-            req.user.userId,
-            {
-                webhookId: result.insertedId,
-                url,
-                events
-            }
-        );
-
-        res.json({
-            success: true,
-            message: 'Webhook configured successfully',
-            webhookId: result.insertedId,
-            secret: webhookSecret
-        });
-
-    } catch (error) {
-        console.error('Error configuring webhook:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error configuring webhook'
-        });
-    }
-});
-
-// System Health Check
+// Get system health status
 app.get('/api/system/health', verifyToken, verifyAdmin, async (req, res) => {
     try {
         const startTime = process.hrtime();
 
-        // Perform comprehensive health checks
         const [
             dbHealth,
             redisHealth,
             systemMetrics,
-            serviceStatus
+            serviceStatus,
+            recentErrors
         ] = await Promise.all([
             checkDatabaseHealth(),
             checkRedisHealth(),
             getSystemMetrics(),
-            checkServiceStatus()
+            checkServiceStatus(),
+            getRecentErrors()
         ]);
 
         // Calculate response time
@@ -3754,7 +3523,7 @@ app.get('/api/system/health', verifyToken, verifyAdmin, async (req, res) => {
         const responseTime = seconds * 1000 + nanoseconds / 1000000;
 
         const healthStatus = {
-            status: 'healthy',
+            status: 'healthy', // Will be updated based on checks
             timestamp: new Date(),
             responseTime,
             components: {
@@ -3763,6 +3532,7 @@ app.get('/api/system/health', verifyToken, verifyAdmin, async (req, res) => {
                 system: systemMetrics,
                 services: serviceStatus
             },
+            errors: recentErrors,
             uptime: process.uptime(),
             version: process.env.APP_VERSION || '1.0.0'
         };
@@ -3794,464 +3564,555 @@ app.get('/api/system/health', verifyToken, verifyAdmin, async (req, res) => {
     }
 });
 
-// Database health check
-async function checkDatabaseHealth() {
-    try {
-        const startTime = process.hrtime();
-        
-        // Check database connection
-        const adminDb = client.db().admin();
-        const serverStatus = await adminDb.serverStatus();
-        
-        // Calculate response time
-        const [seconds, nanoseconds] = process.hrtime(startTime);
-        const responseTime = seconds * 1000 + nanoseconds / 1000000;
-
-        return {
-            healthy: true,
-            responseTime,
-            connections: serverStatus.connections,
-            metrics: {
-                activeConnections: serverStatus.connections.current,
-                availableConnections: serverStatus.connections.available,
-                totalOperations: serverStatus.opcounters
-            }
-        };
-    } catch (error) {
-        return {
-            healthy: false,
-            error: error.message
-        };
-    }
-}
-
-// Redis health check
-async function checkRedisHealth() {
-    try {
-        const startTime = process.hrtime();
-        
-        // Test Redis connection
-        await redis.ping();
-        
-        // Get Redis info
-        const info = await redis.info();
-        
-        // Calculate response time
-        const [seconds, nanoseconds] = process.hrtime(startTime);
-        const responseTime = seconds * 1000 + nanoseconds / 1000000;
-
-        return {
-            healthy: true,
-            responseTime,
-            info: parseRedisInfo(info)
-        };
-    } catch (error) {
-        return {
-            healthy: false,
-            error: error.message
-        };
-    }
-}
-
-// System metrics collection
-async function getSystemMetrics() {
-    const metrics = {
-        memory: process.memoryUsage(),
-        cpu: process.cpuUsage(),
-        heap: v8.getHeapStatistics(),
-        eventLoop: {
-            lag: await checkEventLoopLag(),
-            utilization: process.eventLoop.utilization()
-        }
-    };
-
-    return {
-        healthy: true,
-        metrics: {
-            memoryUsage: {
-                heapUsed: Math.round(metrics.memory.heapUsed / 1024 / 1024),
-                heapTotal: Math.round(metrics.memory.heapTotal / 1024 / 1024),
-                external: Math.round(metrics.memory.external / 1024 / 1024),
-                rss: Math.round(metrics.memory.rss / 1024 / 1024)
-            },
-            cpu: {
-                user: metrics.cpu.user,
-                system: metrics.cpu.system
-            },
-            heap: {
-                total: Math.round(metrics.heap.total_heap_size / 1024 / 1024),
-                used: Math.round(metrics.heap.used_heap_size / 1024 / 1024),
-                limit: Math.round(metrics.heap.heap_size_limit / 1024 / 1024)
-            },
-            eventLoop: metrics.eventLoop
-        }
-    };
-}
-
-// Service status check
-async function checkServiceStatus() {
-    const services = {
-        api: true,
-        websocket: wss.clients.size >= 0,
-        database: client.isConnected(),
-        cache: redis.status === 'ready'
-    };
-
-    return {
-        healthy: Object.values(services).every(status => status),
-        services
-    };
-}
-
-// Event loop lag check
-function checkEventLoopLag() {
-    return new Promise((resolve) => {
-        const start = Date.now();
-        setImmediate(() => {
-            resolve(Date.now() - start);
-        });
-    });
-}
-
-// System Maintenance Endpoints
-
-// Schedule maintenance window
+// System maintenance mode toggle
 app.post('/api/system/maintenance', verifyToken, verifyAdmin, async (req, res) => {
     try {
-        const {
-            startTime,
-            duration,
-            type,
-            description,
-            affectedServices,
-            notifyUsers = true
-        } = req.body;
+        const { enabled, message, estimatedDuration } = req.body;
 
-        // Validate maintenance window
-        const maintenanceStart = new Date(startTime);
-        if (maintenanceStart < new Date()) {
-            return res.status(400).json({
-                success: false,
-                message: 'Maintenance window cannot be in the past'
-            });
-        }
-
-        const maintenance = {
-            startTime: maintenanceStart,
-            endTime: new Date(maintenanceStart.getTime() + duration * 60000),
-            type,
-            description,
-            affectedServices,
-            status: 'scheduled',
-            createdBy: new ObjectId(req.user.userId),
-            createdAt: new Date(),
-            notifications: {
-                scheduled: false,
-                started: false,
-                completed: false
-            },
-            progress: {
-                status: 'pending',
-                steps: [],
-                currentStep: null,
-                completedSteps: 0,
-                errors: []
-            }
+        const maintenanceStatus = {
+            enabled,
+            message,
+            estimatedDuration,
+            startTime: enabled ? new Date() : null,
+            updatedBy: new ObjectId(req.user.userId),
+            updatedAt: new Date()
         };
 
-        const result = await database.collection('maintenance_windows')
-            .insertOne(maintenance);
-
-        // Schedule maintenance tasks
-        scheduleMaintenance(result.insertedId);
-
-        // Notify affected companies if requested
-        if (notifyUsers) {
-            const companies = await getAffectedCompanies(affectedServices);
-            await notifyMaintenanceWindow(companies, maintenance);
-        }
-
-        res.json({
-            success: true,
-            message: 'Maintenance window scheduled successfully',
-            maintenanceId: result.insertedId
-        });
-
-    } catch (error) {
-        console.error('Error scheduling maintenance:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error scheduling maintenance'
-        });
-    }
-});
-
-// System Backup Endpoints
-
-// Initiate system backup
-app.post('/api/system/backup', verifyToken, verifyAdmin, async (req, res) => {
-    try {
-        const { type, includeData = true } = req.body;
-
-        const backup = {
-            type,
-            startTime: new Date(),
-            status: 'in_progress',
-            initiatedBy: new ObjectId(req.user.userId),
-            includeData,
-            metadata: {
-                version: process.env.APP_VERSION,
-                node: process.version,
-                platform: process.platform
-            }
-        };
-
-        const result = await database.collection('system_backups')
-            .insertOne(backup);
-
-        // Start backup process asynchronously
-        performSystemBackup(result.insertedId, type, includeData)
-            .catch(error => console.error('Backup error:', error));
-
-        res.json({
-            success: true,
-            message: 'System backup initiated',
-            backupId: result.insertedId
-        });
-
-    } catch (error) {
-        console.error('Error initiating backup:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error initiating backup'
-        });
-    }
-});
-
-// System Configuration Management
-
-// Update system configuration
-app.put('/api/system/config', verifyToken, verifyAdmin, async (req, res) => {
-    try {
-        const { settings } = req.body;
-
-        // Validate settings
-        const validationResult = validateSystemSettings(settings);
-        if (!validationResult.valid) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid settings',
-                errors: validationResult.errors
-            });
-        }
-
-        // Get current configuration for comparison
-        const currentConfig = await system_config.findOne({ type: 'global' });
-
-        // Update configuration
         await system_config.updateOne(
             { type: 'global' },
             {
                 $set: {
-                    ...settings,
-                    updatedAt: new Date(),
-                    updatedBy: new ObjectId(req.user.userId)
+                    'maintenance': maintenanceStatus
                 }
-            },
-            { upsert: true }
-        );
-
-        // Log configuration changes
-        await createAuditLog(
-            'SYSTEM_CONFIG_UPDATED',
-            req.user.userId,
-            null,
-            {
-                previous: currentConfig,
-                new: settings
             }
         );
 
-        // Apply new configuration
-        await applySystemConfiguration(settings);
+        // If enabling maintenance mode, disconnect all non-admin users
+        if (enabled) {
+            const adminUsers = await users.find({ 
+                role: { $in: ['superadmin', 'admin'] } 
+            }).toArray();
+            
+            const adminIds = adminUsers.map(user => user._id.toString());
+
+            await sessions.deleteMany({
+                userId: { 
+                    $nin: adminIds.map(id => new ObjectId(id))
+                }
+            });
+        }
+
+        // Create system notification
+        const notification = {
+            type: enabled ? 'MAINTENANCE_START' : 'MAINTENANCE_END',
+            message: enabled ? 
+                `System maintenance started: ${message}` : 
+                'System maintenance completed',
+            timestamp: new Date(),
+            severity: 'info'
+        };
+
+        await database.collection('system_notifications').insertOne(notification);
 
         res.json({
             success: true,
-            message: 'System configuration updated successfully'
+            message: `Maintenance mode ${enabled ? 'enabled' : 'disabled'} successfully`,
+            maintenance: maintenanceStatus
         });
 
     } catch (error) {
-        console.error('Error updating system configuration:', error);
+        console.error('Error toggling maintenance mode:', error);
         res.status(500).json({
             success: false,
-            message: 'Error updating system configuration'
+            message: 'Error toggling maintenance mode'
         });
     }
 });
 
-// Helper Functions
-
-// Schedule maintenance tasks
-async function scheduleMaintenance(maintenanceId) {
+// Get system metrics
+app.get('/api/system/metrics', verifyToken, verifyAdmin, async (req, res) => {
     try {
-        const maintenance = await database.collection('maintenance_windows')
-            .findOne({ _id: maintenanceId });
+        const [
+            systemMetrics,
+            databaseMetrics,
+            apiMetrics,
+            userMetrics
+        ] = await Promise.all([
+            getDetailedSystemMetrics(),
+            getDatabaseMetrics(),
+            getApiMetrics(),
+            getUserMetrics()
+        ]);
 
-        // Schedule pre-maintenance notification
-        setTimeout(async () => {
-            await notifyMaintenanceStart(maintenance);
-        }, maintenance.startTime.getTime() - Date.now() - 3600000); // 1 hour before
-
-        // Schedule maintenance start
-        setTimeout(async () => {
-            await startMaintenance(maintenance);
-        }, maintenance.startTime.getTime() - Date.now());
-
-        // Schedule maintenance end
-        setTimeout(async () => {
-            await completeMaintenance(maintenance);
-        }, maintenance.endTime.getTime() - Date.now());
+        res.json({
+            success: true,
+            metrics: {
+                system: systemMetrics,
+                database: databaseMetrics,
+                api: apiMetrics,
+                users: userMetrics
+            }
+        });
 
     } catch (error) {
-        console.error('Error scheduling maintenance:', error);
+        console.error('Error fetching system metrics:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching system metrics'
+        });
     }
-}
+});
 
-// Perform system backup
-async function performSystemBackup(backupId, type, includeData) {
-    try {
-        const startTime = Date.now();
-        const backupPath = `backups/${backupId}_${Date.now()}`;
+// System Metrics Helper Functions
 
-        // Create backup directory
-        await fs.promises.mkdir(backupPath, { recursive: true });
-
-        // Backup system configuration
-        const config = await system_config.findOne({ type: 'global' });
-        await fs.promises.writeFile(
-            `${backupPath}/config.json`,
-            JSON.stringify(config, null, 2)
-        );
-
-        if (includeData) {
-            // Backup collections
-            const collections = await database.listCollections().toArray();
-            for (const collection of collections) {
-                const data = await database.collection(collection.name).find().toArray();
-                await fs.promises.writeFile(
-                    `${backupPath}/${collection.name}.json`,
-                    JSON.stringify(data, null, 2)
-                );
-            }
+async function getDetailedSystemMetrics() {
+    const metrics = {
+        memory: process.memoryUsage(),
+        cpu: process.cpuUsage(),
+        uptime: process.uptime(),
+        resourceUsage: {
+            heap: v8.getHeapStatistics(),
+            eventLoop: await checkEventLoopLag()
         }
-
-        // Create backup metadata
-        const metadata = {
-            backupId,
-            type,
-            startTime: new Date(startTime),
-            endTime: new Date(),
-            size: await calculateDirectorySize(backupPath),
-            collections: includeData ? collections.length : 0,
-            path: backupPath
-        };
-
-        // Update backup status
-        await database.collection('system_backups').updateOne(
-            { _id: backupId },
-            {
-                $set: {
-                    status: 'completed',
-                    completedAt: new Date(),
-                    metadata
-                }
-            }
-        );
-
-    } catch (error) {
-        console.error('Backup error:', error);
-        await database.collection('system_backups').updateOne(
-            { _id: backupId },
-            {
-                $set: {
-                    status: 'failed',
-                    error: error.message,
-                    completedAt: new Date()
-                }
-            }
-        );
-    }
-}
-
-// Apply system configuration
-async function applySystemConfiguration(settings) {
-    // Apply rate limiting settings
-    if (settings.rateLimit) {
-        updateRateLimits(settings.rateLimit);
-    }
-
-    // Apply security settings
-    if (settings.security) {
-        updateSecuritySettings(settings.security);
-    }
-
-    // Apply cache settings
-    if (settings.cache) {
-        updateCacheSettings(settings.cache);
-    }
-
-    // Apply logging settings
-    if (settings.logging) {
-        updateLoggingSettings(settings.logging);
-    }
-}
-
-// Validate system settings
-function validateSystemSettings(settings) {
-    const errors = [];
-
-    // Validate rate limiting
-    if (settings.rateLimit) {
-        if (settings.rateLimit.windowMs < 1000) {
-            errors.push('Rate limit window must be at least 1 second');
-        }
-        if (settings.rateLimit.max < 1) {
-            errors.push('Rate limit maximum must be at least 1');
-        }
-    }
-
-    // Validate security settings
-    if (settings.security) {
-        if (settings.security.sessionTimeout < 300) {
-            errors.push('Session timeout must be at least 5 minutes');
-        }
-        if (settings.security.maxLoginAttempts < 3) {
-            errors.push('Maximum login attempts must be at least 3');
-        }
-    }
-
-    // Validate cache settings
-    if (settings.cache) {
-        if (settings.cache.ttl < 0) {
-            errors.push('Cache TTL cannot be negative');
-        }
-    }
+    };
 
     return {
-        valid: errors.length === 0,
-        errors
+        memory: {
+            total: Math.round(metrics.memory.heapTotal / 1024 / 1024),
+            used: Math.round(metrics.memory.heapUsed / 1024 / 1024),
+            external: Math.round(metrics.memory.external / 1024 / 1024),
+            percentage: Math.round((metrics.memory.heapUsed / metrics.memory.heapTotal) * 100)
+        },
+        cpu: {
+            user: metrics.cpu.user,
+            system: metrics.cpu.system,
+            percentage: process.cpuUsage().user / process.cpuUsage().system
+        },
+        uptime: {
+            days: Math.floor(metrics.uptime / 86400),
+            hours: Math.floor((metrics.uptime % 86400) / 3600),
+            minutes: Math.floor((metrics.uptime % 3600) / 60)
+        },
+        heap: {
+            total: Math.round(metrics.resourceUsage.heap.total_heap_size / 1024 / 1024),
+            used: Math.round(metrics.resourceUsage.heap.used_heap_size / 1024 / 1024),
+            limit: Math.round(metrics.resourceUsage.heap.heap_size_limit / 1024 / 1024)
+        },
+        eventLoop: {
+            lag: metrics.resourceUsage.eventLoop,
+            utilization: process.eventLoop ? process.eventLoop.utilization() : null
+        }
     };
 }
 
-// Calculate directory size
-async function calculateDirectorySize(directoryPath) {
-    let totalSize = 0;
-    const files = await fs.promises.readdir(directoryPath);
+async function getDatabaseMetrics() {
+    try {
+        const adminDb = client.db().admin();
+        const serverStatus = await adminDb.serverStatus();
+        
+        const collectionsStats = await Promise.all(
+            (await database.listCollections().toArray())
+                .map(async collection => {
+                    const stats = await database.collection(collection.name).stats();
+                    return {
+                        name: collection.name,
+                        size: stats.size,
+                        count: stats.count
+                    };
+                })
+        );
 
-    for (const file of files) {
-        const stats = await fs.promises.stat(`${directoryPath}/${file}`);
-        totalSize += stats.size;
+        return {
+            connections: serverStatus.connections,
+            operations: serverStatus.opcounters,
+            collections: collectionsStats,
+            storage: {
+                total: collectionsStats.reduce((acc, curr) => acc + curr.size, 0),
+                byCollection: collectionsStats
+            }
+        };
+    } catch (error) {
+        console.error('Error getting database metrics:', error);
+        throw error;
     }
-
-    return totalSize;
 }
+
+async function getApiMetrics() {
+    const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    try {
+        const [
+            requestCounts,
+            responseTimeStats,
+            errorRates,
+            endpointUsage
+        ] = await Promise.all([
+            security_logs.countDocuments({
+                type: 'API_REQUEST',
+                timestamp: { $gte: last24Hours }
+            }),
+            security_logs.aggregate([
+                {
+                    $match: {
+                        type: 'API_REQUEST',
+                        timestamp: { $gte: last24Hours }
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        average: { $avg: '$details.responseTime' },
+                        max: { $max: '$details.responseTime' },
+                        min: { $min: '$details.responseTime' }
+                    }
+                }
+            ]).toArray(),
+            security_logs.aggregate([
+                {
+                    $match: {
+                        type: 'API_ERROR',
+                        timestamp: { $gte: last24Hours }
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$details.errorType',
+                        count: { $sum: 1 }
+                    }
+                }
+            ]).toArray(),
+            security_logs.aggregate([
+                {
+                    $match: {
+                        type: 'API_REQUEST',
+                        timestamp: { $gte: last24Hours }
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$details.endpoint',
+                        count: { $sum: 1 },
+                        avgResponseTime: { $avg: '$details.responseTime' }
+                    }
+                },
+                { $sort: { count: -1 } },
+                { $limit: 10 }
+            ]).toArray()
+        ]);
+
+        return {
+            requests: {
+                total: requestCounts,
+                perHour: requestCounts / 24
+            },
+            performance: responseTimeStats[0] || {
+                average: 0,
+                max: 0,
+                min: 0
+            },
+            errors: {
+                distribution: errorRates,
+                total: errorRates.reduce((sum, curr) => sum + curr.count, 0)
+            },
+            endpoints: {
+                mostUsed: endpointUsage,
+                total: endpointUsage.length
+            }
+        };
+    } catch (error) {
+        console.error('Error getting API metrics:', error);
+        throw error;
+    }
+}
+// Continue System Metrics Helper Functions
+
+async function getUserMetrics() {
+    const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    try {
+        const [
+            userStats,
+            sessionStats,
+            loginStats,
+            activityStats
+        ] = await Promise.all([
+            users.aggregate([
+                {
+                    $group: {
+                        _id: null,
+                        total: { $sum: 1 },
+                        active: { 
+                            $sum: { 
+                                $cond: [{ $eq: ['$status', 'active'] }, 1, 0] 
+                            }
+                        },
+                        locked: {
+                            $sum: {
+                                $cond: [{ $gte: ['$failedLoginAttempts', 5] }, 1, 0]
+                            }
+                        }
+                    }
+                }
+            ]).toArray(),
+            sessions.aggregate([
+                {
+                    $match: {
+                        expires: { $gt: new Date() }
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        activeSessions: { $sum: 1 },
+                        uniqueUsers: { $addToSet: '$userId' }
+                    }
+                }
+            ]).toArray(),
+            security_logs.aggregate([
+                {
+                    $match: {
+                        type: { $in: ['LOGIN_SUCCESS', 'LOGIN_FAILED'] },
+                        timestamp: { $gte: last24Hours }
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$type',
+                        count: { $sum: 1 }
+                    }
+                }
+            ]).toArray(),
+            audit_logs.aggregate([
+                {
+                    $match: {
+                        timestamp: { $gte: last24Hours }
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$action',
+                        count: { $sum: 1 }
+                    }
+                },
+                { $sort: { count: -1 } },
+                { $limit: 5 }
+            ]).toArray()
+        ]);
+
+        return {
+            users: userStats[0] || {
+                total: 0,
+                active: 0,
+                locked: 0
+            },
+            sessions: sessionStats[0] || {
+                activeSessions: 0,
+                uniqueUsers: []
+            },
+            authentication: {
+                successful: loginStats.find(s => s._id === 'LOGIN_SUCCESS')?.count || 0,
+                failed: loginStats.find(s => s._id === 'LOGIN_FAILED')?.count || 0
+            },
+            activity: {
+                topActions: activityStats,
+                total: activityStats.reduce((sum, stat) => sum + stat.count, 0)
+            }
+        };
+    } catch (error) {
+        console.error('Error getting user metrics:', error);
+        throw error;
+    }
+}
+
+// Error Handling and Logging Functions
+
+async function getRecentErrors() {
+    try {
+        return await security_logs.find({
+            type: 'ERROR',
+            timestamp: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+        })
+        .sort({ timestamp: -1 })
+        .limit(50)
+        .toArray();
+    } catch (error) {
+        console.error('Error fetching recent errors:', error);
+        return [];
+    }
+}
+
+// System cleanup functions
+async function performSystemCleanup() {
+    try {
+        const [
+            expiredSessions,
+            oldLogs,
+            deletedCompanies
+        ] = await Promise.all([
+            cleanupExpiredSessions(),
+            cleanupOldLogs(),
+            cleanupDeletedCompanies()
+        ]);
+
+        return {
+            sessions: expiredSessions,
+            logs: oldLogs,
+            companies: deletedCompanies
+        };
+    } catch (error) {
+        console.error('Error during system cleanup:', error);
+        throw error;
+    }
+}
+
+async function cleanupExpiredSessions() {
+    try {
+        const result = await sessions.deleteMany({
+            expires: { $lt: new Date() }
+        });
+        return result.deletedCount;
+    } catch (error) {
+        console.error('Error cleaning up sessions:', error);
+        throw error;
+    }
+}
+
+async function cleanupOldLogs() {
+    const retentionPeriod = 90; // days
+    const cutoffDate = new Date(Date.now() - retentionPeriod * 24 * 60 * 60 * 1000);
+
+    try {
+        const [auditLogs, securityLogs] = await Promise.all([
+            audit_logs.deleteMany({
+                timestamp: { $lt: cutoffDate }
+            }),
+            security_logs.deleteMany({
+                timestamp: { $lt: cutoffDate }
+            })
+        ]);
+
+        return {
+            auditLogs: auditLogs.deletedCount,
+            securityLogs: securityLogs.deletedCount
+        };
+    } catch (error) {
+        console.error('Error cleaning up logs:', error);
+        throw error;
+    }
+}
+
+async function cleanupDeletedCompanies() {
+    const retentionPeriod = 30; // days
+    const cutoffDate = new Date(Date.now() - retentionPeriod * 24 * 60 * 60 * 1000);
+
+    try {
+        const result = await database.collection('deleted_companies').deleteMany({
+            deletedAt: { $lt: cutoffDate },
+            backupId: { $exists: true } // Only delete if backup exists
+        });
+
+        return result.deletedCount;
+    } catch (error) {
+        console.error('Error cleaning up deleted companies:', error);
+        throw error;
+    }
+}
+
+// Scheduled Tasks
+const scheduleSystemTasks = () => {
+    // Run system cleanup daily
+    setInterval(async () => {
+        try {
+            console.log('Starting scheduled system cleanup...');
+            const results = await performSystemCleanup();
+            console.log('System cleanup completed:', results);
+        } catch (error) {
+            console.error('Error during scheduled cleanup:', error);
+        }
+    }, 24 * 60 * 60 * 1000); // 24 hours
+
+    // Monitor system health every 5 minutes
+    setInterval(async () => {
+        try {
+            const healthStatus = await checkSystemHealth();
+            if (healthStatus.status !== 'healthy') {
+                console.warn('System health check failed:', healthStatus);
+                // Implement alert mechanism here
+            }
+        } catch (error) {
+            console.error('Error during health check:', error);
+        }
+    }, 5 * 60 * 1000); // 5 minutes
+};
+
+// Graceful Shutdown Handler
+async function gracefulShutdown(signal) {
+    console.log(`${signal} received. Starting graceful shutdown...`);
+
+    try {
+        // Close all active sessions
+        await sessions.updateMany(
+            { expires: { $gt: new Date() } },
+            { $set: { expires: new Date() } }
+        );
+
+        // Close database connection
+        await client.close();
+        console.log('MongoDB connection closed');
+
+        // Close Redis connection if available
+        if (redis) {
+            await redis.quit();
+            console.log('Redis connection closed');
+        }
+
+        // Additional cleanup tasks
+        await performSystemCleanup();
+        console.log('System cleanup completed');
+
+        process.exit(0);
+    } catch (error) {
+        console.error('Error during shutdown:', error);
+        process.exit(1);
+    }
+}
+
+// Register shutdown handlers
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Handle uncaught exceptions and unhandled rejections
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    gracefulShutdown('Uncaught Exception');
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    gracefulShutdown('Unhandled Rejection');
+});
+
+// Initialize application
+const initializeApp = async () => {
+    try {
+        // Initialize database
+        await initializeDatabase();
+
+        // Schedule system tasks
+        scheduleSystemTasks();
+
+        // Start server
+        const PORT = process.env.PORT || 8080;
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    } catch (error) {
+        console.error('Error initializing application:', error);
+        process.exit(1);
+    }
+};
+
+// Start the application
+initializeApp();
+
+module.exports = app;
