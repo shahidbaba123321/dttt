@@ -161,6 +161,7 @@ const client = new MongoClient(uri, {
 });
 // Database and Collections initialization
 let database;
+let client;
 let users;
 let audit_logs;
 let deleted_users;
@@ -4050,26 +4051,48 @@ async function gracefulShutdown(signal) {
     console.log(`${signal} received. Starting graceful shutdown...`);
 
     try {
-        // Close all active sessions
-        await sessions.updateMany(
-            { expires: { $gt: new Date() } },
-            { $set: { expires: new Date() } }
-        );
+        // Check if database and collections are initialized
+        if (client && client.isConnected()) {
+            // Close all active sessions if the collection exists
+            if (sessions) {
+                try {
+                    await sessions.updateMany(
+                        { expires: { $gt: new Date() } },
+                        { $set: { expires: new Date() } }
+                    );
+                    console.log('Active sessions closed');
+                } catch (error) {
+                    console.warn('Error closing sessions:', error);
+                }
+            }
 
-        // Close database connection
-        await client.close();
-        console.log('MongoDB connection closed');
+            // Close database connection
+            await client.close();
+            console.log('MongoDB connection closed');
+        }
 
         // Close Redis connection if available
         if (redis) {
-            await redis.quit();
-            console.log('Redis connection closed');
+            try {
+                await redis.quit();
+                console.log('Redis connection closed');
+            } catch (error) {
+                console.warn('Error closing Redis connection:', error);
+            }
         }
 
         // Additional cleanup tasks
-        await performSystemCleanup();
-        console.log('System cleanup completed');
+        if (typeof performSystemCleanup === 'function') {
+            try {
+                await performSystemCleanup();
+                console.log('System cleanup completed');
+            } catch (error) {
+                console.warn('Error during system cleanup:', error);
+            }
+        }
 
+        // Exit process
+        console.log('Shutdown completed');
         process.exit(0);
     } catch (error) {
         console.error('Error during shutdown:', error);
@@ -4084,28 +4107,51 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 // Handle uncaught exceptions and unhandled rejections
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
-    gracefulShutdown('Uncaught Exception');
+    gracefulShutdown('Uncaught Exception').catch(err => {
+        console.error('Error during shutdown after uncaught exception:', err);
+        process.exit(1);
+    });
 });
 
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    gracefulShutdown('Unhandled Rejection');
+    gracefulShutdown('Unhandled Rejection').catch(err => {
+        console.error('Error during shutdown after unhandled rejection:', err);
+        process.exit(1);
+    });
 });
 
 // Initialize application
 const initializeApp = async () => {
     try {
-        // Initialize database
-        await initializeDatabase();
+        // Initialize database first
+        const dbCollections = await initializeDatabase();
+        
+        // Assign collections to global variables
+        ({
+            database,
+            sessions,
+            users,
+            audit_logs,
+            security_logs,
+            // ... other collections
+        } = dbCollections);
 
         // Schedule system tasks
         scheduleSystemTasks();
 
         // Start server
         const PORT = process.env.PORT || 8080;
-        app.listen(PORT, '0.0.0.0', () => {
+        const server = app.listen(PORT, '0.0.0.0', () => {
             console.log(`Server running on port ${PORT}`);
         });
+
+        // Handle server errors
+        server.on('error', (error) => {
+            console.error('Server error:', error);
+            gracefulShutdown('Server Error');
+        });
+
     } catch (error) {
         console.error('Error initializing application:', error);
         process.exit(1);
@@ -4113,6 +4159,9 @@ const initializeApp = async () => {
 };
 
 // Start the application
-initializeApp();
+initializeApp().catch(error => {
+    console.error('Application startup failed:', error);
+    process.exit(1);
+});
 
 module.exports = app;
