@@ -11,25 +11,11 @@ const { validationResult } = require('express-validator');
 require('dotenv').config();
 
 // Redis Configuration
-let Redis, RedisStore, redis;
+const app = express();
+let client = null;
+let redis = null;
+let RedisStore = null;
 
-// Try to initialize Redis if available
-try {
-    Redis = require('ioredis');
-    RedisStore = require('rate-limit-redis');
-    redis = new Redis({
-        host: process.env.REDIS_HOST || 'localhost',
-        port: process.env.REDIS_PORT || 6379,
-        password: process.env.REDIS_PASSWORD,
-        retryStrategy: (times) => {
-            const delay = Math.min(times * 50, 2000);
-            return delay;
-        }
-    });
-    console.log('Redis connected successfully');
-} catch (error) {
-    console.warn('Redis not available, using memory store:', error.message);
-}
 
 const app = express();
 
@@ -40,11 +26,7 @@ const limiter = rateLimit({
     message: {
         success: false,
         message: 'Too many requests, please try again later.'
-    },
-    store: redis && RedisStore ? new RedisStore({
-        client: redis,
-        prefix: 'rl:'
-    }) : undefined
+    }
 });
 
 // Authentication rate limiter
@@ -54,12 +36,10 @@ const authLimiter = rateLimit({
     message: {
         success: false,
         message: 'Too many failed attempts, please try again later'
-    },
-    store: redis && RedisStore ? new RedisStore({
-        client: redis,
-        prefix: 'auth_rl:'
-    }) : undefined
+    }
 });
+
+
 
 // Define CORS options
 const corsOptions = {
@@ -161,7 +141,6 @@ const client = new MongoClient(uri, {
 });
 // Database and Collections initialization
 let database;
-let client;
 let users;
 let audit_logs;
 let deleted_users;
@@ -181,6 +160,48 @@ let system_config;
 let migration_jobs;
 let security_logs;
 let sessions;
+
+// Initialize Redis separately after ensuring connection
+async function initializeRedis() {
+    try {
+        const Redis = require('ioredis');
+        const RedisStore = require('rate-limit-redis');
+
+        redisClient = new Redis({
+            host: process.env.REDIS_HOST || 'localhost',
+            port: process.env.REDIS_PORT || 6379,
+            password: process.env.REDIS_PASSWORD,
+            retryStrategy: (times) => {
+                const delay = Math.min(times * 50, 2000);
+                return delay;
+            }
+        });
+
+        // Wait for Redis connection
+        await new Promise((resolve, reject) => {
+            redisClient.on('connect', resolve);
+            redisClient.on('error', reject);
+        });
+
+        console.log('Redis connected successfully');
+
+        // Only setup Redis store after successful connection
+        const redisStore = new RedisStore({
+            sendCommand: (...args) => redisClient.call(...args),
+            prefix: 'rl:'
+        });
+
+        // Update rate limiters with Redis store
+        limiter.store = redisStore;
+        authLimiter.store = redisStore;
+
+        return redisClient;
+    } catch (error) {
+        console.warn('Redis initialization failed, using memory store:', error.message);
+        return null;
+    }
+}
+
 
 // Initialize database connection and collections
 async function initializeDatabase() {
@@ -211,6 +232,7 @@ async function initializeDatabase() {
         security_logs = database.collection('security_logs');
         sessions = database.collection('sessions');
 
+        
         // Function to check and create index if needed
         const ensureIndex = async (collection, indexSpec, options = {}) => {
             try {
@@ -4051,47 +4073,44 @@ async function gracefulShutdown(signal) {
     console.log(`${signal} received. Starting graceful shutdown...`);
 
     try {
-        // Check if database and collections are initialized
-        if (client && client.isConnected()) {
-            // Close all active sessions if the collection exists
-            if (sessions) {
-                try {
-                    await sessions.updateMany(
-                        { expires: { $gt: new Date() } },
-                        { $set: { expires: new Date() } }
-                    );
-                    console.log('Active sessions closed');
-                } catch (error) {
-                    console.warn('Error closing sessions:', error);
-                }
-            }
+        // Check if database is connected
+        if (client) {
+            try {
+                // Check connection status
+                const isConnected = await client.db().admin().ping();
+                if (isConnected) {
+                    // Close all active sessions if the collection exists
+                    if (sessions) {
+                        try {
+                            await sessions.updateMany(
+                                { expires: { $gt: new Date() } },
+                                { $set: { expires: new Date() } }
+                            );
+                            console.log('Active sessions closed');
+                        } catch (error) {
+                            console.warn('Error closing sessions:', error);
+                        }
+                    }
 
-            // Close database connection
-            await client.close();
-            console.log('MongoDB connection closed');
+                    // Close database connection
+                    await client.close();
+                    console.log('MongoDB connection closed');
+                }
+            } catch (error) {
+                console.warn('Error checking MongoDB connection:', error);
+            }
         }
 
         // Close Redis connection if available
-        if (redis) {
+        if (redisClient) {
             try {
-                await redis.quit();
+                await redisClient.quit();
                 console.log('Redis connection closed');
             } catch (error) {
                 console.warn('Error closing Redis connection:', error);
             }
         }
 
-        // Additional cleanup tasks
-        if (typeof performSystemCleanup === 'function') {
-            try {
-                await performSystemCleanup();
-                console.log('System cleanup completed');
-            } catch (error) {
-                console.warn('Error during system cleanup:', error);
-            }
-        }
-
-        // Exit process
         console.log('Shutdown completed');
         process.exit(0);
     } catch (error) {
@@ -4107,38 +4126,31 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 // Handle uncaught exceptions and unhandled rejections
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
-    gracefulShutdown('Uncaught Exception').catch(err => {
-        console.error('Error during shutdown after uncaught exception:', err);
-        process.exit(1);
-    });
+    gracefulShutdown('Uncaught Exception');
 });
-
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    gracefulShutdown('Unhandled Rejection').catch(err => {
-        console.error('Error during shutdown after unhandled rejection:', err);
-        process.exit(1);
-    });
+    gracefulShutdown('Unhandled Rejection');
 });
+
 
 // Initialize application
 const initializeApp = async () => {
     try {
         // Initialize database first
-        const dbCollections = await initializeDatabase();
-        
-        // Assign collections to global variables
-        ({
-            database,
-            sessions,
-            users,
-            audit_logs,
-            security_logs,
-            // ... other collections
-        } = dbCollections);
+        await initializeDatabase();
 
-        // Schedule system tasks
-        scheduleSystemTasks();
+        // Initialize Redis
+        await initializeRedis();
+
+        // Apply middleware
+        app.use(cors(corsOptions));
+        app.use(express.json());
+        app.use(helmet());
+        app.use(compression());
+        app.use(morgan('combined'));
+        app.use(limiter);
+        app.use('/api/login', authLimiter);
 
         // Start server
         const PORT = process.env.PORT || 8080;
