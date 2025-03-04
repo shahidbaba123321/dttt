@@ -178,38 +178,41 @@
             });
         }
 
-        async loadFilters() {
-            try {
-                // Load roles for both filter and user form
-                const rolesResponse = await utils.fetchWithAuth('/roles');
-                if (rolesResponse.success) {
-                    // Store roles for later use
-                    this.availableRoles = rolesResponse.roles.filter(role => 
-                        role.name.toLowerCase() !== 'superadmin'
-                    );
-                    
-                    // Populate role filter in search
-                    this.populateSelect(this.roleFilter, this.availableRoles, 'name');
-                    
-                    // Populate role select in user form
-                    this.populateRoleSelect();
-                }
-
-                // Status filter is static
-                this.statusFilter.innerHTML = `
-                    <option value="">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="pending">Pending</option>
-                    <option value="suspended">Suspended</option>
-                `;
-
-            } catch (error) {
-                console.error('Error loading filters:', error);
-                this.showNotification('Failed to load filters', 'error');
-                throw error;
+         async loadFilters() {
+        try {
+            // Load roles for both filter and user form
+            const rolesResponse = await utils.fetchWithAuth('/api/roles');
+            if (rolesResponse.success) {
+                this.availableRoles = rolesResponse.data.roles.filter(role => 
+                    role.name.toLowerCase() !== 'superadmin'
+                );
+                
+                this.populateSelect(this.roleFilter, this.availableRoles, 'name');
+                this.populateRoleSelect();
             }
+
+            // Load departments
+            const departmentsResponse = await utils.fetchWithAuth('/api/departments');
+            if (departmentsResponse.success) {
+                this.departments = departmentsResponse.data.departments;
+                this.populateSelect(this.departmentFilter, this.departments, 'name');
+            }
+
+            // Status filter remains static
+            this.statusFilter.innerHTML = `
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="suspended">Suspended</option>
+            `;
+
+        } catch (error) {
+            console.error('Error loading filters:', error);
+            this.showNotification('Failed to load filters', 'error');
+            throw error;
         }
+    }
+
 
         populateSelect(selectElement, items, valueKey) {
             const currentValue = selectElement.value;
@@ -244,32 +247,33 @@
         }
 
         async loadUsers() {
-            try {
-                this.showLoadingState();
-                const queryParams = new URLSearchParams({
-                    page: this.currentPage,
-                    limit: this.itemsPerPage,
-                    search: this.filters.search,
-                    role: this.filters.role,
-                    status: this.filters.status
-                });
+        try {
+            this.showLoadingState();
+            const queryParams = new URLSearchParams({
+                page: this.currentPage,
+                limit: this.itemsPerPage,
+                search: this.filters.search,
+                role: this.filters.role,
+                status: this.filters.status,
+                department: this.filters.department // Add department filter
+            });
 
-                const response = await utils.fetchWithAuth(`/users?${queryParams}`);
-                if (response.success) {
-                    this.users = response.users;
-                    this.totalUsers = response.pagination.total;
-                    this.renderUsers();
-                    this.updatePagination(response.pagination);
-                } else {
-                    throw new Error(response.message || 'Failed to load users');
-                }
-            } catch (error) {
-                console.error('Error loading users:', error);
-                this.showNotification('Failed to load users', 'error');
-            } finally {
-                this.hideLoadingState();
+            const response = await utils.fetchWithAuth(`/api/users?${queryParams}`);
+            if (response.success) {
+                this.users = response.data.users; // Updated response structure
+                this.totalUsers = response.data.pagination.total;
+                this.renderUsers();
+                this.updatePagination(response.data.pagination);
+            } else {
+                throw new Error(response.message || 'Failed to load users');
             }
+        } catch (error) {
+            console.error('Error loading users:', error);
+            this.showNotification('Failed to load users', 'error');
+        } finally {
+            this.hideLoadingState();
         }
+    }
 
         showLoadingState() {
             this.tableBody.innerHTML = `
@@ -479,127 +483,150 @@
         }
 
         async handleUserFormSubmit() {
-            try {
-                if (!this.userForm.checkValidity()) {
-                    this.userForm.reportValidity();
-                    return;
-                }
-
-                if (!this.roleSelect.value) {
-                    this.showNotification('Please select a role', 'error');
-                    return;
-                }
-
-                // Get the selected role details
-                const selectedRole = this.availableRoles.find(role => role._id === this.roleSelect.value);
-                if (!selectedRole) {
-                    this.showNotification('Invalid role selected', 'error');
-                    return;
-                }
-
-                const formData = {
-                    name: this.nameInput.value.trim(),
-                    email: this.emailInput.value.trim(),
-                    department: this.departmentInput.value.trim(),
-                    role: selectedRole.name, // Send role name instead of ID
-                    requires2FA: this.twoFACheckbox.checked,
-                    status: 'active' // Add default status for new users
-                };
-
-                // Validate email format
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(formData.email)) {
-                    this.showNotification('Please enter a valid email address', 'error');
-                    return;
-                }
-
-                // Validate required fields
-                if (!formData.name || !formData.email || !formData.department || !formData.role) {
-                    this.showNotification('Please fill in all required fields', 'error');
-                    return;
-                }
-
-                const isEdit = !!this.currentEditUserId;
-                const endpoint = isEdit ? `/users/${this.currentEditUserId}` : '/users';
-                const method = isEdit ? 'PUT' : 'POST';
-
-                const response = await utils.fetchWithAuth(endpoint, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                if (response.success) {
-                    const action = this.currentEditUserId ? 'updated' : 'created';
-                    this.showNotification(
-                        `<strong>${formData.name}</strong> has been successfully ${action}!`,
-                        'success'
-                    );
-                    this.hideUserModal();
-                    await this.loadUsers();
-                } else {
-                    throw new Error(response.message || 'Operation failed');
-                }
-
-            } catch (error) {
-                console.error('Error saving user:', error);
-                this.showNotification(
-                    `Failed to ${this.currentEditUserId ? 'update' : 'create'} user: ${error.message}`,
-                    'error'
-                );
+        try {
+            if (!this.validateForm()) {
+                return;
             }
+
+            const formData = this.getFormData();
+            const isEdit = !!this.currentEditUserId;
+            const endpoint = isEdit ? 
+                `/api/users/${this.currentEditUserId}` : 
+                '/api/users';
+            const method = isEdit ? 'PUT' : 'POST';
+
+            const response = await utils.fetchWithAuth(endpoint, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.success) {
+                const action = isEdit ? 'updated' : 'created';
+                this.showNotification(
+                    `User ${formData.name} has been successfully ${action}!`,
+                    'success'
+                );
+                this.hideUserModal();
+                await this.loadUsers();
+            } else {
+                throw new Error(response.message || 'Operation failed');
+            }
+
+        } catch (error) {
+            console.error('Error saving user:', error);
+            this.showNotification(
+                `Failed to ${this.currentEditUserId ? 'update' : 'create'} user: ${error.message}`,
+                'error'
+            );
         }
+    }
+        validateForm() {
+        if (!this.userForm.checkValidity()) {
+            this.userForm.reportValidity();
+            return false;
+        }
+
+        if (!this.roleSelect.value) {
+            this.showNotification('Please select a role', 'error');
+            return false;
+        }
+
+        const email = this.emailInput.value.trim();
+        if (!this.validateEmail(email)) {
+            this.showNotification('Please enter a valid email address', 'error');
+            return false;
+        }
+
+        const name = this.nameInput.value.trim();
+        if (name.length < 2) {
+            this.showNotification('Name must be at least 2 characters long', 'error');
+            return false;
+        }
+
+        return true;
+    }
+
+    validateEmail(email) {
+        // Enhanced email validation
+        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        return emailRegex.test(email);
+    }
+
+    getFormData() {
+        const selectedRole = this.availableRoles.find(role => role._id === this.roleSelect.value);
+        
+        return {
+            name: this.nameInput.value.trim(),
+            email: this.emailInput.value.trim(),
+            department: this.departmentInput.value.trim(),
+            role: selectedRole.name,
+            requires2FA: this.twoFACheckbox.checked,
+            status: 'active',
+            permissions: selectedRole.permissions || []
+        };
+    }
+
+
 
         async toggle2FA(userId, enabled) {
-            try {
-                const response = await utils.fetchWithAuth(`/users/${userId}/2fa`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ requires2FA: enabled })
-                });
+        try {
+            const response = await utils.fetchWithAuth(`/api/users/${userId}/2fa`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ enabled })
+            });
 
-                if (response.success) {
-                    this.showNotification(
-                        `Two-factor authentication has been ${enabled ? 'enabled' : 'disabled'}!`,
-                        'success'
-                    );
-                    await this.loadUsers();
-                } else {
-                    throw new Error(response.message || 'Failed to update 2FA settings');
-                }
-            } catch (error) {
-                console.error('Error toggling 2FA:', error);
-                this.showNotification('Failed to update 2FA settings', 'error');
-                // Revert toggle state
-                const toggle = document.querySelector(`input[data-userid="${userId}"]`);
-                if (toggle) toggle.checked = !enabled;
+            if (response.success) {
+                this.showNotification(
+                    `Two-factor authentication has been ${enabled ? 'enabled' : 'disabled'}`,
+                    'success'
+                );
+                await this.loadUsers();
+            } else {
+                throw new Error(response.message);
             }
+        } catch (error) {
+            console.error('Error toggling 2FA:', error);
+            this.showNotification('Failed to update 2FA settings', 'error');
+            // Revert toggle state
+            const toggle = document.querySelector(`input[data-userid="${userId}"]`);
+            if (toggle) toggle.checked = !enabled;
         }
+    }
 
           async toggleUserStatus(userId, currentStatus) {
-            try {
-                const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-                const response = await utils.fetchWithAuth(`/users/${userId}/status`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ status: newStatus })
-                });
+        try {
+            const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+            const response = await utils.fetchWithAuth(`/api/users/${userId}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    status: newStatus,
+                    reason: `Status changed by administrator`
+                })
+            });
 
-                if (response.success) {
-                    const status = newStatus === 'active' ? 'activated' : 'deactivated';
-                    this.showNotification(
-                        `User has been successfully ${status}!`,
-                        'success'
-                    );
-                    await this.loadUsers();
-                } else {
-                    throw new Error(response.message || 'Failed to update user status');
-                }
-            } catch (error) {
-                console.error('Error toggling user status:', error);
-                this.showNotification('Failed to update user status', 'error');
+            if (response.success) {
+                this.showNotification(
+                    `User has been ${newStatus === 'active' ? 'activated' : 'deactivated'}`,
+                    'success'
+                );
+                await this.loadUsers();
+            } else {
+                throw new Error(response.message);
             }
+        } catch (error) {
+            console.error('Error toggling user status:', error);
+            this.showNotification('Failed to update user status', 'error');
         }
+    }
 
         async showDeleteModal(userId) {
             try {
