@@ -744,48 +744,54 @@ const CONFIG = {
 // Utility Functions
 const utils = {
     async fetchWithAuth(endpoint, options = {}) {
-    try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            throw new Error('No authentication token found');
-        }
-
-        const defaultOptions = {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-        };
-
-        const finalOptions = {
-            ...defaultOptions,
-            ...options,
-            headers: {
-                ...defaultOptions.headers,
-                ...(options.headers || {})
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found');
             }
-        };
 
-        console.log('Making API request:', {
-            endpoint,
-            options: finalOptions
-        });
+            const defaultOptions = {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            };
 
-        const response = await fetch(`${CONFIG.API_BASE_URL}${endpoint}`, finalOptions);
-        const data = await response.json();
+            const finalOptions = {
+                ...defaultOptions,
+                ...options,
+                headers: {
+                    ...defaultOptions.headers,
+                    ...(options.headers || {})
+                }
+            };
 
-        if (!response.ok) {
-            // Log the error response for debugging
-            console.error('API Error Response:', data);
-            throw new Error(data.message || `HTTP error! status: ${response.status}`);
+            console.log('Making API request:', {
+                endpoint,
+                options: finalOptions
+            });
+
+            const response = await fetch(endpoint, finalOptions);
+            
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server response was not JSON');
+            }
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || `HTTP error! status: ${response.status}`);
+            }
+
+            return data;
+        } catch (error) {
+            console.error('API request failed:', error);
+            throw error;
         }
-
-        return data;
-    } catch (error) {
-        console.error('API request failed:', error);
-        throw error;
     }
-    },
+};
 
     getInitials(name) {
         const nameParts = name.split('@')[0].split(/[._-]/);
