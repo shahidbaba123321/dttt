@@ -210,8 +210,43 @@ async function initializeDatabase() {
         console.log("Connected to MongoDB Atlas");
         
         database = client.db('infocraftorbis');
-        
-        // Initialize all collections
+
+        // List of all collections to initialize
+        const collectionsToCreate = [
+            'users',
+            'audit_logs',
+            'deleted_users',
+            'user_permissions',
+            'companies',
+            'company_users',
+            'company_subscriptions',
+            'company_audit_logs',
+            'subscription_plans',
+            'roles',
+            'role_permissions',
+            'user_role_assignments',
+            'webhooks',
+            'api_keys',
+            'notifications',
+            'system_config',
+            'migration_jobs',
+            'security_logs',
+            'sessions'
+        ];
+
+        // Create collections if they don't exist
+        for (const collectionName of collectionsToCreate) {
+            try {
+                await database.createCollection(collectionName);
+                console.log(`Collection ${collectionName} created or already exists`);
+            } catch (error) {
+                if (error.code !== 48) { // 48 is the error code for "collection already exists"
+                    console.warn(`Error creating collection ${collectionName}:`, error);
+                }
+            }
+        }
+
+        // Assign collections
         users = database.collection('users');
         audit_logs = database.collection('audit_logs');
         deleted_users = database.collection('deleted_users');
@@ -232,78 +267,65 @@ async function initializeDatabase() {
         security_logs = database.collection('security_logs');
         sessions = database.collection('sessions');
 
-        
         // Function to check and create index if needed
         const ensureIndex = async (collection, indexSpec, options = {}) => {
-            try {
-                const existingIndexes = await collection.listIndexes().toArray();
-                
-                const indexExists = existingIndexes.some(idx => {
-                    const keyMatch = Object.keys(idx.key).every(k => 
-                        idx.key[k] === indexSpec[k]
-                    );
-                    return keyMatch;
-                });
+    try {
+        // Check if index already exists
+        const indexName = options.name || Object.keys(indexSpec).map(key => `${key}_${indexSpec[key]}`).join('_');
+        const existingIndexes = await collection.listIndexes().toArray();
+        
+        const indexExists = existingIndexes.some(idx => {
+            // Compare index specification
+            const keyMatch = Object.keys(indexSpec).every(k => 
+                idx.key[k] === indexSpec[k]
+            );
+            return keyMatch;
+        });
 
-                if (!indexExists) {
-                    await collection.createIndex(indexSpec, options);
-                    console.log(`Created index for ${collection.collectionName}`);
-                } else {
-                    console.log(`Index already exists for ${collection.collectionName}`);
-                }
-            } catch (err) {
-                console.warn(`Warning handling index for ${collection.collectionName}:`, err.message);
-            }
-        };
+        if (!indexExists) {
+            await collection.createIndex(indexSpec, options);
+            console.log(`Created index for ${collection.collectionName}`);
+        } else {
+            console.log(`Index already exists for ${collection.collectionName}`);
+        }
+    } catch (error) {
+        console.warn(`Warning handling index for ${collection.collectionName}:`, error.message);
+    }
+};
 
-        // Initialize indexes for all collections
-        const indexPromises = [
-            // User-related indexes
-            ensureIndex(users, { email: 1 }, { unique: true }),
-            ensureIndex(users, { status: 1 }),
-            ensureIndex(users, { role: 1 }),
-            ensureIndex(audit_logs, { timestamp: -1 }),
-            ensureIndex(audit_logs, { 'performedBy': 1 }),
-            ensureIndex(deleted_users, { originalId: 1 }),
-            ensureIndex(deleted_users, { email: 1 }),
-            ensureIndex(user_permissions, { userId: 1 }, { unique: true }),
+// Update the initialization promises in initializeDatabase
+const indexPromises = [
+    // User-related indexes
+    ensureIndex(users, { email: 1 }, { unique: true }),
+    ensureIndex(users, { status: 1 }),
+    ensureIndex(audit_logs, { timestamp: -1 }),
+    ensureIndex(deleted_users, { originalId: 1 }),
+    ensureIndex(user_permissions, { userId: 1 }, { unique: true, name: 'user_permissions_userId' }),
 
-            // Company-related indexes
-            ensureIndex(companies, { name: 1 }, { unique: true }),
-            ensureIndex(companies, { 'contactDetails.email': 1 }, { unique: true }),
-            ensureIndex(companies, { status: 1 }),
-            ensureIndex(companies, { 'subscription.plan': 1 }),
-            ensureIndex(company_users, { companyId: 1 }),
-            ensureIndex(company_users, { email: 1 }, { unique: true }),
-            ensureIndex(company_users, { status: 1 }),
-            ensureIndex(company_subscriptions, { companyId: 1 }, { unique: true }),
-            ensureIndex(company_audit_logs, { companyId: 1 }),
-            ensureIndex(company_audit_logs, { timestamp: -1 }),
+    // Company-related indexes
+    ensureIndex(companies, { name: 1 }, { unique: true }),
+    ensureIndex(companies, { 'contactDetails.email': 1 }, { unique: true }),
+    ensureIndex(companies, { status: 1 }),
+    ensureIndex(company_users, { companyId: 1 }),
+    ensureIndex(company_users, { email: 1 }, { unique: true }),
+    ensureIndex(company_subscriptions, { companyId: 1 }, { unique: true }),
+    ensureIndex(company_audit_logs, { companyId: 1 }),
 
-            // Role and permission indexes
-            ensureIndex(roles, { name: 1 }, { unique: true }),
-            ensureIndex(role_permissions, { roleId: 1 }, { unique: true }),
-            ensureIndex(user_role_assignments, { userId: 1 }, { unique: true }),
+    // Role and permission indexes
+    ensureIndex(roles, { name: 1 }, { unique: true }),
+    ensureIndex(role_permissions, { roleId: 1 }, { unique: true }),
+    ensureIndex(user_role_assignments, { userId: 1 }, { unique: true }),
 
-            // Integration and security indexes
-            ensureIndex(webhooks, { companyId: 1 }),
-            ensureIndex(webhooks, { url: 1 }),
-            ensureIndex(api_keys, { companyId: 1 }),
-            ensureIndex(api_keys, { key: 1 }, { unique: true }),
-            ensureIndex(notifications, { companyId: 1 }),
-            ensureIndex(notifications, { timestamp: -1 }),
-            ensureIndex(security_logs, { timestamp: -1 }),
-            ensureIndex(security_logs, { type: 1 }),
-            ensureIndex(security_logs, { ip: 1 }),
-            ensureIndex(sessions, { userId: 1 }),
-            ensureIndex(sessions, { expires: 1 }),
-
-            // System indexes
-            ensureIndex(migration_jobs, { companyId: 1 }),
-            ensureIndex(migration_jobs, { status: 1 }),
-            ensureIndex(system_config, { type: 1 }, { unique: true })
-        ];
-
+    // Integration and security indexes
+    ensureIndex(webhooks, { companyId: 1 }),
+    ensureIndex(api_keys, { companyId: 1 }),
+    ensureIndex(notifications, { companyId: 1 }),
+    ensureIndex(security_logs, { timestamp: -1 }),
+    ensureIndex(security_logs, { type: 1 }),
+    ensureIndex(sessions, { userId: 1 }),
+    ensureIndex(sessions, { expires: 1 }),
+    ensureIndex(migration_jobs, { status: 1 })
+];
         await Promise.all(indexPromises);
         
         // Initialize default data
@@ -334,7 +356,7 @@ async function initializeDatabase() {
             sessions
         };
     } catch (err) {
-        console.error("MongoDB connection error:", err);
+        console.error("MongoDB initialization error:", err);
         throw err;
     }
 }
@@ -362,11 +384,14 @@ async function initializeDefaultData() {
             console.log('Initializing system configuration...');
             await initializeSystemConfig();
         }
+
+        console.log('Default data initialization completed');
     } catch (error) {
         console.error('Error initializing default data:', error);
         throw error;
     }
 }
+
 // Initialize default roles
 async function initializeDefaultRoles() {
     const defaultRoles = {
@@ -523,72 +548,28 @@ async function initializeSystemConfig() {
     const defaultConfig = {
         type: 'global',
         security: {
-            sessionTimeout: 1800, // 30 minutes
+            sessionTimeout: 1800,
             maxLoginAttempts: 5,
             passwordPolicy: {
                 minLength: 8,
                 requireNumbers: true,
                 requireSpecialChars: true,
                 requireUppercase: true,
-                requireLowercase: true,
-                passwordHistory: 5,
-                passwordExpiry: 90 // days
-            },
-            mfaPolicy: {
-                required: false,
-                allowedMethods: ['email', 'authenticator']
-            }
-        },
-        email: {
-            fromName: 'WorkWise Pro',
-            fromEmail: 'noreply@workwisepro.com',
-            templates: {
-                welcome: {
-                    subject: 'Welcome to WorkWise Pro',
-                    enabled: true
-                },
-                passwordReset: {
-                    subject: 'Password Reset Request',
-                    enabled: true
-                },
-                accountLocked: {
-                    subject: 'Account Security Alert',
-                    enabled: true
-                }
+                requireLowercase: true
             }
         },
         backup: {
             frequency: 'daily',
-            retentionDays: 30,
-            time: '00:00',
-            includeAttachments: true
-        },
-        notifications: {
-            enabled: true,
-            channels: ['email', 'in-app'],
-            batchProcessing: true,
-            batchInterval: 300 // 5 minutes
+            retentionDays: 30
         },
         maintenance: {
             window: 'sunday',
-            time: '00:00',
-            duration: 120 // minutes
-        },
-        audit: {
-            enabled: true,
-            retentionDays: 365,
-            detailedLogging: true
+            time: '00:00'
         },
         createdAt: new Date()
     };
 
-    try {
-        await system_config.insertOne(defaultConfig);
-        console.log('Default system configuration initialized');
-    } catch (error) {
-        console.error('Error initializing system configuration:', error);
-        throw error;
-    }
+    await system_config.insertOne(defaultConfig);
 }
 
 // Utility Functions
