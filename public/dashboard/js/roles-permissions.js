@@ -1,3 +1,8 @@
+(function() {
+    // Check if RolesPermissionsManager already exists
+    if (window.RolesPermissionsManager) {
+        return; // Exit if already defined
+    }
 class RolesPermissionsManager {
     constructor(apiBaseUrl) {
         this.baseUrl = 'https://18.215.160.136.nip.io/api';
@@ -788,12 +793,5 @@ class RolesPermissionsManager {
     }
 }
 
-// Initialize the module
-if (typeof window !== 'undefined') {
     window.RolesPermissionsManager = RolesPermissionsManager;
-}
-
-// Export for module systems
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = RolesPermissionsManager;
-}
+})();
