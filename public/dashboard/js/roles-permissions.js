@@ -1,6 +1,6 @@
 class RolesPermissionsManager {
-    constructor() {
-        this.baseUrl = 'https://18.215.160.136.nip.io/api';
+    constructor(apiBaseUrl) {
+        this.baseUrl = apiBaseUrl || 'https://18.215.160.136.nip.io/api';
         this.token = localStorage.getItem('token');
         this.currentRole = null;
         this.roles = [];
@@ -9,6 +9,7 @@ class RolesPermissionsManager {
         this.initializeEventListeners();
         this.loadRolesAndPermissions();
     }
+
 
     initializeElements() {
         // Main containers
@@ -71,8 +72,13 @@ class RolesPermissionsManager {
                 this.fetchPermissions()
             ]);
 
-            this.roles = rolesResponse.data;
-            this.permissions = this.groupPermissions(permissionsResponse.data);
+            if (!rolesResponse.success || !permissionsResponse.success) {
+                throw new Error('Failed to fetch data');
+            }
+
+            this.roles = rolesResponse.data || [];
+            // Ensure permissions data is in the correct format
+            this.permissions = permissionsResponse.data || {};
             
             this.renderRolesList();
             this.updateUI();
@@ -83,44 +89,62 @@ class RolesPermissionsManager {
     }
 
     async fetchRoles() {
-        const response = await fetch(`${this.baseUrl}/roles`, {
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
+        try {
+            const response = await fetch(`${this.baseUrl}/roles`, {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch roles');
             }
-        });
 
-        if (!response.ok) {
-            throw new Error('Failed to fetch roles');
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching roles:', error);
+            return { success: false, data: [] };
         }
-
-        return await response.json();
     }
 
     async fetchPermissions() {
-        const response = await fetch(`${this.baseUrl}/permissions`, {
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
+        try {
+            const response = await fetch(`${this.baseUrl}/permissions`, {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch permissions');
             }
-        });
 
-        if (!response.ok) {
-            throw new Error('Failed to fetch permissions');
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching permissions:', error);
+            return { success: false, data: {} };
         }
-
-        return await response.json();
     }
 
     groupPermissions(permissions) {
-        return permissions.reduce((groups, permission) => {
-            const category = permission.category || 'General';
-            if (!groups[category]) {
-                groups[category] = [];
-            }
-            groups[category].push(permission);
-            return groups;
-        }, {});
+        // Check if permissions is already grouped
+        if (typeof permissions === 'object' && !Array.isArray(permissions)) {
+            return permissions;
+        }
+
+        // If it's an array, group it
+        if (Array.isArray(permissions)) {
+            return permissions.reduce((groups, permission) => {
+                const category = permission.category || 'General';
+                if (!groups[category]) {
+                    groups[category] = [];
+                }
+                groups[category].push(permission);
+                return groups;
+            }, {});
     }
 
     renderRolesList() {
