@@ -781,17 +781,49 @@ class RolesPermissionsManager {
     }
 
     // Cleanup method
-    cleanup() {
-        if (this.rolesList) {
-            const roleItems = this.rolesList.querySelectorAll('.role-item');
-            roleItems.forEach(item => {
-                item.removeEventListener('click', () => this.selectRole(item.dataset.roleId));
-            });
-        }
+   cleanup() {
+            // Remove event listeners
+            if (this.rolesList) {
+                const roleItems = this.rolesList.querySelectorAll('.role-item');
+                roleItems.forEach(item => {
+                    item.removeEventListener('click', () => this.selectRole(item.dataset.roleId));
+                });
+            }
 
-        document.querySelectorAll('.notification, .loading-overlay, .tooltip').forEach(el => el.remove());
+            // Remove all tooltips and notifications
+            document.querySelectorAll('.notification, .loading-overlay, .tooltip').forEach(el => el.remove());
+
+            // Clear any timeouts or intervals if you have any
+            if (this.notificationTimeout) {
+                clearTimeout(this.notificationTimeout);
+            }
+
+            // Clear references
+            this.currentRole = null;
+            this.roles = [];
+            this.permissions = [];
+
+            // Remove DOM references
+            this.rolesList = null;
+            this.permissionsPanel = null;
+            this.permissionsGroups = null;
+            this.roleModal = null;
+            this.deleteModal = null;
+            this.roleForm = null;
+            this.roleSearch = null;
+            this.createRoleBtn = null;
+            this.editRoleBtn = null;
+            this.deleteRoleBtn = null;
+            this.selectAllPermissions = null;
+            this.deselectAllPermissions = null;
+            this.saveRoleBtn = null;
+            this.confirmDeleteBtn = null;
+            this.closeRoleModal = null;
+            this.cancelRoleModal = null;
+            this.closeDeleteModal = null;
+            this.cancelDelete = null;
+        }
     }
-}
 
     window.RolesPermissionsManager = RolesPermissionsManager;
 })();
