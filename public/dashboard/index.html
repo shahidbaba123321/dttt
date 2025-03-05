@@ -803,12 +803,12 @@ body {
         </main>
     </div>
 
-    <script>
+  <script>
 // Content Loading Management
 class ContentLoader {
     constructor() {
         this.contentContainer = document.querySelector('.dashboard-content');
-        this.baseUrl = 'https://main.d1cfw592vg73f.amplifyapp.com/dashboard';
+        this.baseUrl = '/dashboard';
         this.currentPage = null;
         this.initializeStyles();
     }
@@ -973,7 +973,7 @@ class ContentLoader {
         window.history.pushState({ section }, '', url);
     }
 }
-        // User Session Management
+      // User Session Management
 class UserSession {
     constructor() {
         this.token = this.getQueryParam('token') || localStorage.getItem('token');
@@ -1120,7 +1120,8 @@ class UserSession {
         }
     }
 }
-        // Sidebar Management
+
+// Sidebar Management
 class SidebarManager {
     constructor(contentLoader) {
         this.sidebar = document.getElementById('sidebar');
@@ -1287,8 +1288,7 @@ class SidebarManager {
         }
     }
 }
-
-// User Interface Management
+      // User Interface Management
 class UserInterface {
     constructor(userSession, contentLoader) {
         this.userSession = userSession;
@@ -1353,9 +1353,29 @@ class UserInterface {
     showErrorNotification(message) {
         console.error(message);
         // You can implement a more sophisticated notification system here
+        const notification = document.createElement('div');
+        notification.className = 'error-notification';
+        notification.innerHTML = `
+            <i class="fas fa-exclamation-circle"></i>
+            <span>${message}</span>
+        `;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 5000);
+    }
+
+    showSuccessNotification(message) {
+        const notification = document.createElement('div');
+        notification.className = 'success-notification';
+        notification.innerHTML = `
+            <i class="fas fa-check-circle"></i>
+            <span>${message}</span>
+        `;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 5000);
     }
 }
-        // Dashboard Application Class
+
+// Dashboard Application Class
 class DashboardApp {
     constructor() {
         this.contentLoader = new ContentLoader();
@@ -1367,14 +1387,10 @@ class DashboardApp {
     }
 
     initialize() {
-        // Handle initial route
         this.handleInitialRoute();
-
-        // Add global error boundary
         this.setupErrorBoundary();
-
-        // Initialize performance monitoring
         this.initializePerformanceMonitoring();
+        this.initializeNotificationStyles();
     }
 
     handleInitialRoute() {
@@ -1382,7 +1398,6 @@ class DashboardApp {
         if (hash) {
             this.sidebarManager.loadSection(hash);
         } else {
-            // Default to dashboard
             this.sidebarManager.loadSection('dashboard');
         }
     }
@@ -1409,6 +1424,111 @@ class DashboardApp {
             });
         }
     }
+
+    initializeNotificationStyles() {
+        const notificationStyles = `
+            .error-notification,
+            .success-notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: var(--border-radius-md);
+                background-color: var(--bg-primary);
+                box-shadow: var(--shadow-lg);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                z-index: 9999;
+                animation: slideIn 0.3s ease-out;
+            }
+
+            .error-notification {
+                border-left: 4px solid var(--danger-color);
+            }
+
+            .success-notification {
+                border-left: 4px solid var(--success-color);
+            }
+
+            .error-notification i {
+                color: var(--danger-color);
+            }
+
+            .success-notification i {
+                color: var(--success-color);
+            }
+
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+
+            .sidebar-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.3s ease, visibility 0.3s ease;
+            }
+
+            .sidebar-overlay.visible {
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .error-state {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 400px;
+                text-align: center;
+                padding: var(--spacing-xl);
+            }
+
+            .error-state i {
+                font-size: 3rem;
+                color: var(--danger-color);
+                margin-bottom: var(--spacing-lg);
+            }
+
+            .error-state h2 {
+                color: var(--text-primary);
+                margin-bottom: var(--spacing-md);
+            }
+
+            .error-state p {
+                color: var(--text-secondary);
+            }
+        `;
+
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = notificationStyles;
+        document.head.appendChild(styleSheet);
+    }
 }
 
 // Initialize Application
@@ -1417,7 +1537,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.dashboardApp = new DashboardApp();
     } catch (error) {
         console.error('Error initializing dashboard:', error);
-        // Show user-friendly error message
         const mainContent = document.querySelector('.dashboard-content');
         if (mainContent) {
             mainContent.innerHTML = `
@@ -1430,38 +1549,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
-
-// Add necessary styles for error state
-const errorStyles = `
-    .error-state {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 400px;
-        text-align: center;
-        padding: var(--spacing-xl);
-    }
-
-    .error-state i {
-        font-size: 3rem;
-        color: var(--danger-color);
-        margin-bottom: var(--spacing-lg);
-    }
-
-    .error-state h2 {
-        color: var(--text-primary);
-        margin-bottom: var(--spacing-md);
-    }
-
-    .error-state p {
-        color: var(--text-secondary);
-    }
-`;
-
-const styleSheet = document.createElement('style');
-styleSheet.textContent = errorStyles;
-document.head.appendChild(styleSheet);
 </script>
     
 </body>
