@@ -808,7 +808,9 @@ body {
 class ContentLoader {
     constructor() {
         this.contentContainer = document.querySelector('.dashboard-content');
-        this.baseUrl = 'https://main.d1cfw592vg73f.amplifyapp.com';
+        // Update baseUrl to match your file structure
+        this.baseUrl = window.location.origin;
+        this.apiBaseUrl = 'https://18.215.160.136.nip.io/api';
         this.currentPage = null;
         this.loadedScripts = new Set();
         this.moduleInstances = new Map();
@@ -905,16 +907,12 @@ class ContentLoader {
         try {
             this.showLoadingState();
 
-            // Cleanup previous module instance if exists
-            if (this.moduleInstances.has(this.currentPage)) {
-                const instance = this.moduleInstances.get(this.currentPage);
-                if (instance && typeof instance.cleanup === 'function') {
-                    await instance.cleanup();
-                }
-            }
-
+            // Log the URL being fetched for debugging
             const fileName = this.getFileName(section);
-            const response = await fetch(`${this.baseUrl}/dashboard/${fileName}`);
+            const fetchUrl = `${this.baseUrl}/dashboard/${fileName}`;
+            console.log('Fetching content from:', fetchUrl);
+
+            const response = await fetch(fetchUrl);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -923,14 +921,14 @@ class ContentLoader {
             const content = await response.text();
             this.contentContainer.innerHTML = content;
 
-            // Initialize module script
-            await this.initializePageScript(section);
-            
-            // Update current page and URL
+            // Initialize module script if needed
+            if (section === 'roles') {
+                await this.initializeRolesPermissions();
+            }
+
             this.currentPage = section;
             this.updateURL(section);
 
-            // Dispatch content loaded event
             document.dispatchEvent(new CustomEvent('contentLoaded', {
                 detail: { section: section }
             }));
@@ -942,6 +940,7 @@ class ContentLoader {
             this.hideLoadingState();
         }
     }
+
 
     getFileName(section) {
         const fileMap = {
@@ -1004,25 +1003,29 @@ class ContentLoader {
 
     async initializeRolesPermissions() {
         try {
-            // Remove existing instance if present
-            if (this.moduleInstances.has('roles')) {
-                const instance = this.moduleInstances.get('roles');
-                if (instance && typeof instance.cleanup === 'function') {
-                    await instance.cleanup();
-                }
+            // Create and append the script
+            const script = document.createElement('script');
+            script.src = `${this.baseUrl}/dashboard/js/roles-permissions.js`;
+            script.type = 'module';
+            document.body.appendChild(script);
+
+            // Wait for script to load
+            await new Promise((resolve, reject) => {
+                script.onload = resolve;
+                script.onerror = reject;
+            });
+
+            // Initialize the module
+            if (typeof RolesPermissionsManager !== 'undefined') {
+                const instance = new RolesPermissionsManager(this.apiBaseUrl);
+                this.moduleInstances.set('roles', instance);
             }
-
-            // Import and initialize RolesPermissionsManager
-            const { default: RolesPermissionsManager } = await import(`${this.baseUrl}/dashboard/js/roles-permissions.js`);
-            const instance = new RolesPermissionsManager();
-            this.moduleInstances.set('roles', instance);
-
         } catch (error) {
             console.error('Error initializing roles-permissions module:', error);
             throw error;
         }
     }
-
+}
     showLoadingState() {
         const loader = document.createElement('div');
         loader.className = 'content-loader';
