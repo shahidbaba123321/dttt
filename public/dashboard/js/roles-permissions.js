@@ -1,39 +1,54 @@
+// Utility function for debouncing (defined before class to ensure availability)
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
 
-
-class RolesPermissionsManager {
-    static instance = null;
-
-    static getInstance() {
-        if (!RolesPermissionsManager.instance) {
-            RolesPermissionsManager.instance = new RolesPermissionsManager();
-        }
-        return RolesPermissionsManager.instance;
+// Main RolesPermissionsManager class
+function RolesPermissionsManager() {
+    // Singleton pattern implementation
+    if (RolesPermissionsManager._instance) {
+        return RolesPermissionsManager._instance;
     }
+    RolesPermissionsManager._instance = this;
 
-    constructor() {
-        if (RolesPermissionsManager.instance) {
-            return RolesPermissionsManager.instance;
-        }
-        RolesPermissionsManager.instance = this;
-        
-        // Initialize properties
-        this.baseUrl = 'https://18.215.160.136.nip.io/api';
-        this.token = localStorage.getItem('token');
-        this.currentRole = null;
-        this.permissions = [];
-        this.roles = [];
-        this.hasUnsavedChanges = false;
+    // Initialize properties
+    this.baseUrl = 'https://18.215.160.136.nip.io/api';
+    this.token = localStorage.getItem('token');
+    this.currentRole = null;
+    this.permissions = [];
+    this.roles = [];
+    this.hasUnsavedChanges = false;
 
-        // Wait for DOM to be ready before initializing
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => this.initialize());
-        } else {
-            this.initialize();
-        }
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => this.initialize());
+    } else {
+        this.initialize();
     }
+}
 
-    initialize() {
-        // Wait for a short moment to ensure content is loaded
+// Static method for getting instance
+RolesPermissionsManager.getInstance = function() {
+    if (!RolesPermissionsManager._instance) {
+        RolesPermissionsManager._instance = new RolesPermissionsManager();
+    }
+    return RolesPermissionsManager._instance;
+};
+
+// Static property for instance
+RolesPermissionsManager._instance = null;
+
+// Prototype methods
+RolesPermissionsManager.prototype = {
+    initialize: function() {
         setTimeout(() => {
             if (document.querySelector('.roles-permissions-container')) {
                 this.initializeElements();
@@ -41,9 +56,9 @@ class RolesPermissionsManager {
                 this.loadInitialData();
             }
         }, 100);
-    }
+    },
 
-    initializeElements() {
+    initializeElements: function() {
         try {
             // Main containers
             this.rolesList = document.getElementById('rolesList');
@@ -75,9 +90,9 @@ class RolesPermissionsManager {
             console.error('Error initializing elements:', error);
             throw error;
         }
-    }
+    },
 
-    initializeEventListeners() {
+    initializeEventListeners: function() {
         // Only add event listeners if elements exist
         if (this.createRoleBtn) {
             this.createRoleBtn.addEventListener('click', () => this.showCreateRoleModal());
@@ -92,14 +107,13 @@ class RolesPermissionsManager {
             this.confirmRoleCreate.addEventListener('click', () => this.handleRoleCreation());
         }
         if (this.roleSearch) {
-            this.roleSearch.addEventListener('input', this.debounce((e) => {
+            this.roleSearch.addEventListener('input', debounce((e) => {
                 this.filterRoles(e.target.value);
             }, 300));
         }
         if (this.savePermissionsBtn) {
             this.savePermissionsBtn.addEventListener('click', () => this.savePermissions());
         }
-    }
 
         // Warn about unsaved changes
         window.addEventListener('beforeunload', (e) => {
@@ -108,7 +122,7 @@ class RolesPermissionsManager {
                 e.returnValue = '';
             }
         });
-    
+    },
 
     async loadInitialData() {
         try {
@@ -120,7 +134,7 @@ class RolesPermissionsManager {
             console.error('Error loading initial data:', error);
             this.showError('Failed to load roles and permissions data');
         }
-    }
+    },
 
     async loadRoles() {
         try {
@@ -139,7 +153,7 @@ class RolesPermissionsManager {
             console.error('Error loading roles:', error);
             this.showError('Failed to load roles');
         }
-    }
+    },
 
     async loadPermissions() {
         try {
@@ -157,7 +171,7 @@ class RolesPermissionsManager {
             console.error('Error loading permissions:', error);
             this.showError('Failed to load permissions');
         }
-    }
+    },
 
     renderRoles() {
         // Keep the superadmin role
@@ -171,7 +185,7 @@ class RolesPermissionsManager {
                 this.rolesList.appendChild(roleElement);
             }
         });
-    }
+    },
 
     createRoleElement(role) {
         const div = document.createElement('div');
@@ -192,7 +206,7 @@ class RolesPermissionsManager {
 
         div.addEventListener('click', () => this.selectRole(role._id));
         return div;
-    }
+    },
 
     async selectRole(roleId) {
         if (this.hasUnsavedChanges) {
@@ -226,21 +240,19 @@ class RolesPermissionsManager {
             console.error('Error selecting role:', error);
             this.showError('Failed to load role details');
         }
-    }
+    },
 
     renderPermissions(roleData) {
         const permissionsContent = document.querySelector('.rp-permissions-content');
-        permissionsContent.innerHTML = ''; // Clear existing permissions
+        permissionsContent.innerHTML = '';
 
-        // Group permissions by category
         const groupedPermissions = this.groupPermissionsByCategory(this.permissions);
 
-        // Create permission categories
         Object.entries(groupedPermissions).forEach(([category, permissions]) => {
             const categoryElement = this.createPermissionCategory(category, permissions, roleData);
             permissionsContent.appendChild(categoryElement);
         });
-    }
+    },
 
     groupPermissionsByCategory(permissions) {
         return permissions.reduce((acc, permission) => {
@@ -249,7 +261,7 @@ class RolesPermissionsManager {
             acc[category].push(permission);
             return acc;
         }, {});
-    }
+    },
 
     createPermissionCategory(category, permissions, roleData) {
         const div = document.createElement('div');
@@ -265,7 +277,6 @@ class RolesPermissionsManager {
             </div>
         `;
 
-        // Add event listeners to toggles
         div.querySelectorAll('.rp-permission-toggle').forEach(toggle => {
             toggle.addEventListener('change', () => {
                 this.hasUnsavedChanges = true;
@@ -274,7 +285,7 @@ class RolesPermissionsManager {
         });
 
         return div;
-    }
+    },
 
     createPermissionToggle(permission, isChecked) {
         return `
@@ -289,7 +300,7 @@ class RolesPermissionsManager {
                 </label>
             </div>
         `;
-    }
+    },
 
     async savePermissions() {
         try {
@@ -312,13 +323,12 @@ class RolesPermissionsManager {
             this.savePermissionsBtn.disabled = true;
             this.showSuccess('Permissions updated successfully');
             
-            // Refresh role data
             await this.loadRoles();
         } catch (error) {
             console.error('Error saving permissions:', error);
             this.showError('Failed to update permissions');
         }
-    }
+    },
 
     async handleRoleCreation() {
         try {
@@ -353,19 +363,18 @@ class RolesPermissionsManager {
             console.error('Error creating role:', error);
             this.showError('Failed to create role');
         }
-    }
+    },
 
-    // UI Helpers
     showCreateRoleModal() {
         this.createRoleModal.classList.add('active');
         this.roleNameInput.value = '';
         this.roleDescriptionInput.value = '';
         this.isDefaultInput.checked = false;
-    }
+    },
 
     hideCreateRoleModal() {
         this.createRoleModal.classList.remove('active');
-    }
+    },
 
     filterRoles(searchTerm) {
         const normalizedSearch = searchTerm.toLowerCase();
@@ -375,46 +384,40 @@ class RolesPermissionsManager {
             const roleName = item.querySelector('.rp-role-name').textContent.toLowerCase();
             item.style.display = roleName.includes(normalizedSearch) ? 'flex' : 'none';
         });
-    }
+    },
 
     showError(message) {
-        // Implement error notification
         console.error(message);
-    }
+    },
 
     showSuccess(message) {
-        // Implement success notification
         console.log(message);
-    }
+    },
 
     async showConfirmDialog(message) {
         return window.confirm(message);
     }
-}
+};
 
-// Utility function for debouncing
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
+// Initialize the module
+(function() {
+    // On direct script load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initModule);
+    } else {
+        initModule();
+    }
 
-// Initialize when document is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    const rolesPermissionsManager = new RolesPermissionsManager();
-});
-
-(() => {
-    // Listen for content loaded event
+    // On dynamic content load
     document.addEventListener('contentLoaded', (event) => {
-        if (event.detail.section === 'roles') {
-            RolesPermissionsManager.getInstance();
+        if (event.detail && event.detail.section === 'roles') {
+            initModule();
         }
     });
+
+    function initModule() {
+        if (document.querySelector('.roles-permissions-container')) {
+            RolesPermissionsManager.getInstance();
+        }
+    }
 })();
