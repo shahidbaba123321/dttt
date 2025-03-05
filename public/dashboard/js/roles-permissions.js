@@ -465,6 +465,7 @@ validateRole(roleData) {
     return errors;
 }
 
+
 // Add this method to handle role type changes
 handleRoleTypeChange() {
     const roleTypeInputs = document.getElementsByName('roleType');
@@ -517,6 +518,7 @@ handleRoleTypeChange() {
 
 async saveRole() {
     try {
+        // Validate input data first
         const roleData = {
             name: document.getElementById('roleName').value.trim(),
             description: document.getElementById('roleDescription').value.trim(),
@@ -524,64 +526,70 @@ async saveRole() {
             permissions: this.currentRole ? [...this.currentRole.permissions] : []
         };
 
-        if (!roleData.name) {
-            this.showError('Role name is required');
+        // Validate role data
+        const validationErrors = this.validateRole(roleData);
+        if (validationErrors.length > 0) {
+            this.showError(validationErrors[0]);
             return;
         }
 
         let response;
-        let url;
-        let method;
+        const headers = {
+            'Authorization': `Bearer ${this.token}`,
+            'Content-Type': 'application/json'
+        };
 
         if (this.currentRole && !this.currentRole.isSystem) {
             // Update existing role
-            url = `${this.baseUrl}/roles/${this.currentRole._id}`;
-            method = 'PUT';
+            response = await fetch(`${this.baseUrl}/roles/${this.currentRole._id}`, {
+                method: 'PUT',
+                headers: headers,
+                body: JSON.stringify(roleData)
+            });
         } else {
             // Create new role
-            url = `${this.baseUrl}/roles`;
-            method = 'POST';
+            response = await fetch(`${this.baseUrl}/roles`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(roleData)
+            });
         }
 
-        response = await fetch(url, {
-            method: method,
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(roleData)
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to save role');
+        // Check if response is JSON
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            throw new Error(`Expected JSON response but received ${contentType}`);
         }
 
         const result = await response.json();
-        
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to save role');
+        }
+
         // Refresh roles list
         await this.loadRolesAndPermissions();
         
         // Select the newly created/updated role
-        if (result.data._id) {
+        if (result.data && result.data._id) {
             await this.selectRole(result.data._id);
         }
 
         this.closeModal(this.roleModal);
         this.showSuccess(this.currentRole ? 'Role updated successfully' : 'Role created successfully');
 
-        // Create audit log entry
-        await this.createAuditLog(
-            this.currentRole ? 'ROLE_UPDATED' : 'ROLE_CREATED',
-            roleData.name,
-            roleData
-        );
-
     } catch (error) {
         console.error('Error saving role:', error);
-        this.showError(error.message || 'Failed to save role');
+        
+        // Handle specific error cases
+        if (error.message.includes('<!DOCTYPE')) {
+            this.showError('Server error. Please check your connection and try again.');
+        } else {
+            this.showError(error.message || 'Failed to save role. Please try again.');
+        }
     }
 }
+
     
     showDeleteModal() {
         if (!this.currentRole) {
@@ -720,15 +728,32 @@ async saveRole() {
     }
 
     showError(message) {
-        console.error(message);
-        this.showNotification(message, 'error');
-    }
+    console.error(message);
+    const notification = document.createElement('div');
+    notification.className = 'notification error';
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 5000);
+}
 
-    showSuccess(message) {
-        console.log(message);
-        this.showNotification(message, 'success');
-    }
-
+// Add success notification helper
+showSuccess(message) {
+    const notification = document.createElement('div');
+    notification.className = 'notification success';
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-check-circle"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+}
     showNotification(message, type = 'info') {
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
