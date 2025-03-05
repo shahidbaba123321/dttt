@@ -913,15 +913,16 @@ class ContentLoader {
 
         const scriptName = scriptMap[section] || `${section}.js`;
         const script = document.createElement('script');
-        script.src = `/dashboard/js/${scriptName}`;
+        // Update the path to match your actual file structure
+        script.src = `dashboard/js/${scriptName}`; // Remove leading slash
         script.dataset.page = section;
-        script.async = true;
+        script.type = 'text/javascript'; // Add this line
         
         // Return a promise that resolves when the script loads
         return new Promise((resolve, reject) => {
             script.onload = resolve;
-            script.onerror = () => {
-                console.warn(`Script for ${section} not found or failed to load`);
+            script.onerror = (e) => {
+                console.warn(`Script for ${section} not found or failed to load`, e);
                 resolve(); // Resolve anyway to prevent blocking
             };
             document.body.appendChild(script);
@@ -1459,6 +1460,6 @@ const styleSheet = document.createElement('style');
 styleSheet.textContent = errorStyles;
 document.head.appendChild(styleSheet);
 </script>
-    <script src="js/roles-permissions.js"></script>
+    
 </body>
 </html>
