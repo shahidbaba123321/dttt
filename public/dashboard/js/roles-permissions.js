@@ -1,3 +1,8 @@
+// Check for browser environment
+if (typeof window === 'undefined') {
+    throw new Error('This module must be run in a browser environment');
+}
+
 class RolesPermissionsManager {
     constructor(apiBaseUrl) {
         this.baseUrl = apiBaseUrl || 'https://18.215.160.136.nip.io/api';
@@ -9,7 +14,6 @@ class RolesPermissionsManager {
         this.initializeEventListeners();
         this.loadRolesAndPermissions();
     }
-
 
     initializeElements() {
         // Main containers
@@ -77,7 +81,6 @@ class RolesPermissionsManager {
             }
 
             this.roles = rolesResponse.data || [];
-            // Ensure permissions data is in the correct format
             this.permissions = permissionsResponse.data || {};
             
             this.renderRolesList();
@@ -130,12 +133,10 @@ class RolesPermissionsManager {
     }
 
     groupPermissions(permissions) {
-        // Check if permissions is already grouped
         if (typeof permissions === 'object' && !Array.isArray(permissions)) {
             return permissions;
         }
 
-        // If it's an array, group it
         if (Array.isArray(permissions)) {
             return permissions.reduce((groups, permission) => {
                 const category = permission.category || 'General';
@@ -145,6 +146,9 @@ class RolesPermissionsManager {
                 groups[category].push(permission);
                 return groups;
             }, {});
+        }
+
+        return {};
     }
 
     renderRolesList() {
@@ -152,7 +156,6 @@ class RolesPermissionsManager {
             .map(role => this.createRoleListItem(role))
             .join('');
 
-        // Add click events to role items
         const roleItems = this.rolesList.querySelectorAll('.role-item');
         roleItems.forEach(item => {
             item.addEventListener('click', () => this.selectRole(item.dataset.roleId));
@@ -204,7 +207,6 @@ class RolesPermissionsManager {
             .map(([category, permissions]) => this.createPermissionGroup(category, permissions))
             .join('');
 
-        // Add change events to permission checkboxes
         const checkboxes = this.permissionsGroups.querySelectorAll('input[type="checkbox"]');
         checkboxes.forEach(checkbox => {
             checkbox.addEventListener('change', () => this.handlePermissionChange(checkbox));
@@ -254,7 +256,7 @@ class RolesPermissionsManager {
         } catch (error) {
             console.error('Error updating permissions:', error);
             this.showError('Failed to update permissions');
-            checkbox.checked = !checkbox.checked; // Revert checkbox state
+            checkbox.checked = !checkbox.checked;
         }
     }
 
@@ -277,7 +279,6 @@ class RolesPermissionsManager {
         this.updateUI();
     }
 
-        // Role Modal Management
     showCreateRoleModal() {
         this.roleForm.reset();
         document.getElementById('modalTitle').textContent = 'Create New Role';
@@ -295,7 +296,6 @@ class RolesPermissionsManager {
         document.getElementById('roleName').value = this.currentRole.name;
         document.getElementById('roleDescription').value = this.currentRole.description || '';
         
-        // Set role type
         const roleTypeInputs = document.getElementsByName('roleType');
         roleTypeInputs.forEach(input => {
             input.checked = input.value === (this.currentRole.isSystem ? 'system' : 'custom');
@@ -319,7 +319,6 @@ class RolesPermissionsManager {
 
             let response;
             if (this.currentRole && !this.currentRole.isSystem) {
-                // Update existing role
                 response = await fetch(`${this.baseUrl}/roles/${this.currentRole._id}`, {
                     method: 'PUT',
                     headers: {
@@ -329,7 +328,6 @@ class RolesPermissionsManager {
                     body: JSON.stringify(roleData)
                 });
             } else {
-                // Create new role
                 response = await fetch(`${this.baseUrl}/roles`, {
                     method: 'POST',
                     headers: {
@@ -345,11 +343,8 @@ class RolesPermissionsManager {
             }
 
             const result = await response.json();
-            
-            // Refresh roles list
             await this.loadRolesAndPermissions();
             
-            // Select the newly created/updated role
             if (result.data._id) {
                 await this.selectRole(result.data._id);
             }
@@ -404,7 +399,6 @@ class RolesPermissionsManager {
         }
     }
 
-    // Permission Management
     toggleAllPermissions(state) {
         if (!this.currentRole || this.currentRole.isSystem) return;
 
@@ -415,7 +409,6 @@ class RolesPermissionsManager {
         });
     }
 
-    // Search Functionality
     searchRoles(query) {
         const normalizedQuery = query.toLowerCase();
         const roleItems = this.rolesList.querySelectorAll('.role-item');
@@ -431,9 +424,7 @@ class RolesPermissionsManager {
         });
     }
 
-    // UI Updates
     updateUI() {
-        // Update role details
         const roleNameElement = document.getElementById('selectedRoleName');
         const roleMetadata = document.getElementById('roleMetadata');
         const usersCount = document.getElementById('usersCount');
@@ -445,7 +436,6 @@ class RolesPermissionsManager {
             usersCount.textContent = this.currentRole.usersCount || 0;
             lastModified.textContent = this.formatDate(this.currentRole.updatedAt || this.currentRole.createdAt);
 
-            // Update button states
             this.editRoleBtn.disabled = this.currentRole.isSystem;
             this.deleteRoleBtn.disabled = this.currentRole.isSystem;
         } else {
@@ -454,13 +444,11 @@ class RolesPermissionsManager {
             usersCount.textContent = '0';
             lastModified.textContent = '-';
 
-            // Disable buttons
             this.editRoleBtn.disabled = true;
             this.deleteRoleBtn.disabled = true;
         }
     }
 
-    // Utility Functions
     closeModal(modal) {
         modal.classList.remove('show');
     }
@@ -475,16 +463,12 @@ class RolesPermissionsManager {
     }
 
     showError(message) {
-        // Implement your error notification system here
         console.error(message);
-        // Example: Toast notification
         this.showNotification(message, 'error');
     }
 
     showSuccess(message) {
-        // Implement your success notification system here
         console.log(message);
-        // Example: Toast notification
         this.showNotification(message, 'success');
     }
 
@@ -500,7 +484,6 @@ class RolesPermissionsManager {
 
         document.body.appendChild(notification);
 
-        // Remove notification after 3 seconds
         setTimeout(() => {
             notification.remove();
         }, 3000);
@@ -514,12 +497,22 @@ class RolesPermissionsManager {
             default: return 'fa-info-circle';
         }
     }
+
+    cleanup() {
+        // Remove event listeners and clean up resources
+        if (this.rolesList) {
+            const roleItems = this.rolesList.querySelectorAll('.role-item');
+            roleItems.forEach(item => {
+                item.removeEventListener('click', () => this.selectRole(item.dataset.roleId));
+            });
+        }
+    }
 }
 
-// Initialize the module
-document.addEventListener('DOMContentLoaded', () => {
-    const rolesPermissionsManager = new RolesPermissionsManager();
-});
+// Make the class available globally
+window.RolesPermissionsManager = RolesPermissionsManager;
 
-// Export the class for potential reuse
-export default RolesPermissionsManager;
+// Export for module systems
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = RolesPermissionsManager;
+}
