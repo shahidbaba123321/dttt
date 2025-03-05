@@ -899,26 +899,37 @@ class ContentLoader {
     }
 
     async initializePageScript(section) {
-        try {
-            const oldScript = document.querySelector(`script[data-page="${section}"]`);
-            if (oldScript) {
-                oldScript.remove();
-            }
+    try {
+        // Map section names to their correct script files
+        const scriptMap = {
+            'roles': 'roles-permissions.js',
+            // Add other mappings as needed
+        };
 
-            const script = document.createElement('script');
-            script.src = `/dashboard/js/${section}.js`;
-            script.dataset.page = section;
-            script.async = true;
-            
+        const oldScript = document.querySelector(`script[data-page="${section}"]`);
+        if (oldScript) {
+            oldScript.remove();
+        }
+
+        const scriptName = scriptMap[section] || `${section}.js`;
+        const script = document.createElement('script');
+        script.src = `/dashboard/js/${scriptName}`;
+        script.dataset.page = section;
+        script.async = true;
+        
+        // Return a promise that resolves when the script loads
+        return new Promise((resolve, reject) => {
+            script.onload = resolve;
             script.onerror = () => {
                 console.warn(`Script for ${section} not found or failed to load`);
+                resolve(); // Resolve anyway to prevent blocking
             };
-
             document.body.appendChild(script);
-        } catch (error) {
-            console.error('Error initializing page script:', error);
-        }
+        });
+    } catch (error) {
+        console.error('Error initializing page script:', error);
     }
+}
 
     showLoadingState() {
         const loader = document.createElement('div');
