@@ -804,11 +804,10 @@ body {
     </div>
 
   <script>
-      // Content Loading Management
+// Content Loading Management
 class ContentLoader {
     constructor() {
         this.contentContainer = document.querySelector('.dashboard-content');
-        // Update baseUrl to match your file structure
         this.baseUrl = window.location.origin;
         this.apiBaseUrl = 'https://18.215.160.136.nip.io/api';
         this.currentPage = null;
@@ -907,7 +906,6 @@ class ContentLoader {
         try {
             this.showLoadingState();
 
-            // Log the URL being fetched for debugging
             const fileName = this.getFileName(section);
             const fetchUrl = `${this.baseUrl}/dashboard/${fileName}`;
             console.log('Fetching content from:', fetchUrl);
@@ -921,7 +919,6 @@ class ContentLoader {
             const content = await response.text();
             this.contentContainer.innerHTML = content;
 
-            // Initialize module script if needed
             if (section === 'roles') {
                 await this.initializeRolesPermissions();
             }
@@ -941,91 +938,48 @@ class ContentLoader {
         }
     }
 
-
     getFileName(section) {
         const fileMap = {
             'dashboard': 'dashboard.html',
             'companies': 'companies.html',
             'roles': 'roles-permissions.html',
             'users': 'users.html',
-            'general-settings': 'settings.html',
-            // Add other specific mappings here
+            'general-settings': 'settings.html'
         };
 
         return fileMap[section] || `${section}.html`;
     }
 
-    async initializePageScript(section) {
-        try {
-            // Special handling for roles-permissions
-            if (section === 'roles') {
-                await this.initializeRolesPermissions();
-                return;
-            }
-
-            const scriptMap = {
-                'dashboard': 'dashboard.js',
-                'companies': 'companies.js',
-                'users': 'users.js',
-                // Add other script mappings
-            };
-
-            const scriptName = scriptMap[section];
-            if (!scriptName) return;
-
-            // Remove existing script if present
-            const existingScript = document.querySelector(`script[data-page="${section}"]`);
-            if (existingScript) {
-                existingScript.remove();
-                this.loadedScripts.delete(section);
-            }
-
-            // Load and execute new script
-            if (!this.loadedScripts.has(section)) {
-                const script = document.createElement('script');
-                script.src = `${this.baseUrl}/dashboard/js/${scriptName}`;
-                script.dataset.page = section;
-                script.type = 'module';
-
-                await new Promise((resolve, reject) => {
-                    script.onload = resolve;
-                    script.onerror = reject;
-                    document.body.appendChild(script);
-                });
-
-                this.loadedScripts.add(section);
-            }
-        } catch (error) {
-            console.error(`Error initializing script for ${section}:`, error);
-            throw error;
-        }
-    }
-
     async initializeRolesPermissions() {
         try {
-            // Create and append the script
+            if (this.moduleInstances.has('roles')) {
+                const instance = this.moduleInstances.get('roles');
+                if (instance && typeof instance.cleanup === 'function') {
+                    await instance.cleanup();
+                }
+            }
+
             const script = document.createElement('script');
             script.src = `${this.baseUrl}/dashboard/js/roles-permissions.js`;
-            script.type = 'module';
             document.body.appendChild(script);
 
-            // Wait for script to load
             await new Promise((resolve, reject) => {
                 script.onload = resolve;
                 script.onerror = reject;
             });
 
-            // Initialize the module
-            if (typeof RolesPermissionsManager !== 'undefined') {
-                const instance = new RolesPermissionsManager(this.apiBaseUrl);
+            if (typeof window.RolesPermissionsManager !== 'undefined') {
+                const instance = new window.RolesPermissionsManager(this.apiBaseUrl);
                 this.moduleInstances.set('roles', instance);
+            } else {
+                throw new Error('RolesPermissionsManager not loaded properly');
             }
         } catch (error) {
             console.error('Error initializing roles-permissions module:', error);
             throw error;
         }
     }
-}
+
     showLoadingState() {
         const loader = document.createElement('div');
         loader.className = 'content-loader';
@@ -1076,7 +1030,7 @@ class ContentLoader {
         window.history.pushState({ section }, '', url);
     }
 }
-// User Session Management
+      // User Session Management
 class UserSession {
     constructor() {
         this.token = this.getQueryParam('token') || localStorage.getItem('token');
@@ -1099,7 +1053,6 @@ class UserSession {
 
         if (this.getQueryParam('token')) {
             localStorage.setItem('token', this.token);
-            // Clean up URL after storing token
             const url = new URL(window.location.href);
             url.searchParams.delete('token');
             window.history.replaceState({}, '', url);
@@ -1134,13 +1087,11 @@ class UserSession {
 
     setupPermissions() {
         if (this.userData.role !== 'superadmin') {
-            // Hide or disable certain elements based on permissions
             document.querySelectorAll('[data-requires-role="superadmin"]').forEach(element => {
                 element.style.display = 'none';
             });
         }
 
-        // Set up permission-based visibility
         this.userData.permissions.forEach(permission => {
             document.querySelectorAll(`[data-requires-permission="${permission}"]`).forEach(element => {
                 element.style.display = '';
@@ -1188,7 +1139,6 @@ class UserSession {
             this.userData.email
         );
 
-        // Update all user-related elements
         document.querySelectorAll('.user-name, .dropdown-user-name').forEach(element => {
             element.textContent = userName;
         });
@@ -1231,11 +1181,9 @@ class UserSession {
                 throw new Error('Logout failed');
             }
 
-            // Clear all session data
             localStorage.clear();
             sessionStorage.clear();
             
-            // Clear any module instances
             if (window.dashboardApp && window.dashboardApp.contentLoader) {
                 window.dashboardApp.contentLoader.moduleInstances.clear();
             }
@@ -1244,14 +1192,12 @@ class UserSession {
 
         } catch (error) {
             console.error('Error during logout:', error);
-            // Force logout even if API call fails
             localStorage.clear();
             sessionStorage.clear();
             window.location.href = '/login.html';
         }
     }
 
-    // Helper method to check permissions
     hasPermission(permission) {
         return this.userData && (
             this.userData.role === 'superadmin' || 
@@ -1259,8 +1205,7 @@ class UserSession {
         );
     }
 }
-
-// Sidebar Manager with enhanced role-based visibility
+ // Sidebar Manager with enhanced role-based visibility
 class SidebarManager {
     constructor(contentLoader) {
         this.sidebar = document.getElementById('sidebar');
@@ -1284,7 +1229,6 @@ class SidebarManager {
         this.initializeResponsiveHandling();
         this.initializeNavigation();
 
-        // Load initial content based on URL hash or default to dashboard
         const initialSection = window.location.hash.slice(1) || 'dashboard';
         this.loadSection(initialSection);
     }
@@ -1300,7 +1244,6 @@ class SidebarManager {
             this.toggleMobileSidebar();
         });
 
-        // Close mobile sidebar when clicking outside
         document.addEventListener('click', (e) => {
             if (this.isMobile && this.sidebar.classList.contains('mobile-visible')) {
                 const isClickInside = this.sidebar.contains(e.target) || 
@@ -1311,7 +1254,6 @@ class SidebarManager {
             }
         });
 
-        // Handle escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.isMobile && 
                 this.sidebar.classList.contains('mobile-visible')) {
@@ -1319,7 +1261,6 @@ class SidebarManager {
             }
         });
 
-        // Handle browser navigation
         window.addEventListener('popstate', (event) => {
             if (event.state && event.state.section) {
                 this.loadSection(event.state.section, false);
@@ -1327,7 +1268,6 @@ class SidebarManager {
         });
     }
 
-        // Continuing SidebarManager methods...
     initializeResponsiveHandling() {
         window.addEventListener('resize', () => {
             const wasNotMobile = !this.isMobile;
@@ -1361,7 +1301,6 @@ class SidebarManager {
                 e.preventDefault();
                 const section = item.dataset.section;
                 
-                // Special handling for roles section
                 if (section === 'roles') {
                     this.handleRolesNavigation(item);
                 } else {
@@ -1372,7 +1311,6 @@ class SidebarManager {
     }
 
     handleRolesNavigation(item) {
-        // Check if user has permission to access roles
         const userSession = window.dashboardApp.userSession;
         if (userSession.hasPermission('manage_roles') || userSession.userData.role === 'superadmin') {
             this.loadSection('roles');
@@ -1384,23 +1322,19 @@ class SidebarManager {
     }
 
     loadSection(section, updateHistory = true) {
-        // Update active state in sidebar
         const navItems = this.sidebar.querySelectorAll('.nav-item');
         navItems.forEach(item => {
             item.classList.toggle('active', item.dataset.section === section);
         });
 
-        // Update breadcrumb
         const activeItem = this.sidebar.querySelector(`.nav-item[data-section="${section}"]`);
         if (activeItem) {
             const breadcrumb = document.querySelector('.breadcrumb .current-page');
             breadcrumb.textContent = activeItem.querySelector('span').textContent;
         }
 
-        // Load content
         this.contentLoader.loadContent(section);
 
-        // Close mobile sidebar if open
         if (this.isMobile) {
             this.closeMobileSidebar();
         }
@@ -1447,9 +1381,8 @@ class SidebarManager {
             overlay.remove();
         }
     }
-}
-
-// Enhanced User Interface Management
+}   
+      // Enhanced User Interface Management
 class UserInterface {
     constructor(userSession, contentLoader) {
         this.userSession = userSession;
@@ -1459,7 +1392,6 @@ class UserInterface {
     }
 
     initializeEventListeners() {
-        // User dropdown toggle
         const userProfileDropdown = document.getElementById('userProfileDropdown');
         const userDropdown = document.getElementById('userDropdown');
 
@@ -1468,12 +1400,10 @@ class UserInterface {
             userDropdown.classList.toggle('show');
         });
 
-        // Close dropdown when clicking outside
         document.addEventListener('click', () => {
             userDropdown.classList.remove('show');
         });
 
-        // Logout button
         const logoutButton = document.getElementById('logoutButton');
         logoutButton.addEventListener('click', (e) => {
             e.preventDefault();
@@ -1487,7 +1417,6 @@ class UserInterface {
 
     async handleLogout() {
         try {
-            // Show loading state
             this.showLoadingNotification('Logging out...');
             await this.userSession.logout();
         } catch (error) {
@@ -1502,7 +1431,7 @@ class UserInterface {
             clearTimeout(sessionTimeout);
             sessionTimeout = setTimeout(() => {
                 this.showWarningNotification('Your session will expire soon. Please save your work.');
-                setTimeout(() => this.userSession.logout(), 60000); // Give 1 minute warning
+                setTimeout(() => this.userSession.logout(), 60000); // 1 minute warning
             }, 29 * 60 * 1000); // 29 minutes
         };
 
@@ -1535,7 +1464,6 @@ class UserInterface {
     }
 
     initializeRolesPermissionsUI() {
-        // Additional UI initialization for roles & permissions
         const permissionsContainer = document.querySelector('.permissions-groups');
         if (permissionsContainer) {
             this.setupPermissionsHandlers(permissionsContainer);
@@ -1543,7 +1471,6 @@ class UserInterface {
     }
 
     setupPermissionsHandlers(container) {
-        // Add event handlers for permissions UI elements
         container.addEventListener('change', (e) => {
             if (e.target.matches('.permission-checkbox')) {
                 this.handlePermissionChange(e.target);
@@ -1556,10 +1483,8 @@ class UserInterface {
             const permissionName = checkbox.id;
             const isChecked = checkbox.checked;
             
-            // Show loading state
             this.showLoadingNotification('Updating permissions...');
 
-            // Update will be handled by RolesPermissionsManager
             const event = new CustomEvent('permissionChange', {
                 detail: { permission: permissionName, value: isChecked }
             });
@@ -1568,7 +1493,6 @@ class UserInterface {
         } catch (error) {
             console.error('Error updating permission:', error);
             this.showErrorNotification('Failed to update permission');
-            // Revert checkbox state
             checkbox.checked = !checkbox.checked;
         }
     }
@@ -1587,12 +1511,9 @@ class UserInterface {
             </div>
         `;
 
-        // Remove existing notifications
         document.querySelectorAll('.notification').forEach(n => n.remove());
-
         document.body.appendChild(notification);
 
-        // Remove notification after 3 seconds
         this.notificationTimeout = setTimeout(() => {
             notification.remove();
         }, 3000);
@@ -1688,7 +1609,60 @@ class DashboardApp {
     }
 
     initializeNotificationStyles() {
-        // Your existing notification styles...
+        const styles = `
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                border-radius: var(--border-radius-md);
+                background-color: white;
+                box-shadow: var(--shadow-lg);
+                z-index: 1100;
+                animation: slideIn 0.3s ease-out;
+            }
+
+            .notification-content {
+                display: flex;
+                align-items: center;
+                gap: var(--spacing-sm);
+            }
+
+            .notification.success {
+                background-color: #DEF7EC;
+                color: #03543F;
+            }
+
+            .notification.error {
+                background-color: #FDE8E8;
+                color: #9B1C1C;
+            }
+
+            .notification.warning {
+                background-color: #FEF3C7;
+                color: #92400E;
+            }
+
+            .notification.info {
+                background-color: #E1EFFE;
+                color: #1E429F;
+            }
+
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = styles;
+        document.head.appendChild(styleSheet);
     }
 }
 
@@ -1710,8 +1684,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
-
-  </script>
-    
+</script>
 </body>
 </html>
