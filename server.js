@@ -426,14 +426,17 @@ async function initializeDefaultPermissions() {
             category: 'Role Management',
             description: 'Can create, edit, and delete roles'
         },
-        // Add more permissions as needed
+        // Add more default permissions as needed
     ];
 
     try {
-        await database.collection('permissions').insertMany(defaultPermissions, { ordered: false });
+        await database.collection('permissions').insertMany(defaultPermissions, { 
+            ordered: false 
+        });
         console.log('Default permissions initialized');
     } catch (error) {
-        if (error.code !== 11000) { // Ignore duplicate key errors
+        // Ignore duplicate key errors
+        if (error.code !== 11000) {
             console.error('Error initializing permissions:', error);
             throw error;
         }
@@ -2313,6 +2316,31 @@ app.put('/api/companies/:companyId', verifyToken, verifyCompanyAccess, async (re
         });
     }
 });
+
+// Helper functions
+async function countPermissionUsage(permissionName) {
+    return await role_permissions.countDocuments({
+        permissions: permissionName
+    });
+}
+
+async function getLastPermissionUpdate() {
+    const lastUpdate = await audit_logs.findOne(
+        { action: { $regex: /^PERMISSION_/ } },
+        { sort: { timestamp: -1 } }
+    );
+    return lastUpdate?.timestamp || null;
+}
+
+async function getUserInfo(userId) {
+    if (!userId) return null;
+    const user = await users.findOne(
+        { _id: new ObjectId(userId) },
+        { projection: { name: 1, email: 1 } }
+    );
+    return user;
+}
+
 // 1. Get All Roles
 app.get('/api/roles', verifyToken, verifyAdmin, async (req, res) => {
     try {
@@ -2630,17 +2658,20 @@ app.get('/api/permissions', verifyToken, verifyAdmin, async (req, res) => {
             permissionsList = await database.collection('permissions').find().toArray();
         }
 
-        const groupedPermissions = permissionsList.reduce((acc, permission) => {
+        // Process permissions sequentially to avoid too many concurrent operations
+        const groupedPermissions = {};
+        for (const permission of permissionsList) {
             const category = permission.category || 'General';
-            if (!acc[category]) {
-                acc[category] = [];
+            if (!groupedPermissions[category]) {
+                groupedPermissions[category] = [];
             }
-            acc[category].push({
+            
+            const usage = await countPermissionUsage(permission.name);
+            groupedPermissions[category].push({
                 ...permission,
-                usageCount: await countPermissionUsage(permission.name)
+                usageCount: usage
             });
-            return acc;
-        }, {});
+        }
 
         const metadata = {
             totalPermissions: permissionsList.length,
@@ -2753,29 +2784,6 @@ app.delete('/api/roles/:roleId', verifyToken, verifyAdmin, async (req, res) => {
 });
 
 
-// Helper functions
-async function countPermissionUsage(permissionName) {
-    return await role_permissions.countDocuments({
-        permissions: permissionName
-    });
-}
-
-async function getLastPermissionUpdate() {
-    const lastUpdate = await audit_logs.findOne(
-        { action: { $regex: /^PERMISSION_/ } },
-        { sort: { timestamp: -1 } }
-    );
-    return lastUpdate?.timestamp || null;
-}
-
-async function getUserInfo(userId) {
-    if (!userId) return null;
-    const user = await users.findOne(
-        { _id: new ObjectId(userId) },
-        { projection: { name: 1, email: 1 } }
-    );
-    return user;
-}
 
 // Helper function to calculate company storage usage
 async function calculateCompanyStorageUsage(companyId) {
