@@ -108,7 +108,7 @@ class RolesPermissionsManager {
                 e.returnValue = '';
             }
         });
-    }
+    
 
     async loadInitialData() {
         try {
