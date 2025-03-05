@@ -412,74 +412,90 @@ class RolesPermissionsManager {
     }
 
     async saveRole() {
-        try {
-            const roleData = {
-                name: document.getElementById('roleName').value.trim(),
-                description: document.getElementById('roleDescription').value.trim(),
-                isSystem: document.querySelector('input[name="roleType"]:checked').value === 'system',
-                permissions: this.currentRole ? [...this.currentRole.permissions] : []
-            };
+    try {
+        const roleData = {
+            name: document.getElementById('roleName').value.trim(),
+            description: document.getElementById('roleDescription').value.trim(),
+            isSystem: document.querySelector('input[name="roleType"]:checked').value === 'system',
+            permissions: this.currentRole ? [...this.currentRole.permissions] : []
+        };
 
-            // Validate role data
-            const validationErrors = this.validateRole(roleData);
-            if (validationErrors.length > 0) {
-                this.showError(validationErrors[0]);
-                return;
-            }
-
-            this.showLoading();
-
-            let response;
-            const headers = {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            };
-
-            if (this.currentRole && !this.currentRole.isSystem) {
-                // Update existing role
-                response = await fetch(`${this.baseUrl}/roles/${this.currentRole._id}`, {
-                    method: 'PUT',
-                    headers: headers,
-                    body: JSON.stringify(roleData)
-                });
-            } else {
-                // Create new role
-                response = await fetch(`${this.baseUrl}/roles`, {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify(roleData)
-                });
-            }
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to save role');
-            }
-
-            const result = await response.json();
-            
-            if (!result.success) {
-                throw new Error(result.message || 'Failed to save role');
-            }
-
-            // Refresh roles list and select the new/updated role
-            await this.loadRolesAndPermissions();
-            
-            if (result.data && result.data._id) {
-                await this.selectRole(result.data._id);
-            }
-
-            this.closeModal(this.roleModal);
-            this.showSuccess(this.currentRole ? 'Role updated successfully' : 'Role created successfully');
-
-        } catch (error) {
-            console.error('Error saving role:', error);
-            this.showError(error.message || 'Failed to save role');
-        } finally {
-            this.hideLoading();
+        // Validate role data
+        const validationErrors = this.validateRole(roleData);
+        if (validationErrors.length > 0) {
+            this.showError(validationErrors[0]);
+            return;
         }
+
+        this.showLoading();
+
+        let response;
+        const headers = {
+            'Authorization': `Bearer ${this.token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        };
+
+        // Log the request details for debugging
+        console.log('Making request to:', this.currentRole ? 
+            `${this.baseUrl}/roles/${this.currentRole._id}` : 
+            `${this.baseUrl}/roles`);
+
+        if (this.currentRole && !this.currentRole.isSystem) {
+            // Update existing role
+            response = await fetch(`${this.baseUrl}/roles/${this.currentRole._id}`, {
+                method: 'PUT',
+                headers: headers,
+                body: JSON.stringify(roleData)
+            });
+        } else {
+            // Create new role
+            response = await fetch(`${this.baseUrl}/roles`, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify(roleData)
+            });
+        }
+
+        // Check if response is HTML instead of JSON
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            throw new Error(`Invalid response type: ${contentType}`);
+        }
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to save role');
+        }
+
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.message || 'Failed to save role');
+        }
+
+        // Refresh roles list and select the new/updated role
+        await this.loadRolesAndPermissions();
+        
+        if (result.data && result.data._id) {
+            await this.selectRole(result.data._id);
+        }
+
+        this.closeModal(this.roleModal);
+        
+        // Set correct success message based on whether creating or updating
+        const successMessage = this.currentRole ? 
+            'Role updated successfully' : 
+            'Role created successfully';
+        this.showSuccess(successMessage);
+
+    } catch (error) {
+        console.error('Error saving role:', error);
+        this.showError(error.message || 'Failed to save role');
+    } finally {
+        this.hideLoading();
     }
+}
 
     showCreateRoleModal() {
         this.roleForm.reset();
