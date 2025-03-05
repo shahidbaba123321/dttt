@@ -804,7 +804,160 @@ body {
     </div>
 
     <script>
-// User Session Management
+// Content Loading Management
+class ContentLoader {
+    constructor() {
+        this.contentContainer = document.querySelector('.dashboard-content');
+        this.baseUrl = '/dashboard/';
+        this.currentPage = null;
+        this.initializeStyles();
+    }
+
+    initializeStyles() {
+        const styles = `
+            .content-loader {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 400px;
+                color: var(--text-secondary);
+            }
+
+            .loader-spinner {
+                font-size: 2rem;
+                margin-bottom: var(--spacing-md);
+                color: var(--primary-color);
+            }
+
+            .under-construction {
+                text-align: center;
+                padding: var(--spacing-xl);
+                background-color: var(--bg-primary);
+                border-radius: var(--border-radius-lg);
+                box-shadow: var(--shadow-sm);
+                margin: var(--spacing-lg);
+            }
+
+            .under-construction i {
+                font-size: 3rem;
+                color: var(--warning-color);
+                margin-bottom: var(--spacing-lg);
+            }
+
+            .under-construction h2 {
+                color: var(--text-primary);
+                margin-bottom: var(--spacing-md);
+            }
+
+            .under-construction p {
+                color: var(--text-secondary);
+            }
+        `;
+
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = styles;
+        document.head.appendChild(styleSheet);
+    }
+
+    async loadContent(section) {
+        try {
+            this.showLoadingState();
+
+            const fileName = this.getFileName(section);
+            const response = await fetch(`${this.baseUrl}${fileName}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const content = await response.text();
+            this.contentContainer.innerHTML = content;
+            
+            await this.initializePageScript(section);
+            this.currentPage = section;
+            this.updateURL(section);
+
+        } catch (error) {
+            console.error('Error loading content:', error);
+            this.showUnderConstruction();
+        } finally {
+            this.hideLoadingState();
+        }
+    }
+
+    getFileName(section) {
+        const fileMap = {
+            'dashboard': 'dashboard.html',
+            'companies': 'companies.html',
+            'roles': 'roles-permissions.html',
+            'users': 'users.html',
+            'general-settings': 'settings.html',
+        };
+
+        return fileMap[section] || `${section}.html`;
+    }
+
+    async initializePageScript(section) {
+        try {
+            const oldScript = document.querySelector(`script[data-page="${section}"]`);
+            if (oldScript) {
+                oldScript.remove();
+            }
+
+            const script = document.createElement('script');
+            script.src = `/dashboard/js/${section}.js`;
+            script.dataset.page = section;
+            script.async = true;
+            
+            script.onerror = () => {
+                console.warn(`Script for ${section} not found or failed to load`);
+            };
+
+            document.body.appendChild(script);
+        } catch (error) {
+            console.error('Error initializing page script:', error);
+        }
+    }
+
+    showLoadingState() {
+        const loader = document.createElement('div');
+        loader.className = 'content-loader';
+        loader.innerHTML = `
+            <div class="loader-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+            </div>
+            <p>Loading content...</p>
+        `;
+        
+        this.contentContainer.innerHTML = '';
+        this.contentContainer.appendChild(loader);
+    }
+
+    hideLoadingState() {
+        const loader = this.contentContainer.querySelector('.content-loader');
+        if (loader) {
+            loader.remove();
+        }
+    }
+
+    showUnderConstruction() {
+        this.contentContainer.innerHTML = `
+            <div class="under-construction">
+                <i class="fas fa-hard-hat"></i>
+                <h2>Page Under Construction</h2>
+                <p>This section is currently being developed. Please check back later.</p>
+            </div>
+        `;
+    }
+
+    updateURL(section) {
+        const url = new URL(window.location.href);
+        url.hash = section;
+        window.history.pushState({ section }, '', url);
+    }
+}
+        // User Session Management
 class UserSession {
     constructor() {
         this.token = this.getQueryParam('token') || localStorage.getItem('token');
@@ -823,7 +976,6 @@ class UserSession {
             return;
         }
 
-        // Store token if it came from query params
         if (this.getQueryParam('token')) {
             localStorage.setItem('token', this.token);
         }
@@ -846,7 +998,6 @@ class UserSession {
                 return;
             }
 
-            // Store user data
             this.userData = data.user;
             this.updateUIWithUserData();
 
@@ -857,7 +1008,6 @@ class UserSession {
     }
 
     generateInitialsAvatar(name, email) {
-        // Get initials from name or email
         let initials;
         if (name && name.trim()) {
             initials = name
@@ -868,14 +1018,12 @@ class UserSession {
                 .toUpperCase()
                 .slice(0, 2);
         } else {
-            // Use email if name is not available
             initials = email
                 .split('@')[0]
                 .slice(0, 2)
                 .toUpperCase();
         }
 
-        // Generate background color based on initials
         const hue = this.getHueFromString(initials);
         const backgroundColor = `hsl(${hue}, 60%, 45%)`;
 
@@ -900,7 +1048,6 @@ class UserSession {
             this.userData.email
         );
 
-        // Update user name and role
         const userNameElements = document.querySelectorAll('.user-name, .dropdown-user-name');
         const userRoleElements = document.querySelectorAll('.user-role');
         const userEmailElements = document.querySelectorAll('.dropdown-user-email');
@@ -917,7 +1064,6 @@ class UserSession {
             element.textContent = this.userData.email;
         });
 
-        // Update avatar containers
         const avatarContainers = document.querySelectorAll('.avatar-container');
         avatarContainers.forEach(container => {
             container.style.backgroundColor = backgroundColor;
@@ -959,20 +1105,20 @@ class UserSession {
     }
 }
 
-// Sidebar Management
+// Sidebar Management with integrated content loading
 class SidebarManager {
-    constructor() {
+    constructor(contentLoader) {
         this.sidebar = document.getElementById('sidebar');
         this.mainContent = document.querySelector('.main-content');
         this.sidebarToggle = document.getElementById('sidebarToggle');
         this.mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
         this.isMobile = window.innerWidth <= 1024;
+        this.contentLoader = contentLoader;
         
         this.initializeSidebar();
     }
 
     initializeSidebar() {
-        // Load saved state
         const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
         if (sidebarCollapsed && !this.isMobile) {
             this.sidebar.classList.add('collapsed');
@@ -982,22 +1128,23 @@ class SidebarManager {
         this.initializeEventListeners();
         this.initializeResponsiveHandling();
         this.initializeNavigation();
+
+        // Load initial content based on URL hash or default to dashboard
+        const initialSection = window.location.hash.slice(1) || 'dashboard';
+        this.loadSection(initialSection);
     }
 
     initializeEventListeners() {
-        // Desktop sidebar toggle
         this.sidebarToggle.addEventListener('click', (e) => {
             e.stopPropagation();
             this.toggleSidebar();
         });
 
-        // Mobile sidebar toggle
         this.mobileSidebarToggle.addEventListener('click', (e) => {
             e.stopPropagation();
             this.toggleMobileSidebar();
         });
 
-        // Close mobile sidebar when clicking outside
         document.addEventListener('click', (e) => {
             if (this.isMobile && this.sidebar.classList.contains('mobile-visible')) {
                 const isClickInside = this.sidebar.contains(e.target) || 
@@ -1008,11 +1155,17 @@ class SidebarManager {
             }
         });
 
-        // Handle escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.isMobile && 
                 this.sidebar.classList.contains('mobile-visible')) {
                 this.closeMobileSidebar();
+            }
+        });
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', (event) => {
+            if (event.state && event.state.section) {
+                this.loadSection(event.state.section, false);
             }
         });
     }
@@ -1048,17 +1201,33 @@ class SidebarManager {
 
             item.addEventListener('click', (e) => {
                 e.preventDefault();
-                navItems.forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-
-                const breadcrumb = document.querySelector('.breadcrumb .current-page');
-                breadcrumb.textContent = textContent;
-
-                if (this.isMobile) {
-                    this.closeMobileSidebar();
-                }
+                const section = item.dataset.section;
+                this.loadSection(section);
             });
         });
+    }
+
+    loadSection(section, updateHistory = true) {
+        // Update active state in sidebar
+        const navItems = this.sidebar.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            item.classList.toggle('active', item.dataset.section === section);
+        });
+
+        // Update breadcrumb
+        const activeItem = this.sidebar.querySelector(`.nav-item[data-section="${section}"]`);
+        if (activeItem) {
+            const breadcrumb = document.querySelector('.breadcrumb .current-page');
+            breadcrumb.textContent = activeItem.querySelector('span').textContent;
+        }
+
+        // Load content
+        this.contentLoader.loadContent(section);
+
+        // Close mobile sidebar if open
+        if (this.isMobile) {
+            this.closeMobileSidebar();
+        }
     }
 
     toggleSidebar() {
@@ -1103,11 +1272,11 @@ class SidebarManager {
         }
     }
 }
-
-// User Interface Management
+        // User Interface Management
 class UserInterface {
-    constructor(userSession) {
+    constructor(userSession, contentLoader) {
         this.userSession = userSession;
+        this.contentLoader = contentLoader;
         this.initializeEventListeners();
     }
 
@@ -1134,6 +1303,7 @@ class UserInterface {
         });
 
         this.initializeSessionTimeout();
+        this.initializeErrorHandling();
     }
 
     initializeSessionTimeout() {
@@ -1151,14 +1321,133 @@ class UserInterface {
 
         resetTimeout();
     }
+
+    initializeErrorHandling() {
+        window.addEventListener('error', (event) => {
+            console.error('Global error:', event.error);
+            this.showErrorNotification('An error occurred. Please try again.');
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled promise rejection:', event.reason);
+            this.showErrorNotification('An error occurred. Please try again.');
+        });
+    }
+
+    showErrorNotification(message) {
+        // You can implement a more sophisticated notification system here
+        console.error(message);
+    }
+}
+
+// Dashboard Application Class
+class DashboardApp {
+    constructor() {
+        this.contentLoader = new ContentLoader();
+        this.userSession = new UserSession();
+        this.sidebarManager = new SidebarManager(this.contentLoader);
+        this.userInterface = new UserInterface(this.userSession, this.contentLoader);
+        
+        this.initialize();
+    }
+
+    initialize() {
+        // Handle initial route
+        this.handleInitialRoute();
+
+        // Add global error boundary
+        this.setupErrorBoundary();
+
+        // Initialize performance monitoring
+        this.initializePerformanceMonitoring();
+    }
+
+    handleInitialRoute() {
+        const hash = window.location.hash.slice(1);
+        if (hash) {
+            this.sidebarManager.loadSection(hash);
+        } else {
+            // Default to dashboard
+            this.sidebarManager.loadSection('dashboard');
+        }
+    }
+
+    setupErrorBoundary() {
+        window.onerror = (message, source, lineno, colno, error) => {
+            console.error('Global error:', {
+                message,
+                source,
+                lineno,
+                colno,
+                error
+            });
+            return false;
+        };
+    }
+
+    initializePerformanceMonitoring() {
+        if ('performance' in window) {
+            window.addEventListener('load', () => {
+                const timing = performance.timing;
+                const pageLoadTime = timing.loadEventEnd - timing.navigationStart;
+                console.log(`Page load time: ${pageLoadTime}ms`);
+            });
+        }
+    }
 }
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
-    const userSession = new UserSession();
-    const sidebarManager = new SidebarManager();
-    const userInterface = new UserInterface(userSession);
+    try {
+        window.dashboardApp = new DashboardApp();
+    } catch (error) {
+        console.error('Error initializing dashboard:', error);
+        // Show user-friendly error message
+        const mainContent = document.querySelector('.dashboard-content');
+        if (mainContent) {
+            mainContent.innerHTML = `
+                <div class="error-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h2>Something went wrong</h2>
+                    <p>Unable to initialize the dashboard. Please try refreshing the page.</p>
+                </div>
+            `;
+        }
+    }
 });
+
+// Add necessary styles for error state
+const errorStyles = `
+    .error-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 400px;
+        text-align: center;
+        padding: var(--spacing-xl);
+    }
+
+    .error-state i {
+        font-size: 3rem;
+        color: var(--danger-color);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .error-state h2 {
+        color: var(--text-primary);
+        margin-bottom: var(--spacing-md);
+    }
+
+    .error-state p {
+        color: var(--text-secondary);
+    }
+`;
+
+const styleSheet = document.createElement('style');
+styleSheet.textContent = errorStyles;
+document.head.appendChild(styleSheet);
 </script>
+    <script src="js/roles-permissions.js"></script>
 </body>
 </html>
