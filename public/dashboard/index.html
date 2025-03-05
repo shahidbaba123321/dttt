@@ -808,12 +808,10 @@ body {
 class ContentLoader {
     constructor() {
         this.contentContainer = document.querySelector('.dashboard-content');
-        // Update baseUrl to match your Amplify URL structure
-        this.baseUrl = 'https://main.d1cfw592vg73f.amplifyapp.com/dashboard/';
+        this.baseUrl = 'https://main.d1cfw592vg73f.amplifyapp.com/dashboard';
         this.currentPage = null;
         this.initializeStyles();
     }
-
 
     initializeStyles() {
         const styles = `
@@ -867,8 +865,7 @@ class ContentLoader {
             this.showLoadingState();
 
             const fileName = this.getFileName(section);
-            // Use the full URL
-            const response = await fetch(`${this.baseUrl}${fileName}`);
+            const response = await fetch(`${this.baseUrl}/${fileName}`);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -876,6 +873,11 @@ class ContentLoader {
             
             const content = await response.text();
             this.contentContainer.innerHTML = content;
+
+            // Dispatch contentLoaded event before initializing script
+            document.dispatchEvent(new CustomEvent('contentLoaded', {
+                detail: { section: section }
+            }));
             
             await this.initializePageScript(section);
             this.currentPage = section;
@@ -904,8 +906,7 @@ class ContentLoader {
     async initializePageScript(section) {
         try {
             const scriptMap = {
-                'roles': 'roles-permissions.js',
-                // Add other mappings as needed
+                'roles': 'roles-permissions.js'
             };
 
             const oldScript = document.querySelector(`script[data-page="${section}"]`);
@@ -915,13 +916,15 @@ class ContentLoader {
 
             const scriptName = scriptMap[section] || `${section}.js`;
             const script = document.createElement('script');
-            // Use the full Amplify URL
-            script.src = `https://main.d1cfw592vg73f.amplifyapp.com/dashboard/js/${scriptName}`;
+            script.src = `${this.baseUrl}/js/${scriptName}`;
             script.dataset.page = section;
             script.type = 'text/javascript';
             
             return new Promise((resolve, reject) => {
-                script.onload = resolve;
+                script.onload = () => {
+                    console.log(`Script loaded: ${scriptName}`);
+                    resolve();
+                };
                 script.onerror = (e) => {
                     console.warn(`Script for ${section} not found or failed to load`, e);
                     resolve(); // Resolve anyway to prevent blocking
@@ -932,7 +935,7 @@ class ContentLoader {
             console.error('Error initializing page script:', error);
         }
     }
-}
+
     showLoadingState() {
         const loader = document.createElement('div');
         loader.className = 'content-loader';
@@ -1117,8 +1120,7 @@ class UserSession {
         }
     }
 }
-
-// Sidebar Management with integrated content loading
+        // Sidebar Management
 class SidebarManager {
     constructor(contentLoader) {
         this.sidebar = document.getElementById('sidebar');
@@ -1285,7 +1287,8 @@ class SidebarManager {
         }
     }
 }
-        // User Interface Management
+
+// User Interface Management
 class UserInterface {
     constructor(userSession, contentLoader) {
         this.userSession = userSession;
@@ -1348,12 +1351,11 @@ class UserInterface {
     }
 
     showErrorNotification(message) {
-        // You can implement a more sophisticated notification system here
         console.error(message);
+        // You can implement a more sophisticated notification system here
     }
 }
-
-// Dashboard Application Class
+        // Dashboard Application Class
 class DashboardApp {
     constructor() {
         this.contentLoader = new ContentLoader();
