@@ -46,28 +46,177 @@ class RolesPermissionsManager {
     }
 
     initializeEventListeners() {
-        // Role management
-        this.createRoleBtn.addEventListener('click', () => this.showCreateRoleModal());
-        this.editRoleBtn.addEventListener('click', () => this.showEditRoleModal());
-        this.deleteRoleBtn.addEventListener('click', () => this.showDeleteModal());
-        
-        // Modal actions
-        this.saveRoleBtn.addEventListener('click', () => this.saveRole());
-        this.confirmDeleteBtn.addEventListener('click', () => this.deleteRole());
-        
-        // Modal close events
-        this.closeRoleModal.addEventListener('click', () => this.closeModal(this.roleModal));
-        this.cancelRoleModal.addEventListener('click', () => this.closeModal(this.roleModal));
-        this.closeDeleteModal.addEventListener('click', () => this.closeModal(this.deleteModal));
-        this.cancelDelete.addEventListener('click', () => this.closeModal(this.deleteModal));
+    // Role management buttons
+    this.createRoleBtn.addEventListener('click', () => this.showCreateRoleModal());
+    this.editRoleBtn.addEventListener('click', () => this.showEditRoleModal());
+    this.deleteRoleBtn.addEventListener('click', () => this.showDeleteModal());
+    
+    // Modal actions
+    this.saveRoleBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.saveRole();
+    });
+    this.confirmDeleteBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.deleteRole();
+    });
+    
+    // Modal close events
+    this.closeRoleModal.addEventListener('click', () => this.closeModal(this.roleModal));
+    this.cancelRoleModal.addEventListener('click', () => this.closeModal(this.roleModal));
+    this.closeDeleteModal.addEventListener('click', () => this.closeModal(this.deleteModal));
+    this.cancelDelete.addEventListener('click', () => this.closeModal(this.deleteModal));
 
-        // Permission management
-        this.selectAllPermissions.addEventListener('click', () => this.toggleAllPermissions(true));
-        this.deselectAllPermissions.addEventListener('click', () => this.toggleAllPermissions(false));
+    // Permission management
+    this.selectAllPermissions.addEventListener('click', () => this.toggleAllPermissions(true));
+    this.deselectAllPermissions.addEventListener('click', () => this.toggleAllPermissions(false));
 
-        // Search functionality
-        this.roleSearch.addEventListener('input', (e) => this.searchRoles(e.target.value));
-    }
+    // Search functionality
+    this.roleSearch.addEventListener('input', (e) => this.searchRoles(e.target.value));
+
+    // Form submission handling
+    this.roleForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.saveRole();
+    });
+
+    // Role name validation
+    const roleNameInput = document.getElementById('roleName');
+    roleNameInput.addEventListener('input', (e) => {
+        const name = e.target.value.trim();
+        const errors = this.validateRole({ name });
+        
+        if (errors.length > 0) {
+            e.target.setCustomValidity(errors[0]);
+            e.target.reportValidity();
+        } else {
+            e.target.setCustomValidity('');
+        }
+    });
+
+    // Role description validation
+    const roleDescriptionInput = document.getElementById('roleDescription');
+    roleDescriptionInput.addEventListener('input', (e) => {
+        const description = e.target.value.trim();
+        if (description.length > 200) {
+            e.target.setCustomValidity('Description cannot exceed 200 characters');
+            e.target.reportValidity();
+        } else {
+            e.target.setCustomValidity('');
+        }
+    });
+
+    // Role type change handling
+    const roleTypeInputs = document.getElementsByName('roleType');
+    roleTypeInputs.forEach(input => {
+        input.addEventListener('change', (e) => {
+            const isSystem = e.target.value === 'system';
+            this.handleRoleTypeChange(isSystem);
+        });
+    });
+
+    // Modal keyboard navigation and accessibility
+    this.roleModal.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            this.closeModal(this.roleModal);
+        }
+    });
+
+    this.deleteModal.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            this.closeModal(this.deleteModal);
+        }
+    });
+
+    // Prevent modal close when clicking inside
+    this.roleModal.querySelector('.modal-content').addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+
+    this.deleteModal.querySelector('.modal-content').addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+
+    // Close modals when clicking outside
+    this.roleModal.addEventListener('click', (e) => {
+        if (e.target === this.roleModal) {
+            this.closeModal(this.roleModal);
+        }
+    });
+
+    this.deleteModal.addEventListener('click', (e) => {
+        if (e.target === this.deleteModal) {
+            this.closeModal(this.deleteModal);
+        }
+    });
+
+    // Permission group toggle
+    document.addEventListener('click', (e) => {
+        if (e.target.matches('.permission-group-header')) {
+            const permissionList = e.target.nextElementSibling;
+            if (permissionList) {
+                permissionList.style.display = 
+                    permissionList.style.display === 'none' ? 'block' : 'none';
+                e.target.classList.toggle('collapsed');
+            }
+        }
+    });
+
+    // Handle permission changes with debouncing
+    let permissionUpdateTimeout;
+    document.addEventListener('change', (e) => {
+        if (e.target.matches('.permission-checkbox')) {
+            clearTimeout(permissionUpdateTimeout);
+            permissionUpdateTimeout = setTimeout(() => {
+                this.handlePermissionChange(e.target);
+            }, 300);
+        }
+    });
+
+    // Role selection handling with keyboard
+    this.rolesList.addEventListener('keydown', (e) => {
+        if (e.target.classList.contains('role-item')) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.selectRole(e.target.dataset.roleId);
+            }
+        }
+    });
+
+    // Add tab index to role items for keyboard navigation
+    this.rolesList.querySelectorAll('.role-item').forEach(item => {
+        item.setAttribute('tabindex', '0');
+        item.setAttribute('role', 'button');
+        item.addEventListener('click', () => this.selectRole(item.dataset.roleId));
+    });
+
+    // Initialize tooltips for buttons
+    this.initializeTooltips();
+}
+
+// Helper method for tooltips
+initializeTooltips() {
+    const tooltipElements = document.querySelectorAll('[data-tooltip]');
+    tooltipElements.forEach(element => {
+        element.addEventListener('mouseenter', (e) => {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            tooltip.textContent = e.target.dataset.tooltip;
+            document.body.appendChild(tooltip);
+
+            const rect = e.target.getBoundingClientRect();
+            tooltip.style.top = `${rect.bottom + 5}px`;
+            tooltip.style.left = `${rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2)}px`;
+        });
+
+        element.addEventListener('mouseleave', () => {
+            const tooltip = document.querySelector('.tooltip');
+            if (tooltip) {
+                tooltip.remove();
+            }
+        });
+    });
+}
 
     async loadRolesAndPermissions() {
         try {
@@ -280,83 +429,160 @@ class RolesPermissionsManager {
     }
 
     showCreateRoleModal() {
-        this.roleForm.reset();
-        document.getElementById('modalTitle').textContent = 'Create New Role';
-        this.roleModal.classList.add('show');
-        document.getElementById('roleName').focus();
+    this.roleForm.reset();
+    document.getElementById('modalTitle').textContent = 'Create New Role';
+    
+    const roleTypeInputs = document.getElementsByName('roleType');
+    roleTypeInputs.forEach(input => {
+        input.disabled = false; // Enable role type selection for new roles
+    });
+
+    this.handleRoleTypeChange();
+    this.roleModal.classList.add('show');
+    document.getElementById('roleName').focus();
+}
+
+// Add these helper methods for role validation
+validateRole(roleData) {
+    const errors = [];
+
+    if (!roleData.name) {
+        errors.push('Role name is required');
     }
 
-    showEditRoleModal() {
-        if (!this.currentRole || this.currentRole.isSystem) {
-            this.showError('System roles cannot be edited');
+    if (roleData.name && roleData.name.length < 3) {
+        errors.push('Role name must be at least 3 characters long');
+    }
+
+    if (roleData.name && roleData.name.length > 50) {
+        errors.push('Role name cannot exceed 50 characters');
+    }
+
+    if (roleData.description && roleData.description.length > 200) {
+        errors.push('Description cannot exceed 200 characters');
+    }
+
+    return errors;
+}
+
+// Add this method to handle role type changes
+handleRoleTypeChange() {
+    const roleTypeInputs = document.getElementsByName('roleType');
+    roleTypeInputs.forEach(input => {
+        input.addEventListener('change', (e) => {
+            const isSystem = e.target.value === 'system';
+            const permissionCheckboxes = document.querySelectorAll('.permission-checkbox');
+            
+            permissionCheckboxes.forEach(checkbox => {
+                checkbox.disabled = isSystem;
+            });
+
+            if (isSystem) {
+                this.selectAllPermissions.disabled = true;
+                this.deselectAllPermissions.disabled = true;
+            } else {
+                this.selectAllPermissions.disabled = false;
+                this.deselectAllPermissions.disabled = false;
+            }
+        });
+    });
+} 
+
+    
+
+   showEditRoleModal() {
+    if (!this.currentRole) {
+        this.showError('Please select a role to edit');
+        return;
+    }
+
+    if (this.currentRole.isSystem) {
+        this.showError('System roles cannot be edited');
+        return;
+    }
+
+    document.getElementById('modalTitle').textContent = 'Edit Role';
+    document.getElementById('roleName').value = this.currentRole.name;
+    document.getElementById('roleDescription').value = this.currentRole.description || '';
+    
+    const roleTypeInputs = document.getElementsByName('roleType');
+    roleTypeInputs.forEach(input => {
+        input.checked = input.value === (this.currentRole.isSystem ? 'system' : 'custom');
+        input.disabled = this.currentRole.isSystem; // Disable role type change for system roles
+    });
+
+    this.handleRoleTypeChange();
+    this.roleModal.classList.add('show');
+}
+
+async saveRole() {
+    try {
+        const roleData = {
+            name: document.getElementById('roleName').value.trim(),
+            description: document.getElementById('roleDescription').value.trim(),
+            isSystem: document.querySelector('input[name="roleType"]:checked').value === 'system',
+            permissions: this.currentRole ? [...this.currentRole.permissions] : []
+        };
+
+        if (!roleData.name) {
+            this.showError('Role name is required');
             return;
         }
 
-        document.getElementById('modalTitle').textContent = 'Edit Role';
-        document.getElementById('roleName').value = this.currentRole.name;
-        document.getElementById('roleDescription').value = this.currentRole.description || '';
-        
-        const roleTypeInputs = document.getElementsByName('roleType');
-        roleTypeInputs.forEach(input => {
-            input.checked = input.value === (this.currentRole.isSystem ? 'system' : 'custom');
+        let response;
+        let url;
+        let method;
+
+        if (this.currentRole && !this.currentRole.isSystem) {
+            // Update existing role
+            url = `${this.baseUrl}/roles/${this.currentRole._id}`;
+            method = 'PUT';
+        } else {
+            // Create new role
+            url = `${this.baseUrl}/roles`;
+            method = 'POST';
+        }
+
+        response = await fetch(url, {
+            method: method,
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(roleData)
         });
 
-        this.roleModal.classList.add('show');
-    }
-
-    async saveRole() {
-        try {
-            const roleData = {
-                name: document.getElementById('roleName').value.trim(),
-                description: document.getElementById('roleDescription').value.trim(),
-                isSystem: document.querySelector('input[name="roleType"]:checked').value === 'system'
-            };
-
-            if (!roleData.name) {
-                this.showError('Role name is required');
-                return;
-            }
-
-            let response;
-            if (this.currentRole && !this.currentRole.isSystem) {
-                response = await fetch(`${this.baseUrl}/roles/${this.currentRole._id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(roleData)
-                });
-            } else {
-                response = await fetch(`${this.baseUrl}/roles`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(roleData)
-                });
-            }
-
-            if (!response.ok) {
-                throw new Error('Failed to save role');
-            }
-
-            const result = await response.json();
-            await this.loadRolesAndPermissions();
-            
-            if (result.data._id) {
-                await this.selectRole(result.data._id);
-            }
-
-            this.closeModal(this.roleModal);
-            this.showSuccess(this.currentRole ? 'Role updated successfully' : 'Role created successfully');
-        } catch (error) {
-            console.error('Error saving role:', error);
-            this.showError('Failed to save role');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to save role');
         }
-    }
 
+        const result = await response.json();
+        
+        // Refresh roles list
+        await this.loadRolesAndPermissions();
+        
+        // Select the newly created/updated role
+        if (result.data._id) {
+            await this.selectRole(result.data._id);
+        }
+
+        this.closeModal(this.roleModal);
+        this.showSuccess(this.currentRole ? 'Role updated successfully' : 'Role created successfully');
+
+        // Create audit log entry
+        await this.createAuditLog(
+            this.currentRole ? 'ROLE_UPDATED' : 'ROLE_CREATED',
+            roleData.name,
+            roleData
+        );
+
+    } catch (error) {
+        console.error('Error saving role:', error);
+        this.showError(error.message || 'Failed to save role');
+    }
+}
+    
     showDeleteModal() {
         if (!this.currentRole) {
             this.showError('Please select a role to delete');
@@ -374,30 +600,61 @@ class RolesPermissionsManager {
     }
 
     async deleteRole() {
-        if (!this.currentRole || this.currentRole.isSystem) return;
-
-        try {
-            const response = await fetch(`${this.baseUrl}/roles/${this.currentRole._id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to delete role');
-            }
-
-            this.closeModal(this.deleteModal);
-            this.currentRole = null;
-            await this.loadRolesAndPermissions();
-            this.showSuccess('Role deleted successfully');
-        } catch (error) {
-            console.error('Error deleting role:', error);
-            this.showError('Failed to delete role');
-        }
+    if (!this.currentRole || this.currentRole.isSystem) {
+        this.showError('Cannot delete system roles');
+        return;
     }
+
+    try {
+        // Check if role has assigned users
+        const checkUsersResponse = await fetch(`${this.baseUrl}/roles/${this.currentRole._id}/users`, {
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!checkUsersResponse.ok) {
+            throw new Error('Failed to check role assignments');
+        }
+
+        const usersData = await checkUsersResponse.json();
+        if (usersData.data.count > 0) {
+            this.showError(`Cannot delete role. ${usersData.data.count} users are currently assigned to this role.`);
+            return;
+        }
+
+        // Proceed with deletion
+        const response = await fetch(`${this.baseUrl}/roles/${this.currentRole._id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to delete role');
+        }
+
+        // Create audit log entry
+        await this.createAuditLog(
+            'ROLE_DELETED',
+            this.currentRole.name,
+            { roleId: this.currentRole._id }
+        );
+
+        this.closeModal(this.deleteModal);
+        this.currentRole = null;
+        await this.loadRolesAndPermissions();
+        this.showSuccess('Role deleted successfully');
+
+    } catch (error) {
+        console.error('Error deleting role:', error);
+        this.showError(error.message || 'Failed to delete role');
+    }
+}
 
     toggleAllPermissions(state) {
         if (!this.currentRole || this.currentRole.isSystem) return;
