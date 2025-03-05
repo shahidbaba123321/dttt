@@ -951,34 +951,44 @@ class ContentLoader {
     }
 
     async initializeRolesPermissions() {
-        try {
-            if (this.moduleInstances.has('roles')) {
-                const instance = this.moduleInstances.get('roles');
-                if (instance && typeof instance.cleanup === 'function') {
-                    await instance.cleanup();
-                }
+    try {
+        // Remove any existing instance
+        if (this.moduleInstances.has('roles')) {
+            const instance = this.moduleInstances.get('roles');
+            if (instance && typeof instance.cleanup === 'function') {
+                await instance.cleanup();
             }
-
-            const script = document.createElement('script');
-            script.src = `${this.baseUrl}/dashboard/js/roles-permissions.js`;
-            document.body.appendChild(script);
-
-            await new Promise((resolve, reject) => {
-                script.onload = resolve;
-                script.onerror = reject;
-            });
-
-            if (typeof window.RolesPermissionsManager !== 'undefined') {
-                const instance = new window.RolesPermissionsManager(this.apiBaseUrl);
-                this.moduleInstances.set('roles', instance);
-            } else {
-                throw new Error('RolesPermissionsManager not loaded properly');
-            }
-        } catch (error) {
-            console.error('Error initializing roles-permissions module:', error);
-            throw error;
+            this.moduleInstances.delete('roles');
         }
+
+        // Check if script is already loaded
+        const existingScript = document.querySelector('script[src*="roles-permissions.js"]');
+        if (existingScript) {
+            existingScript.remove();
+        }
+
+        // Create and append the script
+        const script = document.createElement('script');
+        script.src = `${this.baseUrl}/dashboard/js/roles-permissions.js`;
+        
+        await new Promise((resolve, reject) => {
+            script.onload = resolve;
+            script.onerror = reject;
+            document.body.appendChild(script);
+        });
+
+        // Initialize new instance
+        if (typeof window.RolesPermissionsManager !== 'undefined') {
+            const instance = new window.RolesPermissionsManager(this.apiBaseUrl);
+            this.moduleInstances.set('roles', instance);
+        } else {
+            throw new Error('RolesPermissionsManager not loaded properly');
+        }
+    } catch (error) {
+        console.error('Error initializing roles-permissions module:', error);
+        throw error;
     }
+}
 
     showLoadingState() {
         const loader = document.createElement('div');
