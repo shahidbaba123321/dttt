@@ -1,337 +1,456 @@
 <div class="roles-permissions-container">
     <!-- Header Section -->
-    <div class="rp-header">
-        <div class="rp-title">
-            <h2>Roles & Permissions Management</h2>
-            <p>Manage user roles and their associated permissions</p>
-        </div>
-        <button class="rp-create-role-btn" id="createRoleBtn">
+    <div class="section-header">
+        <h2>Roles & Permissions Management</h2>
+        <button id="createRoleBtn" class="primary-button">
             <i class="fas fa-plus"></i> Create New Role
         </button>
     </div>
 
     <!-- Main Content Grid -->
-    <div class="rp-grid">
+    <div class="content-grid">
         <!-- Roles List Panel -->
-        <div class="rp-roles-panel">
-            <div class="rp-panel-header">
-                <h3>Roles</h3>
-                <span class="rp-search-container">
-                    <input type="text" id="roleSearch" placeholder="Search roles...">
+        <div class="roles-panel">
+            <div class="panel-header">
+                <h3>System Roles</h3>
+                <div class="search-box">
                     <i class="fas fa-search"></i>
-                </span>
-            </div>
-            <div class="rp-roles-list" id="rolesList">
-                <!-- Superadmin Role (Fixed) -->
-                <div class="rp-role-item superadmin" data-role-id="superadmin">
-                    <div class="rp-role-info">
-                        <span class="rp-role-name">Superadmin</span>
-                        <span class="rp-role-badge system">System Role</span>
-                    </div>
-                    <div class="rp-role-stats">
-                        <span class="rp-users-count" title="Users with this role">
-                            <i class="fas fa-users"></i> <span id="superadminCount">0</span>
-                        </span>
-                    </div>
+                    <input type="text" id="roleSearch" placeholder="Search roles...">
                 </div>
-                <!-- Other roles will be dynamically added here -->
+            </div>
+            <div class="roles-list" id="rolesList">
+                <!-- Roles will be dynamically loaded here -->
             </div>
         </div>
 
         <!-- Permissions Panel -->
-        <div class="rp-permissions-panel" id="permissionsPanel">
-            <div class="rp-panel-header">
-                <h3>Permissions Configuration</h3>
-                <div class="rp-role-actions">
-                    <button class="rp-save-btn" id="savePermissions" disabled>
-                        <i class="fas fa-save"></i> Save Changes
+        <div class="permissions-panel" id="permissionsPanel">
+            <div class="panel-header">
+                <h3>Role Details & Permissions</h3>
+                <div class="role-actions" id="roleActions">
+                    <button class="secondary-button" id="editRoleBtn">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="danger-button" id="deleteRoleBtn">
+                        <i class="fas fa-trash"></i> Delete
                     </button>
                 </div>
             </div>
             
-            <!-- Permission Categories -->
-            <div class="rp-permissions-content">
-                <!-- User Management -->
-                <div class="rp-permission-category">
-                    <h4>User Management</h4>
-                    <div class="rp-permission-group">
-                        <!-- Permission items will be dynamically added here -->
+            <!-- Role Details Section -->
+            <div class="role-details" id="roleDetails">
+                <div class="role-info">
+                    <h4 id="selectedRoleName">Select a role</h4>
+                    <span class="role-meta" id="roleMetadata">
+                        <!-- Role metadata will be displayed here -->
+                    </span>
+                </div>
+                <div class="role-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Users Assigned</span>
+                        <span class="stat-value" id="usersCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Last Modified</span>
+                        <span class="stat-value" id="lastModified">-</span>
                     </div>
                 </div>
+            </div>
 
-                <!-- Company Management -->
-                <div class="rp-permission-category">
-                    <h4>Company Management</h4>
-                    <div class="rp-permission-group">
-                        <!-- Permission items will be dynamically added here -->
+            <!-- Permissions Section -->
+            <div class="permissions-section">
+                <div class="permissions-header">
+                    <h4>Permissions Configuration</h4>
+                    <div class="permissions-actions">
+                        <button class="secondary-button" id="selectAllPermissions">
+                            Select All
+                        </button>
+                        <button class="secondary-button" id="deselectAllPermissions">
+                            Deselect All
+                        </button>
                     </div>
                 </div>
-
-                <!-- System Settings -->
-                <div class="rp-permission-category">
-                    <h4>System Settings</h4>
-                    <div class="rp-permission-group">
-                        <!-- Permission items will be dynamically added here -->
-                    </div>
-                </div>
-
-                <!-- Module Access -->
-                <div class="rp-permission-category">
-                    <h4>Module Access</h4>
-                    <div class="rp-permission-group">
-                        <!-- Permission items will be dynamically added here -->
-                    </div>
+                
+                <div class="permissions-groups" id="permissionsGroups">
+                    <!-- Permission groups will be dynamically loaded here -->
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Create Role Modal -->
-<div class="rp-modal" id="createRoleModal">
-    <div class="rp-modal-content">
-        <div class="rp-modal-header">
-            <h3>Create New Role</h3>
-            <button class="rp-modal-close" id="closeRoleModal">
+<!-- Modals -->
+<!-- Create/Edit Role Modal -->
+<div class="modal" id="roleModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">Create New Role</h3>
+            <button class="close-button" id="closeRoleModal">
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        <div class="rp-modal-body">
-            <form id="createRoleForm">
-                <div class="rp-form-group">
+        <div class="modal-body">
+            <form id="roleForm">
+                <div class="form-group">
                     <label for="roleName">Role Name</label>
                     <input type="text" id="roleName" required 
                            placeholder="Enter role name">
                 </div>
-                <div class="rp-form-group">
+                <div class="form-group">
                     <label for="roleDescription">Description</label>
-                    <textarea id="roleDescription" 
-                              placeholder="Enter role description"></textarea>
+                    <textarea id="roleDescription" rows="3" 
+                            placeholder="Enter role description"></textarea>
                 </div>
-                <div class="rp-form-group">
-                    <label class="rp-checkbox">
-                        <input type="checkbox" id="isDefault">
-                        <span>Set as default role for new users</span>
-                    </label>
+                <div class="form-group">
+                    <label>Role Type</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="roleType" value="system" checked>
+                            System Role
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="roleType" value="custom">
+                            Custom Role
+                        </label>
+                    </div>
                 </div>
             </form>
         </div>
-        <div class="rp-modal-footer">
-            <button class="rp-btn-secondary" id="cancelRoleCreate">Cancel</button>
-            <button class="rp-btn-primary" id="confirmRoleCreate">Create Role</button>
+        <div class="modal-footer">
+            <button class="secondary-button" id="cancelRoleModal">Cancel</button>
+            <button class="primary-button" id="saveRole">Save Role</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Delete Role</h3>
+            <button class="close-button" id="closeDeleteModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete this role? This action cannot be undone.</p>
+            <div class="warning-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span id="deleteWarningText">
+                    Users assigned to this role will need to be reassigned.
+                </span>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="secondary-button" id="cancelDelete">Cancel</button>
+            <button class="danger-button" id="confirmDelete">Delete Role</button>
         </div>
     </div>
 </div>
 
 <style>
-/* Roles & Permissions Container */
+    /* Roles & Permissions Specific Styles */
 .roles-permissions-container {
     padding: var(--spacing-lg);
-    background-color: var(--bg-secondary);
-    min-height: calc(100vh - var(--header-height));
+    max-width: 1600px;
+    margin: 0 auto;
 }
 
-/* Header Styles */
-.rp-header {
+.section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: var(--spacing-lg);
-    padding: var(--spacing-lg);
-    background-color: var(--bg-primary);
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-sm);
 }
 
-.rp-title h2 {
-    color: var(--text-primary);
-    font-size: 1.5rem;
-    margin-bottom: var(--spacing-xs);
-}
-
-.rp-title p {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-}
-
-.rp-create-role-btn {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: var(--spacing-sm) var(--spacing-lg);
-    border-radius: var(--border-radius-md);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    transition: background-color var(--transition-speed) ease;
-}
-
-.rp-create-role-btn:hover {
-    background-color: var(--primary-dark);
-}
-
-/* Grid Layout */
-.rp-grid {
+.content-grid {
     display: grid;
     grid-template-columns: 300px 1fr;
     gap: var(--spacing-lg);
-    margin-top: var(--spacing-lg);
-}
-
-/* Panel Styles */
-.rp-roles-panel, .rp-permissions-panel {
     background-color: var(--bg-primary);
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-sm);
-    height: fit-content;
+    min-height: calc(100vh - 200px);
 }
 
-.rp-panel-header {
-    padding: var(--spacing-lg);
+/* Roles Panel Styles */
+.roles-panel {
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-light);
+    padding: var(--spacing-md);
+}
+
+.panel-header {
+    padding-bottom: var(--spacing-md);
     border-bottom: 1px solid var(--border-light);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    margin-bottom: var(--spacing-md);
 }
 
-.rp-panel-header h3 {
-    color: var(--text-primary);
-    font-size: 1.1rem;
-    font-weight: 600;
-}
-
-/* Search Container */
-.rp-search-container {
+.panel-header .search-box {
+    margin-top: var(--spacing-sm);
     position: relative;
-    width: 100%;
-    max-width: 200px;
 }
 
-.rp-search-container input {
+.panel-header .search-box input {
     width: 100%;
-    padding: var(--spacing-sm) var(--spacing-lg);
-    padding-right: calc(var(--spacing-lg) + 20px);
+    padding: var(--spacing-sm) var(--spacing-md);
+    padding-left: 2.5rem;
     border: 1px solid var(--border-light);
     border-radius: var(--border-radius-md);
-    font-size: 0.875rem;
+    background-color: var(--bg-primary);
 }
 
-.rp-search-container i {
+.panel-header .search-box i {
     position: absolute;
-    right: var(--spacing-sm);
+    left: var(--spacing-md);
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-tertiary);
 }
 
-/* Roles List */
-.rp-roles-list {
-    padding: var(--spacing-md);
+.roles-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
 }
 
-.rp-role-item {
+.role-item {
+    display: flex;
+    align-items: center;
     padding: var(--spacing-md);
-    border: 1px solid var(--border-light);
     border-radius: var(--border-radius-md);
-    margin-bottom: var(--spacing-sm);
     cursor: pointer;
     transition: all var(--transition-speed) ease;
+    background-color: var(--bg-primary);
+    border: 1px solid transparent;
+}
+
+.role-item:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.role-item.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-dark);
+}
+
+.role-item-content {
+    flex: 1;
+}
+
+.role-item-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: var(--spacing-xs);
 }
 
-.rp-role-item:hover {
-    border-color: var(--primary-color);
-    background-color: var(--bg-tertiary);
+.role-name {
+    font-weight: 600;
 }
 
-.rp-role-item.active {
-    border-color: var(--primary-color);
-    background-color: var(--bg-tertiary);
-}
-
-.rp-role-item.superadmin {
-    background-color: var(--bg-tertiary);
-    border-color: var(--primary-color);
-    cursor: not-allowed;
-}
-
-.rp-role-info {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-}
-
-.rp-role-name {
-    font-weight: 500;
-    color: var(--text-primary);
-}
-
-.rp-role-badge {
+.role-type {
     font-size: 0.75rem;
     padding: 2px 8px;
     border-radius: 12px;
     background-color: var(--bg-tertiary);
-    color: var(--text-secondary);
 }
 
-.rp-role-badge.system {
-    background-color: var(--primary-light);
-    color: white;
+.role-item.active .role-type {
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
-.rp-users-count {
+.role-description {
     font-size: 0.875rem;
     color: var(--text-secondary);
+}
+
+.role-item.active .role-description {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Permissions Panel Styles */
+.permissions-panel {
+    padding: var(--spacing-md);
+}
+
+.role-actions {
     display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
+    gap: var(--spacing-sm);
 }
 
-/* Permissions Panel */
-.rp-permissions-content {
-    padding: var(--spacing-lg);
+.role-details {
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+    margin: var(--spacing-md) 0;
 }
 
-.rp-permission-category {
-    margin-bottom: var(--spacing-xl);
-}
-
-.rp-permission-category h4 {
-    color: var(--text-primary);
-    font-size: 1rem;
+.role-info {
     margin-bottom: var(--spacing-md);
-    padding-bottom: var(--spacing-xs);
-    border-bottom: 1px solid var(--border-light);
 }
 
-.rp-permission-group {
+.role-meta {
+    font-size: 0.875rem;
+    color: var(--text-tertiary);
+}
+
+.role-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: var(--spacing-md);
 }
 
+.stat-item {
+    background-color: var(--bg-primary);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--border-light);
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.stat-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Permissions Section Styles */
+.permissions-section {
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md);
+}
+
+.permissions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.permissions-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.permissions-groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.permission-group {
+    background-color: var(--bg-primary);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--border-light);
+    overflow: hidden;
+}
+
+.permission-group-header {
+    padding: var(--spacing-md);
+    background-color: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-light);
+    font-weight: 600;
+}
+
+.permission-list {
+    padding: var(--spacing-md);
+}
+
+.permission-item {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm) 0;
+}
+
+.permission-checkbox {
+    margin-right: var(--spacing-sm);
+}
+
+.permission-label {
+    flex: 1;
+    font-size: 0.875rem;
+}
+
+/* Button Styles */
+.primary-button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    transition: all var(--transition-speed) ease;
+}
+
+.primary-button:hover {
+    background-color: var(--primary-dark);
+}
+
+.secondary-button {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-light);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    transition: all var(--transition-speed) ease;
+}
+
+.secondary-button:hover {
+    background-color: var(--border-light);
+}
+
+.danger-button {
+    background-color: var(--danger-color);
+    color: white;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    transition: all var(--transition-speed) ease;
+}
+
+.danger-button:hover {
+    background-color: #dc2626;
+}
+
 /* Modal Styles */
-.rp-modal {
+.modal {
     display: none;
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    right: 0;
+    bottom: 0;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 1000;
     align-items: center;
     justify-content: center;
 }
 
-.rp-modal.active {
+.modal.show {
     display: flex;
 }
 
-.rp-modal-content {
+.modal-content {
     background-color: var(--bg-primary);
     border-radius: var(--border-radius-lg);
     width: 100%;
@@ -339,101 +458,127 @@
     box-shadow: var(--shadow-lg);
 }
 
-.rp-modal-header {
-    padding: var(--spacing-lg);
+.modal-header {
+    padding: var(--spacing-md);
     border-bottom: 1px solid var(--border-light);
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.rp-modal-body {
-    padding: var(--spacing-lg);
+.modal-body {
+    padding: var(--spacing-md);
 }
 
-.rp-modal-footer {
-    padding: var(--spacing-lg);
+.modal-footer {
+    padding: var(--spacing-md);
     border-top: 1px solid var(--border-light);
     display: flex;
     justify-content: flex-end;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
+}
+
+.close-button {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: var(--spacing-xs);
+    border-radius: var(--border-radius-sm);
+    transition: all var(--transition-speed) ease;
+}
+
+.close-button:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
 }
 
 /* Form Styles */
-.rp-form-group {
+.form-group {
     margin-bottom: var(--spacing-md);
 }
 
-.rp-form-group label {
+.form-group label {
     display: block;
     margin-bottom: var(--spacing-xs);
-    color: var(--text-primary);
+    color: var(--text-secondary);
     font-weight: 500;
 }
 
-.rp-form-group input,
-.rp-form-group textarea {
+.form-group input[type="text"],
+.form-group textarea {
     width: 100%;
     padding: var(--spacing-sm);
     border: 1px solid var(--border-light);
     border-radius: var(--border-radius-md);
-    font-size: 0.875rem;
-}
-
-.rp-form-group textarea {
-    height: 100px;
-    resize: vertical;
-}
-
-/* Button Styles */
-.rp-btn-primary,
-.rp-btn-secondary {
-    padding: var(--spacing-sm) var(--spacing-lg);
-    border-radius: var(--border-radius-md);
-    font-weight: 500;
-    cursor: pointer;
+    background-color: var(--bg-primary);
     transition: all var(--transition-speed) ease;
 }
 
-.rp-btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
+.form-group input[type="text"]:focus,
+.form-group textarea:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
 }
 
-.rp-btn-primary:hover {
-    background-color: var(--primary-dark);
+.radio-group {
+    display: flex;
+    gap: var(--spacing-md);
 }
 
-.rp-btn-secondary {
-    background-color: var(--bg-tertiary);
-    color: var(--text-secondary);
-    border: 1px solid var(--border-light);
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    cursor: pointer;
 }
 
-.rp-btn-secondary:hover {
-    background-color: var(--border-light);
+/* Warning Message Styles */
+.warning-message {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background-color: #FEF2F2;
+    border: 1px solid #FEE2E2;
+    border-radius: var(--border-radius-md);
+    color: #991B1B;
+    margin-top: var(--spacing-md);
 }
 
-/* Responsive Design */
+.warning-message i {
+    color: #DC2626;
+}
+
+/* Responsive Styles */
 @media (max-width: 1024px) {
-    .rp-grid {
+    .content-grid {
         grid-template-columns: 1fr;
     }
-    
-    .rp-roles-panel {
-        margin-bottom: var(--spacing-lg);
+
+    .roles-panel {
+        border-right: none;
+        border-bottom: 1px solid var(--border-light);
     }
 }
 
 @media (max-width: 768px) {
-    .rp-header {
+    .roles-permissions-container {
+        padding: var(--spacing-md);
+    }
+
+    .section-header {
         flex-direction: column;
         gap: var(--spacing-md);
-        text-align: center;
+        align-items: stretch;
     }
-    
-    .rp-permission-group {
+
+    .permissions-groups {
+        grid-template-columns: 1fr;
+    }
+
+    .role-stats {
         grid-template-columns: 1fr;
     }
 }
