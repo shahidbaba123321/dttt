@@ -2783,7 +2783,107 @@ app.delete('/api/roles/:roleId', verifyToken, verifyAdmin, async (req, res) => {
     }
 });
 
+// Add this endpoint if it's missing
+app.put('/api/roles/:roleId', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { roleId } = req.params;
+            const { name, description, isSystem } = req.body;
 
+            // Validate roleId format
+            if (!ObjectId.isValid(roleId)) {
+                throw new Error('Invalid role ID format');
+            }
+
+            // Validate required fields
+            if (!name || typeof name !== 'string' || name.trim().length < 3) {
+                throw new Error('Role name must be at least 3 characters long');
+            }
+
+            // Get existing role
+            const existingRole = await roles.findOne({ 
+                _id: new ObjectId(roleId) 
+            }, { session });
+
+            if (!existingRole) {
+                throw new Error('Role not found');
+            }
+
+            if (existingRole.isSystem) {
+                throw new Error('System roles cannot be modified');
+            }
+
+            // Check if new name conflicts with other roles
+            if (name !== existingRole.name) {
+                const nameExists = await roles.findOne({
+                    _id: { $ne: new ObjectId(roleId) },
+                    name: { $regex: new RegExp(`^${name}$`, 'i') }
+                }, { session });
+
+                if (nameExists) {
+                    throw new Error('Role name already exists');
+                }
+            }
+
+            // Update role
+            await roles.updateOne(
+                { _id: new ObjectId(roleId) },
+                { 
+                    $set: { 
+                        name,
+                        description,
+                        isSystem,
+                        updatedAt: new Date(),
+                        updatedBy: new ObjectId(req.user.userId)
+                    }
+                },
+                { session }
+            );
+
+            // Create audit log
+            await createAuditLog(
+                'ROLE_UPDATED',
+                req.user.userId,
+                roleId,
+                {
+                    roleName: name,
+                    previousName: existingRole.name,
+                    changes: {
+                        name: name !== existingRole.name,
+                        description: description !== existingRole.description,
+                        isSystem: isSystem !== existingRole.isSystem
+                    }
+                },
+                session
+            );
+
+            // Get updated role
+            const updatedRole = await roles.findOne({ 
+                _id: new ObjectId(roleId) 
+            }, { session });
+
+            res.json({
+                success: true,
+                message: 'Role updated successfully',
+                data: updatedRole
+            });
+        });
+    } catch (error) {
+        console.error('Error updating role:', error);
+        res.status(
+            error.message.includes('not found') ? 404 :
+            error.message.includes('already exists') ? 400 :
+            error.message.includes('System roles') ? 403 :
+            500
+        ).json({
+            success: false,
+            message: error.message || 'Error updating role'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
 
 // Helper function to calculate company storage usage
 async function calculateCompanyStorageUsage(companyId) {
