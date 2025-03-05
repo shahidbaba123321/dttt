@@ -371,6 +371,13 @@ async function initializeDefaultData() {
             await initializeDefaultRoles();
         }
 
+        // Check and initialize default permissions
+        const permissionsCount = await database.collection('permissions').countDocuments();
+        if (permissionsCount === 0) {
+            console.log('Initializing default permissions...');
+            await initializeDefaultPermissions();
+        }
+
         // Check and initialize default subscription plans
         const plansCount = await subscription_plans.countDocuments();
         if (plansCount === 0) {
@@ -392,6 +399,46 @@ async function initializeDefaultData() {
     }
 }
 
+
+async function initializeDefaultPermissions() {
+    const defaultPermissions = [
+        {
+            name: 'view_users',
+            displayName: 'View Users',
+            category: 'User Management',
+            description: 'Can view user list and details'
+        },
+        {
+            name: 'manage_users',
+            displayName: 'Manage Users',
+            category: 'User Management',
+            description: 'Can create, edit, and delete users'
+        },
+        {
+            name: 'view_roles',
+            displayName: 'View Roles',
+            category: 'Role Management',
+            description: 'Can view roles and permissions'
+        },
+        {
+            name: 'manage_roles',
+            displayName: 'Manage Roles',
+            category: 'Role Management',
+            description: 'Can create, edit, and delete roles'
+        },
+        // Add more permissions as needed
+    ];
+
+    try {
+        await database.collection('permissions').insertMany(defaultPermissions, { ordered: false });
+        console.log('Default permissions initialized');
+    } catch (error) {
+        if (error.code !== 11000) { // Ignore duplicate key errors
+            console.error('Error initializing permissions:', error);
+            throw error;
+        }
+    }
+}
 // Initialize default roles
 async function initializeDefaultRoles() {
     const defaultRoles = {
@@ -2266,6 +2313,221 @@ app.put('/api/companies/:companyId', verifyToken, verifyCompanyAccess, async (re
         });
     }
 });
+// Role and Permission Management Routes
+app.get('/api/roles', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const rolesList = await roles.find().toArray();
+        
+        // Enhance roles with user counts
+        const enhancedRoles = await Promise.all(rolesList.map(async (role) => {
+            const usersCount = await user_role_assignments.countDocuments({ roleId: role._id });
+            return {
+                ...role,
+                usersCount
+            };
+        }));
+
+        res.json({
+            success: true,
+            data: enhancedRoles
+        });
+    } catch (error) {
+        console.error('Error fetching roles:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching roles'
+        });
+    }
+});
+
+app.get('/api/roles/:roleId', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const role = await roles.findOne({ 
+            _id: new ObjectId(req.params.roleId) 
+        });
+
+        if (!role) {
+            return res.status(404).json({
+                success: false,
+                message: 'Role not found'
+            });
+        }
+
+        const usersCount = await user_role_assignments.countDocuments({ 
+            roleId: role._id 
+        });
+
+        const rolePermissions = await role_permissions.findOne({ 
+            roleId: role._id 
+        });
+
+        res.json({
+            success: true,
+            data: {
+                ...role,
+                usersCount,
+                permissions: rolePermissions?.permissions || []
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching role:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching role details'
+        });
+    }
+});
+
+app.get('/api/permissions', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const permissionsList = await database.collection('permissions').find().toArray();
+        
+        const groupedPermissions = permissionsList.reduce((acc, permission) => {
+            const category = permission.category || 'General';
+            if (!acc[category]) {
+                acc[category] = [];
+            }
+            acc[category].push(permission);
+            return acc;
+        }, {});
+
+        res.json({
+            success: true,
+            data: groupedPermissions
+        });
+    } catch (error) {
+        console.error('Error fetching permissions:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching permissions'
+        });
+    }
+});
+
+app.put('/api/roles/:roleId/permissions', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { roleId } = req.params;
+        const { permissions } = req.body;
+
+        const role = await roles.findOne({ _id: new ObjectId(roleId) });
+        if (!role) {
+            return res.status(404).json({
+                success: false,
+                message: 'Role not found'
+            });
+        }
+
+        if (role.isSystem) {
+            return res.status(403).json({
+                success: false,
+                message: 'System roles cannot be modified'
+            });
+        }
+
+        await role_permissions.updateOne(
+            { roleId: new ObjectId(roleId) },
+            { 
+                $set: { 
+                    permissions,
+                    updatedAt: new Date(),
+                    updatedBy: new ObjectId(req.user.userId)
+                }
+            },
+            { upsert: true }
+        );
+
+        await createAuditLog(
+            'ROLE_PERMISSIONS_UPDATED',
+            req.user.userId,
+            roleId,
+            {
+                roleName: role.name,
+                permissions
+            }
+        );
+
+        res.json({
+            success: true,
+            message: 'Role permissions updated successfully'
+        });
+    } catch (error) {
+        console.error('Error updating role permissions:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating role permissions'
+        });
+    }
+});
+
+app.post('/api/roles', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { name, description, permissions, isSystem = false } = req.body;
+
+        if (!name) {
+            return res.status(400).json({
+                success: false,
+                message: 'Role name is required'
+            });
+        }
+
+        const existingRole = await roles.findOne({ 
+            name: { $regex: new RegExp(`^${name}$`, 'i') }
+        });
+
+        if (existingRole) {
+            return res.status(400).json({
+                success: false,
+                message: 'Role name already exists'
+            });
+        }
+
+        const role = {
+            name,
+            description,
+            isSystem,
+            createdAt: new Date(),
+            createdBy: new ObjectId(req.user.userId),
+            updatedAt: new Date()
+        };
+
+        const result = await roles.insertOne(role);
+
+        if (permissions && permissions.length > 0) {
+            await role_permissions.insertOne({
+                roleId: result.insertedId,
+                permissions,
+                createdAt: new Date(),
+                createdBy: new ObjectId(req.user.userId)
+            });
+        }
+
+        await createAuditLog(
+            'ROLE_CREATED',
+            req.user.userId,
+            result.insertedId,
+            {
+                roleName: name,
+                permissions
+            }
+        );
+
+        res.status(201).json({
+            success: true,
+            message: 'Role created successfully',
+            data: {
+                _id: result.insertedId,
+                ...role
+            }
+        });
+    } catch (error) {
+        console.error('Error creating role:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error creating role'
+        });
+    }
+});
+
 
 // Helper function to calculate company storage usage
 async function calculateCompanyStorageUsage(companyId) {
