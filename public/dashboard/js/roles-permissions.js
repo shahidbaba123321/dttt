@@ -1,4 +1,4 @@
-// Utility function for debouncing (defined before class to ensure availability)
+// Utility function for debouncing
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -11,9 +11,7 @@ function debounce(func, wait) {
     };
 }
 
-// Main RolesPermissionsManager class
 function RolesPermissionsManager() {
-    // Singleton pattern implementation
     if (RolesPermissionsManager._instance) {
         return RolesPermissionsManager._instance;
     }
@@ -23,11 +21,59 @@ function RolesPermissionsManager() {
     this.baseUrl = 'https://18.215.160.136.nip.io/api';
     this.token = localStorage.getItem('token');
     this.currentRole = null;
-    this.permissions = [];
+    this.permissions = [
+        {
+            key: 'view_users',
+            name: 'View Users',
+            description: 'Can view user list',
+            category: 'User Management'
+        },
+        {
+            key: 'create_users',
+            name: 'Create Users',
+            description: 'Can create new users',
+            category: 'User Management'
+        },
+        {
+            key: 'edit_users',
+            name: 'Edit Users',
+            description: 'Can edit existing users',
+            category: 'User Management'
+        },
+        {
+            key: 'delete_users',
+            name: 'Delete Users',
+            description: 'Can delete users',
+            category: 'User Management'
+        },
+        {
+            key: 'view_roles',
+            name: 'View Roles',
+            description: 'Can view roles',
+            category: 'Role Management'
+        },
+        {
+            key: 'manage_roles',
+            name: 'Manage Roles',
+            description: 'Can create and edit roles',
+            category: 'Role Management'
+        },
+        {
+            key: 'view_settings',
+            name: 'View Settings',
+            description: 'Can view system settings',
+            category: 'System Settings'
+        },
+        {
+            key: 'manage_settings',
+            name: 'Manage Settings',
+            description: 'Can modify system settings',
+            category: 'System Settings'
+        }
+    ];
     this.roles = [];
     this.hasUnsavedChanges = false;
 
-    // Initialize when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => this.initialize());
     } else {
@@ -35,7 +81,8 @@ function RolesPermissionsManager() {
     }
 }
 
-// Static method for getting instance
+RolesPermissionsManager._instance = null;
+
 RolesPermissionsManager.getInstance = function() {
     if (!RolesPermissionsManager._instance) {
         RolesPermissionsManager._instance = new RolesPermissionsManager();
@@ -43,10 +90,6 @@ RolesPermissionsManager.getInstance = function() {
     return RolesPermissionsManager._instance;
 };
 
-// Static property for instance
-RolesPermissionsManager._instance = null;
-
-// Prototype methods
 RolesPermissionsManager.prototype = {
     initialize: function() {
         setTimeout(() => {
@@ -93,7 +136,6 @@ RolesPermissionsManager.prototype = {
     },
 
     initializeEventListeners: function() {
-        // Only add event listeners if elements exist
         if (this.createRoleBtn) {
             this.createRoleBtn.addEventListener('click', () => this.showCreateRoleModal());
         }
@@ -115,7 +157,6 @@ RolesPermissionsManager.prototype = {
             this.savePermissionsBtn.addEventListener('click', () => this.savePermissions());
         }
 
-        // Warn about unsaved changes
         window.addEventListener('beforeunload', (e) => {
             if (this.hasUnsavedChanges) {
                 e.preventDefault();
@@ -139,42 +180,70 @@ RolesPermissionsManager.prototype = {
     async loadRoles() {
         try {
             const response = await fetch(`${this.baseUrl}/roles`, {
+                method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${this.token}`
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
                 }
             });
 
             if (!response.ok) throw new Error('Failed to fetch roles');
 
             const data = await response.json();
-            this.roles = data.roles;
+            this.roles = Array.isArray(data) ? data : (data.roles || []);
+
+            if (!this.roles.find(role => role.name.toLowerCase() === 'superadmin')) {
+                this.roles.unshift({
+                    _id: 'superadmin',
+                    name: 'Superadmin',
+                    description: 'Full system access',
+                    permissions: ['all'],
+                    isSystem: true,
+                    userCount: 1
+                });
+            }
+
             this.renderRoles();
         } catch (error) {
             console.error('Error loading roles:', error);
             this.showError('Failed to load roles');
+            
+            this.roles = [{
+                _id: 'superadmin',
+                name: 'Superadmin',
+                description: 'Full system access',
+                permissions: ['all'],
+                isSystem: true,
+                userCount: 1
+            }];
+            this.renderRoles();
         }
     },
 
     async loadPermissions() {
         try {
             const response = await fetch(`${this.baseUrl}/permissions`, {
+                method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${this.token}`
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
                 }
             });
 
             if (!response.ok) throw new Error('Failed to fetch permissions');
 
             const data = await response.json();
-            this.permissions = data.permissions;
+            if (data && Array.isArray(data.permissions)) {
+                this.permissions = data.permissions;
+            }
         } catch (error) {
             console.error('Error loading permissions:', error);
             this.showError('Failed to load permissions');
+            // Continue using default permissions defined in constructor
         }
     },
 
     renderRoles() {
-        // Keep the superadmin role
         const superadminRole = this.rolesList.querySelector('.superadmin');
         this.rolesList.innerHTML = '';
         if (superadminRole) this.rolesList.appendChild(superadminRole);
@@ -217,24 +286,17 @@ RolesPermissionsManager.prototype = {
         }
 
         try {
-            const response = await fetch(`${this.baseUrl}/roles/${roleId}`, {
-                headers: {
-                    'Authorization': `Bearer ${this.token}`
-                }
-            });
+            const role = this.roles.find(r => r._id === roleId);
+            if (!role) throw new Error('Role not found');
 
-            if (!response.ok) throw new Error('Failed to fetch role details');
-
-            const roleData = await response.json();
-            this.currentRole = roleData;
-            this.renderPermissions(roleData);
+            this.currentRole = role;
+            this.renderPermissions(role);
             
-            // Update UI
             this.rolesList.querySelectorAll('.rp-role-item').forEach(item => {
                 item.classList.toggle('active', item.dataset.roleId === roleId);
             });
             
-            this.savePermissionsBtn.disabled = roleData.name.toLowerCase() === 'superadmin';
+            this.savePermissionsBtn.disabled = role.name.toLowerCase() === 'superadmin';
             this.hasUnsavedChanges = false;
         } catch (error) {
             console.error('Error selecting role:', error);
@@ -350,7 +412,8 @@ RolesPermissionsManager.prototype = {
                 body: JSON.stringify({
                     name: roleName,
                     description,
-                    isDefault
+                    isDefault,
+                    permissions: []
                 })
             });
 
@@ -388,10 +451,12 @@ RolesPermissionsManager.prototype = {
 
     showError(message) {
         console.error(message);
+        // You can implement a more sophisticated error notification system here
     },
 
     showSuccess(message) {
         console.log(message);
+        // You can implement a more sophisticated success notification system here
     },
 
     async showConfirmDialog(message) {
@@ -401,14 +466,12 @@ RolesPermissionsManager.prototype = {
 
 // Initialize the module
 (function() {
-    // On direct script load
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initModule);
     } else {
         initModule();
     }
 
-    // On dynamic content load
     document.addEventListener('contentLoaded', (event) => {
         if (event.detail && event.detail.section === 'roles') {
             initModule();
