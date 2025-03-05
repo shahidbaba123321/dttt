@@ -5,854 +5,805 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WorkWise Pro - Superadmin Dashboard</title>
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="../assets/favicon.png">
-
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+    <!-- Core CSS will be added in the next part -->
     <style>
-        :root {
-            /* Color Variables */
-            --primary-color: #4F46E5;
-            --primary-dark: #4338CA;
-            --primary-light: #818CF8;
-            --secondary-color: #3B82F6;
-            --success-color: #10B981;
-            --warning-color: #F59E0B;
-            --danger-color: #EF4444;
-            --info-color: #3B82F6;
-            
-            /* Background Colors */
-            --bg-primary: #FFFFFF;
-            --bg-secondary: #F9FAFB;
-            --bg-tertiary: #F3F4F6;
-            
-            /* Text Colors */
-            --text-primary: #111827;
-            --text-secondary: #4B5563;
-            --text-tertiary: #9CA3AF;
-            
-            /* Border Colors */
-            --border-light: #E5E7EB;
-            --border-medium: #D1D5DB;
-            
-            /* Shadow Variables */
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            
-            /* Spacing Variables */
-            --spacing-xs: 0.25rem;
-            --spacing-sm: 0.5rem;
-            --spacing-md: 1rem;
-            --spacing-lg: 1.5rem;
-            --spacing-xl: 2rem;
-            
-            /* Sidebar Width */
-            --sidebar-width: 280px;
-            --sidebar-collapsed-width: 70px;
-            
-            /* Header Height */
-            --header-height: 70px;
-            
-            /* Border Radius */
-            --border-radius-sm: 0.375rem;
-            --border-radius-md: 0.5rem;
-            --border-radius-lg: 0.75rem;
-            
-            /* Transition */
-            --transition-speed: 0.3s;
-        }
+       :root {
+    /* Color Variables */
+    --primary-color: #4F46E5;
+    --primary-dark: #4338CA;
+    --primary-light: #818CF8;
+    --secondary-color: #3B82F6;
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+    --danger-color: #EF4444;
+    --info-color: #3B82F6;
+    
+    /* Background Colors */
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F9FAFB;
+    --bg-tertiary: #F3F4F6;
+    
+    /* Text Colors */
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --text-tertiary: #9CA3AF;
+    
+    /* Border Colors */
+    --border-light: #E5E7EB;
+    --border-medium: #D1D5DB;
+    
+    /* Shadow Variables */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    
+    /* Spacing Variables */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    
+    /* Sidebar Width */
+    --sidebar-width: 280px;
+    --sidebar-collapsed-width: 70px;
+    
+    /* Header Height */
+    --header-height: 70px;
+    
+    /* Border Radius */
+    --border-radius-sm: 0.375rem;
+    --border-radius-md: 0.5rem;
+    --border-radius-lg: 0.75rem;
+    
+    /* Transition */
+    --transition-speed: 0.3s;
+}
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-secondary);
-            color: var(--text-primary);
-            line-height: 1.5;
-            overflow-x: hidden;
-        }
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    line-height: 1.5;
+    overflow-x: hidden;
+}
 
-        /* Layout Structure */
-        .dashboard-container {
-            display: flex;
-            min-height: 100vh;
-        }
+/* Layout Structure */
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
 
-        /* Sidebar Styles */
-        .sidebar {
-            width: var(--sidebar-width);
-            background-color: var(--bg-primary);
-            border-right: 1px solid var(--border-light);
-            height: 100vh;
-            position: fixed;
-            left: 0;
-            top: 0;
-            overflow-y: auto;
-            transition: width var(--transition-speed) ease;
-            z-index: 1000;
-            box-shadow: var(--shadow-md);
-        }
+/* Sidebar Styles */
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--bg-primary);
+    border-right: 1px solid var(--border-light);
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    overflow-y: auto;
+    transition: width var(--transition-speed) ease, transform var(--transition-speed) ease;
+    z-index: 1000;
+    box-shadow: var(--shadow-md);
+    will-change: width, transform;
+}
 
-        .sidebar.collapsed {
-            width: var(--sidebar-collapsed-width);
-        }
+.sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
 
-        /* Main Content Area */
-        .main-content {
-            flex: 1;
-            margin-left: var(--sidebar-width);
-            transition: margin-left var(--transition-speed) ease;
-            min-height: 100vh;
-            background-color: var(--bg-secondary);
-        }
+.sidebar-logo {
+    padding: var(--spacing-md) var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-light);
+    height: var(--header-height);
+}
 
-        .main-content.expanded {
-            margin-left: var(--sidebar-collapsed-width);
-        }
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
 
-        /* Header Styles */
-        .header {
-            height: var(--header-height);
-            background-color: var(--bg-primary);
-            border-bottom: 1px solid var(--border-light);
-            position: sticky;
-            top: 0;
-            z-index: 999;
-            display: flex;
-            align-items: center;
-            padding: 0 var(--spacing-xl);
-            justify-content: space-between;
-            box-shadow: var(--shadow-sm);
-        }
+.logo-img {
+    height: 32px;
+    width: auto;
+}
 
-        /* Scrollbar Styles */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
+.logo-text {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    white-space: nowrap;
+}
 
-        ::-webkit-scrollbar-track {
-            background: var(--bg-secondary);
-        }
+.sidebar-toggle {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    transition: all var(--transition-speed) ease;
+}
 
-        ::-webkit-scrollbar-thumb {
-            background: var(--text-tertiary);
-            border-radius: 3px;
-        }
+.sidebar-toggle:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--primary-color);
+}
 
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--text-secondary);
-        }
+.sidebar-nav {
+    padding: var(--spacing-md);
+}
 
-        /* Utility Classes */
-        .hidden {
-            display: none !important;
-        }
+.nav-section {
+    margin-bottom: var(--spacing-lg);
+}
 
-        .flex {
-            display: flex;
-        }
+.nav-section-header {
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--text-tertiary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
 
-        .items-center {
-            align-items: center;
-        }
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: var(--border-radius-md);
+    transition: all var(--transition-speed) ease;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xs);
+}
 
-        .justify-between {
-            justify-content: space-between;
-        }
+.nav-item i {
+    width: 20px;
+    text-align: center;
+    font-size: 1.1rem;
+    transition: margin var(--transition-speed) ease;
+}
 
-        .gap-2 {
-            gap: 0.5rem;
-        }
+.nav-item span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
-        .gap-4 {
-            gap: 1rem;
-        }
+.nav-item:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--primary-color);
+}
 
-        /* Responsive Design */
-        @media (max-width: 1024px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
+.nav-item.active {
+    background-color: var(--primary-color);
+    color: white;
+}
 
-            .sidebar.mobile-visible {
-                transform: translateX(0);
-            }
+/* Main Content Area */
+.main-content {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    transition: margin-left var(--transition-speed) ease;
+    min-height: 100vh;
+    background-color: var(--bg-secondary);
+    will-change: margin-left;
+}
 
-            .main-content {
-                margin-left: 0;
-            }
+.main-content.expanded {
+    margin-left: var(--sidebar-collapsed-width);
+}
 
-            .main-content.expanded {
-                margin-left: 0;
-            }
-        }
+/* Header Styles */
+.header {
+    height: var(--header-height);
+    background-color: var(--bg-primary);
+    border-bottom: 1px solid var(--border-light);
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    padding: 0 var(--spacing-xl);
+    justify-content: space-between;
+    box-shadow: var(--shadow-sm);
+}
 
-        @media (max-width: 768px) {
-            :root {
-                --header-height: 60px;
-            }
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
 
-            .header {
-                padding: 0 var(--spacing-md);
-            }
-        }
+.mobile-sidebar-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    transition: all var(--transition-speed) ease;
+}
 
-        /* Animation Classes */
-        .fade-in {
-            animation: fadeIn 0.3s ease-in-out;
-        }
+.breadcrumb {
+    font-weight: 500;
+    color: var(--text-primary);
+}
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
 
-        .slide-in {
-            animation: slideIn 0.3s ease-in-out;
-        }
+/* Search Box Styles */
+.search-container {
+    position: relative;
+}
 
-        @keyframes slideIn {
-            from { transform: translateX(-20px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
+.search-box {
+    display: flex;
+    align-items: center;
+    background-color: var(--bg-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-sm) var(--spacing-md);
+    width: 300px;
+}
+
+.search-box i {
+    color: var(--text-tertiary);
+    margin-right: var(--spacing-sm);
+}
+
+.search-box input {
+    border: none;
+    background: none;
+    outline: none;
+    width: 100%;
+    color: var(--text-primary);
+}
+
+.search-box input::placeholder {
+    color: var(--text-tertiary);
+}
+
+/* Quick Actions Styles */
+.quick-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.action-button {
+    position: relative;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+}
+
+.action-button:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--primary-color);
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: var(--danger-color);
+    color: white;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+}
+
+/* User Profile Styles */
+.user-profile {
+    position: relative;
+    cursor: pointer;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-lg);
+    transition: all var(--transition-speed) ease;
+}
+
+.user-info:hover {
+    background-color: var(--bg-tertiary);
+}
+
+.avatar-container {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all var(--transition-speed) ease;
+}
+
+.avatar-container.large {
+    width: 48px;
+    height: 48px;
+    font-size: 1.125rem;
+}
+
+.avatar-initials {
+    line-height: 1;
+    user-select: none;
+}
+
+.user-details {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .user-details {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+    }
+}
+
+.user-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.user-role {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+}
+
+/* Dropdown Menu Styles */
+.user-dropdown {
+    position: absolute;
+    top: calc(100% + var(--spacing-sm));
+    right: 0;
+    background-color: var(--bg-primary);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    width: 280px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all var(--transition-speed) ease;
+    z-index: 1000;
+}
+
+.user-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-header {
+    padding: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.dropdown-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.dropdown-user-info {
+    flex: 1;
+}
+
+.dropdown-user-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    display: block;
+}
+
+.dropdown-user-email {
+    font-size: 0.875rem;
+    color: var(--text-tertiary);
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: var(--border-light);
+    margin: var(--spacing-xs) 0;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all var(--transition-speed) ease;
+}
+
+.dropdown-item:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--primary-color);
+}
+
+.dropdown-item i {
+    width: 20px;
+    text-align: center;
+}
+
+/* Collapsed Sidebar Styles */
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed .nav-section-header,
+.sidebar.collapsed .nav-item span {
+    display: none;
+}
+
+.sidebar.collapsed .nav-item {
+    padding: var(--spacing-sm);
+    justify-content: center;
+}
+
+.sidebar.collapsed .nav-item i {
+    margin: 0;
+}
+
+/* Tooltip for Collapsed Sidebar */
+.sidebar.collapsed .nav-item {
+    position: relative;
+}
+
+.sidebar.collapsed .nav-item:hover::after {
+    content: attr(data-title);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    box-shadow: var(--shadow-md);
+    white-space: nowrap;
+    z-index: 1000;
+    margin-left: var(--spacing-sm);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.mobile-visible {
+        transform: translateX(0);
+    }
+
+    .mobile-sidebar-toggle {
+        display: block;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .main-content.expanded {
+        margin-left: 0;
+    }
+
+    .search-box {
+        width: 200px;
+    }
+}
+
+@media (max-width: 768px) {
+    :root {
+        --header-height: 60px;
+    }
+
+    .header {
+        padding: 0 var(--spacing-md);
+    }
+
+    .search-container {
+        display: none;
+    }
+
+    .user-info .fa-chevron-down {
+        display: none;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes pulseAvatar {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-in-out;
+}
+
+.avatar-container:hover {
+    animation: pulseAvatar 0.3s ease;
+}
+
+/* Scrollbar Styles */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--text-tertiary);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
     </style>
 </head>
 <body>
     <div class="dashboard-container">
-     <!-- Sidebar -->
-<aside class="sidebar" id="sidebar">
-    <!-- Logo Section -->
-    <div class="sidebar-logo">
-        <div class="logo-container">
-            <img src="../assets/logo.png" alt="WorkWise Pro" class="logo-img">
-            <span class="logo-text">WorkWise Pro</span>
-        </div>
-        <button id="sidebarToggle" class="sidebar-toggle">
-            <i class="fas fa-bars"></i>
-        </button>
-    </div>
-
-    <!-- Navigation Menu -->
-    <nav class="sidebar-nav">
-        <div class="nav-section">
-            <a href="#" class="nav-item active" data-section="dashboard">
-                <i class="fas fa-th-large"></i>
-                <span>Dashboard Overview</span>
-            </a>
-        </div>
-
-        <div class="nav-section">
-            <div class="nav-section-header">
-                <span>Companies/Organizations</span>
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <!-- Logo Section -->
+            <div class="sidebar-logo">
+                <div class="logo-container">
+                    <img src="../assets/logo.png" alt="WorkWise Pro" class="logo-img">
+                    <span class="logo-text">WorkWise Pro</span>
+                </div>
+                <button id="sidebarToggle" class="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
             </div>
-            <a href="#" class="nav-item" data-section="companies">
-                <i class="fas fa-building"></i>
-                <span>Management</span>
-            </a>
-        </div>
 
-        <div class="nav-section">
-            <div class="nav-section-header">
-                <span>System Settings</span>
-            </div>
-            <a href="#" class="nav-item" data-section="general-settings">
-                <i class="fas fa-cog"></i>
-                <span>General Settings</span>
-            </a>
-            <a href="#" class="nav-item" data-section="pricing">
-                <i class="fas fa-tags"></i>
-                <span>Pricing & Plans</span>
-            </a>
-            <a href="#" class="nav-item" data-section="security">
-                <i class="fas fa-shield-alt"></i>
-                <span>Security Settings</span>
-            </a>
-        </div>
+            <!-- Navigation Menu -->
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <a href="#" class="nav-item active" data-section="dashboard">
+                        <i class="fas fa-th-large"></i>
+                        <span>Dashboard Overview</span>
+                    </a>
+                </div>
 
-        <div class="nav-section">
-            <div class="nav-section-header">
-                <span>Modules Management</span>
-            </div>
-            <a href="#" class="nav-item" data-section="modules">
-                <i class="fas fa-cube"></i>
-                <span>Modules List</span>
-            </a>
-            <a href="#" class="nav-item" data-section="module-settings">
-                <i class="fas fa-sliders-h"></i>
-                <span>Module Settings</span>
-            </a>
-        </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">
+                        <span>Companies/Organizations</span>
+                    </div>
+                    <a href="#" class="nav-item" data-section="companies">
+                        <i class="fas fa-building"></i>
+                        <span>Management</span>
+                    </a>
+                </div>
 
-        <div class="nav-section">
-            <div class="nav-section-header">
-                <span>User Management</span>
-            </div>
-            <a href="#" class="nav-item" data-section="users">
-                <i class="fas fa-users"></i>
-                <span>Users List</span>
-            </a>
-            <a href="#" class="nav-item" data-section="roles">
-                <i class="fas fa-user-shield"></i>
-                <span>Roles & Permissions</span>
-            </a>
-            <a href="#" class="nav-item" data-section="org-chart">
-                <i class="fas fa-sitemap"></i>
-                <span>Organization Chart</span>
-            </a>
-        </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">
+                        <span>System Settings</span>
+                    </div>
+                    <a href="#" class="nav-item" data-section="general-settings">
+                        <i class="fas fa-cog"></i>
+                        <span>General Settings</span>
+                    </a>
+                    <a href="#" class="nav-item" data-section="pricing">
+                        <i class="fas fa-tags"></i>
+                        <span>Pricing & Plans</span>
+                    </a>
+                    <a href="#" class="nav-item" data-section="security">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Security Settings</span>
+                    </a>
+                </div>
 
-        <div class="nav-section">
-            <div class="nav-section-header">
-                <span>Tools</span>
-            </div>
-            <a href="#" class="nav-item" data-section="analytics">
-                <i class="fas fa-chart-line"></i>
-                <span>Analytics & Reports</span>
-            </a>
-            <a href="#" class="nav-item" data-section="backup">
-                <i class="fas fa-database"></i>
-                <span>Backup & Restore</span>
-            </a>
-            <a href="#" class="nav-item" data-section="audit">
-                <i class="fas fa-history"></i>
-                <span>Audit Logs</span>
-            </a>
-            <a href="#" class="nav-item" data-section="api">
-                <i class="fas fa-code"></i>
-                <span>API Management</span>
-            </a>
-        </div>
+                <div class="nav-section">
+                    <div class="nav-section-header">
+                        <span>Modules Management</span>
+                    </div>
+                    <a href="#" class="nav-item" data-section="modules">
+                        <i class="fas fa-cube"></i>
+                        <span>Modules List</span>
+                    </a>
+                    <a href="#" class="nav-item" data-section="module-settings">
+                        <i class="fas fa-sliders-h"></i>
+                        <span>Module Settings</span>
+                    </a>
+                </div>
 
-        <div class="nav-section">
-            <div class="nav-section-header">
-                <span>Support</span>
-            </div>
-            <a href="#" class="nav-item" data-section="support">
-                <i class="fas fa-headset"></i>
-                <span>Support Center</span>
-            </a>
-        </div>
-    </nav>
-</aside>
+                <div class="nav-section">
+                    <div class="nav-section-header">
+                        <span>User Management</span>
+                    </div>
+                    <a href="#" class="nav-item" data-section="users">
+                        <i class="fas fa-users"></i>
+                        <span>Users List</span>
+                    </a>
+                    <a href="#" class="nav-item" data-section="roles">
+                        <i class="fas fa-user-shield"></i>
+                        <span>Roles & Permissions</span>
+                    </a>
+                    <a href="#" class="nav-item" data-section="org-chart">
+                        <i class="fas fa-sitemap"></i>
+                        <span>Organization Chart</span>
+                    </a>
+                </div>
 
+                <div class="nav-section">
+                    <div class="nav-section-header">
+                        <span>Tools</span>
+                    </div>
+                    <a href="#" class="nav-item" data-section="analytics">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Analytics & Reports</span>
+                    </a>
+                    <a href="#" class="nav-item" data-section="backup">
+                        <i class="fas fa-database"></i>
+                        <span>Backup & Restore</span>
+                    </a>
+                    <a href="#" class="nav-item" data-section="audit">
+                        <i class="fas fa-history"></i>
+                        <span>Audit Logs</span>
+                    </a>
+                    <a href="#" class="nav-item" data-section="api">
+                        <i class="fas fa-code"></i>
+                        <span>API Management</span>
+                    </a>
+                </div>
 
-        
+                <div class="nav-section">
+                    <div class="nav-section-header">
+                        <span>Support</span>
+                    </div>
+                    <a href="#" class="nav-item" data-section="support">
+                        <i class="fas fa-headset"></i>
+                        <span>Support Center</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
         <!-- Main Content Area -->
         <main class="main-content">
-           <!-- Header -->
-<header class="header">
-    <div class="header-left">
-        <button id="mobileSidebarToggle" class="mobile-sidebar-toggle">
-            <i class="fas fa-bars"></i>
-        </button>
-        <div class="breadcrumb">
-            <span class="current-page">Dashboard Overview</span>
-        </div>
-    </div>
-
-    <div class="header-right">
-        <!-- Search Bar -->
-        <div class="search-container">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search...">
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="quick-actions">
-            <button class="action-button" data-tooltip="Notifications">
-                <i class="fas fa-bell"></i>
-                <span class="notification-badge">3</span>
-            </button>
-            <button class="action-button" data-tooltip="Messages">
-                <i class="fas fa-envelope"></i>
-                <span class="notification-badge">5</span>
-            </button>
-        </div>
-
-        <!-- User Profile -->
-        <div class="user-profile" id="userProfileDropdown">
-            <div class="user-info">
-                <img src="../assets/default-avatar.png" alt="User Avatar" class="user-avatar">
-                <div class="user-details">
-                    <span class="user-name">John Doe</span>
-                    <span class="user-role">Superadmin</span>
-                </div>
-                <i class="fas fa-chevron-down"></i>
-            </div>
-
-            <!-- User Dropdown Menu -->
-            <div class="user-dropdown" id="userDropdown">
-                <div class="dropdown-header">
-                    <img src="../assets/default-avatar.png" alt="User Avatar" class="dropdown-avatar">
-                    <div class="dropdown-user-info">
-                        <span class="dropdown-user-name">John Doe</span>
-                        <span class="dropdown-user-email">john.doe@example.com</span>
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button id="mobileSidebarToggle" class="mobile-sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="breadcrumb">
+                        <span class="current-page">Dashboard Overview</span>
                     </div>
                 </div>
-                <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item">
-                    <i class="fas fa-user"></i>
-                    <span>My Profile</span>
-                </a>
-                <a href="#" class="dropdown-item">
-                    <i class="fas fa-cog"></i>
-                    <span>Account Settings</span>
-                </a>
-                <a href="#" class="dropdown-item">
-                    <i class="fas fa-lock"></i>
-                    <span>Security</span>
-                </a>
-                <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item" id="logoutButton">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Sign Out</span>
-                </a>
+
+                <div class="header-right">
+                    <!-- Search Bar -->
+                    <div class="search-container">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Search...">
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <button class="action-button" data-tooltip="Notifications">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge">3</span>
+                        </button>
+                        <button class="action-button" data-tooltip="Messages">
+                            <i class="fas fa-envelope"></i>
+                            <span class="notification-badge">5</span>
+                        </button>
+                    </div>
+
+                    <!-- User Profile -->
+                    <div class="user-profile" id="userProfileDropdown">
+                        <div class="user-info">
+                            <div class="avatar-container">
+                                <!-- Initials will be inserted here by JavaScript -->
+                            </div>
+                            <div class="user-details">
+                                <span class="user-name"></span>
+                                <span class="user-role"></span>
+                            </div>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+
+                        <!-- User Dropdown Menu -->
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="dropdown-header">
+                                <div class="avatar-container large">
+                                    <!-- Initials will be inserted here by JavaScript -->
+                                </div>
+                                <div class="dropdown-user-info">
+                                    <span class="dropdown-user-name"></span>
+                                    <span class="dropdown-user-email"></span>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-user"></i>
+                                <span>My Profile</span>
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                <span>Account Settings</span>
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-lock"></i>
+                                <span>Security</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" class="dropdown-item" id="logoutButton">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Sign Out</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Dashboard Content -->
+            <div class="dashboard-content">
+                <!-- Content will be dynamically loaded here -->
             </div>
-        </div>
-    </div>
-</header>
-
-
         </main>
     </div>
-    <!-- Add this additional CSS to your existing style section -->
-<style>
-    /* Header Styles */
-    .header-left {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-lg);
-    }
 
-    .mobile-sidebar-toggle {
-        display: none;
-        background: none;
-        border: none;
-        color: var(--text-secondary);
-        cursor: pointer;
-        padding: var(--spacing-sm);
-        border-radius: var(--border-radius-sm);
-        transition: all var(--transition-speed) ease;
-    }
-
-    .breadcrumb {
-        font-weight: 500;
-        color: var(--text-primary);
-    }
-
-    .header-right {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-lg);
-    }
-
-    /* Search Box Styles */
-    .search-container {
-        position: relative;
-    }
-
-    .search-box {
-        display: flex;
-        align-items: center;
-        background-color: var(--bg-tertiary);
-        border-radius: var(--border-radius-lg);
-        padding: var(--spacing-sm) var(--spacing-md);
-        width: 300px;
-    }
-
-    .search-box i {
-        color: var(--text-tertiary);
-        margin-right: var(--spacing-sm);
-    }
-
-    .search-box input {
-        border: none;
-        background: none;
-        outline: none;
-        width: 100%;
-        color: var(--text-primary);
-    }
-
-    .search-box input::placeholder {
-        color: var(--text-tertiary);
-    }
-
-    /* Quick Actions Styles */
-    .quick-actions {
-        display: flex;
-        gap: var(--spacing-sm);
-    }
-
-    .action-button {
-        position: relative;
-        background: none;
-        border: none;
-        color: var(--text-secondary);
-        padding: var(--spacing-sm);
-        border-radius: var(--border-radius-sm);
-        cursor: pointer;
-        transition: all var(--transition-speed) ease;
-    }
-
-    .action-button:hover {
-        background-color: var(--bg-tertiary);
-        color: var(--primary-color);
-    }
-
-    .notification-badge {
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        background-color: var(--danger-color);
-        color: white;
-        font-size: 0.75rem;
-        padding: 2px 6px;
-        border-radius: 10px;
-        min-width: 18px;
-    }
-
-    /* User Profile Styles */
-    .user-profile {
-        position: relative;
-        cursor: pointer;
-    }
-
-    .user-info {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-sm);
-        padding: var(--spacing-sm) var(--spacing-md);
-        border-radius: var(--border-radius-lg);
-        transition: all var(--transition-speed) ease;
-    }
-
-    .user-info:hover {
-        background-color: var(--bg-tertiary);
-    }
-
-    .user-avatar {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-
-    .user-details {
-        display: none;
-    }
-
-    @media (min-width: 768px) {
-        .user-details {
-            display: flex;
-            flex-direction: column;
-            line-height: 1.2;
-        }
-    }
-
-    .user-name {
-        font-weight: 500;
-        color: var(--text-primary);
-    }
-
-    .user-role {
-        font-size: 0.75rem;
-        color: var(--text-tertiary);
-    }
-
-    /* Dropdown Menu Styles */
-    .user-dropdown {
-        position: absolute;
-        top: calc(100% + var(--spacing-sm));
-        right: 0;
-        background-color: var(--bg-primary);
-        border-radius: var(--border-radius-lg);
-        box-shadow: var(--shadow-lg);
-        width: 280px;
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(-10px);
-        transition: all var(--transition-speed) ease;
-        z-index: 1000;
-    }
-
-    .user-dropdown.show {
-        opacity: 1;
-        visibility: visible;
-        transform: translateY(0);
-    }
-
-    .dropdown-header {
-        padding: var(--spacing-md);
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-md);
-    }
-
-    .dropdown-avatar {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-
-    .dropdown-user-info {
-        flex: 1;
-    }
-
-    .dropdown-user-name {
-        font-weight: 500;
-        color: var(--text-primary);
-        display: block;
-    }
-
-    .dropdown-user-email {
-        font-size: 0.875rem;
-        color: var(--text-tertiary);
-    }
-
-    .dropdown-divider {
-        height: 1px;
-        background-color: var(--border-light);
-        margin: var(--spacing-xs) 0;
-    }
-
-    .dropdown-item {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-md);
-        padding: var(--spacing-sm) var(--spacing-md);
-        color: var(--text-secondary);
-        text-decoration: none;
-        transition: all var(--transition-speed) ease;
-    }
-
-    .dropdown-item:hover {
-        background-color: var(--bg-tertiary);
-        color: var(--primary-color);
-    }
-
-    .dropdown-item i {
-        width: 20px;
-        text-align: center;
-    }
-
-    /* Mobile Responsive Adjustments */
-    @media (max-width: 1024px) {
-        .mobile-sidebar-toggle {
-            display: block;
-        }
-
-        .search-box {
-            width: 200px;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .search-container {
-            display: none;
-        }
-
-        .user-info .fa-chevron-down {
-            display: none;
-        }
-    }
-
-    /* Tooltip Styles */
-    [data-tooltip] {
-        position: relative;
-    }
-
-    [data-tooltip]:hover::before {
-        content: attr(data-tooltip);
-        position: absolute;
-        bottom: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: var(--text-primary);
-        color: white;
-        padding: var(--spacing-xs) var(--spacing-sm);
-        border-radius: var(--border-radius-sm);
-        font-size: 0.75rem;
-        white-space: nowrap;
-        margin-bottom: var(--spacing-xs);
-    }
-</style>
-<!-- Add this additional CSS to your existing style section -->
-<style>
-    /* Sidebar Styles */
-    .sidebar-logo {
-        padding: var(--spacing-md) var(--spacing-lg);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border-bottom: 1px solid var(--border-light);
-        height: var(--header-height);
-    }
-
-    .logo-container {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-md);
-    }
-
-    .logo-img {
-        height: 32px;
-        width: auto;
-    }
-
-    .logo-text {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: var(--primary-color);
-        white-space: nowrap;
-    }
-
-    .sidebar-toggle {
-        background: none;
-        border: none;
-        color: var(--text-secondary);
-        cursor: pointer;
-        padding: var(--spacing-sm);
-        border-radius: var(--border-radius-sm);
-        transition: all var(--transition-speed) ease;
-    }
-
-    .sidebar-toggle:hover {
-        background-color: var(--bg-tertiary);
-        color: var(--primary-color);
-    }
-
-    .sidebar-nav {
-        padding: var(--spacing-md);
-    }
-
-    .nav-section {
-        margin-bottom: var(--spacing-lg);
-    }
-
-    .nav-section-header {
-        padding: var(--spacing-sm) var(--spacing-md);
-        color: var(--text-tertiary);
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        font-weight: 600;
-    }
-
-    .nav-item {
-        display: flex;
-        align-items: center;
-        padding: var(--spacing-sm) var(--spacing-md);
-        color: var(--text-secondary);
-        text-decoration: none;
-        border-radius: var(--border-radius-md);
-        transition: all var(--transition-speed) ease;
-        gap: var(--spacing-md);
-        margin-bottom: var(--spacing-xs);
-    }
-
-    .nav-item i {
-        width: 20px;
-        text-align: center;
-        font-size: 1.1rem;
-    }
-
-    .nav-item span {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .nav-item:hover {
-        background-color: var(--bg-tertiary);
-        color: var(--primary-color);
-    }
-
-    .nav-item.active {
-        background-color: var(--primary-color);
-        color: white;
-    }
-
-    /* Collapsed Sidebar Styles */
-    .sidebar.collapsed .logo-text,
-    .sidebar.collapsed .nav-section-header,
-    .sidebar.collapsed .nav-item span {
-        display: none;
-    }
-
-    .sidebar.collapsed .nav-item {
-        padding: var(--spacing-sm);
-        justify-content: center;
-    }
-
-    .sidebar.collapsed .nav-item i {
-        margin: 0;
-    }
-
-    /* Tooltip for Collapsed Sidebar */
-    .sidebar.collapsed .nav-item {
-        position: relative;
-    }
-
-    .sidebar.collapsed .nav-item:hover::after {
-        content: attr(data-title);
-        position: absolute;
-        left: 100%;
-        top: 50%;
-        transform: translateY(-50%);
-        background-color: var(--bg-primary);
-        color: var(--text-primary);
-        padding: var(--spacing-sm) var(--spacing-md);
-        border-radius: var(--border-radius-sm);
-        box-shadow: var(--shadow-md);
-        white-space: nowrap;
-        z-index: 1000;
-        margin-left: var(--spacing-sm);
-    }
-
-    /* Mobile Responsive Adjustments */
-    @media (max-width: 1024px) {
-        .sidebar {
-            position: fixed;
-            left: -100%;
-            transition: left var(--transition-speed) ease;
-        }
-
-        .sidebar.mobile-visible {
-            left: 0;
-        }
-
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 999;
-        }
-
-        .sidebar-overlay.visible {
-            display: block;
-        }
-    }
-</style>
     <script>
 // User Session Management
 class UserSession {
@@ -906,15 +857,57 @@ class UserSession {
         }
     }
 
+    generateInitialsAvatar(name, email) {
+        // Get initials from name or email
+        let initials;
+        if (name && name.trim()) {
+            initials = name
+                .trim()
+                .split(' ')
+                .map(word => word[0])
+                .join('')
+                .toUpperCase()
+                .slice(0, 2);
+        } else {
+            // Use email if name is not available
+            initials = email
+                .split('@')[0]
+                .slice(0, 2)
+                .toUpperCase();
+        }
+
+        // Generate background color based on initials
+        const hue = this.getHueFromString(initials);
+        const backgroundColor = `hsl(${hue}, 60%, 45%)`;
+
+        return {
+            initials,
+            backgroundColor
+        };
+    }
+
+    getHueFromString(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return hash % 360;
+    }
+
     updateUIWithUserData() {
-        // Update header user info
+        const userName = this.userData.name || this.userData.email.split('@')[0];
+        const { initials, backgroundColor } = this.generateInitialsAvatar(
+            this.userData.name, 
+            this.userData.email
+        );
+
+        // Update user name and role
         const userNameElements = document.querySelectorAll('.user-name, .dropdown-user-name');
         const userRoleElements = document.querySelectorAll('.user-role');
         const userEmailElements = document.querySelectorAll('.dropdown-user-email');
-        const userAvatarElements = document.querySelectorAll('.user-avatar, .dropdown-avatar');
 
         userNameElements.forEach(element => {
-            element.textContent = this.userData.name || this.userData.email.split('@')[0];
+            element.textContent = userName;
         });
 
         userRoleElements.forEach(element => {
@@ -925,15 +918,12 @@ class UserSession {
             element.textContent = this.userData.email;
         });
 
-        // Update avatar if available
-        if (this.userData.avatar) {
-            userAvatarElements.forEach(element => {
-                element.src = this.userData.avatar;
-                element.onerror = () => {
-                    element.src = '../assets/default-avatar.png';
-                };
-            });
-        }
+        // Update avatar containers
+        const avatarContainers = document.querySelectorAll('.avatar-container');
+        avatarContainers.forEach(container => {
+            container.style.backgroundColor = backgroundColor;
+            container.innerHTML = `<span class="avatar-initials">${initials}</span>`;
+        });
     }
 
     capitalizeFirstLetter(string) {
@@ -959,15 +949,158 @@ class UserSession {
                 throw new Error('Logout failed');
             }
 
-            // Clear local storage and redirect
             localStorage.clear();
             window.location.href = '/login.html';
 
         } catch (error) {
             console.error('Error during logout:', error);
-            // Fallback logout
             localStorage.clear();
             window.location.href = '/login.html';
+        }
+    }
+}
+
+// Sidebar Management
+class SidebarManager {
+    constructor() {
+        this.sidebar = document.getElementById('sidebar');
+        this.mainContent = document.querySelector('.main-content');
+        this.sidebarToggle = document.getElementById('sidebarToggle');
+        this.mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
+        this.isMobile = window.innerWidth <= 1024;
+        
+        this.initializeSidebar();
+    }
+
+    initializeSidebar() {
+        // Load saved state
+        const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (sidebarCollapsed && !this.isMobile) {
+            this.sidebar.classList.add('collapsed');
+            this.mainContent.classList.add('expanded');
+        }
+
+        this.initializeEventListeners();
+        this.initializeResponsiveHandling();
+        this.initializeNavigation();
+    }
+
+    initializeEventListeners() {
+        // Desktop sidebar toggle
+        this.sidebarToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleSidebar();
+        });
+
+        // Mobile sidebar toggle
+        this.mobileSidebarToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleMobileSidebar();
+        });
+
+        // Close mobile sidebar when clicking outside
+        document.addEventListener('click', (e) => {
+            if (this.isMobile && this.sidebar.classList.contains('mobile-visible')) {
+                const isClickInside = this.sidebar.contains(e.target) || 
+                                    this.mobileSidebarToggle.contains(e.target);
+                if (!isClickInside) {
+                    this.closeMobileSidebar();
+                }
+            }
+        });
+
+        // Handle escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isMobile && 
+                this.sidebar.classList.contains('mobile-visible')) {
+                this.closeMobileSidebar();
+            }
+        });
+    }
+
+    initializeResponsiveHandling() {
+        window.addEventListener('resize', () => {
+            const wasNotMobile = !this.isMobile;
+            this.isMobile = window.innerWidth <= 1024;
+
+            if (this.isMobile && wasNotMobile) {
+                this.sidebar.classList.remove('collapsed');
+                this.mainContent.classList.remove('expanded');
+                this.closeMobileSidebar();
+            } else if (!this.isMobile) {
+                this.sidebar.classList.remove('mobile-visible');
+                this.removeOverlay();
+                
+                const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+                if (sidebarCollapsed) {
+                    this.sidebar.classList.add('collapsed');
+                    this.mainContent.classList.add('expanded');
+                }
+            }
+        });
+    }
+
+    initializeNavigation() {
+        const navItems = this.sidebar.querySelectorAll('.nav-item');
+        
+        navItems.forEach(item => {
+            const textContent = item.querySelector('span').textContent;
+            item.setAttribute('data-title', textContent);
+
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                navItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+
+                const breadcrumb = document.querySelector('.breadcrumb .current-page');
+                breadcrumb.textContent = textContent;
+
+                if (this.isMobile) {
+                    this.closeMobileSidebar();
+                }
+            });
+        });
+    }
+
+    toggleSidebar() {
+        if (!this.isMobile) {
+            this.sidebar.classList.toggle('collapsed');
+            this.mainContent.classList.toggle('expanded');
+            
+            localStorage.setItem('sidebarCollapsed', this.sidebar.classList.contains('collapsed'));
+            window.dispatchEvent(new Event('resize'));
+        }
+    }
+
+    toggleMobileSidebar() {
+        if (this.isMobile) {
+            this.sidebar.classList.toggle('mobile-visible');
+            this.toggleOverlay();
+        }
+    }
+
+    closeMobileSidebar() {
+        if (this.isMobile) {
+            this.sidebar.classList.remove('mobile-visible');
+            this.removeOverlay();
+        }
+    }
+
+    toggleOverlay() {
+        let overlay = document.querySelector('.sidebar-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'sidebar-overlay';
+            document.body.appendChild(overlay);
+        }
+        overlay.classList.toggle('visible');
+        overlay.addEventListener('click', () => this.closeMobileSidebar());
+    }
+
+    removeOverlay() {
+        const overlay = document.querySelector('.sidebar-overlay');
+        if (overlay) {
+            overlay.remove();
         }
     }
 }
@@ -1001,7 +1134,6 @@ class UserInterface {
             this.userSession.logout();
         });
 
-        // Session timeout handling
         this.initializeSessionTimeout();
     }
 
@@ -1014,19 +1146,18 @@ class UserInterface {
             }, 30 * 60 * 1000); // 30 minutes
         };
 
-        // Reset timeout on user activity
         ['click', 'mousemove', 'keypress'].forEach(event => {
             document.addEventListener(event, resetTimeout);
         });
 
-        // Initial timeout set
         resetTimeout();
     }
 }
 
-// Initialize user session and UI
+// Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
     const userSession = new UserSession();
+    const sidebarManager = new SidebarManager();
     const userInterface = new UserInterface(userSession);
 });
 </script>
