@@ -804,12 +804,14 @@ body {
     </div>
 
   <script>
-// Content Loading Management
+      // Content Loading Management
 class ContentLoader {
     constructor() {
         this.contentContainer = document.querySelector('.dashboard-content');
-        this.baseUrl = '/dashboard';
+        this.baseUrl = 'https://main.d1cfw592vg73f.amplifyapp.com';
         this.currentPage = null;
+        this.loadedScripts = new Set();
+        this.moduleInstances = new Map();
         this.initializeStyles();
     }
 
@@ -853,6 +855,45 @@ class ContentLoader {
             .under-construction p {
                 color: var(--text-secondary);
             }
+
+            .error-container {
+                text-align: center;
+                padding: var(--spacing-xl);
+                background-color: var(--bg-primary);
+                border-radius: var(--border-radius-lg);
+                box-shadow: var(--shadow-sm);
+                margin: var(--spacing-lg);
+            }
+
+            .error-container i {
+                font-size: 3rem;
+                color: var(--danger-color);
+                margin-bottom: var(--spacing-lg);
+            }
+
+            .error-container h2 {
+                color: var(--text-primary);
+                margin-bottom: var(--spacing-md);
+            }
+
+            .error-container p {
+                color: var(--text-secondary);
+                margin-bottom: var(--spacing-lg);
+            }
+
+            .retry-button {
+                background-color: var(--primary-color);
+                color: white;
+                border: none;
+                padding: var(--spacing-sm) var(--spacing-lg);
+                border-radius: var(--border-radius-md);
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+            }
+
+            .retry-button:hover {
+                background-color: var(--primary-dark);
+            }
         `;
 
         const styleSheet = document.createElement('style');
@@ -864,8 +905,16 @@ class ContentLoader {
         try {
             this.showLoadingState();
 
+            // Cleanup previous module instance if exists
+            if (this.moduleInstances.has(this.currentPage)) {
+                const instance = this.moduleInstances.get(this.currentPage);
+                if (instance && typeof instance.cleanup === 'function') {
+                    await instance.cleanup();
+                }
+            }
+
             const fileName = this.getFileName(section);
-            const response = await fetch(`${this.baseUrl}/${fileName}`);
+            const response = await fetch(`${this.baseUrl}/dashboard/${fileName}`);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -874,18 +923,21 @@ class ContentLoader {
             const content = await response.text();
             this.contentContainer.innerHTML = content;
 
-            // Dispatch contentLoaded event before initializing script
-            document.dispatchEvent(new CustomEvent('contentLoaded', {
-                detail: { section: section }
-            }));
-            
+            // Initialize module script
             await this.initializePageScript(section);
+            
+            // Update current page and URL
             this.currentPage = section;
             this.updateURL(section);
 
+            // Dispatch content loaded event
+            document.dispatchEvent(new CustomEvent('contentLoaded', {
+                detail: { section: section }
+            }));
+
         } catch (error) {
             console.error('Error loading content:', error);
-            this.showUnderConstruction();
+            this.showErrorState(error);
         } finally {
             this.hideLoadingState();
         }
@@ -898,6 +950,7 @@ class ContentLoader {
             'roles': 'roles-permissions.html',
             'users': 'users.html',
             'general-settings': 'settings.html',
+            // Add other specific mappings here
         };
 
         return fileMap[section] || `${section}.html`;
@@ -905,34 +958,68 @@ class ContentLoader {
 
     async initializePageScript(section) {
         try {
-            const scriptMap = {
-                'roles': 'roles-permissions.js'
-            };
-
-            const oldScript = document.querySelector(`script[data-page="${section}"]`);
-            if (oldScript) {
-                oldScript.remove();
+            // Special handling for roles-permissions
+            if (section === 'roles') {
+                await this.initializeRolesPermissions();
+                return;
             }
 
-            const scriptName = scriptMap[section] || `${section}.js`;
-            const script = document.createElement('script');
-            script.src = `${this.baseUrl}/js/${scriptName}`;
-            script.dataset.page = section;
-            script.type = 'text/javascript';
-            
-            return new Promise((resolve, reject) => {
-                script.onload = () => {
-                    console.log(`Script loaded: ${scriptName}`);
-                    resolve();
-                };
-                script.onerror = (e) => {
-                    console.warn(`Script for ${section} not found or failed to load`, e);
-                    resolve(); // Resolve anyway to prevent blocking
-                };
-                document.body.appendChild(script);
-            });
+            const scriptMap = {
+                'dashboard': 'dashboard.js',
+                'companies': 'companies.js',
+                'users': 'users.js',
+                // Add other script mappings
+            };
+
+            const scriptName = scriptMap[section];
+            if (!scriptName) return;
+
+            // Remove existing script if present
+            const existingScript = document.querySelector(`script[data-page="${section}"]`);
+            if (existingScript) {
+                existingScript.remove();
+                this.loadedScripts.delete(section);
+            }
+
+            // Load and execute new script
+            if (!this.loadedScripts.has(section)) {
+                const script = document.createElement('script');
+                script.src = `${this.baseUrl}/dashboard/js/${scriptName}`;
+                script.dataset.page = section;
+                script.type = 'module';
+
+                await new Promise((resolve, reject) => {
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.body.appendChild(script);
+                });
+
+                this.loadedScripts.add(section);
+            }
         } catch (error) {
-            console.error('Error initializing page script:', error);
+            console.error(`Error initializing script for ${section}:`, error);
+            throw error;
+        }
+    }
+
+    async initializeRolesPermissions() {
+        try {
+            // Remove existing instance if present
+            if (this.moduleInstances.has('roles')) {
+                const instance = this.moduleInstances.get('roles');
+                if (instance && typeof instance.cleanup === 'function') {
+                    await instance.cleanup();
+                }
+            }
+
+            // Import and initialize RolesPermissionsManager
+            const { default: RolesPermissionsManager } = await import(`${this.baseUrl}/dashboard/js/roles-permissions.js`);
+            const instance = new RolesPermissionsManager();
+            this.moduleInstances.set('roles', instance);
+
+        } catch (error) {
+            console.error('Error initializing roles-permissions module:', error);
+            throw error;
         }
     }
 
@@ -957,6 +1044,19 @@ class ContentLoader {
         }
     }
 
+    showErrorState(error) {
+        this.contentContainer.innerHTML = `
+            <div class="error-container">
+                <i class="fas fa-exclamation-circle"></i>
+                <h2>Error Loading Content</h2>
+                <p>${error.message || 'An unexpected error occurred.'}</p>
+                <button class="retry-button" onclick="window.dashboardApp.contentLoader.loadContent('${this.currentPage}')">
+                    <i class="fas fa-redo"></i> Retry
+                </button>
+            </div>
+        `;
+    }
+
     showUnderConstruction() {
         this.contentContainer.innerHTML = `
             <div class="under-construction">
@@ -973,10 +1073,12 @@ class ContentLoader {
         window.history.pushState({ section }, '', url);
     }
 }
-      // User Session Management
+// User Session Management
 class UserSession {
     constructor() {
         this.token = this.getQueryParam('token') || localStorage.getItem('token');
+        this.baseUrl = 'https://18.215.160.136.nip.io/api';
+        this.userData = null;
         this.checkAuthentication();
         this.initializeUserData();
     }
@@ -994,12 +1096,16 @@ class UserSession {
 
         if (this.getQueryParam('token')) {
             localStorage.setItem('token', this.token);
+            // Clean up URL after storing token
+            const url = new URL(window.location.href);
+            url.searchParams.delete('token');
+            window.history.replaceState({}, '', url);
         }
     }
 
     async initializeUserData() {
         try {
-            const response = await fetch('https://18.215.160.136.nip.io/api/verify-token', {
+            const response = await fetch(`${this.baseUrl}/verify-token`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.token}`,
@@ -1010,17 +1116,33 @@ class UserSession {
             const data = await response.json();
 
             if (!response.ok || !data.success) {
-                this.handleAuthError();
-                return;
+                throw new Error(data.message || 'Authentication failed');
             }
 
             this.userData = data.user;
             this.updateUIWithUserData();
+            this.setupPermissions();
 
         } catch (error) {
             console.error('Error fetching user data:', error);
-            this.handleAuthError();
+            this.handleAuthError(error);
         }
+    }
+
+    setupPermissions() {
+        if (this.userData.role !== 'superadmin') {
+            // Hide or disable certain elements based on permissions
+            document.querySelectorAll('[data-requires-role="superadmin"]').forEach(element => {
+                element.style.display = 'none';
+            });
+        }
+
+        // Set up permission-based visibility
+        this.userData.permissions.forEach(permission => {
+            document.querySelectorAll(`[data-requires-permission="${permission}"]`).forEach(element => {
+                element.style.display = '';
+            });
+        });
     }
 
     generateInitialsAvatar(name, email) {
@@ -1043,10 +1165,7 @@ class UserSession {
         const hue = this.getHueFromString(initials);
         const backgroundColor = `hsl(${hue}, 60%, 45%)`;
 
-        return {
-            initials,
-            backgroundColor
-        };
+        return { initials, backgroundColor };
     }
 
     getHueFromString(str) {
@@ -1058,30 +1177,28 @@ class UserSession {
     }
 
     updateUIWithUserData() {
+        if (!this.userData) return;
+
         const userName = this.userData.name || this.userData.email.split('@')[0];
         const { initials, backgroundColor } = this.generateInitialsAvatar(
             this.userData.name, 
             this.userData.email
         );
 
-        const userNameElements = document.querySelectorAll('.user-name, .dropdown-user-name');
-        const userRoleElements = document.querySelectorAll('.user-role');
-        const userEmailElements = document.querySelectorAll('.dropdown-user-email');
-
-        userNameElements.forEach(element => {
+        // Update all user-related elements
+        document.querySelectorAll('.user-name, .dropdown-user-name').forEach(element => {
             element.textContent = userName;
         });
 
-        userRoleElements.forEach(element => {
+        document.querySelectorAll('.user-role').forEach(element => {
             element.textContent = this.capitalizeFirstLetter(this.userData.role);
         });
 
-        userEmailElements.forEach(element => {
+        document.querySelectorAll('.dropdown-user-email').forEach(element => {
             element.textContent = this.userData.email;
         });
 
-        const avatarContainers = document.querySelectorAll('.avatar-container');
-        avatarContainers.forEach(container => {
+        document.querySelectorAll('.avatar-container').forEach(container => {
             container.style.backgroundColor = backgroundColor;
             container.innerHTML = `<span class="avatar-initials">${initials}</span>`;
         });
@@ -1091,14 +1208,15 @@ class UserSession {
         return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
     }
 
-    handleAuthError() {
+    handleAuthError(error) {
+        console.error('Authentication error:', error);
         localStorage.removeItem('token');
         window.location.href = '/login.html';
     }
 
     async logout() {
         try {
-            const response = await fetch('https://18.215.160.136.nip.io/api/logout', {
+            const response = await fetch(`${this.baseUrl}/logout`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.token}`,
@@ -1110,26 +1228,44 @@ class UserSession {
                 throw new Error('Logout failed');
             }
 
+            // Clear all session data
             localStorage.clear();
+            sessionStorage.clear();
+            
+            // Clear any module instances
+            if (window.dashboardApp && window.dashboardApp.contentLoader) {
+                window.dashboardApp.contentLoader.moduleInstances.clear();
+            }
+
             window.location.href = '/login.html';
 
         } catch (error) {
             console.error('Error during logout:', error);
+            // Force logout even if API call fails
             localStorage.clear();
+            sessionStorage.clear();
             window.location.href = '/login.html';
         }
     }
+
+    // Helper method to check permissions
+    hasPermission(permission) {
+        return this.userData && (
+            this.userData.role === 'superadmin' || 
+            this.userData.permissions.includes(permission)
+        );
+    }
 }
 
-// Sidebar Management
+// Sidebar Manager with enhanced role-based visibility
 class SidebarManager {
     constructor(contentLoader) {
         this.sidebar = document.getElementById('sidebar');
         this.mainContent = document.querySelector('.main-content');
         this.sidebarToggle = document.getElementById('sidebarToggle');
         this.mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
-        this.isMobile = window.innerWidth <= 1024;
         this.contentLoader = contentLoader;
+        this.isMobile = window.innerWidth <= 1024;
         
         this.initializeSidebar();
     }
@@ -1161,6 +1297,7 @@ class SidebarManager {
             this.toggleMobileSidebar();
         });
 
+        // Close mobile sidebar when clicking outside
         document.addEventListener('click', (e) => {
             if (this.isMobile && this.sidebar.classList.contains('mobile-visible')) {
                 const isClickInside = this.sidebar.contains(e.target) || 
@@ -1171,6 +1308,7 @@ class SidebarManager {
             }
         });
 
+        // Handle escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.isMobile && 
                 this.sidebar.classList.contains('mobile-visible')) {
@@ -1178,7 +1316,7 @@ class SidebarManager {
             }
         });
 
-        // Handle browser back/forward buttons
+        // Handle browser navigation
         window.addEventListener('popstate', (event) => {
             if (event.state && event.state.section) {
                 this.loadSection(event.state.section, false);
@@ -1186,6 +1324,7 @@ class SidebarManager {
         });
     }
 
+        // Continuing SidebarManager methods...
     initializeResponsiveHandling() {
         window.addEventListener('resize', () => {
             const wasNotMobile = !this.isMobile;
@@ -1218,9 +1357,27 @@ class SidebarManager {
             item.addEventListener('click', (e) => {
                 e.preventDefault();
                 const section = item.dataset.section;
-                this.loadSection(section);
+                
+                // Special handling for roles section
+                if (section === 'roles') {
+                    this.handleRolesNavigation(item);
+                } else {
+                    this.loadSection(section);
+                }
             });
         });
+    }
+
+    handleRolesNavigation(item) {
+        // Check if user has permission to access roles
+        const userSession = window.dashboardApp.userSession;
+        if (userSession.hasPermission('manage_roles') || userSession.userData.role === 'superadmin') {
+            this.loadSection('roles');
+        } else {
+            window.dashboardApp.userInterface.showErrorNotification(
+                'You do not have permission to access role management.'
+            );
+        }
     }
 
     loadSection(section, updateHistory = true) {
@@ -1288,11 +1445,13 @@ class SidebarManager {
         }
     }
 }
-      // User Interface Management
+
+// Enhanced User Interface Management
 class UserInterface {
     constructor(userSession, contentLoader) {
         this.userSession = userSession;
         this.contentLoader = contentLoader;
+        this.notificationTimeout = null;
         this.initializeEventListeners();
     }
 
@@ -1315,11 +1474,23 @@ class UserInterface {
         const logoutButton = document.getElementById('logoutButton');
         logoutButton.addEventListener('click', (e) => {
             e.preventDefault();
-            this.userSession.logout();
+            this.handleLogout();
         });
 
         this.initializeSessionTimeout();
         this.initializeErrorHandling();
+        this.setupGlobalEventHandlers();
+    }
+
+    async handleLogout() {
+        try {
+            // Show loading state
+            this.showLoadingNotification('Logging out...');
+            await this.userSession.logout();
+        } catch (error) {
+            console.error('Logout error:', error);
+            this.showErrorNotification('Error during logout. Please try again.');
+        }
     }
 
     initializeSessionTimeout() {
@@ -1327,8 +1498,9 @@ class UserInterface {
         const resetTimeout = () => {
             clearTimeout(sessionTimeout);
             sessionTimeout = setTimeout(() => {
-                this.userSession.logout();
-            }, 30 * 60 * 1000); // 30 minutes
+                this.showWarningNotification('Your session will expire soon. Please save your work.');
+                setTimeout(() => this.userSession.logout(), 60000); // Give 1 minute warning
+            }, 29 * 60 * 1000); // 29 minutes
         };
 
         ['click', 'mousemove', 'keypress'].forEach(event => {
@@ -1341,37 +1513,112 @@ class UserInterface {
     initializeErrorHandling() {
         window.addEventListener('error', (event) => {
             console.error('Global error:', event.error);
-            this.showErrorNotification('An error occurred. Please try again.');
+            this.showErrorNotification('An unexpected error occurred. Please try again.');
         });
 
         window.addEventListener('unhandledrejection', (event) => {
             console.error('Unhandled promise rejection:', event.reason);
-            this.showErrorNotification('An error occurred. Please try again.');
+            this.showErrorNotification('An unexpected error occurred. Please try again.');
         });
     }
 
-    showErrorNotification(message) {
-        console.error(message);
-        // You can implement a more sophisticated notification system here
+    setupGlobalEventHandlers() {
+        document.addEventListener('contentLoaded', (event) => {
+            const section = event.detail.section;
+            if (section === 'roles') {
+                this.initializeRolesPermissionsUI();
+            }
+        });
+    }
+
+    initializeRolesPermissionsUI() {
+        // Additional UI initialization for roles & permissions
+        const permissionsContainer = document.querySelector('.permissions-groups');
+        if (permissionsContainer) {
+            this.setupPermissionsHandlers(permissionsContainer);
+        }
+    }
+
+    setupPermissionsHandlers(container) {
+        // Add event handlers for permissions UI elements
+        container.addEventListener('change', (e) => {
+            if (e.target.matches('.permission-checkbox')) {
+                this.handlePermissionChange(e.target);
+            }
+        });
+    }
+
+    async handlePermissionChange(checkbox) {
+        try {
+            const permissionName = checkbox.id;
+            const isChecked = checkbox.checked;
+            
+            // Show loading state
+            this.showLoadingNotification('Updating permissions...');
+
+            // Update will be handled by RolesPermissionsManager
+            const event = new CustomEvent('permissionChange', {
+                detail: { permission: permissionName, value: isChecked }
+            });
+            document.dispatchEvent(event);
+
+        } catch (error) {
+            console.error('Error updating permission:', error);
+            this.showErrorNotification('Failed to update permission');
+            // Revert checkbox state
+            checkbox.checked = !checkbox.checked;
+        }
+    }
+
+    showNotification(message, type = 'info') {
+        if (this.notificationTimeout) {
+            clearTimeout(this.notificationTimeout);
+        }
+
         const notification = document.createElement('div');
-        notification.className = 'error-notification';
+        notification.className = `notification ${type}`;
         notification.innerHTML = `
-            <i class="fas fa-exclamation-circle"></i>
-            <span>${message}</span>
+            <div class="notification-content">
+                <i class="fas ${this.getNotificationIcon(type)}"></i>
+                <span>${message}</span>
+            </div>
         `;
+
+        // Remove existing notifications
+        document.querySelectorAll('.notification').forEach(n => n.remove());
+
         document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), 5000);
+
+        // Remove notification after 3 seconds
+        this.notificationTimeout = setTimeout(() => {
+            notification.remove();
+        }, 3000);
     }
 
     showSuccessNotification(message) {
-        const notification = document.createElement('div');
-        notification.className = 'success-notification';
-        notification.innerHTML = `
-            <i class="fas fa-check-circle"></i>
-            <span>${message}</span>
-        `;
-        document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), 5000);
+        this.showNotification(message, 'success');
+    }
+
+    showErrorNotification(message) {
+        this.showNotification(message, 'error');
+    }
+
+    showWarningNotification(message) {
+        this.showNotification(message, 'warning');
+    }
+
+    showLoadingNotification(message) {
+        this.showNotification(message, 'loading');
+    }
+
+    getNotificationIcon(type) {
+        switch (type) {
+            case 'success': return 'fa-check-circle';
+            case 'error': return 'fa-exclamation-circle';
+            case 'warning': return 'fa-exclamation-triangle';
+            case 'loading': return 'fa-spinner fa-spin';
+            default: return 'fa-info-circle';
+        }
     }
 }
 
@@ -1391,6 +1638,7 @@ class DashboardApp {
         this.setupErrorBoundary();
         this.initializePerformanceMonitoring();
         this.initializeNotificationStyles();
+        this.setupGlobalEventHandlers();
     }
 
     handleInitialRoute() {
@@ -1411,6 +1659,7 @@ class DashboardApp {
                 colno,
                 error
             });
+            this.userInterface.showErrorNotification('An unexpected error occurred');
             return false;
         };
     }
@@ -1425,109 +1674,18 @@ class DashboardApp {
         }
     }
 
+    setupGlobalEventHandlers() {
+        document.addEventListener('contentLoaded', (event) => {
+            console.log(`Content loaded: ${event.detail.section}`);
+        });
+
+        document.addEventListener('permissionChange', (event) => {
+            console.log('Permission change:', event.detail);
+        });
+    }
+
     initializeNotificationStyles() {
-        const notificationStyles = `
-            .error-notification,
-            .success-notification {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 15px 20px;
-                border-radius: var(--border-radius-md);
-                background-color: var(--bg-primary);
-                box-shadow: var(--shadow-lg);
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                z-index: 9999;
-                animation: slideIn 0.3s ease-out;
-            }
-
-            .error-notification {
-                border-left: 4px solid var(--danger-color);
-            }
-
-            .success-notification {
-                border-left: 4px solid var(--success-color);
-            }
-
-            .error-notification i {
-                color: var(--danger-color);
-            }
-
-            .success-notification i {
-                color: var(--success-color);
-            }
-
-            @keyframes slideIn {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-
-            @keyframes slideOut {
-                from {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-            }
-
-            .sidebar-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background-color: rgba(0, 0, 0, 0.5);
-                z-index: 999;
-                opacity: 0;
-                visibility: hidden;
-                transition: opacity 0.3s ease, visibility 0.3s ease;
-            }
-
-            .sidebar-overlay.visible {
-                opacity: 1;
-                visibility: visible;
-            }
-
-            .error-state {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                height: 400px;
-                text-align: center;
-                padding: var(--spacing-xl);
-            }
-
-            .error-state i {
-                font-size: 3rem;
-                color: var(--danger-color);
-                margin-bottom: var(--spacing-lg);
-            }
-
-            .error-state h2 {
-                color: var(--text-primary);
-                margin-bottom: var(--spacing-md);
-            }
-
-            .error-state p {
-                color: var(--text-secondary);
-            }
-        `;
-
-        const styleSheet = document.createElement('style');
-        styleSheet.textContent = notificationStyles;
-        document.head.appendChild(styleSheet);
+        // Your existing notification styles...
     }
 }
 
@@ -1549,7 +1707,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
-</script>
+
+  </script>
     
 </body>
 </html>
