@@ -1,7 +1,22 @@
-// public/dashboard/js/roles-permissions.js
+
 
 class RolesPermissionsManager {
+    static instance = null;
+
+    static getInstance() {
+        if (!RolesPermissionsManager.instance) {
+            RolesPermissionsManager.instance = new RolesPermissionsManager();
+        }
+        return RolesPermissionsManager.instance;
+    }
+
     constructor() {
+        if (RolesPermissionsManager.instance) {
+            return RolesPermissionsManager.instance;
+        }
+        RolesPermissionsManager.instance = this;
+        
+        // Initialize properties
         this.baseUrl = 'https://18.215.160.136.nip.io/api';
         this.token = localStorage.getItem('token');
         this.currentRole = null;
@@ -9,49 +24,82 @@ class RolesPermissionsManager {
         this.roles = [];
         this.hasUnsavedChanges = false;
 
-        this.initializeElements();
-        this.initializeEventListeners();
-        this.loadInitialData();
+        // Wait for DOM to be ready before initializing
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.initialize());
+        } else {
+            this.initialize();
+        }
+    }
+
+    initialize() {
+        // Wait for a short moment to ensure content is loaded
+        setTimeout(() => {
+            if (document.querySelector('.roles-permissions-container')) {
+                this.initializeElements();
+                this.initializeEventListeners();
+                this.loadInitialData();
+            }
+        }, 100);
     }
 
     initializeElements() {
-        // Main containers
-        this.rolesList = document.getElementById('rolesList');
-        this.permissionsPanel = document.getElementById('permissionsPanel');
-        
-        // Buttons
-        this.createRoleBtn = document.getElementById('createRoleBtn');
-        this.savePermissionsBtn = document.getElementById('savePermissions');
-        
-        // Modal elements
-        this.createRoleModal = document.getElementById('createRoleModal');
-        this.closeRoleModal = document.getElementById('closeRoleModal');
-        this.confirmRoleCreate = document.getElementById('confirmRoleCreate');
-        this.cancelRoleCreate = document.getElementById('cancelRoleCreate');
-        
-        // Form elements
-        this.roleNameInput = document.getElementById('roleName');
-        this.roleDescriptionInput = document.getElementById('roleDescription');
-        this.isDefaultInput = document.getElementById('isDefault');
-        
-        // Search
-        this.roleSearch = document.getElementById('roleSearch');
+        try {
+            // Main containers
+            this.rolesList = document.getElementById('rolesList');
+            this.permissionsPanel = document.getElementById('permissionsPanel');
+            
+            // Buttons
+            this.createRoleBtn = document.getElementById('createRoleBtn');
+            this.savePermissionsBtn = document.getElementById('savePermissions');
+            
+            // Modal elements
+            this.createRoleModal = document.getElementById('createRoleModal');
+            this.closeRoleModal = document.getElementById('closeRoleModal');
+            this.confirmRoleCreate = document.getElementById('confirmRoleCreate');
+            this.cancelRoleCreate = document.getElementById('cancelRoleCreate');
+            
+            // Form elements
+            this.roleNameInput = document.getElementById('roleName');
+            this.roleDescriptionInput = document.getElementById('roleDescription');
+            this.isDefaultInput = document.getElementById('isDefault');
+            
+            // Search
+            this.roleSearch = document.getElementById('roleSearch');
+
+            // Verify required elements
+            if (!this.rolesList || !this.permissionsPanel) {
+                throw new Error('Required elements not found');
+            }
+        } catch (error) {
+            console.error('Error initializing elements:', error);
+            throw error;
+        }
     }
 
     initializeEventListeners() {
-        // Role creation
-        this.createRoleBtn.addEventListener('click', () => this.showCreateRoleModal());
-        this.closeRoleModal.addEventListener('click', () => this.hideCreateRoleModal());
-        this.cancelRoleCreate.addEventListener('click', () => this.hideCreateRoleModal());
-        this.confirmRoleCreate.addEventListener('click', () => this.handleRoleCreation());
-
-        // Role search
-        this.roleSearch.addEventListener('input', debounce((e) => {
-            this.filterRoles(e.target.value);
-        }, 300));
-
-        // Save permissions
-        this.savePermissionsBtn.addEventListener('click', () => this.savePermissions());
+        // Only add event listeners if elements exist
+        if (this.createRoleBtn) {
+            this.createRoleBtn.addEventListener('click', () => this.showCreateRoleModal());
+        }
+        if (this.closeRoleModal) {
+            this.closeRoleModal.addEventListener('click', () => this.hideCreateRoleModal());
+        }
+        if (this.cancelRoleCreate) {
+            this.cancelRoleCreate.addEventListener('click', () => this.hideCreateRoleModal());
+        }
+        if (this.confirmRoleCreate) {
+            this.confirmRoleCreate.addEventListener('click', () => this.handleRoleCreation());
+        }
+        if (this.roleSearch) {
+            this.roleSearch.addEventListener('input', this.debounce((e) => {
+                this.filterRoles(e.target.value);
+            }, 300));
+        }
+        if (this.savePermissionsBtn) {
+            this.savePermissionsBtn.addEventListener('click', () => this.savePermissions());
+        }
+    }
 
         // Warn about unsaved changes
         window.addEventListener('beforeunload', (e) => {
@@ -361,3 +409,12 @@ function debounce(func, wait) {
 document.addEventListener('DOMContentLoaded', () => {
     const rolesPermissionsManager = new RolesPermissionsManager();
 });
+
+(() => {
+    // Listen for content loaded event
+    document.addEventListener('contentLoaded', (event) => {
+        if (event.detail.section === 'roles') {
+            RolesPermissionsManager.getInstance();
+        }
+    });
+})();
