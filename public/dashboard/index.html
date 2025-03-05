@@ -808,10 +808,12 @@ body {
 class ContentLoader {
     constructor() {
         this.contentContainer = document.querySelector('.dashboard-content');
-        this.baseUrl = '/dashboard/';
+        // Update baseUrl to match your Amplify URL structure
+        this.baseUrl = 'https://main.d1cfw592vg73f.amplifyapp.com/dashboard/';
         this.currentPage = null;
         this.initializeStyles();
     }
+
 
     initializeStyles() {
         const styles = `
@@ -865,6 +867,7 @@ class ContentLoader {
             this.showLoadingState();
 
             const fileName = this.getFileName(section);
+            // Use the full URL
             const response = await fetch(`${this.baseUrl}${fileName}`);
             
             if (!response.ok) {
@@ -899,39 +902,37 @@ class ContentLoader {
     }
 
     async initializePageScript(section) {
-    try {
-        // Map section names to their correct script files
-        const scriptMap = {
-            'roles': 'roles-permissions.js',
-            // Add other mappings as needed
-        };
-
-        const oldScript = document.querySelector(`script[data-page="${section}"]`);
-        if (oldScript) {
-            oldScript.remove();
-        }
-
-        const scriptName = scriptMap[section] || `${section}.js`;
-        const script = document.createElement('script');
-        // Update the path to match your actual file structure
-        script.src = `dashboard/js/${scriptName}`; // Remove leading slash
-        script.dataset.page = section;
-        script.type = 'text/javascript'; // Add this line
-        
-        // Return a promise that resolves when the script loads
-        return new Promise((resolve, reject) => {
-            script.onload = resolve;
-            script.onerror = (e) => {
-                console.warn(`Script for ${section} not found or failed to load`, e);
-                resolve(); // Resolve anyway to prevent blocking
+        try {
+            const scriptMap = {
+                'roles': 'roles-permissions.js',
+                // Add other mappings as needed
             };
-            document.body.appendChild(script);
-        });
-    } catch (error) {
-        console.error('Error initializing page script:', error);
+
+            const oldScript = document.querySelector(`script[data-page="${section}"]`);
+            if (oldScript) {
+                oldScript.remove();
+            }
+
+            const scriptName = scriptMap[section] || `${section}.js`;
+            const script = document.createElement('script');
+            // Use the full Amplify URL
+            script.src = `https://main.d1cfw592vg73f.amplifyapp.com/dashboard/js/${scriptName}`;
+            script.dataset.page = section;
+            script.type = 'text/javascript';
+            
+            return new Promise((resolve, reject) => {
+                script.onload = resolve;
+                script.onerror = (e) => {
+                    console.warn(`Script for ${section} not found or failed to load`, e);
+                    resolve(); // Resolve anyway to prevent blocking
+                };
+                document.body.appendChild(script);
+            });
+        } catch (error) {
+            console.error('Error initializing page script:', error);
+        }
     }
 }
-
     showLoadingState() {
         const loader = document.createElement('div');
         loader.className = 'content-loader';
