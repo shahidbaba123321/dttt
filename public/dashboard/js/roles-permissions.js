@@ -5,15 +5,18 @@ if (typeof window === 'undefined') {
 
 class RolesPermissionsManager {
     constructor(apiBaseUrl) {
-        this.baseUrl = apiBaseUrl || 'https://18.215.160.136.nip.io/api';
+        // Make sure the API URL is correct
+        this.baseUrl = 'https://18.215.160.136.nip.io/api';
         this.token = localStorage.getItem('token');
         this.currentRole = null;
         this.roles = [];
         this.permissions = [];
+        console.log('API Base URL:', this.baseUrl); // Debug log
         this.initializeElements();
         this.initializeEventListeners();
         this.loadRolesAndPermissions();
     }
+
 
     initializeElements() {
         // Main containers
@@ -517,79 +520,76 @@ handleRoleTypeChange() {
 }
 
 async saveRole() {
-    try {
-        // Validate input data first
-        const roleData = {
-            name: document.getElementById('roleName').value.trim(),
-            description: document.getElementById('roleDescription').value.trim(),
-            isSystem: document.querySelector('input[name="roleType"]:checked').value === 'system',
-            permissions: this.currentRole ? [...this.currentRole.permissions] : []
-        };
+        try {
+            const roleData = {
+                name: document.getElementById('roleName').value.trim(),
+                description: document.getElementById('roleDescription').value.trim(),
+                isSystem: document.querySelector('input[name="roleType"]:checked').value === 'system',
+                permissions: this.currentRole ? [...this.currentRole.permissions] : []
+            };
 
-        // Validate role data
-        const validationErrors = this.validateRole(roleData);
-        if (validationErrors.length > 0) {
-            this.showError(validationErrors[0]);
-            return;
-        }
+            if (!roleData.name) {
+                this.showError('Role name is required');
+                return;
+            }
 
-        let response;
-        const headers = {
-            'Authorization': `Bearer ${this.token}`,
-            'Content-Type': 'application/json'
-        };
+            const headers = {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            };
 
-        if (this.currentRole && !this.currentRole.isSystem) {
-            // Update existing role
-            response = await fetch(`${this.baseUrl}/roles/${this.currentRole._id}`, {
-                method: 'PUT',
-                headers: headers,
-                body: JSON.stringify(roleData)
-            });
-        } else {
-            // Create new role
-            response = await fetch(`${this.baseUrl}/roles`, {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify(roleData)
-            });
-        }
+            // Log the request details for debugging
+            console.log('Making request to:', this.currentRole ? 
+                `${this.baseUrl}/roles/${this.currentRole._id}` : 
+                `${this.baseUrl}/roles`);
+            console.log('Request data:', roleData);
 
-        // Check if response is JSON
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-            throw new Error(`Expected JSON response but received ${contentType}`);
-        }
+            let response;
+            if (this.currentRole && !this.currentRole.isSystem) {
+                // Update existing role
+                response = await fetch(`${this.baseUrl}/roles/${this.currentRole._id}`, {
+                    method: 'PUT',
+                    headers: headers,
+                    body: JSON.stringify(roleData)
+                });
+            } else {
+                // Create new role
+                response = await fetch(`${this.baseUrl}/roles`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(roleData)
+                });
+            }
 
-        const result = await response.json();
+            // Log response details for debugging
+            console.log('Response status:', response.status);
+            console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
-        if (!response.ok) {
-            throw new Error(result.message || 'Failed to save role');
-        }
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Error response:', errorText);
+                throw new Error(`Server error: ${response.status}`);
+            }
 
-        // Refresh roles list
-        await this.loadRolesAndPermissions();
-        
-        // Select the newly created/updated role
-        if (result.data && result.data._id) {
-            await this.selectRole(result.data._id);
-        }
+            const result = await response.json();
+            
+            // Refresh roles list
+            await this.loadRolesAndPermissions();
+            
+            if (result.data && result.data._id) {
+                await this.selectRole(result.data._id);
+            }
 
-        this.closeModal(this.roleModal);
-        this.showSuccess(this.currentRole ? 'Role updated successfully' : 'Role created successfully');
+            this.closeModal(this.roleModal);
+            this.showSuccess(this.currentRole ? 'Role updated successfully' : 'Role created successfully');
 
-    } catch (error) {
-        console.error('Error saving role:', error);
-        
-        // Handle specific error cases
-        if (error.message.includes('<!DOCTYPE')) {
-            this.showError('Server error. Please check your connection and try again.');
-        } else {
-            this.showError(error.message || 'Failed to save role. Please try again.');
+        } catch (error) {
+            console.error('Error saving role:', error);
+            this.showError(`Failed to save role: ${error.message}`);
         }
     }
 }
-
     
     showDeleteModal() {
         if (!this.currentRole) {
