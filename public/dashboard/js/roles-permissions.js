@@ -429,63 +429,173 @@ class RolesPermissionsManager {
         }
 
         const result = await response.json();
-        console.log('Permissions API response:', result);
+        console.log('Raw API Response:', result);
 
-        if (!result.success) {
-            throw new Error('Failed to fetch permissions');
+        // Initialize default permissions if none exist
+        if (!result.data || Object.keys(result.data).length === 0) {
+            console.warn('No permissions found in response');
+            return { success: false, data: [] };
         }
 
-        // Return the data as is, since it's already categorized
+        // Extract all permissions into a flat array
+        let allPermissions = [];
+        if (Array.isArray(result.data)) {
+            allPermissions = result.data;
+        } else {
+            Object.values(result.data).forEach(categoryPermissions => {
+                if (Array.isArray(categoryPermissions)) {
+                    allPermissions = allPermissions.concat(categoryPermissions);
+                }
+            });
+        }
+
+        console.log('Processed permissions:', allPermissions);
+
         return {
             success: true,
-            data: result.data
+            data: allPermissions
         };
     } catch (error) {
         console.error('Error fetching permissions:', error);
-        return { success: false, data: {} };
+        return { success: false, data: [] };
     }
 }
 
 organizePermissionsByCategory(permissions) {
-    if (!permissions || Object.keys(permissions).length === 0) {
-        console.warn('No permissions data received');
+    if (!permissions || !Array.isArray(permissions) || permissions.length === 0) {
+        console.warn('Invalid permissions data received:', permissions);
         return {};
     }
 
-    const categorizedPermissions = {};
-    
-    // Define category order for consistent display
-    const categoryOrder = [
-        'Dashboard Access',
-        'User Management',
-        'Role Management',
-        'Company Management',
-        'System Settings',
-        'Module Management',
-        'Analytics & Reports',
-        'System Tools',
-        'Support'
+    // Define all possible categories
+    const categorizedPermissions = {
+        'Dashboard Access': [],
+        'User Management': [],
+        'Role Management': [],
+        'Company Management': [],
+        'System Settings': [],
+        'Module Management': [],
+        'Analytics & Reports': [],
+        'System Tools': [],
+        'Support': []
+    };
+
+    // Default permissions if they're not in the server response
+    const defaultPermissions = [
+        {
+            name: 'view_dashboard',
+            displayName: 'View Dashboard',
+            category: 'Dashboard Access',
+            description: 'Can access the dashboard overview'
+        },
+        {
+            name: 'view_companies',
+            displayName: 'View Companies',
+            category: 'Company Management',
+            description: 'Can view company list and details'
+        },
+        {
+            name: 'manage_companies',
+            displayName: 'Manage Companies',
+            category: 'Company Management',
+            description: 'Can create, edit, and delete companies'
+        },
+        {
+            name: 'view_settings',
+            displayName: 'View Settings',
+            category: 'System Settings',
+            description: 'Can view system settings'
+        },
+        {
+            name: 'manage_settings',
+            displayName: 'Manage Settings',
+            category: 'System Settings',
+            description: 'Can modify system settings'
+        },
+        {
+            name: 'manage_pricing',
+            displayName: 'Manage Pricing',
+            category: 'System Settings',
+            description: 'Can manage pricing and plans'
+        },
+        {
+            name: 'manage_security',
+            displayName: 'Manage Security',
+            category: 'System Settings',
+            description: 'Can manage security settings'
+        },
+        {
+            name: 'view_modules',
+            displayName: 'View Modules',
+            category: 'Module Management',
+            description: 'Can view available modules'
+        },
+        {
+            name: 'manage_modules',
+            displayName: 'Manage Modules',
+            category: 'Module Management',
+            description: 'Can manage and configure modules'
+        },
+        {
+            name: 'view_analytics',
+            displayName: 'View Analytics',
+            category: 'Analytics & Reports',
+            description: 'Can view analytics and reports'
+        },
+        {
+            name: 'manage_reports',
+            displayName: 'Manage Reports',
+            category: 'Analytics & Reports',
+            description: 'Can create and manage custom reports'
+        },
+        {
+            name: 'manage_backup',
+            displayName: 'Manage Backup',
+            category: 'System Tools',
+            description: 'Can perform backup and restore operations'
+        },
+        {
+            name: 'view_audit_logs',
+            displayName: 'View Audit Logs',
+            category: 'System Tools',
+            description: 'Can view system audit logs'
+        },
+        {
+            name: 'manage_api',
+            displayName: 'Manage API',
+            category: 'System Tools',
+            description: 'Can manage API settings and keys'
+        },
+        {
+            name: 'access_support',
+            displayName: 'Access Support',
+            category: 'Support',
+            description: 'Can access support center'
+        },
+        {
+            name: 'manage_support',
+            displayName: 'Manage Support',
+            category: 'Support',
+            description: 'Can manage support tickets and resources'
+        }
     ];
 
-    // Initialize categories
-    categoryOrder.forEach(category => {
-        categorizedPermissions[category] = [];
-    });
+    // Combine server permissions with default permissions
+    const allPermissions = [...permissions, ...defaultPermissions];
 
-    // Handle the permissions data structure where permissions are grouped by category
-    Object.entries(permissions).forEach(([category, perms]) => {
-        if (Array.isArray(perms)) {
-            perms.forEach(permission => {
-                if (!categorizedPermissions[permission.category]) {
-                    categorizedPermissions[permission.category] = [];
-                }
-                categorizedPermissions[permission.category].push({
-                    name: permission.name,
-                    displayName: permission.displayName || this.formatPermissionName(permission.name),
-                    description: permission.description || '',
-                    category: permission.category,
-                    _id: permission._id // Preserve the ID if it exists
-                });
+    // Remove duplicates based on permission name
+    const uniquePermissions = Array.from(
+        new Map(allPermissions.map(item => [item.name, item])).values()
+    );
+
+    // Organize permissions into categories
+    uniquePermissions.forEach(permission => {
+        if (permission.category && categorizedPermissions[permission.category]) {
+            categorizedPermissions[permission.category].push({
+                name: permission.name,
+                displayName: permission.displayName || this.formatPermissionName(permission.name),
+                description: permission.description || '',
+                category: permission.category
             });
         }
     });
@@ -497,7 +607,7 @@ organizePermissionsByCategory(permissions) {
         }
     });
 
-    console.log('Organized permissions by category:', categorizedPermissions);
+    console.log('Final organized permissions:', categorizedPermissions);
     return categorizedPermissions;
 }
 
@@ -558,14 +668,11 @@ organizePermissionsByCategory(permissions) {
             </div>
         `;
     }
-        renderPermissions() {
+       renderPermissions() {
     if (!this.currentRole || !this.permissionsGroups) return;
 
-    console.log('Rendering permissions for role:', this.currentRole);
-    console.log('Available permissions:', this.permissions);
-
+    console.log('Current role:', this.currentRole);
     const categorizedPermissions = this.organizePermissionsByCategory(this.permissions);
-    console.log('Categorized permissions:', categorizedPermissions);
     
     if (Object.keys(categorizedPermissions).length === 0) {
         this.permissionsGroups.innerHTML = `
@@ -576,7 +683,25 @@ organizePermissionsByCategory(permissions) {
         return;
     }
 
-    this.permissionsGroups.innerHTML = Object.entries(categorizedPermissions)
+    // Sort categories in a specific order
+    const categoryOrder = [
+        'Dashboard Access',
+        'User Management',
+        'Role Management',
+        'Company Management',
+        'System Settings',
+        'Module Management',
+        'Analytics & Reports',
+        'System Tools',
+        'Support'
+    ];
+
+    const sortedCategories = Object.entries(categorizedPermissions)
+        .sort(([a], [b]) => {
+            return categoryOrder.indexOf(a) - categoryOrder.indexOf(b);
+        });
+
+    this.permissionsGroups.innerHTML = sortedCategories
         .map(([category, permissions]) => {
             if (permissions.length === 0) return '';
             return this.createPermissionGroup(category, permissions);
