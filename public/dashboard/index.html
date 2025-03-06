@@ -818,7 +818,8 @@ body {
 class ContentLoader {
     constructor() {
         this.contentContainer = document.querySelector('.dashboard-content');
-         this.baseUrl = 'https://main.d1cfw592vg73f.amplifyapp.com';
+        // Updated baseUrl to match Amplify structure
+        this.baseUrl = 'https://main.d1cfw592vg73f.amplifyapp.com';
         this.apiBaseUrl = 'https://18.215.160.136.nip.io/api';
         this.currentPage = null;
         this.loadedScripts = new Set();
@@ -954,19 +955,38 @@ class ContentLoader {
                     opacity: 1;
                 }
             }
+
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
         `;
 
         const styleSheet = document.createElement('style');
         styleSheet.textContent = styles;
         document.head.appendChild(styleSheet);
     }
-       async loadContent(section) {
+        async loadContent(section) {
         try {
             this.showLoadingState();
 
-            // Update the fetch URL to match your file structure
+            // Remove any existing instance
+            if (this.moduleInstances.has(this.currentPage)) {
+                const instance = this.moduleInstances.get(this.currentPage);
+                if (instance && typeof instance.cleanup === 'function') {
+                    await instance.cleanup();
+                }
+                this.moduleInstances.delete(this.currentPage);
+            }
+
             const fileName = this.getFileName(section);
-            // Remove 'public' from the path as it might be at the root in Amplify
+            // Updated path to match Amplify structure
             const fetchUrl = `${this.baseUrl}/dashboard/${fileName}`;
             console.log('Fetching content from:', fetchUrl);
 
@@ -1022,9 +1042,15 @@ class ContentLoader {
         return fileMap[section] || `${section}.html`;
     }
 
-     async initializeRolesPermissions() {
+    async initializeRolesPermissions() {
         try {
-            // Update script path to match your file structure
+            // Check if script is already loaded
+            const existingScript = document.querySelector('script[src*="roles-permissions.js"]');
+            if (existingScript) {
+                existingScript.remove();
+            }
+
+            // Create and append the script with updated path
             const script = document.createElement('script');
             script.src = `${this.baseUrl}/dashboard/js/roles-permissions.js`;
             
@@ -1046,7 +1072,6 @@ class ContentLoader {
             throw error;
         }
     }
-}
 
     showLoadingState() {
         const loader = document.createElement('div');
@@ -1098,8 +1123,7 @@ class ContentLoader {
         window.history.pushState({ section }, '', url);
     }
 }
-
-// User Session Management
+    // User Session Management
 class UserSession {
     constructor() {
         this.token = this.getQueryParam('token') || localStorage.getItem('token');
@@ -1107,7 +1131,8 @@ class UserSession {
         this.userData = null;
         this.checkAuthentication();
     }
-        getQueryParam(param) {
+
+    getQueryParam(param) {
         const urlParams = new URLSearchParams(window.location.search);
         return urlParams.get(param);
     }
@@ -1283,7 +1308,7 @@ class UserSession {
         }
     }
 }
- // Sidebar Manager with enhanced role-based visibility
+    // Sidebar Manager with enhanced role-based visibility
 class SidebarManager {
     constructor(contentLoader) {
         this.sidebar = document.getElementById('sidebar');
