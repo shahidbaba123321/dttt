@@ -614,105 +614,116 @@ body {
 
             <!-- Navigation Menu -->
             <nav class="sidebar-nav">
-                <div class="nav-section">
-                    <a href="#" class="nav-item active" data-section="dashboard">
-                        <i class="fas fa-th-large"></i>
-                        <span>Dashboard Overview</span>
-                    </a>
-                </div>
+    <!-- Dashboard Section -->
+    <div class="nav-section">
+        <a href="#" class="nav-item active" data-section="dashboard" data-required-permission="view_dashboard">
+            <i class="fas fa-th-large"></i>
+            <span>Dashboard Overview</span>
+        </a>
+    </div>
 
-                <div class="nav-section">
-                    <div class="nav-section-header">
-                        <span>Companies/Organizations</span>
-                    </div>
-                    <a href="#" class="nav-item" data-section="companies">
-                        <i class="fas fa-building"></i>
-                        <span>Management</span>
-                    </a>
-                </div>
+    <!-- Companies/Organizations Section -->
+    <div class="nav-section">
+        <div class="nav-section-header">
+            <span>Companies/Organizations</span>
+        </div>
+        <a href="#" class="nav-item" data-section="companies" data-required-permission="view_companies">
+            <i class="fas fa-building"></i>
+            <span>Management</span>
+        </a>
+    </div>
 
-                <div class="nav-section">
-                    <div class="nav-section-header">
-                        <span>System Settings</span>
-                    </div>
-                    <a href="#" class="nav-item" data-section="general-settings">
-                        <i class="fas fa-cog"></i>
-                        <span>General Settings</span>
-                    </a>
-                    <a href="#" class="nav-item" data-section="pricing">
-                        <i class="fas fa-tags"></i>
-                        <span>Pricing & Plans</span>
-                    </a>
-                    <a href="#" class="nav-item" data-section="security">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>Security Settings</span>
-                    </a>
-                </div>
+    <!-- System Settings Section -->
+    <div class="nav-section">
+        <div class="nav-section-header">
+            <span>System Settings</span>
+        </div>
+        <a href="#" class="nav-item" data-section="general-settings" data-required-permission="view_settings">
+            <i class="fas fa-cog"></i>
+            <span>General Settings</span>
+        </a>
+        <a href="#" class="nav-item" data-section="pricing" data-required-permission="manage_pricing">
+            <i class="fas fa-tags"></i>
+            <span>Pricing & Plans</span>
+        </a>
+        <a href="#" class="nav-item" data-section="security" data-required-permission="manage_security">
+            <i class="fas fa-shield-alt"></i>
+            <span>Security Settings</span>
+        </a>
+    </div>
 
-                <div class="nav-section">
-                    <div class="nav-section-header">
-                        <span>Modules Management</span>
-                    </div>
-                    <a href="#" class="nav-item" data-section="modules">
-                        <i class="fas fa-cube"></i>
-                        <span>Modules List</span>
-                    </a>
-                    <a href="#" class="nav-item" data-section="module-settings">
-                        <i class="fas fa-sliders-h"></i>
-                        <span>Module Settings</span>
-                    </a>
-                </div>
+    <!-- Modules Management Section -->
+    <div class="nav-section">
+        <div class="nav-section-header">
+            <span>Modules Management</span>
+        </div>
+        <a href="#" class="nav-item" data-section="modules" data-required-permission="view_modules">
+            <i class="fas fa-cube"></i>
+            <span>Modules List</span>
+        </a>
+        <a href="#" class="nav-item" data-section="module-settings" data-required-permission="manage_modules">
+            <i class="fas fa-sliders-h"></i>
+            <span>Module Settings</span>
+        </a>
+    </div>
 
-                <div class="nav-section">
-                    <div class="nav-section-header">
-                        <span>User Management</span>
-                    </div>
-                    <a href="#" class="nav-item" data-section="users">
-                        <i class="fas fa-users"></i>
-                        <span>Users List</span>
-                    </a>
-                    <a href="#" class="nav-item" data-section="roles">
-                        <i class="fas fa-user-shield"></i>
-                        <span>Roles & Permissions</span>
-                    </a>
-                    <a href="#" class="nav-item" data-section="org-chart">
-                        <i class="fas fa-sitemap"></i>
-                        <span>Organization Chart</span>
-                    </a>
-                </div>
+    <!-- User Management Section -->
+    <div class="nav-section">
+        <div class="nav-section-header">
+            <span>User Management</span>
+        </div>
+        <a href="#" class="nav-item" data-section="users" data-required-permission="view_users">
+            <i class="fas fa-users"></i>
+            <span>Users List</span>
+        </a>
+        <a href="#" class="nav-item" data-section="roles" data-required-permission="view_roles">
+            <i class="fas fa-user-shield"></i>
+            <span>Roles & Permissions</span>
+        </a>
+        <a href="#" class="nav-item" data-section="org-chart" data-required-permission="view_users">
+            <i class="fas fa-sitemap"></i>
+            <span>Organization Chart</span>
+        </a>
+    </div>
 
-                <div class="nav-section">
-                    <div class="nav-section-header">
-                        <span>Tools</span>
-                    </div>
-                    <a href="#" class="nav-item" data-section="analytics">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Analytics & Reports</span>
-                    </a>
-                    <a href="#" class="nav-item" data-section="backup">
-                        <i class="fas fa-database"></i>
-                        <span>Backup & Restore</span>
-                    </a>
-                    <a href="#" class="nav-item" data-section="audit">
-                        <i class="fas fa-history"></i>
-                        <span>Audit Logs</span>
-                    </a>
-                    <a href="#" class="nav-item" data-section="api">
-                        <i class="fas fa-code"></i>
-                        <span>API Management</span>
-                    </a>
-                </div>
+    <!-- Tools Section -->
+    <div class="nav-section">
+        <div class="nav-section-header">
+            <span>Tools</span>
+        </div>
+        <a href="#" class="nav-item" data-section="analytics" data-required-permission="view_analytics">
+            <i class="fas fa-chart-line"></i>
+            <span>Analytics & Reports</span>
+        </a>
+        <a href="#" class="nav-item" data-section="backup" data-required-permission="manage_backup">
+            <i class="fas fa-database"></i>
+            <span>Backup & Restore</span>
+        </a>
+        <a href="#" class="nav-item" data-section="audit" data-required-permission="view_audit_logs">
+            <i class="fas fa-history"></i>
+            <span>Audit Logs</span>
+        </a>
+        <a href="#" class="nav-item" data-section="api" data-required-permission="manage_api">
+            <i class="fas fa-code"></i>
+            <span>API Management</span>
+        </a>
+    </div>
 
-                <div class="nav-section">
-                    <div class="nav-section-header">
-                        <span>Support</span>
-                    </div>
-                    <a href="#" class="nav-item" data-section="support">
-                        <i class="fas fa-headset"></i>
-                        <span>Support Center</span>
-                    </a>
-                </div>
-            </nav>
+    <!-- Support Section -->
+    <div class="nav-section">
+        <div class="nav-section-header">
+            <span>Support</span>
+        </div>
+        <a href="#" class="nav-item" data-section="support" data-required-permission="access_support">
+            <i class="fas fa-headset"></i>
+            <span>Support Center</span>
+        </a>
+        <a href="#" class="nav-item" data-section="documentation" data-required-permission="access_support">
+            <i class="fas fa-book"></i>
+            <span>Documentation</span>
+        </a>
+    </div>
+</nav>
         </aside>
 
         <!-- Main Content Area -->
