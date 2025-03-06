@@ -1096,17 +1096,32 @@ class UserSession {
     }
 
     setupPermissions() {
+        if (!this.userData) return;
+
         if (this.userData.role !== 'superadmin') {
-            document.querySelectorAll('[data-requires-role="superadmin"]').forEach(element => {
-                element.style.display = 'none';
+            // Hide elements based on permissions
+            document.querySelectorAll('[data-required-permission]').forEach(element => {
+                const requiredPermission = element.dataset.requiredPermission;
+                if (!this.hasPermission(requiredPermission)) {
+                    element.style.display = 'none';
+                }
             });
         }
 
+        // Show elements based on role-specific permissions
         this.userData.permissions.forEach(permission => {
-            document.querySelectorAll(`[data-requires-permission="${permission}"]`).forEach(element => {
+            document.querySelectorAll(`[data-required-permission="${permission}"]`).forEach(element => {
                 element.style.display = '';
             });
         });
+    }
+
+    hasPermission(permission) {
+        if (!permission) return true;
+        if (!this.userData) return false;
+        
+        return this.userData.role === 'superadmin' || 
+               (this.userData.permissions || []).includes(permission);
     }
 
     generateInitialsAvatar(name, email) {
@@ -1207,13 +1222,6 @@ class UserSession {
             window.location.href = '/login.html';
         }
     }
-
-    hasPermission(permission) {
-        return this.userData && (
-            this.userData.role === 'superadmin' || 
-            this.userData.permissions.includes(permission)
-        );
-    }
 }
  // Sidebar Manager with enhanced role-based visibility
 class SidebarManager {
@@ -1270,12 +1278,6 @@ class SidebarManager {
                 this.closeMobileSidebar();
             }
         });
-
-        window.addEventListener('popstate', (event) => {
-            if (event.state && event.state.section) {
-                this.loadSection(event.state.section, false);
-            }
-        });
     }
 
     initializeResponsiveHandling() {
@@ -1307,28 +1309,32 @@ class SidebarManager {
             const textContent = item.querySelector('span').textContent;
             item.setAttribute('data-title', textContent);
 
+            // Check permissions
+            const requiredPermission = item.dataset.requiredPermission;
+            if (requiredPermission && !this.hasPermission(requiredPermission)) {
+                item.style.display = 'none';
+                return;
+            }
+
             item.addEventListener('click', (e) => {
                 e.preventDefault();
                 const section = item.dataset.section;
                 
-                if (section === 'roles') {
-                    this.handleRolesNavigation(item);
-                } else {
+                if (this.hasPermission(item.dataset.requiredPermission)) {
                     this.loadSection(section);
+                } else {
+                    window.dashboardApp.userInterface.showError(
+                        'You do not have permission to access this section'
+                    );
                 }
             });
         });
     }
 
-    handleRolesNavigation(item) {
+    hasPermission(permission) {
+        if (!permission) return true;
         const userSession = window.dashboardApp.userSession;
-        if (userSession.hasPermission('manage_roles') || userSession.userData.role === 'superadmin') {
-            this.loadSection('roles');
-        } else {
-            window.dashboardApp.userInterface.showErrorNotification(
-                'You do not have permission to access role management.'
-            );
-        }
+        return userSession.hasPermission(permission);
     }
 
     loadSection(section, updateHistory = true) {
@@ -1391,7 +1397,7 @@ class SidebarManager {
             overlay.remove();
         }
     }
-}   
+}
       // Enhanced User Interface Management
 class UserInterface {
     constructor(userSession, contentLoader) {
