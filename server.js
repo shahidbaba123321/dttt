@@ -3051,6 +3051,355 @@ app.put('/api/roles/:roleId', verifyToken, verifyAdmin, async (req, res) => {
     }
 });
 
+// User Management Routes
+
+// Get all users with filtering and pagination
+app.get('/api/users', verifyToken, async (req, res) => {
+    try {
+        const {
+            page = 1,
+            limit = 10,
+            search,
+            role,
+            status,
+            tfa
+        } = req.query;
+
+        // Build filter
+        const filter = {};
+
+        if (search) {
+            filter.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        if (role) filter.role = role;
+        if (status) filter.status = status;
+        if (tfa) filter.requires2FA = tfa === 'enabled';
+
+        // Get total count
+        const total = await users.countDocuments(filter);
+
+        // Get users with pagination
+        const usersList = await users
+            .find(filter)
+            .sort({ createdAt: -1 })
+            .skip((parseInt(page) - 1) * parseInt(limit))
+            .limit(parseInt(limit))
+            .toArray();
+
+        // Remove sensitive information
+        const sanitizedUsers = usersList.map(user => {
+            const { password, resetToken, resetTokenExpires, ...safeUser } = user;
+            return safeUser;
+        });
+
+        res.json({
+            success: true,
+            data: sanitizedUsers,
+            total,
+            page: parseInt(page),
+            totalPages: Math.ceil(total / parseInt(limit))
+        });
+
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching users'
+        });
+    }
+});
+
+// Get single user
+app.get('/api/users/:userId', verifyToken, async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const user = await users.findOne({ 
+            _id: new ObjectId(userId)
+        });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Remove sensitive information
+        const { password, resetToken, resetTokenExpires, ...safeUser } = user;
+
+        res.json({
+            success: true,
+            data: safeUser
+        });
+
+    } catch (error) {
+        console.error('Error fetching user:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching user'
+        });
+    }
+});
+
+// Create new user
+app.post('/api/users', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const {
+            name,
+            email,
+            password,
+            department,
+            role,
+            requires2FA = false
+        } = req.body;
+
+        // Validate required fields
+        if (!name || !email || !password || !role) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required fields'
+            });
+        }
+
+        // Check if email exists
+        const existingUser = await users.findOne({ 
+            email: { $regex: new RegExp(`^${email}$`, 'i') }
+        });
+
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email already exists'
+            });
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        // Create user
+        const newUser = {
+            name,
+            email,
+            password: hashedPassword,
+            department,
+            role,
+            requires2FA,
+            status: 'active',
+            createdAt: new Date(),
+            createdBy: new ObjectId(req.user.userId),
+            failedLoginAttempts: 0,
+            lastLogin: null
+        };
+
+        const result = await users.insertOne(newUser);
+
+        // Create audit log
+        await createAuditLog(
+            'USER_CREATED',
+            req.user.userId,
+            result.insertedId,
+            {
+                name,
+                email,
+                department,
+                role
+            }
+        );
+
+        res.status(201).json({
+            success: true,
+            message: 'User created successfully',
+            data: {
+                _id: result.insertedId,
+                ...newUser,
+                password: undefined
+            }
+        });
+
+    } catch (error) {
+        console.error('Error creating user:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error creating user'
+        });
+    }
+});
+
+// Update user
+app.put('/api/users/:userId', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const {
+            name,
+            email,
+            department,
+            role,
+            requires2FA,
+            status
+        } = req.body;
+
+        const updateDoc = {
+            $set: {
+                ...(name && { name }),
+                ...(email && { email }),
+                ...(department && { department }),
+                ...(role && { role }),
+                ...(requires2FA !== undefined && { requires2FA }),
+                ...(status && { status }),
+                updatedAt: new Date(),
+                updatedBy: new ObjectId(req.user.userId)
+            }
+        };
+
+        const result = await users.updateOne(
+            { _id: new ObjectId(userId) },
+            updateDoc
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Create audit log
+        await createAuditLog(
+            'USER_UPDATED',
+            req.user.userId,
+            userId,
+            {
+                updates: req.body
+            }
+        );
+
+        res.json({
+            success: true,
+            message: 'User updated successfully'
+        });
+
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating user'
+        });
+    }
+});
+
+// Delete user
+app.delete('/api/users/:userId', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        // Get user before deletion
+        const user = await users.findOne({ _id: new ObjectId(userId) });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Move to deleted_users collection
+        await deleted_users.insertOne({
+            ...user,
+            deletedAt: new Date(),
+            deletedBy: new ObjectId(req.user.userId)
+        });
+
+        // Delete user
+        await users.deleteOne({ _id: new ObjectId(userId) });
+
+        // Create audit log
+        await createAuditLog(
+            'USER_DELETED',
+            req.user.userId,
+            userId,
+            {
+                email: user.email,
+                name: user.name
+            }
+        );
+
+        res.json({
+            success: true,
+            message: 'User deleted successfully'
+        });
+
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error deleting user'
+        });
+    }
+});
+
+// Change user password
+app.put('/api/users/:userId/password', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { password } = req.body;
+
+        if (!password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Password is required'
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        const result = await users.updateOne(
+            { _id: new ObjectId(userId) },
+            {
+                $set: {
+                    password: hashedPassword,
+                    passwordLastChanged: new Date(),
+                    updatedAt: new Date(),
+                    updatedBy: new ObjectId(req.user.userId)
+                }
+            }
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Create audit log
+        await createAuditLog(
+            'USER_PASSWORD_CHANGED',
+            req.user.userId,
+            userId,
+            {
+                changedBy: req.user.userId
+            }
+        );
+
+        res.json({
+            success: true,
+            message: 'Password changed successfully'
+        });
+
+    } catch (error) {
+        console.error('Error changing password:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error changing password'
+        });
+    }
+});
+
 // Helper function to calculate company storage usage
 async function calculateCompanyStorageUsage(companyId) {
     try {
