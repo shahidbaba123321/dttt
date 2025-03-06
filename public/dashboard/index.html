@@ -813,8 +813,7 @@ body {
             </div>
         </main>
     </div>
-
-  <script>
+<script>
 // Content Loading Management
 class ContentLoader {
     constructor() {
@@ -906,19 +905,76 @@ class ContentLoader {
             .retry-button:hover {
                 background-color: var(--primary-dark);
             }
+
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                border-radius: var(--border-radius-md);
+                background-color: white;
+                box-shadow: var(--shadow-lg);
+                z-index: 1100;
+                animation: slideIn 0.3s ease-out;
+            }
+
+            .notification-content {
+                display: flex;
+                align-items: center;
+                gap: var(--spacing-sm);
+            }
+
+            .notification.success {
+                background-color: #DEF7EC;
+                color: #03543F;
+            }
+
+            .notification.error {
+                background-color: #FDE8E8;
+                color: #9B1C1C;
+            }
+
+            .notification.warning {
+                background-color: #FEF3C7;
+                color: #92400E;
+            }
+
+            .notification.info {
+                background-color: #E1EFFE;
+                color: #1E429F;
+            }
+
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
         `;
 
         const styleSheet = document.createElement('style');
         styleSheet.textContent = styles;
         document.head.appendChild(styleSheet);
     }
-
-    async loadContent(section) {
+        async loadContent(section) {
         try {
             this.showLoadingState();
 
+            // Remove any existing instance
+            if (this.moduleInstances.has(this.currentPage)) {
+                const instance = this.moduleInstances.get(this.currentPage);
+                if (instance && typeof instance.cleanup === 'function') {
+                    await instance.cleanup();
+                }
+                this.moduleInstances.delete(this.currentPage);
+            }
+
             const fileName = this.getFileName(section);
-            const fetchUrl = `${this.baseUrl}/dashboard/${fileName}`;
+            const fetchUrl = `${this.baseUrl}/public/dashboard/${fileName}`;
             console.log('Fetching content from:', fetchUrl);
 
             const response = await fetch(fetchUrl);
@@ -930,6 +986,7 @@ class ContentLoader {
             const content = await response.text();
             this.contentContainer.innerHTML = content;
 
+            // Initialize module script if needed
             if (section === 'roles') {
                 await this.initializeRolesPermissions();
             }
@@ -954,52 +1011,54 @@ class ContentLoader {
             'dashboard': 'dashboard.html',
             'companies': 'companies.html',
             'roles': 'roles-permissions.html',
-            'users': 'user-manage.html',
-            'general-settings': 'settings.html'
+            'users': 'users.html',
+            'general-settings': 'settings.html',
+            'pricing': 'pricing.html',
+            'security': 'security.html',
+            'modules': 'modules.html',
+            'module-settings': 'module-settings.html',
+            'org-chart': 'org-chart.html',
+            'analytics': 'analytics.html',
+            'backup': 'backup.html',
+            'audit': 'audit.html',
+            'api': 'api.html',
+            'support': 'support.html',
+            'documentation': 'documentation.html'
         };
 
         return fileMap[section] || `${section}.html`;
     }
 
     async initializeRolesPermissions() {
-    try {
-        // Remove any existing instance
-        if (this.moduleInstances.has('roles')) {
-            const instance = this.moduleInstances.get('roles');
-            if (instance && typeof instance.cleanup === 'function') {
-                await instance.cleanup();
+        try {
+            // Check if script is already loaded
+            const existingScript = document.querySelector('script[src*="roles-permissions.js"]');
+            if (existingScript) {
+                existingScript.remove();
             }
-            this.moduleInstances.delete('roles');
-        }
 
-        // Check if script is already loaded
-        const existingScript = document.querySelector('script[src*="roles-permissions.js"]');
-        if (existingScript) {
-            existingScript.remove();
-        }
+            // Create and append the script
+            const script = document.createElement('script');
+            script.src = `${this.baseUrl}/public/dashboard/js/roles-permissions.js`;
+            
+            await new Promise((resolve, reject) => {
+                script.onload = resolve;
+                script.onerror = reject;
+                document.body.appendChild(script);
+            });
 
-        // Create and append the script
-        const script = document.createElement('script');
-        script.src = `${this.baseUrl}/dashboard/js/roles-permissions.js`;
-        
-        await new Promise((resolve, reject) => {
-            script.onload = resolve;
-            script.onerror = reject;
-            document.body.appendChild(script);
-        });
-
-        // Initialize new instance
-        if (typeof window.RolesPermissionsManager !== 'undefined') {
-            const instance = new window.RolesPermissionsManager(this.apiBaseUrl);
-            this.moduleInstances.set('roles', instance);
-        } else {
-            throw new Error('RolesPermissionsManager not loaded properly');
+            // Initialize new instance
+            if (typeof window.RolesPermissionsManager !== 'undefined') {
+                const instance = new window.RolesPermissionsManager(this.apiBaseUrl);
+                this.moduleInstances.set('roles', instance);
+            } else {
+                throw new Error('RolesPermissionsManager not loaded properly');
+            }
+        } catch (error) {
+            console.error('Error initializing roles-permissions module:', error);
+            throw error;
         }
-    } catch (error) {
-        console.error('Error initializing roles-permissions module:', error);
-        throw error;
     }
-}
 
     showLoadingState() {
         const loader = document.createElement('div');
@@ -1051,17 +1110,16 @@ class ContentLoader {
         window.history.pushState({ section }, '', url);
     }
 }
-      // User Session Management
+
+// User Session Management
 class UserSession {
     constructor() {
         this.token = this.getQueryParam('token') || localStorage.getItem('token');
         this.baseUrl = 'https://18.215.160.136.nip.io/api';
         this.userData = null;
         this.checkAuthentication();
-        this.initializeUserData();
     }
-
-    getQueryParam(param) {
+        getQueryParam(param) {
         const urlParams = new URLSearchParams(window.location.search);
         return urlParams.get(param);
     }
@@ -1100,9 +1158,12 @@ class UserSession {
             this.updateUIWithUserData();
             this.setupPermissions();
 
+            return this.userData;
+
         } catch (error) {
             console.error('Error fetching user data:', error);
             this.handleAuthError(error);
+            throw error;
         }
     }
 
@@ -1316,36 +1377,64 @@ class SidebarManager {
     initializeNavigation() {
         const navItems = this.sidebar.querySelectorAll('.nav-item');
         
-        navItems.forEach(item => {
-            const textContent = item.querySelector('span').textContent;
-            item.setAttribute('data-title', textContent);
+        const initializeItems = () => {
+            navItems.forEach(item => {
+                const textContent = item.querySelector('span').textContent;
+                item.setAttribute('data-title', textContent);
 
-            // Check permissions
-            const requiredPermission = item.dataset.requiredPermission;
-            if (requiredPermission && !this.hasPermission(requiredPermission)) {
-                item.style.display = 'none';
-                return;
-            }
-
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                const section = item.dataset.section;
-                
-                if (this.hasPermission(item.dataset.requiredPermission)) {
-                    this.loadSection(section);
-                } else {
-                    window.dashboardApp.userInterface.showError(
-                        'You do not have permission to access this section'
-                    );
+                // Check permissions
+                const requiredPermission = item.dataset.requiredPermission;
+                if (requiredPermission && !this.hasPermission(requiredPermission)) {
+                    item.style.display = 'none';
+                    return;
                 }
+
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const section = item.dataset.section;
+                    
+                    if (this.hasPermission(item.dataset.requiredPermission)) {
+                        this.loadSection(section);
+                    } else {
+                        if (window.dashboardApp?.userInterface) {
+                            window.dashboardApp.userInterface.showError(
+                                'You do not have permission to access this section'
+                            );
+                        }
+                    }
+                });
             });
-        });
+        };
+
+        // Check if user session is available or wait for it
+        if (window.dashboardApp?.userSession) {
+            initializeItems();
+        } else {
+            // Wait for user session to be initialized
+            const checkInterval = setInterval(() => {
+                if (window.dashboardApp?.userSession) {
+                    clearInterval(checkInterval);
+                    initializeItems();
+                }
+            }, 100);
+
+            // Clear interval after 5 seconds if user session is still not available
+            setTimeout(() => {
+                clearInterval(checkInterval);
+                console.error('User session initialization timeout');
+            }, 5000);
+        }
     }
 
     hasPermission(permission) {
         if (!permission) return true;
-        const userSession = window.dashboardApp.userSession;
-        return userSession.hasPermission(permission);
+        
+        if (!window.dashboardApp || !window.dashboardApp.userSession) {
+            console.warn('User session not initialized');
+            return false;
+        }
+
+        return window.dashboardApp.userSession.hasPermission(permission);
     }
 
     loadSection(section, updateHistory = true) {
@@ -1409,7 +1498,7 @@ class SidebarManager {
         }
     }
 }
-      // Enhanced User Interface Management
+    // Enhanced User Interface Management
 class UserInterface {
     constructor(userSession, contentLoader) {
         this.userSession = userSession;
@@ -1419,20 +1508,23 @@ class UserInterface {
     }
 
     initializeEventListeners() {
+        // User dropdown toggle
         const userProfileDropdown = document.getElementById('userProfileDropdown');
         const userDropdown = document.getElementById('userDropdown');
 
-        userProfileDropdown.addEventListener('click', (e) => {
+        userProfileDropdown?.addEventListener('click', (e) => {
             e.stopPropagation();
             userDropdown.classList.toggle('show');
         });
 
+        // Close dropdown when clicking outside
         document.addEventListener('click', () => {
-            userDropdown.classList.remove('show');
+            userDropdown?.classList.remove('show');
         });
 
+        // Logout button
         const logoutButton = document.getElementById('logoutButton');
-        logoutButton.addEventListener('click', (e) => {
+        logoutButton?.addEventListener('click', (e) => {
             e.preventDefault();
             this.handleLogout();
         });
@@ -1483,45 +1575,12 @@ class UserInterface {
 
     setupGlobalEventHandlers() {
         document.addEventListener('contentLoaded', (event) => {
-            const section = event.detail.section;
-            if (section === 'roles') {
-                this.initializeRolesPermissionsUI();
-            }
+            console.log(`Content loaded: ${event.detail.section}`);
         });
-    }
 
-    initializeRolesPermissionsUI() {
-        const permissionsContainer = document.querySelector('.permissions-groups');
-        if (permissionsContainer) {
-            this.setupPermissionsHandlers(permissionsContainer);
-        }
-    }
-
-    setupPermissionsHandlers(container) {
-        container.addEventListener('change', (e) => {
-            if (e.target.matches('.permission-checkbox')) {
-                this.handlePermissionChange(e.target);
-            }
+        document.addEventListener('permissionChange', (event) => {
+            console.log('Permission change:', event.detail);
         });
-    }
-
-    async handlePermissionChange(checkbox) {
-        try {
-            const permissionName = checkbox.id;
-            const isChecked = checkbox.checked;
-            
-            this.showLoadingNotification('Updating permissions...');
-
-            const event = new CustomEvent('permissionChange', {
-                detail: { permission: permissionName, value: isChecked }
-            });
-            document.dispatchEvent(event);
-
-        } catch (error) {
-            console.error('Error updating permission:', error);
-            this.showErrorNotification('Failed to update permission');
-            checkbox.checked = !checkbox.checked;
-        }
     }
 
     showNotification(message, type = 'info') {
@@ -1529,20 +1588,25 @@ class UserInterface {
             clearTimeout(this.notificationTimeout);
         }
 
+        // Remove existing notifications
+        document.querySelectorAll('.notification').forEach(n => n.remove());
+
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
         notification.innerHTML = `
             <div class="notification-content">
                 <i class="fas ${this.getNotificationIcon(type)}"></i>
-                <span>${message}</span>
+                <span>${this.escapeHtml(message)}</span>
             </div>
         `;
 
-        document.querySelectorAll('.notification').forEach(n => n.remove());
         document.body.appendChild(notification);
+        
+        notification.style.animation = 'slideIn 0.3s ease-out';
 
         this.notificationTimeout = setTimeout(() => {
-            notification.remove();
+            notification.style.animation = 'slideOut 0.3s ease-in';
+            setTimeout(() => notification.remove(), 300);
         }, 3000);
     }
 
@@ -1571,25 +1635,45 @@ class UserInterface {
             default: return 'fa-info-circle';
         }
     }
+
+    escapeHtml(unsafe) {
+        if (!unsafe) return '';
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
 }
 
 // Dashboard Application Class
 class DashboardApp {
     constructor() {
-        this.contentLoader = new ContentLoader();
-        this.userSession = new UserSession();
-        this.sidebarManager = new SidebarManager(this.contentLoader);
-        this.userInterface = new UserInterface(this.userSession, this.contentLoader);
-        
         this.initialize();
     }
 
-    initialize() {
-        this.handleInitialRoute();
-        this.setupErrorBoundary();
-        this.initializePerformanceMonitoring();
-        this.initializeNotificationStyles();
-        this.setupGlobalEventHandlers();
+    async initialize() {
+        try {
+            // Initialize user session first
+            this.userSession = new UserSession();
+            // Wait for user data to be loaded
+            await this.userSession.initializeUserData();
+
+            // Then initialize other components
+            this.contentLoader = new ContentLoader();
+            this.sidebarManager = new SidebarManager(this.contentLoader);
+            this.userInterface = new UserInterface(this.userSession, this.contentLoader);
+            
+            this.handleInitialRoute();
+            this.setupErrorBoundary();
+            this.initializePerformanceMonitoring();
+            this.initializeNotificationStyles();
+            this.setupGlobalEventHandlers();
+        } catch (error) {
+            console.error('Error initializing dashboard:', error);
+            this.handleInitializationError(error);
+        }
     }
 
     handleInitialRoute() {
@@ -1610,7 +1694,7 @@ class DashboardApp {
                 colno,
                 error
             });
-            this.userInterface.showErrorNotification('An unexpected error occurred');
+            this.userInterface?.showErrorNotification('An unexpected error occurred');
             return false;
         };
     }
@@ -1635,70 +1719,7 @@ class DashboardApp {
         });
     }
 
-    initializeNotificationStyles() {
-        const styles = `
-            .notification {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 15px 25px;
-                border-radius: var(--border-radius-md);
-                background-color: white;
-                box-shadow: var(--shadow-lg);
-                z-index: 1100;
-                animation: slideIn 0.3s ease-out;
-            }
-
-            .notification-content {
-                display: flex;
-                align-items: center;
-                gap: var(--spacing-sm);
-            }
-
-            .notification.success {
-                background-color: #DEF7EC;
-                color: #03543F;
-            }
-
-            .notification.error {
-                background-color: #FDE8E8;
-                color: #9B1C1C;
-            }
-
-            .notification.warning {
-                background-color: #FEF3C7;
-                color: #92400E;
-            }
-
-            .notification.info {
-                background-color: #E1EFFE;
-                color: #1E429F;
-            }
-
-            @keyframes slideIn {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-        `;
-
-        const styleSheet = document.createElement('style');
-        styleSheet.textContent = styles;
-        document.head.appendChild(styleSheet);
-    }
-}
-
-// Initialize Application
-document.addEventListener('DOMContentLoaded', () => {
-    try {
-        window.dashboardApp = new DashboardApp();
-    } catch (error) {
-        console.error('Error initializing dashboard:', error);
+    handleInitializationError(error) {
         const mainContent = document.querySelector('.dashboard-content');
         if (mainContent) {
             mainContent.innerHTML = `
@@ -1706,6 +1727,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     <i class="fas fa-exclamation-triangle"></i>
                     <h2>Something went wrong</h2>
                     <p>Unable to initialize the dashboard. Please try refreshing the page.</p>
+                    <p class="error-details">${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    initializeNotificationStyles() {
+        // Notification styles are already included in ContentLoader styles
+    }
+}
+
+// Initialize Application
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        window.dashboardApp = new DashboardApp();
+    } catch (error) {
+        console.error('Error creating dashboard:', error);
+        const mainContent = document.querySelector('.dashboard-content');
+        if (mainContent) {
+            mainContent.innerHTML = `
+                <div class="error-state">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h2>Something went wrong</h2>
+                    <p>Unable to initialize the dashboard. Please try refreshing the page.</p>
+                    <p class="error-details">${error.message}</p>
                 </div>
             `;
         }
