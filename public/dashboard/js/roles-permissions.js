@@ -413,7 +413,7 @@ class RolesPermissionsManager {
         }
     }
 
-    async fetchPermissions() {
+   async fetchPermissions() {
     try {
         const response = await fetch(`${this.baseUrl}/permissions`, {
             method: 'GET',
@@ -429,25 +429,24 @@ class RolesPermissionsManager {
         }
 
         const result = await response.json();
-        console.log('Raw permissions response:', result);
+        console.log('Permissions API response:', result);
 
         if (!result.success) {
             throw new Error('Failed to fetch permissions');
         }
 
-        // Ensure we're returning the permissions array directly
+        // Return the data as is, since it's already categorized
         return {
             success: true,
-            data: Array.isArray(result.data) ? result.data : 
-                  result.data.permissions || result.data || []
+            data: result.data
         };
     } catch (error) {
         console.error('Error fetching permissions:', error);
-        return { success: false, data: [] };
+        return { success: false, data: {} };
     }
 }
 
-  organizePermissionsByCategory(permissions) {
+organizePermissionsByCategory(permissions) {
     if (!permissions || Object.keys(permissions).length === 0) {
         console.warn('No permissions data received');
         return {};
@@ -473,13 +472,10 @@ class RolesPermissionsManager {
         categorizedPermissions[category] = [];
     });
 
-    console.log('Raw permissions data:', permissions);
-
-    // Handle the permissions data structure
-    // Check if permissions is an array (from your server structure)
-    if (Array.isArray(permissions)) {
-        permissions.forEach(permission => {
-            if (permission.category && permission.name) {
+    // Handle the permissions data structure where permissions are grouped by category
+    Object.entries(permissions).forEach(([category, perms]) => {
+        if (Array.isArray(perms)) {
+            perms.forEach(permission => {
                 if (!categorizedPermissions[permission.category]) {
                     categorizedPermissions[permission.category] = [];
                 }
@@ -487,26 +483,12 @@ class RolesPermissionsManager {
                     name: permission.name,
                     displayName: permission.displayName || this.formatPermissionName(permission.name),
                     description: permission.description || '',
-                    category: permission.category
+                    category: permission.category,
+                    _id: permission._id // Preserve the ID if it exists
                 });
-            }
-        });
-    } else {
-        // Handle if permissions come as an object
-        Object.values(permissions).forEach(permission => {
-            if (permission.category && permission.name) {
-                if (!categorizedPermissions[permission.category]) {
-                    categorizedPermissions[permission.category] = [];
-                }
-                categorizedPermissions[permission.category].push({
-                    name: permission.name,
-                    displayName: permission.displayName || this.formatPermissionName(permission.name),
-                    description: permission.description || '',
-                    category: permission.category
-                });
-            }
-        });
-    }
+            });
+        }
+    });
 
     // Remove empty categories
     Object.keys(categorizedPermissions).forEach(category => {
@@ -515,7 +497,7 @@ class RolesPermissionsManager {
         }
     });
 
-    console.log('Organized permissions:', categorizedPermissions);
+    console.log('Organized permissions by category:', categorizedPermissions);
     return categorizedPermissions;
 }
 
@@ -579,8 +561,11 @@ class RolesPermissionsManager {
         renderPermissions() {
     if (!this.currentRole || !this.permissionsGroups) return;
 
-    console.log('Current role permissions:', this.currentRole.permissions);
+    console.log('Rendering permissions for role:', this.currentRole);
+    console.log('Available permissions:', this.permissions);
+
     const categorizedPermissions = this.organizePermissionsByCategory(this.permissions);
+    console.log('Categorized permissions:', categorizedPermissions);
     
     if (Object.keys(categorizedPermissions).length === 0) {
         this.permissionsGroups.innerHTML = `
@@ -599,7 +584,6 @@ class RolesPermissionsManager {
         .filter(Boolean)
         .join('');
 
-    // Initialize checkboxes and tooltips
     const checkboxes = this.permissionsGroups.querySelectorAll('input[type="checkbox"]');
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', () => this.handlePermissionChange(checkbox));
@@ -607,7 +591,7 @@ class RolesPermissionsManager {
 
     this.initializeTooltips();
 }
-
+    
     createPermissionGroup(category, permissions) {
         return `
             <div class="permission-group">
@@ -623,32 +607,33 @@ class RolesPermissionsManager {
     }
 
     createPermissionItem(permission) {
-        const isChecked = this.currentRole.permissions.includes(permission.name);
-        const isDisabled = this.currentRole.isSystem;
-        
-        return `
-            <div class="permission-item">
-                <div class="permission-checkbox-wrapper">
-                    <input type="checkbox" 
-                           id="${permission.name}" 
-                           class="permission-checkbox"
-                           ${isChecked ? 'checked' : ''}
-                           ${isDisabled ? 'disabled' : ''}
-                           data-tooltip="${this.escapeHtml(permission.description)}"
-                           data-permission="${permission.name}">
-                    <label for="${permission.name}" class="permission-label">
-                        <div class="permission-label-content">
-                            <span class="permission-name">${this.escapeHtml(permission.displayName || permission.name)}</span>
-                            <span class="permission-description">
-                                ${this.escapeHtml(permission.description)}
-                            </span>
-                        </div>
-                    </label>
-                </div>
+    const isChecked = Array.isArray(this.currentRole.permissions) && 
+                     this.currentRole.permissions.includes(permission.name);
+    const isDisabled = this.currentRole.isSystem;
+    
+    return `
+        <div class="permission-item">
+            <div class="permission-checkbox-wrapper">
+                <input type="checkbox" 
+                       id="${permission.name}" 
+                       class="permission-checkbox"
+                       ${isChecked ? 'checked' : ''}
+                       ${isDisabled ? 'disabled' : ''}
+                       data-tooltip="${this.escapeHtml(permission.description)}"
+                       data-permission="${permission.name}">
+                <label for="${permission.name}" class="permission-label">
+                    <div class="permission-label-content">
+                        <span class="permission-name">${this.escapeHtml(permission.displayName || permission.name)}</span>
+                        <span class="permission-description">
+                            ${this.escapeHtml(permission.description)}
+                        </span>
+                    </div>
+                </label>
             </div>
-        `;
-    }
-
+        </div>
+    `;
+}
+    
     async handlePermissionChange(checkbox) {
         if (!this.currentRole || this.currentRole.isSystem) return;
 
