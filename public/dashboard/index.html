@@ -1180,34 +1180,106 @@ class UserSession {
         }
     }
 
-    setupPermissions() {
-        if (!this.userData) return;
+   setupPermissions() {
+    if (!this.userData) return;
 
-        if (this.userData.role !== 'superadmin') {
-            // Hide elements based on permissions
-            document.querySelectorAll('[data-required-permission]').forEach(element => {
-                const requiredPermission = element.dataset.requiredPermission;
-                if (!this.hasPermission(requiredPermission)) {
-                    element.style.display = 'none';
-                }
-            });
-        }
+    // Define all UI elements and their required permissions
+    const uiPermissions = {
+        // Dashboard
+        'dashboard': 'view_dashboard',
 
-        // Show elements based on role-specific permissions
-        this.userData.permissions.forEach(permission => {
-            document.querySelectorAll(`[data-required-permission="${permission}"]`).forEach(element => {
+        // Companies/Organizations
+        'companies': 'view_companies',
+        'manage-companies': 'manage_companies',
+
+        // System Settings
+        'general-settings': 'view_settings',
+        'pricing': 'manage_pricing',
+        'security': 'manage_security',
+
+        // Modules Management
+        'modules': 'view_modules',
+        'module-settings': 'manage_modules',
+
+        // User Management
+        'users': 'view_users',
+        'roles': 'view_roles',
+        'org-chart': 'view_users',
+
+        // Tools
+        'analytics': 'view_analytics',
+        'backup': 'manage_backup',
+        'audit': 'view_audit_logs',
+        'api': 'manage_api',
+
+        // Support
+        'support': 'access_support',
+        'documentation': 'access_support'
+    };
+
+    // Handle permissions based on role
+    if (this.userData.role === 'superadmin') {
+        // Show all sections for superadmin
+        Object.keys(uiPermissions).forEach(section => {
+            document.querySelectorAll(`[data-section="${section}"]`).forEach(element => {
                 element.style.display = '';
             });
         });
+    } else {
+        // For other roles, check individual permissions
+        Object.entries(uiPermissions).forEach(([section, permission]) => {
+            const hasPermission = this.hasPermission(permission);
+            document.querySelectorAll(`[data-section="${section}"]`).forEach(element => {
+                element.style.display = hasPermission ? '' : 'none';
+            });
+        });
+
+        // Check all elements with data-required-permission attribute
+        document.querySelectorAll('[data-required-permission]').forEach(element => {
+            const requiredPermission = element.dataset.requiredPermission;
+            element.style.display = this.hasPermission(requiredPermission) ? '' : 'none';
+        });
     }
 
-    hasPermission(permission) {
-        if (!permission) return true;
-        if (!this.userData) return false;
+    // Update sidebar sections visibility
+    this.updateSidebarSections();
+}
+
+updateSidebarSections() {
+    // Get all nav sections
+    const navSections = document.querySelectorAll('.nav-section');
+    
+    navSections.forEach(section => {
+        // Check if any nav items in this section are visible
+        const navItems = section.querySelectorAll('.nav-item');
+        const hasVisibleItems = Array.from(navItems).some(item => 
+            window.getComputedStyle(item).display !== 'none'
+        );
+
+        // Show/hide the entire section based on visible items
+        const sectionHeader = section.querySelector('.nav-section-header');
+        if (sectionHeader) {
+            sectionHeader.style.display = hasVisibleItems ? '' : 'none';
+        }
         
-        return this.userData.role === 'superadmin' || 
-               (this.userData.permissions || []).includes(permission);
-    }
+        // If no visible items and not the dashboard section, hide the entire section
+        if (!hasVisibleItems && !section.querySelector('[data-section="dashboard"]')) {
+            section.style.display = 'none';
+        }
+    });
+}
+
+hasPermission(permission) {
+    if (!permission) return true;
+    if (!this.userData) return false;
+    
+    // Superadmin has all permissions
+    if (this.userData.role === 'superadmin') return true;
+
+    // Check if user has the specific permission
+    return Array.isArray(this.userData.permissions) && 
+           this.userData.permissions.includes(permission);
+}
 
     generateInitialsAvatar(name, email) {
         let initials;
@@ -1388,36 +1460,39 @@ class SidebarManager {
     }
 
     initializeNavigation() {
-        const navItems = this.sidebar.querySelectorAll('.nav-item');
-        
-        const initializeItems = () => {
-            navItems.forEach(item => {
-                const textContent = item.querySelector('span').textContent;
-                item.setAttribute('data-title', textContent);
+    const navItems = this.sidebar.querySelectorAll('.nav-item');
+    
+    const initializeItems = () => {
+        navItems.forEach(item => {
+            const textContent = item.querySelector('span').textContent;
+            item.setAttribute('data-title', textContent);
 
-                // Check permissions
-                const requiredPermission = item.dataset.requiredPermission;
-                if (requiredPermission && !this.hasPermission(requiredPermission)) {
-                    item.style.display = 'none';
-                    return;
+            // Check permissions
+            const requiredPermission = item.dataset.requiredPermission;
+            const section = item.dataset.section;
+
+            if (requiredPermission && !this.hasPermission(requiredPermission)) {
+                item.style.display = 'none';
+                return;
+            }
+
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (this.hasPermission(requiredPermission)) {
+                    this.loadSection(section);
+                } else {
+                    window.dashboardApp?.userInterface?.showErrorNotification(
+                        'You do not have permission to access this section'
+                    );
                 }
-
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const section = item.dataset.section;
-                    
-                    if (this.hasPermission(item.dataset.requiredPermission)) {
-                        this.loadSection(section);
-                    } else {
-                        if (window.dashboardApp?.userInterface) {
-                            window.dashboardApp.userInterface.showError(
-                                'You do not have permission to access this section'
-                            );
-                        }
-                    }
-                });
             });
-        };
+        });
+
+        // Update section visibility after initializing items
+        if (window.dashboardApp?.userSession) {
+            window.dashboardApp.userSession.updateSidebarSections();
+        }
+    };
 
         // Check if user session is available or wait for it
         if (window.dashboardApp?.userSession) {
