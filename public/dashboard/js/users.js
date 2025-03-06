@@ -13,6 +13,7 @@ class UsersManager {
         this.totalUsers = 0;
         this.users = [];
         this.roles = [];
+        this.currentUserId = null;
         this.filters = {
             search: '',
             role: '',
@@ -24,7 +25,8 @@ class UsersManager {
         this.initializeEventListeners();
         this.loadInitialData();
     }
-       initializeElements() {
+
+    initializeElements() {
         // Main containers
         this.usersTableBody = document.getElementById('usersTableBody');
         this.paginationControls = document.getElementById('paginationControls');
@@ -65,9 +67,9 @@ class UsersManager {
 
         // Error handling for missing elements
         Object.entries(this).forEach(([key, value]) => {
-            if (key !== 'token' && key !== 'baseUrl' && key !== 'currentPage' && 
-                key !== 'pageSize' && key !== 'totalUsers' && key !== 'users' && 
-                key !== 'roles' && key !== 'filters' && !value) {
+            if (key !== 'token' && key !== 'currentPage' && key !== 'pageSize' && 
+                key !== 'totalUsers' && key !== 'users' && key !== 'roles' && 
+                key !== 'currentUserId' && key !== 'filters' && key !== 'baseUrl' && !value) {
                 console.error(`Element not found: ${key}`);
             }
         });
@@ -89,8 +91,8 @@ class UsersManager {
         this.cancelPasswordModal?.addEventListener('click', () => this.closeModal(this.passwordModal));
 
         // Search and filters
-        this.searchInput?.addEventListener('input', debounce(() => {
-            this.filters.search = this.searchInput.value;
+        this.searchInput?.addEventListener('input', debounce((e) => {
+            this.filters.search = e.target.value;
             this.currentPage = 1;
             this.loadUsers();
         }, 300));
@@ -130,9 +132,21 @@ class UsersManager {
             if (e.target === this.deleteModal) this.closeModal(this.deleteModal);
             if (e.target === this.passwordModal) this.closeModal(this.passwordModal);
         });
-    }
 
-    async loadInitialData() {
+        // Prevent modal close when clicking inside
+        this.userModal?.querySelector('.modal-content')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        this.deleteModal?.querySelector('.modal-content')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        this.passwordModal?.querySelector('.modal-content')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+    }
+     async loadInitialData() {
         try {
             this.showLoading();
             await Promise.all([
@@ -187,125 +201,380 @@ class UsersManager {
     }
 
     async loadUsers() {
-    try {
-        const queryParams = new URLSearchParams({
-            page: this.currentPage,
-            limit: this.pageSize,
-            ...this.filters
-        });
+        try {
+            const queryParams = new URLSearchParams({
+                page: this.currentPage,
+                limit: this.pageSize,
+                ...this.filters
+            });
 
-        const response = await fetch(`${this.baseUrl}/users?${queryParams}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
+            const response = await fetch(`${this.baseUrl}/users?${queryParams}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch users');
             }
-        });
 
-        if (!response.ok) {
-            throw new Error('Failed to fetch users');
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to load users');
+            }
+
+            this.users = result.data || [];
+            this.totalUsers = result.total || 0;
+
+            this.renderUsers();
+            this.updatePagination();
+            this.updateDisplayRange();
+
+        } catch (error) {
+            console.error('Error loading users:', error);
+            this.showError('Failed to load users');
+        }
+    }
+
+    renderUsers() {
+        if (!this.usersTableBody) return;
+
+        if (!this.users || this.users.length === 0) {
+            this.usersTableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="no-data">
+                        <div class="no-data-message">
+                            <i class="fas fa-users-slash"></i>
+                            <p>No users found</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
         }
 
-        const result = await response.json();
+        this.usersTableBody.innerHTML = this.users.map(user => {
+            // Safely get user properties with defaults
+            const userName = user?.name || 'N/A';
+            const userEmail = user?.email || 'N/A';
+            const userDepartment = user?.department || 'N/A';
+            const userRole = user?.role || 'N/A';
+            const userStatus = user?.status || 'inactive';
+            const requires2FA = user?.requires2FA || false;
+
+            return `
+                <tr>
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar" style="background-color: ${this.getAvatarColor(userName)}">
+                                ${this.getInitials(userName)}
+                            </div>
+                            <div class="user-details">
+                                <span class="user-name">${this.escapeHtml(userName)}</span>
+                                <span class="user-email">${this.escapeHtml(userEmail)}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${this.escapeHtml(userEmail)}</td>
+                    <td>${this.escapeHtml(userDepartment)}</td>
+                    <td>${this.escapeHtml(this.getRoleName(userRole))}</td>
+                    <td>
+                        <span class="status-badge status-${userStatus.toLowerCase()}">
+                            ${this.capitalizeFirstLetter(userStatus)}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="tfa-status ${requires2FA ? 'tfa-enabled' : 'tfa-disabled'}">
+                            <i class="fas ${requires2FA ? 'fa-shield-alt' : 'fa-shield-alt'}"></i>
+                            ${requires2FA ? 'Enabled' : 'Disabled'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-button edit" 
+                                    onclick="window.usersManager.showEditUserModal('${user._id}')"
+                                    title="Edit User">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-button" 
+                                    onclick="window.usersManager.showPasswordModal('${user._id}')"
+                                    title="Change Password">
+                                <i class="fas fa-key"></i>
+                            </button>
+                            <button class="action-button ${userStatus === 'active' ? 'deactivate' : 'activate'}"
+                                    onclick="window.usersManager.toggleUserStatus('${user._id}')"
+                                    title="${userStatus === 'active' ? 'Deactivate' : 'Activate'} User">
+                                <i class="fas ${userStatus === 'active' ? 'fa-user-slash' : 'fa-user-check'}"></i>
+                            </button>
+                            <button class="action-button delete" 
+                                    onclick="window.usersManager.showDeleteModal('${user._id}')"
+                                    title="Delete User">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+     showCreateUserModal() {
+        this.currentUserId = null;
+        this.userForm.reset();
+        document.getElementById('modalTitle').textContent = 'Add New User';
+        this.userModal.classList.add('show');
+        document.getElementById('userName').focus();
+    }
+
+    async showEditUserModal(userId) {
+        try {
+            this.showLoading();
+            const response = await fetch(`${this.baseUrl}/users/${userId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch user details');
+
+            const result = await response.json();
+            if (!result.success) throw new Error(result.message || 'Failed to fetch user details');
+
+            const user = result.data;
+            this.currentUserId = userId;
+
+            document.getElementById('modalTitle').textContent = 'Edit User';
+            document.getElementById('userName').value = user.name || '';
+            document.getElementById('userEmail').value = user.email || '';
+            document.getElementById('userDepartment').value = user.department || '';
+            document.getElementById('userRole').value = user.role || '';
+            document.querySelector(`input[name="userStatus"][value="${user.status}"]`).checked = true;
+            document.getElementById('enable2FA').checked = user.requires2FA || false;
+
+            this.userModal.classList.add('show');
+            document.getElementById('userName').focus();
+
+        } catch (error) {
+            console.error('Error loading user details:', error);
+            this.showError('Failed to load user details');
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    showPasswordModal(userId) {
+        this.currentUserId = userId;
+        this.passwordForm.reset();
+        this.passwordModal.classList.add('show');
+        document.getElementById('newPassword').focus();
+    }
+
+    showDeleteModal(userId) {
+        this.currentUserId = userId;
+        const user = this.users.find(u => u._id === userId);
         
-        if (!result.success) {
-            throw new Error(result.message || 'Failed to load users');
+        if (user) {
+            const warningText = document.querySelector('#deleteModal .warning-message span');
+            warningText.textContent = `Are you sure you want to delete ${user.name}? This action cannot be undone.`;
         }
-
-        this.users = result.data || [];
-        this.totalUsers = result.total || 0;
-
-        this.renderUsers();
-        this.updatePagination();
-        this.updateDisplayRange();
-
-    } catch (error) {
-        console.error('Error loading users:', error);
-        this.showError('Failed to load users');
-    }
-}
-    
-        renderUsers() {
-    if (!this.usersTableBody) return;
-
-    if (!this.users || this.users.length === 0) {
-        this.usersTableBody.innerHTML = `
-            <tr>
-                <td colspan="7" class="no-data">
-                    <div class="no-data-message">
-                        <i class="fas fa-users-slash"></i>
-                        <p>No users found</p>
-                    </div>
-                </td>
-            </tr>
-        `;
-        return;
+        
+        this.deleteModal.classList.add('show');
     }
 
-    this.usersTableBody.innerHTML = this.users.map(user => {
-        // Safely get user properties with defaults
-        const userName = user?.name || 'N/A';
-        const userEmail = user?.email || 'N/A';
-        const userDepartment = user?.department || 'N/A';
-        const userRole = user?.role || 'N/A';
-        const userStatus = user?.status || 'inactive';
-        const requires2FA = user?.requires2FA || false;
+    async saveUser() {
+        try {
+            const userData = {
+                name: document.getElementById('userName').value.trim(),
+                email: document.getElementById('userEmail').value.trim(),
+                department: document.getElementById('userDepartment').value.trim(),
+                role: document.getElementById('userRole').value,
+                status: document.querySelector('input[name="userStatus"]:checked').value,
+                requires2FA: document.getElementById('enable2FA').checked
+            };
 
-        return `
-            <tr>
-                <td>
-                    <div class="user-info">
-                        <div class="user-avatar" style="background-color: ${this.getAvatarColor(userName)}">
-                            ${this.getInitials(userName)}
-                        </div>
-                        <div class="user-details">
-                            <span class="user-name">${this.escapeHtml(userName)}</span>
-                            <span class="user-email">${this.escapeHtml(userEmail)}</span>
-                        </div>
-                    </div>
-                </td>
-                <td>${this.escapeHtml(userEmail)}</td>
-                <td>${this.escapeHtml(userDepartment)}</td>
-                <td>${this.escapeHtml(this.getRoleName(userRole))}</td>
-                <td>
-                    <span class="status-badge status-${userStatus.toLowerCase()}">
-                        ${this.capitalizeFirstLetter(userStatus)}
-                    </span>
-                </td>
-                <td>
-                    <span class="tfa-status ${requires2FA ? 'tfa-enabled' : 'tfa-disabled'}">
-                        <i class="fas ${requires2FA ? 'fa-shield-alt' : 'fa-shield-alt'}"></i>
-                        ${requires2FA ? 'Enabled' : 'Disabled'}
-                    </span>
-                </td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="action-button edit" 
-                                onclick="window.usersManager.showEditUserModal('${user._id}')"
-                                title="Edit User">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="action-button" 
-                                onclick="window.usersManager.showPasswordModal('${user._id}')"
-                                title="Change Password">
-                            <i class="fas fa-key"></i>
-                        </button>
-                        <button class="action-button ${userStatus === 'active' ? 'deactivate' : 'activate'}"
-                                onclick="window.usersManager.toggleUserStatus('${user._id}')"
-                                title="${userStatus === 'active' ? 'Deactivate' : 'Activate'} User">
-                            <i class="fas ${userStatus === 'active' ? 'fa-user-slash' : 'fa-user-check'}"></i>
-                        </button>
-                        <button class="action-button delete" 
-                                onclick="window.usersManager.showDeleteModal('${user._id}')"
-                                title="Delete User">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    }).join('');
-}
+            const validationErrors = this.validateUserData(userData);
+            if (validationErrors.length > 0) {
+                this.showError(validationErrors[0]);
+                return;
+            }
+
+            this.showLoading();
+
+            const url = this.currentUserId
+                ? `${this.baseUrl}/users/${this.currentUserId}`
+                : `${this.baseUrl}/users`;
+
+            const method = this.currentUserId ? 'PUT' : 'POST';
+
+            // If creating new user, add password
+            if (!this.currentUserId) {
+                userData.password = this.generateTemporaryPassword();
+            }
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to save user');
+            }
+
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to save user');
+            }
+
+            this.closeModal(this.userModal);
+            await this.loadUsers();
+
+            // Show success message with password if new user
+            if (!this.currentUserId && userData.password) {
+                this.showSuccess(`User created successfully. Temporary password: ${userData.password}`);
+            } else {
+                this.showSuccess('User updated successfully');
+            }
+
+        } catch (error) {
+            console.error('Error saving user:', error);
+            this.showError(error.message || 'Failed to save user');
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    async changePassword() {
+        try {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                this.showError('Passwords do not match');
+                return;
+            }
+
+            if (!this.validatePassword(newPassword)) {
+                this.showError('Password must be at least 8 characters long and include uppercase, lowercase, number, and special character');
+                return;
+            }
+
+            this.showLoading();
+
+            const response = await fetch(`${this.baseUrl}/users/${this.currentUserId}/password`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ password: newPassword })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to change password');
+            }
+
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to change password');
+            }
+
+            this.closeModal(this.passwordModal);
+            this.showSuccess('Password changed successfully');
+
+        } catch (error) {
+            console.error('Error changing password:', error);
+            this.showError(error.message || 'Failed to change password');
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    async deleteUser() {
+        try {
+            this.showLoading();
+
+            const response = await fetch(`${this.baseUrl}/users/${this.currentUserId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to delete user');
+            }
+
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to delete user');
+            }
+
+            this.closeModal(this.deleteModal);
+            await this.loadUsers();
+            this.showSuccess('User deleted successfully');
+
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            this.showError(error.message || 'Failed to delete user');
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    async toggleUserStatus(userId) {
+        try {
+            const user = this.users.find(u => u._id === userId);
+            if (!user) throw new Error('User not found');
+
+            const newStatus = user.status === 'active' ? 'inactive' : 'active';
+
+            this.showLoading();
+
+            const response = await fetch(`${this.baseUrl}/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to update user status');
+            }
+
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to update user status');
+            }
+
+            await this.loadUsers();
+            this.showSuccess(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
+
+        } catch (error) {
+            console.error('Error toggling user status:', error);
+            this.showError(error.message || 'Failed to update user status');
+        } finally {
+            this.hideLoading();
+        }
+    }
 
     updatePagination() {
         if (!this.paginationControls) return;
@@ -366,231 +635,28 @@ class UsersManager {
         this.totalUsersElement.textContent = this.totalUsers;
     }
 
-    async showCreateUserModal() {
-        this.currentUserId = null;
-        this.userForm.reset();
-        document.getElementById('modalTitle').textContent = 'Add New User';
-        this.userModal.classList.add('show');
-        document.getElementById('userName').focus();
-    }
-
-    async showEditUserModal(userId) {
-        try {
-            this.showLoading();
-            const response = await fetch(`${this.baseUrl}/users/${userId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) throw new Error('Failed to fetch user details');
-
-            const result = await response.json();
-            if (!result.success) throw new Error(result.message || 'Failed to fetch user details');
-
-            const user = result.data;
-            this.currentUserId = userId;
-
-            document.getElementById('modalTitle').textContent = 'Edit User';
-            document.getElementById('userName').value = user.name || '';
-            document.getElementById('userEmail').value = user.email || '';
-            document.getElementById('userDepartment').value = user.department || '';
-            document.getElementById('userRole').value = user.role || '';
-            document.querySelector(`input[name="userStatus"][value="${user.status}"]`).checked = true;
-            document.getElementById('enable2FA').checked = user.requires2FA || false;
-
-            this.userModal.classList.add('show');
-            document.getElementById('userName').focus();
-
-        } catch (error) {
-            console.error('Error loading user details:', error);
-            this.showError('Failed to load user details');
-        } finally {
-            this.hideLoading();
-        }
-    }
-    async showPasswordModal(userId) {
-        this.currentUserId = userId;
-        this.passwordForm.reset();
-        this.passwordModal.classList.add('show');
-        document.getElementById('newPassword').focus();
-    }
-
-    async showDeleteModal(userId) {
-        this.currentUserId = userId;
-        const user = this.users.find(u => u._id === userId);
-        
-        if (user) {
-            document.getElementById('deleteWarningText').textContent = 
-                `Are you sure you want to delete ${user.name}? This action cannot be undone.`;
-        }
-        
-        this.deleteModal.classList.add('show');
-    }
-       async saveUser() {
-        try {
-            const userData = {
-                name: document.getElementById('userName').value.trim(),
-                email: document.getElementById('userEmail').value.trim(),
-                department: document.getElementById('userDepartment').value.trim(),
-                role: document.getElementById('userRole').value,
-                status: document.querySelector('input[name="userStatus"]:checked').value,
-                requires2FA: document.getElementById('enable2FA').checked
-            };
-
-            const validationErrors = this.validateUserData(userData);
-            if (validationErrors.length > 0) {
-                this.showError(validationErrors[0]);
-                return;
-            }
-
-            this.showLoading();
-
-            const url = this.currentUserId
-                ? `${this.baseUrl}/users/${this.currentUserId}`
-                : `${this.baseUrl}/users`;
-
-            const method = this.currentUserId ? 'PUT' : 'POST';
-
-            const response = await fetch(url, {
-                method: method,
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(userData)
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to save user');
-            }
-
-            this.closeModal(this.userModal);
-            await this.loadUsers();
-            this.showSuccess(`User ${this.currentUserId ? 'updated' : 'created'} successfully`);
-
-        } catch (error) {
-            console.error('Error saving user:', error);
-            this.showError(error.message || 'Failed to save user');
-        } finally {
-            this.hideLoading();
-        }
-    }
-
-    async changePassword() {
-        try {
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-
-            if (newPassword !== confirmPassword) {
-                this.showError('Passwords do not match');
-                return;
-            }
-
-            if (!this.validatePassword(newPassword)) {
-                this.showError('Password does not meet security requirements');
-                return;
-            }
-
-            this.showLoading();
-
-            const response = await fetch(`${this.baseUrl}/users/${this.currentUserId}/password`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ password: newPassword })
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to change password');
-            }
-
-            this.closeModal(this.passwordModal);
-            this.showSuccess('Password changed successfully');
-
-        } catch (error) {
-            console.error('Error changing password:', error);
-            this.showError(error.message || 'Failed to change password');
-        } finally {
-            this.hideLoading();
-        }
-    }
-
-    async deleteUser() {
-        try {
-            this.showLoading();
-
-            const response = await fetch(`${this.baseUrl}/users/${this.currentUserId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to delete user');
-            }
-
-            this.closeModal(this.deleteModal);
-            await this.loadUsers();
-            this.showSuccess('User deleted successfully');
-
-        } catch (error) {
-            console.error('Error deleting user:', error);
-            this.showError(error.message || 'Failed to delete user');
-        } finally {
-            this.hideLoading();
-        }
-    }
-
-    async toggleUserStatus(userId) {
-        try {
-            const user = this.users.find(u => u._id === userId);
-            if (!user) throw new Error('User not found');
-
-            const newStatus = user.status === 'active' ? 'inactive' : 'active';
-
-            this.showLoading();
-
-            const response = await fetch(`${this.baseUrl}/users/${userId}/status`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ status: newStatus })
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to update user status');
-            }
-
-            await this.loadUsers();
-            this.showSuccess(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
-
-        } catch (error) {
-            console.error('Error toggling user status:', error);
-            this.showError(error.message || 'Failed to update user status');
-        } finally {
-            this.hideLoading();
-        }
-    }
-
     changePage(page) {
-        if (page < 1 || page > Math.ceil(this.totalUsers / this.pageSize)) return;
+        const totalPages = Math.ceil(this.totalUsers / this.pageSize);
+        if (page < 1 || page > totalPages) return;
+        
         this.currentPage = page;
         this.loadUsers();
     }
 
+    closeModal(modal) {
+        if (!modal) return;
+        modal.classList.remove('show');
+        if (modal === this.userModal) {
+            this.userForm.reset();
+            this.currentUserId = null;
+        }
+        if (modal === this.passwordModal) {
+            this.passwordForm.reset();
+            this.currentUserId = null;
+        }
+    }
+
+     // Utility Methods
     validateUserData(userData) {
         const errors = [];
 
@@ -625,69 +691,66 @@ class UsersManager {
                hasLowerCase && 
                hasNumbers && 
                hasSpecialChar;
-    } 
-        // Utility Functions
-    closeModal(modal) {
-        if (!modal) return;
-        modal.classList.remove('show');
-        if (modal === this.userModal) {
-            this.userForm.reset();
-            this.currentUserId = null;
+    }
+
+    generateTemporaryPassword() {
+        const length = 12;
+        const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+        let password = '';
+        
+        // Ensure at least one of each required character type
+        password += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random() * 26)];
+        password += 'abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random() * 26)];
+        password += '0123456789'[Math.floor(Math.random() * 10)];
+        password += '!@#$%^&*'[Math.floor(Math.random() * 8)];
+
+        // Fill the rest randomly
+        for (let i = password.length; i < length; i++) {
+            password += charset[Math.floor(Math.random() * charset.length)];
         }
-        if (modal === this.passwordModal) {
-            this.passwordForm.reset();
-            this.currentUserId = null;
+
+        // Shuffle the password
+        return password.split('').sort(() => Math.random() - 0.5).join('');
+    }
+
+    getInitials(name) {
+        if (!name || name === 'N/A') return 'NA';
+        
+        return name
+            .split(' ')
+            .map(word => word[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+    }
+
+    getAvatarColor(name) {
+        if (!name || name === 'N/A') return '#6B7280'; // Default gray color
+        
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) {
+            hash = name.charCodeAt(i) + ((hash << 5) - hash);
         }
+        
+        const hue = hash % 360;
+        return `hsl(${hue}, 70%, 45%)`;
     }
 
     getRoleName(roleId) {
-    const role = this.roles.find(r => r._id === roleId);
-    return role ? role.name : 'Unknown Role';
-}
-
-    getInitials(name) {
-    if (!name || name === 'N/A') return 'NA';
-    
-    return name
-        .split(' ')
-        .map(word => word[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-}
-    getAvatarColor(name) {
-    if (!name || name === 'N/A') return '#6B7280'; // Default gray color
-    
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        const role = this.roles.find(r => r._id === roleId);
+        return role ? role.name : 'Unknown Role';
     }
-    
-    const hue = hash % 360;
-    return `hsl(${hue}, 70%, 45%)`;
-}
-
-
-    capitalizeFirstLetter(string) {
-    if (!string) return '';
-    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
-}
-
 
     isValidEmail(email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
     }
 
-    escapeHtml(unsafe) {
-    if (!unsafe) return '';
-    return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
+    capitalizeFirstLetter(string) {
+        if (!string) return '';
+        return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+    }
+
     showLoading() {
         const loader = document.createElement('div');
         loader.className = 'loading-overlay';
@@ -708,56 +771,51 @@ class UsersManager {
     }
 
     showError(message) {
-        this.showNotification(message, 'error');
-    }
-
-    showSuccess(message) {
-        this.showNotification(message, 'success');
-    }
-
-    showNotification(message, type = 'info') {
         const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
+        notification.className = 'notification error';
         notification.innerHTML = `
             <div class="notification-content">
-                <i class="fas ${this.getNotificationIcon(type)}"></i>
+                <i class="fas fa-exclamation-circle"></i>
                 <span>${this.escapeHtml(message)}</span>
             </div>
         `;
+        this.showNotification(notification);
+    }
 
+    showSuccess(message) {
+        const notification = document.createElement('div');
+        notification.className = 'notification success';
+        notification.innerHTML = `
+            <div class="notification-content">
+                <i class="fas fa-check-circle"></i>
+                <span>${this.escapeHtml(message)}</span>
+            </div>
+        `;
+        this.showNotification(notification);
+    }
+
+    showNotification(notification) {
         // Remove existing notifications
         document.querySelectorAll('.notification').forEach(n => n.remove());
 
+        // Add new notification
         document.body.appendChild(notification);
-        
-        notification.style.animation = 'slideIn 0.3s ease-out';
 
+        // Remove after delay
         setTimeout(() => {
             notification.style.animation = 'slideOut 0.3s ease-in';
             setTimeout(() => notification.remove(), 300);
         }, 3000);
     }
 
-    getNotificationIcon(type) {
-        switch (type) {
-            case 'success': return 'fa-check-circle';
-            case 'error': return 'fa-exclamation-circle';
-            case 'warning': return 'fa-exclamation-triangle';
-            default: return 'fa-info-circle';
-        }
-    }
-
-    // Debounce function for search
-    debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
+    escapeHtml(unsafe) {
+        if (!unsafe) return '';
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 
     cleanup() {
@@ -766,13 +824,17 @@ class UsersManager {
             this.searchInput.removeEventListener('input', this.debounce);
         }
 
+        if (this.createUserBtn) {
+            this.createUserBtn.removeEventListener('click', this.showCreateUserModal);
+        }
+
+        // Remove all modals
+        this.closeModal(this.userModal);
+        this.closeModal(this.deleteModal);
+        this.closeModal(this.passwordModal);
+
         // Remove all notifications and loaders
         document.querySelectorAll('.notification, .loading-overlay').forEach(el => el.remove());
-
-        // Clear timeouts if any
-        if (this.notificationTimeout) {
-            clearTimeout(this.notificationTimeout);
-        }
 
         // Reset state
         this.currentPage = 1;
@@ -795,10 +857,6 @@ class UsersManager {
     }
 }
 
-// Register the class globally
-window.UsersManager = UsersManager;
-})();
-
 // Helper function for debouncing
 function debounce(func, wait) {
     let timeout;
@@ -811,3 +869,7 @@ function debounce(func, wait) {
         timeout = setTimeout(later, wait);
     };
 }
+
+// Register the class globally
+window.UsersManager = UsersManager;
+})();   
