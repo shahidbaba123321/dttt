@@ -818,7 +818,7 @@ body {
 class ContentLoader {
     constructor() {
         this.contentContainer = document.querySelector('.dashboard-content');
-        this.baseUrl = window.location.origin;
+         this.baseUrl = 'https://main.d1cfw592vg73f.amplifyapp.com';
         this.apiBaseUrl = 'https://18.215.160.136.nip.io/api';
         this.currentPage = null;
         this.loadedScripts = new Set();
@@ -960,21 +960,14 @@ class ContentLoader {
         styleSheet.textContent = styles;
         document.head.appendChild(styleSheet);
     }
-        async loadContent(section) {
+       async loadContent(section) {
         try {
             this.showLoadingState();
 
-            // Remove any existing instance
-            if (this.moduleInstances.has(this.currentPage)) {
-                const instance = this.moduleInstances.get(this.currentPage);
-                if (instance && typeof instance.cleanup === 'function') {
-                    await instance.cleanup();
-                }
-                this.moduleInstances.delete(this.currentPage);
-            }
-
+            // Update the fetch URL to match your file structure
             const fileName = this.getFileName(section);
-            const fetchUrl = `${this.baseUrl}/public/dashboard/${fileName}`;
+            // Remove 'public' from the path as it might be at the root in Amplify
+            const fetchUrl = `${this.baseUrl}/dashboard/${fileName}`;
             console.log('Fetching content from:', fetchUrl);
 
             const response = await fetch(fetchUrl);
@@ -1029,17 +1022,11 @@ class ContentLoader {
         return fileMap[section] || `${section}.html`;
     }
 
-    async initializeRolesPermissions() {
+     async initializeRolesPermissions() {
         try {
-            // Check if script is already loaded
-            const existingScript = document.querySelector('script[src*="roles-permissions.js"]');
-            if (existingScript) {
-                existingScript.remove();
-            }
-
-            // Create and append the script
+            // Update script path to match your file structure
             const script = document.createElement('script');
-            script.src = `${this.baseUrl}/public/dashboard/js/roles-permissions.js`;
+            script.src = `${this.baseUrl}/dashboard/js/roles-permissions.js`;
             
             await new Promise((resolve, reject) => {
                 script.onload = resolve;
@@ -1059,6 +1046,7 @@ class ContentLoader {
             throw error;
         }
     }
+}
 
     showLoadingState() {
         const loader = document.createElement('div');
