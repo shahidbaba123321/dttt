@@ -20,7 +20,9 @@ class UsersManager {
             status: '',
             tfa: ''
         };
-        
+         // Make instance available globally
+    window.usersManager = this;
+    
         this.initializeElements();
         this.initializeEventListeners();
         this.loadInitialData();
@@ -240,86 +242,128 @@ class UsersManager {
     }
 
     renderUsers() {
-        if (!this.usersTableBody) return;
+    if (!this.usersTableBody) return;
 
-        if (!this.users || this.users.length === 0) {
-            this.usersTableBody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="no-data">
-                        <div class="no-data-message">
-                            <i class="fas fa-users-slash"></i>
-                            <p>No users found</p>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        this.usersTableBody.innerHTML = this.users.map(user => {
-            // Safely get user properties with defaults
-            const userName = user?.name || 'N/A';
-            const userEmail = user?.email || 'N/A';
-            const userDepartment = user?.department || 'N/A';
-            const userRole = user?.role || 'N/A';
-            const userStatus = user?.status || 'inactive';
-            const requires2FA = user?.requires2FA || false;
-
-            return `
-                <tr>
-                    <td>
-                        <div class="user-info">
-                            <div class="user-avatar" style="background-color: ${this.getAvatarColor(userName)}">
-                                ${this.getInitials(userName)}
-                            </div>
-                            <div class="user-details">
-                                <span class="user-name">${this.escapeHtml(userName)}</span>
-                                <span class="user-email">${this.escapeHtml(userEmail)}</span>
-                            </div>
-                        </div>
-                    </td>
-                    <td>${this.escapeHtml(userEmail)}</td>
-                    <td>${this.escapeHtml(userDepartment)}</td>
-                    <td>${this.escapeHtml(this.getRoleName(userRole))}</td>
-                    <td>
-                        <span class="status-badge status-${userStatus.toLowerCase()}">
-                            ${this.capitalizeFirstLetter(userStatus)}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="tfa-status ${requires2FA ? 'tfa-enabled' : 'tfa-disabled'}">
-                            <i class="fas ${requires2FA ? 'fa-shield-alt' : 'fa-shield-alt'}"></i>
-                            ${requires2FA ? 'Enabled' : 'Disabled'}
-                        </span>
-                    </td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="action-button edit" 
-                                    onclick="window.usersManager.showEditUserModal('${user._id}')"
-                                    title="Edit User">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="action-button" 
-                                    onclick="window.usersManager.showPasswordModal('${user._id}')"
-                                    title="Change Password">
-                                <i class="fas fa-key"></i>
-                            </button>
-                            <button class="action-button ${userStatus === 'active' ? 'deactivate' : 'activate'}"
-                                    onclick="window.usersManager.toggleUserStatus('${user._id}')"
-                                    title="${userStatus === 'active' ? 'Deactivate' : 'Activate'} User">
-                                <i class="fas ${userStatus === 'active' ? 'fa-user-slash' : 'fa-user-check'}"></i>
-                            </button>
-                            <button class="action-button delete" 
-                                    onclick="window.usersManager.showDeleteModal('${user._id}')"
-                                    title="Delete User">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+    if (!this.users || this.users.length === 0) {
+        this.usersTableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="no-data">
+                    <div class="no-data-message">
+                        <i class="fas fa-users-slash"></i>
+                        <p>No users found</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
     }
+
+    this.usersTableBody.innerHTML = this.users.map(user => {
+        // Safely get user properties with defaults
+        const userName = user?.name || 'N/A';
+        const userEmail = user?.email || 'N/A';
+        const userDepartment = user?.department || 'N/A';
+        const userRole = user?.role || 'N/A';
+        const userStatus = user?.status || 'inactive';
+        const requires2FA = user?.requires2FA || false;
+
+        return `
+            <tr>
+                <td>
+                    <div class="user-info">
+                        <div class="user-avatar" style="background-color: ${this.getAvatarColor(userName)}">
+                            ${this.getInitials(userName)}
+                        </div>
+                        <div class="user-details">
+                            <span class="user-name">${this.escapeHtml(userName)}</span>
+                            <span class="user-email">${this.escapeHtml(userEmail)}</span>
+                        </div>
+                    </div>
+                </td>
+                <td>${this.escapeHtml(userEmail)}</td>
+                <td>${this.escapeHtml(userDepartment)}</td>
+                <td>${this.escapeHtml(this.getRoleName(userRole))}</td>
+                <td>
+                    <span class="status-badge status-${userStatus.toLowerCase()}">
+                        ${this.capitalizeFirstLetter(userStatus)}
+                    </span>
+                </td>
+                <td>
+                    <span class="tfa-status ${requires2FA ? 'tfa-enabled' : 'tfa-disabled'}">
+                        <i class="fas ${requires2FA ? 'fa-shield-alt' : 'fa-shield-alt'}"></i>
+                        ${requires2FA ? 'Enabled' : 'Disabled'}
+                    </span>
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="action-button edit" 
+                                data-action="edit"
+                                data-user-id="${user._id}"
+                                title="Edit User">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-button" 
+                                data-action="password"
+                                data-user-id="${user._id}"
+                                title="Change Password">
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <button class="action-button ${userStatus === 'active' ? 'deactivate' : 'activate'}"
+                                data-action="toggle-status"
+                                data-user-id="${user._id}"
+                                title="${userStatus === 'active' ? 'Deactivate' : 'Activate'} User">
+                            <i class="fas ${userStatus === 'active' ? 'fa-user-slash' : 'fa-user-check'}"></i>
+                        </button>
+                        <button class="action-button delete" 
+                                data-action="delete"
+                                data-user-id="${user._id}"
+                                title="Delete User">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    // Add event listeners after rendering
+    this.initializeTableActions();
+}
+    initializeTableActions() {
+    if (!this.usersTableBody) return;
+
+    // Remove any existing event listeners
+    const oldButtons = this.usersTableBody.querySelectorAll('.action-button');
+    oldButtons.forEach(button => {
+        button.replaceWith(button.cloneNode(true));
+    });
+
+    // Add new event listeners
+    const buttons = this.usersTableBody.querySelectorAll('.action-button');
+    buttons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const action = button.dataset.action;
+            const userId = button.dataset.userId;
+
+            switch (action) {
+                case 'edit':
+                    this.showEditUserModal(userId);
+                    break;
+                case 'password':
+                    this.showPasswordModal(userId);
+                    break;
+                case 'toggle-status':
+                    this.toggleUserStatus(userId);
+                    break;
+                case 'delete':
+                    this.showDeleteModal(userId);
+                    break;
+            }
+        });
+    });
+}
+
+    
      showCreateUserModal() {
         this.currentUserId = null;
         this.userForm.reset();
