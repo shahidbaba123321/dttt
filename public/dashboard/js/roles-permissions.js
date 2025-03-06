@@ -25,6 +25,7 @@ class RolesPermissionsManager {
                 border: 1px solid var(--border-light);
                 border-radius: var(--border-radius-md);
                 overflow: hidden;
+                background-color: var(--bg-primary);
             }
 
             .permission-item {
@@ -74,6 +75,7 @@ class RolesPermissionsManager {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+                border-bottom: 1px solid var(--border-light);
             }
 
             .permission-count {
@@ -118,6 +120,19 @@ class RolesPermissionsManager {
                 padding: var(--spacing-lg);
                 color: var(--text-tertiary);
                 font-style: italic;
+            }
+
+            .no-permissions-message {
+                text-align: center;
+                padding: var(--spacing-lg);
+                color: var(--text-tertiary);
+                background-color: var(--bg-secondary);
+                border-radius: var(--border-radius-md);
+                margin: var(--spacing-md);
+            }
+
+            .permission-group:empty {
+                display: none;
             }
 
             .tooltip {
@@ -345,46 +360,7 @@ class RolesPermissionsManager {
         });
     }
 
-    organizePermissionsByCategory(permissions) {
-        const categorizedPermissions = {};
-        
-        const categoryOrder = [
-            'Dashboard Access',
-            'User Management',
-            'Role Management',
-            'Company Management',
-            'System Settings',
-            'Module Management',
-            'Analytics & Reports',
-            'System Tools',
-            'Support'
-        ];
-
-        // Initialize categories
-        categoryOrder.forEach(category => {
-            categorizedPermissions[category] = [];
-        });
-
-        // Organize permissions into categories
-        Object.values(permissions).forEach(permission => {
-            if (categorizedPermissions[permission.category]) {
-                categorizedPermissions[permission.category].push(permission);
-            } else {
-                // Handle any permissions with undefined categories
-                categorizedPermissions['System Settings'].push(permission);
-            }
-        });
-
-        // Remove empty categories
-        Object.keys(categorizedPermissions).forEach(category => {
-            if (categorizedPermissions[category].length === 0) {
-                delete categorizedPermissions[category];
-            }
-        });
-
-        return categorizedPermissions;
-    }
-        async loadRolesAndPermissions() {
+    async loadRolesAndPermissions() {
         try {
             this.showLoading();
             const [rolesResponse, permissionsResponse] = await Promise.all([
@@ -399,6 +375,8 @@ class RolesPermissionsManager {
             this.roles = rolesResponse.data || [];
             this.permissions = permissionsResponse.data || {};
             
+            console.log('Loaded permissions:', this.permissions);
+            
             this.renderRolesList();
             this.updateUI();
             this.hideLoading();
@@ -408,8 +386,7 @@ class RolesPermissionsManager {
             this.hideLoading();
         }
     }
-
-    async fetchRoles() {
+        async fetchRoles() {
         try {
             const response = await fetch(`${this.baseUrl}/roles`, {
                 method: 'GET',
@@ -451,16 +428,99 @@ class RolesPermissionsManager {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const contentType = response.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                throw new Error("Received non-JSON response from server");
+            const result = await response.json();
+            console.log('Raw permissions response:', result);
+
+            if (!result.success) {
+                throw new Error('Failed to fetch permissions');
             }
 
-            return await response.json();
+            return {
+                success: true,
+                data: result.data || {}
+            };
         } catch (error) {
             console.error('Error fetching permissions:', error);
             return { success: false, data: {} };
         }
+    }
+
+    organizePermissionsByCategory(permissions) {
+        if (!permissions || Object.keys(permissions).length === 0) {
+            console.warn('No permissions data received');
+            return {};
+        }
+
+        const categorizedPermissions = {};
+        
+        const categoryOrder = [
+            'Dashboard Access',
+            'User Management',
+            'Role Management',
+            'Company Management',
+            'System Settings',
+            'Module Management',
+            'Analytics & Reports',
+            'System Tools',
+            'Support'
+        ];
+
+        // Initialize categories
+        categoryOrder.forEach(category => {
+            categorizedPermissions[category] = [];
+        });
+
+        console.log('Organizing permissions:', permissions);
+
+        // Handle the permissions data structure
+        if (Array.isArray(permissions)) {
+            permissions.forEach(permission => {
+                const category = permission.category || 'System Settings';
+                if (!categorizedPermissions[category]) {
+                    categorizedPermissions[category] = [];
+                }
+                categorizedPermissions[category].push({
+                    name: permission.name,
+                    displayName: permission.displayName || this.formatPermissionName(permission.name),
+                    description: permission.description || '',
+                    category: category
+                });
+            });
+        } else {
+            Object.values(permissions).forEach(categoryPermissions => {
+                if (Array.isArray(categoryPermissions)) {
+                    categoryPermissions.forEach(permission => {
+                        const category = permission.category || 'System Settings';
+                        if (!categorizedPermissions[category]) {
+                            categorizedPermissions[category] = [];
+                        }
+                        categorizedPermissions[category].push({
+                            name: permission.name,
+                            displayName: permission.displayName || this.formatPermissionName(permission.name),
+                            description: permission.description || '',
+                            category: category
+                        });
+                    });
+                }
+            });
+        }
+
+        // Remove empty categories
+        Object.keys(categorizedPermissions).forEach(category => {
+            if (categorizedPermissions[category].length === 0) {
+                delete categorizedPermissions[category];
+            }
+        });
+
+        console.log('Organized permissions:', categorizedPermissions);
+        return categorizedPermissions;
+    }
+
+    formatPermissionName(name) {
+        return name
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
     }
 
     renderRolesList() {
@@ -513,14 +573,29 @@ class RolesPermissionsManager {
             </div>
         `;
     }
-
-    renderPermissions() {
+        renderPermissions() {
         if (!this.currentRole || !this.permissionsGroups) return;
+
+        console.log('Rendering permissions for role:', this.currentRole);
+        console.log('Available permissions:', this.permissions);
 
         const categorizedPermissions = this.organizePermissionsByCategory(this.permissions);
         
+        if (Object.keys(categorizedPermissions).length === 0) {
+            this.permissionsGroups.innerHTML = `
+                <div class="no-permissions-message">
+                    <p>No permissions available</p>
+                </div>
+            `;
+            return;
+        }
+
         this.permissionsGroups.innerHTML = Object.entries(categorizedPermissions)
-            .map(([category, permissions]) => this.createPermissionGroup(category, permissions))
+            .map(([category, permissions]) => {
+                if (permissions.length === 0) return '';
+                return this.createPermissionGroup(category, permissions);
+            })
+            .filter(Boolean)
             .join('');
 
         const checkboxes = this.permissionsGroups.querySelectorAll('input[type="checkbox"]');
@@ -571,7 +646,8 @@ class RolesPermissionsManager {
             </div>
         `;
     }
-        async handlePermissionChange(checkbox) {
+
+    async handlePermissionChange(checkbox) {
         if (!this.currentRole || this.currentRole.isSystem) return;
 
         try {
@@ -653,8 +729,7 @@ class RolesPermissionsManager {
             this.hideLoading();
         }
     }
-
-    async toggleAllPermissions(checked) {
+        async toggleAllPermissions(checked) {
         if (!this.currentRole || this.currentRole.isSystem) return;
 
         const checkboxes = this.permissionsGroups.querySelectorAll('input[type="checkbox"]');
@@ -742,7 +817,8 @@ class RolesPermissionsManager {
             this.hideLoading();
         }
     }
-        showCreateRoleModal() {
+
+    showCreateRoleModal() {
         this.roleForm.reset();
         document.getElementById('modalTitle').textContent = 'Create New Role';
         
@@ -805,8 +881,7 @@ class RolesPermissionsManager {
 
         this.deleteModal.classList.add('show');
     }
-
-    async deleteRole() {
+        async deleteRole() {
         if (!this.currentRole || this.currentRole.isSystem) return;
 
         try {
@@ -908,7 +983,8 @@ class RolesPermissionsManager {
             noResultsMsg.remove();
         }
     }
-        initializeTooltips() {
+
+    initializeTooltips() {
         document.querySelectorAll('.tooltip').forEach(tooltip => tooltip.remove());
 
         const tooltipElements = document.querySelectorAll('[data-tooltip]');
@@ -1049,7 +1125,6 @@ class RolesPermissionsManager {
     }
 
     cleanup() {
-        // Remove event listeners
         if (this.rolesList) {
             const roleItems = this.rolesList.querySelectorAll('.role-item');
             roleItems.forEach(item => {
@@ -1057,20 +1132,16 @@ class RolesPermissionsManager {
             });
         }
 
-        // Remove all tooltips and notifications
         document.querySelectorAll('.notification, .loading-overlay, .tooltip').forEach(el => el.remove());
 
-        // Clear any timeouts
         if (this.notificationTimeout) {
             clearTimeout(this.notificationTimeout);
         }
 
-        // Clear references
         this.currentRole = null;
         this.roles = [];
         this.permissions = [];
 
-        // Remove DOM references
         this.rolesList = null;
         this.permissionsPanel = null;
         this.permissionsGroups = null;
