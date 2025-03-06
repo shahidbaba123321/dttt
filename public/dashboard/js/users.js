@@ -187,78 +187,95 @@ class UsersManager {
     }
 
     async loadUsers() {
-        try {
-            const queryParams = new URLSearchParams({
-                page: this.currentPage,
-                limit: this.pageSize,
-                ...this.filters
-            });
+    try {
+        const queryParams = new URLSearchParams({
+            page: this.currentPage,
+            limit: this.pageSize,
+            ...this.filters
+        });
 
-            const response = await fetch(`${this.baseUrl}/users?${queryParams}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+        const response = await fetch(`${this.baseUrl}/users?${queryParams}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
 
-            if (!response.ok) throw new Error('Failed to fetch users');
-
-            const result = await response.json();
-            this.users = result.data || [];
-            this.totalUsers = result.total || 0;
-
-            this.renderUsers();
-            this.updatePagination();
-            this.updateDisplayRange();
-
-        } catch (error) {
-            console.error('Error loading users:', error);
-            this.showError('Failed to load users');
+        if (!response.ok) {
+            throw new Error('Failed to fetch users');
         }
-    } 
+
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.message || 'Failed to load users');
+        }
+
+        this.users = result.data || [];
+        this.totalUsers = result.total || 0;
+
+        this.renderUsers();
+        this.updatePagination();
+        this.updateDisplayRange();
+
+    } catch (error) {
+        console.error('Error loading users:', error);
+        this.showError('Failed to load users');
+    }
+}
+    
         renderUsers() {
-        if (!this.usersTableBody) return;
+    if (!this.usersTableBody) return;
 
-        if (this.users.length === 0) {
-            this.usersTableBody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="no-data">
-                        <div class="no-data-message">
-                            <i class="fas fa-users-slash"></i>
-                            <p>No users found</p>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
+    if (!this.users || this.users.length === 0) {
+        this.usersTableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="no-data">
+                    <div class="no-data-message">
+                        <i class="fas fa-users-slash"></i>
+                        <p>No users found</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
 
-        this.usersTableBody.innerHTML = this.users.map(user => `
+    this.usersTableBody.innerHTML = this.users.map(user => {
+        // Safely get user properties with defaults
+        const userName = user?.name || 'N/A';
+        const userEmail = user?.email || 'N/A';
+        const userDepartment = user?.department || 'N/A';
+        const userRole = user?.role || 'N/A';
+        const userStatus = user?.status || 'inactive';
+        const requires2FA = user?.requires2FA || false;
+
+        return `
             <tr>
                 <td>
                     <div class="user-info">
-                        <div class="user-avatar">
-                            ${this.getInitials(user.name)}
+                        <div class="user-avatar" style="background-color: ${this.getAvatarColor(userName)}">
+                            ${this.getInitials(userName)}
                         </div>
                         <div class="user-details">
-                            <span class="user-name">${this.escapeHtml(user.name)}</span>
-                            <span class="user-department">${this.escapeHtml(user.department || 'N/A')}</span>
+                            <span class="user-name">${this.escapeHtml(userName)}</span>
+                            <span class="user-email">${this.escapeHtml(userEmail)}</span>
                         </div>
                     </div>
                 </td>
-                <td>${this.escapeHtml(user.email)}</td>
-                <td>${this.escapeHtml(user.department || 'N/A')}</td>
-                <td>${this.escapeHtml(this.getRoleName(user.role))}</td>
+                <td>${this.escapeHtml(userEmail)}</td>
+                <td>${this.escapeHtml(userDepartment)}</td>
+                <td>${this.escapeHtml(this.getRoleName(userRole))}</td>
                 <td>
-                    <span class="status-badge status-${user.status.toLowerCase()}">
-                        ${this.capitalizeFirstLetter(user.status)}
+                    <span class="status-badge status-${userStatus.toLowerCase()}">
+                        ${this.capitalizeFirstLetter(userStatus)}
                     </span>
                 </td>
                 <td>
-                    <span class="tfa-status ${user.requires2FA ? 'tfa-enabled' : 'tfa-disabled'}">
-                        <i class="fas ${user.requires2FA ? 'fa-shield-check' : 'fa-shield'}"></i>
-                        ${user.requires2FA ? 'Enabled' : 'Disabled'}
+                    <span class="tfa-status ${requires2FA ? 'tfa-enabled' : 'tfa-disabled'}">
+                        <i class="fas ${requires2FA ? 'fa-shield-alt' : 'fa-shield-alt'}"></i>
+                        ${requires2FA ? 'Enabled' : 'Disabled'}
                     </span>
                 </td>
                 <td>
@@ -273,10 +290,10 @@ class UsersManager {
                                 title="Change Password">
                             <i class="fas fa-key"></i>
                         </button>
-                        <button class="action-button ${user.status === 'active' ? 'deactivate' : 'activate'}"
+                        <button class="action-button ${userStatus === 'active' ? 'deactivate' : 'activate'}"
                                 onclick="window.usersManager.toggleUserStatus('${user._id}')"
-                                title="${user.status === 'active' ? 'Deactivate' : 'Activate'} User">
-                            <i class="fas ${user.status === 'active' ? 'fa-user-slash' : 'fa-user-check'}"></i>
+                                title="${userStatus === 'active' ? 'Deactivate' : 'Activate'} User">
+                            <i class="fas ${userStatus === 'active' ? 'fa-user-slash' : 'fa-user-check'}"></i>
                         </button>
                         <button class="action-button delete" 
                                 onclick="window.usersManager.showDeleteModal('${user._id}')"
@@ -286,8 +303,9 @@ class UsersManager {
                     </div>
                 </td>
             </tr>
-        `).join('');
-    }
+        `;
+    }).join('');
+}
 
     updatePagination() {
         if (!this.paginationControls) return;
@@ -621,22 +639,38 @@ class UsersManager {
     }
 
     getRoleName(roleId) {
-        const role = this.roles.find(r => r._id === roleId);
-        return role ? role.name : 'Unknown Role';
-    }
+    const role = this.roles.find(r => r._id === roleId);
+    return role ? role.name : 'Unknown Role';
+}
 
     getInitials(name) {
-        return name
-            .split(' ')
-            .map(word => word[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2);
+    if (!name || name === 'N/A') return 'NA';
+    
+    return name
+        .split(' ')
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+}
+    getAvatarColor(name) {
+    if (!name || name === 'N/A') return '#6B7280'; // Default gray color
+    
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
+    
+    const hue = hash % 360;
+    return `hsl(${hue}, 70%, 45%)`;
+}
+
 
     capitalizeFirstLetter(string) {
-        return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
-    }
+    if (!string) return '';
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+}
+
 
     isValidEmail(email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -644,15 +678,14 @@ class UsersManager {
     }
 
     escapeHtml(unsafe) {
-        if (!unsafe) return '';
-        return unsafe
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
-
+    if (!unsafe) return '';
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
     showLoading() {
         const loader = document.createElement('div');
         loader.className = 'loading-overlay';
