@@ -17,12 +17,14 @@ let redis = null;
 let RedisStore = null;
 
 
-const app = express();
+app.set('trust proxy', 1);
 
 // Rate limiter configuration
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // Limit each IP to 100 requests per windowMs
+    standardHeaders: true,
+    legacyHeaders: false,
     message: {
         success: false,
         message: 'Too many requests, please try again later.'
@@ -33,12 +35,13 @@ const limiter = rateLimit({
 const authLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
     max: 5, // 5 failed attempts per hour
+    standardHeaders: true,
+    legacyHeaders: false,
     message: {
         success: false,
         message: 'Too many failed attempts, please try again later'
     }
 });
-
 
 
 // Define CORS options
@@ -402,6 +405,7 @@ async function initializeDefaultData() {
 
 async function initializeDefaultPermissions() {
     const defaultPermissions = [
+        // Existing permissions
         {
             name: 'view_users',
             displayName: 'View Users',
@@ -426,7 +430,117 @@ async function initializeDefaultPermissions() {
             category: 'Role Management',
             description: 'Can create, edit, and delete roles'
         },
-        // Add more default permissions as needed
+
+        // Add new UI/UX permissions
+        // Dashboard permissions
+        {
+            name: 'view_dashboard',
+            displayName: 'View Dashboard',
+            category: 'Dashboard Access',
+            description: 'Can access the dashboard overview'
+        },
+
+        // Companies/Organizations permissions
+        {
+            name: 'view_companies',
+            displayName: 'View Companies',
+            category: 'Company Management',
+            description: 'Can view company list and details'
+        },
+        {
+            name: 'manage_companies',
+            displayName: 'Manage Companies',
+            category: 'Company Management',
+            description: 'Can create, edit, and delete companies'
+        },
+
+        // System Settings permissions
+        {
+            name: 'view_settings',
+            displayName: 'View Settings',
+            category: 'System Settings',
+            description: 'Can view system settings'
+        },
+        {
+            name: 'manage_settings',
+            displayName: 'Manage Settings',
+            category: 'System Settings',
+            description: 'Can modify system settings'
+        },
+        {
+            name: 'manage_pricing',
+            displayName: 'Manage Pricing',
+            category: 'System Settings',
+            description: 'Can manage pricing and plans'
+        },
+        {
+            name: 'manage_security',
+            displayName: 'Manage Security',
+            category: 'System Settings',
+            description: 'Can manage security settings'
+        },
+
+        // Modules Management permissions
+        {
+            name: 'view_modules',
+            displayName: 'View Modules',
+            category: 'Module Management',
+            description: 'Can view available modules'
+        },
+        {
+            name: 'manage_modules',
+            displayName: 'Manage Modules',
+            category: 'Module Management',
+            description: 'Can manage and configure modules'
+        },
+
+        // Analytics & Reports permissions
+        {
+            name: 'view_analytics',
+            displayName: 'View Analytics',
+            category: 'Analytics & Reports',
+            description: 'Can view analytics and reports'
+        },
+        {
+            name: 'manage_reports',
+            displayName: 'Manage Reports',
+            category: 'Analytics & Reports',
+            description: 'Can create and manage custom reports'
+        },
+
+        // Backup & System Tools permissions
+        {
+            name: 'manage_backup',
+            displayName: 'Manage Backup',
+            category: 'System Tools',
+            description: 'Can perform backup and restore operations'
+        },
+        {
+            name: 'view_audit_logs',
+            displayName: 'View Audit Logs',
+            category: 'System Tools',
+            description: 'Can view system audit logs'
+        },
+        {
+            name: 'manage_api',
+            displayName: 'Manage API',
+            category: 'System Tools',
+            description: 'Can manage API settings and keys'
+        },
+
+        // Support Center permissions
+        {
+            name: 'access_support',
+            displayName: 'Access Support',
+            category: 'Support',
+            description: 'Can access support center'
+        },
+        {
+            name: 'manage_support',
+            displayName: 'Manage Support',
+            category: 'Support',
+            description: 'Can manage support tickets and resources'
+        }
     ];
 
     try {
@@ -435,13 +549,13 @@ async function initializeDefaultPermissions() {
         });
         console.log('Default permissions initialized');
     } catch (error) {
-        // Ignore duplicate key errors
-        if (error.code !== 11000) {
+        if (error.code !== 11000) { // Ignore duplicate key errors
             console.error('Error initializing permissions:', error);
             throw error;
         }
     }
 }
+
 // Initialize default roles
 async function initializeDefaultRoles() {
     const defaultRoles = {
@@ -455,19 +569,55 @@ async function initializeDefaultRoles() {
         admin: {
             name: 'Admin',
             description: 'System administrator with extensive access rights',
-            permissions: ['all_except_superadmin'],
+            permissions: [
+                // User Management
+                'view_users',
+                'manage_users',
+                'view_roles',
+                'manage_roles',
+                
+                // Dashboard Access
+                'view_dashboard',
+                
+                // Company Management
+                'view_companies',
+                'manage_companies',
+                
+                // System Settings
+                'view_settings',
+                'manage_settings',
+                'manage_pricing',
+                'manage_security',
+                
+                // Module Management
+                'view_modules',
+                'manage_modules',
+                
+                // Analytics & Reports
+                'view_analytics',
+                'manage_reports',
+                
+                // System Tools
+                'manage_backup',
+                'view_audit_logs',
+                'manage_api',
+                
+                // Support
+                'access_support',
+                'manage_support'
+            ],
             isDefault: true
         },
         hr_admin: {
             name: 'HR Admin',
             description: 'Manages HR functions and user accounts',
             permissions: [
-                'users_view',
-                'users_create',
-                'users_edit',
-                'users_delete',
-                'departments_manage',
-                'attendance_manage'
+                'view_dashboard',
+                'view_users',
+                'manage_users',
+                'view_roles',
+                'view_analytics',
+                'access_support'
             ],
             isDefault: true
         },
@@ -475,10 +625,10 @@ async function initializeDefaultRoles() {
             name: 'Manager',
             description: 'Department or team manager',
             permissions: [
-                'team_view',
-                'team_manage',
-                'attendance_view',
-                'reports_view'
+                'view_dashboard',
+                'view_users',
+                'view_analytics',
+                'access_support'
             ],
             isDefault: true
         },
@@ -486,9 +636,8 @@ async function initializeDefaultRoles() {
             name: 'Employee',
             description: 'Regular employee access',
             permissions: [
-                'profile_view',
-                'profile_edit',
-                'attendance_submit'
+                'view_dashboard',
+                'access_support'
             ],
             isDefault: true
         }
@@ -507,6 +656,23 @@ async function initializeDefaultRoles() {
                 },
                 { upsert: true }
             );
+
+            // Create role permissions
+            if (role.permissions && role.permissions.length > 0) {
+                const roleDoc = await roles.findOne({ name: role.name });
+                if (roleDoc) {
+                    await role_permissions.updateOne(
+                        { roleId: roleDoc._id },
+                        {
+                            $set: {
+                                permissions: role.permissions,
+                                updatedAt: new Date()
+                            }
+                        },
+                        { upsert: true }
+                    );
+                }
+            }
         }
         console.log('Default roles initialized');
     } catch (error) {
