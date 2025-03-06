@@ -972,7 +972,7 @@ class ContentLoader {
         styleSheet.textContent = styles;
         document.head.appendChild(styleSheet);
     }
-        async loadContent(section) {
+      async loadContent(section) {
         try {
             this.showLoadingState();
 
@@ -1002,6 +1002,8 @@ class ContentLoader {
             // Initialize module script if needed
             if (section === 'roles') {
                 await this.initializeRolesPermissions();
+            } else if (section === 'users') {
+                await this.initializeUsers();
             }
 
             this.currentPage = section;
@@ -1073,6 +1075,37 @@ class ContentLoader {
         }
     }
 
+    async initializeUsers() {
+        try {
+            // Check if script is already loaded
+            const existingScript = document.querySelector('script[src*="users.js"]');
+            if (existingScript) {
+                existingScript.remove();
+            }
+
+            // Create and append the script with updated path
+            const script = document.createElement('script');
+            script.src = `${this.baseUrl}/dashboard/js/users.js`;
+            
+            await new Promise((resolve, reject) => {
+                script.onload = resolve;
+                script.onerror = reject;
+                document.body.appendChild(script);
+            });
+
+            // Initialize new instance
+            if (typeof window.UsersManager !== 'undefined') {
+                const instance = new window.UsersManager();
+                this.moduleInstances.set('users', instance);
+            } else {
+                throw new Error('UsersManager not loaded properly');
+            }
+        } catch (error) {
+            console.error('Error initializing users module:', error);
+            throw error;
+        }
+    }
+
     showLoadingState() {
         const loader = document.createElement('div');
         loader.className = 'content-loader';
@@ -1122,7 +1155,7 @@ class ContentLoader {
         url.hash = section;
         window.history.pushState({ section }, '', url);
     }
-}
+} 
     // User Session Management
 class UserSession {
     constructor() {
@@ -1180,108 +1213,107 @@ class UserSession {
         }
     }
 
-   setupPermissions() {
-    if (!this.userData) return;
+    setupPermissions() {
+        if (!this.userData) return;
 
-    // Define all UI elements and their required permissions
-    const uiPermissions = {
-        // Dashboard
-        'dashboard': 'view_dashboard',
+        // Define all UI elements and their required permissions
+        const uiPermissions = {
+            // Dashboard
+            'dashboard': 'view_dashboard',
 
-        // Companies/Organizations
-        'companies': 'view_companies',
-        'manage-companies': 'manage_companies',
+            // Companies/Organizations
+            'companies': 'view_companies',
+            'manage-companies': 'manage_companies',
 
-        // System Settings
-        'general-settings': 'view_settings',
-        'pricing': 'manage_pricing',
-        'security': 'manage_security',
+            // System Settings
+            'general-settings': 'view_settings',
+            'pricing': 'manage_pricing',
+            'security': 'manage_security',
 
-        // Modules Management
-        'modules': 'view_modules',
-        'module-settings': 'manage_modules',
+            // Modules Management
+            'modules': 'view_modules',
+            'module-settings': 'manage_modules',
 
-        // User Management
-        'users': 'view_users',
-        'roles': 'view_roles',
-        'org-chart': 'view_users',
+            // User Management
+            'users': 'view_users',
+            'roles': 'view_roles',
+            'org-chart': 'view_users',
 
-        // Tools
-        'analytics': 'view_analytics',
-        'backup': 'manage_backup',
-        'audit': 'view_audit_logs',
-        'api': 'manage_api',
+            // Tools
+            'analytics': 'view_analytics',
+            'backup': 'manage_backup',
+            'audit': 'view_audit_logs',
+            'api': 'manage_api',
 
-        // Support
-        'support': 'access_support',
-        'documentation': 'access_support'
-    };
+            // Support
+            'support': 'access_support',
+            'documentation': 'access_support'
+        };
 
-    // Handle permissions based on role
-    if (this.userData.role === 'superadmin') {
-        // Show all sections for superadmin
-        Object.keys(uiPermissions).forEach(section => {
-            document.querySelectorAll(`[data-section="${section}"]`).forEach(element => {
-                element.style.display = '';
+        // Handle permissions based on role
+        if (this.userData.role === 'superadmin') {
+            // Show all sections for superadmin
+            Object.keys(uiPermissions).forEach(section => {
+                document.querySelectorAll(`[data-section="${section}"]`).forEach(element => {
+                    element.style.display = '';
+                });
             });
-        });
-    } else {
-        // For other roles, check individual permissions
-        Object.entries(uiPermissions).forEach(([section, permission]) => {
-            const hasPermission = this.hasPermission(permission);
-            document.querySelectorAll(`[data-section="${section}"]`).forEach(element => {
-                element.style.display = hasPermission ? '' : 'none';
+        } else {
+            // For other roles, check individual permissions
+            Object.entries(uiPermissions).forEach(([section, permission]) => {
+                const hasPermission = this.hasPermission(permission);
+                document.querySelectorAll(`[data-section="${section}"]`).forEach(element => {
+                    element.style.display = hasPermission ? '' : 'none';
+                });
             });
-        });
 
-        // Check all elements with data-required-permission attribute
-        document.querySelectorAll('[data-required-permission]').forEach(element => {
-            const requiredPermission = element.dataset.requiredPermission;
-            element.style.display = this.hasPermission(requiredPermission) ? '' : 'none';
+            // Check all elements with data-required-permission attribute
+            document.querySelectorAll('[data-required-permission]').forEach(element => {
+                const requiredPermission = element.dataset.requiredPermission;
+                element.style.display = this.hasPermission(requiredPermission) ? '' : 'none';
+            });
+        }
+
+        // Update sidebar sections visibility
+        this.updateSidebarSections();
+    }
+
+    updateSidebarSections() {
+        // Get all nav sections
+        const navSections = document.querySelectorAll('.nav-section');
+        
+        navSections.forEach(section => {
+            // Check if any nav items in this section are visible
+            const navItems = section.querySelectorAll('.nav-item');
+            const hasVisibleItems = Array.from(navItems).some(item => 
+                window.getComputedStyle(item).display !== 'none'
+            );
+
+            // Show/hide the entire section based on visible items
+            const sectionHeader = section.querySelector('.nav-section-header');
+            if (sectionHeader) {
+                sectionHeader.style.display = hasVisibleItems ? '' : 'none';
+            }
+            
+            // If no visible items and not the dashboard section, hide the entire section
+            if (!hasVisibleItems && !section.querySelector('[data-section="dashboard"]')) {
+                section.style.display = 'none';
+            }
         });
     }
 
-    // Update sidebar sections visibility
-    this.updateSidebarSections();
-}
-
-updateSidebarSections() {
-    // Get all nav sections
-    const navSections = document.querySelectorAll('.nav-section');
-    
-    navSections.forEach(section => {
-        // Check if any nav items in this section are visible
-        const navItems = section.querySelectorAll('.nav-item');
-        const hasVisibleItems = Array.from(navItems).some(item => 
-            window.getComputedStyle(item).display !== 'none'
-        );
-
-        // Show/hide the entire section based on visible items
-        const sectionHeader = section.querySelector('.nav-section-header');
-        if (sectionHeader) {
-            sectionHeader.style.display = hasVisibleItems ? '' : 'none';
-        }
+    hasPermission(permission) {
+        if (!permission) return true;
+        if (!this.userData) return false;
         
-        // If no visible items and not the dashboard section, hide the entire section
-        if (!hasVisibleItems && !section.querySelector('[data-section="dashboard"]')) {
-            section.style.display = 'none';
-        }
-    });
-}
+        // Superadmin has all permissions
+        if (this.userData.role === 'superadmin') return true;
 
-hasPermission(permission) {
-    if (!permission) return true;
-    if (!this.userData) return false;
-    
-    // Superadmin has all permissions
-    if (this.userData.role === 'superadmin') return true;
-
-    // Check if user has the specific permission
-    return Array.isArray(this.userData.permissions) && 
-           this.userData.permissions.includes(permission);
-}
-
-    generateInitialsAvatar(name, email) {
+        // Check if user has the specific permission
+        return Array.isArray(this.userData.permissions) && 
+               this.userData.permissions.includes(permission);
+    }
+        generateInitialsAvatar(name, email) {
         let initials;
         if (name && name.trim()) {
             initials = name
@@ -1460,39 +1492,39 @@ class SidebarManager {
     }
 
     initializeNavigation() {
-    const navItems = this.sidebar.querySelectorAll('.nav-item');
-    
-    const initializeItems = () => {
-        navItems.forEach(item => {
-            const textContent = item.querySelector('span').textContent;
-            item.setAttribute('data-title', textContent);
+        const navItems = this.sidebar.querySelectorAll('.nav-item');
+        
+        const initializeItems = () => {
+            navItems.forEach(item => {
+                const textContent = item.querySelector('span').textContent;
+                item.setAttribute('data-title', textContent);
 
-            // Check permissions
-            const requiredPermission = item.dataset.requiredPermission;
-            const section = item.dataset.section;
+                // Check permissions
+                const requiredPermission = item.dataset.requiredPermission;
+                const section = item.dataset.section;
 
-            if (requiredPermission && !this.hasPermission(requiredPermission)) {
-                item.style.display = 'none';
-                return;
-            }
-
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (this.hasPermission(requiredPermission)) {
-                    this.loadSection(section);
-                } else {
-                    window.dashboardApp?.userInterface?.showErrorNotification(
-                        'You do not have permission to access this section'
-                    );
+                if (requiredPermission && !this.hasPermission(requiredPermission)) {
+                    item.style.display = 'none';
+                    return;
                 }
-            });
-        });
 
-        // Update section visibility after initializing items
-        if (window.dashboardApp?.userSession) {
-            window.dashboardApp.userSession.updateSidebarSections();
-        }
-    };
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (this.hasPermission(requiredPermission)) {
+                        this.loadSection(section);
+                    } else {
+                        window.dashboardApp?.userInterface?.showErrorNotification(
+                            'You do not have permission to access this section'
+                        );
+                    }
+                });
+            });
+
+            // Update section visibility after initializing items
+            if (window.dashboardApp?.userSession) {
+                window.dashboardApp.userSession.updateSidebarSections();
+            }
+        };
 
         // Check if user session is available or wait for it
         if (window.dashboardApp?.userSession) {
@@ -1543,8 +1575,7 @@ class SidebarManager {
             this.closeMobileSidebar();
         }
     }
-
-    toggleSidebar() {
+        toggleSidebar() {
         if (!this.isMobile) {
             this.sidebar.classList.toggle('collapsed');
             this.mainContent.classList.toggle('expanded');
@@ -1586,7 +1617,8 @@ class SidebarManager {
         }
     }
 }
-    // Enhanced User Interface Management
+
+// Enhanced User Interface Management
 class UserInterface {
     constructor(userSession, contentLoader) {
         this.userSession = userSession;
@@ -1670,8 +1702,7 @@ class UserInterface {
             console.log('Permission change:', event.detail);
         });
     }
-
-    showNotification(message, type = 'info') {
+        showNotification(message, type = 'info') {
         if (this.notificationTimeout) {
             clearTimeout(this.notificationTimeout);
         }
