@@ -414,107 +414,110 @@ class RolesPermissionsManager {
     }
 
     async fetchPermissions() {
-        try {
-            const response = await fetch(`${this.baseUrl}/permissions`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+        const response = await fetch(`${this.baseUrl}/permissions`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             }
-
-            const result = await response.json();
-            console.log('Raw permissions response:', result);
-
-            if (!result.success) {
-                throw new Error('Failed to fetch permissions');
-            }
-
-            return {
-                success: true,
-                data: result.data || {}
-            };
-        } catch (error) {
-            console.error('Error fetching permissions:', error);
-            return { success: false, data: {} };
-        }
-    }
-
-    organizePermissionsByCategory(permissions) {
-        if (!permissions || Object.keys(permissions).length === 0) {
-            console.warn('No permissions data received');
-            return {};
-        }
-
-        const categorizedPermissions = {};
-        
-        const categoryOrder = [
-            'Dashboard Access',
-            'User Management',
-            'Role Management',
-            'Company Management',
-            'System Settings',
-            'Module Management',
-            'Analytics & Reports',
-            'System Tools',
-            'Support'
-        ];
-
-        // Initialize categories
-        categoryOrder.forEach(category => {
-            categorizedPermissions[category] = [];
         });
 
-        console.log('Organizing permissions:', permissions);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-        // Handle the permissions data structure
-        if (Array.isArray(permissions)) {
-            permissions.forEach(permission => {
-                const category = permission.category || 'System Settings';
-                if (!categorizedPermissions[category]) {
-                    categorizedPermissions[category] = [];
+        const result = await response.json();
+        console.log('Raw permissions response:', result);
+
+        if (!result.success) {
+            throw new Error('Failed to fetch permissions');
+        }
+
+        // Ensure we're returning the permissions array directly
+        return {
+            success: true,
+            data: Array.isArray(result.data) ? result.data : 
+                  result.data.permissions || result.data || []
+        };
+    } catch (error) {
+        console.error('Error fetching permissions:', error);
+        return { success: false, data: [] };
+    }
+}
+
+  organizePermissionsByCategory(permissions) {
+    if (!permissions || Object.keys(permissions).length === 0) {
+        console.warn('No permissions data received');
+        return {};
+    }
+
+    const categorizedPermissions = {};
+    
+    // Define category order for consistent display
+    const categoryOrder = [
+        'Dashboard Access',
+        'User Management',
+        'Role Management',
+        'Company Management',
+        'System Settings',
+        'Module Management',
+        'Analytics & Reports',
+        'System Tools',
+        'Support'
+    ];
+
+    // Initialize categories
+    categoryOrder.forEach(category => {
+        categorizedPermissions[category] = [];
+    });
+
+    console.log('Raw permissions data:', permissions);
+
+    // Handle the permissions data structure
+    // Check if permissions is an array (from your server structure)
+    if (Array.isArray(permissions)) {
+        permissions.forEach(permission => {
+            if (permission.category && permission.name) {
+                if (!categorizedPermissions[permission.category]) {
+                    categorizedPermissions[permission.category] = [];
                 }
-                categorizedPermissions[category].push({
+                categorizedPermissions[permission.category].push({
                     name: permission.name,
                     displayName: permission.displayName || this.formatPermissionName(permission.name),
                     description: permission.description || '',
-                    category: category
+                    category: permission.category
                 });
-            });
-        } else {
-            Object.values(permissions).forEach(categoryPermissions => {
-                if (Array.isArray(categoryPermissions)) {
-                    categoryPermissions.forEach(permission => {
-                        const category = permission.category || 'System Settings';
-                        if (!categorizedPermissions[category]) {
-                            categorizedPermissions[category] = [];
-                        }
-                        categorizedPermissions[category].push({
-                            name: permission.name,
-                            displayName: permission.displayName || this.formatPermissionName(permission.name),
-                            description: permission.description || '',
-                            category: category
-                        });
-                    });
-                }
-            });
-        }
-
-        // Remove empty categories
-        Object.keys(categorizedPermissions).forEach(category => {
-            if (categorizedPermissions[category].length === 0) {
-                delete categorizedPermissions[category];
             }
         });
-
-        console.log('Organized permissions:', categorizedPermissions);
-        return categorizedPermissions;
+    } else {
+        // Handle if permissions come as an object
+        Object.values(permissions).forEach(permission => {
+            if (permission.category && permission.name) {
+                if (!categorizedPermissions[permission.category]) {
+                    categorizedPermissions[permission.category] = [];
+                }
+                categorizedPermissions[permission.category].push({
+                    name: permission.name,
+                    displayName: permission.displayName || this.formatPermissionName(permission.name),
+                    description: permission.description || '',
+                    category: permission.category
+                });
+            }
+        });
     }
+
+    // Remove empty categories
+    Object.keys(categorizedPermissions).forEach(category => {
+        if (categorizedPermissions[category].length === 0) {
+            delete categorizedPermissions[category];
+        }
+    });
+
+    console.log('Organized permissions:', categorizedPermissions);
+    return categorizedPermissions;
+}
 
     formatPermissionName(name) {
         return name
@@ -574,37 +577,36 @@ class RolesPermissionsManager {
         `;
     }
         renderPermissions() {
-        if (!this.currentRole || !this.permissionsGroups) return;
+    if (!this.currentRole || !this.permissionsGroups) return;
 
-        console.log('Rendering permissions for role:', this.currentRole);
-        console.log('Available permissions:', this.permissions);
-
-        const categorizedPermissions = this.organizePermissionsByCategory(this.permissions);
-        
-        if (Object.keys(categorizedPermissions).length === 0) {
-            this.permissionsGroups.innerHTML = `
-                <div class="no-permissions-message">
-                    <p>No permissions available</p>
-                </div>
-            `;
-            return;
-        }
-
-        this.permissionsGroups.innerHTML = Object.entries(categorizedPermissions)
-            .map(([category, permissions]) => {
-                if (permissions.length === 0) return '';
-                return this.createPermissionGroup(category, permissions);
-            })
-            .filter(Boolean)
-            .join('');
-
-        const checkboxes = this.permissionsGroups.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', () => this.handlePermissionChange(checkbox));
-        });
-
-        this.initializeTooltips();
+    console.log('Current role permissions:', this.currentRole.permissions);
+    const categorizedPermissions = this.organizePermissionsByCategory(this.permissions);
+    
+    if (Object.keys(categorizedPermissions).length === 0) {
+        this.permissionsGroups.innerHTML = `
+            <div class="no-permissions-message">
+                <p>No permissions available</p>
+            </div>
+        `;
+        return;
     }
+
+    this.permissionsGroups.innerHTML = Object.entries(categorizedPermissions)
+        .map(([category, permissions]) => {
+            if (permissions.length === 0) return '';
+            return this.createPermissionGroup(category, permissions);
+        })
+        .filter(Boolean)
+        .join('');
+
+    // Initialize checkboxes and tooltips
+    const checkboxes = this.permissionsGroups.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => this.handlePermissionChange(checkbox));
+    });
+
+    this.initializeTooltips();
+}
 
     createPermissionGroup(category, permissions) {
         return `
