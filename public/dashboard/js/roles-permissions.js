@@ -3,6 +3,7 @@
     if (window.RolesPermissionsManager) {
         return; // Exit if already defined
     }
+
 class RolesPermissionsManager {
     constructor(apiBaseUrl) {
         this.baseUrl = 'https://18.215.160.136.nip.io/api';
@@ -10,12 +11,208 @@ class RolesPermissionsManager {
         this.currentRole = null;
         this.roles = [];
         this.permissions = [];
+        this.notificationTimeout = null;
         this.initializeElements();
+        this.initializeStyles();
         this.initializeEventListeners();
         this.loadRolesAndPermissions();
     }
 
-    initializeElements() {
+    initializeStyles() {
+        const styles = `
+            .permission-group {
+                margin-bottom: var(--spacing-md);
+                border: 1px solid var(--border-light);
+                border-radius: var(--border-radius-md);
+                overflow: hidden;
+            }
+
+            .permission-item {
+                padding: var(--spacing-sm) var(--spacing-md);
+                border-bottom: 1px solid var(--border-light);
+                transition: background-color 0.2s ease;
+            }
+
+            .permission-item:hover {
+                background-color: var(--bg-tertiary);
+            }
+
+            .permission-item:last-child {
+                border-bottom: none;
+            }
+
+            .permission-label-content {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .permission-name {
+                font-weight: 500;
+                color: var(--text-primary);
+            }
+
+            .permission-description {
+                font-size: 0.875rem;
+                color: var(--text-secondary);
+            }
+
+            .permission-checkbox-wrapper {
+                display: flex;
+                align-items: flex-start;
+                gap: var(--spacing-sm);
+            }
+
+            .permission-checkbox {
+                margin-top: 4px;
+            }
+
+            .permission-group-header {
+                background-color: var(--bg-tertiary);
+                padding: var(--spacing-md);
+                font-weight: 600;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .permission-count {
+                font-size: 0.875rem;
+                color: var(--text-tertiary);
+                background-color: var(--bg-primary);
+                padding: 2px 8px;
+                border-radius: 12px;
+            }
+
+            .loading-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+            }
+
+            .loading-spinner {
+                background-color: var(--bg-primary);
+                padding: var(--spacing-lg);
+                border-radius: var(--border-radius-lg);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: var(--spacing-md);
+                box-shadow: var(--shadow-lg);
+            }
+
+            .loading-spinner i {
+                font-size: 2rem;
+                color: var(--primary-color);
+            }
+
+            .no-results-message {
+                text-align: center;
+                padding: var(--spacing-lg);
+                color: var(--text-tertiary);
+                font-style: italic;
+            }
+
+            .tooltip {
+                position: absolute;
+                background-color: var(--bg-primary);
+                color: var(--text-primary);
+                padding: 8px 12px;
+                border-radius: var(--border-radius-md);
+                font-size: 0.875rem;
+                box-shadow: var(--shadow-lg);
+                z-index: 1000;
+                max-width: 250px;
+                word-wrap: break-word;
+                border: 1px solid var(--border-light);
+                pointer-events: none;
+                animation: tooltipFadeIn 0.2s ease-in-out;
+            }
+
+            @keyframes tooltipFadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(5px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                border-radius: var(--border-radius-md);
+                background-color: white;
+                box-shadow: var(--shadow-lg);
+                z-index: 1100;
+                animation: slideIn 0.3s ease-out;
+            }
+
+            .notification-content {
+                display: flex;
+                align-items: center;
+                gap: var(--spacing-sm);
+            }
+
+            .notification.success {
+                background-color: #DEF7EC;
+                color: #03543F;
+            }
+
+            .notification.error {
+                background-color: #FDE8E8;
+                color: #9B1C1C;
+            }
+
+            .notification.warning {
+                background-color: #FEF3C7;
+                color: #92400E;
+            }
+
+            .notification.info {
+                background-color: #E1EFFE;
+                color: #1E429F;
+            }
+
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = styles;
+        document.head.appendChild(styleSheet);
+    }
+        initializeElements() {
         // Main containers
         this.rolesList = document.getElementById('rolesList');
         this.permissionsPanel = document.getElementById('permissionsPanel');
@@ -47,7 +244,8 @@ class RolesPermissionsManager {
         // Error handling for missing elements
         Object.entries(this).forEach(([key, value]) => {
             if (key !== 'token' && key !== 'currentRole' && key !== 'roles' && 
-                key !== 'permissions' && key !== 'baseUrl' && !value) {
+                key !== 'permissions' && key !== 'baseUrl' && 
+                key !== 'notificationTimeout' && !value) {
                 console.error(`Element not found: ${key}`);
             }
         });
@@ -145,6 +343,46 @@ class RolesPermissionsManager {
         this.deleteModal?.querySelector('.modal-content')?.addEventListener('click', (e) => {
             e.stopPropagation();
         });
+    }
+
+    organizePermissionsByCategory(permissions) {
+        const categorizedPermissions = {};
+        
+        const categoryOrder = [
+            'Dashboard Access',
+            'User Management',
+            'Role Management',
+            'Company Management',
+            'System Settings',
+            'Module Management',
+            'Analytics & Reports',
+            'System Tools',
+            'Support'
+        ];
+
+        // Initialize categories
+        categoryOrder.forEach(category => {
+            categorizedPermissions[category] = [];
+        });
+
+        // Organize permissions into categories
+        Object.values(permissions).forEach(permission => {
+            if (categorizedPermissions[permission.category]) {
+                categorizedPermissions[permission.category].push(permission);
+            } else {
+                // Handle any permissions with undefined categories
+                categorizedPermissions['System Settings'].push(permission);
+            }
+        });
+
+        // Remove empty categories
+        Object.keys(categorizedPermissions).forEach(category => {
+            if (categorizedPermissions[category].length === 0) {
+                delete categorizedPermissions[category];
+            }
+        });
+
+        return categorizedPermissions;
     }
         async loadRolesAndPermissions() {
         try {
@@ -276,44 +514,12 @@ class RolesPermissionsManager {
         `;
     }
 
-    async selectRole(roleId) {
-        try {
-            this.showLoading();
-            const response = await fetch(`${this.baseUrl}/roles/${roleId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch role details');
-            }
-
-            const data = await response.json();
-            this.currentRole = data.data;
-            
-            this.updateUI();
-            this.renderPermissions();
-            
-            const url = new URL(window.location.href);
-            url.searchParams.set('roleId', roleId);
-            window.history.pushState({}, '', url);
-
-            this.hideLoading();
-        } catch (error) {
-            console.error('Error selecting role:', error);
-            this.showError('Failed to load role details');
-            this.hideLoading();
-        }
-    }
-
     renderPermissions() {
         if (!this.currentRole || !this.permissionsGroups) return;
 
-        this.permissionsGroups.innerHTML = Object.entries(this.permissions)
+        const categorizedPermissions = this.organizePermissionsByCategory(this.permissions);
+        
+        this.permissionsGroups.innerHTML = Object.entries(categorizedPermissions)
             .map(([category, permissions]) => this.createPermissionGroup(category, permissions))
             .join('');
 
@@ -342,6 +548,7 @@ class RolesPermissionsManager {
     createPermissionItem(permission) {
         const isChecked = this.currentRole.permissions.includes(permission.name);
         const isDisabled = this.currentRole.isSystem;
+        
         return `
             <div class="permission-item">
                 <div class="permission-checkbox-wrapper">
@@ -350,16 +557,16 @@ class RolesPermissionsManager {
                            class="permission-checkbox"
                            ${isChecked ? 'checked' : ''}
                            ${isDisabled ? 'disabled' : ''}
-                           data-tooltip="${this.escapeHtml(permission.description || 'No description available')}"
+                           data-tooltip="${this.escapeHtml(permission.description)}"
                            data-permission="${permission.name}">
                     <label for="${permission.name}" class="permission-label">
-                        ${this.escapeHtml(permission.displayName || permission.name)}
+                        <div class="permission-label-content">
+                            <span class="permission-name">${this.escapeHtml(permission.displayName || permission.name)}</span>
+                            <span class="permission-description">
+                                ${this.escapeHtml(permission.description)}
+                            </span>
+                        </div>
                     </label>
-                </div>
-                <div class="permission-description" 
-                     title="${this.escapeHtml(permission.description || '')}"
-                     data-tooltip="${this.escapeHtml(permission.description || 'No description available')}">
-                    ${this.escapeHtml(permission.description || '')}
                 </div>
             </div>
         `;
@@ -370,9 +577,9 @@ class RolesPermissionsManager {
         try {
             const updatedPermissions = [...this.currentRole.permissions];
             if (checkbox.checked) {
-                updatedPermissions.push(checkbox.id);
+                updatedPermissions.push(checkbox.dataset.permission);
             } else {
-                const index = updatedPermissions.indexOf(checkbox.id);
+                const index = updatedPermissions.indexOf(checkbox.dataset.permission);
                 if (index > -1) updatedPermissions.splice(index, 1);
             }
 
@@ -410,6 +617,63 @@ class RolesPermissionsManager {
             await this.loadRolesAndPermissions();
         } catch (error) {
             throw error;
+        }
+    }
+
+    async selectRole(roleId) {
+        try {
+            this.showLoading();
+            const response = await fetch(`${this.baseUrl}/roles/${roleId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch role details');
+            }
+
+            const data = await response.json();
+            this.currentRole = data.data;
+            
+            this.updateUI();
+            this.renderPermissions();
+            
+            const url = new URL(window.location.href);
+            url.searchParams.set('roleId', roleId);
+            window.history.pushState({}, '', url);
+
+            this.hideLoading();
+        } catch (error) {
+            console.error('Error selecting role:', error);
+            this.showError('Failed to load role details');
+            this.hideLoading();
+        }
+    }
+
+    async toggleAllPermissions(checked) {
+        if (!this.currentRole || this.currentRole.isSystem) return;
+
+        const checkboxes = this.permissionsGroups.querySelectorAll('input[type="checkbox"]');
+        const permissions = new Set();
+
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = checked;
+            if (checked) {
+                permissions.add(checkbox.dataset.permission);
+            }
+        });
+
+        try {
+            await this.updateRolePermissions(Array.from(permissions));
+            this.showSuccess(`All permissions ${checked ? 'selected' : 'deselected'} successfully`);
+        } catch (error) {
+            console.error('Error updating permissions:', error);
+            this.showError('Failed to update permissions');
+            checkboxes.forEach(checkbox => checkbox.checked = !checked);
         }
     }
 
@@ -478,8 +742,7 @@ class RolesPermissionsManager {
             this.hideLoading();
         }
     }
-
-    showCreateRoleModal() {
+        showCreateRoleModal() {
         this.roleForm.reset();
         document.getElementById('modalTitle').textContent = 'Create New Role';
         
@@ -580,7 +843,7 @@ class RolesPermissionsManager {
             this.hideLoading();
         }
     }
-        // UI Update Methods
+
     updateUI() {
         const roleNameElement = document.getElementById('selectedRoleName');
         const roleMetadata = document.getElementById('roleMetadata');
@@ -608,10 +871,14 @@ class RolesPermissionsManager {
 
             this.editRoleBtn.disabled = true;
             this.deleteRoleBtn.disabled = true;
+            
+            if (this.selectAllPermissions && this.deselectAllPermissions) {
+                this.selectAllPermissions.disabled = true;
+                this.deselectAllPermissions.disabled = true;
+            }
         }
     }
 
-    // Search Functionality
     searchRoles(query) {
         const normalizedQuery = query.toLowerCase();
         const roleItems = this.rolesList.querySelectorAll('.role-item');
@@ -641,9 +908,7 @@ class RolesPermissionsManager {
             noResultsMsg.remove();
         }
     }
-
-    // Tooltip Management
-    initializeTooltips() {
+        initializeTooltips() {
         document.querySelectorAll('.tooltip').forEach(tooltip => tooltip.remove());
 
         const tooltipElements = document.querySelectorAll('[data-tooltip]');
@@ -665,7 +930,6 @@ class RolesPermissionsManager {
         });
     }
 
-    // Validation Methods
     validateRole(roleData) {
         const errors = [];
 
@@ -693,7 +957,6 @@ class RolesPermissionsManager {
         return errors;
     }
 
-    // Utility Methods
     closeModal(modal) {
         if (!modal) return;
         modal.classList.remove('show');
@@ -751,6 +1014,12 @@ class RolesPermissionsManager {
     }
 
     showNotification(message, type = 'info') {
+        if (this.notificationTimeout) {
+            clearTimeout(this.notificationTimeout);
+        }
+
+        document.querySelectorAll('.notification').forEach(n => n.remove());
+
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
         notification.innerHTML = `
@@ -760,12 +1029,11 @@ class RolesPermissionsManager {
             </div>
         `;
 
-        document.querySelectorAll('.notification').forEach(n => n.remove());
         document.body.appendChild(notification);
         
         notification.style.animation = 'slideIn 0.3s ease-out';
 
-        setTimeout(() => {
+        this.notificationTimeout = setTimeout(() => {
             notification.style.animation = 'slideOut 0.3s ease-in';
             setTimeout(() => notification.remove(), 300);
         }, 3000);
@@ -780,50 +1048,50 @@ class RolesPermissionsManager {
         }
     }
 
-    // Cleanup method
-   cleanup() {
-            // Remove event listeners
-            if (this.rolesList) {
-                const roleItems = this.rolesList.querySelectorAll('.role-item');
-                roleItems.forEach(item => {
-                    item.removeEventListener('click', () => this.selectRole(item.dataset.roleId));
-                });
-            }
-
-            // Remove all tooltips and notifications
-            document.querySelectorAll('.notification, .loading-overlay, .tooltip').forEach(el => el.remove());
-
-            // Clear any timeouts or intervals if you have any
-            if (this.notificationTimeout) {
-                clearTimeout(this.notificationTimeout);
-            }
-
-            // Clear references
-            this.currentRole = null;
-            this.roles = [];
-            this.permissions = [];
-
-            // Remove DOM references
-            this.rolesList = null;
-            this.permissionsPanel = null;
-            this.permissionsGroups = null;
-            this.roleModal = null;
-            this.deleteModal = null;
-            this.roleForm = null;
-            this.roleSearch = null;
-            this.createRoleBtn = null;
-            this.editRoleBtn = null;
-            this.deleteRoleBtn = null;
-            this.selectAllPermissions = null;
-            this.deselectAllPermissions = null;
-            this.saveRoleBtn = null;
-            this.confirmDeleteBtn = null;
-            this.closeRoleModal = null;
-            this.cancelRoleModal = null;
-            this.closeDeleteModal = null;
-            this.cancelDelete = null;
+    cleanup() {
+        // Remove event listeners
+        if (this.rolesList) {
+            const roleItems = this.rolesList.querySelectorAll('.role-item');
+            roleItems.forEach(item => {
+                item.removeEventListener('click', () => this.selectRole(item.dataset.roleId));
+            });
         }
-    }
 
-    window.RolesPermissionsManager = RolesPermissionsManager;
+        // Remove all tooltips and notifications
+        document.querySelectorAll('.notification, .loading-overlay, .tooltip').forEach(el => el.remove());
+
+        // Clear any timeouts
+        if (this.notificationTimeout) {
+            clearTimeout(this.notificationTimeout);
+        }
+
+        // Clear references
+        this.currentRole = null;
+        this.roles = [];
+        this.permissions = [];
+
+        // Remove DOM references
+        this.rolesList = null;
+        this.permissionsPanel = null;
+        this.permissionsGroups = null;
+        this.roleModal = null;
+        this.deleteModal = null;
+        this.roleForm = null;
+        this.roleSearch = null;
+        this.createRoleBtn = null;
+        this.editRoleBtn = null;
+        this.deleteRoleBtn = null;
+        this.selectAllPermissions = null;
+        this.deselectAllPermissions = null;
+        this.saveRoleBtn = null;
+        this.confirmDeleteBtn = null;
+        this.closeRoleModal = null;
+        this.cancelRoleModal = null;
+        this.closeDeleteModal = null;
+        this.cancelDelete = null;
+    }
+}
+
+// Register the class globally
+window.RolesPermissionsManager = RolesPermissionsManager;
 })();
