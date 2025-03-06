@@ -20,12 +20,175 @@ class UsersManager {
             status: '',
             tfa: ''
         };
-         // Make instance available globally
-    window.usersManager = this;
-    
+        
+        // Make instance available globally
+        window.usersManager = this;
+        
         this.initializeElements();
+        this.initializeStyles();
         this.initializeEventListeners();
         this.loadInitialData();
+    }
+
+    initializeStyles() {
+        const styles = `
+            .tfa-toggle {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+            }
+
+            .switch {
+                position: relative;
+                display: inline-block;
+                width: 48px;
+                height: 24px;
+            }
+
+            .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+            .slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #cbd5e1;
+                transition: .4s;
+            }
+
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 18px;
+                width: 18px;
+                left: 3px;
+                bottom: 3px;
+                background-color: white;
+                transition: .4s;
+            }
+
+            input:checked + .slider {
+                background-color: var(--success-color);
+            }
+
+            input:focus + .slider {
+                box-shadow: 0 0 1px var(--success-color);
+            }
+
+            input:checked + .slider:before {
+                transform: translateX(24px);
+            }
+
+            .slider.round {
+                border-radius: 24px;
+            }
+
+            .slider.round:before {
+                border-radius: 50%;
+            }
+
+            .tfa-status {
+                font-size: 0.875rem;
+                font-weight: 500;
+            }
+
+            .tfa-enabled {
+                color: var(--success-color);
+            }
+
+            .tfa-disabled {
+                color: var(--text-tertiary);
+            }
+
+            .loading-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+            }
+
+            .loading-spinner {
+                background-color: var(--bg-primary);
+                padding: var(--spacing-lg);
+                border-radius: var(--border-radius-lg);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: var(--spacing-md);
+                box-shadow: var(--shadow-lg);
+            }
+
+            .loading-spinner i {
+                font-size: 2rem;
+                color: var(--primary-color);
+            }
+
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                border-radius: var(--border-radius-md);
+                background-color: white;
+                box-shadow: var(--shadow-lg);
+                z-index: 1100;
+                animation: slideIn 0.3s ease-out;
+            }
+
+            .notification-content {
+                display: flex;
+                align-items: center;
+                gap: var(--spacing-sm);
+            }
+
+            .notification.success {
+                background-color: #DEF7EC;
+                color: #03543F;
+            }
+
+            .notification.error {
+                background-color: #FDE8E8;
+                color: #9B1C1C;
+            }
+
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = styles;
+        document.head.appendChild(styleSheet);
     }
 
     initializeElements() {
@@ -76,8 +239,7 @@ class UsersManager {
             }
         });
     }
-
-    initializeEventListeners() {
+        initializeEventListeners() {
         // User management
         this.createUserBtn?.addEventListener('click', () => this.showCreateUserModal());
         this.saveUserBtn?.addEventListener('click', () => this.saveUser());
@@ -147,8 +309,32 @@ class UsersManager {
         this.passwordModal?.querySelector('.modal-content')?.addEventListener('click', (e) => {
             e.stopPropagation();
         });
+
+        // Form input validation
+        const roleNameInput = document.getElementById('userName');
+        roleNameInput?.addEventListener('input', (e) => {
+            const name = e.target.value.trim();
+            if (name.length < 2) {
+                e.target.setCustomValidity('Name must be at least 2 characters long');
+            } else {
+                e.target.setCustomValidity('');
+            }
+            e.target.reportValidity();
+        });
+
+        const emailInput = document.getElementById('userEmail');
+        emailInput?.addEventListener('input', (e) => {
+            const email = e.target.value.trim();
+            if (!this.isValidEmail(email)) {
+                e.target.setCustomValidity('Please enter a valid email address');
+            } else {
+                e.target.setCustomValidity('');
+            }
+            e.target.reportValidity();
+        });
     }
-     async loadInitialData() {
+
+    async loadInitialData() {
         try {
             this.showLoading();
             await Promise.all([
@@ -240,131 +426,185 @@ class UsersManager {
             this.showError('Failed to load users');
         }
     }
+        renderUsers() {
+        if (!this.usersTableBody) return;
 
-    renderUsers() {
-    if (!this.usersTableBody) return;
+        if (!this.users || this.users.length === 0) {
+            this.usersTableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="no-data">
+                        <div class="no-data-message">
+                            <i class="fas fa-users-slash"></i>
+                            <p>No users found</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
 
-    if (!this.users || this.users.length === 0) {
-        this.usersTableBody.innerHTML = `
-            <tr>
-                <td colspan="7" class="no-data">
-                    <div class="no-data-message">
-                        <i class="fas fa-users-slash"></i>
-                        <p>No users found</p>
-                    </div>
-                </td>
-            </tr>
-        `;
-        return;
+        this.usersTableBody.innerHTML = this.users.map(user => {
+            // Safely get user properties with defaults
+            const userName = user?.name || 'N/A';
+            const userEmail = user?.email || 'N/A';
+            const userDepartment = user?.department || 'N/A';
+            const userRole = user?.role || 'N/A';
+            const userStatus = user?.status || 'inactive';
+            const requires2FA = user?.requires2FA || false;
+
+            return `
+                <tr>
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar" style="background-color: ${this.getAvatarColor(userName)}">
+                                ${this.getInitials(userName)}
+                            </div>
+                            <div class="user-details">
+                                <span class="user-name">${this.escapeHtml(userName)}</span>
+                                <span class="user-email">${this.escapeHtml(userEmail)}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${this.escapeHtml(userEmail)}</td>
+                    <td>${this.escapeHtml(userDepartment)}</td>
+                    <td>${this.escapeHtml(this.getRoleName(userRole))}</td>
+                    <td>
+                        <span class="status-badge status-${userStatus.toLowerCase()}">
+                            ${this.capitalizeFirstLetter(userStatus)}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="tfa-toggle">
+                            <label class="switch">
+                                <input type="checkbox" 
+                                       ${requires2FA ? 'checked' : ''} 
+                                       data-action="toggle-2fa"
+                                       data-user-id="${user._id}">
+                                <span class="slider round"></span>
+                            </label>
+                            <span class="tfa-status ${requires2FA ? 'tfa-enabled' : 'tfa-disabled'}">
+                                ${requires2FA ? 'Enabled' : 'Disabled'}
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-button edit" 
+                                    data-action="edit"
+                                    data-user-id="${user._id}"
+                                    title="Edit User">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-button" 
+                                    data-action="password"
+                                    data-user-id="${user._id}"
+                                    title="Change Password">
+                                <i class="fas fa-key"></i>
+                            </button>
+                            <button class="action-button ${userStatus === 'active' ? 'deactivate' : 'activate'}"
+                                    data-action="toggle-status"
+                                    data-user-id="${user._id}"
+                                    title="${userStatus === 'active' ? 'Deactivate' : 'Activate'} User">
+                                <i class="fas ${userStatus === 'active' ? 'fa-user-slash' : 'fa-user-check'}"></i>
+                            </button>
+                            <button class="action-button delete" 
+                                    data-action="delete"
+                                    data-user-id="${user._id}"
+                                    title="Delete User">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        this.initializeTableActions();
     }
 
-    this.usersTableBody.innerHTML = this.users.map(user => {
-        // Safely get user properties with defaults
-        const userName = user?.name || 'N/A';
-        const userEmail = user?.email || 'N/A';
-        const userDepartment = user?.department || 'N/A';
-        const userRole = user?.role || 'N/A';
-        const userStatus = user?.status || 'inactive';
-        const requires2FA = user?.requires2FA || false;
-
-        return `
-            <tr>
-                <td>
-                    <div class="user-info">
-                        <div class="user-avatar" style="background-color: ${this.getAvatarColor(userName)}">
-                            ${this.getInitials(userName)}
-                        </div>
-                        <div class="user-details">
-                            <span class="user-name">${this.escapeHtml(userName)}</span>
-                            <span class="user-email">${this.escapeHtml(userEmail)}</span>
-                        </div>
-                    </div>
-                </td>
-                <td>${this.escapeHtml(userEmail)}</td>
-                <td>${this.escapeHtml(userDepartment)}</td>
-                <td>${this.escapeHtml(this.getRoleName(userRole))}</td>
-                <td>
-                    <span class="status-badge status-${userStatus.toLowerCase()}">
-                        ${this.capitalizeFirstLetter(userStatus)}
-                    </span>
-                </td>
-                <td>
-                    <span class="tfa-status ${requires2FA ? 'tfa-enabled' : 'tfa-disabled'}">
-                        <i class="fas ${requires2FA ? 'fa-shield-alt' : 'fa-shield-alt'}"></i>
-                        ${requires2FA ? 'Enabled' : 'Disabled'}
-                    </span>
-                </td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="action-button edit" 
-                                data-action="edit"
-                                data-user-id="${user._id}"
-                                title="Edit User">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="action-button" 
-                                data-action="password"
-                                data-user-id="${user._id}"
-                                title="Change Password">
-                            <i class="fas fa-key"></i>
-                        </button>
-                        <button class="action-button ${userStatus === 'active' ? 'deactivate' : 'activate'}"
-                                data-action="toggle-status"
-                                data-user-id="${user._id}"
-                                title="${userStatus === 'active' ? 'Deactivate' : 'Activate'} User">
-                            <i class="fas ${userStatus === 'active' ? 'fa-user-slash' : 'fa-user-check'}"></i>
-                        </button>
-                        <button class="action-button delete" 
-                                data-action="delete"
-                                data-user-id="${user._id}"
-                                title="Delete User">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    }).join('');
-
-    // Add event listeners after rendering
-    this.initializeTableActions();
-}
     initializeTableActions() {
-    if (!this.usersTableBody) return;
+        if (!this.usersTableBody) return;
 
-    // Remove any existing event listeners
-    const oldButtons = this.usersTableBody.querySelectorAll('.action-button');
-    oldButtons.forEach(button => {
-        button.replaceWith(button.cloneNode(true));
-    });
-
-    // Add new event listeners
-    const buttons = this.usersTableBody.querySelectorAll('.action-button');
-    buttons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            const action = button.dataset.action;
-            const userId = button.dataset.userId;
-
-            switch (action) {
-                case 'edit':
-                    this.showEditUserModal(userId);
-                    break;
-                case 'password':
-                    this.showPasswordModal(userId);
-                    break;
-                case 'toggle-status':
-                    this.toggleUserStatus(userId);
-                    break;
-                case 'delete':
-                    this.showDeleteModal(userId);
-                    break;
-            }
+        // Remove any existing event listeners
+        const oldElements = this.usersTableBody.querySelectorAll('.action-button, .switch input');
+        oldElements.forEach(element => {
+            element.replaceWith(element.cloneNode(true));
         });
-    });
-}
 
-    
-     showCreateUserModal() {
+        // Add new event listeners
+        const buttons = this.usersTableBody.querySelectorAll('.action-button');
+        buttons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const action = button.dataset.action;
+                const userId = button.dataset.userId;
+
+                switch (action) {
+                    case 'edit':
+                        this.showEditUserModal(userId);
+                        break;
+                    case 'password':
+                        this.showPasswordModal(userId);
+                        break;
+                    case 'toggle-status':
+                        this.toggleUserStatus(userId);
+                        break;
+                    case 'delete':
+                        this.showDeleteModal(userId);
+                        break;
+                }
+            });
+        });
+
+        // Add 2FA toggle listeners
+        const tfaToggles = this.usersTableBody.querySelectorAll('input[data-action="toggle-2fa"]');
+        tfaToggles.forEach(toggle => {
+            toggle.addEventListener('change', (e) => {
+                const userId = toggle.dataset.userId;
+                this.toggle2FA(userId);
+            });
+        });
+    }
+
+    async toggle2FA(userId) {
+        try {
+            const user = this.users.find(u => u._id === userId);
+            if (!user) throw new Error('User not found');
+
+            const newState = !user.requires2FA;
+
+            this.showLoading();
+
+            const response = await fetch(`${this.baseUrl}/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ requires2FA: newState })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to update 2FA status');
+            }
+
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to update 2FA status');
+            }
+
+            await this.loadUsers();
+            this.showSuccess(`Two-factor authentication ${newState ? 'enabled' : 'disabled'} successfully`);
+
+        } catch (error) {
+            console.error('Error toggling 2FA:', error);
+            this.showError(error.message || 'Failed to update 2FA status');
+        } finally {
+            this.hideLoading();
+        }
+    }
+        showCreateUserModal() {
         this.currentUserId = null;
         this.userForm.reset();
         document.getElementById('modalTitle').textContent = 'Add New User';
@@ -544,8 +784,7 @@ class UsersManager {
             this.hideLoading();
         }
     }
-
-    async deleteUser() {
+        async deleteUser() {
         try {
             this.showLoading();
 
@@ -699,8 +938,7 @@ class UsersManager {
             this.currentUserId = null;
         }
     }
-
-     // Utility Methods
+        // Utility Methods
     validateUserData(userData) {
         const errors = [];
 
@@ -718,6 +956,10 @@ class UsersManager {
 
         if (!userData.role) {
             errors.push('Role is required');
+        }
+
+        if (userData.name && userData.name.length > 50) {
+            errors.push('Name cannot exceed 50 characters');
         }
 
         return errors;
@@ -916,4 +1158,4 @@ function debounce(func, wait) {
 
 // Register the class globally
 window.UsersManager = UsersManager;
-})();   
+})();
