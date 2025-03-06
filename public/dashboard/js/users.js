@@ -387,16 +387,19 @@ class UsersManager {
 
             if (!response.ok) throw new Error('Failed to fetch user details');
 
-            const user = await response.json();
+            const result = await response.json();
+            if (!result.success) throw new Error(result.message || 'Failed to fetch user details');
+
+            const user = result.data;
             this.currentUserId = userId;
 
             document.getElementById('modalTitle').textContent = 'Edit User';
-            document.getElementById('userName').value = user.name;
-            document.getElementById('userEmail').value = user.email;
+            document.getElementById('userName').value = user.name || '';
+            document.getElementById('userEmail').value = user.email || '';
             document.getElementById('userDepartment').value = user.department || '';
-            document.getElementById('userRole').value = user.role;
+            document.getElementById('userRole').value = user.role || '';
             document.querySelector(`input[name="userStatus"][value="${user.status}"]`).checked = true;
-            document.getElementById('enable2FA').checked = user.requires2FA;
+            document.getElementById('enable2FA').checked = user.requires2FA || false;
 
             this.userModal.classList.add('show');
             document.getElementById('userName').focus();
@@ -408,7 +411,6 @@ class UsersManager {
             this.hideLoading();
         }
     }
-
     async showPasswordModal(userId) {
         this.currentUserId = userId;
         this.passwordForm.reset();
