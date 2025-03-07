@@ -1030,7 +1030,7 @@ class ContentLoader {
     getFileName(section) {
         const fileMap = {
             'dashboard': 'dashboard.html',
-            'companies': 'companies.html',
+            'companies': 'clientcompanies.html',
             'roles': 'roles-permissions.html',
             'users': 'users.html',
             'general-settings': 'settings.html',
@@ -1117,7 +1117,7 @@ class ContentLoader {
         console.log('Initializing Companies module...');
         
         // Check if script is already loaded
-        const existingScript = document.querySelector('script[src*="companies.js"]');
+        const existingScript = document.querySelector('script[src*="clientcompanies.js"]');
         if (existingScript) {
             console.log('Removing existing Companies script...');
             existingScript.remove();
@@ -1125,7 +1125,7 @@ class ContentLoader {
 
         // Create and append the script
         const script = document.createElement('script');
-        script.src = `${this.baseUrl}/dashboard/js/companies.js`;
+        script.src = `${this.baseUrl}/dashboard/js/clientcompanies.js`;
         console.log('Loading Companies script from:', script.src);
         
         // Add error handling for script loading
