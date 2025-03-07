@@ -21,6 +21,7 @@
             this.sortOrder = 'desc';
             this.selectedCompanyId = null;
             this.industries = new Set();
+            this.addLoaderStyles();
             
             // Initialize after DOM is ready
             if (document.readyState === 'loading') {
@@ -30,11 +31,44 @@
             }
         }
 
-        initialize() {
+        addLoaderStyles() {
+            const styles = `
+                .loader {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: var(--spacing-md);
+                    padding: var(--spacing-xl);
+                    color: var(--text-secondary);
+                }
+                
+                .loader i {
+                    font-size: 2rem;
+                    color: var(--primary-color);
+                }
+                
+                .loader p {
+                    margin: 0;
+                }
+            `;
+
+            const styleSheet = document.createElement('style');
+            styleSheet.textContent = styles;
+            document.head.appendChild(styleSheet);
+        }
+
+                initialize() {
             try {
-                this.initializeEventListeners();
-                this.loadCompanies();
-                this.loadStatistics();
+                // Check if required elements exist before initializing
+                if (document.getElementById('companiesTableBody')) {
+                    this.initializeEventListeners();
+                    this.loadCompanies();
+                    this.loadStatistics();
+                } else {
+                    console.warn('Required DOM elements not found. Waiting for content to load...');
+                    // Optional: Wait for content to be ready
+                    setTimeout(() => this.initialize(), 500);
+                }
             } catch (error) {
                 console.error('Error initializing CompaniesManager:', error);
             }
@@ -141,10 +175,88 @@
             });
         }
 
+        showTableLoader() {
+            const tbody = document.getElementById('companiesTableBody');
+            if (!tbody) return;
+
+            // Add loader styles if not already added
+            if (!document.querySelector('#table-loader-styles')) {
+                const styles = `
+                    .table-loader {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 2rem;
+                        background: var(--bg-primary);
+                    }
+                    .table-loader i {
+                        font-size: 2rem;
+                        color: var(--primary-color);
+                        margin-bottom: 1rem;
+                    }
+                    .table-loader p {
+                        color: var(--text-secondary);
+                        margin: 0;
+                    }
+                    .loading-row {
+                        background: var(--bg-secondary);
+                    }
+                `;
+                const styleSheet = document.createElement('style');
+                styleSheet.id = 'table-loader-styles';
+                styleSheet.textContent = styles;
+                document.head.appendChild(styleSheet);
+            }
+
+            tbody.innerHTML = `
+                <tr class="loading-row">
+                    <td colspan="8">
+                        <div class="table-loader">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading companies data...</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            // Disable interactive elements while loading
+            const filterElements = document.querySelectorAll('.filter-select, .search-box input');
+            filterElements.forEach(element => {
+                element.disabled = true;
+            });
+        }
+
+        hideTableLoader() {
+            // Re-enable interactive elements
+            const filterElements = document.querySelectorAll('.filter-select, .search-box input');
+            filterElements.forEach(element => {
+                element.disabled = false;
+            });
+
+            // The actual table content will be replaced by renderCompaniesTable
+            // But we'll ensure the loader is removed if renderCompaniesTable hasn't run
+            const tbody = document.getElementById('companiesTableBody');
+            if (tbody && tbody.querySelector('.loading-row')) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <div class="empty-state">
+                                <i class="fas fa-building text-muted"></i>
+                                <p>No data available</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        
+
                 // Data Loading Methods
-        async loadCompanies(showLoader = true) {
+                async loadCompanies(showLoader = true) {
             try {
-                if (showLoader) {
+                if (showLoader && document.getElementById('companiesTableBody')) {
                     this.showTableLoader();
                 }
 
@@ -161,17 +273,17 @@
                 if (response.success) {
                     this.companies = response.data.companies;
                     this.totalItems = response.data.pagination.total;
-                    this.updatePagination();
-                    this.renderCompaniesTable();
-                    this.updateIndustryFilter(response.data.filters.industries);
+                    
+                    // Only update UI if elements exist
+                    if (document.getElementById('companiesTableBody')) {
+                        this.updatePagination();
+                        this.renderCompaniesTable();
+                        this.updateIndustryFilter(response.data.filters.industries);
+                    }
                 }
             } catch (error) {
                 console.error('Error loading companies:', error);
-                this.showNotification('Error loading companies', 'error');
-            } finally {
-                if (showLoader) {
-                    this.hideTableLoader();
-                }
+                this.showNotification?.('Error loading companies', 'error');
             }
         }
 
