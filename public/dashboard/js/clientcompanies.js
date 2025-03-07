@@ -1,6 +1,6 @@
 (function() {
     // Check if UsersManager already exists
-    if (window.UsersManager) {
+    if (window.CompaniesManager) {
         return; // Exit if already defined
     }
 
