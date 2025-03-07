@@ -802,21 +802,18 @@
                     name: data.name,
                     industry: data.industry,
                     size: parseInt(data.size),
-                    contactDetails: {
-                        email: data.contactEmail,
-                        phone: data.contactPhone,
-                        address: data.address
-                    },
-                    subscription: {
-                        plan: data.subscriptionPlan
-                    },
-                    status: data.status,
-                    adminDetails: {
-                        name: data.adminName,
-                        email: data.adminEmail
-                    },
+                    contactEmail: data.contactEmail,        // Changed this
+                    contactPhone: data.contactPhone,        // Changed this
+                    address: data.address,                  // Changed this
+                    subscriptionPlan: data.subscriptionPlan, // Changed this
+                    adminEmail: data.adminEmail,            // Changed this
+                    adminName: data.adminName,              // Changed this
+                    status: data.status || 'active',
                     sendWelcomeEmail: data.sendWelcomeEmail === 'on'
                 };
+
+                // Log the data being sent
+                console.log('Sending company data:', companyData);
 
                 let response;
                 if (this.selectedCompanyId) {
@@ -841,7 +838,7 @@
             } catch (error) {
                 console.error('Error saving company:', error);
                 this.showNotification(
-                    `Error ${this.selectedCompanyId ? 'updating' : 'creating'} company`,
+                    `Error ${this.selectedCompanyId ? 'updating' : 'creating'} company: ${error.message}`,
                     'error'
                 );
             }
@@ -849,36 +846,68 @@
 
         validateCompanyForm(data) {
             // Company name validation
-            if (!data.name || data.name.length < 2) {
+            if (!data.name?.trim()) {
+                this.showNotification('Company name is required', 'error');
+                return false;
+            }
+
+            if (data.name.length < 2) {
                 this.showNotification('Company name must be at least 2 characters long', 'error');
                 return false;
             }
 
-            // Email validation
+            // Industry validation
+            if (!data.industry) {
+                this.showNotification('Industry is required', 'error');
+                return false;
+            }
+
+            // Company size validation
+            if (!data.size || parseInt(data.size) <= 0) {
+                this.showNotification('Company size must be greater than 0', 'error');
+                return false;
+            }
+
+            // Subscription plan validation
+            if (!data.subscriptionPlan) {
+                this.showNotification('Subscription plan is required', 'error');
+                return false;
+            }
+
+            // Contact email validation
+            if (!data.contactEmail) {
+                this.showNotification('Contact email is required', 'error');
+                return false;
+            }
+
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(data.contactEmail)) {
                 this.showNotification('Please enter a valid contact email', 'error');
                 return false;
             }
 
-            // Validate company domain email
             if (this.isGenericEmail(data.contactEmail)) {
-                this.showNotification('Please use a company domain email', 'error');
+                this.showNotification('Please use a company domain email for contact', 'error');
                 return false;
             }
 
-            // Company size validation
-            if (parseInt(data.size) <= 0) {
-                this.showNotification('Company size must be greater than 0', 'error');
-                return false;
-            }
+            // Admin details validation for new companies
+            if (!this.selectedCompanyId) {
+                if (!data.adminName) {
+                    this.showNotification('Admin name is required', 'error');
+                    return false;
+                }
 
-            // Admin email validation
-            if (!this.selectedCompanyId) { // Only validate for new companies
+                if (!data.adminEmail) {
+                    this.showNotification('Admin email is required', 'error');
+                    return false;
+                }
+
                 if (!emailRegex.test(data.adminEmail)) {
                     this.showNotification('Please enter a valid admin email', 'error');
                     return false;
                 }
+
                 if (this.isGenericEmail(data.adminEmail)) {
                     this.showNotification('Please use a company domain email for admin', 'error');
                     return false;
@@ -887,7 +916,6 @@
 
             return true;
         }
-
             // Utility Functions
         isGenericEmail(email) {
             const genericDomains = [
