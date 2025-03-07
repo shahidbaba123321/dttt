@@ -788,19 +788,12 @@
 
         async saveCompany() {
     try {
-        console.log('Starting company save process');
         const form = document.getElementById('companyForm');
         const formData = new FormData(form);
         const data = Object.fromEntries(formData);
 
-        console.log('Form data:', data);
+        console.log('Sending data:', data);
 
-        // Validate form data
-        if (!this.validateCompanyForm(data)) {
-            return;
-        }
-
-        // Structure the data
         const companyData = {
             name: data.name,
             industry: data.industry,
@@ -810,49 +803,59 @@
             address: data.address,
             subscriptionPlan: data.subscriptionPlan,
             adminEmail: data.adminEmail,
-            adminName: data.adminName,
-            status: data.status || 'active',
-            sendWelcomeEmail: data.sendWelcomeEmail === 'on'
+            adminName: data.adminName
         };
 
-        console.log('Structured company data:', companyData);
-
-        let response;
-        if (this.selectedCompanyId) {
-            console.log('Updating existing company');
-            response = await this.makeRequest(
-                `/companies/${this.selectedCompanyId}`,
-                'PUT',
-                companyData
-            );
-        } else {
-            console.log('Creating new company');
-            response = await this.makeRequest('/companies', 'POST', companyData);
-        }
-
-        console.log('API Response:', response);
+        const response = await this.makeRequest('/companies', 'POST', companyData);
 
         if (response.success) {
-            this.showNotification(
-                `Company ${this.selectedCompanyId ? 'updated' : 'created'} successfully`,
-                'success'
-            );
+            this.showNotification('Company created successfully', 'success');
             this.closeModals();
             this.loadCompanies();
-            this.loadStatistics();
+        } else {
+            throw new Error(response.message || 'Failed to create company');
         }
+
     } catch (error) {
-        console.error('Error saving company:', error);
-        console.error('Error details:', {
-            message: error.message,
-            stack: error.stack
-        });
-        this.showNotification(
-            `Error ${this.selectedCompanyId ? 'updating' : 'creating'} company: ${error.message}`,
-            'error'
-        );
+        console.error('Save error:', error);
+        this.showNotification(error.message, 'error');
     }
 }
+
+        async makeRequest(endpoint, method = 'GET', data = null) {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('No authentication token found');
+        }
+
+        const config = {
+            method,
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: data ? JSON.stringify(data) : undefined
+        };
+
+        console.log(`Making ${method} request to ${endpoint}:`, config);
+
+        const response = await fetch(`${this.apiBaseUrl}${endpoint}`, config);
+        const responseData = await response.json();
+
+        console.log('Response:', responseData);
+
+        if (!response.ok) {
+            throw new Error(responseData.message || `HTTP error! status: ${response.status}`);
+        }
+
+        return responseData;
+    } catch (error) {
+        console.error('Request error:', error);
+        throw error;
+    }
+}
+
         validateCompanyForm(data) {
             // Company name validation
             if (!data.name?.trim()) {
