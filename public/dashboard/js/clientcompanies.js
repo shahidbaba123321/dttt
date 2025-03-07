@@ -57,18 +57,21 @@
             document.head.appendChild(styleSheet);
         }
 
-                initialize() {
+                        initialize() {
             try {
-                // Check if required elements exist before initializing
-                if (document.getElementById('companiesTableBody')) {
-                    this.initializeEventListeners();
-                    this.loadCompanies();
-                    this.loadStatistics();
-                } else {
-                    console.warn('Required DOM elements not found. Waiting for content to load...');
-                    // Optional: Wait for content to be ready
-                    setTimeout(() => this.initialize(), 500);
-                }
+                console.log('Initializing CompaniesManager...');
+                
+                // Delay initialization slightly to ensure DOM is ready
+                setTimeout(async () => {
+                    try {
+                        await this.initializeEventListeners();
+                        await this.loadCompanies();
+                        await this.loadStatistics();
+                    } catch (error) {
+                        console.error('Error during delayed initialization:', error);
+                    }
+                }, 100);
+                
             } catch (error) {
                 console.error('Error initializing CompaniesManager:', error);
             }
@@ -254,7 +257,7 @@
         
 
                 // Data Loading Methods
-                async loadCompanies(showLoader = true) {
+                        async loadCompanies(showLoader = true) {
             try {
                 if (showLoader && document.getElementById('companiesTableBody')) {
                     this.showTableLoader();
@@ -268,49 +271,92 @@
                     ...this.filters
                 });
 
+                console.log('Loading companies with params:', queryParams.toString());
                 const response = await this.makeRequest(`/companies?${queryParams}`, 'GET');
 
                 if (response.success) {
                     this.companies = response.data.companies;
                     this.totalItems = response.data.pagination.total;
                     
-                    // Only update UI if elements exist
                     if (document.getElementById('companiesTableBody')) {
                         this.updatePagination();
                         this.renderCompaniesTable();
-                        this.updateIndustryFilter(response.data.filters.industries);
+                        if (response.data.filters?.industries) {
+                            this.updateIndustryFilter(response.data.filters.industries);
+                        }
                     }
                 }
             } catch (error) {
                 console.error('Error loading companies:', error);
-                this.showNotification?.('Error loading companies', 'error');
+                this.showNotification?.('Error loading companies. Please try again.', 'error');
+                
+                // Show error state in table
+                const tbody = document.getElementById('companiesTableBody');
+                if (tbody) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <div class="error-state">
+                                    <i class="fas fa-exclamation-circle text-danger"></i>
+                                    <p>Error loading companies data</p>
+                                    <button class="btn btn-outline-primary btn-sm mt-2" 
+                                            onclick="companiesManager.loadCompanies()">
+                                        <i class="fas fa-redo"></i> Retry
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+            } finally {
+                if (showLoader) {
+                    this.hideTableLoader();
+                }
             }
         }
-
-        async loadStatistics() {
+        
+                       async loadStatistics() {
             try {
-                const response = await this.makeRequest('/companies/statistics', 'GET');
+                console.log('Loading company statistics...');
+                const response = await this.makeRequest('/companies/overall-statistics', 'GET');
                 
                 if (response.success) {
                     const stats = response.statistics;
                     
-                    // Update statistics cards
-                    document.getElementById('totalCompanies').textContent = stats.total || 0;
-                    document.getElementById('activeCompanies').textContent = stats.active || 0;
-                    document.getElementById('pendingRenewals').textContent = stats.pendingRenewals || 0;
-                    document.getElementById('inactiveCompanies').textContent = stats.inactive || 0;
+                    // Update statistics cards if they exist
+                    const statsMapping = {
+                        'totalCompanies': stats.total || 0,
+                        'activeCompanies': stats.active || 0,
+                        'pendingRenewals': stats.pendingRenewals || 0,
+                        'inactiveCompanies': stats.inactive || 0
+                    };
 
-                    // Animate numbers
-                    this.animateNumbers();
+                    Object.entries(statsMapping).forEach(([id, value]) => {
+                        const element = document.getElementById(id);
+                        if (element) {
+                            element.textContent = value;
+                        }
+                    });
+
+                    // Animate numbers if elements exist
+                    if (document.querySelector('.stat-details')) {
+                        this.animateNumbers();
+                    }
                 }
             } catch (error) {
                 console.error('Error loading statistics:', error);
-                this.showNotification('Error loading statistics', 'error');
+                // Update stats cards to show error state
+                ['totalCompanies', 'activeCompanies', 'pendingRenewals', 'inactiveCompanies'].forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = '-';
+                        element.parentElement.classList.add('error-state');
+                    }
+                });
             }
         }
-
         // API Request Handler
-        async makeRequest(endpoint, method = 'GET', data = null) {
+                async makeRequest(endpoint, method = 'GET', data = null) {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) {
@@ -332,11 +378,13 @@
                     config.body = JSON.stringify(data);
                 }
 
+                console.log(`Making ${method} request to:`, `${this.apiBaseUrl}${endpoint}`);
                 const response = await fetch(`${this.apiBaseUrl}${endpoint}`, config);
                 const responseData = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(responseData.message || 'API request failed');
+                    console.error('API Error Response:', responseData);
+                    throw new Error(responseData.message || `API request failed with status ${response.status}`);
                 }
 
                 return responseData;
@@ -345,7 +393,6 @@
                 throw error;
             }
         }
-
         // UI Rendering Methods
         renderCompaniesTable() {
             const tbody = document.getElementById('companiesTableBody');
