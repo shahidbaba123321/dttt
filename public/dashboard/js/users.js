@@ -20,6 +20,15 @@ class UsersManager {
             status: '',
             tfa: ''
         };
+
+        // Handle URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('role')) {
+            const roleParam = urlParams.get('role');
+            if (roleParam !== 'undefined') {
+                this.filters.role = roleParam;
+            }
+        }
         
         // Make instance available globally
         window.usersManager = this;
@@ -106,6 +115,24 @@ class UsersManager {
                 color: var(--text-tertiary);
             }
 
+            .role-badge {
+                display: inline-flex;
+                align-items: center;
+                padding: 0.375rem 0.75rem;
+                background-color: var(--bg-secondary);
+                border-radius: var(--border-radius-md);
+                font-size: 0.875rem;
+                color: var(--text-primary);
+                transition: all 0.2s ease;
+                cursor: pointer;
+            }
+
+            .role-badge:hover {
+                background-color: var(--primary-color);
+                color: white;
+                transform: translateY(-1px);
+            }
+
             .loading-overlay {
                 position: fixed;
                 top: 0;
@@ -163,6 +190,24 @@ class UsersManager {
                 color: #9B1C1C;
             }
 
+            .clear-filters {
+                display: inline-flex;
+                align-items: center;
+                gap: var(--spacing-sm);
+                padding: 0.75rem 1rem;
+                background-color: var(--bg-secondary);
+                border: 1px solid var(--border-light);
+                border-radius: var(--border-radius-md);
+                color: var(--text-secondary);
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+
+            .clear-filters:hover {
+                background-color: var(--bg-tertiary);
+                color: var(--text-primary);
+            }
+
             @keyframes slideIn {
                 from {
                     transform: translateX(100%);
@@ -190,8 +235,7 @@ class UsersManager {
         styleSheet.textContent = styles;
         document.head.appendChild(styleSheet);
     }
-
-    initializeElements() {
+        initializeElements() {
         // Main containers
         this.usersTableBody = document.getElementById('usersTableBody');
         this.paginationControls = document.getElementById('paginationControls');
@@ -239,7 +283,8 @@ class UsersManager {
             }
         });
     }
-        initializeEventListeners() {
+
+    initializeEventListeners() {
         // User management
         this.createUserBtn?.addEventListener('click', () => this.showCreateUserModal());
         this.saveUserBtn?.addEventListener('click', () => this.saveUser());
@@ -265,6 +310,15 @@ class UsersManager {
             this.filters.role = this.roleFilter.value;
             this.currentPage = 1;
             this.loadUsers();
+            
+            // Update URL
+            const url = new URL(window.location.href);
+            if (this.filters.role) {
+                url.searchParams.set('role', this.filters.role);
+            } else {
+                url.searchParams.delete('role');
+            }
+            window.history.replaceState({}, '', url);
         });
 
         this.statusFilter?.addEventListener('change', () => {
@@ -333,8 +387,7 @@ class UsersManager {
             e.target.reportValidity();
         });
     }
-
-    async loadInitialData() {
+        async loadInitialData() {
         try {
             this.showLoading();
             await Promise.all([
@@ -369,7 +422,9 @@ class UsersManager {
                 this.roleFilter.innerHTML = `
                     <option value="">All Roles</option>
                     ${this.roles.map(role => `
-                        <option value="${role._id}">${this.escapeHtml(role.name)}</option>
+                        <option value="${role.name}" ${this.filters.role === role.name ? 'selected' : ''}>
+                            ${this.escapeHtml(role.name)}
+                        </option>
                     `).join('')}
                 `;
             }
@@ -378,7 +433,9 @@ class UsersManager {
             const userRoleSelect = document.getElementById('userRole');
             if (userRoleSelect) {
                 userRoleSelect.innerHTML = this.roles.map(role => `
-                    <option value="${role._id}">${this.escapeHtml(role.name)}</option>
+                    <option value="${role.name}">
+                        ${this.escapeHtml(role.name)}
+                    </option>
                 `).join('');
             }
 
@@ -394,6 +451,13 @@ class UsersManager {
                 page: this.currentPage,
                 limit: this.pageSize,
                 ...this.filters
+            });
+
+            // Remove undefined or empty values from query params
+            Array.from(queryParams.entries()).forEach(([key, value]) => {
+                if (value === 'undefined' || value === '') {
+                    queryParams.delete(key);
+                }
             });
 
             const response = await fetch(`${this.baseUrl}/users?${queryParams}`, {
@@ -426,6 +490,52 @@ class UsersManager {
             this.showError('Failed to load users');
         }
     }
+
+    clearFilters() {
+        this.filters = {
+            search: '',
+            role: '',
+            status: '',
+            tfa: ''
+        };
+        
+        // Reset filter inputs
+        if (this.searchInput) this.searchInput.value = '';
+        if (this.roleFilter) this.roleFilter.value = '';
+        if (this.statusFilter) this.statusFilter.value = '';
+        if (this.tfaFilter) this.tfaFilter.value = '';
+        
+        // Update URL
+        const url = new URL(window.location.href);
+        url.search = '';
+        window.history.replaceState({}, '', url);
+        
+        // Reload users
+        this.currentPage = 1;
+        this.loadUsers();
+    }
+
+    filterByRole(role) {
+        this.filters.role = role;
+        this.currentPage = 1;
+        
+        // Update URL
+        const url = new URL(window.location.href);
+        if (role) {
+            url.searchParams.set('role', role);
+        } else {
+            url.searchParams.delete('role');
+        }
+        window.history.replaceState({}, '', url);
+        
+        // Update role filter dropdown
+        if (this.roleFilter) {
+            this.roleFilter.value = role;
+        }
+        
+        this.loadUsers();
+    }
+
         renderUsers() {
         if (!this.usersTableBody) return;
 
@@ -467,7 +577,11 @@ class UsersManager {
                     </td>
                     <td>${this.escapeHtml(userEmail)}</td>
                     <td>${this.escapeHtml(userDepartment)}</td>
-                    <td>${this.escapeHtml(this.getRoleName(userRole))}</td>
+                    <td>
+                        <span class="role-badge" data-role="${this.escapeHtml(userRole)}">
+                            ${this.escapeHtml(userRole)}
+                        </span>
+                    </td>
                     <td>
                         <span class="status-badge status-${userStatus.toLowerCase()}">
                             ${this.capitalizeFirstLetter(userStatus)}
@@ -526,7 +640,7 @@ class UsersManager {
         if (!this.usersTableBody) return;
 
         // Remove any existing event listeners
-        const oldElements = this.usersTableBody.querySelectorAll('.action-button, .switch input');
+        const oldElements = this.usersTableBody.querySelectorAll('.action-button, .switch input, .role-badge');
         oldElements.forEach(element => {
             element.replaceWith(element.cloneNode(true));
         });
@@ -563,9 +677,21 @@ class UsersManager {
                 this.toggle2FA(userId);
             });
         });
+
+        // Add role click handlers
+        const roleBadges = this.usersTableBody.querySelectorAll('.role-badge');
+        roleBadges.forEach(badge => {
+            badge.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const role = badge.dataset.role;
+                if (role) {
+                    this.filterByRole(role);
+                }
+            });
+        });
     }
 
-    async toggle2FA(userId) {
+        async toggle2FA(userId) {
         try {
             const user = this.users.find(u => u._id === userId);
             if (!user) throw new Error('User not found');
@@ -604,7 +730,8 @@ class UsersManager {
             this.hideLoading();
         }
     }
-        showCreateUserModal() {
+
+    showCreateUserModal() {
         this.currentUserId = null;
         this.userForm.reset();
         document.getElementById('modalTitle').textContent = 'Add New User';
@@ -613,45 +740,42 @@ class UsersManager {
     }
 
     async showEditUserModal(userId) {
-    try {
-        this.showLoading();
-        const response = await fetch(`${this.baseUrl}/users/${userId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            }
-        });
+        try {
+            this.showLoading();
+            const response = await fetch(`${this.baseUrl}/users/${userId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
 
-        if (!response.ok) throw new Error('Failed to fetch user details');
+            if (!response.ok) throw new Error('Failed to fetch user details');
 
-        const result = await response.json();
-        if (!result.success) throw new Error(result.message || 'Failed to fetch user details');
+            const result = await response.json();
+            if (!result.success) throw new Error(result.message || 'Failed to fetch user details');
 
-        const user = result.data;
-        this.currentUserId = userId;
+            const user = result.data;
+            this.currentUserId = userId;
 
-        // Find role ID by name
-        const userRole = this.roles.find(r => r.name === user.role);
+            document.getElementById('modalTitle').textContent = 'Edit User';
+            document.getElementById('userName').value = user.name || '';
+            document.getElementById('userEmail').value = user.email || '';
+            document.getElementById('userDepartment').value = user.department || '';
+            document.getElementById('userRole').value = user.role || '';
+            document.querySelector(`input[name="userStatus"][value="${user.status}"]`).checked = true;
+            document.getElementById('enable2FA').checked = user.requires2FA || false;
 
-        document.getElementById('modalTitle').textContent = 'Edit User';
-        document.getElementById('userName').value = user.name || '';
-        document.getElementById('userEmail').value = user.email || '';
-        document.getElementById('userDepartment').value = user.department || '';
-        document.getElementById('userRole').value = userRole ? userRole._id : '';
-        document.querySelector(`input[name="userStatus"][value="${user.status}"]`).checked = true;
-        document.getElementById('enable2FA').checked = user.requires2FA || false;
+            this.userModal.classList.add('show');
+            document.getElementById('userName').focus();
 
-        this.userModal.classList.add('show');
-        document.getElementById('userName').focus();
-
-    } catch (error) {
-        console.error('Error loading user details:', error);
-        this.showError('Failed to load user details');
-    } finally {
-        this.hideLoading();
+        } catch (error) {
+            console.error('Error loading user details:', error);
+            this.showError('Failed to load user details');
+        } finally {
+            this.hideLoading();
+        }
     }
-}
 
     showPasswordModal(userId) {
         this.currentUserId = userId;
@@ -673,81 +797,74 @@ class UsersManager {
     }
 
     async saveUser() {
-    try {
-        const roleId = document.getElementById('userRole').value;
-        const selectedRole = this.roles.find(r => r._id === roleId);
-        
-        if (!selectedRole) {
-            throw new Error('Invalid role selected');
+        try {
+            const userData = {
+                name: document.getElementById('userName').value.trim(),
+                email: document.getElementById('userEmail').value.trim(),
+                department: document.getElementById('userDepartment').value.trim(),
+                role: document.getElementById('userRole').value,
+                status: document.querySelector('input[name="userStatus"]:checked').value,
+                requires2FA: document.getElementById('enable2FA').checked
+            };
+
+            const validationErrors = this.validateUserData(userData);
+            if (validationErrors.length > 0) {
+                this.showError(validationErrors[0]);
+                return;
+            }
+
+            this.showLoading();
+
+            const url = this.currentUserId
+                ? `${this.baseUrl}/users/${this.currentUserId}`
+                : `${this.baseUrl}/users`;
+
+            const method = this.currentUserId ? 'PUT' : 'POST';
+
+            // If creating new user, add password
+            if (!this.currentUserId) {
+                userData.password = this.generateTemporaryPassword();
+            }
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to save user');
+            }
+
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to save user');
+            }
+
+            this.closeModal(this.userModal);
+            await this.loadUsers();
+
+            // Show success message with password if new user
+            if (!this.currentUserId && userData.password) {
+                this.showSuccess(`User created successfully. Temporary password: ${userData.password}`);
+            } else {
+                this.showSuccess('User updated successfully');
+            }
+
+        } catch (error) {
+            console.error('Error saving user:', error);
+            this.showError(error.message || 'Failed to save user');
+        } finally {
+            this.hideLoading();
         }
-
-        const userData = {
-            name: document.getElementById('userName').value.trim(),
-            email: document.getElementById('userEmail').value.trim(),
-            department: document.getElementById('userDepartment').value.trim(),
-            role: selectedRole.name, // Store role name instead of ID
-            status: document.querySelector('input[name="userStatus"]:checked').value,
-            requires2FA: document.getElementById('enable2FA').checked
-        };
-
-        const validationErrors = this.validateUserData(userData);
-        if (validationErrors.length > 0) {
-            this.showError(validationErrors[0]);
-            return;
-        }
-
-        this.showLoading();
-
-        const url = this.currentUserId
-            ? `${this.baseUrl}/users/${this.currentUserId}`
-            : `${this.baseUrl}/users`;
-
-        const method = this.currentUserId ? 'PUT' : 'POST';
-
-        // If creating new user, add password
-        if (!this.currentUserId) {
-            userData.password = this.generateTemporaryPassword();
-        }
-
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(userData)
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Failed to save user');
-        }
-
-        const result = await response.json();
-        
-        if (!result.success) {
-            throw new Error(result.message || 'Failed to save user');
-        }
-
-        this.closeModal(this.userModal);
-        await this.loadUsers();
-
-        // Show success message with password if new user
-        if (!this.currentUserId && userData.password) {
-            this.showSuccess(`User created successfully. Temporary password: ${userData.password}`);
-        } else {
-            this.showSuccess('User updated successfully');
-        }
-
-    } catch (error) {
-        console.error('Error saving user:', error);
-        this.showError(error.message || 'Failed to save user');
-    } finally {
-        this.hideLoading();
     }
-}
 
-    async changePassword() {
+        async changePassword() {
         try {
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
@@ -794,7 +911,8 @@ class UsersManager {
             this.hideLoading();
         }
     }
-        async deleteUser() {
+
+    async deleteUser() {
         try {
             this.showLoading();
 
@@ -917,7 +1035,7 @@ class UsersManager {
         this.paginationControls.innerHTML = paginationHTML;
     }
 
-    updateDisplayRange() {
+        updateDisplayRange() {
         if (!this.startRange || !this.endRange || !this.totalUsersElement) return;
 
         const start = (this.currentPage - 1) * this.pageSize + 1;
@@ -948,7 +1066,7 @@ class UsersManager {
             this.currentUserId = null;
         }
     }
-        // Utility Methods
+
     validateUserData(userData) {
         const errors = [];
 
@@ -1032,16 +1150,6 @@ class UsersManager {
         return `hsl(${hue}, 70%, 45%)`;
     }
 
-    getRoleName(roleId) {
-    // If roleId is already a name, return it
-    if (typeof roleId === 'string' && !roleId.match(/^[0-9a-fA-F]{24}$/)) {
-        return roleId;
-    }
-    // Otherwise, look up the role by ID
-    const role = this.roles.find(r => r._id === roleId);
-    return role ? role.name : 'Unknown Role';
-}
-    
     isValidEmail(email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
