@@ -137,102 +137,102 @@
     </div>
 
     <!-- Add/Edit Company Modal -->
-    <div id="companyModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modalTitle">Add New Company</h2>
-                <button class="close-modal">×</button>
-            </div>
-            <div class="modal-body">
-                <form id="companyForm">
+<div id="companyModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">Add New Company</h2>
+            <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="companyForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="companyName">Company Name*</label>
+                        <input type="text" id="companyName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="industry">Industry*</label>
+                        <select id="industry" name="industry" required>
+                            <option value="">Select Industry</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="companySize">Company Size*</label>
+                        <input type="number" id="companySize" name="size" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="subscriptionPlan">Subscription Plan*</label>
+                        <select id="subscriptionPlan" name="subscriptionPlan" required>
+                            <option value="">Select Plan</option>
+                            <option value="Basic">Basic</option>
+                            <option value="Professional">Professional</option>
+                            <option value="Enterprise">Enterprise</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Contact Details</h3>
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="companyName">Company Name*</label>
-                            <input type="text" id="companyName" name="name" required>
+                            <label for="contactEmail">Email Address*</label>
+                            <input type="email" id="contactEmail" name="contactEmail" required>
+                            <small class="form-hint">Must be a company domain email</small>
                         </div>
                         <div class="form-group">
-                            <label for="industry">Industry*</label>
-                            <select id="industry" name="industry" required>
-                                <option value="">Select Industry</option>
-                                <!-- Options will be populated dynamically -->
+                            <label for="contactPhone">Phone Number</label>
+                            <input type="tel" id="contactPhone" name="contactPhone">
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="address">Address</label>
+                            <textarea id="address" name="address" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Company Admin</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="adminName">Admin Name*</label>
+                            <input type="text" id="adminName" name="adminName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="adminEmail">Admin Email*</label>
+                            <input type="email" id="adminEmail" name="adminEmail" required>
+                            <small class="form-hint">Must be a company domain email</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Additional Settings</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="status">Status</label>
+                            <select id="status" name="status">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="companySize">Company Size*</label>
-                            <input type="number" id="companySize" name="size" min="1" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="subscriptionPlan">Subscription Plan*</label>
-                            <select id="subscriptionPlan" name="subscriptionPlan" required>
-                                <option value="">Select Plan</option>
-                                <option value="Basic">Basic</option>
-                                <option value="Professional">Professional</option>
-                                <option value="Enterprise">Enterprise</option>
-                            </select>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="sendWelcomeEmail" name="sendWelcomeEmail" checked>
+                                Send welcome email to admin
+                            </label>
                         </div>
                     </div>
-
-                    <div class="form-section">
-                        <h3>Contact Details</h3>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="contactEmail">Email Address*</label>
-                                <input type="email" id="contactEmail" name="contactEmail" required>
-                                <small class="form-hint">Must be a company domain email</small>
-                            </div>
-                            <div class="form-group">
-                                <label for="contactPhone">Phone Number</label>
-                                <input type="tel" id="contactPhone" name="contactPhone">
-                            </div>
-                            <div class="form-group full-width">
-                                <label for="address">Address</label>
-                                <textarea id="address" name="address" rows="3"></textarea>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h3>Company Admin</h3>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="adminName">Admin Name*</label>
-                                <input type="text" id="adminName" name="adminName" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="adminEmail">Admin Email*</label>
-                                <input type="email" id="adminEmail" name="adminEmail" required>
-                                <small class="form-hint">Must be a company domain email</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h3>Additional Settings</h3>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="status">Status</label>
-                                <select id="status" name="status">
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="sendWelcomeEmail" name="sendWelcomeEmail" checked>
-                                    Send welcome email to admin
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-text" data-dismiss="modal">Cancel</button>
-                <button class="btn btn-primary" id="saveCompanyBtn">Save Company</button>
-            </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-text" data-dismiss="modal">Cancel</button>
+            <button class="btn btn-primary" onclick="document.getElementById('companyForm').requestSubmit()">
+                Save Company
+            </button>
         </div>
     </div>
-
+</div>
     <!-- Company Details Modal -->
     <div id="companyDetailsModal" class="modal">
         <div class="modal-content modal-lg">
