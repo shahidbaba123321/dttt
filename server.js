@@ -76,6 +76,16 @@ app.use(morgan('combined'));
 app.use(limiter);
 app.use('/api/login', authLimiter);
 
+// Add this before your routes
+app.use((err, req, res, next) => {
+    console.error('API Error:', err);
+    res.status(500).json({
+        success: false,
+        message: err.message || 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+});
+
 // Cache middleware
 const cacheMiddleware = (duration) => {
     const memoryCache = new Map();
@@ -2194,6 +2204,26 @@ app.get('/api/companies', verifyToken, verifyAdmin, cacheMiddleware(300), async 
         // Get total count
         const total = await companies.countDocuments(filter);
 
+        // If no companies exist, return empty result
+        if (total === 0) {
+            return res.json({
+                success: true,
+                data: {
+                    companies: [],
+                    pagination: {
+                        total: 0,
+                        page: 1,
+                        pages: 0
+                    },
+                    filters: {
+                        industries: [],
+                        plans: await getSubscriptionPlans(),
+                        statuses: ['active', 'inactive', 'suspended']
+                    }
+                }
+            });
+        }
+
         // Get companies with pagination and sorting
         const companiesList = await companies
             .find(filter)
@@ -2258,6 +2288,42 @@ app.get('/api/companies', verifyToken, verifyAdmin, cacheMiddleware(300), async 
         res.status(500).json({
             success: false,
             message: 'Error fetching companies'
+        });
+    }
+});
+
+// Add this new endpoint for overall statistics
+app.get('/api/companies/overall-statistics', verifyToken, verifyAdmin, cacheMiddleware(300), async (req, res) => {
+    try {
+        const [
+            totalCompanies,
+            activeCompanies,
+            pendingRenewals,
+            inactiveCompanies
+        ] = await Promise.all([
+            companies.countDocuments({}),
+            companies.countDocuments({ status: 'active' }),
+            companies.countDocuments({
+                'subscription.status': 'pending_renewal'
+            }),
+            companies.countDocuments({ status: 'inactive' })
+        ]);
+
+        res.json({
+            success: true,
+            statistics: {
+                total: totalCompanies,
+                active: activeCompanies,
+                pendingRenewals: pendingRenewals,
+                inactive: inactiveCompanies
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching overall statistics:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching statistics'
         });
     }
 });
