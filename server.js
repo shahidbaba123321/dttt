@@ -76,22 +76,31 @@ app.use(morgan('combined'));
 app.use(limiter);
 app.use('/api/login', authLimiter);
 
-// Add this before your routes
+// Error logging middleware
 app.use((err, req, res, next) => {
-    console.error('API Error:', err);
+    console.error('Global error:', {
+        message: err.message,
+        stack: err.stack,
+        code: err.code,
+        name: err.name
+    });
+    
     res.status(500).json({
         success: false,
-        message: err.message || 'Internal server error',
-        error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+        message: 'Internal server error',
+        debug: process.env.NODE_ENV === 'development' ? {
+            error: err.message,
+            type: err.name,
+            code: err.code
+        } : undefined
     });
 });
 
-// Add this before your routes
+// Request logging
 app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path}`, {
+    console.log(`${req.method} ${req.url}`, {
         body: req.body,
-        query: req.query,
-        params: req.params
+        headers: req.headers
     });
     next();
 });
@@ -1967,220 +1976,82 @@ app.post('/api/users/2fa/toggle', verifyToken, async (req, res) => {
 
 // Create new company
 app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
-    let session;
     try {
-        console.log('Starting company creation process');
         console.log('Request body:', req.body);
 
-        const {
-            name,
-            industry,
-            size,
-            contactEmail,
-            contactPhone,
-            address,
-            subscriptionPlan,
-            adminEmail,
-            adminName,
-            status = 'active',
-            sendWelcomeEmail = true
-        } = req.body;
+        // 1. Basic company creation first
+        const company = {
+            name: req.body.name,
+            industry: req.body.industry,
+            size: parseInt(req.body.size),
+            contactDetails: {
+                email: req.body.contactEmail,
+                phone: req.body.contactPhone || '',
+                address: req.body.address || ''
+            },
+            status: 'active',
+            createdAt: new Date(),
+            createdBy: new ObjectId(req.user.userId),
+            updatedAt: new Date()
+        };
 
-        // Validation
-        if (!name || !industry || !contactEmail || !subscriptionPlan || !adminEmail || !adminName) {
-            return res.status(400).json({
-                success: false,
-                message: 'Missing required fields',
-                missingFields: {
-                    name: !name,
-                    industry: !industry,
-                    contactEmail: !contactEmail,
-                    subscriptionPlan: !subscriptionPlan,
-                    adminEmail: !adminEmail,
-                    adminName: !adminName
+        console.log('Attempting to create company:', company);
+
+        // 2. Insert company
+        const companyResult = await companies.insertOne(company);
+        const companyId = companyResult.insertedId;
+
+        console.log('Company created with ID:', companyId);
+
+        // 3. Create admin user
+        const adminPassword = 'TempPass123!';  // Simplified for testing
+        const hashedPassword = await bcrypt.hash(adminPassword, 12);
+
+        const adminUser = {
+            companyId: companyId,
+            name: req.body.adminName,
+            email: req.body.adminEmail,
+            password: hashedPassword,
+            role: 'admin',
+            status: 'active',
+            createdAt: new Date(),
+            createdBy: new ObjectId(req.user.userId)
+        };
+
+        await company_users.insertOne(adminUser);
+        console.log('Admin user created');
+
+        // 4. Send response
+        res.status(201).json({
+            success: true,
+            message: 'Company created successfully',
+            data: {
+                companyId,
+                adminCredentials: {
+                    email: req.body.adminEmail,
+                    temporaryPassword: adminPassword
                 }
-            });
-        }
-
-        // Check existing company
-        const existingCompany = await companies.findOne({ 
-            name: { $regex: new RegExp(`^${name}$`, 'i') }
+            }
         });
 
-        if (existingCompany) {
-            return res.status(400).json({
-                success: false,
-                message: 'Company name already exists'
-            });
-        }
-
-        // Get subscription plan
-        const plan = await subscription_plans.findOne({ name: subscriptionPlan });
-        if (!plan) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid subscription plan'
-            });
-        }
-
-        // Start session
-        session = await client.startSession();
-        session.startTransaction();
-
-        try {
-            // Create company
-            const company = {
-                name,
-                industry,
-                size: parseInt(size),
-                contactDetails: {
-                    email: contactEmail,
-                    phone: contactPhone || '',
-                    address: address || ''
-                },
-                subscription: {
-                    plan: subscriptionPlan,
-                    startDate: new Date(),
-                    status: 'active'
-                },
-                status,
-                createdAt: new Date(),
-                createdBy: new ObjectId(req.user.userId),
-                updatedAt: new Date(),
-                settings: {
-                    dataRetentionDays: 365,
-                    securitySettings: {
-                        passwordPolicy: {
-                            minLength: 8,
-                            requireSpecialChar: true,
-                            requireNumber: true
-                        },
-                        sessionTimeout: 30,
-                        maxLoginAttempts: 5
-                    }
-                }
-            };
-
-            const companyResult = await companies.insertOne(company, { session });
-            const companyId = companyResult.insertedId;
-
-            // Create admin user
-            const adminPassword = crypto.randomBytes(12).toString('base64url');
-            const hashedPassword = await bcrypt.hash(adminPassword, 12);
-
-            const adminUser = {
-                companyId: companyId,
-                name: adminName,
-                email: adminEmail,
-                password: hashedPassword,
-                role: 'admin',
-                status: 'active',
-                createdAt: new Date(),
-                createdBy: new ObjectId(req.user.userId),
-                passwordResetRequired: true,
-                lastLogin: null,
-                failedLoginAttempts: 0
-            };
-
-            await company_users.insertOne(adminUser, { session });
-
-            // Create subscription
-            const subscription = {
-                companyId: companyId,
-                plan: plan._id,
-                startDate: new Date(),
-                status: 'active',
-                billingCycle: plan.billingCycle,
-                price: plan.price,
-                features: plan.features,
-                createdAt: new Date(),
-                nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-            };
-
-            await company_subscriptions.insertOne(subscription, { session });
-
-            // Create initial collections
-            await database.createCollection(`company_${companyId}_departments`);
-            await database.createCollection(`company_${companyId}_employees`);
-            await database.createCollection(`company_${companyId}_attendance`);
-
-            // Create initial department
-            await database.collection(`company_${companyId}_departments`).insertOne({
-                name: 'Administration',
-                description: 'Main administrative department',
-                createdAt: new Date(),
-                createdBy: new ObjectId(req.user.userId),
-                status: 'active'
-            }, { session });
-
-            // Commit transaction
-            await session.commitTransaction();
-
-            // Create audit log
-            await createCompanyAuditLog(
-                'COMPANY_CREATED',
-                companyId,
-                req.user.userId,
-                {
-                    companyName: name,
-                    adminEmail,
-                    subscriptionPlan
-                }
-            );
-
-            // Create notification
-            await createNotification(
-                companyId,
-                'COMPANY_WELCOME',
-                `Welcome to WorkWise Pro! Your company ${name} has been successfully registered.`,
-                {
-                    companyName: name,
-                    adminEmail: adminEmail
-                }
-            );
-
-            res.status(201).json({
-                success: true,
-                message: 'Company created successfully',
-                data: {
-                    companyId,
-                    adminCredentials: {
-                        email: adminEmail,
-                        temporaryPassword: adminPassword
-                    }
-                }
-            });
-
-        } catch (transactionError) {
-            console.error('Transaction error:', transactionError);
-            if (session) {
-                await session.abortTransaction();
-            }
-            throw transactionError;
-        }
-
     } catch (error) {
-        console.error('Error creating company:', error);
-        if (session) {
-            try {
-                await session.abortTransaction();
-            } catch (abortError) {
-                console.error('Error aborting transaction:', abortError);
-            }
-        }
+        console.error('Detailed error:', error);
+        console.error('Error stack:', error.stack);
+        console.error('Error creating company:', {
+            message: error.message,
+            code: error.code,
+            name: error.name
+        });
+
         res.status(500).json({
             success: false,
             message: 'Error creating company',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
-    } finally {
-        if (session) {
-            try {
-                await session.endSession();
-            } catch (endError) {
-                console.error('Error ending session:', endError);
+            debug: {
+                error: error.message,
+                type: error.name,
+                code: error.code
             }
-        }
+        });
     }
 });
 // Get all companies with filtering and pagination
