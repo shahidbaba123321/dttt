@@ -993,40 +993,50 @@ class ContentLoader {
         const fetchUrl = `${this.baseUrl}/dashboard/${fileName}`;
         console.log('Fetching content from:', fetchUrl);
 
-        const response = await fetch(fetchUrl);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        try {
+            const response = await fetch(fetchUrl);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const content = await response.text();
+            this.contentContainer.innerHTML = content;
+
+            // Initialize module script if needed
+            if (section === 'companies') {
+                try {
+                    await this.initializeCompanies();
+                } catch (moduleError) {
+                    console.error('Module initialization error:', moduleError);
+                    this.showErrorState(moduleError);
+                    return;
+                }
+            } else if (section === 'roles') {
+                await this.initializeRolesPermissions();
+            } else if (section === 'users') {
+                await this.initializeUsers();
+            }
+
+            this.currentPage = section;
+            this.updateURL(section);
+
+            document.dispatchEvent(new CustomEvent('contentLoaded', {
+                detail: { section: section }
+            }));
+
+        } catch (error) {
+            console.error('Content loading error:', error);
+            this.showErrorState(error);
         }
-        
-        const content = await response.text();
-        this.contentContainer.innerHTML = content;
-
-        // Initialize module script if needed
-        if (section === 'companies') {
-            console.log('Initializing Companies module...');
-            await this.initializeCompanies();
-        } else if (section === 'roles') {
-            await this.initializeRolesPermissions();
-        } else if (section === 'users') {
-            await this.initializeUsers();
-        }
-
-        this.currentPage = section;
-        this.updateURL(section);
-
-        document.dispatchEvent(new CustomEvent('contentLoaded', {
-            detail: { section: section }
-        }));
 
     } catch (error) {
-        console.error('Error loading content:', error);
+        console.error('Error in loadContent:', error);
         this.showErrorState(error);
     } finally {
         this.hideLoadingState();
     }
 }
-
     getFileName(section) {
         const fileMap = {
             'dashboard': 'dashboard.html',
@@ -1128,31 +1138,42 @@ class ContentLoader {
         script.src = `${this.baseUrl}/dashboard/js/clientcompanies.js`;
         console.log('Loading Companies script from:', script.src);
         
+        // Add error event listener
+        script.onerror = (error) => {
+            console.error('Error loading clientcompanies.js:', error);
+        };
+
         await new Promise((resolve, reject) => {
-            script.onload = resolve;
-            script.onerror = reject;
+            script.onload = () => {
+                console.log('Companies script loaded successfully');
+                resolve();
+            };
+            script.onerror = (error) => {
+                console.error('Error loading script:', error);
+                reject(error);
+            };
             document.body.appendChild(script);
         });
 
-        // Wait a brief moment for the class to be registered
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Add a longer delay to ensure script is fully processed
+        await new Promise(resolve => setTimeout(resolve, 500));
 
         // Check if CompaniesManager is available
-        if (typeof window.CompaniesManager !== 'undefined') {
-            console.log('Creating new CompaniesManager instance...');
-            const instance = new window.CompaniesManager(this.apiBaseUrl);
-            this.moduleInstances.set('companies', instance);
-            console.log('CompaniesManager initialized successfully');
-        } else {
+        if (typeof window.CompaniesManager === 'undefined') {
             throw new Error('CompaniesManager class not found after script load');
         }
+
+        console.log('Creating new CompaniesManager instance...');
+        const instance = new window.CompaniesManager(this.apiBaseUrl);
+        this.moduleInstances.set('companies', instance);
+        console.log('CompaniesManager initialized successfully');
+
     } catch (error) {
         console.error('Error initializing companies module:', error);
-        this.showErrorState(error);
         throw error;
     }
 }
-
+    
     showLoadingState() {
         const loader = document.createElement('div');
         loader.className = 'content-loader';
