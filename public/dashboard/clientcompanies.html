@@ -1,33 +1,65 @@
+<!DOCTYPE html>
 <div class="companies-container">
     <!-- Header Section -->
     <div class="companies-header">
         <div class="header-left">
             <h1>Companies Management</h1>
-            <p class="subtitle">Manage and monitor all client companies using the HRMS platform</p>
+            <p class="subtitle">Manage and monitor all client companies</p>
         </div>
         <div class="header-right">
-            <button id="addCompanyBtn" class="btn btn-primary" data-required-permission="manage_companies">
-                <i class="fas fa-plus"></i>
-                Add New Company
+            <button class="btn btn-primary" id="addCompanyBtn">
+                <i class="fas fa-plus"></i> Add New Company
             </button>
-            <div class="header-actions">
-                <button id="exportDataBtn" class="btn btn-outline" title="Export Data">
-                    <i class="fas fa-download"></i>
-                </button>
-                <button id="refreshDataBtn" class="btn btn-outline" title="Refresh Data">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="statistics-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-building"></i>
+            </div>
+            <div class="stat-content">
+                <h3 id="totalCompanies">0</h3>
+                <p>Total Companies</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon active">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+                <h3 id="activeCompanies">0</h3>
+                <p>Active Companies</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon pending">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-content">
+                <h3 id="pendingRenewals">0</h3>
+                <p>Pending Renewals</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon inactive">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="stat-content">
+                <h3 id="inactiveCompanies">0</h3>
+                <p>Inactive Companies</p>
             </div>
         </div>
     </div>
 
-    <!-- Search and Filter Section -->
-    <div class="search-filter-container">
+    <!-- Filters Section -->
+    <div class="filters-section">
         <div class="search-box">
             <i class="fas fa-search"></i>
             <input type="text" id="companySearch" placeholder="Search companies...">
         </div>
-        <div class="filters">
+        <div class="filters-group">
             <select id="industryFilter" class="filter-select">
                 <option value="">All Industries</option>
             </select>
@@ -35,67 +67,25 @@
                 <option value="">All Status</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
-                <option value="suspended">Suspended</option>
+                <option value="pending">Pending</option>
             </select>
             <select id="planFilter" class="filter-select">
                 <option value="">All Plans</option>
-                <option value="Basic">Basic</option>
-                <option value="Professional">Professional</option>
-                <option value="Enterprise">Enterprise</option>
+                <option value="basic">Basic</option>
+                <option value="premium">Premium</option>
+                <option value="enterprise">Enterprise</option>
             </select>
-            <button id="clearFiltersBtn" class="btn btn-text">
-                <i class="fas fa-times"></i> Clear Filters
+            <button id="resetFilters" class="btn btn-secondary">
+                <i class="fas fa-undo"></i> Reset
             </button>
         </div>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="stats-container">
-        <div class="stat-card">
-            <div class="stat-icon" style="background-color: var(--primary-light)">
-                <i class="fas fa-building"></i>
-            </div>
-            <div class="stat-details">
-                <h3 id="totalCompanies">0</h3>
-                <p>Total Companies</p>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon" style="background-color: var(--success-color)">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="stat-details">
-                <h3 id="activeCompanies">0</h3>
-                <p>Active Companies</p>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon" style="background-color: var(--warning-color)">
-                <i class="fas fa-clock"></i>
-            </div>
-            <div class="stat-details">
-                <h3 id="pendingRenewals">0</h3>
-                <p>Pending Renewals</p>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon" style="background-color: var(--danger-color)">
-                <i class="fas fa-exclamation-circle"></i>
-            </div>
-            <div class="stat-details">
-                <h3 id="inactiveCompanies">0</h3>
-                <p>Inactive Companies</p>
-            </div>
-        </div>
-    </div>
-        <!-- Companies Table -->
+    <!-- Companies Table -->
     <div class="table-container">
         <table class="companies-table">
             <thead>
                 <tr>
-                    <th>
-                        <input type="checkbox" id="selectAllCompanies">
-                    </th>
                     <th>Company Name</th>
                     <th>Industry</th>
                     <th>Users</th>
@@ -109,89 +99,125 @@
                 <!-- Table content will be dynamically populated -->
             </tbody>
         </table>
-
-        <!-- Pagination -->
-        <div class="pagination-container">
-            <div class="pagination-info">
-                Showing <span id="startRange">0</span> to <span id="endRange">0</span> of 
-                <span id="totalItems">0</span> companies
-            </div>
-            <div class="pagination-controls">
-                <select id="itemsPerPage" class="items-per-page">
-                    <option value="10">10 per page</option>
-                    <option value="25">25 per page</option>
-                    <option value="50">50 per page</option>
-                    <option value="100">100 per page</option>
-                </select>
-                <div class="pagination-buttons">
-                    <button id="prevPage" class="btn btn-outline" disabled>
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <div id="pageNumbers" class="page-numbers"></div>
-                    <button id="nextPage" class="btn btn-outline" disabled>
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-            </div>
+        <div id="tableLoader" class="table-loader">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading companies...</p>
+        </div>
+        <div id="noDataMessage" class="no-data-message" style="display: none;">
+            <i class="fas fa-folder-open"></i>
+            <p>No companies found</p>
         </div>
     </div>
 
-    <!-- Add/Edit Company Modal -->
+    <!-- Pagination -->
+    <div class="pagination-container">
+        <div class="pagination-info">
+            <span>Showing</span>
+            <select id="pageSize" class="page-size-select">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+            <span>entries</span>
+        </div>
+        <div class="pagination-controls" id="paginationControls">
+            <!-- Pagination controls will be dynamically populated -->
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Company Modal -->
 <div id="companyModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
             <h2 id="modalTitle">Add New Company</h2>
-            <button class="close-modal">&times;</button>
+            <button class="close-modal">×</button>
         </div>
         <div class="modal-body">
             <form id="companyForm">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="companyName">Company Name*</label>
-                        <input type="text" id="companyName" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="industry">Industry*</label>
-                        <select id="industry" name="industry" required>
-                            <option value="">Select Industry</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="companySize">Company Size*</label>
-                        <input type="number" id="companySize" name="size" min="1" required>
-                    </div>
-                    <div class="form-group">
-    <label for="subscriptionPlan">Subscription Plan*</label>
-    <select id="subscriptionPlan" name="subscriptionPlan" required>
-        <option value="">Select Plan</option>
-        <option value="Basic">Basic</option>
-        <option value="Professional">Professional</option>
-        <option value="Enterprise">Enterprise</option>
-    </select>
-</div>
-                </div>
-
+                <!-- Company Basic Information -->
                 <div class="form-section">
-                    <h3>Contact Details</h3>
+                    <h3>Basic Information</h3>
                     <div class="form-grid">
                         <div class="form-group">
-    <label for="contactEmail">Contact Email*</label>
-    <input type="email" id="contactEmail" name="contactEmail" required>
-    <small class="form-hint">Must be a company domain email</small>
-</div>
-<div class="form-group">
-    <label for="contactPhone">Contact Phone</label>
-    <input type="tel" id="contactPhone" name="contactPhone">
-</div>
-<div class="form-group full-width">
-    <label for="address">Address</label>
-    <textarea id="address" name="address" rows="3"></textarea>
-</div>
+                            <label for="companyName">Company Name*</label>
+                            <input type="text" id="companyName" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="industry">Industry*</label>
+                            <select id="industry" name="industry" required>
+                                <option value="">Select Industry</option>
+                                <option value="technology">Technology</option>
+                                <option value="healthcare">Healthcare</option>
+                                <option value="finance">Finance</option>
+                                <option value="education">Education</option>
+                                <option value="manufacturing">Manufacturing</option>
+                                <option value="retail">Retail</option>
+                                <option value="services">Services</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="companySize">Company Size*</label>
+                            <select id="companySize" name="size" required>
+                                <option value="">Select Size</option>
+                                <option value="1-50">1-50 employees</option>
+                                <option value="51-200">51-200 employees</option>
+                                <option value="201-500">201-500 employees</option>
+                                <option value="501-1000">501-1000 employees</option>
+                                <option value="1001+">1001+ employees</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Contact Information -->
                 <div class="form-section">
-                    <h3>Company Admin</h3>
+                    <h3>Contact Information</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="contactEmail">Contact Email*</label>
+                            <input type="email" id="contactEmail" name="contactEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contactPhone">Contact Phone</label>
+                            <input type="tel" id="contactPhone" name="contactPhone">
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="address">Address</label>
+                            <textarea id="address" name="address" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subscription Details -->
+                <div class="form-section">
+                    <h3>Subscription Details</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="subscriptionPlan">Subscription Plan*</label>
+                            <select id="subscriptionPlan" name="subscriptionPlan" required>
+                                <option value="">Select Plan</option>
+                                <option value="basic">Basic</option>
+                                <option value="premium">Premium</option>
+                                <option value="enterprise">Enterprise</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="billingCycle">Billing Cycle*</label>
+                            <select id="billingCycle" name="billingCycle" required>
+                                <option value="monthly">Monthly</option>
+                                <option value="quarterly">Quarterly</option>
+                                <option value="annually">Annually</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Company Admin Details -->
+                <div class="form-section">
+                    <h3>Company Admin Account</h3>
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="adminName">Admin Name*</label>
@@ -200,24 +226,26 @@
                         <div class="form-group">
                             <label for="adminEmail">Admin Email*</label>
                             <input type="email" id="adminEmail" name="adminEmail" required>
-                            <small class="form-hint">Must be a company domain email</small>
                         </div>
                     </div>
                 </div>
 
+                <!-- Additional Settings -->
                 <div class="form-section">
                     <h3>Additional Settings</h3>
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="status">Status</label>
-                            <select id="status" name="status">
+                            <label for="status">Status*</label>
+                            <select id="status" name="status" required>
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
+                                <option value="pending">Pending</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label class="checkbox-label">
+                        <div class="form-group checkbox-group">
+                            <label class="checkbox-container">
                                 <input type="checkbox" id="sendWelcomeEmail" name="sendWelcomeEmail" checked>
+                                <span class="checkmark"></span>
                                 Send welcome email to admin
                             </label>
                         </div>
@@ -226,411 +254,208 @@
             </form>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-text" data-dismiss="modal">Cancel</button>
-            <button class="btn btn-primary" onclick="document.getElementById('companyForm').requestSubmit()">
-                Save Company
-            </button>
+            <button class="btn btn-secondary" id="cancelCompany">Cancel</button>
+            <button class="btn btn-primary" id="saveCompany">Save Company</button>
         </div>
     </div>
 </div>
-    <!-- Company Details Modal -->
-    <div id="companyDetailsModal" class="modal">
-        <div class="modal-content modal-lg">
-            <div class="modal-header">
-                <h2>Company Details</h2>
-                <button class="close-modal">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="tabs">
-                    <button class="tab-btn active" data-tab="overview">Overview</button>
-                    <button class="tab-btn" data-tab="users">Users</button>
-                    <button class="tab-btn" data-tab="subscription">Subscription</button>
-                    <button class="tab-btn" data-tab="activity">Activity</button>
+
+<!-- Company Details Modal -->
+<div id="companyDetailsModal" class="modal">
+    <div class="modal-content large">
+        <div class="modal-header">
+            <h2>Company Details</h2>
+            <button class="close-modal">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="company-details-container">
+                <!-- Company Overview -->
+                <div class="details-section">
+                    <div class="company-header">
+                        <div class="company-logo">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="company-info">
+                            <h3 id="detailCompanyName"></h3>
+                            <span id="detailIndustry" class="badge"></span>
+                            <span id="detailStatus" class="badge"></span>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="tab-content">
-                    <!-- Overview Tab -->
-                    <div id="overview" class="tab-pane active">
-                        <!-- Content will be dynamically populated -->
+                <!-- Tabs Navigation -->
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="overview">Overview</button>
+                        <button class="tab-btn" data-tab="users">Users</button>
+                        <button class="tab-btn" data-tab="subscription">Subscription</button>
+                        <button class="tab-btn" data-tab="activity">Activity</button>
                     </div>
 
-                    <!-- Users Tab -->
-                    <div id="users" class="tab-pane">
-                        <!-- Content will be dynamically populated -->
-                    </div>
+                    <!-- Tab Content -->
+                    <div class="tab-content">
+                        <!-- Overview Tab -->
+                        <div id="overview" class="tab-pane active">
+                            <div class="info-grid">
+                                <div class="info-card">
+                                    <h4>Contact Information</h4>
+                                    <p><i class="fas fa-envelope"></i> <span id="detailEmail"></span></p>
+                                    <p><i class="fas fa-phone"></i> <span id="detailPhone"></span></p>
+                                    <p><i class="fas fa-map-marker-alt"></i> <span id="detailAddress"></span></p>
+                                </div>
+                                <div class="info-card">
+                                    <h4>Company Statistics</h4>
+                                    <p>Total Users: <span id="detailUserCount"></span></p>
+                                    <p>Active Users: <span id="detailActiveUsers"></span></p>
+                                    <p>Departments: <span id="detailDepartments"></span></p>
+                                </div>
+                                <div class="info-card">
+                                    <h4>Usage Metrics</h4>
+                                    <div id="usageChart"></div>
+                                </div>
+                            </div>
+                        </div>
 
-                    <!-- Subscription Tab -->
-                    <div id="subscription" class="tab-pane">
-                        <!-- Content will be dynamically populated -->
-                    </div>
+                        <!-- Users Tab -->
+                        <div id="users" class="tab-pane">
+                            <div class="users-list-container">
+                                <div class="users-header">
+                                    <h4>Company Users</h4>
+                                    <button class="btn btn-primary btn-sm" id="addUserBtn">
+                                        <i class="fas fa-plus"></i> Add User
+                                    </button>
+                                </div>
+                                <div class="users-table-container">
+                                    <!-- Users table will be dynamically populated -->
+                                </div>
+                            </div>
+                        </div>
 
-                    <!-- Activity Tab -->
-                    <div id="activity" class="tab-pane">
-                        <!-- Content will be dynamically populated -->
+                        <!-- Subscription Tab -->
+                        <div id="subscription" class="tab-pane">
+                            <div class="subscription-details">
+                                <div class="current-plan">
+                                    <h4>Current Plan</h4>
+                                    <div class="plan-info">
+                                        <span id="detailPlanName" class="plan-badge"></span>
+                                        <p>Billing Cycle: <span id="detailBillingCycle"></span></p>
+                                        <p>Next Billing Date: <span id="detailNextBilling"></span></p>
+                                    </div>
+                                </div>
+                                <div class="usage-limits">
+                                    <h4>Usage & Limits</h4>
+                                    <div class="limits-grid">
+                                        <!-- Usage metrics will be dynamically populated -->
+                                    </div>
+                                </div>
+                                <div class="billing-history">
+                                    <h4>Billing History</h4>
+                                    <div class="billing-table-container">
+                                        <!-- Billing history table will be dynamically populated -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Activity Tab -->
+                        <div id="activity" class="tab-pane">
+                            <div class="activity-log">
+                                <h4>Recent Activity</h4>
+                                <div class="activity-timeline">
+                                    <!-- Activity timeline will be dynamically populated -->
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button class="btn btn-primary" id="editCompanyBtn">Edit Company</button>
+        </div>
     </div>
-    <style>
-/* Companies Container */
-.companies-container {
-    padding: var(--spacing-lg);
-    max-width: 100%;
-    margin: 0 auto;
-}
+</div>
 
-/* Header Styles */
-.companies-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-lg);
-}
+<!-- Delete Confirmation Modal -->
+<div id="deleteConfirmModal" class="modal">
+    <div class="modal-content small">
+        <div class="modal-header">
+            <h2>Delete Company</h2>
+            <button class="close-modal">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="delete-confirmation">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Are you sure?</h3>
+                <p>You are about to delete <strong id="deleteCompanyName"></strong>. This action cannot be undone.</p>
+                <div class="backup-option">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="createBackup" checked>
+                        <span class="checkmark"></span>
+                        Create backup before deletion
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="deleteReason">Reason for deletion</label>
+                    <textarea id="deleteReason" rows="3" required></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            <button class="btn btn-danger" id="confirmDelete">Delete Company</button>
+        </div>
+    </div>
+</div>
 
-.header-left h1 {
-    font-size: 1.75rem;
-    color: var(--text-primary);
-    margin-bottom: var(--spacing-xs);
-}
-
-.header-left .subtitle {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-}
-
-.header-right {
-    display: flex;
-    gap: var(--spacing-md);
-    align-items: center;
-}
-
-.header-actions {
-    display: flex;
-    gap: var(--spacing-sm);
-}
-
-/* Button Styles */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    padding: 0.5rem 1rem;
-    border-radius: var(--border-radius-md);
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: none;
-    font-size: 0.875rem;
-}
-
-.btn i {
-    font-size: 1rem;
-}
-
-.btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.btn-primary:hover {
-    background-color: var(--primary-dark);
-}
-
-.btn-outline {
-    background-color: transparent;
-    border: 1px solid var(--border-medium);
-    color: var(--text-secondary);
-}
-
-.btn-outline:hover {
-    background-color: var(--bg-tertiary);
-    border-color: var(--text-secondary);
-}
-
-.btn-text {
-    background: none;
-    color: var(--text-secondary);
-    padding: 0.5rem;
-}
-
-.btn-text:hover {
-    color: var(--primary-color);
-    background-color: var(--bg-tertiary);
-}
-
-.btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* Search and Filter Styles */
-.search-filter-container {
-    background-color: var(--bg-primary);
-    padding: var(--spacing-lg);
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-sm);
-    margin-bottom: var(--spacing-lg);
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-md);
-    align-items: center;
-    justify-content: space-between;
-}
-
-.search-box {
-    flex: 1;
-    min-width: 250px;
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    background-color: var(--bg-tertiary);
-    padding: 0.5rem 1rem;
-    border-radius: var(--border-radius-md);
-}
-
-.search-box i {
-    color: var(--text-tertiary);
-}
-
-.search-box input {
-    flex: 1;
-    border: none;
-    background: none;
-    outline: none;
-    color: var(--text-primary);
-    font-size: 0.875rem;
-}
-
-.filters {
-    display: flex;
-    gap: var(--spacing-sm);
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-.filter-select {
-    padding: 0.5rem 2rem 0.5rem 1rem;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--border-radius-md);
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    font-size: 0.875rem;
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.5rem center;
-    background-size: 1rem;
-}
-
-/* Stats Cards */
-.stats-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-lg);
-}
-
-.stat-card {
-    background-color: var(--bg-primary);
-    padding: var(--spacing-lg);
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-}
-
-.stat-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: var(--border-radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-}
-
-.stat-icon i {
-    font-size: 1.5rem;
-}
-
-.stat-details h3 {
-    font-size: 1.5rem;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-}
-
-.stat-details p {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-}
-
-/* Table Styles */
-.table-container {
-    background-color: var(--bg-primary);
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-sm);
-    overflow: hidden;
-}
-
-.companies-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.companies-table th,
-.companies-table td {
-    padding: var(--spacing-md);
-    text-align: left;
-    border-bottom: 1px solid var(--border-light);
-}
-
-.companies-table th {
-    background-color: var(--bg-secondary);
-    color: var(--text-secondary);
-    font-weight: 500;
-    font-size: 0.875rem;
-}
-
-.companies-table tbody tr:hover {
-    background-color: var(--bg-tertiary);
-}
-
-.companies-table td {
-    color: var(--text-primary);
-    font-size: 0.875rem;
-}
-
-/* Status Badge */
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: var(--border-radius-sm);
-    font-size: 0.75rem;
-    font-weight: 500;
-}
-
-.status-active {
-    background-color: #DEF7EC;
-    color: #03543F;
-}
-
-.status-inactive {
-    background-color: #FDE8E8;
-    color: #9B1C1C;
-}
-
-.status-suspended {
-    background-color: #FEF3C7;
-    color: #92400E;
-}
-
-/* Pagination Styles */
-.pagination-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-md);
-    border-top: 1px solid var(--border-light);
-}
-
-.pagination-info {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-}
-
-.pagination-controls {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-}
-
-.items-per-page {
-    padding: 0.25rem 0.5rem;
-    border: 1px solid var(--border-medium);
-    border-radius: var(--border-radius-sm);
-    font-size: 0.875rem;
-}
-
-.pagination-buttons {
-    display: flex;
-    gap: var(--spacing-xs);
-    align-items: center;
-}
-
-.page-numbers {
-    display: flex;
-    gap: var(--spacing-xs);
-}
-
-.page-numbers button {
-    min-width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--border-radius-sm);
-    border: 1px solid var(--border-medium);
-    background: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-}
-
-.page-numbers button.active {
-    background-color: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-/* Modal Styles */
+<style>
+    /* Modal Base Styles */
 .modal {
     display: none;
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
+    width: 100%;
+    height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
+    z-index: 1050;
     overflow-y: auto;
-    padding: var(--spacing-lg);
-}
-
-.modal.show {
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
+    animation: fadeIn 0.3s ease-out;
 }
 
 .modal-content {
+    position: relative;
     background-color: var(--bg-primary);
+    margin: 2rem auto;
+    width: 90%;
+    max-width: 800px;
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-lg);
-    width: 100%;
-    max-width: 600px;
-    margin: 2rem auto;
-    animation: modalSlideIn 0.3s ease-out;
+    animation: slideIn 0.3s ease-out;
 }
 
-.modal-lg {
-    max-width: 800px;
+.modal-content.large {
+    max-width: 1000px;
+}
+
+.modal-content.small {
+    max-width: 500px;
 }
 
 .modal-header {
     padding: var(--spacing-lg);
     border-bottom: 1px solid var(--border-light);
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
 }
 
 .modal-header h2 {
+    margin: 0;
     color: var(--text-primary);
-    font-size: 1.25rem;
+    font-size: 1.5rem;
+    font-weight: 600;
 }
 
 .close-modal {
@@ -639,17 +464,20 @@
     font-size: 1.5rem;
     color: var(--text-tertiary);
     cursor: pointer;
-    padding: 0.5rem;
+    padding: var(--spacing-sm);
     border-radius: var(--border-radius-sm);
+    transition: all 0.3s ease;
 }
 
 .close-modal:hover {
-    background-color: var(--bg-tertiary);
     color: var(--text-primary);
+    background-color: var(--bg-tertiary);
 }
 
 .modal-body {
     padding: var(--spacing-lg);
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
 }
 
 .modal-footer {
@@ -660,10 +488,22 @@
     gap: var(--spacing-md);
 }
 
-/* Form Styles */
+/* Form Sections Styling */
+.form-section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.form-section h3 {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--border-light);
+}
+
 .form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-md);
 }
 
@@ -677,8 +517,8 @@
 
 .form-group label {
     display: block;
-    margin-bottom: var(--spacing-xs);
-    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-secondary);
     font-weight: 500;
 }
 
@@ -686,11 +526,12 @@
 .form-group select,
 .form-group textarea {
     width: 100%;
-    padding: 0.5rem;
+    padding: var(--spacing-sm) var(--spacing-md);
     border: 1px solid var(--border-medium);
-    border-radius: var(--border-radius-sm);
+    border-radius: var(--border-radius-md);
     background-color: var(--bg-primary);
     color: var(--text-primary);
+    transition: all 0.3s ease;
 }
 
 .form-group input:focus,
@@ -698,62 +539,158 @@
 .form-group textarea:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px var(--primary-light);
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
 }
 
-.form-hint {
+/* Checkbox Styling */
+.checkbox-group {
+    margin-top: var(--spacing-md);
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    color: var(--text-secondary);
+}
+
+.checkbox-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    position: relative;
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    margin-right: var(--spacing-sm);
+    background-color: var(--bg-primary);
+    border: 2px solid var(--border-medium);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.checkbox-container:hover input ~ .checkmark {
+    border-color: var(--primary-color);
+}
+
+.checkbox-container input:checked ~ .checkmark {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.checkmark:after {
+    content: '';
+    position: absolute;
+    display: none;
+    left: 5px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
     display: block;
-    margin-top: 0.25rem;
-    color: var(--text-tertiary);
-    font-size: 0.75rem;
 }
 
-.form-section {
+/* Company Details Modal Specific Styles */
+.company-details-container {
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius-lg);
+}
+
+.company-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    background-color: var(--bg-primary);
+    border-radius: var(--border-radius-lg);
     margin-bottom: var(--spacing-lg);
 }
 
-.form-section h3 {
-    color: var(--text-primary);
-    font-size: 1rem;
-    margin-bottom: var(--spacing-md);
-    padding-bottom: var(--spacing-xs);
-    border-bottom: 1px solid var(--border-light);
+.company-logo {
+    width: 64px;
+    height: 64px;
+    background-color: var(--primary-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
 }
 
-/* Tabs Styles */
+.company-info h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.25rem;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-top: var(--spacing-sm);
+    margin-right: var(--spacing-sm);
+}
+
+/* Tabs Styling */
+.tabs-container {
+    background-color: var(--bg-primary);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+}
+
 .tabs {
     display: flex;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-lg);
     border-bottom: 1px solid var(--border-light);
+    background-color: var(--bg-secondary);
 }
 
 .tab-btn {
     padding: var(--spacing-md) var(--spacing-lg);
-    background: none;
     border: none;
+    background: none;
     color: var(--text-secondary);
     cursor: pointer;
     font-weight: 500;
+    transition: all 0.3s ease;
     position: relative;
+}
+
+.tab-btn:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: var(--primary-color);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
 }
 
 .tab-btn.active {
     color: var(--primary-color);
 }
 
-.tab-btn.active::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background-color: var(--primary-color);
+.tab-btn.active:after {
+    transform: scaleX(1);
 }
 
 .tab-content {
-    min-height: 300px;
+    padding: var(--spacing-lg);
 }
 
 .tab-pane {
@@ -762,56 +699,99 @@
 
 .tab-pane.active {
     display: block;
+    animation: fadeIn 0.3s ease-out;
 }
 
-/* Animations */
-@keyframes modalSlideIn {
+/* Info Grid Styling */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.info-card {
+    background-color: var(--bg-secondary);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.info-card h4 {
+    margin: 0 0 var(--spacing-md) 0;
+    color: var(--text-primary);
+}
+
+.info-card p {
+    margin: var(--spacing-sm) 0;
+    color: var(--text-secondary);
+}
+
+.info-card i {
+    width: 20px;
+    color: var(--primary-color);
+}
+
+/* Delete Modal Specific Styles */
+.delete-confirmation {
+    text-align: center;
+    padding: var(--spacing-lg) 0;
+}
+
+.delete-confirmation i {
+    font-size: 3rem;
+    color: var(--danger-color);
+    margin-bottom: var(--spacing-lg);
+}
+
+.delete-confirmation h3 {
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.delete-confirmation p {
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-lg);
+}
+
+.backup-option {
+    margin: var(--spacing-lg) 0;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .modal-content {
+        margin: 1rem;
+        width: calc(100% - 2rem);
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tabs {
+        flex-wrap: wrap;
+    }
+
+    .tab-btn {
+        flex: 1 1 auto;
+        text-align: center;
+    }
+}
+
+/* Animation Keyframes */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
     from {
-        transform: translateY(-20px);
         opacity: 0;
+        transform: translateY(-20px);
     }
     to {
-        transform: translateY(0);
         opacity: 1;
-    }
-}
-
-/* Responsive Styles */
-@media (max-width: 768px) {
-    .companies-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--spacing-md);
-    }
-
-    .header-right {
-        width: 100%;
-        justify-content: space-between;
-    }
-
-    .search-filter-container {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .filters {
-        justify-content: space-between;
-    }
-
-    .companies-table {
-        display: block;
-        overflow-x: auto;
-    }
-
-    .pagination-container {
-        flex-direction: column;
-        gap: var(--spacing-md);
-        align-items: stretch;
-    }
-
-    .pagination-controls {
-        flex-direction: column;
-        gap: var(--spacing-sm);
+        transform: translateY(0);
     }
 }
 </style>
