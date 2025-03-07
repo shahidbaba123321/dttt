@@ -315,46 +315,46 @@
             }
         }
         
-                       async loadStatistics() {
-            try {
-                console.log('Loading company statistics...');
-                const response = await this.makeRequest('/companies/overall-statistics', 'GET');
-                
-                if (response.success) {
-                    const stats = response.statistics;
-                    
-                    // Update statistics cards if they exist
-                    const statsMapping = {
-                        'totalCompanies': stats.total || 0,
-                        'activeCompanies': stats.active || 0,
-                        'pendingRenewals': stats.pendingRenewals || 0,
-                        'inactiveCompanies': stats.inactive || 0
-                    };
+                   async loadStatistics() {
+    try {
+        console.log('Loading company statistics...');
+        const response = await this.makeRequest('/companies/overall-statistics', 'GET');
+        
+        if (response.success) {
+            const stats = response.statistics;
+            
+            // Update statistics cards if they exist
+            const statsMapping = {
+                'totalCompanies': stats.total || 0,
+                'activeCompanies': stats.active || 0,
+                'pendingRenewals': stats.pendingRenewals || 0,
+                'inactiveCompanies': stats.inactive || 0
+            };
 
-                    Object.entries(statsMapping).forEach(([id, value]) => {
-                        const element = document.getElementById(id);
-                        if (element) {
-                            element.textContent = value;
-                        }
-                    });
-
-                    // Animate numbers if elements exist
-                    if (document.querySelector('.stat-details')) {
-                        this.animateNumbers();
-                    }
+            Object.entries(statsMapping).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.textContent = value;
                 }
-            } catch (error) {
-                console.error('Error loading statistics:', error);
-                // Update stats cards to show error state
-                ['totalCompanies', 'activeCompanies', 'pendingRenewals', 'inactiveCompanies'].forEach(id => {
-                    const element = document.getElementById(id);
-                    if (element) {
-                        element.textContent = '-';
-                        element.parentElement.classList.add('error-state');
-                    }
-                });
+            });
+
+            // Animate numbers if elements exist
+            if (document.querySelector('.stat-details')) {
+                this.animateNumbers();
             }
         }
+    } catch (error) {
+        console.error('Error loading statistics:', error);
+        // Update stats cards to show error state
+        ['totalCompanies', 'activeCompanies', 'pendingRenewals', 'inactiveCompanies'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = '-';
+                element.parentElement.classList.add('error-state');
+            }
+        });
+    }
+}
         // API Request Handler
                 async makeRequest(endpoint, method = 'GET', data = null) {
             try {
