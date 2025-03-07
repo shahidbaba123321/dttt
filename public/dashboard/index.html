@@ -1128,17 +1128,8 @@ class ContentLoader {
         script.src = `${this.baseUrl}/dashboard/js/clientcompanies.js`;
         console.log('Loading Companies script from:', script.src);
         
-        // Add error handling for script loading
-        script.onerror = (error) => {
-            console.error('Error loading companies.js:', error);
-            throw new Error('Failed to load companies.js');
-        };
-
         await new Promise((resolve, reject) => {
-            script.onload = () => {
-                console.log('Companies script loaded successfully');
-                resolve();
-            };
+            script.onload = resolve;
             script.onerror = reject;
             document.body.appendChild(script);
         });
@@ -1161,7 +1152,6 @@ class ContentLoader {
         throw error;
     }
 }
-
 
     showLoadingState() {
         const loader = document.createElement('div');
