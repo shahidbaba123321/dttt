@@ -33,8 +33,6 @@
                 return;
             }
 
-            // Initialize components
-           
             this.initializeElements();
             this.initializeEventListeners();
             this.loadInitialData();
@@ -55,160 +53,7 @@
             return true;
         }
 
-        async loadInitialData() {
-            try {
-                console.log('Loading initial data...');
-                
-                // Show loading state
-                this.showTableLoader(true);
-
-                // Load data
-                await Promise.all([
-                    this.loadStatistics(),
-                    this.loadCompanies()
-                ]);
-
-                console.log('Initial data loaded successfully');
-            } catch (error) {
-                console.error('Error loading initial data:', error);
-                this.handleApiError(error, 'Failed to load initial data');
-                this.renderEmptyTable();
-            } finally {
-                this.showTableLoader(false);
-            }
-        }
-
-        async loadCompanies() {
-            try {
-                this.showTableLoader(true);
-                
-                const queryParams = new URLSearchParams({
-                    page: this.currentPage.toString(),
-                    limit: this.pageSize.toString(),
-                    search: this.filters.search || '',
-                    industry: this.filters.industry || '',
-                    status: this.filters.status || '',
-                    plan: this.filters.plan || '',
-                    sortField: 'createdAt',
-                    sortOrder: 'desc'
-                });
-
-                const url = `${this.baseUrl}/companies`;
-                console.log('Fetching companies from:', url);
-
-                const response = await fetch(`${url}?${queryParams}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                console.log('Companies data received:', data);
-
-                if (data.success) {
-                    this.companies = data.data.companies;
-                    this.totalCompanies = data.data.pagination.total;
-                    this.renderCompaniesTable();
-                    this.updatePagination(data.data.pagination);
-                } else {
-                    throw new Error(data.message || 'Failed to load companies');
-                }
-            } catch (error) {
-                console.error('Companies loading error:', error);
-                this.showNotification('Failed to load companies', 'error');
-                this.renderEmptyTable();
-            } finally {
-                this.showTableLoader(false);
-            }
-        }
-
-        async initializeCompanies() {
-    try {
-        console.log('Initializing Companies module...');
-        
-        // Check if script is already loaded
-        const existingScript = document.querySelector('script[src*="clientcompanies.js"]');
-        if (existingScript) {
-            console.log('Removing existing Companies script...');
-            existingScript.remove();
-        }
-
-        // Create and append the script
-        const script = document.createElement('script');
-        script.src = `${this.baseUrl}/dashboard/js/clientcompanies.js`;
-        console.log('Loading Companies script from:', script.src);
-
-        await new Promise((resolve, reject) => {
-            script.onload = () => {
-                console.log('Companies script loaded successfully');
-                resolve();
-            };
-            script.onerror = (error) => {
-                console.error('Error loading script:', error);
-                reject(error);
-            };
-            document.body.appendChild(script);
-        });
-
-        // Add a delay to ensure script is processed
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        // Check if CompaniesManager is available
-        if (typeof window.CompaniesManager === 'undefined') {
-            throw new Error('CompaniesManager class not found after script load');
-        }
-
-        console.log('Creating new CompaniesManager instance...');
-        const instance = new window.CompaniesManager();
-        this.moduleInstances.set('companies', instance);
-        console.log('CompaniesManager initialized successfully');
-
-    } catch (error) {
-        console.error('Error initializing companies module:', error);
-        throw error;
-    }
-}
-
-        async loadStatistics() {
-            try {
-                const response = await fetch(`${this.baseUrl}/companies/overall-statistics`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                console.log('Statistics data received:', data);
-
-                if (data.success) {
-                    this.updateStatistics(data.statistics);
-                } else {
-                    throw new Error(data.message || 'Invalid statistics data');
-                }
-            } catch (error) {
-                console.error('Statistics loading error:', error);
-                this.updateStatistics({
-                    total: 0,
-                    active: 0,
-                    pendingRenewals: 0,
-                    inactive: 0
-                });
-            }
-        }
-
-            initializeElements() {
+        initializeElements() {
             try {
                 console.log('Initializing elements...');
                 
@@ -273,6 +118,8 @@
 
         initializeEventListeners() {
             try {
+                console.log('Initializing event listeners...');
+
                 // Filter listeners
                 this.elements.filters.search?.addEventListener('input', 
                     this.debounce(() => {
@@ -344,28 +191,113 @@
                     }
                 });
 
+                console.log('Event listeners initialized successfully');
             } catch (error) {
                 console.error('Error initializing event listeners:', error);
                 throw new Error('Failed to initialize event listeners');
             }
         }
 
-        updateStatistics(statistics) {
+         async loadInitialData() {
             try {
-                if (this.elements.stats.total) {
-                    this.elements.stats.total.textContent = statistics.total || 0;
+                console.log('Loading initial data...');
+                
+                // Show loading state
+                this.showTableLoader(true);
+
+                // Load data
+                await Promise.all([
+                    this.loadStatistics(),
+                    this.loadCompanies()
+                ]);
+
+                console.log('Initial data loaded successfully');
+            } catch (error) {
+                console.error('Error loading initial data:', error);
+                this.handleApiError(error, 'Failed to load initial data');
+                this.showEmptyState();
+            } finally {
+                this.showTableLoader(false);
+            }
+        }
+
+        async loadCompanies() {
+            try {
+                this.showTableLoader(true);
+                
+                const queryParams = new URLSearchParams({
+                    page: this.currentPage.toString(),
+                    limit: this.pageSize.toString(),
+                    search: this.filters.search || '',
+                    industry: this.filters.industry || '',
+                    status: this.filters.status || '',
+                    plan: this.filters.plan || ''
+                });
+
+                const url = `${this.baseUrl}/companies`;
+                console.log('Fetching companies from:', url, 'with params:', queryParams.toString());
+
+                const response = await fetch(`${url}?${queryParams}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
                 }
-                if (this.elements.stats.active) {
-                    this.elements.stats.active.textContent = statistics.active || 0;
-                }
-                if (this.elements.stats.pending) {
-                    this.elements.stats.pending.textContent = statistics.pendingRenewals || 0;
-                }
-                if (this.elements.stats.inactive) {
-                    this.elements.stats.inactive.textContent = statistics.inactive || 0;
+
+                const data = await response.json();
+                console.log('Companies data received:', data);
+
+                if (data.success) {
+                    this.companies = data.data.companies;
+                    this.totalCompanies = data.data.pagination.total;
+                    this.renderCompaniesTable();
+                    this.updatePagination(data.data.pagination);
+                } else {
+                    throw new Error(data.message || 'Failed to load companies');
                 }
             } catch (error) {
-                console.error('Error updating statistics:', error);
+                console.error('Companies loading error:', error);
+                this.showNotification('Failed to load companies', 'error');
+                this.showEmptyState();
+            } finally {
+                this.showTableLoader(false);
+            }
+        }
+
+        async loadStatistics() {
+            try {
+                const response = await fetch(`${this.baseUrl}/companies/overall-statistics`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    this.updateStatistics(data.statistics);
+                } else {
+                    throw new Error(data.message || 'Invalid statistics data');
+                }
+            } catch (error) {
+                console.error('Statistics loading error:', error);
+                this.updateStatistics({
+                    total: 0,
+                    active: 0,
+                    pendingRenewals: 0,
+                    inactive: 0
+                });
             }
         }
 
@@ -373,14 +305,35 @@
             if (!this.elements.table.body) return;
 
             if (!this.companies.length) {
-                this.showNoDataMessage(true);
+                this.showEmptyState();
                 return;
             }
 
-            this.showNoDataMessage(false);
             this.elements.table.body.innerHTML = this.companies
                 .map(company => this.createTableRow(company))
                 .join('');
+        }
+
+        showEmptyState() {
+            if (!this.elements.table.body) return;
+
+            this.elements.table.body.innerHTML = `
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <div class="empty-state-content">
+                            <i class="fas fa-folder-open"></i>
+                            <p>No companies found</p>
+                            <button class="btn btn-primary btn-sm" onclick="companiesManager.openAddCompanyModal()">
+                                <i class="fas fa-plus"></i> Add Company
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            if (this.elements.table.noData) {
+                this.elements.table.noData.style.display = 'block';
+            }
         }
 
         createTableRow(company) {
@@ -400,16 +353,12 @@
                         </div>
                     </td>
                     <td>
-                        <span class="status-badge ${company.status.toLowerCase()}">
+                        <span class="status-badge ${company.status?.toLowerCase()}">
                             <i class="fas fa-circle"></i>
                             ${this.capitalizeFirstLetter(company.status)}
                         </span>
                     </td>
-                    <td>
-                        <div class="contact-info">
-                            ${company.contactDetails?.email || 'N/A'}
-                        </div>
-                    </td>
+                    <td>${this.escapeHtml(company.contactDetails?.email || 'N/A')}</td>
                     <td>${this.formatDate(company.createdAt)}</td>
                     <td>
                         <div class="action-buttons">
@@ -437,7 +386,60 @@
             `;
         }
 
-        // Modal Handling Methods
+        updatePagination(paginationData) {
+            if (!this.elements.pagination.container) return;
+
+            const { total, page, pages } = paginationData;
+            const startItem = ((page - 1) * this.pageSize) + 1;
+            const endItem = Math.min(page * this.pageSize, total);
+
+            this.elements.pagination.container.innerHTML = `
+                <div class="pagination-info">
+                    Showing ${startItem} to ${endItem} of ${total} entries
+                </div>
+                <div class="pagination-buttons">
+                    ${this.createPaginationButtons(page, pages)}
+                </div>
+            `;
+        }
+
+        createPaginationButtons(currentPage, totalPages) {
+            let buttons = [];
+            
+            // Previous button
+            buttons.push(`
+                <button class="page-button ${currentPage === 1 ? 'disabled' : ''}"
+                    ${currentPage === 1 ? 'disabled' : `onclick="companiesManager.goToPage(${currentPage - 1})"`}>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            `);
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    buttons.push(`
+                        <button class="page-button ${i === currentPage ? 'active' : ''}"
+                            onclick="companiesManager.goToPage(${i})">
+                            ${i}
+                        </button>
+                    `);
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    buttons.push('<span class="page-ellipsis">...</span>');
+                }
+            }
+
+            // Next button
+            buttons.push(`
+                <button class="page-button ${currentPage === totalPages ? 'disabled' : ''}"
+                    ${currentPage === totalPages ? 'disabled' : `onclick="companiesManager.goToPage(${currentPage + 1})"`}>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            `);
+
+            return buttons.join('');
+        }
+
+         // Modal Handling Methods
         handleCompanyAction(action, companyId) {
             const company = this.companies.find(c => c._id === companyId);
             if (!company) {
@@ -501,8 +503,15 @@
 
             this.elements.modals.deleteModal.dataset.companyId = company._id;
             this.showModal(this.elements.modals.deleteModal);
+
+            // Set up delete confirmation button
+            const confirmButton = this.elements.modals.deleteModal.querySelector('#confirmDelete');
+            if (confirmButton) {
+                confirmButton.onclick = () => this.handleDeleteCompany(company._id);
+            }
         }
 
+        // Form Handling Methods
         async handleFormSubmit(event) {
             event.preventDefault();
 
@@ -528,7 +537,7 @@
                 );
             } catch (error) {
                 console.error('Form submission error:', error);
-                this.showNotification('Error processing form submission', 'error');
+                this.showNotification(error.message || 'Error processing form submission', 'error');
             } finally {
                 this.showLoadingState(false);
             }
@@ -582,7 +591,7 @@
             }
         }
 
-        async deleteCompany(companyId) {
+        async handleDeleteCompany(companyId) {
             try {
                 const response = await fetch(`${this.baseUrl}/companies/${companyId}`, {
                     method: 'DELETE',
@@ -598,6 +607,7 @@
 
                 const data = await response.json();
                 if (data.success) {
+                    this.closeModals();
                     await this.loadCompanies();
                     this.showNotification('Company deleted successfully', 'success');
                 }
@@ -613,10 +623,12 @@
             const data = {
                 name: formData.get('name'),
                 industry: formData.get('industry'),
-                size: parseInt(formData.get('size')),
-                contactEmail: formData.get('contactEmail'),
-                contactPhone: formData.get('contactPhone'),
-                address: formData.get('address'),
+                size: formData.get('size'),
+                contactDetails: {
+                    email: formData.get('contactEmail'),
+                    phone: formData.get('contactPhone'),
+                    address: formData.get('address')
+                },
                 adminName: formData.get('adminName'),
                 adminEmail: formData.get('adminEmail')
             };
@@ -628,13 +640,23 @@
             const requiredFields = [
                 { field: 'name', label: 'Company Name' },
                 { field: 'industry', label: 'Industry' },
-                { field: 'contactEmail', label: 'Contact Email' },
+                { field: 'contactDetails.email', label: 'Contact Email' },
                 { field: 'adminName', label: 'Admin Name' },
                 { field: 'adminEmail', label: 'Admin Email' }
             ];
 
-            const missingFields = requiredFields.filter(({ field }) => !data[field])
-                .map(({ label }) => label);
+            const missingFields = [];
+
+            requiredFields.forEach(({ field, label }) => {
+                if (field.includes('.')) {
+                    const [parent, child] = field.split('.');
+                    if (!data[parent] || !data[parent][child]) {
+                        missingFields.push(label);
+                    }
+                } else if (!data[field]) {
+                    missingFields.push(label);
+                }
+            });
 
             if (missingFields.length > 0) {
                 this.showNotification(
@@ -644,7 +666,7 @@
                 return false;
             }
 
-            if (!this.isValidEmail(data.contactEmail)) {
+            if (!this.isValidEmail(data.contactDetails.email)) {
                 this.showNotification('Please enter a valid contact email', 'error');
                 return false;
             }
@@ -657,35 +679,7 @@
             return true;
         }
 
-        populateCompanyForm(company) {
-            const form = this.elements.modals.companyForm;
-            if (!form) return;
-
-            form.elements['name'].value = company.name;
-            form.elements['industry'].value = company.industry;
-            form.elements['size'].value = company.size || '';
-            form.elements['contactEmail'].value = company.contactDetails?.email || '';
-            form.elements['contactPhone'].value = company.contactDetails?.phone || '';
-            form.elements['address'].value = company.contactDetails?.address || '';
-        }
-
-        populateCompanyDetails(company) {
-            const modal = this.elements.modals.detailsModal;
-            if (!modal) return;
-
-            // Update basic information
-            modal.querySelector('#detailCompanyName').textContent = company.name;
-            modal.querySelector('#detailIndustry').textContent = company.industry;
-            modal.querySelector('#detailStatus').className = `status-badge ${company.status.toLowerCase()}`;
-            modal.querySelector('#detailStatus').textContent = this.capitalizeFirstLetter(company.status);
-
-            // Update contact information
-            modal.querySelector('#detailEmail').textContent = company.contactDetails?.email || 'N/A';
-            modal.querySelector('#detailPhone').textContent = company.contactDetails?.phone || 'N/A';
-            modal.querySelector('#detailAddress').textContent = company.contactDetails?.address || 'N/A';
-        }
-
-         // UI Helper Methods
+          // UI Helper Methods
         showModal(modal) {
             if (!modal) return;
             modal.style.display = 'block';
@@ -715,75 +709,70 @@
                 this.elements.table.loader.style.display = show ? 'flex' : 'none';
             }
             if (this.elements.table.body) {
-                this.elements.table.body.style.display = show ? 'none' : 'table-row-group';
+                this.elements.table.body.style.display = show ? 'none' : '';
             }
         }
 
-        showNoDataMessage(show) {
-            if (this.elements.table.noData) {
-                this.elements.table.noData.style.display = show ? 'block' : 'none';
-            }
-        }
-
-        updatePagination(paginationData) {
-            if (!this.elements.pagination.container) return;
-
-            const { total, page, pages } = paginationData;
-            const startItem = ((page - 1) * this.pageSize) + 1;
-            const endItem = Math.min(page * this.pageSize, total);
-
-            this.elements.pagination.container.innerHTML = `
-                <div class="pagination-info">
-                    Showing ${startItem} to ${endItem} of ${total} entries
-                </div>
-                <div class="pagination-buttons">
-                    ${this.createPaginationButtons(page, pages)}
-                </div>
-            `;
-        }
-
-        createPaginationButtons(currentPage, totalPages) {
-            let buttons = [];
-            
-            // Previous button
-            buttons.push(`
-                <button class="page-button ${currentPage === 1 ? 'disabled' : ''}"
-                    ${currentPage === 1 ? 'disabled' : `onclick="companiesManager.goToPage(${currentPage - 1})"`}>
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-            `);
-
-            // Page numbers
-            for (let i = 1; i <= totalPages; i++) {
-                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-                    buttons.push(`
-                        <button class="page-button ${i === currentPage ? 'active' : ''}"
-                            onclick="companiesManager.goToPage(${i})">
-                            ${i}
-                        </button>
-                    `);
-                } else if (i === currentPage - 2 || i === currentPage + 2) {
-                    buttons.push('<span class="page-ellipsis">...</span>');
+        updateStatistics(statistics) {
+            try {
+                if (this.elements.stats.total) {
+                    this.elements.stats.total.textContent = statistics.total || 0;
                 }
+                if (this.elements.stats.active) {
+                    this.elements.stats.active.textContent = statistics.active || 0;
+                }
+                if (this.elements.stats.pending) {
+                    this.elements.stats.pending.textContent = statistics.pendingRenewals || 0;
+                }
+                if (this.elements.stats.inactive) {
+                    this.elements.stats.inactive.textContent = statistics.inactive || 0;
+                }
+            } catch (error) {
+                console.error('Error updating statistics:', error);
             }
-
-            // Next button
-            buttons.push(`
-                <button class="page-button ${currentPage === totalPages ? 'disabled' : ''}"
-                    ${currentPage === totalPages ? 'disabled' : `onclick="companiesManager.goToPage(${currentPage + 1})"`}>
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-            `);
-
-            return buttons.join('');
         }
 
-        goToPage(page) {
-            this.currentPage = page;
-            this.loadCompanies();
+        populateCompanyForm(company) {
+            const form = this.elements.modals.companyForm;
+            if (!form) return;
+
+            // Basic fields
+            form.elements['name'].value = company.name || '';
+            form.elements['industry'].value = company.industry || '';
+            form.elements['size'].value = company.size || '';
+
+            // Contact details
+            if (company.contactDetails) {
+                form.elements['contactEmail'].value = company.contactDetails.email || '';
+                form.elements['contactPhone'].value = company.contactDetails.phone || '';
+                form.elements['address'].value = company.contactDetails.address || '';
+            }
+        }
+
+        populateCompanyDetails(company) {
+            const modal = this.elements.modals.detailsModal;
+            if (!modal) return;
+
+            // Update basic information
+            modal.querySelector('#detailCompanyName').textContent = company.name || 'N/A';
+            modal.querySelector('#detailIndustry').textContent = company.industry || 'N/A';
+            
+            const statusElement = modal.querySelector('#detailStatus');
+            if (statusElement) {
+                statusElement.className = `status-badge ${company.status?.toLowerCase() || 'inactive'}`;
+                statusElement.textContent = this.capitalizeFirstLetter(company.status || 'inactive');
+            }
+
+            // Update contact information
+            modal.querySelector('#detailEmail').textContent = company.contactDetails?.email || 'N/A';
+            modal.querySelector('#detailPhone').textContent = company.contactDetails?.phone || 'N/A';
+            modal.querySelector('#detailAddress').textContent = company.contactDetails?.address || 'N/A';
+            modal.querySelector('#detailSize').textContent = company.size || 'N/A';
+            modal.querySelector('#detailCreatedAt').textContent = this.formatDate(company.createdAt);
         }
 
         resetFilters() {
+            // Reset filter values
             this.filters = {
                 search: '',
                 industry: '',
@@ -798,7 +787,10 @@
                 }
             });
 
+            // Reset pagination
             this.currentPage = 1;
+            
+            // Reload companies
             this.loadCompanies();
         }
 
@@ -838,11 +830,17 @@
         }
 
         // Utility Methods
+        goToPage(page) {
+            this.currentPage = page;
+            this.loadCompanies();
+        }
+
         isValidEmail(email) {
             return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         }
 
         escapeHtml(unsafe) {
+            if (!unsafe) return '';
             return unsafe
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
@@ -902,4 +900,4 @@
 
     // Export to window object
     window.CompaniesManager = CompaniesManager;
-})();  
+})();
