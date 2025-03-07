@@ -155,7 +155,11 @@
                 console.log('Initializing CompaniesManager...');
                 this.initializeEventListeners();
                 this.loadCompanies();
-                this.loadStatistics();
+                
+                // Only load statistics if the elements exist
+                if (document.getElementById('totalCompanies')) {
+                    this.loadStatistics();
+                }
             } catch (error) {
                 console.error('Error initializing CompaniesManager:', error);
                 this.showNotification('Error initializing companies module', 'error');
@@ -577,6 +581,63 @@
             span.textContent = '...';
             return span;
         }
+
+        async loadStatistics() {
+            try {
+                console.log('Loading company statistics...');
+                const response = await this.makeRequest('/companies/overall-statistics', 'GET');
+                
+                if (response.success) {
+                    const stats = response.statistics;
+                    
+                    // Update statistics cards if they exist
+                    const statsMapping = {
+                        'totalCompanies': stats.total || 0,
+                        'activeCompanies': stats.active || 0,
+                        'pendingRenewals': stats.pendingRenewals || 0,
+                        'inactiveCompanies': stats.inactive || 0
+                    };
+
+                    Object.entries(statsMapping).forEach(([id, value]) => {
+                        const element = document.getElementById(id);
+                        if (element) {
+                            element.textContent = value;
+                            // Add animation if needed
+                            this.animateNumber(element, 0, value, 1000);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+                // Update stats cards to show error state
+                ['totalCompanies', 'activeCompanies', 'pendingRenewals', 'inactiveCompanies'].forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = '-';
+                        element.parentElement.classList.add('error-state');
+                    }
+                });
+            }
+        }
+
+        // Add this helper method for number animation
+        animateNumber(element, start, end, duration) {
+            if (start === end) return;
+            
+            const range = end - start;
+            const increment = end > start ? 1 : -1;
+            const stepTime = Math.abs(Math.floor(duration / range));
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                element.textContent = current.toLocaleString();
+                if (current === end) {
+                    clearInterval(timer);
+                }
+            }, stepTime);
+        }
+
 
         // Company Operations
         async showCompanyModal(companyId = null) {
