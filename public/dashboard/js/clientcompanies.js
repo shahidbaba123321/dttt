@@ -5,14 +5,12 @@
     }
 
     class CompaniesManager {
-        constructor(apiBaseUrl) {
-            // API Configuration
-            this.apiBaseUrl = apiBaseUrl || 'https://18.215.160.136.nip.io/api';
-            
-            // State Management
+        constructor() {
+            this.baseUrl = 'https://18.215.160.136.nip.io/api';
+            this.token = localStorage.getItem('token');
             this.currentPage = 1;
-            this.itemsPerPage = 10;
-            this.totalItems = 0;
+            this.pageSize = 10;
+            this.totalCompanies = 0;
             this.companies = [];
             this.filters = {
                 search: '',
@@ -20,128 +18,306 @@
                 status: '',
                 plan: ''
             };
-            this.sortField = 'createdAt';
-            this.sortOrder = 'desc';
-            this.selectedCompanyId = null;
-            this.industries = new Set();
-
-            // Add loader styles
-            this.addLoaderStyles();
-            
-            // Initialize after DOM is ready
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', () => this.initialize());
-            } else {
-                this.initialize();
-            }
+            this.notificationTimeout = null;
+            this.initializeStyles();
+            this.initializeElements();
+            this.initializeEventListeners();
+            this.loadInitialData();
         }
 
-        addLoaderStyles() {
+        initializeStyles() {
             const styles = `
-                .table-loader {
+                /* Companies Table Styles */
+                .companies-container {
+                    padding: var(--spacing-lg);
+                }
+
+                .companies-header {
                     display: flex;
-                    flex-direction: column;
+                    justify-content: space-between;
                     align-items: center;
-                    justify-content: center;
-                    padding: 2rem;
-                    background: var(--bg-primary);
+                    margin-bottom: var(--spacing-lg);
                 }
-                .table-loader i {
-                    font-size: 2rem;
-                    color: var(--primary-color);
-                    margin-bottom: 1rem;
-                }
-                .table-loader p {
-                    color: var(--text-secondary);
+
+                .header-left h1 {
                     margin: 0;
+                    color: var(--text-primary);
+                    font-size: 1.5rem;
                 }
-                .loading-row {
-                    background: var(--bg-secondary);
+
+                .subtitle {
+                    color: var(--text-secondary);
+                    margin-top: var(--spacing-xs);
                 }
-                .empty-state {
-                    text-align: center;
-                    padding: 2rem;
+
+                /* Statistics Grid */
+                .statistics-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: var(--spacing-md);
+                    margin-bottom: var(--spacing-xl);
                 }
-                .empty-state i {
-                    font-size: 3rem;
-                    color: var(--text-tertiary);
-                    margin-bottom: 1rem;
+
+                .stat-card {
+                    background: var(--bg-primary);
+                    padding: var(--spacing-lg);
+                    border-radius: var(--border-radius-lg);
+                    box-shadow: var(--shadow-sm);
+                    display: flex;
+                    align-items: center;
+                    gap: var(--spacing-md);
                 }
-                .error-state {
-                    text-align: center;
-                    padding: 2rem;
-                }
-                .error-state i {
-                    font-size: 3rem;
-                    color: var(--danger-color);
-                    margin-bottom: 1rem;
-                }
-                .company-avatar {
-                    width: 40px;
-                    height: 40px;
-                    border-radius: 8px;
+
+                .stat-icon {
+                    width: 48px;
+                    height: 48px;
+                    border-radius: var(--border-radius-md);
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    color: white;
-                    font-weight: 500;
-                    font-size: 1.2rem;
+                    font-size: 1.5rem;
+                    background: var(--primary-light);
+                    color: var(--primary-color);
                 }
-                .company-name-cell {
-                    display: flex;
-                    align-items: center;
-                    gap: 1rem;
-                }
-                .company-info {
-                    display: flex;
-                    flex-direction: column;
-                }
-                .company-name {
-                    font-weight: 500;
-                    color: var(--text-primary);
-                }
-                .company-email {
-                    font-size: 0.875rem;
-                    color: var(--text-tertiary);
-                }
-                .status-badge {
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 0.5rem;
-                    padding: 0.25rem 0.75rem;
-                    border-radius: 9999px;
-                    font-size: 0.875rem;
-                    font-weight: 500;
-                }
-                .status-active {
-                    background-color: #DEF7EC;
+
+                .stat-icon.active {
+                    background: #DEF7EC;
                     color: #03543F;
                 }
-                .status-inactive {
-                    background-color: #FDE8E8;
-                    color: #9B1C1C;
-                }
-                .status-suspended {
-                    background-color: #FEF3C7;
+
+                .stat-icon.pending {
+                    background: #FEF3C7;
                     color: #92400E;
                 }
+
+                .stat-icon.inactive {
+                    background: #FDE8E8;
+                    color: #9B1C1C;
+                }
+
+                .stat-content h3 {
+                    margin: 0;
+                    font-size: 1.5rem;
+                    color: var(--text-primary);
+                }
+
+                .stat-content p {
+                    margin: 0;
+                    color: var(--text-secondary);
+                }
+
+                /* Filters Section */
+                .filters-section {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: var(--spacing-lg);
+                    gap: var(--spacing-md);
+                    flex-wrap: wrap;
+                }
+
+                .filters-group {
+                    display: flex;
+                    gap: var(--spacing-sm);
+                    flex-wrap: wrap;
+                }
+
+                .filter-select {
+                    min-width: 150px;
+                }
+
+                /* Table Styles */
+                .table-container {
+                    background: var(--bg-primary);
+                    border-radius: var(--border-radius-lg);
+                    box-shadow: var(--shadow-sm);
+                    overflow: hidden;
+                }
+
+                .companies-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+
+                .companies-table th {
+                    background: var(--bg-secondary);
+                    padding: var(--spacing-md);
+                    text-align: left;
+                    color: var(--text-secondary);
+                    font-weight: 500;
+                    border-bottom: 1px solid var(--border-light);
+                }
+
+                .companies-table td {
+                    padding: var(--spacing-md);
+                    border-bottom: 1px solid var(--border-light);
+                    color: var(--text-primary);
+                }
+
+                .companies-table tr:last-child td {
+                    border-bottom: none;
+                }
+
+                .companies-table tr:hover {
+                    background: var(--bg-secondary);
+                }
+
+                /* Status Badges */
+                .status-badge {
+                    padding: 4px 8px;
+                    border-radius: 12px;
+                    font-size: 0.875rem;
+                    font-weight: 500;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                }
+
+                .status-badge.active {
+                    background: #DEF7EC;
+                    color: #03543F;
+                }
+
+                .status-badge.inactive {
+                    background: #FDE8E8;
+                    color: #9B1C1C;
+                }
+
+                .status-badge.pending {
+                    background: #FEF3C7;
+                    color: #92400E;
+                }
+
+                /* Action Buttons */
                 .action-buttons {
                     display: flex;
-                    gap: 0.5rem;
-                    align-items: center;
+                    gap: var(--spacing-sm);
                 }
+
                 .btn-icon {
-                    padding: 0.5rem;
+                    width: 32px;
+                    height: 32px;
+                    border-radius: var(--border-radius-md);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                     border: none;
-                    background: none;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+
+                .btn-icon:hover {
+                    transform: translateY(-1px);
+                }
+
+                .btn-view {
+                    background: var(--primary-light);
+                    color: var(--primary-color);
+                }
+
+                .btn-edit {
+                    background: #FEF3C7;
+                    color: #92400E;
+                }
+
+                .btn-delete {
+                    background: #FDE8E8;
+                    color: #9B1C1C;
+                }
+
+                /* Loader */
+                .table-loader {
+                    display: none;
+                    padding: var(--spacing-xl);
+                    text-align: center;
+                    color: var(--text-secondary);
+                }
+
+                .table-loader i {
+                    font-size: 2rem;
+                    margin-bottom: var(--spacing-md);
+                }
+
+                /* No Data Message */
+                .no-data-message {
+                    display: none;
+                    padding: var(--spacing-xl);
+                    text-align: center;
+                    color: var(--text-secondary);
+                }
+
+                .no-data-message i {
+                    font-size: 3rem;
+                    margin-bottom: var(--spacing-md);
+                    color: var(--text-tertiary);
+                }
+
+                /* Pagination */
+                .pagination-container {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: var(--spacing-md);
+                    border-top: 1px solid var(--border-light);
+                }
+
+                .pagination-info {
+                    color: var(--text-secondary);
+                }
+
+                .pagination-controls {
+                    display: flex;
+                    gap: var(--spacing-sm);
+                }
+
+                .page-button {
+                    padding: var(--spacing-sm) var(--spacing-md);
+                    border: 1px solid var(--border-light);
+                    border-radius: var(--border-radius-md);
+                    background: var(--bg-primary);
                     color: var(--text-secondary);
                     cursor: pointer;
-                    border-radius: var(--border-radius-sm);
-                    transition: all 0.2s;
+                    transition: all 0.3s ease;
                 }
-                .btn-icon:hover {
-                    background-color: var(--bg-tertiary);
+
+                .page-button:hover {
+                    background: var(--bg-secondary);
                     color: var(--primary-color);
+                }
+
+                .page-button.active {
+                    background: var(--primary-color);
+                    color: white;
+                    border-color: var(--primary-color);
+                }
+
+                .page-button.disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+
+                /* Responsive Adjustments */
+                @media (max-width: 768px) {
+                    .companies-header {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: var(--spacing-md);
+                    }
+
+                    .filters-section {
+                        flex-direction: column;
+                        align-items: stretch;
+                    }
+
+                    .companies-table {
+                        display: block;
+                        overflow-x: auto;
+                    }
+
+                    .pagination-container {
+                        flex-direction: column;
+                        gap: var(--spacing-md);
+                    }
                 }
             `;
 
@@ -150,844 +326,514 @@
             document.head.appendChild(styleSheet);
         }
 
-                initialize() {
-            try {
-                console.log('Initializing CompaniesManager...');
-                this.initializeEventListeners();
-                this.initializeModalHandlers(); // Add this line
-                this.loadCompanies();
-                
-                if (document.getElementById('totalCompanies')) {
-                    this.loadStatistics();
+        initializeElements() {
+            // Statistics elements
+            this.elements = {
+                stats: {
+                    total: document.getElementById('totalCompanies'),
+                    active: document.getElementById('activeCompanies'),
+                    pending: document.getElementById('pendingRenewals'),
+                    inactive: document.getElementById('inactiveCompanies')
+                },
+                filters: {
+                    search: document.getElementById('companySearch'),
+                    industry: document.getElementById('industryFilter'),
+                    status: document.getElementById('statusFilter'),
+                    plan: document.getElementById('planFilter'),
+                    reset: document.getElementById('resetFilters')
+                },
+                table: {
+                    body: document.getElementById('companiesTableBody'),
+                    loader: document.getElementById('tableLoader'),
+                    noData: document.getElementById('noDataMessage')
+                },
+                pagination: {
+                    container: document.getElementById('paginationControls'),
+                    pageSize: document.getElementById('pageSize')
+                },
+                modals: {
+                    addCompany: document.getElementById('companyModal'),
+                    companyForm: document.getElementById('companyForm'),
+                    deleteModal: document.getElementById('deleteConfirmModal')
+                },
+                buttons: {
+                    addNew: document.getElementById('addCompanyBtn')
                 }
-            } catch (error) {
-                console.error('Error initializing CompaniesManager:', error);
-                this.showNotification('Error initializing companies module', 'error');
-            }
-        }
-                initializeModalHandlers() {
-            // Form submission handler
-            const companyForm = document.getElementById('companyForm');
-            if (companyForm) {
-                companyForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.saveCompany();
-                });
-            }
-
-            // Close modal handlers
-            document.querySelectorAll('.close-modal, [data-dismiss="modal"]').forEach(button => {
-                button.addEventListener('click', () => {
-                    this.closeModals();
-                });
-            });
-
-            // Close on outside click
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.addEventListener('click', (e) => {
-                    if (e.target === modal) {
-                        this.closeModals();
-                    }
-                });
-            });
-
-            // Initialize industry dropdown
-            this.initializeIndustryDropdown();
+            };
         }
 
-        async initializeIndustryDropdown() {
-            const industrySelect = document.getElementById('industry');
-            if (!industrySelect) return;
+        // Continuing the CompaniesManager class...
 
-            const industries = [
-                'Technology',
-                'Healthcare',
-                'Finance',
-                'Education',
-                'Manufacturing',
-                'Retail',
-                'Construction',
-                'Transportation',
-                'Energy',
-                'Agriculture',
-                'Entertainment',
-                'Real Estate',
-                'Hospitality',
-                'Telecommunications',
-                'Consulting',
-                'Other'
-            ];
-
-            // Clear existing options except the first one
-            while (industrySelect.options.length > 1) {
-                industrySelect.remove(1);
-            }
-
-            // Add industry options
-            industries.forEach(industry => {
-                const option = new Option(industry, industry);
-                industrySelect.add(option);
-            });
-        }
-
-        closeModals() {
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.classList.remove('show');
-            });
-            document.body.style.overflow = '';
-
-            // Reset form if it exists
-            const form = document.getElementById('companyForm');
-            if (form) {
-                form.reset();
-                // Re-enable admin fields
-                const adminEmailInput = form.querySelector('#adminEmail');
-                const adminNameInput = form.querySelector('#adminName');
-                if (adminEmailInput) adminEmailInput.disabled = false;
-                if (adminNameInput) adminNameInput.disabled = false;
-            }
-        }
-
-        async initializeEventListeners() {
-            // Add Company Button
-            document.getElementById('addCompanyBtn')?.addEventListener('click', () => {
-                this.showCompanyModal();
-            });
-
-            // Search Input
-            document.getElementById('companySearch')?.addEventListener('input', 
-                this.debounce((e) => {
-                    this.filters.search = e.target.value;
-                    this.currentPage = 1;
-                    this.loadCompanies();
-                }, 300)
+        initializeEventListeners() {
+            // Filter listeners
+            this.elements.filters.search?.addEventListener('input', 
+                this.debounce(() => this.handleSearch(), 300)
             );
 
-            // Filters
-            ['industry', 'status', 'plan'].forEach(filter => {
-                document.getElementById(`${filter}Filter`)?.addEventListener('change', (e) => {
-                    this.filters[filter] = e.target.value;
-                    this.currentPage = 1;
-                    this.loadCompanies();
+            this.elements.filters.industry?.addEventListener('change', 
+                () => this.handleFilterChange()
+            );
+
+            this.elements.filters.status?.addEventListener('change', 
+                () => this.handleFilterChange()
+            );
+
+            this.elements.filters.plan?.addEventListener('change', 
+                () => this.handleFilterChange()
+            );
+
+            this.elements.filters.reset?.addEventListener('click', 
+                () => this.resetFilters()
+            );
+
+            // Add company button
+            this.elements.buttons.addNew?.addEventListener('click', 
+                () => this.openAddCompanyModal()
+            );
+
+            // Form submission
+            this.elements.modals.companyForm?.addEventListener('submit', 
+                (e) => this.handleFormSubmit(e)
+            );
+
+            // Table action buttons
+            document.addEventListener('click', (e) => {
+                const actionButton = e.target.closest('[data-company-action]');
+                if (actionButton) {
+                    const companyId = actionButton.dataset.companyId;
+                    const action = actionButton.dataset.companyAction;
+                    this.handleCompanyAction(action, companyId);
+                }
+            });
+
+            // Pagination
+            this.elements.pagination.pageSize?.addEventListener('change', 
+                () => this.handlePageSizeChange()
+            );
+
+            // Modal close buttons
+            document.querySelectorAll('.close-modal, [data-dismiss="modal"]')
+                .forEach(button => {
+                    button.addEventListener('click', () => this.closeModals());
                 });
-            });
-
-            // Clear Filters
-            document.getElementById('clearFiltersBtn')?.addEventListener('click', () => {
-                this.clearFilters();
-            });
-
-            // Items Per Page
-            document.getElementById('itemsPerPage')?.addEventListener('change', (e) => {
-                this.itemsPerPage = parseInt(e.target.value);
-                this.currentPage = 1;
-                this.loadCompanies();
-            });
-
-            // Pagination Navigation
-            document.getElementById('prevPage')?.addEventListener('click', () => {
-                if (this.currentPage > 1) {
-                    this.currentPage--;
-                    this.loadCompanies();
-                }
-            });
-
-            document.getElementById('nextPage')?.addEventListener('click', () => {
-                const totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
-                if (this.currentPage < totalPages) {
-                    this.currentPage++;
-                    this.loadCompanies();
-                }
-            });
-
-            // Export Data
-            document.getElementById('exportDataBtn')?.addEventListener('click', () => {
-                this.exportData();
-            });
-
-            // Refresh Data
-            document.getElementById('refreshDataBtn')?.addEventListener('click', () => {
-                this.loadCompanies(true);
-                this.loadStatistics();
-            });
         }
 
-        // Utility function for debouncing
-        debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        clearFilters() {
-            this.filters = {
-                search: '',
-                industry: '',
-                status: '',
-                plan: ''
-            };
-
-            // Reset filter inputs
-            document.getElementById('companySearch').value = '';
-            document.getElementById('industryFilter').value = '';
-            document.getElementById('statusFilter').value = '';
-            document.getElementById('planFilter').value = '';
-
-            this.currentPage = 1;
-            this.loadCompanies();
-        }
-
-            async loadCompanies(showLoader = true) {
+        async loadInitialData() {
             try {
-                if (showLoader) {
-                    this.showTableLoader();
-                }
-
-                console.log('Loading companies with params:', {
-                    page: this.currentPage,
-                    limit: this.itemsPerPage,
-                    sortField: this.sortField,
-                    sortOrder: this.sortOrder,
-                    ...this.filters
-                });
-
-                const queryParams = new URLSearchParams({
-                    page: this.currentPage.toString(),
-                    limit: this.itemsPerPage.toString(),
-                    sortField: this.sortField,
-                    sortOrder: this.sortOrder,
-                    ...(this.filters.search && { search: this.filters.search }),
-                    ...(this.filters.industry && { industry: this.filters.industry }),
-                    ...(this.filters.status && { status: this.filters.status }),
-                    ...(this.filters.plan && { plan: this.filters.plan })
-                });
-
-                const response = await this.makeRequest(`/companies?${queryParams}`, 'GET');
-
-                if (response.success) {
-                    console.log('Companies data received:', response.data);
-                    
-                    this.companies = response.data.companies || [];
-                    this.totalItems = response.data.pagination.total || 0;
-
-                    const tbody = document.getElementById('companiesTableBody');
-                    if (tbody) {
-                        if (this.companies.length === 0) {
-                            tbody.innerHTML = this.getEmptyStateHtml();
-                        } else {
-                            this.renderCompaniesTable();
-                        }
-
-                        this.updatePagination();
-                        
-                        if (response.data.filters) {
-                            this.updateFilters(response.data.filters);
-                        }
-                    }
-                } else {
-                    throw new Error(response.message || 'Failed to load companies');
-                }
+                await Promise.all([
+                    this.loadStatistics(),
+                    this.loadCompanies()
+                ]);
             } catch (error) {
-                console.error('Error loading companies:', error);
-                
-                const tbody = document.getElementById('companiesTableBody');
-                if (tbody) {
-                    tbody.innerHTML = this.getErrorStateHtml();
-                }
-
-                this.showNotification('Error loading companies. Please try again.', 'error');
-            } finally {
-                if (showLoader) {
-                    this.hideTableLoader();
-                }
+                console.error('Error loading initial data:', error);
+                this.showNotification('Failed to load initial data', 'error');
             }
         }
 
-        getEmptyStateHtml() {
-            return `
-                <tr>
-                    <td colspan="8" class="text-center py-4">
-                        <div class="empty-state">
-                            <i class="fas fa-building text-muted"></i>
-                            <p>No companies found</p>
-                            <button class="btn btn-primary mt-3" onclick="companiesManager.showCompanyModal()">
-                                <i class="fas fa-plus"></i> Add New Company
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
+        // API Integration Methods
+        async loadStatistics() {
+            try {
+                const response = await fetch(`${this.baseUrl}/companies/overall-statistics`, {
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to load statistics');
+
+                const data = await response.json();
+                if (data.success) {
+                    this.updateStatistics(data.statistics);
+                }
+            } catch (error) {
+                console.error('Statistics loading error:', error);
+                this.showNotification('Failed to load statistics', 'error');
+            }
         }
 
-        getErrorStateHtml() {
-            return `
-                <tr>
-                    <td colspan="8" class="text-center py-4">
-                        <div class="error-state">
-                            <i class="fas fa-exclamation-circle text-danger"></i>
-                            <p>Error loading companies data</p>
-                            <button class="btn btn-outline-primary btn-sm mt-2" 
-                                    onclick="companiesManager.loadCompanies()">
-                                <i class="fas fa-redo"></i> Retry
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
+        async loadCompanies() {
+            try {
+                this.showTableLoader(true);
+                
+                const queryParams = new URLSearchParams({
+                    page: this.currentPage,
+                    limit: this.pageSize,
+                    search: this.filters.search,
+                    industry: this.filters.industry,
+                    status: this.filters.status,
+                    plan: this.filters.plan
+                });
+
+                const response = await fetch(`${this.baseUrl}/companies?${queryParams}`, {
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to load companies');
+
+                const data = await response.json();
+                if (data.success) {
+                    this.companies = data.data.companies;
+                    this.totalCompanies = data.data.pagination.total;
+                    this.renderCompaniesTable();
+                    this.updatePagination(data.data.pagination);
+                }
+            } catch (error) {
+                console.error('Companies loading error:', error);
+                this.showNotification('Failed to load companies', 'error');
+            } finally {
+                this.showTableLoader(false);
+            }
         }
 
+        async createCompany(formData) {
+            try {
+                const response = await fetch(`${this.baseUrl}/companies`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) throw new Error('Failed to create company');
+
+                const data = await response.json();
+                if (data.success) {
+                    this.showNotification('Company created successfully', 'success');
+                    this.closeModals();
+                    this.loadCompanies();
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('Company creation error:', error);
+                this.showNotification('Failed to create company', 'error');
+                return false;
+            }
+        }
+
+        async updateCompany(companyId, formData) {
+            try {
+                const response = await fetch(`${this.baseUrl}/companies/${companyId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) throw new Error('Failed to update company');
+
+                const data = await response.json();
+                if (data.success) {
+                    this.showNotification('Company updated successfully', 'success');
+                    this.closeModals();
+                    this.loadCompanies();
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('Company update error:', error);
+                this.showNotification('Failed to update company', 'error');
+                return false;
+            }
+        }
+
+        async deleteCompany(companyId) {
+            try {
+                const response = await fetch(`${this.baseUrl}/companies/${companyId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to delete company');
+
+                const data = await response.json();
+                if (data.success) {
+                    this.showNotification('Company deleted successfully', 'success');
+                    this.loadCompanies();
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('Company deletion error:', error);
+                this.showNotification('Failed to delete company', 'error');
+                return false;
+            }
+        }
+
+        // Utility Methods
+        showTableLoader(show) {
+            if (this.elements.table.loader) {
+                this.elements.table.loader.style.display = show ? 'flex' : 'none';
+            }
+            if (this.elements.table.body) {
+                this.elements.table.body.style.display = show ? 'none' : 'table-row-group';
+            }
+        }
+
+        showNotification(message, type = 'info') {
+            if (window.dashboardApp?.userInterface) {
+                window.dashboardApp.userInterface.showNotification(message, type);
+            } else {
+                alert(message);
+            }
+        }
+
+        debounce(func, wait) {
+            let timeout;
+            return (...args) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+                // Table Rendering Methods
         renderCompaniesTable() {
-            const tbody = document.getElementById('companiesTableBody');
-            if (!tbody) return;
+            if (!this.elements.table.body) return;
 
-            tbody.innerHTML = this.companies.map(company => `
+            if (!this.companies.length) {
+                this.showNoDataMessage(true);
+                return;
+            }
+
+            this.showNoDataMessage(false);
+            this.elements.table.body.innerHTML = this.companies.map(company => this.createTableRow(company)).join('');
+        }
+
+        createTableRow(company) {
+            return `
                 <tr>
                     <td>
-                        <input type="checkbox" class="company-checkbox" 
-                               data-company-id="${company._id}">
-                    </td>
-                    <td>
-                        <div class="company-name-cell">
-                            <div class="company-avatar" style="background-color: ${this.getCompanyColor(company.name)}">
-                                ${this.getCompanyInitials(company.name)}
-                            </div>
-                            <div class="company-info">
-                                <div class="company-name">${this.escapeHtml(company.name)}</div>
-                                <div class="company-email">${this.escapeHtml(company.contactDetails.email)}</div>
-                            </div>
+                        <div class="company-info">
+                            <span class="company-name">${this.escapeHtml(company.name)}</span>
+                            <small class="company-id">#${company._id}</small>
                         </div>
                     </td>
                     <td>${this.escapeHtml(company.industry)}</td>
                     <td>
                         <div class="user-count">
                             <i class="fas fa-users"></i>
-                            ${company.metrics?.users || 0}
+                            ${company.userCount || 0}
                         </div>
                     </td>
                     <td>
-                        <div class="subscription-info">
-                            <span class="plan-badge ${company.subscription.plan.toLowerCase()}">
-                                ${company.subscription.plan}
-                            </span>
-                            <span class="subscription-status ${company.subscription.status}">
-                                ${this.formatSubscriptionStatus(company.subscription)}
-                            </span>
-                        </div>
+                        <span class="subscription-badge ${company.subscription?.plan?.toLowerCase()}">
+                            ${this.escapeHtml(company.subscription?.plan || 'No Plan')}
+                        </span>
                     </td>
                     <td>
-                        <span class="status-badge status-${company.status.toLowerCase()}">
+                        <span class="status-badge ${company.status.toLowerCase()}">
                             <i class="fas fa-circle"></i>
                             ${this.capitalizeFirstLetter(company.status)}
                         </span>
                     </td>
-                    <td>
-                        <div class="last-active">
-                            <i class="fas fa-clock"></i>
-                            ${this.formatLastActive(company.lastActivity)}
-                        </div>
-                    </td>
+                    <td>${this.formatDate(company.lastActive)}</td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn-icon" title="View Details"
-                                    onclick="companiesManager.viewCompanyDetails('${company._id}')">
+                            <button class="btn-icon btn-view" 
+                                data-company-action="view" 
+                                data-company-id="${company._id}" 
+                                title="View Details">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button class="btn-icon" title="Edit Company"
-                                    onclick="companiesManager.editCompany('${company._id}')">
+                            <button class="btn-icon btn-edit" 
+                                data-company-action="edit" 
+                                data-company-id="${company._id}" 
+                                title="Edit Company">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <div class="dropdown">
-                                <button class="btn-icon" title="More Actions">
-                                    <i class="fas fa-ellipsis-v"></i>
-                                </button>
-                                <div class="dropdown-menu">
-                                    <a href="#" onclick="companiesManager.toggleCompanyStatus('${company._id}')">
-                                        ${company.status === 'active' ? 'Deactivate' : 'Activate'}
-                                    </a>
-                                    <a href="#" onclick="companiesManager.resetAdminPassword('${company._id}')">
-                                        Reset Admin Password
-                                    </a>
-                                    <a href="#" onclick="companiesManager.backupCompanyData('${company._id}')">
-                                        Backup Data
-                                    </a>
-                                    <div class="dropdown-divider"></div>
-                                    <a href="#" class="text-danger" 
-                                       onclick="companiesManager.deleteCompany('${company._id}')">
-                                        Delete Company
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-
-            this.initializeDropdowns();
-        }
-
-        updateFilters(filters) {
-            // Update industry filter
-            const industrySelect = document.getElementById('industryFilter');
-            if (industrySelect && filters.industries) {
-                this.updateSelectOptions(industrySelect, filters.industries);
-            }
-
-            // Update plan filter
-            const planSelect = document.getElementById('planFilter');
-            if (planSelect && filters.plans) {
-                this.updateSelectOptions(planSelect, filters.plans);
-            }
-
-            // Update status filter
-            const statusSelect = document.getElementById('statusFilter');
-            if (statusSelect && filters.statuses) {
-                this.updateSelectOptions(statusSelect, filters.statuses);
-            }
-        }
-
-        updateSelectOptions(select, options) {
-            const currentValue = select.value;
-            
-            // Clear existing options except the first one
-            while (select.options.length > 1) {
-                select.remove(1);
-            }
-
-            // Add new options
-            options.forEach(option => {
-                const optionElement = new Option(option, option);
-                select.add(optionElement);
-            });
-
-            // Restore selected value if it exists in new options
-            if (options.includes(currentValue)) {
-                select.value = currentValue;
-            }
-        }
-
-        showTableLoader() {
-            const tbody = document.getElementById('companiesTableBody');
-            if (!tbody) return;
-
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="8">
-                        <div class="table-loader">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <p>Loading companies data...</p>
+                            <button class="btn-icon btn-delete" 
+                                data-company-action="delete" 
+                                data-company-id="${company._id}" 
+                                title="Delete Company">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
             `;
         }
 
-        hideTableLoader() {
-            // Table content will be replaced by renderCompaniesTable
+        // Pagination Methods
+        updatePagination(paginationData) {
+            if (!this.elements.pagination.container) return;
+
+            const { total, page, pages } = paginationData;
+            const paginationHTML = `
+                <div class="pagination-info">
+                    Showing ${((page - 1) * this.pageSize) + 1} to 
+                    ${Math.min(page * this.pageSize, total)} of ${total} entries
+                </div>
+                <div class="pagination-buttons">
+                    ${this.createPaginationButtons(page, pages)}
+                </div>
+            `;
+
+            this.elements.pagination.container.innerHTML = paginationHTML;
         }
 
-            updatePagination() {
-            const totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+        createPaginationButtons(currentPage, totalPages) {
+            let buttons = [];
             
-            // Update range text
-            document.getElementById('startRange').textContent = 
-                this.totalItems ? ((this.currentPage - 1) * this.itemsPerPage) + 1 : 0;
-            document.getElementById('endRange').textContent = 
-                Math.min(this.currentPage * this.itemsPerPage, this.totalItems);
-            document.getElementById('totalItems').textContent = this.totalItems;
-
-            // Update pagination buttons
-            const prevPageBtn = document.getElementById('prevPage');
-            const nextPageBtn = document.getElementById('nextPage');
-            if (prevPageBtn) prevPageBtn.disabled = this.currentPage === 1;
-            if (nextPageBtn) nextPageBtn.disabled = this.currentPage === totalPages;
-
-            // Generate page numbers
-            this.renderPageNumbers(totalPages);
-        }
-
-        renderPageNumbers(totalPages) {
-            const pageNumbers = document.getElementById('pageNumbers');
-            if (!pageNumbers) return;
-
-            pageNumbers.innerHTML = '';
-
-            let startPage = Math.max(1, this.currentPage - 2);
-            let endPage = Math.min(totalPages, startPage + 4);
-
-            if (endPage - startPage < 4) {
-                startPage = Math.max(1, endPage - 4);
-            }
-
-            // First page
-            if (startPage > 1) {
-                pageNumbers.appendChild(this.createPageButton(1));
-                if (startPage > 2) {
-                    pageNumbers.appendChild(this.createEllipsis());
-                }
-            }
+            // Previous button
+            buttons.push(`
+                <button class="page-button ${currentPage === 1 ? 'disabled' : ''}"
+                    ${currentPage === 1 ? 'disabled' : `onclick="companiesManager.goToPage(${currentPage - 1})"`}>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            `);
 
             // Page numbers
-            for (let i = startPage; i <= endPage; i++) {
-                pageNumbers.appendChild(this.createPageButton(i));
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    buttons.push(`
+                        <button class="page-button ${i === currentPage ? 'active' : ''}"
+                            onclick="companiesManager.goToPage(${i})">
+                            ${i}
+                        </button>
+                    `);
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    buttons.push('<span class="page-ellipsis">...</span>');
+                }
             }
 
-            // Last page
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) {
-                    pageNumbers.appendChild(this.createEllipsis());
-                }
-                pageNumbers.appendChild(this.createPageButton(totalPages));
-            }
+            // Next button
+            buttons.push(`
+                <button class="page-button ${currentPage === totalPages ? 'disabled' : ''}"
+                    ${currentPage === totalPages ? 'disabled' : `onclick="companiesManager.goToPage(${currentPage + 1})"`}>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            `);
+
+            return buttons.join('');
         }
 
-        createPageButton(pageNum) {
-            const button = document.createElement('button');
-            button.textContent = pageNum;
-            button.className = pageNum === this.currentPage ? 'active' : '';
-            button.addEventListener('click', () => {
-                this.currentPage = pageNum;
-                this.loadCompanies();
+        // Modal Handling Methods
+        openAddCompanyModal() {
+            if (!this.elements.modals.addCompany) return;
+
+            this.currentCompany = null;
+            this.elements.modals.companyForm.reset();
+            this.elements.modals.addCompany.querySelector('#modalTitle').textContent = 'Add New Company';
+            this.showModal(this.elements.modals.addCompany);
+        }
+
+        openEditCompanyModal(company) {
+            if (!this.elements.modals.addCompany) return;
+
+            this.currentCompany = company;
+            this.elements.modals.addCompany.querySelector('#modalTitle').textContent = 'Edit Company';
+            this.populateCompanyForm(company);
+            this.showModal(this.elements.modals.addCompany);
+        }
+
+        openDeleteConfirmationModal(companyId) {
+            if (!this.elements.modals.deleteModal) return;
+
+            const company = this.companies.find(c => c._id === companyId);
+            if (!company) return;
+
+            const companyNameElement = this.elements.modals.deleteModal.querySelector('#deleteCompanyName');
+            if (companyNameElement) {
+                companyNameElement.textContent = company.name;
+            }
+
+            this.elements.modals.deleteModal.dataset.companyId = companyId;
+            this.showModal(this.elements.modals.deleteModal);
+        }
+
+        showModal(modal) {
+            if (!modal) return;
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        closeModals() {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                modal.style.display = 'none';
             });
-            return button;
+            document.body.style.overflow = '';
         }
 
-        createEllipsis() {
-            const span = document.createElement('span');
-            span.className = 'pagination-ellipsis';
-            span.textContent = '...';
-            return span;
-        }
+        // Form Handling Methods
+        async handleFormSubmit(event) {
+            event.preventDefault();
 
-        async loadStatistics() {
             try {
-                console.log('Loading company statistics...');
-                const response = await this.makeRequest('/companies/overall-statistics', 'GET');
-                
-                if (response.success) {
-                    const stats = response.statistics;
-                    
-                    // Update statistics cards if they exist
-                    const statsMapping = {
-                        'totalCompanies': stats.total || 0,
-                        'activeCompanies': stats.active || 0,
-                        'pendingRenewals': stats.pendingRenewals || 0,
-                        'inactiveCompanies': stats.inactive || 0
-                    };
-
-                    Object.entries(statsMapping).forEach(([id, value]) => {
-                        const element = document.getElementById(id);
-                        if (element) {
-                            element.textContent = value;
-                            // Add animation if needed
-                            this.animateNumber(element, 0, value, 1000);
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error('Error loading statistics:', error);
-                // Update stats cards to show error state
-                ['totalCompanies', 'activeCompanies', 'pendingRenewals', 'inactiveCompanies'].forEach(id => {
-                    const element = document.getElementById(id);
-                    if (element) {
-                        element.textContent = '-';
-                        element.parentElement.classList.add('error-state');
-                    }
-                });
-            }
-        }
-
-        // Add this helper method for number animation
-        animateNumber(element, start, end, duration) {
-            if (start === end) return;
-            
-            const range = end - start;
-            const increment = end > start ? 1 : -1;
-            const stepTime = Math.abs(Math.floor(duration / range));
-            let current = start;
-            
-            const timer = setInterval(() => {
-                current += increment;
-                element.textContent = current.toLocaleString();
-                if (current === end) {
-                    clearInterval(timer);
-                }
-            }, stepTime);
-        }
-
-
-        // Company Operations
-        async showCompanyModal(companyId = null) {
-            this.selectedCompanyId = companyId;
-            const modal = document.getElementById('companyModal');
-            const modalTitle = document.getElementById('modalTitle');
-            const form = document.getElementById('companyForm');
-
-            modalTitle.textContent = companyId ? 'Edit Company' : 'Add New Company';
-
-            if (companyId) {
-                try {
-                    const response = await this.makeRequest(`/companies/${companyId}`, 'GET');
-                    if (response.success) {
-                        this.populateCompanyForm(response.data);
-                    }
-                } catch (error) {
-                    console.error('Error fetching company details:', error);
-                    this.showNotification('Error fetching company details', 'error');
+                const formData = this.getFormData();
+                if (!this.validateFormData(formData)) {
                     return;
                 }
-            } else {
-                form.reset();
-            }
 
-            modal.classList.add('show');
-            document.body.style.overflow = 'hidden';
+                const isSuccess = this.currentCompany
+                    ? await this.updateCompany(this.currentCompany._id, formData)
+                    : await this.createCompany(formData);
 
-            // Focus first input
-            const firstInput = form.querySelector('input:not([type="hidden"])');
-            if (firstInput) {
-                firstInput.focus();
-            }
-        }
-
-        populateCompanyForm(company) {
-            const form = document.getElementById('companyForm');
-            
-            // Basic Details
-            form.querySelector('#companyName').value = company.name;
-            form.querySelector('#industry').value = company.industry;
-            form.querySelector('#companySize').value = company.size;
-            form.querySelector('#subscriptionPlan').value = company.subscription.plan;
-            
-            // Contact Details
-            form.querySelector('#contactEmail').value = company.contactDetails.email;
-            form.querySelector('#contactPhone').value = company.contactDetails.phone || '';
-            form.querySelector('#address').value = company.contactDetails.address || '';
-            
-            // Admin Details (if editing, these might be disabled)
-            const adminEmailInput = form.querySelector('#adminEmail');
-            const adminNameInput = form.querySelector('#adminName');
-            if (this.selectedCompanyId) {
-                adminEmailInput.disabled = true;
-                adminNameInput.disabled = true;
-                adminEmailInput.value = company.adminEmail || '';
-                adminNameInput.value = company.adminName || '';
-            } else {
-                adminEmailInput.disabled = false;
-                adminNameInput.disabled = false;
-            }
-
-            // Status
-            form.querySelector('#status').value = company.status;
-        }
-
-        async saveCompany() {
-    try {
-        const form = document.getElementById('companyForm');
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData);
-
-        console.log('Sending data:', data);
-
-        const companyData = {
-            name: data.name,
-            industry: data.industry,
-            size: parseInt(data.size),
-            contactEmail: data.contactEmail,
-            contactPhone: data.contactPhone,
-            address: data.address,
-            subscriptionPlan: data.subscriptionPlan,
-            adminEmail: data.adminEmail,
-            adminName: data.adminName
-        };
-
-        const response = await this.makeRequest('/companies', 'POST', companyData);
-
-        if (response.success) {
-            this.showNotification('Company created successfully', 'success');
-            this.closeModals();
-            this.loadCompanies();
-        } else {
-            throw new Error(response.message || 'Failed to create company');
-        }
-
-    } catch (error) {
-        console.error('Save error:', error);
-        this.showNotification(error.message, 'error');
-    }
-}
-
-        async makeRequest(endpoint, method = 'GET', data = null) {
-    try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            throw new Error('No authentication token found');
-        }
-
-        const config = {
-            method,
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: data ? JSON.stringify(data) : undefined
-        };
-
-        console.log(`Making ${method} request to ${endpoint}:`, config);
-
-        const response = await fetch(`${this.apiBaseUrl}${endpoint}`, config);
-        const responseData = await response.json();
-
-        console.log('Response:', responseData);
-
-        if (!response.ok) {
-            throw new Error(responseData.message || `HTTP error! status: ${response.status}`);
-        }
-
-        return responseData;
-    } catch (error) {
-        console.error('Request error:', error);
-        throw error;
-    }
-}
-
-        validateCompanyForm(data) {
-            // Company name validation
-            if (!data.name?.trim()) {
-                this.showNotification('Company name is required', 'error');
-                return false;
-            }
-
-            if (data.name.length < 2) {
-                this.showNotification('Company name must be at least 2 characters long', 'error');
-                return false;
-            }
-
-            // Industry validation
-            if (!data.industry) {
-                this.showNotification('Industry is required', 'error');
-                return false;
-            }
-
-            // Company size validation
-            if (!data.size || parseInt(data.size) <= 0) {
-                this.showNotification('Company size must be greater than 0', 'error');
-                return false;
-            }
-
-            // Subscription plan validation
-            if (!data.subscriptionPlan) {
-                this.showNotification('Subscription plan is required', 'error');
-                return false;
-            }
-
-            // Contact email validation
-            if (!data.contactEmail) {
-                this.showNotification('Contact email is required', 'error');
-                return false;
-            }
-
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(data.contactEmail)) {
-                this.showNotification('Please enter a valid contact email', 'error');
-                return false;
-            }
-
-            if (this.isGenericEmail(data.contactEmail)) {
-                this.showNotification('Please use a company domain email for contact', 'error');
-                return false;
-            }
-
-            // Admin details validation for new companies
-            if (!this.selectedCompanyId) {
-                if (!data.adminName) {
-                    this.showNotification('Admin name is required', 'error');
-                    return false;
+                if (isSuccess) {
+                    this.closeModals();
+                    await this.loadCompanies();
                 }
+            } catch (error) {
+                console.error('Form submission error:', error);
+                this.showNotification('Error processing form submission', 'error');
+            }
+        }
 
-                if (!data.adminEmail) {
-                    this.showNotification('Admin email is required', 'error');
-                    return false;
-                }
+        getFormData() {
+            const form = this.elements.modals.companyForm;
+            const formData = new FormData(form);
+            const data = {};
 
-                if (!emailRegex.test(data.adminEmail)) {
-                    this.showNotification('Please enter a valid admin email', 'error');
-                    return false;
-                }
+            for (const [key, value] of formData.entries()) {
+                data[key] = value;
+            }
 
-                if (this.isGenericEmail(data.adminEmail)) {
-                    this.showNotification('Please use a company domain email for admin', 'error');
-                    return false;
-                }
+            return data;
+        }
+
+        validateFormData(data) {
+            const requiredFields = ['name', 'industry', 'contactEmail', 'subscriptionPlan'];
+            const missingFields = requiredFields.filter(field => !data[field]);
+
+            if (missingFields.length > 0) {
+                this.showNotification(`Please fill in all required fields: ${missingFields.join(', ')}`, 'error');
+                return false;
+            }
+
+            if (!this.isValidEmail(data.contactEmail)) {
+                this.showNotification('Please enter a valid email address', 'error');
+                return false;
             }
 
             return true;
         }
-            // Utility Functions
-        isGenericEmail(email) {
-            const genericDomains = [
-                'gmail.com', 'yahoo.com', 'hotmail.com', 
-                'outlook.com', 'aol.com', 'icloud.com'
-            ];
-            const domain = email.split('@')[1].toLowerCase();
-            return genericDomains.includes(domain);
+
+        populateCompanyForm(company) {
+            const form = this.elements.modals.companyForm;
+            if (!form) return;
+
+            // Populate each form field
+            Object.keys(company).forEach(key => {
+                const input = form.querySelector(`[name="${key}"]`);
+                if (input) {
+                    input.value = company[key];
+                }
+            });
         }
 
-        getCompanyInitials(name) {
-            return name
-                .split(' ')
-                .map(word => word[0])
-                .join('')
-                .toUpperCase()
-                .slice(0, 2);
-        }
-
-        getCompanyColor(name) {
-            let hash = 0;
-            for (let i = 0; i < name.length; i++) {
-                hash = name.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            const hue = hash % 360;
-            return `hsl(${hue}, 70%, 45%)`;
-        }
-
-        formatSubscriptionStatus(subscription) {
-            const status = subscription.status.toLowerCase();
-            const expiryDate = new Date(subscription.nextBillingDate);
-            const daysUntilExpiry = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
-
-            if (status === 'active' && daysUntilExpiry <= 7) {
-                return `Renews in ${daysUntilExpiry} days`;
-            }
-            return this.capitalizeFirstLetter(status);
-        }
-
-        formatLastActive(timestamp) {
-            if (!timestamp) return 'Never';
-            
-            const date = new Date(timestamp);
-            const now = new Date();
-            const diffInSeconds = Math.floor((now - date) / 1000);
-
-            if (diffInSeconds < 60) return 'Just now';
-            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-            if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-            
-            return date.toLocaleDateString();
-        }
-
-        capitalizeFirstLetter(string) {
-            return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+        // Utility Methods
+        isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         }
 
         escapeHtml(unsafe) {
-            if (!unsafe) return '';
             return unsafe
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
@@ -996,133 +842,37 @@
                 .replace(/'/g, "&#039;");
         }
 
-        // API Request Handler
-        async makeRequest(endpoint, method = 'GET', data = null, queryParams = null) {
-            try {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    throw new Error('No authentication token found');
-                }
+        formatDate(date) {
+            if (!date) return 'N/A';
+            return new Date(date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
 
-                const headers = {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                };
+        capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+        }
 
-                const config = {
-                    method,
-                    headers,
-                    credentials: 'include'
-                };
-
-                if (data && (method === 'POST' || method === 'PUT')) {
-                    config.body = JSON.stringify(data);
-                }
-
-                let url = `${this.apiBaseUrl}${endpoint}`;
-                if (queryParams) {
-                    const params = new URLSearchParams(queryParams);
-                    url += `?${params.toString()}`;
-                }
-
-                console.log(`API Request: ${method} ${endpoint}`, {
-                    headers: config.headers,
-                    body: config.body
-                });
-
-                const response = await fetch(url, config);
-                const responseData = await response.json();
-
-                console.log(`API Response for ${endpoint}:`, responseData);
-
-                if (!response.ok) {
-                    throw new Error(responseData.message || `API request failed with status ${response.status}`);
-                }
-
-                return responseData;
-            } catch (error) {
-                console.error('API Request Error:', error);
-                throw error;
+        showNoDataMessage(show) {
+            if (this.elements.table.noData) {
+                this.elements.table.noData.style.display = show ? 'block' : 'none';
             }
         }
 
-        // Modal Management
-        closeModals() {
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.classList.remove('show');
-            });
-            document.body.style.overflow = '';
-        }
-
-        initializeDropdowns() {
-            document.querySelectorAll('.dropdown').forEach(dropdown => {
-                const button = dropdown.querySelector('.btn-icon');
-                const menu = dropdown.querySelector('.dropdown-menu');
-
-                button.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    menu.classList.toggle('show');
-                });
-            });
-
-            // Close dropdowns when clicking outside
-            document.addEventListener('click', () => {
-                document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-                    menu.classList.remove('show');
-                });
-            });
-        }
-
-        // Notification System
-        showNotification(message, type = 'info') {
-            // Dispatch event to global notification system
-            const event = new CustomEvent('showNotification', {
-                detail: { message, type }
-            });
-            document.dispatchEvent(event);
-        }
-
-        // Export Functionality
-        async exportData() {
-            try {
-                const response = await this.makeRequest('/companies/export', 'GET');
-                
-                if (response.success && response.data) {
-                    const blob = new Blob([JSON.stringify(response.data, null, 2)], {
-                        type: 'application/json'
-                    });
-                    
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `companies_export_${new Date().toISOString().split('T')[0]}.json`;
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-
-                    this.showNotification('Data exported successfully', 'success');
-                }
-            } catch (error) {
-                console.error('Export error:', error);
-                this.showNotification('Error exporting data', 'error');
-            }
-        }
-
-        // Cleanup
+        // Cleanup method
         cleanup() {
-            // Remove event listeners
-            document.removeEventListener('click', this.handleOutsideClick);
-            
-            // Clear any timeouts/intervals
-            if (this.searchDebounceTimeout) {
-                clearTimeout(this.searchDebounceTimeout);
-            }
+            // Remove event listeners and clean up resources
+            this.closeModals();
+            // Additional cleanup as needed
         }
     }
-          
 
-    // Make CompaniesManager available globally
+
+
+    // Export to window object
     window.CompaniesManager = CompaniesManager;
-    console.log('CompaniesManager registered globally');
 })();
