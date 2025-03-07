@@ -165,6 +165,88 @@
                 this.showNotification('Error initializing companies module', 'error');
             }
         }
+                initializeModalHandlers() {
+            // Form submission handler
+            const companyForm = document.getElementById('companyForm');
+            if (companyForm) {
+                companyForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveCompany();
+                });
+            }
+
+            // Close modal handlers
+            document.querySelectorAll('.close-modal, [data-dismiss="modal"]').forEach(button => {
+                button.addEventListener('click', () => {
+                    this.closeModals();
+                });
+            });
+
+            // Close on outside click
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        this.closeModals();
+                    }
+                });
+            });
+
+            // Initialize industry dropdown
+            this.initializeIndustryDropdown();
+        }
+
+        async initializeIndustryDropdown() {
+            const industrySelect = document.getElementById('industry');
+            if (!industrySelect) return;
+
+            const industries = [
+                'Technology',
+                'Healthcare',
+                'Finance',
+                'Education',
+                'Manufacturing',
+                'Retail',
+                'Construction',
+                'Transportation',
+                'Energy',
+                'Agriculture',
+                'Entertainment',
+                'Real Estate',
+                'Hospitality',
+                'Telecommunications',
+                'Consulting',
+                'Other'
+            ];
+
+            // Clear existing options except the first one
+            while (industrySelect.options.length > 1) {
+                industrySelect.remove(1);
+            }
+
+            // Add industry options
+            industries.forEach(industry => {
+                const option = new Option(industry, industry);
+                industrySelect.add(option);
+            });
+        }
+
+        closeModals() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('show');
+            });
+            document.body.style.overflow = '';
+
+            // Reset form if it exists
+            const form = document.getElementById('companyForm');
+            if (form) {
+                form.reset();
+                // Re-enable admin fields
+                const adminEmailInput = form.querySelector('#adminEmail');
+                const adminNameInput = form.querySelector('#adminName');
+                if (adminEmailInput) adminEmailInput.disabled = false;
+                if (adminNameInput) adminNameInput.disabled = false;
+            }
+        }
 
         async initializeEventListeners() {
             // Add Company Button
@@ -998,88 +1080,7 @@
             }
         }
     }
-            initializeModalHandlers() {
-            // Form submission handler
-            const companyForm = document.getElementById('companyForm');
-            if (companyForm) {
-                companyForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.saveCompany();
-                });
-            }
-
-            // Close modal handlers
-            document.querySelectorAll('.close-modal, [data-dismiss="modal"]').forEach(button => {
-                button.addEventListener('click', () => {
-                    this.closeModals();
-                });
-            });
-
-            // Close on outside click
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.addEventListener('click', (e) => {
-                    if (e.target === modal) {
-                        this.closeModals();
-                    }
-                });
-            });
-
-            // Initialize industry dropdown
-            this.initializeIndustryDropdown();
-        }
-
-        async initializeIndustryDropdown() {
-            const industrySelect = document.getElementById('industry');
-            if (!industrySelect) return;
-
-            const industries = [
-                'Technology',
-                'Healthcare',
-                'Finance',
-                'Education',
-                'Manufacturing',
-                'Retail',
-                'Construction',
-                'Transportation',
-                'Energy',
-                'Agriculture',
-                'Entertainment',
-                'Real Estate',
-                'Hospitality',
-                'Telecommunications',
-                'Consulting',
-                'Other'
-            ];
-
-            // Clear existing options except the first one
-            while (industrySelect.options.length > 1) {
-                industrySelect.remove(1);
-            }
-
-            // Add industry options
-            industries.forEach(industry => {
-                const option = new Option(industry, industry);
-                industrySelect.add(option);
-            });
-        }
-
-        closeModals() {
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.classList.remove('show');
-            });
-            document.body.style.overflow = '';
-
-            // Reset form if it exists
-            const form = document.getElementById('companyForm');
-            if (form) {
-                form.reset();
-                // Re-enable admin fields
-                const adminEmailInput = form.querySelector('#adminEmail');
-                const adminNameInput = form.querySelector('#adminName');
-                if (adminEmailInput) adminEmailInput.disabled = false;
-                if (adminNameInput) adminNameInput.disabled = false;
-            }
-        }
+          
 
     // Make CompaniesManager available globally
     window.CompaniesManager = CompaniesManager;
