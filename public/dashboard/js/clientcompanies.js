@@ -222,84 +222,112 @@
         }
 
         async loadCompanies() {
-            try {
-                this.showTableLoader(true);
-                
-                const queryParams = new URLSearchParams({
-                    page: this.currentPage.toString(),
-                    limit: this.pageSize.toString(),
-                    search: this.filters.search || '',
-                    industry: this.filters.industry || '',
-                    status: this.filters.status || '',
-                    plan: this.filters.plan || ''
-                });
+    try {
+        this.showTableLoader(true);
+        
+        // Log the request details for debugging
+        console.log('Loading companies with params:', {
+            page: this.currentPage,
+            limit: this.pageSize,
+            filters: this.filters
+        });
 
-                const url = `${this.baseUrl}/companies`;
-                console.log('Fetching companies from:', url, 'with params:', queryParams.toString());
+        const queryParams = new URLSearchParams({
+            page: this.currentPage.toString(),
+            limit: this.pageSize.toString(),
+            ...(this.filters.search && { search: this.filters.search }),
+            ...(this.filters.industry && { industry: this.filters.industry }),
+            ...(this.filters.status && { status: this.filters.status }),
+            ...(this.filters.plan && { plan: this.filters.plan }),
+            sortField: 'createdAt',
+            sortOrder: 'desc'
+        });
 
-                const response = await fetch(`${url}?${queryParams}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+        // Use the exact endpoint from your server.js
+        const url = `${this.baseUrl}/companies`;
+        console.log('Request URL:', url);
+        console.log('Query Parameters:', queryParams.toString());
 
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                console.log('Companies data received:', data);
-
-                if (data.success) {
-                    this.companies = data.data.companies;
-                    this.totalCompanies = data.data.pagination.total;
-                    this.renderCompaniesTable();
-                    this.updatePagination(data.data.pagination);
-                } else {
-                    throw new Error(data.message || 'Failed to load companies');
-                }
-            } catch (error) {
-                console.error('Companies loading error:', error);
-                this.showNotification('Failed to load companies', 'error');
-                this.showEmptyState();
-            } finally {
-                this.showTableLoader(false);
+        const response = await fetch(`${url}?${queryParams}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             }
+        });
+
+        // Log response status for debugging
+        console.log('Response status:', response.status);
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
         }
+
+        const data = await response.json();
+        console.log('Companies data received:', data);
+
+        if (data.success) {
+            this.companies = data.data.companies;
+            this.totalCompanies = data.data.pagination.total;
+            this.renderCompaniesTable();
+            this.updatePagination(data.data.pagination);
+        } else {
+            throw new Error(data.message || 'Failed to load companies');
+        }
+    } catch (error) {
+        console.error('Companies loading error:', error);
+        this.showNotification('Failed to load companies', 'error');
+        this.showEmptyState();
+    } finally {
+        this.showTableLoader(false);
+    }
+}
+
 
         async loadStatistics() {
-            try {
-                const response = await fetch(`${this.baseUrl}/companies/overall-statistics`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+    try {
+        // Use the exact endpoint from your server.js
+        const url = `${this.baseUrl}/companies/overall-statistics`;
+        console.log('Loading statistics from:', url);
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                if (data.success) {
-                    this.updateStatistics(data.statistics);
-                } else {
-                    throw new Error(data.message || 'Invalid statistics data');
-                }
-            } catch (error) {
-                console.error('Statistics loading error:', error);
-                this.updateStatistics({
-                    total: 0,
-                    active: 0,
-                    pendingRenewals: 0,
-                    inactive: 0
-                });
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             }
+        });
+
+        // Log response status for debugging
+        console.log('Statistics response status:', response.status);
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
         }
+
+        const data = await response.json();
+        console.log('Statistics data received:', data);
+
+        if (data.success) {
+            this.updateStatistics(data.statistics);
+        } else {
+            throw new Error(data.message || 'Invalid statistics data');
+        }
+    } catch (error) {
+        console.error('Statistics loading error:', error);
+        this.updateStatistics({
+            total: 0,
+            active: 0,
+            pendingRenewals: 0,
+            inactive: 0
+        });
+    }
+}
+
 
         renderCompaniesTable() {
             if (!this.elements.table.body) return;
