@@ -975,55 +975,57 @@ class ContentLoader {
         document.head.appendChild(styleSheet);
     }
       async loadContent(section) {
-        try {
-            this.showLoadingState();
+    try {
+        console.log(`Loading content for section: ${section}`);
+        this.showLoadingState();
 
-            // Remove any existing instance
-            if (this.moduleInstances.has(this.currentPage)) {
-                const instance = this.moduleInstances.get(this.currentPage);
-                if (instance && typeof instance.cleanup === 'function') {
-                    await instance.cleanup();
-                }
-                this.moduleInstances.delete(this.currentPage);
+        // Remove any existing instance
+        if (this.moduleInstances.has(this.currentPage)) {
+            console.log(`Cleaning up previous module: ${this.currentPage}`);
+            const instance = this.moduleInstances.get(this.currentPage);
+            if (instance && typeof instance.cleanup === 'function') {
+                await instance.cleanup();
             }
+            this.moduleInstances.delete(this.currentPage);
+        }
 
-            const fileName = this.getFileName(section);
-            // Updated path to match Amplify structure
-            const fetchUrl = `${this.baseUrl}/dashboard/${fileName}`;
-            console.log('Fetching content from:', fetchUrl);
+        const fileName = this.getFileName(section);
+        const fetchUrl = `${this.baseUrl}/dashboard/${fileName}`;
+        console.log('Fetching content from:', fetchUrl);
 
-            const response = await fetch(fetchUrl);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const content = await response.text();
-            this.contentContainer.innerHTML = content;
+        const response = await fetch(fetchUrl);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const content = await response.text();
+        this.contentContainer.innerHTML = content;
 
-            // Initialize module script if needed
-            if (section === 'roles') {
-                await this.initializeRolesPermissions();
-            } else if (section === 'users') {
-                await this.initializeUsers();
-             } else if (section === 'companies') { 
+        // Initialize module script if needed
+        if (section === 'companies') {
+            console.log('Initializing Companies module...');
             await this.initializeCompanies();
+        } else if (section === 'roles') {
+            await this.initializeRolesPermissions();
+        } else if (section === 'users') {
+            await this.initializeUsers();
         }
 
-            this.currentPage = section;
-            this.updateURL(section);
+        this.currentPage = section;
+        this.updateURL(section);
 
-            document.dispatchEvent(new CustomEvent('contentLoaded', {
-                detail: { section: section }
-            }));
+        document.dispatchEvent(new CustomEvent('contentLoaded', {
+            detail: { section: section }
+        }));
 
-        } catch (error) {
-            console.error('Error loading content:', error);
-            this.showErrorState(error);
-        } finally {
-            this.hideLoadingState();
-        }
+    } catch (error) {
+        console.error('Error loading content:', error);
+        this.showErrorState(error);
+    } finally {
+        this.hideLoadingState();
     }
+}
 
     getFileName(section) {
         const fileMap = {
@@ -1112,31 +1114,50 @@ class ContentLoader {
 
     async initializeCompanies() {
     try {
+        console.log('Initializing Companies module...');
+        
         // Check if script is already loaded
         const existingScript = document.querySelector('script[src*="companies.js"]');
         if (existingScript) {
+            console.log('Removing existing Companies script...');
             existingScript.remove();
         }
 
-        // Create and append the script with updated path
+        // Create and append the script
         const script = document.createElement('script');
         script.src = `${this.baseUrl}/dashboard/js/companies.js`;
+        console.log('Loading Companies script from:', script.src);
         
+        // Add error handling for script loading
+        script.onerror = (error) => {
+            console.error('Error loading companies.js:', error);
+            throw new Error('Failed to load companies.js');
+        };
+
         await new Promise((resolve, reject) => {
-            script.onload = resolve;
+            script.onload = () => {
+                console.log('Companies script loaded successfully');
+                resolve();
+            };
             script.onerror = reject;
             document.body.appendChild(script);
         });
 
-        // Initialize new instance
+        // Wait a brief moment for the class to be registered
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Check if CompaniesManager is available
         if (typeof window.CompaniesManager !== 'undefined') {
-            const instance = new window.CompaniesManager();
+            console.log('Creating new CompaniesManager instance...');
+            const instance = new window.CompaniesManager(this.apiBaseUrl);
             this.moduleInstances.set('companies', instance);
+            console.log('CompaniesManager initialized successfully');
         } else {
-            throw new Error('CompaniesManager not loaded properly');
+            throw new Error('CompaniesManager class not found after script load');
         }
     } catch (error) {
         console.error('Error initializing companies module:', error);
+        this.showErrorState(error);
         throw error;
     }
 }
