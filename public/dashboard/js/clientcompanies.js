@@ -259,11 +259,10 @@
                 // Data Loading Methods
         async loadCompanies(showLoader = true) {
     try {
-        if (showLoader && document.getElementById('companiesTableBody')) {
+        if (showLoader) {
             this.showTableLoader();
         }
 
-        // Log the request parameters
         console.log('Loading companies with params:', {
             page: this.currentPage,
             limit: this.itemsPerPage,
@@ -272,18 +271,13 @@
             ...this.filters
         });
 
-        const queryParams = new URLSearchParams({
-            page: this.currentPage.toString(),
-            limit: this.itemsPerPage.toString(),
+        const response = await this.makeRequest('/companies', 'GET', null, {
+            page: this.currentPage,
+            limit: this.itemsPerPage,
             sortField: this.sortField,
             sortOrder: this.sortOrder,
-            ...(this.filters.search && { search: this.filters.search }),
-            ...(this.filters.industry && { industry: this.filters.industry }),
-            ...(this.filters.status && { status: this.filters.status }),
-            ...(this.filters.plan && { plan: this.filters.plan })
+            ...this.filters
         });
-
-        const response = await this.makeRequest(`/companies?${queryParams}`, 'GET');
 
         if (response.success) {
             console.log('Companies data received:', response.data);
@@ -309,10 +303,6 @@
                 }
 
                 this.updatePagination();
-                
-                if (response.data.filters?.industries) {
-                    this.updateIndustryFilter(response.data.filters.industries);
-                }
             }
         } else {
             throw new Error(response.message || 'Failed to load companies');
@@ -345,7 +335,8 @@
         }
     }
 }
-                   async loadStatistics() {
+        
+        async loadStatistics() {
     try {
         console.log('Loading company statistics...');
         const response = await this.makeRequest('/companies/overall-statistics', 'GET');
