@@ -1956,8 +1956,11 @@ app.post('/api/users/2fa/toggle', verifyToken, async (req, res) => {
 // Company Management Routes
 
 // Create new company
+// Create new company
 app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
     try {
+        console.log('Received company creation request:', req.body);
+
         const {
             name,
             industry,
@@ -1967,11 +1970,13 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
             address,
             subscriptionPlan,
             adminEmail,
-            adminName
+            adminName,
+            status = 'active',
+            sendWelcomeEmail = true
         } = req.body;
 
         // Validate required fields
-        if (!name || !industry || !contactEmail || !subscriptionPlan || !adminEmail) {
+        if (!name || !industry || !contactEmail || !subscriptionPlan || !adminEmail || !adminName) {
             return res.status(400).json({
                 success: false,
                 message: 'Missing required fields'
@@ -2008,7 +2013,7 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
         }
 
         // Start MongoDB transaction
-        const session = client.startSession();
+        const session = await client.startSession();
         let companyId;
 
         try {
@@ -2020,15 +2025,15 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
                     size: parseInt(size),
                     contactDetails: {
                         email: contactEmail,
-                        phone: contactPhone,
-                        address
+                        phone: contactPhone || '',
+                        address: address || ''
                     },
                     subscription: {
                         plan: subscriptionPlan,
                         startDate: new Date(),
                         status: 'active'
                     },
-                    status: 'active',
+                    status,
                     createdAt: new Date(),
                     createdBy: new ObjectId(req.user.userId),
                     updatedAt: new Date(),
@@ -2124,20 +2129,6 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
                 }
             );
 
-            // Send welcome email (commented out for sandbox)
-            /*
-            await sendEmail({
-                to: adminEmail,
-                subject: 'Welcome to WorkWise Pro',
-                template: 'company-welcome',
-                data: {
-                    companyName: name,
-                    adminName,
-                    tempPassword: adminPassword
-                }
-            });
-            */
-
             res.status(201).json({
                 success: true,
                 message: 'Company created successfully',
@@ -2151,6 +2142,7 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
             });
 
         } catch (error) {
+            console.error('Transaction error:', error);
             throw error;
         } finally {
             await session.endSession();
@@ -2164,7 +2156,6 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
         });
     }
 });
-
 // Get all companies with filtering and pagination
 app.get('/api/companies', verifyToken, verifyAdmin, cacheMiddleware(300), async (req, res) => {
     try {
