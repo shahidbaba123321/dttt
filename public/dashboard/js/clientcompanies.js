@@ -787,63 +787,72 @@
         }
 
         async saveCompany() {
-            try {
-                const form = document.getElementById('companyForm');
-                const formData = new FormData(form);
-                const data = Object.fromEntries(formData);
+    try {
+        console.log('Starting company save process');
+        const form = document.getElementById('companyForm');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData);
 
-                // Validate form data
-                if (!this.validateCompanyForm(data)) {
-                    return;
-                }
+        console.log('Form data:', data);
 
-                // Structure the data according to API requirements
-                const companyData = {
-                    name: data.name,
-                    industry: data.industry,
-                    size: parseInt(data.size),
-                    contactEmail: data.contactEmail,        // Changed this
-                    contactPhone: data.contactPhone,        // Changed this
-                    address: data.address,                  // Changed this
-                    subscriptionPlan: data.subscriptionPlan, // Changed this
-                    adminEmail: data.adminEmail,            // Changed this
-                    adminName: data.adminName,              // Changed this
-                    status: data.status || 'active',
-                    sendWelcomeEmail: data.sendWelcomeEmail === 'on'
-                };
-
-                // Log the data being sent
-                console.log('Sending company data:', companyData);
-
-                let response;
-                if (this.selectedCompanyId) {
-                    response = await this.makeRequest(
-                        `/companies/${this.selectedCompanyId}`,
-                        'PUT',
-                        companyData
-                    );
-                } else {
-                    response = await this.makeRequest('/companies', 'POST', companyData);
-                }
-
-                if (response.success) {
-                    this.showNotification(
-                        `Company ${this.selectedCompanyId ? 'updated' : 'created'} successfully`,
-                        'success'
-                    );
-                    this.closeModals();
-                    this.loadCompanies();
-                    this.loadStatistics();
-                }
-            } catch (error) {
-                console.error('Error saving company:', error);
-                this.showNotification(
-                    `Error ${this.selectedCompanyId ? 'updating' : 'creating'} company: ${error.message}`,
-                    'error'
-                );
-            }
+        // Validate form data
+        if (!this.validateCompanyForm(data)) {
+            return;
         }
 
+        // Structure the data
+        const companyData = {
+            name: data.name,
+            industry: data.industry,
+            size: parseInt(data.size),
+            contactEmail: data.contactEmail,
+            contactPhone: data.contactPhone,
+            address: data.address,
+            subscriptionPlan: data.subscriptionPlan,
+            adminEmail: data.adminEmail,
+            adminName: data.adminName,
+            status: data.status || 'active',
+            sendWelcomeEmail: data.sendWelcomeEmail === 'on'
+        };
+
+        console.log('Structured company data:', companyData);
+
+        let response;
+        if (this.selectedCompanyId) {
+            console.log('Updating existing company');
+            response = await this.makeRequest(
+                `/companies/${this.selectedCompanyId}`,
+                'PUT',
+                companyData
+            );
+        } else {
+            console.log('Creating new company');
+            response = await this.makeRequest('/companies', 'POST', companyData);
+        }
+
+        console.log('API Response:', response);
+
+        if (response.success) {
+            this.showNotification(
+                `Company ${this.selectedCompanyId ? 'updated' : 'created'} successfully`,
+                'success'
+            );
+            this.closeModals();
+            this.loadCompanies();
+            this.loadStatistics();
+        }
+    } catch (error) {
+        console.error('Error saving company:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack
+        });
+        this.showNotification(
+            `Error ${this.selectedCompanyId ? 'updating' : 'creating'} company: ${error.message}`,
+            'error'
+        );
+    }
+}
         validateCompanyForm(data) {
             // Company name validation
             if (!data.name?.trim()) {
