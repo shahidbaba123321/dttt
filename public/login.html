@@ -683,9 +683,9 @@ function initializeLogin() {
                 if (data.role === 'superadmin') {
                     window.location.href = `/dashboard/index.html?token=${encodeURIComponent(data.token)}&role=${encodeURIComponent(data.role)}`;
                 } else if (data.role === 'admin') {
-                    window.location.href = '/dashboard/index.html';
+                    window.location.href = `/dashboard/index.html?token=${encodeURIComponent(token)}&role=${encodeURIComponent(role)}`;
                 } else {
-                    window.location.href = '/dashboard/index.html';
+                    window.location.href = `/dashboard/index.html?token=${encodeURIComponent(token)}&role=${encodeURIComponent(role)}`;
                 }
             }, 1500);
 
@@ -759,7 +759,7 @@ async function checkAuthStatus() {
                 if (role === 'superadmin') {
                     window.location.href = `/dashboard/index.html?token=${encodeURIComponent(token)}&role=${encodeURIComponent(role)}`;
                 } else {
-                    window.location.href = '/dashboard/index.html';
+                    window.location.href = `/dashboard/index.html?token=${encodeURIComponent(token)}&role=${encodeURIComponent(role)}`;
                 }
             } else {
                 // Clear invalid session
