@@ -2168,6 +2168,8 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
 // Get all companies with filtering and pagination
 app.get('/api/companies', verifyToken, verifyAdmin, cacheMiddleware(300), async (req, res) => {
     try {
+        console.log('Fetching companies with query:', req.query);
+
         const {
             page = 1,
             limit = 10,
@@ -2201,8 +2203,11 @@ app.get('/api/companies', verifyToken, verifyAdmin, cacheMiddleware(300), async 
             if (dateTo) filter.createdAt.$lte = new Date(dateTo);
         }
 
+        console.log('Applied filter:', filter);
+
         // Get total count
         const total = await companies.countDocuments(filter);
+        console.log('Total companies found:', total);
 
         // If no companies exist, return empty result
         if (total === 0) {
@@ -2212,12 +2217,12 @@ app.get('/api/companies', verifyToken, verifyAdmin, cacheMiddleware(300), async 
                     companies: [],
                     pagination: {
                         total: 0,
-                        page: 1,
+                        page: parseInt(page),
                         pages: 0
                     },
                     filters: {
                         industries: [],
-                        plans: await getSubscriptionPlans(),
+                        plans: ['Basic', 'Professional', 'Enterprise'],
                         statuses: ['active', 'inactive', 'suspended']
                     }
                 }
@@ -2232,62 +2237,32 @@ app.get('/api/companies', verifyToken, verifyAdmin, cacheMiddleware(300), async 
             .limit(parseInt(limit))
             .toArray();
 
-        // Enrich company data
-        const enrichedCompanies = await Promise.all(companiesList.map(async (company) => {
-            const [
-                userCount,
-                subscription,
-                recentActivity,
-                storageUsage
-            ] = await Promise.all([
-                company_users.countDocuments({ companyId: company._id }),
-                company_subscriptions.findOne({ companyId: company._id }),
-                company_audit_logs
-                    .find({ companyId: company._id })
-                    .sort({ timestamp: -1 })
-                    .limit(5)
-                    .toArray(),
-                calculateCompanyStorageUsage(company._id)
-            ]);
+        console.log(`Found ${companiesList.length} companies for current page`);
 
-            return {
-                ...company,
-                metrics: {
-                    users: userCount,
-                    storage: storageUsage,
-                    activity: recentActivity.length
-                },
-                subscription: {
-                    ...company.subscription,
-                    details: subscription
-                },
-                recentActivity,
-                health: await checkCompanyHealth(company._id)
-            };
-        }));
-
+        // Basic response without enrichment for testing
         res.json({
             success: true,
             data: {
-                companies: enrichedCompanies,
+                companies: companiesList,
                 pagination: {
                     total,
                     page: parseInt(page),
                     pages: Math.ceil(total / parseInt(limit))
                 },
                 filters: {
-                    industries: await getUniqueIndustries(),
-                    plans: await getSubscriptionPlans(),
+                    industries: [],
+                    plans: ['Basic', 'Professional', 'Enterprise'],
                     statuses: ['active', 'inactive', 'suspended']
                 }
             }
         });
 
     } catch (error) {
-        console.error('Error fetching companies:', error);
+        console.error('Detailed error in fetching companies:', error);
         res.status(500).json({
             success: false,
-            message: 'Error fetching companies'
+            message: 'Error fetching companies',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 });
