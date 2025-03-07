@@ -1956,10 +1956,11 @@ app.post('/api/users/2fa/toggle', verifyToken, async (req, res) => {
 // Company Management Routes
 
 // Create new company
-// Create new company
 app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
     try {
-        console.log('Received company creation request:', req.body);
+        console.log('Starting company creation process');
+        console.log('Request body:', req.body);
+        console.log('MongoDB connection status:', client.topology?.isConnected());
 
         const {
             name,
@@ -1975,50 +1976,58 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
             sendWelcomeEmail = true
         } = req.body;
 
-        // Validate required fields
-        if (!name || !industry || !contactEmail || !subscriptionPlan || !adminEmail || !adminName) {
-            return res.status(400).json({
-                success: false,
-                message: 'Missing required fields'
-            });
-        }
-
-        // Validate company email domain
-        if (!isValidCompanyEmail(contactEmail) || !isValidCompanyEmail(adminEmail)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Generic email domains are not allowed. Please use a company domain.'
-            });
-        }
-
-        // Check if company name exists
-        const existingCompany = await companies.findOne({ 
-            name: { $regex: new RegExp(`^${name}$`, 'i') }
+        // Validation logging
+        console.log('Validating required fields:', {
+            name,
+            industry,
+            contactEmail,
+            subscriptionPlan,
+            adminEmail,
+            adminName
         });
 
-        if (existingCompany) {
+        // Validate required fields
+        if (!name || !industry || !contactEmail || !subscriptionPlan || !adminEmail || !adminName) {
+            console.log('Missing required fields');
             return res.status(400).json({
                 success: false,
-                message: 'Company name already exists'
+                message: 'Missing required fields',
+                missingFields: {
+                    name: !name,
+                    industry: !industry,
+                    contactEmail: !contactEmail,
+                    subscriptionPlan: !subscriptionPlan,
+                    adminEmail: !adminEmail,
+                    adminName: !adminName
+                }
             });
         }
 
-        // Get subscription plan details
-        const plan = await subscription_plans.findOne({ name: subscriptionPlan });
-        if (!plan) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid subscription plan'
-            });
-        }
-
-        // Start MongoDB transaction
+        // Start MongoDB session
         const session = await client.startSession();
-        let companyId;
+        console.log('MongoDB session started');
 
         try {
             await session.withTransaction(async () => {
-                // Create company
+                console.log('Starting transaction');
+
+                // Check for existing company
+                const existingCompany = await companies.findOne({ 
+                    name: { $regex: new RegExp(`^${name}$`, 'i') }
+                });
+
+                if (existingCompany) {
+                    throw new Error('Company name already exists');
+                }
+
+                // Get subscription plan
+                const plan = await subscription_plans.findOne({ name: subscriptionPlan });
+                if (!plan) {
+                    throw new Error('Invalid subscription plan');
+                }
+
+                console.log('Creating company document');
+                // Create company document
                 const company = {
                     name,
                     industry,
@@ -2051,10 +2060,13 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
                     }
                 };
 
+                console.log('Inserting company document');
                 const companyResult = await companies.insertOne(company, { session });
-                companyId = companyResult.insertedId;
+                const companyId = companyResult.insertedId;
+                console.log('Company created with ID:', companyId);
 
-                // Create company admin account
+                // Create admin user
+                console.log('Creating admin user');
                 const adminPassword = crypto.randomBytes(12).toString('base64url');
                 const hashedPassword = await bcrypt.hash(adminPassword, 12);
 
@@ -2073,8 +2085,10 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
                 };
 
                 await company_users.insertOne(adminUser, { session });
+                console.log('Admin user created');
 
-                // Create subscription record
+                // Create subscription
+                console.log('Creating subscription');
                 const subscription = {
                     companyId: companyId,
                     plan: plan._id,
@@ -2088,8 +2102,10 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
                 };
 
                 await company_subscriptions.insertOne(subscription, { session });
+                console.log('Subscription created');
 
-                // Initialize company-specific collections
+                // Initialize collections
+                console.log('Initializing company collections');
                 await Promise.all([
                     database.createCollection(`company_${companyId}_employees`, { session }),
                     database.createCollection(`company_${companyId}_departments`, { session }),
@@ -2104,31 +2120,12 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
                     createdBy: new ObjectId(req.user.userId),
                     status: 'active'
                 }, { session });
+
+                console.log('Transaction completed successfully');
+                return { companyId, adminPassword };
             });
 
-            // Create audit log
-            await createCompanyAuditLog(
-                'COMPANY_CREATED',
-                companyId,
-                req.user.userId,
-                {
-                    companyName: name,
-                    adminEmail,
-                    subscriptionPlan
-                }
-            );
-
-            // Create notification
-            await createNotification(
-                companyId,
-                'COMPANY_WELCOME',
-                `Welcome to WorkWise Pro! Your company ${name} has been successfully registered.`,
-                {
-                    companyName: name,
-                    adminEmail: adminEmail
-                }
-            );
-
+            console.log('Company creation successful');
             res.status(201).json({
                 success: true,
                 message: 'Company created successfully',
@@ -2141,10 +2138,11 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
                 }
             });
 
-        } catch (error) {
-            console.error('Transaction error:', error);
-            throw error;
+        } catch (transactionError) {
+            console.error('Transaction error:', transactionError);
+            throw transactionError;
         } finally {
+            console.log('Ending session');
             await session.endSession();
         }
 
@@ -2152,10 +2150,12 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
         console.error('Error creating company:', error);
         res.status(500).json({
             success: false,
-            message: 'Error creating company'
+            message: 'Error creating company',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 });
+
 // Get all companies with filtering and pagination
 app.get('/api/companies', verifyToken, verifyAdmin, cacheMiddleware(300), async (req, res) => {
     try {
