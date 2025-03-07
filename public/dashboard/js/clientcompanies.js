@@ -34,7 +34,7 @@
             }
 
             // Initialize components
-            this.initializeStyles();
+           
             this.initializeElements();
             this.initializeEventListeners();
             this.loadInitialData();
@@ -127,6 +127,53 @@
                 this.showTableLoader(false);
             }
         }
+
+        async initializeCompanies() {
+    try {
+        console.log('Initializing Companies module...');
+        
+        // Check if script is already loaded
+        const existingScript = document.querySelector('script[src*="clientcompanies.js"]');
+        if (existingScript) {
+            console.log('Removing existing Companies script...');
+            existingScript.remove();
+        }
+
+        // Create and append the script
+        const script = document.createElement('script');
+        script.src = `${this.baseUrl}/dashboard/js/clientcompanies.js`;
+        console.log('Loading Companies script from:', script.src);
+
+        await new Promise((resolve, reject) => {
+            script.onload = () => {
+                console.log('Companies script loaded successfully');
+                resolve();
+            };
+            script.onerror = (error) => {
+                console.error('Error loading script:', error);
+                reject(error);
+            };
+            document.body.appendChild(script);
+        });
+
+        // Add a delay to ensure script is processed
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Check if CompaniesManager is available
+        if (typeof window.CompaniesManager === 'undefined') {
+            throw new Error('CompaniesManager class not found after script load');
+        }
+
+        console.log('Creating new CompaniesManager instance...');
+        const instance = new window.CompaniesManager();
+        this.moduleInstances.set('companies', instance);
+        console.log('CompaniesManager initialized successfully');
+
+    } catch (error) {
+        console.error('Error initializing companies module:', error);
+        throw error;
+    }
+}
 
         async loadStatistics() {
             try {
