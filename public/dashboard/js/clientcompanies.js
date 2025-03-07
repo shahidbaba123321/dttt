@@ -6,7 +6,10 @@
 
     class CompaniesManager {
         constructor(apiBaseUrl) {
+            // API Configuration
             this.apiBaseUrl = apiBaseUrl || 'https://18.215.160.136.nip.io/api';
+            
+            // State Management
             this.currentPage = 1;
             this.itemsPerPage = 10;
             this.totalItems = 0;
@@ -21,6 +24,8 @@
             this.sortOrder = 'desc';
             this.selectedCompanyId = null;
             this.industries = new Set();
+
+            // Add loader styles
             this.addLoaderStyles();
             
             // Initialize after DOM is ready
@@ -33,22 +38,110 @@
 
         addLoaderStyles() {
             const styles = `
-                .loader {
+                .table-loader {
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    gap: var(--spacing-md);
-                    padding: var(--spacing-xl);
-                    color: var(--text-secondary);
+                    justify-content: center;
+                    padding: 2rem;
+                    background: var(--bg-primary);
                 }
-                
-                .loader i {
+                .table-loader i {
                     font-size: 2rem;
                     color: var(--primary-color);
+                    margin-bottom: 1rem;
                 }
-                
-                .loader p {
+                .table-loader p {
+                    color: var(--text-secondary);
                     margin: 0;
+                }
+                .loading-row {
+                    background: var(--bg-secondary);
+                }
+                .empty-state {
+                    text-align: center;
+                    padding: 2rem;
+                }
+                .empty-state i {
+                    font-size: 3rem;
+                    color: var(--text-tertiary);
+                    margin-bottom: 1rem;
+                }
+                .error-state {
+                    text-align: center;
+                    padding: 2rem;
+                }
+                .error-state i {
+                    font-size: 3rem;
+                    color: var(--danger-color);
+                    margin-bottom: 1rem;
+                }
+                .company-avatar {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: 500;
+                    font-size: 1.2rem;
+                }
+                .company-name-cell {
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                }
+                .company-info {
+                    display: flex;
+                    flex-direction: column;
+                }
+                .company-name {
+                    font-weight: 500;
+                    color: var(--text-primary);
+                }
+                .company-email {
+                    font-size: 0.875rem;
+                    color: var(--text-tertiary);
+                }
+                .status-badge {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    padding: 0.25rem 0.75rem;
+                    border-radius: 9999px;
+                    font-size: 0.875rem;
+                    font-weight: 500;
+                }
+                .status-active {
+                    background-color: #DEF7EC;
+                    color: #03543F;
+                }
+                .status-inactive {
+                    background-color: #FDE8E8;
+                    color: #9B1C1C;
+                }
+                .status-suspended {
+                    background-color: #FEF3C7;
+                    color: #92400E;
+                }
+                .action-buttons {
+                    display: flex;
+                    gap: 0.5rem;
+                    align-items: center;
+                }
+                .btn-icon {
+                    padding: 0.5rem;
+                    border: none;
+                    background: none;
+                    color: var(--text-secondary);
+                    cursor: pointer;
+                    border-radius: var(--border-radius-sm);
+                    transition: all 0.2s;
+                }
+                .btn-icon:hover {
+                    background-color: var(--bg-tertiary);
+                    color: var(--primary-color);
                 }
             `;
 
@@ -57,23 +150,15 @@
             document.head.appendChild(styleSheet);
         }
 
-                        initialize() {
+        initialize() {
             try {
                 console.log('Initializing CompaniesManager...');
-                
-                // Delay initialization slightly to ensure DOM is ready
-                setTimeout(async () => {
-                    try {
-                        await this.initializeEventListeners();
-                        await this.loadCompanies();
-                        await this.loadStatistics();
-                    } catch (error) {
-                        console.error('Error during delayed initialization:', error);
-                    }
-                }, 100);
-                
+                this.initializeEventListeners();
+                this.loadCompanies();
+                this.loadStatistics();
             } catch (error) {
                 console.error('Error initializing CompaniesManager:', error);
+                this.showNotification('Error initializing companies module', 'error');
             }
         }
 
@@ -106,13 +191,14 @@
                 this.clearFilters();
             });
 
-            // Pagination
+            // Items Per Page
             document.getElementById('itemsPerPage')?.addEventListener('change', (e) => {
                 this.itemsPerPage = parseInt(e.target.value);
                 this.currentPage = 1;
                 this.loadCompanies();
             });
 
+            // Pagination Navigation
             document.getElementById('prevPage')?.addEventListener('click', () => {
                 if (this.currentPage > 1) {
                     this.currentPage--;
@@ -121,7 +207,8 @@
             });
 
             document.getElementById('nextPage')?.addEventListener('click', () => {
-                if (this.currentPage < Math.ceil(this.totalItems / this.itemsPerPage)) {
+                const totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+                if (this.currentPage < totalPages) {
                     this.currentPage++;
                     this.loadCompanies();
                 }
@@ -137,182 +224,123 @@
                 this.loadCompanies(true);
                 this.loadStatistics();
             });
-
-            // Company Form
-            document.getElementById('companyForm')?.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.saveCompany();
-            });
-
-            // Modal Close Buttons
-            document.querySelectorAll('.close-modal, [data-dismiss="modal"]').forEach(button => {
-                button.addEventListener('click', () => {
-                    this.closeModals();
-                });
-            });
-
-            // Table Selection
-            document.getElementById('selectAllCompanies')?.addEventListener('change', (e) => {
-                this.toggleAllCompanies(e.target.checked);
-            });
-
-            // Tab Navigation
-            document.querySelectorAll('.tab-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    this.switchTab(e.target.dataset.tab);
-                });
-            });
-
-            // Close modals when clicking outside
-            window.addEventListener('click', (e) => {
-                if (e.target.classList.contains('modal')) {
-                    this.closeModals();
-                }
-            });
-
-            // Handle escape key
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    this.closeModals();
-                }
-            });
         }
 
-        showTableLoader() {
-            const tbody = document.getElementById('companiesTableBody');
-            if (!tbody) return;
+        // Utility function for debouncing
+        debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
 
-            // Add loader styles if not already added
-            if (!document.querySelector('#table-loader-styles')) {
-                const styles = `
-                    .table-loader {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        padding: 2rem;
-                        background: var(--bg-primary);
+        clearFilters() {
+            this.filters = {
+                search: '',
+                industry: '',
+                status: '',
+                plan: ''
+            };
+
+            // Reset filter inputs
+            document.getElementById('companySearch').value = '';
+            document.getElementById('industryFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('planFilter').value = '';
+
+            this.currentPage = 1;
+            this.loadCompanies();
+        }
+
+            async loadCompanies(showLoader = true) {
+            try {
+                if (showLoader) {
+                    this.showTableLoader();
+                }
+
+                console.log('Loading companies with params:', {
+                    page: this.currentPage,
+                    limit: this.itemsPerPage,
+                    sortField: this.sortField,
+                    sortOrder: this.sortOrder,
+                    ...this.filters
+                });
+
+                const queryParams = new URLSearchParams({
+                    page: this.currentPage.toString(),
+                    limit: this.itemsPerPage.toString(),
+                    sortField: this.sortField,
+                    sortOrder: this.sortOrder,
+                    ...(this.filters.search && { search: this.filters.search }),
+                    ...(this.filters.industry && { industry: this.filters.industry }),
+                    ...(this.filters.status && { status: this.filters.status }),
+                    ...(this.filters.plan && { plan: this.filters.plan })
+                });
+
+                const response = await this.makeRequest(`/companies?${queryParams}`, 'GET');
+
+                if (response.success) {
+                    console.log('Companies data received:', response.data);
+                    
+                    this.companies = response.data.companies || [];
+                    this.totalItems = response.data.pagination.total || 0;
+
+                    const tbody = document.getElementById('companiesTableBody');
+                    if (tbody) {
+                        if (this.companies.length === 0) {
+                            tbody.innerHTML = this.getEmptyStateHtml();
+                        } else {
+                            this.renderCompaniesTable();
+                        }
+
+                        this.updatePagination();
+                        
+                        if (response.data.filters) {
+                            this.updateFilters(response.data.filters);
+                        }
                     }
-                    .table-loader i {
-                        font-size: 2rem;
-                        color: var(--primary-color);
-                        margin-bottom: 1rem;
-                    }
-                    .table-loader p {
-                        color: var(--text-secondary);
-                        margin: 0;
-                    }
-                    .loading-row {
-                        background: var(--bg-secondary);
-                    }
-                `;
-                const styleSheet = document.createElement('style');
-                styleSheet.id = 'table-loader-styles';
-                styleSheet.textContent = styles;
-                document.head.appendChild(styleSheet);
+                } else {
+                    throw new Error(response.message || 'Failed to load companies');
+                }
+            } catch (error) {
+                console.error('Error loading companies:', error);
+                
+                const tbody = document.getElementById('companiesTableBody');
+                if (tbody) {
+                    tbody.innerHTML = this.getErrorStateHtml();
+                }
+
+                this.showNotification('Error loading companies. Please try again.', 'error');
+            } finally {
+                if (showLoader) {
+                    this.hideTableLoader();
+                }
             }
+        }
 
-            tbody.innerHTML = `
-                <tr class="loading-row">
-                    <td colspan="8">
-                        <div class="table-loader">
-                            <i class="fas fa-spinner fa-spin"></i>
-                            <p>Loading companies data...</p>
+        getEmptyStateHtml() {
+            return `
+                <tr>
+                    <td colspan="8" class="text-center py-4">
+                        <div class="empty-state">
+                            <i class="fas fa-building text-muted"></i>
+                            <p>No companies found</p>
+                            <button class="btn btn-primary mt-3" onclick="companiesManager.showCompanyModal()">
+                                <i class="fas fa-plus"></i> Add New Company
+                            </button>
                         </div>
                     </td>
                 </tr>
             `;
-
-            // Disable interactive elements while loading
-            const filterElements = document.querySelectorAll('.filter-select, .search-box input');
-            filterElements.forEach(element => {
-                element.disabled = true;
-            });
         }
 
-        hideTableLoader() {
-            // Re-enable interactive elements
-            const filterElements = document.querySelectorAll('.filter-select, .search-box input');
-            filterElements.forEach(element => {
-                element.disabled = false;
-            });
-
-            // The actual table content will be replaced by renderCompaniesTable
-            // But we'll ensure the loader is removed if renderCompaniesTable hasn't run
-            const tbody = document.getElementById('companiesTableBody');
-            if (tbody && tbody.querySelector('.loading-row')) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="8" class="text-center py-4">
-                            <div class="empty-state">
-                                <i class="fas fa-building text-muted"></i>
-                                <p>No data available</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }
-        }
-
-        
-
-                // Data Loading Methods
-        async loadCompanies(showLoader = true) {
-    try {
-        if (showLoader) {
-            this.showTableLoader();
-        }
-
-        console.log('Loading companies with params:', {
-            page: this.currentPage,
-            limit: this.itemsPerPage,
-            sortField: this.sortField,
-            sortOrder: this.sortOrder,
-            ...this.filters
-        });
-
-        const response = await this.makeRequest('/companies', 'GET', null, {
-            page: this.currentPage,
-            limit: this.itemsPerPage,
-            sortField: this.sortField,
-            sortOrder: this.sortOrder,
-            ...this.filters
-        });
-
-        if (response.success) {
-            console.log('Companies data received:', response.data);
-            
-            this.companies = response.data.companies || [];
-            this.totalItems = response.data.pagination.total || 0;
-
-            const tbody = document.getElementById('companiesTableBody');
-            if (tbody) {
-                if (this.companies.length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="8" class="text-center py-4">
-                                <div class="empty-state">
-                                    <i class="fas fa-building text-muted"></i>
-                                    <p>No companies found</p>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                } else {
-                    this.renderCompaniesTable();
-                }
-
-                this.updatePagination();
-            }
-        } else {
-            throw new Error(response.message || 'Failed to load companies');
-        }
-    } catch (error) {
-        console.error('Error loading companies:', error);
-        
-        const tbody = document.getElementById('companiesTableBody');
-        if (tbody) {
-            tbody.innerHTML = `
+        getErrorStateHtml() {
+            return `
                 <tr>
                     <td colspan="8" class="text-center py-4">
                         <div class="error-state">
@@ -328,129 +356,19 @@
             `;
         }
 
-        this.showNotification('Error loading companies. Please try again.', 'error');
-    } finally {
-        if (showLoader) {
-            this.hideTableLoader();
-        }
-    }
-}
-        
-        async loadStatistics() {
-    try {
-        console.log('Loading company statistics...');
-        const response = await this.makeRequest('/companies/overall-statistics', 'GET');
-        
-        if (response.success) {
-            const stats = response.statistics;
-            
-            // Update statistics cards if they exist
-            const statsMapping = {
-                'totalCompanies': stats.total || 0,
-                'activeCompanies': stats.active || 0,
-                'pendingRenewals': stats.pendingRenewals || 0,
-                'inactiveCompanies': stats.inactive || 0
-            };
-
-            Object.entries(statsMapping).forEach(([id, value]) => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.textContent = value;
-                }
-            });
-
-            // Animate numbers if elements exist
-            if (document.querySelector('.stat-details')) {
-                this.animateNumbers();
-            }
-        }
-    } catch (error) {
-        console.error('Error loading statistics:', error);
-        // Update stats cards to show error state
-        ['totalCompanies', 'activeCompanies', 'pendingRenewals', 'inactiveCompanies'].forEach(id => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.textContent = '-';
-                element.parentElement.classList.add('error-state');
-            }
-        });
-    }
-}
-        // API Request Handler
-     async makeRequest(endpoint, method = 'GET', data = null) {
-    try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            throw new Error('No authentication token found');
-        }
-
-        const headers = {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        };
-
-        const config = {
-            method,
-            headers,
-            credentials: 'include'
-        };
-
-        if (data && (method === 'POST' || method === 'PUT')) {
-            config.body = JSON.stringify(data);
-        }
-
-        // Log the request details
-        console.log(`API Request: ${method} ${endpoint}`, {
-            headers: config.headers,
-            body: config.body
-        });
-
-        const response = await fetch(`${this.apiBaseUrl}${endpoint}`, config);
-        const responseData = await response.json();
-
-        // Log the response
-        console.log(`API Response for ${endpoint}:`, responseData);
-
-        if (!response.ok) {
-            console.error('API Error Response:', responseData);
-            throw new Error(responseData.message || `API request failed with status ${response.status}`);
-        }
-
-        return responseData;
-    } catch (error) {
-        console.error('API Request Error:', error);
-        throw error;
-    }
-}
-        // UI Rendering Methods
         renderCompaniesTable() {
             const tbody = document.getElementById('companiesTableBody');
-            tbody.innerHTML = '';
+            if (!tbody) return;
 
-            if (this.companies.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="8" class="text-center py-4">
-                            <div class="empty-state">
-                                <i class="fas fa-building text-muted"></i>
-                                <p>No companies found</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            this.companies.forEach(company => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
+            tbody.innerHTML = this.companies.map(company => `
+                <tr>
                     <td>
                         <input type="checkbox" class="company-checkbox" 
                                data-company-id="${company._id}">
                     </td>
                     <td>
                         <div class="company-name-cell">
-                            <div class="company-avatar">
+                            <div class="company-avatar" style="background-color: ${this.getCompanyColor(company.name)}">
                                 ${this.getCompanyInitials(company.name)}
                             </div>
                             <div class="company-info">
@@ -463,7 +381,7 @@
                     <td>
                         <div class="user-count">
                             <i class="fas fa-users"></i>
-                            ${company.metrics.users.total}
+                            ${company.metrics?.users || 0}
                         </div>
                     </td>
                     <td>
@@ -521,14 +439,146 @@
                             </div>
                         </div>
                     </td>
-                `;
-                tbody.appendChild(tr);
-            });
+                </tr>
+            `).join('');
 
-            // Initialize dropdowns
             this.initializeDropdowns();
         }
-                // Modal Management
+
+        updateFilters(filters) {
+            // Update industry filter
+            const industrySelect = document.getElementById('industryFilter');
+            if (industrySelect && filters.industries) {
+                this.updateSelectOptions(industrySelect, filters.industries);
+            }
+
+            // Update plan filter
+            const planSelect = document.getElementById('planFilter');
+            if (planSelect && filters.plans) {
+                this.updateSelectOptions(planSelect, filters.plans);
+            }
+
+            // Update status filter
+            const statusSelect = document.getElementById('statusFilter');
+            if (statusSelect && filters.statuses) {
+                this.updateSelectOptions(statusSelect, filters.statuses);
+            }
+        }
+
+        updateSelectOptions(select, options) {
+            const currentValue = select.value;
+            
+            // Clear existing options except the first one
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+
+            // Add new options
+            options.forEach(option => {
+                const optionElement = new Option(option, option);
+                select.add(optionElement);
+            });
+
+            // Restore selected value if it exists in new options
+            if (options.includes(currentValue)) {
+                select.value = currentValue;
+            }
+        }
+
+        showTableLoader() {
+            const tbody = document.getElementById('companiesTableBody');
+            if (!tbody) return;
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8">
+                        <div class="table-loader">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading companies data...</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        hideTableLoader() {
+            // Table content will be replaced by renderCompaniesTable
+        }
+
+            updatePagination() {
+            const totalPages = Math.ceil(this.totalItems / this.itemsPerPage);
+            
+            // Update range text
+            document.getElementById('startRange').textContent = 
+                this.totalItems ? ((this.currentPage - 1) * this.itemsPerPage) + 1 : 0;
+            document.getElementById('endRange').textContent = 
+                Math.min(this.currentPage * this.itemsPerPage, this.totalItems);
+            document.getElementById('totalItems').textContent = this.totalItems;
+
+            // Update pagination buttons
+            const prevPageBtn = document.getElementById('prevPage');
+            const nextPageBtn = document.getElementById('nextPage');
+            if (prevPageBtn) prevPageBtn.disabled = this.currentPage === 1;
+            if (nextPageBtn) nextPageBtn.disabled = this.currentPage === totalPages;
+
+            // Generate page numbers
+            this.renderPageNumbers(totalPages);
+        }
+
+        renderPageNumbers(totalPages) {
+            const pageNumbers = document.getElementById('pageNumbers');
+            if (!pageNumbers) return;
+
+            pageNumbers.innerHTML = '';
+
+            let startPage = Math.max(1, this.currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+
+            if (endPage - startPage < 4) {
+                startPage = Math.max(1, endPage - 4);
+            }
+
+            // First page
+            if (startPage > 1) {
+                pageNumbers.appendChild(this.createPageButton(1));
+                if (startPage > 2) {
+                    pageNumbers.appendChild(this.createEllipsis());
+                }
+            }
+
+            // Page numbers
+            for (let i = startPage; i <= endPage; i++) {
+                pageNumbers.appendChild(this.createPageButton(i));
+            }
+
+            // Last page
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    pageNumbers.appendChild(this.createEllipsis());
+                }
+                pageNumbers.appendChild(this.createPageButton(totalPages));
+            }
+        }
+
+        createPageButton(pageNum) {
+            const button = document.createElement('button');
+            button.textContent = pageNum;
+            button.className = pageNum === this.currentPage ? 'active' : '';
+            button.addEventListener('click', () => {
+                this.currentPage = pageNum;
+                this.loadCompanies();
+            });
+            return button;
+        }
+
+        createEllipsis() {
+            const span = document.createElement('span');
+            span.className = 'pagination-ellipsis';
+            span.textContent = '...';
+            return span;
+        }
+
+        // Company Operations
         async showCompanyModal(companyId = null) {
             this.selectedCompanyId = companyId;
             const modal = document.getElementById('companyModal');
@@ -654,51 +704,6 @@
             }
         }
 
-        async deleteCompany(companyId) {
-            if (!confirm('Are you sure you want to delete this company? This action cannot be undone.')) {
-                return;
-            }
-
-            try {
-                const response = await this.makeRequest(`/companies/${companyId}`, 'DELETE');
-                
-                if (response.success) {
-                    this.showNotification('Company deleted successfully', 'success');
-                    this.loadCompanies();
-                    this.loadStatistics();
-                }
-            } catch (error) {
-                console.error('Error deleting company:', error);
-                this.showNotification('Error deleting company', 'error');
-            }
-        }
-
-        async toggleCompanyStatus(companyId) {
-            try {
-                const company = this.companies.find(c => c._id === companyId);
-                if (!company) return;
-
-                const newStatus = company.status === 'active' ? 'inactive' : 'active';
-                const response = await this.makeRequest(
-                    `/companies/${companyId}/status`,
-                    'PATCH',
-                    { status: newStatus }
-                );
-
-                if (response.success) {
-                    this.showNotification(
-                        `Company ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`,
-                        'success'
-                    );
-                    this.loadCompanies();
-                }
-            } catch (error) {
-                console.error('Error toggling company status:', error);
-                this.showNotification('Error updating company status', 'error');
-            }
-        }
-
-        // Form Validation
         validateCompanyForm(data) {
             // Company name validation
             if (!data.name || data.name.length < 2) {
@@ -741,65 +746,13 @@
         }
 
             // Utility Functions
-        debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        formatDate(dateString) {
-            if (!dateString) return 'N/A';
-            return new Date(dateString).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            });
-        }
-
-        formatTimeAgo(timestamp) {
-            if (!timestamp) return 'N/A';
-            
-            const seconds = Math.floor((new Date() - new Date(timestamp)) / 1000);
-            
-            let interval = seconds / 31536000;
-            if (interval > 1) return Math.floor(interval) + ' years ago';
-            
-            interval = seconds / 2592000;
-            if (interval > 1) return Math.floor(interval) + ' months ago';
-            
-            interval = seconds / 86400;
-            if (interval > 1) return Math.floor(interval) + ' days ago';
-            
-            interval = seconds / 3600;
-            if (interval > 1) return Math.floor(interval) + ' hours ago';
-            
-            interval = seconds / 60;
-            if (interval > 1) return Math.floor(interval) + ' minutes ago';
-            
-            return 'just now';
-        }
-
-        formatCurrency(amount) {
-            return new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD'
-            }).format(amount);
-        }
-
-        formatStorageSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        isGenericEmail(email) {
+            const genericDomains = [
+                'gmail.com', 'yahoo.com', 'hotmail.com', 
+                'outlook.com', 'aol.com', 'icloud.com'
+            ];
+            const domain = email.split('@')[1].toLowerCase();
+            return genericDomains.includes(domain);
         }
 
         getCompanyInitials(name) {
@@ -809,6 +762,45 @@
                 .join('')
                 .toUpperCase()
                 .slice(0, 2);
+        }
+
+        getCompanyColor(name) {
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) {
+                hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const hue = hash % 360;
+            return `hsl(${hue}, 70%, 45%)`;
+        }
+
+        formatSubscriptionStatus(subscription) {
+            const status = subscription.status.toLowerCase();
+            const expiryDate = new Date(subscription.nextBillingDate);
+            const daysUntilExpiry = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+
+            if (status === 'active' && daysUntilExpiry <= 7) {
+                return `Renews in ${daysUntilExpiry} days`;
+            }
+            return this.capitalizeFirstLetter(status);
+        }
+
+        formatLastActive(timestamp) {
+            if (!timestamp) return 'Never';
+            
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+
+            if (diffInSeconds < 60) return 'Just now';
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+            if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+            
+            return date.toLocaleDateString();
+        }
+
+        capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
         }
 
         escapeHtml(unsafe) {
@@ -821,13 +813,81 @@
                 .replace(/'/g, "&#039;");
         }
 
-        isGenericEmail(email) {
-            const genericDomains = [
-                'gmail.com', 'yahoo.com', 'hotmail.com', 
-                'outlook.com', 'aol.com', 'icloud.com'
-            ];
-            const domain = email.split('@')[1].toLowerCase();
-            return genericDomains.includes(domain);
+        // API Request Handler
+        async makeRequest(endpoint, method = 'GET', data = null, queryParams = null) {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('No authentication token found');
+                }
+
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+
+                const config = {
+                    method,
+                    headers,
+                    credentials: 'include'
+                };
+
+                if (data && (method === 'POST' || method === 'PUT')) {
+                    config.body = JSON.stringify(data);
+                }
+
+                let url = `${this.apiBaseUrl}${endpoint}`;
+                if (queryParams) {
+                    const params = new URLSearchParams(queryParams);
+                    url += `?${params.toString()}`;
+                }
+
+                console.log(`API Request: ${method} ${endpoint}`, {
+                    headers: config.headers,
+                    body: config.body
+                });
+
+                const response = await fetch(url, config);
+                const responseData = await response.json();
+
+                console.log(`API Response for ${endpoint}:`, responseData);
+
+                if (!response.ok) {
+                    throw new Error(responseData.message || `API request failed with status ${response.status}`);
+                }
+
+                return responseData;
+            } catch (error) {
+                console.error('API Request Error:', error);
+                throw error;
+            }
+        }
+
+        // Modal Management
+        closeModals() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('show');
+            });
+            document.body.style.overflow = '';
+        }
+
+        initializeDropdowns() {
+            document.querySelectorAll('.dropdown').forEach(dropdown => {
+                const button = dropdown.querySelector('.btn-icon');
+                const menu = dropdown.querySelector('.dropdown-menu');
+
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    menu.classList.toggle('show');
+                });
+            });
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+            });
         }
 
         // Notification System
@@ -866,56 +926,15 @@
             }
         }
 
-        // Modal Management
-        closeModals() {
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.classList.remove('show');
-            });
-            document.body.style.overflow = '';
-        }
-
         // Cleanup
         cleanup() {
             // Remove event listeners
             document.removeEventListener('click', this.handleOutsideClick);
             
-            // Destroy charts if any
-            if (this.activityChart) {
-                this.activityChart.destroy();
+            // Clear any timeouts/intervals
+            if (this.searchDebounceTimeout) {
+                clearTimeout(this.searchDebounceTimeout);
             }
-            
-            // Clear intervals/timeouts
-            if (this.refreshInterval) {
-                clearInterval(this.refreshInterval);
-            }
-
-            // Clear any other resources
-            this.companies = [];
-            this.selectedCompanyId = null;
-        }
-
-        // Animation
-        animateNumbers() {
-            document.querySelectorAll('.stat-details h3').forEach(element => {
-                const finalValue = parseInt(element.textContent);
-                this.animateValue(element, 0, finalValue, 1000);
-            });
-        }
-
-        animateValue(element, start, end, duration) {
-            if (start === end) return;
-            const range = end - start;
-            const increment = end > start ? 1 : -1;
-            const stepTime = Math.abs(Math.floor(duration / range));
-            let current = start;
-            
-            const timer = setInterval(() => {
-                current += increment;
-                element.textContent = current;
-                if (current === end) {
-                    clearInterval(timer);
-                }
-            }, stepTime);
         }
     }
 
