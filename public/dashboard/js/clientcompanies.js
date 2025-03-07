@@ -257,64 +257,94 @@
         
 
                 // Data Loading Methods
-                        async loadCompanies(showLoader = true) {
-            try {
-                if (showLoader && document.getElementById('companiesTableBody')) {
-                    this.showTableLoader();
-                }
+        async loadCompanies(showLoader = true) {
+    try {
+        if (showLoader && document.getElementById('companiesTableBody')) {
+            this.showTableLoader();
+        }
 
-                const queryParams = new URLSearchParams({
-                    page: this.currentPage,
-                    limit: this.itemsPerPage,
-                    sortField: this.sortField,
-                    sortOrder: this.sortOrder,
-                    ...this.filters
-                });
+        // Log the request parameters
+        console.log('Loading companies with params:', {
+            page: this.currentPage,
+            limit: this.itemsPerPage,
+            sortField: this.sortField,
+            sortOrder: this.sortOrder,
+            ...this.filters
+        });
 
-                console.log('Loading companies with params:', queryParams.toString());
-                const response = await this.makeRequest(`/companies?${queryParams}`, 'GET');
+        const queryParams = new URLSearchParams({
+            page: this.currentPage.toString(),
+            limit: this.itemsPerPage.toString(),
+            sortField: this.sortField,
+            sortOrder: this.sortOrder,
+            ...(this.filters.search && { search: this.filters.search }),
+            ...(this.filters.industry && { industry: this.filters.industry }),
+            ...(this.filters.status && { status: this.filters.status }),
+            ...(this.filters.plan && { plan: this.filters.plan })
+        });
 
-                if (response.success) {
-                    this.companies = response.data.companies;
-                    this.totalItems = response.data.pagination.total;
-                    
-                    if (document.getElementById('companiesTableBody')) {
-                        this.updatePagination();
-                        this.renderCompaniesTable();
-                        if (response.data.filters?.industries) {
-                            this.updateIndustryFilter(response.data.filters.industries);
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading companies:', error);
-                this.showNotification?.('Error loading companies. Please try again.', 'error');
-                
-                // Show error state in table
-                const tbody = document.getElementById('companiesTableBody');
-                if (tbody) {
+        const response = await this.makeRequest(`/companies?${queryParams}`, 'GET');
+
+        if (response.success) {
+            console.log('Companies data received:', response.data);
+            
+            this.companies = response.data.companies || [];
+            this.totalItems = response.data.pagination.total || 0;
+
+            const tbody = document.getElementById('companiesTableBody');
+            if (tbody) {
+                if (this.companies.length === 0) {
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="8" class="text-center py-4">
-                                <div class="error-state">
-                                    <i class="fas fa-exclamation-circle text-danger"></i>
-                                    <p>Error loading companies data</p>
-                                    <button class="btn btn-outline-primary btn-sm mt-2" 
-                                            onclick="companiesManager.loadCompanies()">
-                                        <i class="fas fa-redo"></i> Retry
-                                    </button>
+                                <div class="empty-state">
+                                    <i class="fas fa-building text-muted"></i>
+                                    <p>No companies found</p>
                                 </div>
                             </td>
                         </tr>
                     `;
+                } else {
+                    this.renderCompaniesTable();
                 }
-            } finally {
-                if (showLoader) {
-                    this.hideTableLoader();
+
+                this.updatePagination();
+                
+                if (response.data.filters?.industries) {
+                    this.updateIndustryFilter(response.data.filters.industries);
                 }
             }
+        } else {
+            throw new Error(response.message || 'Failed to load companies');
         }
+    } catch (error) {
+        console.error('Error loading companies:', error);
         
+        const tbody = document.getElementById('companiesTableBody');
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-4">
+                        <div class="error-state">
+                            <i class="fas fa-exclamation-circle text-danger"></i>
+                            <p>Error loading companies data</p>
+                            <button class="btn btn-outline-primary btn-sm mt-2" 
+                                    onclick="companiesManager.loadCompanies()">
+                                <i class="fas fa-redo"></i> Retry
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        this.showNotification('Error loading companies. Please try again.', 'error');
+    } finally {
+        if (showLoader) {
+            this.hideTableLoader();
+        }
+    }
+}
                    async loadStatistics() {
     try {
         console.log('Loading company statistics...');
@@ -356,43 +386,51 @@
     }
 }
         // API Request Handler
-                async makeRequest(endpoint, method = 'GET', data = null) {
-            try {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    throw new Error('No authentication token found');
-                }
-
-                const headers = {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                };
-
-                const config = {
-                    method,
-                    headers,
-                    credentials: 'include'
-                };
-
-                if (data && (method === 'POST' || method === 'PUT')) {
-                    config.body = JSON.stringify(data);
-                }
-
-                console.log(`Making ${method} request to:`, `${this.apiBaseUrl}${endpoint}`);
-                const response = await fetch(`${this.apiBaseUrl}${endpoint}`, config);
-                const responseData = await response.json();
-
-                if (!response.ok) {
-                    console.error('API Error Response:', responseData);
-                    throw new Error(responseData.message || `API request failed with status ${response.status}`);
-                }
-
-                return responseData;
-            } catch (error) {
-                console.error('API Request Error:', error);
-                throw error;
-            }
+     async makeRequest(endpoint, method = 'GET', data = null) {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            throw new Error('No authentication token found');
         }
+
+        const headers = {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+
+        const config = {
+            method,
+            headers,
+            credentials: 'include'
+        };
+
+        if (data && (method === 'POST' || method === 'PUT')) {
+            config.body = JSON.stringify(data);
+        }
+
+        // Log the request details
+        console.log(`API Request: ${method} ${endpoint}`, {
+            headers: config.headers,
+            body: config.body
+        });
+
+        const response = await fetch(`${this.apiBaseUrl}${endpoint}`, config);
+        const responseData = await response.json();
+
+        // Log the response
+        console.log(`API Response for ${endpoint}:`, responseData);
+
+        if (!response.ok) {
+            console.error('API Error Response:', responseData);
+            throw new Error(responseData.message || `API request failed with status ${response.status}`);
+        }
+
+        return responseData;
+    } catch (error) {
+        console.error('API Request Error:', error);
+        throw error;
+    }
+}
         // UI Rendering Methods
         renderCompaniesTable() {
             const tbody = document.getElementById('companiesTableBody');
