@@ -1957,10 +1957,10 @@ app.post('/api/users/2fa/toggle', verifyToken, async (req, res) => {
 
 // Create new company
 app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
+    let session;
     try {
         console.log('Starting company creation process');
         console.log('Request body:', req.body);
-        console.log('MongoDB connection status:', client.topology?.isConnected());
 
         const {
             name,
@@ -1976,19 +1976,8 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
             sendWelcomeEmail = true
         } = req.body;
 
-        // Validation logging
-        console.log('Validating required fields:', {
-            name,
-            industry,
-            contactEmail,
-            subscriptionPlan,
-            adminEmail,
-            adminName
-        });
-
-        // Validate required fields
+        // Validation
         if (!name || !industry || !contactEmail || !subscriptionPlan || !adminEmail || !adminName) {
-            console.log('Missing required fields');
             return res.status(400).json({
                 success: false,
                 message: 'Missing required fields',
@@ -2003,129 +1992,143 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
             });
         }
 
-        // Start MongoDB session
-        const session = await client.startSession();
-        console.log('MongoDB session started');
+        // Check existing company
+        const existingCompany = await companies.findOne({ 
+            name: { $regex: new RegExp(`^${name}$`, 'i') }
+        });
+
+        if (existingCompany) {
+            return res.status(400).json({
+                success: false,
+                message: 'Company name already exists'
+            });
+        }
+
+        // Get subscription plan
+        const plan = await subscription_plans.findOne({ name: subscriptionPlan });
+        if (!plan) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid subscription plan'
+            });
+        }
+
+        // Start session
+        session = await client.startSession();
+        session.startTransaction();
 
         try {
-            await session.withTransaction(async () => {
-                console.log('Starting transaction');
-
-                // Check for existing company
-                const existingCompany = await companies.findOne({ 
-                    name: { $regex: new RegExp(`^${name}$`, 'i') }
-                });
-
-                if (existingCompany) {
-                    throw new Error('Company name already exists');
-                }
-
-                // Get subscription plan
-                const plan = await subscription_plans.findOne({ name: subscriptionPlan });
-                if (!plan) {
-                    throw new Error('Invalid subscription plan');
-                }
-
-                console.log('Creating company document');
-                // Create company document
-                const company = {
-                    name,
-                    industry,
-                    size: parseInt(size),
-                    contactDetails: {
-                        email: contactEmail,
-                        phone: contactPhone || '',
-                        address: address || ''
-                    },
-                    subscription: {
-                        plan: subscriptionPlan,
-                        startDate: new Date(),
-                        status: 'active'
-                    },
-                    status,
-                    createdAt: new Date(),
-                    createdBy: new ObjectId(req.user.userId),
-                    updatedAt: new Date(),
-                    settings: {
-                        dataRetentionDays: 365,
-                        securitySettings: {
-                            passwordPolicy: {
-                                minLength: 8,
-                                requireSpecialChar: true,
-                                requireNumber: true
-                            },
-                            sessionTimeout: 30,
-                            maxLoginAttempts: 5
-                        }
-                    }
-                };
-
-                console.log('Inserting company document');
-                const companyResult = await companies.insertOne(company, { session });
-                const companyId = companyResult.insertedId;
-                console.log('Company created with ID:', companyId);
-
-                // Create admin user
-                console.log('Creating admin user');
-                const adminPassword = crypto.randomBytes(12).toString('base64url');
-                const hashedPassword = await bcrypt.hash(adminPassword, 12);
-
-                const adminUser = {
-                    companyId: companyId,
-                    name: adminName,
-                    email: adminEmail,
-                    password: hashedPassword,
-                    role: 'admin',
-                    status: 'active',
-                    createdAt: new Date(),
-                    createdBy: new ObjectId(req.user.userId),
-                    passwordResetRequired: true,
-                    lastLogin: null,
-                    failedLoginAttempts: 0
-                };
-
-                await company_users.insertOne(adminUser, { session });
-                console.log('Admin user created');
-
-                // Create subscription
-                console.log('Creating subscription');
-                const subscription = {
-                    companyId: companyId,
-                    plan: plan._id,
+            // Create company
+            const company = {
+                name,
+                industry,
+                size: parseInt(size),
+                contactDetails: {
+                    email: contactEmail,
+                    phone: contactPhone || '',
+                    address: address || ''
+                },
+                subscription: {
+                    plan: subscriptionPlan,
                     startDate: new Date(),
-                    status: 'active',
-                    billingCycle: plan.billingCycle,
-                    price: plan.price,
-                    features: plan.features,
-                    createdAt: new Date(),
-                    nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-                };
-
-                await company_subscriptions.insertOne(subscription, { session });
-                console.log('Subscription created');
-
-                // Initialize collections
-                console.log('Initializing company collections');
-                await Promise.all([
-                    database.createCollection(`company_${companyId}_employees`, { session }),
-                    database.createCollection(`company_${companyId}_departments`, { session }),
-                    database.createCollection(`company_${companyId}_attendance`, { session })
-                ]);
-
-                // Create initial department
-                await database.collection(`company_${companyId}_departments`).insertOne({
-                    name: 'Administration',
-                    description: 'Main administrative department',
-                    createdAt: new Date(),
-                    createdBy: new ObjectId(req.user.userId),
                     status: 'active'
-                }, { session });
+                },
+                status,
+                createdAt: new Date(),
+                createdBy: new ObjectId(req.user.userId),
+                updatedAt: new Date(),
+                settings: {
+                    dataRetentionDays: 365,
+                    securitySettings: {
+                        passwordPolicy: {
+                            minLength: 8,
+                            requireSpecialChar: true,
+                            requireNumber: true
+                        },
+                        sessionTimeout: 30,
+                        maxLoginAttempts: 5
+                    }
+                }
+            };
 
-                console.log('Transaction completed successfully');
-                return { companyId, adminPassword };
-            });
+            const companyResult = await companies.insertOne(company, { session });
+            const companyId = companyResult.insertedId;
 
-            console.log('Company creation successful');
+            // Create admin user
+            const adminPassword = crypto.randomBytes(12).toString('base64url');
+            const hashedPassword = await bcrypt.hash(adminPassword, 12);
+
+            const adminUser = {
+                companyId: companyId,
+                name: adminName,
+                email: adminEmail,
+                password: hashedPassword,
+                role: 'admin',
+                status: 'active',
+                createdAt: new Date(),
+                createdBy: new ObjectId(req.user.userId),
+                passwordResetRequired: true,
+                lastLogin: null,
+                failedLoginAttempts: 0
+            };
+
+            await company_users.insertOne(adminUser, { session });
+
+            // Create subscription
+            const subscription = {
+                companyId: companyId,
+                plan: plan._id,
+                startDate: new Date(),
+                status: 'active',
+                billingCycle: plan.billingCycle,
+                price: plan.price,
+                features: plan.features,
+                createdAt: new Date(),
+                nextBillingDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+            };
+
+            await company_subscriptions.insertOne(subscription, { session });
+
+            // Create initial collections
+            await database.createCollection(`company_${companyId}_departments`);
+            await database.createCollection(`company_${companyId}_employees`);
+            await database.createCollection(`company_${companyId}_attendance`);
+
+            // Create initial department
+            await database.collection(`company_${companyId}_departments`).insertOne({
+                name: 'Administration',
+                description: 'Main administrative department',
+                createdAt: new Date(),
+                createdBy: new ObjectId(req.user.userId),
+                status: 'active'
+            }, { session });
+
+            // Commit transaction
+            await session.commitTransaction();
+
+            // Create audit log
+            await createCompanyAuditLog(
+                'COMPANY_CREATED',
+                companyId,
+                req.user.userId,
+                {
+                    companyName: name,
+                    adminEmail,
+                    subscriptionPlan
+                }
+            );
+
+            // Create notification
+            await createNotification(
+                companyId,
+                'COMPANY_WELCOME',
+                `Welcome to WorkWise Pro! Your company ${name} has been successfully registered.`,
+                {
+                    companyName: name,
+                    adminEmail: adminEmail
+                }
+            );
+
             res.status(201).json({
                 success: true,
                 message: 'Company created successfully',
@@ -2140,22 +2143,36 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
 
         } catch (transactionError) {
             console.error('Transaction error:', transactionError);
+            if (session) {
+                await session.abortTransaction();
+            }
             throw transactionError;
-        } finally {
-            console.log('Ending session');
-            await session.endSession();
         }
 
     } catch (error) {
         console.error('Error creating company:', error);
+        if (session) {
+            try {
+                await session.abortTransaction();
+            } catch (abortError) {
+                console.error('Error aborting transaction:', abortError);
+            }
+        }
         res.status(500).json({
             success: false,
             message: 'Error creating company',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
+    } finally {
+        if (session) {
+            try {
+                await session.endSession();
+            } catch (endError) {
+                console.error('Error ending session:', endError);
+            }
+        }
     }
 });
-
 // Get all companies with filtering and pagination
 app.get('/api/companies', verifyToken, verifyAdmin, cacheMiddleware(300), async (req, res) => {
     try {
