@@ -34,11 +34,31 @@
             }
 
             // Initialize components
-            this.initializeStyles();
-            this.initializeElements();
-            this.initializeEventListeners();
-            this.loadInitialData();
+           // this.initializeStyles();
+            //this.initializeElements();
+            //this.initializeEventListeners();
+            //this.loadInitialData();
         }
+
+        async initialize() {
+    try {
+        console.log('Initializing CompaniesManager...');
+        
+        // Check API endpoints first
+        await this.checkApiEndpoints();
+
+        // Initialize components
+        this.initializeStyles();
+        this.initializeElements();
+        this.initializeEventListeners();
+        await this.loadInitialData();
+
+        console.log('CompaniesManager initialized successfully');
+    } catch (error) {
+        console.error('Initialization error:', error);
+        this.handleApiError(error, 'Failed to initialize companies manager');
+    }
+}
 
         initializeStyles() {
     const styles = `
@@ -585,40 +605,40 @@
 
         // API Integration Methods
         async loadStatistics() {
-            try {
-                console.log('Loading company statistics...');
-                const response = await fetch(`${this.baseUrl}/companies/overall-statistics`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                console.log('Statistics data received:', data);
-
-                if (data.success) {
-                    this.updateStatistics(data.statistics);
-                } else {
-                    throw new Error(data.message || 'Invalid statistics data received');
-                }
-            } catch (error) {
-                console.error('Statistics loading error:', error);
-                this.handleApiError(error, 'Failed to load statistics');
-                this.updateStatistics({
-                    total: 0,
-                    active: 0,
-                    pendingRenewals: 0,
-                    inactive: 0
-                });
+    try {
+        console.log('Loading statistics...');
+        const response = await fetch(`${this.baseUrl}/companies/statistics`, { // Changed endpoint
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
             }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
+
+        const data = await response.json();
+        console.log('Statistics data:', data);
+
+        if (data.success) {
+            this.updateStatistics(data.statistics);
+        } else {
+            throw new Error(data.message || 'Invalid statistics data');
+        }
+    } catch (error) {
+        console.error('Statistics loading error:', error);
+        // Use default values if statistics fail to load
+        this.updateStatistics({
+            total: 0,
+            active: 0,
+            pendingRenewals: 0,
+            inactive: 0
+        });
+    }
+}
+
 
         updateStatistics(statistics) {
             try {
@@ -641,57 +661,134 @@
                 console.error('Error updating statistics:', error);
             }
         }
+        
+handleSessionExpired() {
+    localStorage.removeItem('token');
+    window.location.href = '/login.html';
+}
+
+        
+   async checkApiEndpoints() {
+    const endpoints = [
+        '/companies/list',
+        '/companies/statistics'
+    ];
+
+    console.log('Checking API endpoints...');
+
+    for (const endpoint of endpoints) {
+        try {
+            const response = await fetch(`${this.baseUrl}${endpoint}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            console.log(`Endpoint ${endpoint}:`, {
+                status: response.status,
+                ok: response.ok
+            });
+        } catch (error) {
+            console.error(`Error checking endpoint ${endpoint}:`, error);
+        }
+    }
+}     
 
         async loadCompanies() {
-            try {
-                console.log('Loading companies...');
-                this.showTableLoader(true);
-                
-                const queryParams = new URLSearchParams({
-                    page: this.currentPage.toString(),
-                    limit: this.pageSize.toString(),
-                    search: this.filters.search || '',
-                    industry: this.filters.industry || '',
-                    status: this.filters.status || '',
-                    plan: this.filters.plan || ''
-                });
+    try {
+        this.showTableLoader(true);
+        
+        // Log the current state
+        console.log('Current state:', {
+            page: this.currentPage,
+            pageSize: this.pageSize,
+            filters: this.filters
+        });
 
-                const url = `${this.baseUrl}/companies?${queryParams}`;
-                console.log('Fetching companies from:', url);
+        const queryParams = new URLSearchParams({
+            page: this.currentPage.toString(),
+            limit: this.pageSize.toString(),
+            search: this.filters.search || '',
+            industry: this.filters.industry || '',
+            status: this.filters.status || '',
+            plan: this.filters.plan || ''
+        });
 
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    }
-                });
+        // Construct and log the full URL
+        const url = `${this.baseUrl}/companies/list`; // Changed endpoint
+        console.log('Attempting to fetch companies from:', url);
+        console.log('With query parameters:', queryParams.toString());
+        console.log('Using token:', this.token ? 'Present' : 'Missing');
 
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                console.log('Companies data received:', data);
-
-                if (data.success) {
-                    this.companies = data.data.companies;
-                    this.totalCompanies = data.data.pagination.total;
-                    this.renderCompaniesTable();
-                    this.updatePagination(data.data.pagination);
-                } else {
-                    throw new Error(data.message || 'Failed to load companies');
-                }
-            } catch (error) {
-                console.error('Companies loading error:', error);
-                this.handleApiError(error, 'Failed to load companies');
-                this.renderEmptyTable();
-            } finally {
-                this.showTableLoader(false);
+        const response = await fetch(`${url}?${queryParams}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
             }
+        });
+
+        // Log response details
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+        if (!response.ok) {
+            let errorMessage = `HTTP error! status: ${response.status}`;
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.message || errorMessage;
+            } catch (e) {
+                console.log('Error response was not JSON:', e);
+            }
+            throw new Error(errorMessage);
         }
+
+        const data = await response.json();
+        console.log('Received data:', data);
+
+        if (data.success) {
+            // Update the local state
+            this.companies = data.data.companies || [];
+            this.totalCompanies = data.data.pagination?.total || 0;
+
+            // Render the updated data
+            this.renderCompaniesTable();
+            this.updatePagination({
+                total: this.totalCompanies,
+                page: this.currentPage,
+                pages: Math.ceil(this.totalCompanies / this.pageSize)
+            });
+
+            console.log('Companies loaded successfully');
+        } else {
+            throw new Error(data.message || 'Failed to load companies');
+        }
+
+    } catch (error) {
+        console.error('Companies loading error:', {
+            message: error.message,
+            stack: error.stack
+        });
+        
+        // Show appropriate error message based on error type
+        if (error.message.includes('404')) {
+            this.showNotification('The companies endpoint is not available. Please check the API configuration.', 'error');
+        } else if (error.message.includes('401')) {
+            this.showNotification('Your session has expired. Please log in again.', 'error');
+            this.handleSessionExpired();
+        } else {
+            this.showNotification('Failed to load companies: ' + error.message, 'error');
+        }
+
+        // Render empty state
+        this.renderEmptyTable();
+    } finally {
+        this.showTableLoader(false);
+    }
+}
 
         async createCompany(formData) {
             try {
