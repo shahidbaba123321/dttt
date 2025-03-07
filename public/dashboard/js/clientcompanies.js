@@ -1,3 +1,9 @@
+(function() {
+    // Check if UsersManager already exists
+    if (window.UsersManager) {
+        return; // Exit if already defined
+    }
+
 class CompaniesManager {
     constructor() {
         this.apiBaseUrl = 'https://18.215.160.136.nip.io/api';
@@ -1220,7 +1226,7 @@ class CompaniesManager {
         }
     }
 }
-
+}
 // Initialize the Companies Manager
 document.addEventListener('DOMContentLoaded', () => {
     window.companiesManager = new CompaniesManager();
