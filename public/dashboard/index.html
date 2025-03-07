@@ -7,6 +7,8 @@
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- In your head section -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -1004,7 +1006,9 @@ class ContentLoader {
                 await this.initializeRolesPermissions();
             } else if (section === 'users') {
                 await this.initializeUsers();
-            }
+             } else if (section === 'companies') { // Add this condition
+            await this.initializeCompanies();
+        }
 
             this.currentPage = section;
             this.updateURL(section);
@@ -1105,6 +1109,38 @@ class ContentLoader {
             throw error;
         }
     }
+
+    async initializeCompanies() {
+    try {
+        // Check if script is already loaded
+        const existingScript = document.querySelector('script[src*="companies.js"]');
+        if (existingScript) {
+            existingScript.remove();
+        }
+
+        // Create and append the script with updated path
+        const script = document.createElement('script');
+        script.src = `${this.baseUrl}/dashboard/js/companies.js`;
+        
+        await new Promise((resolve, reject) => {
+            script.onload = resolve;
+            script.onerror = reject;
+            document.body.appendChild(script);
+        });
+
+        // Initialize new instance
+        if (typeof window.CompaniesManager !== 'undefined') {
+            const instance = new window.CompaniesManager();
+            this.moduleInstances.set('companies', instance);
+        } else {
+            throw new Error('CompaniesManager not loaded properly');
+        }
+    } catch (error) {
+        console.error('Error initializing companies module:', error);
+        throw error;
+    }
+}
+
 
     showLoadingState() {
         const loader = document.createElement('div');
