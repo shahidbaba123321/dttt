@@ -683,9 +683,9 @@ function initializeLogin() {
                 if (data.role === 'superadmin') {
                     window.location.href = `/dashboard/index.html?token=${encodeURIComponent(data.token)}&role=${encodeURIComponent(data.role)}`;
                 } else if (data.role === 'admin') {
-                    window.location.href = `/dashboard/index.html?token=${encodeURIComponent(token)}&role=${encodeURIComponent(role)}`;
+                    window.location.href = `/dashboard/index.html?token=${encodeURIComponent(data.token)}&role=${encodeURIComponent(data.role)}`;
                 } else {
-                    window.location.href = `/dashboard/index.html?token=${encodeURIComponent(token)}&role=${encodeURIComponent(role)}`;
+                    window.location.href = `/dashboard/index.html?token=${encodeURIComponent(data.token)}&role=${encodeURIComponent(data.role)}`;
                 }
             }, 1500);
 
