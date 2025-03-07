@@ -86,6 +86,16 @@ app.use((err, req, res, next) => {
     });
 });
 
+// Add this before your routes
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path}`, {
+        body: req.body,
+        query: req.query,
+        params: req.params
+    });
+    next();
+});
+
 // Cache middleware
 const cacheMiddleware = (duration) => {
     const memoryCache = new Map();
