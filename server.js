@@ -45,7 +45,12 @@ const authLimiter = rateLimit({
 
 // Define CORS options
 const corsOptions = {
-    origin: process.env.FRONTEND_URL || 'https://main.d1cfw592vg73f.amplifyapp.com',
+    origin: [
+        process.env.FRONTEND_URL || 'https://main.d1cfw592vg73f.amplifyapp.com',
+        'http://18.215.160.136.nip.io',
+        'https://18.215.160.136.nip.io',
+        'http://18.215.160.136:8080'
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: [
         'Content-Type', 
