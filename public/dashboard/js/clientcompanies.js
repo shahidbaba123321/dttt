@@ -119,7 +119,71 @@ initializeStyles() {
             .temp-password-modal .modal-body {
                 padding: 24px;
             }
+            .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.show {
+            opacity: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--bg-primary);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.show .modal-content {
+            transform: translateY(0);
+        }
+
+        #addUserForm .form-group {
+            margin-bottom: 20px;
+        }
+
+        #addUserForm label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        #addUserForm input,
+        #addUserForm select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-medium);
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        #addUserForm input:focus,
+        #addUserForm select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
         `;
+    
+    
 
         // Create and append the stylesheet
         const styleSheet = document.createElement('style');
@@ -1464,6 +1528,14 @@ showConfirmDialog(message) {
             </div>
         `;
 
+        // Add event listener for Add User button
+        const addUserBtn = document.getElementById('addUserBtn');
+        if (addUserBtn) {
+            addUserBtn.addEventListener('click', () => {
+                this.showAddUserModal();
+            });
+        }
+
         // Initialize search and filters
         this.initializeUserFilters();
         
@@ -1474,6 +1546,77 @@ showConfirmDialog(message) {
         this.showError('Failed to load users information');
     }
 }
+        / Update the showAddUserModal method
+showAddUserModal() {
+    try {
+        const modalHtml = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Add New User</h2>
+                    <button class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUserForm">
+                        <div class="form-group">
+                            <label for="userName">Full Name*</label>
+                            <input type="text" id="userName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="userEmail">Email*</label>
+                            <input type="email" id="userEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="userRole">Role*</label>
+                            <select id="userRole" required>
+                                <option value="">Select Role</option>
+                                <option value="admin">Admin</option>
+                                <option value="manager">Manager</option>
+                                <option value="employee">Employee</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="userDepartment">Department</label>
+                            <input type="text" id="userDepartment">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="cancelAddUser">Cancel</button>
+                    <button class="btn-primary" id="confirmAddUser">Add User</button>
+                </div>
+            </div>
+        `;
+
+        const modal = document.getElementById('addUserModal');
+        if (!modal) {
+            throw new Error('Add user modal not found');
+        }
+
+        modal.innerHTML = modalHtml;
+        modal.classList.add('show');
+        modal.style.display = 'flex';
+
+        // Add event listeners
+        const closeBtn = modal.querySelector('.close-btn');
+        const cancelBtn = modal.querySelector('#cancelAddUser');
+        const confirmBtn = modal.querySelector('#confirmAddUser');
+
+        closeBtn.addEventListener('click', () => this.closeModals());
+        cancelBtn.addEventListener('click', () => this.closeModals());
+        confirmBtn.addEventListener('click', () => this.handleAddUser());
+
+        // Add click outside to close
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.closeModals();
+            }
+        });
+    } catch (error) {
+        console.error('Error showing add user modal:', error);
+        this.showError('Failed to show add user modal');
+    }
+}
+        
 
         renderUsersTable(users) {
             if (!users.length) {
@@ -1579,14 +1722,13 @@ showConfirmDialog(message) {
         this.showError('Failed to show add user modal');
     }
 }
-       async handleAddUser(companyId) {
+       async handleAddUser() {
     try {
         const form = document.getElementById('addUserForm');
         if (!form) {
             throw new Error('Add user form not found');
         }
 
-        // Validate form data
         const userData = {
             name: document.getElementById('userName').value.trim(),
             email: document.getElementById('userEmail').value.trim(),
@@ -1594,28 +1736,18 @@ showConfirmDialog(message) {
             department: document.getElementById('userDepartment').value.trim() || null
         };
 
-        // Client-side validation
-        if (!userData.name) {
-            this.showError('Name is required');
-            return;
-        }
-        if (!userData.email || !userData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-            this.showError('Valid email is required');
-            return;
-        }
-        if (!userData.role) {
-            this.showError('Role is required');
+        // Validate form data
+        if (!this.validateUserData(userData)) {
             return;
         }
 
-        const response = await fetch(`${this.baseUrl}/companies/${companyId}/users`, {
+        const response = await fetch(`${this.baseUrl}/companies/${this.currentCompanyId}/users`, {
             method: 'POST',
             headers: this.getHeaders(),
             body: JSON.stringify(userData)
         });
 
         const result = await response.json();
-
         if (!response.ok) {
             throw new Error(result.message || 'Failed to add user');
         }
@@ -1628,8 +1760,7 @@ showConfirmDialog(message) {
         }
 
         this.closeModals();
-        await this.renderUsersTab({ _id: companyId });
-
+        await this.renderUsersTab({ _id: this.currentCompanyId });
     } catch (error) {
         console.error('Error adding user:', error);
         this.showError(error.message || 'Failed to add user');
@@ -1637,25 +1768,26 @@ showConfirmDialog(message) {
 }
 
 
+
         validateUserData(userData) {
-            if (!userData.name || userData.name.trim().length < 2) {
-                this.showError('Name must be at least 2 characters long');
-                return false;
-            }
+    if (!userData.name) {
+        this.showError('Name is required');
+        return false;
+    }
 
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(userData.email)) {
-                this.showError('Please enter a valid email address');
-                return false;
-            }
+    if (!userData.email || !userData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+        this.showError('Valid email is required');
+        return false;
+    }
 
-            if (!userData.role) {
-                this.showError('Please select a role');
-                return false;
-            }
+    if (!userData.role) {
+        this.showError('Role is required');
+        return false;
+    }
 
-            return true;
-        }
+    return true;
+}
+
 
         async resetUserPassword(userId) {
     try {
@@ -1749,15 +1881,12 @@ showConfirmDialog(message) {
         }
 
         closeModals() {
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.classList.remove('show');
-                setTimeout(() => {
-                    modal.style.display = 'none';
-                    document.body.style.overflow = '';
-                }, 300);
-            });
-            this.resetForms();
-        }
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+    });
+}
+
 
         resetForms() {
             document.querySelectorAll('form').forEach(form => {
