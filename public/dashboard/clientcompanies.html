@@ -412,21 +412,20 @@
 
 .filter-group {
     display: flex;
-    gap: var(--spacing-sm);
-    flex-wrap: wrap;
+    gap: 12px;
 }
 
 .filter-group select {
-    padding: var(--spacing-sm) var(--spacing-lg);
+    padding: 12px 16px;
     border: 1px solid var(--border-medium);
-    border-radius: var(--border-radius-md);
+    border-radius: 12px;
     background-color: var(--bg-primary);
     color: var(--text-primary);
     font-size: 0.95rem;
+    min-width: 140px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    min-width: 150px;
 }
+
 
 .filter-group select:focus {
     outline: none;
@@ -737,6 +736,12 @@
     border-radius: 0 0 16px 16px;
 }
 
+.users-table-wrapper {
+    overflow-x: auto;
+    margin: 0;
+    border-radius: 0 0 16px 16px;
+}
+
 .users-table {
     width: 100%;
     border-collapse: separate;
@@ -751,10 +756,9 @@
     font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    text-align: left;
     border-bottom: 1px solid var(--border-light);
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    white-space: nowrap;
 }
 
 .users-table td {
@@ -771,6 +775,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    min-width: 250px;
 }
 
 .user-avatar {
@@ -801,6 +806,30 @@
 .user-email {
     color: var(--text-tertiary);
     font-size: 0.85rem;
+}
+.actions-column {
+    text-align: right;
+    width: 120px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+    .btn-icon.reset-password {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--warning-color);
+}
+
+.btn-icon.toggle-status {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--info-color);
+}
+
+.btn-icon:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 
@@ -1159,20 +1188,20 @@
 /* User Management Styles */
 .users-management {
     background-color: var(--bg-primary);
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
 }
 
 .users-header {
-    padding: var(--spacing-lg);
+    padding: 24px;
     border-bottom: 1px solid var(--border-light);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: var(--spacing-lg);
+    gap: 24px;
+    background-color: var(--bg-primary);
 }
-
 .user-cell {
     display: flex;
     align-items: center;
@@ -1237,6 +1266,40 @@
     border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
+.search-filters {
+    display: flex;
+    gap: 16px;
+    flex: 1;
+    align-items: center;
+}
+
+.search-box {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 12px 16px 12px 40px;
+    border: 1px solid var(--border-medium);
+    border-radius: 12px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.search-box i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+}
+
+.search-box input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
 
 /* Activity Log Styles */
 .activity-logs {
@@ -1350,6 +1413,27 @@
     .info-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+    .users-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-filters {
+        flex-direction: column;
+    }
+
+    .search-box {
+        max-width: none;
+    }
+
+    .filter-group {
+        flex-wrap: wrap;
+    }
+
+    .filter-group select {
+        flex: 1;
+        min-width: 120px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -1415,6 +1499,14 @@
     .users-table th,
     .users-table td {
         padding: 12px 16px;
+    }
+
+    .user-cell {
+        min-width: 200px;
+    }
+
+    .actions-column {
+        width: 100px;
     }
 
     .tab-btn {
