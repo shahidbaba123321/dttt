@@ -15,6 +15,7 @@ const app = express();
 let redis = null;
 let RedisStore = null;
 
+
 app.set('trust proxy', 1);
 
 // Rate limiter configuration
@@ -41,9 +42,10 @@ const authLimiter = rateLimit({
     }
 });
 
+
 // Define CORS options
 const corsOptions = {
-    origin: 'https://main.d1cfw592vg73f.amplifyapp.com',
+    origin: process.env.FRONTEND_URL || 'https://main.d1cfw592vg73f.amplifyapp.com',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: [
         'Content-Type', 
@@ -63,7 +65,6 @@ const corsOptions = {
     preflightContinue: false,
     optionsSuccessStatus: 204
 };
-
 
 // Middleware
 app.use(cors(corsOptions));
@@ -169,16 +170,26 @@ const client = new MongoClient(uri, {
     serverSelectionTimeoutMS: 5000,
     maxPoolSize: 10
 });
-
 // Database and Collections initialization
 let database;
 let users;
 let audit_logs;
 let deleted_users;
 let user_permissions;
+let companies;
+let company_users;
+let company_subscriptions;
+let company_audit_logs;
+let subscription_plans;
 let roles;
 let role_permissions;
 let user_role_assignments;
+let webhooks;
+let api_keys;
+let notifications;
+let system_config;
+let migration_jobs;
+let security_logs;
 let sessions;
 
 // Initialize Redis separately after ensuring connection
@@ -197,6 +208,7 @@ async function initializeRedis() {
             }
         });
 
+        // Wait for Redis connection
         await new Promise((resolve, reject) => {
             redisClient.on('connect', resolve);
             redisClient.on('error', reject);
@@ -204,11 +216,13 @@ async function initializeRedis() {
 
         console.log('Redis connected successfully');
 
+        // Only setup Redis store after successful connection
         const redisStore = new RedisStore({
             sendCommand: (...args) => redisClient.call(...args),
             prefix: 'rl:'
         });
 
+        // Update rate limiters with Redis store
         limiter.store = redisStore;
         authLimiter.store = redisStore;
 
@@ -219,6 +233,164 @@ async function initializeRedis() {
     }
 }
 
+
+// Initialize database connection and collections
+async function initializeDatabase() {
+    try {
+        await client.connect();
+        console.log("Connected to MongoDB Atlas");
+        
+        database = client.db('infocraftorbis');
+
+        // List of all collections to initialize
+        const collectionsToCreate = [
+            'users',
+            'audit_logs',
+            'deleted_users',
+            'user_permissions',
+            'companies',
+            'company_users',
+            'company_subscriptions',
+            'company_audit_logs',
+            'subscription_plans',
+            'roles',
+            'role_permissions',
+            'user_role_assignments',
+            'webhooks',
+            'api_keys',
+            'notifications',
+            'system_config',
+            'migration_jobs',
+            'security_logs',
+            'sessions'
+        ];
+
+        // Create collections if they don't exist
+        for (const collectionName of collectionsToCreate) {
+            try {
+                await database.createCollection(collectionName);
+                console.log(`Collection ${collectionName} created or already exists`);
+            } catch (error) {
+                if (error.code !== 48) { // 48 is the error code for "collection already exists"
+                    console.warn(`Error creating collection ${collectionName}:`, error);
+                }
+            }
+        }
+
+        // Assign collections
+        users = database.collection('users');
+        audit_logs = database.collection('audit_logs');
+        deleted_users = database.collection('deleted_users');
+        user_permissions = database.collection('user_permissions');
+        companies = database.collection('companies');
+        company_users = database.collection('company_users');
+        company_subscriptions = database.collection('company_subscriptions');
+        company_audit_logs = database.collection('company_audit_logs');
+        subscription_plans = database.collection('subscription_plans');
+        roles = database.collection('roles');
+        role_permissions = database.collection('role_permissions');
+        user_role_assignments = database.collection('user_role_assignments');
+        webhooks = database.collection('webhooks');
+        api_keys = database.collection('api_keys');
+        notifications = database.collection('notifications');
+        system_config = database.collection('system_config');
+        migration_jobs = database.collection('migration_jobs');
+        security_logs = database.collection('security_logs');
+        sessions = database.collection('sessions');
+
+        // Function to check and create index if needed
+        const ensureIndex = async (collection, indexSpec, options = {}) => {
+    try {
+        // Check if index already exists
+        const indexName = options.name || Object.keys(indexSpec).map(key => `${key}_${indexSpec[key]}`).join('_');
+        const existingIndexes = await collection.listIndexes().toArray();
+        
+        const indexExists = existingIndexes.some(idx => {
+            // Compare index specification
+            const keyMatch = Object.keys(indexSpec).every(k => 
+                idx.key[k] === indexSpec[k]
+            );
+            return keyMatch;
+        });
+
+        if (!indexExists) {
+            await collection.createIndex(indexSpec, options);
+            console.log(`Created index for ${collection.collectionName}`);
+        } else {
+            console.log(`Index already exists for ${collection.collectionName}`);
+        }
+    } catch (error) {
+        console.warn(`Warning handling index for ${collection.collectionName}:`, error.message);
+    }
+};
+
+// Update the initialization promises in initializeDatabase
+const indexPromises = [
+    // User-related indexes
+    ensureIndex(users, { email: 1 }, { unique: true }),
+    ensureIndex(users, { status: 1 }),
+    ensureIndex(audit_logs, { timestamp: -1 }),
+    ensureIndex(deleted_users, { originalId: 1 }),
+    ensureIndex(user_permissions, { userId: 1 }, { unique: true, name: 'user_permissions_userId' }),
+
+    // Company-related indexes
+    ensureIndex(companies, { name: 1 }, { unique: true }),
+    ensureIndex(companies, { 'contactDetails.email': 1 }, { unique: true }),
+    ensureIndex(companies, { status: 1 }),
+    ensureIndex(company_users, { companyId: 1 }),
+    ensureIndex(company_users, { email: 1 }, { unique: true }),
+    ensureIndex(company_subscriptions, { companyId: 1 }, { unique: true }),
+    ensureIndex(company_audit_logs, { companyId: 1 }),
+
+    // Role and permission indexes
+    ensureIndex(roles, { name: 1 }, { unique: true }),
+    ensureIndex(role_permissions, { roleId: 1 }, { unique: true }),
+    ensureIndex(user_role_assignments, { userId: 1 }, { unique: true }),
+
+    // Integration and security indexes
+    ensureIndex(webhooks, { companyId: 1 }),
+    ensureIndex(api_keys, { companyId: 1 }),
+    ensureIndex(notifications, { companyId: 1 }),
+    ensureIndex(security_logs, { timestamp: -1 }),
+    ensureIndex(security_logs, { type: 1 }),
+    ensureIndex(sessions, { userId: 1 }),
+    ensureIndex(sessions, { expires: 1 }),
+    ensureIndex(migration_jobs, { status: 1 })
+];
+        await Promise.all(indexPromises);
+        
+        // Initialize default data
+        await initializeDefaultData();
+
+        console.log("Database collections and indexes initialized");
+        
+        return {
+            database,
+            users,
+            audit_logs,
+            deleted_users,
+            user_permissions,
+            companies,
+            company_users,
+            company_subscriptions,
+            company_audit_logs,
+            subscription_plans,
+            roles,
+            role_permissions,
+            user_role_assignments,
+            webhooks,
+            api_keys,
+            notifications,
+            system_config,
+            migration_jobs,
+            security_logs,
+            sessions
+        };
+    } catch (err) {
+        console.error("MongoDB initialization error:", err);
+        throw err;
+    }
+}
 
 // Initialize default data
 async function initializeDefaultData() {
@@ -237,10 +409,178 @@ async function initializeDefaultData() {
             await initializeDefaultPermissions();
         }
 
+        // Check and initialize default subscription plans
+        const plansCount = await subscription_plans.countDocuments();
+        if (plansCount === 0) {
+            console.log('Initializing default subscription plans...');
+            await initializeDefaultPlans();
+        }
+
+        // Check and initialize system configuration
+        const configExists = await system_config.findOne({ type: 'global' });
+        if (!configExists) {
+            console.log('Initializing system configuration...');
+            await initializeSystemConfig();
+        }
+
         console.log('Default data initialization completed');
     } catch (error) {
         console.error('Error initializing default data:', error);
         throw error;
+    }
+}
+
+
+async function initializeDefaultPermissions() {
+    const defaultPermissions = [
+        // Existing permissions
+        {
+            name: 'view_users',
+            displayName: 'View Users',
+            category: 'User Management',
+            description: 'Can view user list and details'
+        },
+        {
+            name: 'manage_users',
+            displayName: 'Manage Users',
+            category: 'User Management',
+            description: 'Can create, edit, and delete users'
+        },
+        {
+            name: 'view_roles',
+            displayName: 'View Roles',
+            category: 'Role Management',
+            description: 'Can view roles and permissions'
+        },
+        {
+            name: 'manage_roles',
+            displayName: 'Manage Roles',
+            category: 'Role Management',
+            description: 'Can create, edit, and delete roles'
+        },
+
+        // Add new UI/UX permissions
+        // Dashboard permissions
+        {
+            name: 'view_dashboard',
+            displayName: 'View Dashboard',
+            category: 'Dashboard Access',
+            description: 'Can access the dashboard overview'
+        },
+
+        // Companies/Organizations permissions
+        {
+            name: 'view_companies',
+            displayName: 'View Companies',
+            category: 'Company Management',
+            description: 'Can view company list and details'
+        },
+        {
+            name: 'manage_companies',
+            displayName: 'Manage Companies',
+            category: 'Company Management',
+            description: 'Can create, edit, and delete companies'
+        },
+
+        // System Settings permissions
+        {
+            name: 'view_settings',
+            displayName: 'View Settings',
+            category: 'System Settings',
+            description: 'Can view system settings'
+        },
+        {
+            name: 'manage_settings',
+            displayName: 'Manage Settings',
+            category: 'System Settings',
+            description: 'Can modify system settings'
+        },
+        {
+            name: 'manage_pricing',
+            displayName: 'Manage Pricing',
+            category: 'System Settings',
+            description: 'Can manage pricing and plans'
+        },
+        {
+            name: 'manage_security',
+            displayName: 'Manage Security',
+            category: 'System Settings',
+            description: 'Can manage security settings'
+        },
+
+        // Modules Management permissions
+        {
+            name: 'view_modules',
+            displayName: 'View Modules',
+            category: 'Module Management',
+            description: 'Can view available modules'
+        },
+        {
+            name: 'manage_modules',
+            displayName: 'Manage Modules',
+            category: 'Module Management',
+            description: 'Can manage and configure modules'
+        },
+
+        // Analytics & Reports permissions
+        {
+            name: 'view_analytics',
+            displayName: 'View Analytics',
+            category: 'Analytics & Reports',
+            description: 'Can view analytics and reports'
+        },
+        {
+            name: 'manage_reports',
+            displayName: 'Manage Reports',
+            category: 'Analytics & Reports',
+            description: 'Can create and manage custom reports'
+        },
+
+        // Backup & System Tools permissions
+        {
+            name: 'manage_backup',
+            displayName: 'Manage Backup',
+            category: 'System Tools',
+            description: 'Can perform backup and restore operations'
+        },
+        {
+            name: 'view_audit_logs',
+            displayName: 'View Audit Logs',
+            category: 'System Tools',
+            description: 'Can view system audit logs'
+        },
+        {
+            name: 'manage_api',
+            displayName: 'Manage API',
+            category: 'System Tools',
+            description: 'Can manage API settings and keys'
+        },
+
+        // Support Center permissions
+        {
+            name: 'access_support',
+            displayName: 'Access Support',
+            category: 'Support',
+            description: 'Can access support center'
+        },
+        {
+            name: 'manage_support',
+            displayName: 'Manage Support',
+            category: 'Support',
+            description: 'Can manage support tickets and resources'
+        }
+    ];
+
+    try {
+        await database.collection('permissions').insertMany(defaultPermissions, { 
+            ordered: false 
+        });
+        console.log('Default permissions initialized');
+    } catch (error) {
+        if (error.code !== 11000) { // Ignore duplicate key errors
+            console.error('Error initializing permissions:', error);
+            throw error;
+        }
     }
 }
 
@@ -258,22 +598,74 @@ async function initializeDefaultRoles() {
             name: 'Admin',
             description: 'System administrator with extensive access rights',
             permissions: [
+                // User Management
                 'view_users',
                 'manage_users',
                 'view_roles',
                 'manage_roles',
+                
+                // Dashboard Access
                 'view_dashboard',
+                
+                // Company Management
+                'view_companies',
+                'manage_companies',
+                
+                // System Settings
                 'view_settings',
-                'manage_settings'
+                'manage_settings',
+                'manage_pricing',
+                'manage_security',
+                
+                // Module Management
+                'view_modules',
+                'manage_modules',
+                
+                // Analytics & Reports
+                'view_analytics',
+                'manage_reports',
+                
+                // System Tools
+                'manage_backup',
+                'view_audit_logs',
+                'manage_api',
+                
+                // Support
+                'access_support',
+                'manage_support'
             ],
             isDefault: true
         },
-        user: {
-            name: 'User',
-            description: 'Regular user access',
+        hr_admin: {
+            name: 'HR Admin',
+            description: 'Manages HR functions and user accounts',
             permissions: [
                 'view_dashboard',
-                'view_profile'
+                'view_users',
+                'manage_users',
+                'view_roles',
+                'view_analytics',
+                'access_support'
+            ],
+            isDefault: true
+        },
+        manager: {
+            name: 'Manager',
+            description: 'Department or team manager',
+            permissions: [
+                'view_dashboard',
+                'view_users',
+                'view_analytics',
+                'access_support'
+            ],
+            isDefault: true
+        },
+        employee: {
+            name: 'Employee',
+            description: 'Regular employee access',
+            permissions: [
+                'view_dashboard',
+                'access_support'
             ],
             isDefault: true
         }
@@ -317,183 +709,28 @@ async function initializeDefaultRoles() {
     }
 }
 
-// Initialize default permissions
-async function initializeDefaultPermissions() {
-    const defaultPermissions = [
-        {
-            name: 'view_dashboard',
-            displayName: 'View Dashboard',
-            category: 'Dashboard',
-            description: 'Can view dashboard'
-        },
-        {
-            name: 'view_users',
-            displayName: 'View Users',
-            category: 'User Management',
-            description: 'Can view user list and details'
-        },
-        {
-            name: 'manage_users',
-            displayName: 'Manage Users',
-            category: 'User Management',
-            description: 'Can create, edit, and delete users'
-        },
-        {
-            name: 'view_roles',
-            displayName: 'View Roles',
-            category: 'Role Management',
-            description: 'Can view roles and permissions'
-        },
-        {
-            name: 'manage_roles',
-            displayName: 'Manage Roles',
-            category: 'Role Management',
-            description: 'Can create, edit, and delete roles'
-        },
-        {
-            name: 'view_settings',
-            displayName: 'View Settings',
-            category: 'Settings',
-            description: 'Can view system settings'
-        },
-        {
-            name: 'manage_settings',
-            displayName: 'Manage Settings',
-            category: 'Settings',
-            description: 'Can modify system settings'
-        },
-        {
-            name: 'view_profile',
-            displayName: 'View Profile',
-            category: 'Profile',
-            description: 'Can view own profile'
-        }
-    ];
 
+// Audit logging functions
+async function createAuditLog(action, performedBy, targetUser = null, details = {}) {
     try {
-        await database.collection('permissions').insertMany(defaultPermissions, { 
-            ordered: false 
-        });
-        console.log('Default permissions initialized');
-    } catch (error) {
-        if (error.code !== 11000) { // Ignore duplicate key errors
-            console.error('Error initializing permissions:', error);
-            throw error;
-        }
-    }
-}
-
-
-// Initialize database connection and collections
-async function initializeDatabase() {
-    try {
-        await client.connect();
-        console.log("Connected to MongoDB Atlas");
-        
-        database = client.db('infocraftorbis');
-
-        // List of required collections
-        const collectionsToCreate = [
-            'users',
-            'audit_logs',
-            'deleted_users',
-            'user_permissions',
-            'roles',
-            'role_permissions',
-            'user_role_assignments',
-            'sessions'
-        ];
-
-        // Create collections if they don't exist
-        for (const collectionName of collectionsToCreate) {
-            try {
-                await database.createCollection(collectionName);
-                console.log(`Collection ${collectionName} created or already exists`);
-            } catch (error) {
-                if (error.code !== 48) { // 48 is the error code for "collection already exists"
-                    console.warn(`Error creating collection ${collectionName}:`, error);
-                }
-            }
-        }
-
-        // Assign collections
-        users = database.collection('users');
-        audit_logs = database.collection('audit_logs');
-        deleted_users = database.collection('deleted_users');
-        user_permissions = database.collection('user_permissions');
-        roles = database.collection('roles');
-        role_permissions = database.collection('role_permissions');
-        user_role_assignments = database.collection('user_role_assignments');
-        sessions = database.collection('sessions');
-
-        // Create necessary indexes
-        const indexPromises = [
-            // User-related indexes
-            ensureIndex(users, { email: 1 }, { unique: true }),
-            ensureIndex(users, { status: 1 }),
-            ensureIndex(audit_logs, { timestamp: -1 }),
-            ensureIndex(deleted_users, { originalId: 1 }),
-            ensureIndex(user_permissions, { userId: 1 }, { unique: true }),
-
-            // Role and permission indexes
-            ensureIndex(roles, { name: 1 }, { unique: true }),
-            ensureIndex(role_permissions, { roleId: 1 }, { unique: true }),
-            ensureIndex(user_role_assignments, { userId: 1 }, { unique: true }),
-
-            // Session indexes
-            ensureIndex(sessions, { userId: 1 }),
-            ensureIndex(sessions, { expires: 1 })
-        ];
-
-        await Promise.all(indexPromises);
-        
-        // Initialize default data
-        await initializeDefaultData();
-
-        console.log("Database collections and indexes initialized");
-        
-        return {
-            database,
-            users,
-            audit_logs,
-            deleted_users,
-            user_permissions,
-            roles,
-            role_permissions,
-            user_role_assignments,
-            sessions
+        const auditLog = {
+            action,
+            performedBy: performedBy ? new ObjectId(performedBy) : null,
+            targetUser: targetUser ? new ObjectId(targetUser) : null,
+            details,
+            timestamp: new Date(),
+            ip: details.ip || null,
+            userAgent: details.userAgent || null
         };
-    } catch (err) {
-        console.error("MongoDB initialization error:", err);
-        throw err;
+
+        await audit_logs.insertOne(auditLog);
+    } catch (error) {
+        console.error('Error creating audit log:', error);
     }
 }
 
-// Ensure index helper function
-const ensureIndex = async (collection, indexSpec, options = {}) => {
-    try {
-        const indexName = options.name || Object.keys(indexSpec).map(key => `${key}_${indexSpec[key]}`).join('_');
-        const existingIndexes = await collection.listIndexes().toArray();
-        
-        const indexExists = existingIndexes.some(idx => {
-            const keyMatch = Object.keys(indexSpec).every(k => 
-                idx.key[k] === indexSpec[k]
-            );
-            return keyMatch;
-        });
+// Middleware Functions
 
-        if (!indexExists) {
-            await collection.createIndex(indexSpec, options);
-            console.log(`Created index for ${collection.collectionName}`);
-        }
-    } catch (error) {
-        console.warn(`Warning handling index for ${collection.collectionName}:`, error.message);
-    }
-};
-
-
-
-// Authentication Endpoints
 // Token verification middleware
 const verifyToken = async (req, res, next) => {
     try {
@@ -588,11 +825,42 @@ const verifyAdmin = async (req, res, next) => {
         });
     }
 };
+
+
+
+// Request validation middleware
+const validateRequest = (validations) => {
+    return async (req, res, next) => {
+        await Promise.all(validations.map(validation => validation.run(req)));
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Validation error',
+                errors: errors.array()
+            });
+        }
+        next();
+    };
+};
+
+// API Routes Start Here
+
+// Test route
+app.get('/', (req, res) => {
+    res.json({ message: 'Server is running!' });
+});
+// Authentication Routes
+
 // Registration endpoint
 app.post('/api/register', async (req, res) => {
     try {
+        console.log('Registration request received:', req.body);
+
         const { email, password, role } = req.body;
         
+        // Enhanced validation
         if (!email || !password || !role) {
             return res.status(400).json({ 
                 success: false, 
@@ -600,6 +868,7 @@ app.post('/api/register', async (req, res) => {
             });
         }
 
+        // Password strength validation
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
         if (!passwordRegex.test(password)) {
             return res.status(400).json({
@@ -608,6 +877,7 @@ app.post('/api/register', async (req, res) => {
             });
         }
 
+        // Check if user exists with case-insensitive email check
         const existingUser = await users.findOne({ 
             email: { $regex: new RegExp(`^${email}$`, 'i') } 
         });
@@ -619,8 +889,10 @@ app.post('/api/register', async (req, res) => {
             });
         }
 
+        // Hash password
         const hashedPassword = await bcrypt.hash(password, 12);
 
+        // Create user with additional security fields
         const newUser = {
             email,
             password: hashedPassword,
@@ -652,6 +924,7 @@ app.post('/api/register', async (req, res) => {
 
         const result = await users.insertOne(newUser);
 
+        // Initialize user permissions
         await user_permissions.insertOne({
             userId: result.insertedId,
             permissions: [],
@@ -659,6 +932,7 @@ app.post('/api/register', async (req, res) => {
             updatedAt: new Date()
         });
 
+        // Create audit log
         await createAuditLog(
             'USER_REGISTERED',
             result.insertedId,
@@ -671,6 +945,19 @@ app.post('/api/register', async (req, res) => {
             }
         );
 
+        // Create security log
+        await security_logs.insertOne({
+            type: 'USER_REGISTRATION',
+            userId: result.insertedId,
+            timestamp: new Date(),
+            ip: req.ip,
+            userAgent: req.get('user-agent'),
+            details: {
+                email,
+                role
+            }
+        });
+
         res.status(201).json({ 
             success: true, 
             message: 'User registered successfully',
@@ -679,6 +966,15 @@ app.post('/api/register', async (req, res) => {
 
     } catch (error) {
         console.error('Registration error:', error);
+        
+        await security_logs.insertOne({
+            type: 'REGISTRATION_ERROR',
+            timestamp: new Date(),
+            ip: req.ip,
+            userAgent: req.get('user-agent'),
+            error: error.message
+        });
+
         res.status(500).json({ 
             success: false, 
             message: 'Server error during registration' 
@@ -842,6 +1138,15 @@ app.post('/api/login', authLimiter, async (req, res) => {
             }
         );
 
+        // Create security log
+        await security_logs.insertOne({
+            type: 'SUCCESSFUL_LOGIN',
+            timestamp: new Date(),
+            ip: req.ip,
+            userAgent: req.get('user-agent'),
+            userId: user._id
+        });
+
         res.json({ 
             success: true, 
             token,
@@ -857,13 +1162,21 @@ app.post('/api/login', authLimiter, async (req, res) => {
 
     } catch (error) {
         console.error('Login error:', error);
+        
+        await security_logs.insertOne({
+            type: 'LOGIN_ERROR',
+            timestamp: new Date(),
+            ip: req.ip,
+            userAgent: req.get('user-agent'),
+            error: error.message
+        });
+
         res.status(500).json({ 
             success: false, 
             message: 'Server error during login' 
         });
     }
 });
-
 // Logout endpoint
 app.post('/api/logout', verifyToken, async (req, res) => {
     try {
@@ -983,7 +1296,1027 @@ app.post('/api/verify-token', async (req, res) => {
     }
 });
 
+// Password reset request
+app.post('/api/reset-password-request', async (req, res) => {
+    try {
+        const { email } = req.body;
 
+        const user = await users.findOne({ 
+            email: { $regex: new RegExp(`^${email}$`, 'i') },
+            status: 'active'
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: 'If the email exists, reset instructions will be sent'
+            });
+        }
+
+        // Generate reset token
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const hashedToken = await bcrypt.hash(resetToken, 12);
+
+        // Save reset token
+        await users.updateOne(
+            { _id: user._id },
+            {
+                $set: {
+                    resetToken: hashedToken,
+                    resetTokenExpires: new Date(Date.now() + 3600000) // 1 hour
+                }
+            }
+        );
+
+        // Create audit log
+        await createAuditLog(
+            'PASSWORD_RESET_REQUESTED',
+            user._id,
+            user._id,
+            {
+                ip: req.ip,
+                userAgent: req.get('user-agent')
+            }
+        );
+
+        // In a production environment, send email here
+        console.log('Reset token for development:', resetToken);
+
+        res.json({
+            success: true,
+            message: 'If the email exists, reset instructions will be sent',
+            // Only include token in development
+            ...(process.env.NODE_ENV === 'development' && { resetToken })
+        });
+
+    } catch (error) {
+        console.error('Password reset request error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error processing password reset request'
+        });
+    }
+});
+
+// Reset password
+app.post('/api/reset-password', async (req, res) => {
+    try {
+        const { token, password } = req.body;
+
+        // Validate password strength
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!passwordRegex.test(password)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Password must meet security requirements'
+            });
+        }
+
+        // Find user with valid reset token
+        const user = await users.findOne({
+            resetTokenExpires: { $gt: new Date() }
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired reset token'
+            });
+        }
+
+        // Verify token
+        const validToken = await bcrypt.compare(token, user.resetToken);
+        if (!validToken) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or expired reset token'
+            });
+        }
+
+        // Check password history
+        const passwordHistory = user.passwordHistory || [];
+        for (const oldPassword of passwordHistory) {
+            const matchesOld = await bcrypt.compare(password, oldPassword.password);
+            if (matchesOld) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Cannot reuse recent passwords'
+                });
+            }
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        // Update user
+        await users.updateOne(
+            { _id: user._id },
+            {
+                $set: {
+                    password: hashedPassword,
+                    resetToken: null,
+                    resetTokenExpires: null,
+                    passwordLastChanged: new Date(),
+                    passwordResetRequired: false
+                },
+                $push: {
+                    passwordHistory: {
+                        $each: [{
+                            password: user.password,
+                            changedAt: new Date()
+                        }],
+                        $slice: -5 // Keep last 5 passwords
+                    }
+                }
+            }
+        );
+
+        // Invalidate all existing sessions
+        await sessions.deleteMany({ userId: user._id });
+
+        // Create audit log
+        await createAuditLog(
+            'PASSWORD_RESET_COMPLETED',
+            user._id,
+            user._id,
+            {
+                ip: req.ip,
+                userAgent: req.get('user-agent')
+            }
+        );
+
+        res.json({
+            success: true,
+            message: 'Password reset successful'
+        });
+
+    } catch (error) {
+        console.error('Password reset error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error resetting password'
+        });
+    }
+});
+// User Profile Management Routes
+
+// Get user profile
+app.get('/api/users/profile', verifyToken, async (req, res) => {
+    try {
+        const user = await users.findOne(
+            { _id: new ObjectId(req.user.userId) },
+            { projection: { password: 0, resetToken: 0, resetTokenExpires: 0 } }
+        );
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Get user's company information if exists
+        const companyUser = await company_users.findOne({
+            userId: new ObjectId(req.user.userId)
+        });
+
+        let companyInfo = null;
+        if (companyUser) {
+            companyInfo = await companies.findOne(
+                { _id: companyUser.companyId },
+                { projection: { name: 1, industry: 1 } }
+            );
+        }
+
+        // Get user permissions
+        const userPerms = await user_permissions.findOne({ userId: user._id });
+
+        // Get recent activity
+        const recentActivity = await audit_logs
+            .find({ performedBy: user._id })
+            .sort({ timestamp: -1 })
+            .limit(10)
+            .toArray();
+
+        res.json({
+            success: true,
+            profile: {
+                ...user,
+                company: companyInfo,
+                permissions: userPerms?.permissions || [],
+                recentActivity
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching user profile:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching user profile'
+        });
+    }
+});
+
+// Update user profile
+app.put('/api/users/profile', verifyToken, async (req, res) => {
+    try {
+        const {
+            name,
+            phone,
+            address,
+            settings,
+            notifications
+        } = req.body;
+
+        // Validate phone format if provided
+        if (phone && !/^\+?[\d\s-]{10,}$/.test(phone)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid phone number format'
+            });
+        }
+
+        const updateDoc = {
+            $set: {
+                ...(name && { name }),
+                ...(phone && { phone }),
+                ...(address && { address }),
+                ...(settings && { settings }),
+                ...(notifications && { 'settings.notifications': notifications }),
+                updatedAt: new Date()
+            }
+        };
+
+        const result = await users.updateOne(
+            { _id: new ObjectId(req.user.userId) },
+            updateDoc
+        );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Create audit log
+        await createAuditLog(
+            'PROFILE_UPDATED',
+            req.user.userId,
+            req.user.userId,
+            {
+                changes: req.body,
+                ip: req.ip,
+                userAgent: req.get('user-agent')
+            }
+        );
+
+        res.json({
+            success: true,
+            message: 'Profile updated successfully'
+        });
+
+    } catch (error) {
+        console.error('Error updating user profile:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating user profile'
+        });
+    }
+});
+
+// Change password
+app.post('/api/users/change-password', verifyToken, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        const user = await users.findOne({ _id: new ObjectId(req.user.userId) });
+
+        // Verify current password
+        const validPassword = await bcrypt.compare(currentPassword, user.password);
+        if (!validPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Current password is incorrect'
+            });
+        }
+
+        // Validate new password
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!passwordRegex.test(newPassword)) {
+            return res.status(400).json({
+                success: false,
+                message: 'New password does not meet security requirements'
+            });
+        }
+
+        // Check password history
+        const passwordHistory = user.passwordHistory || [];
+        for (const oldPassword of passwordHistory) {
+            const matchesOld = await bcrypt.compare(newPassword, oldPassword.password);
+            if (matchesOld) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Cannot reuse recent passwords'
+                });
+            }
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+        // Update password
+        await users.updateOne(
+            { _id: user._id },
+            {
+                $set: {
+                    password: hashedPassword,
+                    passwordLastChanged: new Date(),
+                    passwordResetRequired: false
+                },
+                $push: {
+                    passwordHistory: {
+                        $each: [{
+                            password: user.password,
+                            changedAt: new Date()
+                        }],
+                        $slice: -5 // Keep last 5 passwords
+                    }
+                }
+            }
+        );
+
+        // Invalidate all other sessions
+        await sessions.deleteMany({
+            userId: user._id,
+            token: { $ne: req.headers.authorization?.split(' ')[1] }
+        });
+
+        // Create audit log
+        await createAuditLog(
+            'PASSWORD_CHANGED',
+            user._id,
+            user._id,
+            {
+                ip: req.ip,
+                userAgent: req.get('user-agent')
+            }
+        );
+
+        res.json({
+            success: true,
+            message: 'Password changed successfully'
+        });
+
+    } catch (error) {
+        console.error('Error changing password:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error changing password'
+        });
+    }
+});
+
+// Enable/Disable 2FA
+app.post('/api/users/2fa/toggle', verifyToken, async (req, res) => {
+    try {
+        const { enable } = req.body;
+
+        const user = await users.findOne({ _id: new ObjectId(req.user.userId) });
+
+        if (enable) {
+            // Generate 2FA secret
+            const secret = crypto.randomBytes(20).toString('hex');
+            const qrCode = await generateQRCode(secret, user.email);
+
+            await users.updateOne(
+                { _id: user._id },
+                {
+                    $set: {
+                        '2fa.secret': secret,
+                        '2fa.enabled': false,
+                        '2fa.pending': true
+                    }
+                }
+            );
+
+            res.json({
+                success: true,
+                message: '2FA setup initiated',
+                data: {
+                    secret,
+                    qrCode
+                }
+            });
+        } else {
+            await users.updateOne(
+                { _id: user._id },
+                {
+                    $set: {
+                        '2fa.enabled': false,
+                        '2fa.secret': null,
+                        '2fa.pending': false
+                    }
+                }
+            );
+
+            // Create audit log
+            await createAuditLog(
+                'TWO_FA_DISABLED',
+                user._id,
+                user._id,
+                {
+                    ip: req.ip,
+                    userAgent: req.get('user-agent')
+                }
+            );
+
+            res.json({
+                success: true,
+                message: '2FA disabled successfully'
+            });
+        }
+
+    } catch (error) {
+        console.error('Error toggling 2FA:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error toggling 2FA'
+        });
+    }
+});
+// Company Management Routes
+
+
+// Helper functions
+async function countPermissionUsage(permissionName) {
+    return await role_permissions.countDocuments({
+        permissions: permissionName
+    });
+}
+
+async function getLastPermissionUpdate() {
+    const lastUpdate = await audit_logs.findOne(
+        { action: { $regex: /^PERMISSION_/ } },
+        { sort: { timestamp: -1 } }
+    );
+    return lastUpdate?.timestamp || null;
+}
+
+async function getUserInfo(userId) {
+    if (!userId) return null;
+    const user = await users.findOne(
+        { _id: new ObjectId(userId) },
+        { projection: { name: 1, email: 1 } }
+    );
+    return user;
+}
+
+// 1. Get All Roles
+app.get('/api/roles', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        // Get pagination parameters
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        // Get search and filter parameters
+        const search = req.query.search;
+        const filter = {};
+
+        if (search) {
+            filter.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        // Get total count for pagination
+        const totalRoles = await roles.countDocuments(filter);
+
+        // Get roles with pagination
+        const rolesList = await roles.find(filter)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .toArray();
+
+        // Enhance roles with user counts and additional data
+        const enhancedRoles = await Promise.all(rolesList.map(async (role) => {
+            const [usersCount, permissions] = await Promise.all([
+                user_role_assignments.countDocuments({ roleId: role._id }),
+                role_permissions.findOne({ roleId: role._id })
+            ]);
+
+            return {
+                ...role,
+                usersCount,
+                permissions: permissions?.permissions || [],
+                createdBy: await getUserInfo(role.createdBy),
+                updatedBy: role.updatedBy ? await getUserInfo(role.updatedBy) : null
+            };
+        }));
+
+        res.json({
+            success: true,
+            data: enhancedRoles,
+            pagination: {
+                total: totalRoles,
+                page,
+                totalPages: Math.ceil(totalRoles / limit),
+                hasMore: page * limit < totalRoles
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching roles:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching roles',
+            error: error.message
+        });
+    }
+});
+
+// 2. Get Single Role
+app.get('/api/roles/:roleId', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { roleId } = req.params;
+
+        if (!ObjectId.isValid(roleId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid role ID format'
+            });
+        }
+
+        const role = await roles.findOne({ 
+            _id: new ObjectId(roleId) 
+        });
+
+        if (!role) {
+            return res.status(404).json({
+                success: false,
+                message: 'Role not found'
+            });
+        }
+
+        const [usersCount, permissions, userAssignments, auditLogs] = await Promise.all([
+            user_role_assignments.countDocuments({ roleId: role._id }),
+            role_permissions.findOne({ roleId: role._id }),
+            user_role_assignments.find({ roleId: role._id }).limit(5).toArray(),
+            audit_logs.find({ 
+                'details.roleId': role._id 
+            })
+            .sort({ timestamp: -1 })
+            .limit(10)
+            .toArray()
+        ]);
+
+        const assignedUsers = await Promise.all(userAssignments.map(async (assignment) => {
+            const user = await users.findOne(
+                { _id: assignment.userId },
+                { projection: { password: 0, resetToken: 0 } }
+            );
+            return user;
+        }));
+
+        res.json({
+            success: true,
+            data: {
+                ...role,
+                usersCount,
+                permissions: permissions?.permissions || [],
+                recentUsers: assignedUsers,
+                auditLogs,
+                createdBy: await getUserInfo(role.createdBy),
+                updatedBy: role.updatedBy ? await getUserInfo(role.updatedBy) : null
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching role details:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching role details',
+            error: error.message
+        });
+    }
+});
+
+// 3. Create Role
+app.post('/api/roles', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { name, description, permissions = [], isSystem = false } = req.body;
+
+            // Validation
+            if (!name || typeof name !== 'string' || name.trim().length < 3) {
+                throw new Error('Role name must be at least 3 characters long');
+            }
+
+            if (description && description.length > 200) {
+                throw new Error('Description cannot exceed 200 characters');
+            }
+
+            const nameRegex = /^[a-zA-Z0-9\s_-]+$/;
+            if (!nameRegex.test(name)) {
+                throw new Error('Role name can only contain letters, numbers, spaces, hyphens, and underscores');
+            }
+
+            // Check for existing role
+            const existingRole = await roles.findOne({ 
+                name: { $regex: new RegExp(`^${name}$`, 'i') }
+            }, { session });
+
+            if (existingRole) {
+                throw new Error('Role name already exists');
+            }
+
+            // Create role
+            const role = {
+                name,
+                description,
+                isSystem,
+                createdAt: new Date(),
+                createdBy: new ObjectId(req.user.userId),
+                updatedAt: new Date()
+            };
+
+            const result = await roles.insertOne(role, { session });
+
+            // Create role permissions
+            if (permissions.length > 0) {
+                await role_permissions.insertOne({
+                    roleId: result.insertedId,
+                    permissions,
+                    createdAt: new Date(),
+                    createdBy: new ObjectId(req.user.userId)
+                }, { session });
+            }
+
+            // Create audit log
+            await createAuditLog(
+                'ROLE_CREATED',
+                req.user.userId,
+                result.insertedId,
+                {
+                    roleName: name,
+                    permissions,
+                    isSystem
+                },
+                session
+            );
+
+            res.status(201).json({
+                success: true,
+                message: 'Role created successfully',
+                data: {
+                    _id: result.insertedId,
+                    ...role,
+                    permissions
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error creating role:', error);
+        res.status(error.message.includes('already exists') ? 400 : 500).json({
+            success: false,
+            message: error.message || 'Error creating role'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// 4. Update Role Permissions
+app.put('/api/roles/:roleId/permissions', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { roleId } = req.params;
+            const { permissions } = req.body;
+
+            if (!ObjectId.isValid(roleId)) {
+                throw new Error('Invalid role ID format');
+            }
+
+            if (!Array.isArray(permissions)) {
+                throw new Error('Permissions must be an array');
+            }
+
+            const role = await roles.findOne({ 
+                _id: new ObjectId(roleId) 
+            }, { session });
+
+            if (!role) {
+                throw new Error('Role not found');
+            }
+
+            if (role.isSystem) {
+                throw new Error('System roles cannot be modified');
+            }
+
+            const currentPermissions = await role_permissions.findOne({ 
+                roleId: new ObjectId(roleId) 
+            }, { session });
+
+            await role_permissions.updateOne(
+                { roleId: new ObjectId(roleId) },
+                { 
+                    $set: { 
+                        permissions,
+                        updatedAt: new Date(),
+                        updatedBy: new ObjectId(req.user.userId)
+                    }
+                },
+                { upsert: true, session }
+            );
+
+            await roles.updateOne(
+                { _id: new ObjectId(roleId) },
+                { 
+                    $set: { 
+                        updatedAt: new Date(),
+                        updatedBy: new ObjectId(req.user.userId)
+                    }
+                },
+                { session }
+            );
+
+            await createAuditLog(
+                'ROLE_PERMISSIONS_UPDATED',
+                req.user.userId,
+                roleId,
+                {
+                    roleName: role.name,
+                    previousPermissions: currentPermissions?.permissions || [],
+                    newPermissions: permissions,
+                    changes: {
+                        added: permissions.filter(p => !currentPermissions?.permissions?.includes(p)),
+                        removed: currentPermissions?.permissions?.filter(p => !permissions.includes(p))
+                    }
+                },
+                session
+            );
+
+            res.json({
+                success: true,
+                message: 'Role permissions updated successfully',
+                data: {
+                    roleId,
+                    permissions
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error updating role permissions:', error);
+        res.status(error.message.includes('not found') ? 404 : 500).json({
+            success: false,
+            message: error.message || 'Error updating role permissions'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// 5. Get Permissions
+app.get('/api/permissions', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        let permissionsList = await database.collection('permissions').find().toArray();
+        
+        if (!permissionsList || permissionsList.length === 0) {
+            await initializeDefaultPermissions();
+            permissionsList = await database.collection('permissions').find().toArray();
+        }
+
+        // Process permissions sequentially to avoid too many concurrent operations
+        const groupedPermissions = {};
+        for (const permission of permissionsList) {
+            const category = permission.category || 'General';
+            if (!groupedPermissions[category]) {
+                groupedPermissions[category] = [];
+            }
+            
+            const usage = await countPermissionUsage(permission.name);
+            groupedPermissions[category].push({
+                ...permission,
+                usageCount: usage
+            });
+        }
+
+        const metadata = {
+            totalPermissions: permissionsList.length,
+            categories: Object.keys(groupedPermissions).length,
+            lastUpdated: await getLastPermissionUpdate()
+        };
+
+        res.json({
+            success: true,
+            data: groupedPermissions,
+            metadata
+        });
+    } catch (error) {
+        console.error('Error fetching permissions:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching permissions',
+            error: error.message
+        });
+    }
+});
+// Delete Role
+app.delete('/api/roles/:roleId', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { roleId } = req.params;
+
+            // Validate roleId format
+            if (!ObjectId.isValid(roleId)) {
+                throw new Error('Invalid role ID format');
+            }
+
+            // Get role and validate
+            const role = await roles.findOne({ 
+                _id: new ObjectId(roleId) 
+            }, { session });
+
+            if (!role) {
+                throw new Error('Role not found');
+            }
+
+            if (role.isSystem) {
+                throw new Error('System roles cannot be deleted');
+            }
+
+            // Check if role has assigned users
+            const assignedUsersCount = await user_role_assignments.countDocuments({ 
+                roleId: new ObjectId(roleId) 
+            }, { session });
+
+            if (assignedUsersCount > 0) {
+                throw new Error(`Cannot delete role. ${assignedUsersCount} users are currently assigned to this role.`);
+            }
+
+            // Delete role permissions
+            await role_permissions.deleteOne({ 
+                roleId: new ObjectId(roleId) 
+            }, { session });
+
+            // Delete role
+            await roles.deleteOne({ 
+                _id: new ObjectId(roleId) 
+            }, { session });
+
+            // Create audit log
+            await createAuditLog(
+                'ROLE_DELETED',
+                req.user.userId,
+                roleId,
+                {
+                    roleName: role.name,
+                    roleDetails: role,
+                    deletedAt: new Date()
+                },
+                session
+            );
+
+            // Archive role data
+            await database.collection('deleted_roles').insertOne({
+                ...role,
+                deletedAt: new Date(),
+                deletedBy: new ObjectId(req.user.userId),
+                originalId: role._id
+            }, { session });
+
+            res.json({
+                success: true,
+                message: 'Role deleted successfully',
+                data: {
+                    roleId,
+                    roleName: role.name
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error deleting role:', error);
+        const statusCode = error.message.includes('not found') ? 404 :
+                          error.message.includes('System roles') ? 403 :
+                          error.message.includes('users are currently assigned') ? 400 :
+                          500;
+        
+        res.status(statusCode).json({
+            success: false,
+            message: error.message || 'Error deleting role'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Add this endpoint if it's missing
+app.put('/api/roles/:roleId', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { roleId } = req.params;
+            const { name, description, isSystem } = req.body;
+
+            // Validate roleId format
+            if (!ObjectId.isValid(roleId)) {
+                throw new Error('Invalid role ID format');
+            }
+
+            // Validate required fields
+            if (!name || typeof name !== 'string' || name.trim().length < 3) {
+                throw new Error('Role name must be at least 3 characters long');
+            }
+
+            // Get existing role
+            const existingRole = await roles.findOne({ 
+                _id: new ObjectId(roleId) 
+            }, { session });
+
+            if (!existingRole) {
+                throw new Error('Role not found');
+            }
+
+            if (existingRole.isSystem) {
+                throw new Error('System roles cannot be modified');
+            }
+
+            // Check if new name conflicts with other roles
+            if (name !== existingRole.name) {
+                const nameExists = await roles.findOne({
+                    _id: { $ne: new ObjectId(roleId) },
+                    name: { $regex: new RegExp(`^${name}$`, 'i') }
+                }, { session });
+
+                if (nameExists) {
+                    throw new Error('Role name already exists');
+                }
+            }
+
+            // Update role
+            await roles.updateOne(
+                { _id: new ObjectId(roleId) },
+                { 
+                    $set: { 
+                        name,
+                        description,
+                        isSystem,
+                        updatedAt: new Date(),
+                        updatedBy: new ObjectId(req.user.userId)
+                    }
+                },
+                { session }
+            );
+
+            // Create audit log
+            await createAuditLog(
+                'ROLE_UPDATED',
+                req.user.userId,
+                roleId,
+                {
+                    roleName: name,
+                    previousName: existingRole.name,
+                    changes: {
+                        name: name !== existingRole.name,
+                        description: description !== existingRole.description,
+                        isSystem: isSystem !== existingRole.isSystem
+                    }
+                },
+                session
+            );
+
+            // Get updated role
+            const updatedRole = await roles.findOne({ 
+                _id: new ObjectId(roleId) 
+            }, { session });
+
+            res.json({
+                success: true,
+                message: 'Role updated successfully',
+                data: updatedRole
+            });
+        });
+    } catch (error) {
+        console.error('Error updating role:', error);
+        res.status(
+            error.message.includes('not found') ? 404 :
+            error.message.includes('already exists') ? 400 :
+            error.message.includes('System roles') ? 403 :
+            500
+        ).json({
+            success: false,
+            message: error.message || 'Error updating role'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// User Management Routes
 
 // Get all users with filtering and pagination
 app.get('/api/users', verifyToken, async (req, res) => {
@@ -1332,466 +2665,17 @@ app.put('/api/users/:userId/password', verifyToken, verifyAdmin, async (req, res
     }
 });
 
-// Get all roles
-app.get('/api/roles', verifyToken, verifyAdmin, async (req, res) => {
-    try {
-        // Get pagination parameters
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
-
-        // Get search and filter parameters
-        const search = req.query.search;
-        const filter = {};
-
-        if (search) {
-            filter.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } }
-            ];
-        }
-
-        // Get total count for pagination
-        const totalRoles = await roles.countDocuments(filter);
-
-        // Get roles with pagination
-        const rolesList = await roles.find(filter)
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .toArray();
-
-        // Enhance roles with user counts and additional data
-        const enhancedRoles = await Promise.all(rolesList.map(async (role) => {
-            const [usersCount, permissions] = await Promise.all([
-                user_role_assignments.countDocuments({ roleId: role._id }),
-                role_permissions.findOne({ roleId: role._id })
-            ]);
-
-            return {
-                ...role,
-                usersCount,
-                permissions: permissions?.permissions || [],
-                createdBy: await getUserInfo(role.createdBy),
-                updatedBy: role.updatedBy ? await getUserInfo(role.updatedBy) : null
-            };
-        }));
-
-        res.json({
-            success: true,
-            data: enhancedRoles,
-            pagination: {
-                total: totalRoles,
-                page,
-                totalPages: Math.ceil(totalRoles / limit),
-                hasMore: page * limit < totalRoles
-            }
-        });
-    } catch (error) {
-        console.error('Error fetching roles:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching roles',
-            error: error.message
-        });
-    }
-});
-
-// Get single role
-app.get('/api/roles/:roleId', verifyToken, verifyAdmin, async (req, res) => {
-    try {
-        const { roleId } = req.params;
-
-        if (!ObjectId.isValid(roleId)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid role ID format'
-            });
-        }
-
-        const role = await roles.findOne({ 
-            _id: new ObjectId(roleId) 
-        });
-
-        if (!role) {
-            return res.status(404).json({
-                success: false,
-                message: 'Role not found'
-            });
-        }
-
-        const [usersCount, permissions, userAssignments, auditLogs] = await Promise.all([
-            user_role_assignments.countDocuments({ roleId: role._id }),
-            role_permissions.findOne({ roleId: role._id }),
-            user_role_assignments.find({ roleId: role._id }).limit(5).toArray(),
-            audit_logs.find({ 
-                'details.roleId': role._id 
-            })
-            .sort({ timestamp: -1 })
-            .limit(10)
-            .toArray()
-        ]);
-
-        const assignedUsers = await Promise.all(userAssignments.map(async (assignment) => {
-            const user = await users.findOne(
-                { _id: assignment.userId },
-                { projection: { password: 0, resetToken: 0 } }
-            );
-            return user;
-        }));
-
-        res.json({
-            success: true,
-            data: {
-                ...role,
-                usersCount,
-                permissions: permissions?.permissions || [],
-                recentUsers: assignedUsers,
-                auditLogs,
-                createdBy: await getUserInfo(role.createdBy),
-                updatedBy: role.updatedBy ? await getUserInfo(role.updatedBy) : null
-            }
-        });
-    } catch (error) {
-        console.error('Error fetching role details:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching role details',
-            error: error.message
-        });
-    }
-});
-
-// Create role
-app.post('/api/roles', verifyToken, verifyAdmin, async (req, res) => {
-    const session = client.startSession();
-    try {
-        await session.withTransaction(async () => {
-            const { name, description, permissions = [], isSystem = false } = req.body;
-
-            // Validation
-            if (!name || typeof name !== 'string' || name.trim().length < 3) {
-                throw new Error('Role name must be at least 3 characters long');
-            }
-
-            if (description && description.length > 200) {
-                throw new Error('Description cannot exceed 200 characters');
-            }
-
-            const nameRegex = /^[a-zA-Z0-9\s_-]+$/;
-            if (!nameRegex.test(name)) {
-                throw new Error('Role name can only contain letters, numbers, spaces, hyphens, and underscores');
-            }
-
-            // Check for existing role
-            const existingRole = await roles.findOne({ 
-                name: { $regex: new RegExp(`^${name}$`, 'i') }
-            }, { session });
-
-            if (existingRole) {
-                throw new Error('Role name already exists');
-            }
-
-            // Create role
-            const role = {
-                name,
-                description,
-                isSystem,
-                createdAt: new Date(),
-                createdBy: new ObjectId(req.user.userId),
-                updatedAt: new Date()
-            };
-
-            const result = await roles.insertOne(role, { session });
-
-            // Create role permissions
-            if (permissions.length > 0) {
-                await role_permissions.insertOne({
-                    roleId: result.insertedId,
-                    permissions,
-                    createdAt: new Date(),
-                    createdBy: new ObjectId(req.user.userId)
-                }, { session });
-            }
-
-            // Create audit log
-            await createAuditLog(
-                'ROLE_CREATED',
-                req.user.userId,
-                result.insertedId,
-                {
-                    roleName: name,
-                    permissions,
-                    isSystem
-                },
-                session
-            );
-
-            res.status(201).json({
-                success: true,
-                message: 'Role created successfully',
-                data: {
-                    _id: result.insertedId,
-                    ...role,
-                    permissions
-                }
-            });
-        });
-    } catch (error) {
-        console.error('Error creating role:', error);
-        res.status(error.message.includes('already exists') ? 400 : 500).json({
-            success: false,
-            message: error.message || 'Error creating role'
-        });
-    } finally {
-        await session.endSession();
-    }
-});
-
-// Update role permissions
-app.put('/api/roles/:roleId/permissions', verifyToken, verifyAdmin, async (req, res) => {
-    const session = client.startSession();
-    try {
-        await session.withTransaction(async () => {
-            const { roleId } = req.params;
-            const { permissions } = req.body;
-
-            if (!ObjectId.isValid(roleId)) {
-                throw new Error('Invalid role ID format');
-            }
-
-            if (!Array.isArray(permissions)) {
-                throw new Error('Permissions must be an array');
-            }
-
-            const role = await roles.findOne({ 
-                _id: new ObjectId(roleId) 
-            }, { session });
-
-            if (!role) {
-                throw new Error('Role not found');
-            }
-
-            if (role.isSystem) {
-                throw new Error('System roles cannot be modified');
-            }
-
-            const currentPermissions = await role_permissions.findOne({ 
-                roleId: new ObjectId(roleId) 
-            }, { session });
-
-            await role_permissions.updateOne(
-                { roleId: new ObjectId(roleId) },
-                { 
-                    $set: { 
-                        permissions,
-                        updatedAt: new Date(),
-                        updatedBy: new ObjectId(req.user.userId)
-                    }
-                },
-                { upsert: true, session }
-            );
-
-            await roles.updateOne(
-                { _id: new ObjectId(roleId) },
-                { 
-                    $set: { 
-                        updatedAt: new Date(),
-                        updatedBy: new ObjectId(req.user.userId)
-                    }
-                },
-                { session }
-            );
-
-            await createAuditLog(
-                'ROLE_PERMISSIONS_UPDATED',
-                req.user.userId,
-                roleId,
-                {
-                    roleName: role.name,
-                    previousPermissions: currentPermissions?.permissions || [],
-                    newPermissions: permissions,
-                    changes: {
-                        added: permissions.filter(p => !currentPermissions?.permissions?.includes(p)),
-                        removed: currentPermissions?.permissions?.filter(p => !permissions.includes(p))
-                    }
-                },
-                session
-            );
-
-            res.json({
-                success: true,
-                message: 'Role permissions updated successfully',
-                data: {
-                    roleId,
-                    permissions
-                }
-            });
-        });
-    } catch (error) {
-        console.error('Error updating role permissions:', error);
-        res.status(error.message.includes('not found') ? 404 : 500).json({
-            success: false,
-            message: error.message || 'Error updating role permissions'
-        });
-    } finally {
-        await session.endSession();
-    }
-});
-
-// Get Permissions
-app.get('/api/permissions', verifyToken, verifyAdmin, async (req, res) => {
-    try {
-        let permissionsList = await database.collection('permissions').find().toArray();
-        
-        if (!permissionsList || permissionsList.length === 0) {
-            await initializeDefaultPermissions();
-            permissionsList = await database.collection('permissions').find().toArray();
-        }
-
-        // Process permissions sequentially to avoid too many concurrent operations
-        const groupedPermissions = {};
-        for (const permission of permissionsList) {
-            const category = permission.category || 'General';
-            if (!groupedPermissions[category]) {
-                groupedPermissions[category] = [];
-            }
-            
-            const usage = await countPermissionUsage(permission.name);
-            groupedPermissions[category].push({
-                ...permission,
-                usageCount: usage
-            });
-        }
-
-        const metadata = {
-            totalPermissions: permissionsList.length,
-            categories: Object.keys(groupedPermissions).length,
-            lastUpdated: await getLastPermissionUpdate()
-        };
-
-        res.json({
-            success: true,
-            data: groupedPermissions,
-            metadata
-        });
-    } catch (error) {
-        console.error('Error fetching permissions:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching permissions',
-            error: error.message
-        });
-    }
-});
-
-// Helper Functions
-async function createAuditLog(action, performedBy, targetUser = null, details = {}) {
-    try {
-        const auditLog = {
-            action,
-            performedBy: performedBy ? new ObjectId(performedBy) : null,
-            targetUser: targetUser ? new ObjectId(targetUser) : null,
-            details,
-            timestamp: new Date(),
-            ip: details.ip || null,
-            userAgent: details.userAgent || null
-        };
-
-        await audit_logs.insertOne(auditLog);
-    } catch (error) {
-        console.error('Error creating audit log:', error);
-    }
-}
-
-async function getUserInfo(userId) {
-    if (!userId) return null;
-    const user = await users.findOne(
-        { _id: new ObjectId(userId) },
-        { projection: { name: 1, email: 1 } }
-    );
-    return user;
-}
-
-async function countPermissionUsage(permissionName) {
-    return await role_permissions.countDocuments({
-        permissions: permissionName
-    });
-}
-
-async function getLastPermissionUpdate() {
-    const lastUpdate = await audit_logs.findOne(
-        { action: { $regex: /^PERMISSION_/ } },
-        { sort: { timestamp: -1 } }
-    );
-    return lastUpdate?.timestamp || null;
-}
-
-// Graceful Shutdown Handler
-async function gracefulShutdown(signal) {
-    console.log(`${signal} received. Starting graceful shutdown...`);
-
-    try {
-        // Check if database is connected
-        if (client) {
-            try {
-                // Check connection status
-                const isConnected = await client.db().admin().ping();
-                if (isConnected) {
-                    // Close all active sessions if the collection exists
-                    if (sessions) {
-                        try {
-                            await sessions.updateMany(
-                                { expires: { $gt: new Date() } },
-                                { $set: { expires: new Date() } }
-                            );
-                            console.log('Active sessions closed');
-                        } catch (error) {
-                            console.warn('Error closing sessions:', error);
-                        }
-                    }
-
-                    // Close database connection
-                    await client.close();
-                    console.log('MongoDB connection closed');
-                }
-            } catch (error) {
-                console.warn('Error checking MongoDB connection:', error);
-            }
-        }
-
-        // Close Redis connection if available
-        if (redisClient) {
-            try {
-                await redisClient.quit();
-                console.log('Redis connection closed');
-            } catch (error) {
-                console.warn('Error closing Redis connection:', error);
-            }
-        }
-
-        console.log('Shutdown completed');
-        process.exit(0);
-    } catch (error) {
-        console.error('Error during shutdown:', error);
-        process.exit(1);
-    }
-}
-
-// Register shutdown handlers
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 // Handle uncaught exceptions and unhandled rejections
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
     gracefulShutdown('Uncaught Exception');
 });
-
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
     gracefulShutdown('Unhandled Rejection');
 });
+
 
 // Initialize application
 const initializeApp = async () => {
