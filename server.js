@@ -208,6 +208,7 @@ let system_config;
 let migration_jobs;
 let security_logs;
 let sessions;
+let billing_history;
 
 // Initialize Redis separately after ensuring connection
 async function initializeRedis() {
@@ -298,7 +299,8 @@ async function initializeDatabase() {
             'system_config',
             'migration_jobs',
             'security_logs',
-            'sessions'
+            'sessions',
+            'billing_history'
         ];
 
         // Create collections if they don't exist
@@ -333,6 +335,7 @@ async function initializeDatabase() {
         migration_jobs = database.collection('migration_jobs');
         security_logs = database.collection('security_logs');
         sessions = database.collection('sessions');
+        billing_history = database.collection('billing_history');
 
         // Function to check and create index if needed
         const ensureIndex = async (collection, indexSpec, options = {}) => {
@@ -391,7 +394,12 @@ const indexPromises = [
     ensureIndex(security_logs, { type: 1 }),
     ensureIndex(sessions, { userId: 1 }),
     ensureIndex(sessions, { expires: 1 }),
-    ensureIndex(migration_jobs, { status: 1 })
+    ensureIndex(migration_jobs, { status: 1 }),
+
+     // Add billing history indexes
+            ensureIndex(billing_history, { companyId: 1 }),
+            ensureIndex(billing_history, { invoiceNumber: 1 }, { unique: true }),
+            ensureIndex(billing_history, { date: -1 })
 ];
         await Promise.all(indexPromises);
         
@@ -420,7 +428,8 @@ const indexPromises = [
             system_config,
             migration_jobs,
             security_logs,
-            sessions
+            sessions,
+            billing_history
         };
     } catch (err) {
         console.error("MongoDB initialization error:", err);
@@ -3668,6 +3677,145 @@ app.patch('/api/companies/:companyId/users/:userId/toggle-status', verifyToken, 
         });
     } finally {
         await session.endSession();
+    }
+});
+
+// Get company billing history
+app.get('/api/companies/:companyId/billing-history', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { companyId } = req.params;
+
+        if (!ObjectId.isValid(companyId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid company ID'
+            });
+        }
+
+        // Get company billing history from the database
+        const billingHistory = await database.collection('billing_history').find({
+            companyId: new ObjectId(companyId)
+        }).sort({ date: -1 }).toArray();
+
+        // If no history exists, return empty array
+        if (!billingHistory) {
+            return res.json({
+                success: true,
+                data: []
+            });
+        }
+
+        res.json({
+            success: true,
+            data: billingHistory
+        });
+
+    } catch (error) {
+        console.error('Error fetching billing history:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching billing history'
+        });
+    }
+});
+
+// Generate invoice
+app.post('/api/companies/:companyId/generate-invoice', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { companyId } = req.params;
+
+        if (!ObjectId.isValid(companyId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid company ID'
+            });
+        }
+
+        const company = await companies.findOne({ _id: new ObjectId(companyId) });
+        if (!company) {
+            return res.status(404).json({
+                success: false,
+                message: 'Company not found'
+            });
+        }
+
+        const subscription = await company_subscriptions.findOne({ 
+            companyId: new ObjectId(companyId) 
+        });
+
+        // Generate invoice number
+        const invoiceNumber = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+        // Create invoice record
+        const invoice = {
+            invoiceNumber,
+            companyId: new ObjectId(companyId),
+            date: new Date(),
+            amount: subscription.price || 0,
+            status: 'pending',
+            items: [{
+                description: `${subscription.plan} Plan Subscription`,
+                quantity: 1,
+                unitPrice: subscription.price || 0,
+                total: subscription.price || 0
+            }],
+            billingDetails: {
+                companyName: company.name,
+                address: company.contactDetails.address,
+                email: company.contactDetails.email
+            },
+            createdAt: new Date(),
+            createdBy: new ObjectId(req.user.userId)
+        };
+
+        // Save invoice to billing history
+        await database.collection('billing_history').insertOne(invoice);
+
+        res.json({
+            success: true,
+            message: 'Invoice generated successfully',
+            data: invoice
+        });
+
+    } catch (error) {
+        console.error('Error generating invoice:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error generating invoice'
+        });
+    }
+});
+
+// Download invoice
+app.get('/api/invoices/:invoiceNumber/download', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { invoiceNumber } = req.params;
+
+        // Get invoice from database
+        const invoice = await database.collection('billing_history').findOne({
+            invoiceNumber: invoiceNumber
+        });
+
+        if (!invoice) {
+            return res.status(404).json({
+                success: false,
+                message: 'Invoice not found'
+            });
+        }
+
+        // In a real implementation, you would generate a PDF here
+        // For now, we'll just send the invoice data
+        res.json({
+            success: true,
+            data: invoice
+        });
+
+    } catch (error) {
+        console.error('Error downloading invoice:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error downloading invoice'
+        });
     }
 });
 
