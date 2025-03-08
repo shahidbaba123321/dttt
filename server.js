@@ -3819,6 +3819,40 @@ app.get('/api/invoices/:invoiceNumber/download', verifyToken, verifyAdmin, async
     }
 });
 
+// Get company activity logs
+app.get('/api/companies/:companyId/activity-logs', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { companyId } = req.params;
+
+        if (!ObjectId.isValid(companyId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid company ID'
+            });
+        }
+
+        const logs = await company_audit_logs
+            .find({ 
+                companyId: new ObjectId(companyId) 
+            })
+            .sort({ timestamp: -1 })
+            .limit(50)
+            .toArray();
+
+        res.json({
+            success: true,
+            data: logs
+        });
+
+    } catch (error) {
+        console.error('Error fetching activity logs:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching activity logs'
+        });
+    }
+});
+
 // Helper function to generate invoice
 async function generateInvoice(company, plan, amount, billingCycle) {
     const invoiceNumber = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
