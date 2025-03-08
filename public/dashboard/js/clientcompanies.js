@@ -1598,7 +1598,7 @@ renderActivityList(logs) {
     }
 
     // Initialize the Companies Manager globally
-    window.companiesManager = new CompaniesManager();
+    window.CompaniesManager = CompaniesManager;
 
 
     // Ensure all modals are hidden by default
