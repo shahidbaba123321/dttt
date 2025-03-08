@@ -42,15 +42,24 @@
         }
 
         async initialize() {
-            try {
-                await this.initializeElements();
-                await this.initializeEventListeners();
-                await this.loadCompanies();
-            } catch (error) {
-                console.error('Initialization error:', error);
-                this.showError('Failed to initialize companies module');
-            }
-        }
+    try {
+        await this.initializeElements();
+        await this.initializeEventListeners();
+        await this.loadCompanies();
+        
+        // Initialize company card listeners
+        this.initializeCompanyCardListeners();
+        
+        // Hide all modals by default
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+        });
+    } catch (error) {
+        console.error('Initialization error:', error);
+        this.showError('Failed to initialize companies module');
+    }
+}
 
         async initializeElements() {
             // Main elements
@@ -305,47 +314,111 @@
             }
         }
 
-        renderCompanies(companies) {
-            if (!companies.length) {
-                this.companiesGrid.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-building"></i>
-                        <h3>No Companies Found</h3>
-                        <p>There are no companies matching your criteria.</p>
-                    </div>
-                `;
-                return;
-            }
+       renderCompanies(companies) {
+    if (!companies.length) {
+        this.companiesGrid.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-building"></i>
+                <h3>No Companies Found</h3>
+                <p>There are no companies matching your criteria.</p>
+            </div>
+        `;
+        return;
+    }
 
-            this.companiesGrid.innerHTML = companies.map(company => `
-                <div class="company-card" data-id="${company._id}">
-                    <div class="company-header">
-                        <h3>${this.escapeHtml(company.name)}</h3>
-                        <span class="company-status status-${company.status}">
-                            ${company.status.charAt(0).toUpperCase() + company.status.slice(1)}
-                        </span>
-                    </div>
-                    <div class="company-details">
-                        <p><i class="fas fa-industry"></i> ${this.escapeHtml(company.industry)}</p>
-                        <p><i class="fas fa-users"></i> ${company.companySize} employees</p>
-                        <p><i class="fas fa-tag"></i> ${company.subscriptionPlan} plan</p>
-                        <p><i class="fas fa-envelope"></i> ${this.escapeHtml(company.contactDetails.email)}</p>
-                    </div>
-                    <div class="company-actions">
-                        <button class="btn-icon" onclick="window.companiesManager.viewCompanyDetails('${company._id}')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn-icon" onclick="window.companiesManager.editCompany('${company._id}')">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-icon" onclick="window.companiesManager.toggleCompanyStatus('${company._id}')">
-                            <i class="fas fa-power-off"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
+    this.companiesGrid.innerHTML = companies.map(company => `
+        <div class="company-card" data-id="${company._id}">
+            <div class="company-header">
+                <h3>${this.escapeHtml(company.name)}</h3>
+                <span class="company-status status-${company.status}">
+                    ${company.status.charAt(0).toUpperCase() + company.status.slice(1)}
+                </span>
+            </div>
+            <div class="company-details">
+                <p><i class="fas fa-industry"></i> ${this.escapeHtml(company.industry)}</p>
+                <p><i class="fas fa-users"></i> ${company.companySize} employees</p>
+                <p><i class="fas fa-tag"></i> ${company.subscriptionPlan} plan</p>
+                <p><i class="fas fa-envelope"></i> ${this.escapeHtml(company.contactDetails.email)}</p>
+            </div>
+            <div class="company-actions">
+                <button class="btn-icon" data-action="view" data-company-id="${company._id}">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn-icon" data-action="edit" data-company-id="${company._id}">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-icon" data-action="toggle-status" data-company-id="${company._id}">
+                    <i class="fas fa-power-off"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+
+    // Add event listeners after rendering
+    this.initializeCompanyCardListeners();
+}
+initializeCompanyCardListeners() {
+    // Add event listeners for company actions
+    this.companiesGrid.addEventListener('click', (e) => {
+        const button = e.target.closest('button[data-action]');
+        if (!button) return;
+
+        const action = button.dataset.action;
+        const companyId = button.dataset.companyId;
+
+        switch (action) {
+            case 'view':
+                this.viewCompanyDetails(companyId);
+                break;
+            case 'edit':
+                this.editCompany(companyId);
+                break;
+            case 'toggle-status':
+                this.toggleCompanyStatus(companyId);
+                break;
+        }
+    });
+}
+        async initializeCompanies() {
+    try {
+        console.log('Initializing Companies module...');
+        
+        // Check if script is already loaded
+        const existingScript = document.querySelector('script[src*="clientcompanies.js"]');
+        if (existingScript) {
+            console.log('Removing existing Companies script...');
+            existingScript.remove();
         }
 
+        // Create and append the script
+        const script = document.createElement('script');
+        script.src = `${this.baseUrl}/dashboard/js/clientcompanies.js`;
+        
+        await new Promise((resolve, reject) => {
+            script.onload = resolve;
+            script.onerror = reject;
+            document.body.appendChild(script);
+        });
+
+        // Wait for script to be processed
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Initialize CompaniesManager
+        if (typeof CompaniesManager === 'undefined') {
+            throw new Error('CompaniesManager class not found');
+        }
+
+        // Create new instance
+        const companiesManager = new CompaniesManager();
+        window.companiesManager = companiesManager; // Make it globally available
+
+        console.log('CompaniesManager initialized successfully');
+    } catch (error) {
+        console.error('Error initializing companies module:', error);
+        throw error;
+    }
+}
+        
             renderPagination() {
             const totalPages = Math.ceil(this.totalCompanies / this.pageSize);
             
@@ -561,6 +634,10 @@
                 const response = await fetch(`${this.baseUrl}/companies/${companyId}`, {
                     headers: this.getHeaders()
                 });
+
+                if (!companyId) {
+            throw new Error('Company ID is required');
+        }
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch company details');
