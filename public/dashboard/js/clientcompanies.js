@@ -43,9 +43,8 @@
 
         async initialize() {
             try {
-                this.initializeElements();
-                this.initializeEventListeners();
-                this.populateIndustryDropdowns();
+                await this.initializeElements();
+                await this.initializeEventListeners();
                 await this.loadCompanies();
             } catch (error) {
                 console.error('Initialization error:', error);
@@ -53,7 +52,7 @@
             }
         }
 
-        initializeElements() {
+        async initializeElements() {
             // Main elements
             this.companiesGrid = document.querySelector('.companies-grid');
             this.paginationContainer = document.querySelector('.pagination');
@@ -69,49 +68,119 @@
             this.detailsModal = document.getElementById('companyDetailsModal');
             this.changePlanModal = document.getElementById('changePlanModal');
             
-            // User Management Modals
-            this.addUserModal = document.getElementById('addUserModal');
-            this.editUserModal = document.getElementById('editUserModal');
-            
             // Forms
             this.companyForm = document.getElementById('companyForm');
-            this.addUserForm = document.getElementById('addUserForm');
-            this.changePlanForm = document.getElementById('changePlanForm');
             
             // Buttons
             this.addCompanyBtn = document.getElementById('addCompanyBtn');
             this.saveCompanyBtn = document.getElementById('saveCompanyBtn');
             this.cancelBtn = document.getElementById('cancelBtn');
+
+            // Initialize dropdowns
+            await this.populateIndustryDropdowns();
         }
 
-        initializeEventListeners() {
-            // Company Management
-            this.addCompanyBtn.addEventListener('click', () => this.showAddCompanyModal());
-            this.companyForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.handleCompanySubmit();
-            });
+        async populateIndustryDropdowns() {
+            try {
+                // Get all industry select elements
+                const industrySelects = [
+                    this.industryFilter,
+                    document.querySelector('#industry'), // In the add/edit company form
+                ];
 
-            // Filters
-            this.searchInput.addEventListener('input', this.debounce(() => {
-                this.filters.search = this.searchInput.value;
-                this.currentPage = 1;
-                this.loadCompanies();
-            }, 300));
+                // Populate each select element
+                industrySelects.forEach(select => {
+                    if (select) {
+                        // Clear existing options
+                        select.innerHTML = '';
 
-            ['industryFilter', 'statusFilter', 'planFilter'].forEach(filterId => {
-                document.getElementById(filterId)?.addEventListener('change', (e) => {
-                    this.filters[e.target.id.replace('Filter', '')] = e.target.value;
+                        // Add default option
+                        const defaultOption = document.createElement('option');
+                        defaultOption.value = '';
+                        defaultOption.textContent = select === this.industryFilter ? 'All Industries' : 'Select Industry';
+                        select.appendChild(defaultOption);
+
+                        // Add industry options
+                        this.industries.forEach(industry => {
+                            const option = document.createElement('option');
+                            option.value = industry.toLowerCase();
+                            option.textContent = industry;
+                            select.appendChild(option);
+                        });
+                    }
+                });
+            } catch (error) {
+                console.error('Error populating industry dropdowns:', error);
+                throw new Error('Failed to populate industry dropdowns');
+            }
+        }
+
+
+                initializeEventListeners() {
+            // Company Management Events
+            if (this.addCompanyBtn) {
+                this.addCompanyBtn.addEventListener('click', () => this.showAddCompanyModal());
+            }
+
+            if (this.companyForm) {
+                this.companyForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleCompanySubmit();
+                });
+            }
+
+            // Search and Filters
+            if (this.searchInput) {
+                this.searchInput.addEventListener('input', this.debounce(() => {
+                    this.filters.search = this.searchInput.value;
                     this.currentPage = 1;
                     this.loadCompanies();
-                });
+                }, 300));
+            }
+
+            // Filter dropdowns
+            ['industryFilter', 'statusFilter', 'planFilter'].forEach(filterId => {
+                const element = document.getElementById(filterId);
+                if (element) {
+                    element.addEventListener('change', (e) => {
+                        this.filters[e.target.id.replace('Filter', '')] = e.target.value;
+                        this.currentPage = 1;
+                        this.loadCompanies();
+                    });
+                }
             });
 
-            // Subscription Management
-            document.getElementById('changePlanForm')?.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.handlePlanChange();
+            // Modal Management
+            document.querySelectorAll('.close-btn').forEach(btn => {
+                btn.addEventListener('click', () => this.closeModals());
             });
+
+            // Tab Management
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => this.switchTab(e.target));
+            });
+
+            // Global Modal Close
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal')) {
+                    this.closeModals();
+                }
+            });
+
+            // Keyboard Events
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    this.closeModals();
+                }
+            });
+
+            // Subscription Plan Events
+            if (document.getElementById('changePlanForm')) {
+                document.getElementById('changePlanForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handlePlanChange(this.currentCompanyId);
+                });
+            }
 
             // Plan calculation events
             const planSelect = document.getElementById('newPlan');
@@ -124,59 +193,80 @@
                 });
             }
 
-            // User Management
-            document.getElementById('addUserForm')?.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.handleAddUser();
-            });
+            // User Management Events
+            if (document.getElementById('addUserForm')) {
+                document.getElementById('addUserForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleAddUser(e);
+                });
+            }
 
-            // Modal close buttons
-            document.querySelectorAll('.close-btn').forEach(btn => {
-                btn.addEventListener('click', () => this.closeModals());
-            });
+            if (document.getElementById('editUserForm')) {
+                document.getElementById('editUserForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleEditUser(e);
+                });
+            }
 
-            // Tab switching in details modal
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => this.switchTab(e.target));
-            });
+            // User Filters
+            const userSearchInput = document.getElementById('userSearch');
+            if (userSearchInput) {
+                userSearchInput.addEventListener('input', this.debounce((e) => {
+                    this.filterUsers(
+                        e.target.value,
+                        document.getElementById('roleFilter')?.value,
+                        document.getElementById('userStatusFilter')?.value
+                    );
+                }, 300));
+            }
 
-            // Global click handler for closing modals
-            document.addEventListener('click', (e) => {
-                if (e.target.classList.contains('modal')) {
-                    this.closeModals();
+            // Role and Status Filters for Users
+            ['roleFilter', 'userStatusFilter'].forEach(filterId => {
+                const element = document.getElementById(filterId);
+                if (element) {
+                    element.addEventListener('change', () => {
+                        this.filterUsers(
+                            document.getElementById('userSearch')?.value || '',
+                            document.getElementById('roleFilter')?.value || '',
+                            document.getElementById('userStatusFilter')?.value || ''
+                        );
+                    });
                 }
             });
 
-            // Escape key handler
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    this.closeModals();
-                }
-            });
+            // Activity Log Filters
+            const activityTypeFilter = document.getElementById('activityTypeFilter');
+            const activityDateFilter = document.getElementById('activityDateFilter');
 
-            // User search and filters
-            document.getElementById('userSearch')?.addEventListener('input', this.debounce((e) => {
-                this.filterUsers(e.target.value);
-            }, 300));
+            if (activityTypeFilter) {
+                activityTypeFilter.addEventListener('change', () => this.filterActivityLogs());
+            }
 
-            document.getElementById('roleFilter')?.addEventListener('change', (e) => {
-                this.filterUsers(document.getElementById('userSearch').value, e.target.value);
-            });
+            if (activityDateFilter) {
+                activityDateFilter.addEventListener('change', () => this.filterActivityLogs());
+            }
 
-            document.getElementById('userStatusFilter')?.addEventListener('change', (e) => {
-                this.filterUsers(
-                    document.getElementById('userSearch').value,
-                    document.getElementById('roleFilter').value,
-                    e.target.value
-                );
-            });
-        }
+            // Invoice Generation
+            const generateInvoiceBtn = document.getElementById('generateInvoiceBtn');
+            if (generateInvoiceBtn) {
+                generateInvoiceBtn.addEventListener('click', () => {
+                    if (this.currentCompanyId) {
+                        this.generateInvoice(this.currentCompanyId);
+                    }
+                });
+            }
 
-        getHeaders() {
-            return {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            };
+            // Pagination Events
+            if (this.paginationContainer) {
+                this.paginationContainer.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('btn-page')) {
+                        const page = parseInt(e.target.dataset.page);
+                        if (!isNaN(page)) {
+                            this.changePage(page);
+                        }
+                    }
+                });
+            }
         }
 
         async loadCompanies() {
@@ -198,7 +288,9 @@
                     return;
                 }
 
-                if (!response.ok) throw new Error('Failed to fetch companies');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch companies');
+                }
 
                 const data = await response.json();
                 this.totalCompanies = data.total;
@@ -253,8 +345,8 @@
                 </div>
             `).join('');
         }
-                // Pagination Methods
-        renderPagination() {
+
+            renderPagination() {
             const totalPages = Math.ceil(this.totalCompanies / this.pageSize);
             
             if (totalPages <= 1) {
@@ -262,253 +354,304 @@
                 return;
             }
 
-            let pages = this.getPaginationRange(this.currentPage, totalPages);
+            const pages = this.getPaginationRange(this.currentPage, totalPages);
             
             this.paginationContainer.innerHTML = `
                 <button class="btn-page" ${this.currentPage === 1 ? 'disabled' : ''} 
-                        onclick="window.companiesManager.changePage(1)">
+                        data-page="1">
                     <i class="fas fa-angle-double-left"></i>
                 </button>
                 ${pages.map(page => `
                     <button class="btn-page ${page === this.currentPage ? 'active' : ''}"
-                            onclick="window.companiesManager.changePage(${page})">
+                            data-page="${page}">
                         ${page}
                     </button>
                 `).join('')}
                 <button class="btn-page" ${this.currentPage === totalPages ? 'disabled' : ''} 
-                        onclick="window.companiesManager.changePage(${totalPages})">
+                        data-page="${totalPages}">
                     <i class="fas fa-angle-double-right"></i>
                 </button>
             `;
         }
 
         getPaginationRange(current, total) {
-            const range = [];
             const delta = 2;
-            const left = current - delta;
-            const right = current + delta + 1;
+            const range = [];
+            const rangeWithDots = [];
+            let l;
 
             for (let i = 1; i <= total; i++) {
-                if (i === 1 || i === total || (i >= left && i < right)) {
+                if (i === 1 || i === total || 
+                    (i >= current - delta && i <= current + delta)) {
                     range.push(i);
                 }
             }
 
-            return range;
+            for (let i of range) {
+                if (l) {
+                    if (i - l === 2) {
+                        rangeWithDots.push(l + 1);
+                    } else if (i - l !== 1) {
+                        rangeWithDots.push('...');
+                    }
+                }
+                rangeWithDots.push(i);
+                l = i;
+            }
+
+            return rangeWithDots;
         }
 
         changePage(page) {
-            this.currentPage = page;
-            this.loadCompanies();
-        }
-
-        // Subscription Management Methods
-        async loadSubscriptionDetails(companyId) {
-            try {
-                const response = await fetch(`${this.baseUrl}/companies/${companyId}/subscription`, {
-                    headers: this.getHeaders()
-                });
-
-                if (!response.ok) throw new Error('Failed to load subscription details');
-
-                const data = await response.json();
-                return data.subscription;
-            } catch (error) {
-                console.error('Error loading subscription:', error);
-                this.showError('Failed to load subscription details');
-                return null;
+            if (page !== this.currentPage) {
+                this.currentPage = page;
+                this.loadCompanies();
             }
         }
 
-        async renderSubscriptionTab(company) {
-            try {
-                const subscription = await this.loadSubscriptionDetails(company._id);
-                if (!subscription) return;
-
-                const tabContent = document.querySelector('.tab-content');
-                tabContent.innerHTML = `
-                    <div class="subscription-details">
-                        <div class="current-plan">
-                            <h4>Current Subscription</h4>
-                            <div class="plan-info">
-                                <div class="info-group">
-                                    <label>Plan Type:</label>
-                                    <span class="plan-badge ${subscription.plan}">
-                                        ${subscription.plan.toUpperCase()}
-                                    </span>
-                                </div>
-                                <div class="info-group">
-                                    <label>Status:</label>
-                                    <span class="status-badge ${subscription.status}">
-                                        ${subscription.status.toUpperCase()}
-                                    </span>
-                                </div>
-                                <div class="info-group">
-                                    <label>Billing Cycle:</label>
-                                    <span>${subscription.billingCycle}</span>
-                                </div>
-                                <div class="info-group">
-                                    <label>Next Billing Date:</label>
-                                    <span>${new Date(subscription.nextBillingDate).toLocaleDateString()}</span>
-                                </div>
-                                <div class="info-group">
-                                    <label>Amount:</label>
-                                    <span>$${subscription.amount.toFixed(2)}/month</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="plan-features">
-                            <h4>Plan Features</h4>
-                            <ul class="feature-list">
-                                ${this.subscriptionPlans[subscription.plan].features.map(feature => `
-                                    <li><i class="fas fa-check"></i> ${feature}</li>
-                                `).join('')}
-                            </ul>
-                        </div>
-
-                        <div class="subscription-actions">
-                            <button class="btn-primary" onclick="window.companiesManager.showChangePlanModal('${company._id}')">
-                                <i class="fas fa-exchange-alt"></i> Change Plan
-                            </button>
-                            <button class="btn-secondary" onclick="window.companiesManager.generateInvoice('${company._id}')">
-                                <i class="fas fa-file-invoice"></i> Generate Invoice
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="billing-history">
-                        <h4>Billing History</h4>
-                        ${await this.renderBillingHistory(company._id)}
-                    </div>
-                `;
-
-                this.initializeSubscriptionEventListeners(company._id);
-            } catch (error) {
-                console.error('Error rendering subscription tab:', error);
-                this.showError('Failed to load subscription information');
-            }
+        async showAddCompanyModal() {
+            this.currentCompanyId = null;
+            document.getElementById('modalTitle').textContent = 'Add New Company';
+            this.companyForm.reset();
+            this.companyModal.classList.add('show');
         }
 
-        async renderBillingHistory(companyId) {
+        async handleCompanySubmit() {
             try {
-                const response = await fetch(`${this.baseUrl}/companies/${companyId}/billing-history`, {
-                    headers: this.getHeaders()
-                });
+                const formData = {
+                    name: document.getElementById('companyName').value,
+                    industry: document.getElementById('industry').value,
+                    companySize: parseInt(document.getElementById('companySize').value),
+                    contactDetails: {
+                        email: document.getElementById('email').value,
+                        phone: document.getElementById('phone').value,
+                        address: document.getElementById('address').value
+                    },
+                    subscriptionPlan: document.getElementById('subscriptionPlan').value,
+                    status: document.getElementById('status').value
+                };
 
-                if (!response.ok) throw new Error('Failed to load billing history');
-
-                const history = await response.json();
-                
-                if (!history.length) {
-                    return `
-                        <div class="empty-state">
-                            <i class="fas fa-history"></i>
-                            <p>No billing history available</p>
-                        </div>
-                    `;
+                // Validate form data
+                if (!this.validateCompanyData(formData)) {
+                    return;
                 }
 
-                return `
-                    <div class="billing-table-container">
-                        <table class="billing-table">
-                            <thead>
-                                <tr>
-                                    <th>Invoice #</th>
-                                    <th>Date</th>
-                                    <th>Amount</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${history.map(invoice => `
-                                    <tr>
-                                        <td>${invoice.invoiceNumber}</td>
-                                        <td>${new Date(invoice.date).toLocaleDateString()}</td>
-                                        <td>$${invoice.amount.toFixed(2)}</td>
-                                        <td>
-                                            <span class="status-badge ${invoice.status}">
-                                                ${invoice.status.toUpperCase()}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button class="btn-icon" onclick="window.companiesManager.downloadInvoice('${invoice.invoiceNumber}')">
-                                                <i class="fas fa-download"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                `;
+                const endpoint = this.currentCompanyId 
+                    ? `${this.baseUrl}/companies/${this.currentCompanyId}`
+                    : `${this.baseUrl}/companies`;
+
+                const method = this.currentCompanyId ? 'PUT' : 'POST';
+
+                const response = await fetch(endpoint, {
+                    method,
+                    headers: this.getHeaders(),
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to save company');
+                }
+
+                this.showSuccess(`Company successfully ${this.currentCompanyId ? 'updated' : 'created'}`);
+                this.closeModals();
+                await this.loadCompanies();
             } catch (error) {
-                console.error('Error loading billing history:', error);
-                return `
-                    <div class="error-state">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <p>Failed to load billing history</p>
-                    </div>
-                `;
+                console.error('Error saving company:', error);
+                this.showError(error.message);
             }
         }
 
-        async showChangePlanModal(companyId) {
+        validateCompanyData(data) {
+            if (!data.name || data.name.trim().length < 2) {
+                this.showError('Company name must be at least 2 characters long');
+                return false;
+            }
+
+            if (!data.industry) {
+                this.showError('Please select an industry');
+                return false;
+            }
+
+            if (!data.companySize || data.companySize < 1) {
+                this.showError('Company size must be at least 1');
+                return false;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(data.contactDetails.email)) {
+                this.showError('Please enter a valid email address');
+                return false;
+            }
+
+            const phoneRegex = /^\+?[\d\s-]{10,}$/;
+            if (!phoneRegex.test(data.contactDetails.phone)) {
+                this.showError('Please enter a valid phone number');
+                return false;
+            }
+
+            if (!data.contactDetails.address || data.contactDetails.address.trim().length < 5) {
+                this.showError('Please enter a valid address');
+                return false;
+            }
+
+            return true;
+        }
+
+        async editCompany(companyId) {
             try {
-                const subscription = await this.loadSubscriptionDetails(companyId);
-                if (!subscription) return;
+                const response = await fetch(`${this.baseUrl}/companies/${companyId}`, {
+                    headers: this.getHeaders()
+                });
 
-                this.changePlanModal.classList.add('show');
-                
-                // Populate current plan details
-                document.getElementById('currentPlan').textContent = subscription.plan.toUpperCase();
-                document.getElementById('newPlan').value = subscription.plan;
-                document.getElementById('billingCycle').value = subscription.billingCycle;
+                if (!response.ok) {
+                    throw new Error('Failed to fetch company data');
+                }
 
-                this.updatePlanSummary();
+                const company = await response.json();
+                this.currentCompanyId = companyId;
+                this.populateCompanyForm(company);
+                document.getElementById('modalTitle').textContent = 'Edit Company';
+                this.companyModal.classList.add('show');
             } catch (error) {
-                console.error('Error showing plan change modal:', error);
-                this.showError('Failed to load plan change options');
+                console.error('Error loading company for edit:', error);
+                this.showError('Failed to load company data');
             }
         }
 
-        updatePlanSummary() {
-            const plan = document.getElementById('newPlan').value;
-            const cycle = document.getElementById('billingCycle').value;
-            const basePrice = this.subscriptionPlans[plan].price;
-            
-            const months = cycle === 'annual' ? 12 : 1;
-            const subtotal = basePrice * months;
-            const discount = cycle === 'annual' ? subtotal * 0.1 : 0; // 10% annual discount
-            const total = subtotal - discount;
+        populateCompanyForm(company) {
+            document.getElementById('companyName').value = company.name;
+            document.getElementById('industry').value = company.industry;
+            document.getElementById('companySize').value = company.companySize;
+            document.getElementById('email').value = company.contactDetails.email;
+            document.getElementById('phone').value = company.contactDetails.phone;
+            document.getElementById('address').value = company.contactDetails.address;
+            document.getElementById('subscriptionPlan').value = company.subscriptionPlan;
+            document.getElementById('status').value = company.status;
+        }
 
-            document.getElementById('planSummary').innerHTML = `
-                <div class="summary-row">
-                    <span>Base Price:</span>
-                    <span>$${basePrice}/month</span>
-                </div>
-                <div class="summary-row">
-                    <span>Billing Period:</span>
-                    <span>${months} month${months > 1 ? 's' : ''}</span>
-                </div>
-                <div class="summary-row">
-                    <span>Subtotal:</span>
-                    <span>$${subtotal.toFixed(2)}</span>
-                </div>
-                ${discount > 0 ? `
-                    <div class="summary-row discount">
-                        <span>Annual Discount (10%):</span>
-                        <span>-$${discount.toFixed(2)}</span>
+        async toggleCompanyStatus(companyId) {
+            try {
+                const response = await fetch(`${this.baseUrl}/companies/${companyId}/toggle-status`, {
+                    method: 'PATCH',
+                    headers: this.getHeaders()
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to toggle company status');
+                }
+
+                const result = await response.json();
+                this.showSuccess(result.message);
+                await this.loadCompanies();
+
+                // If the company details modal is open, refresh it
+                if (this.currentCompanyId === companyId && 
+                    this.detailsModal.classList.contains('show')) {
+                    await this.viewCompanyDetails(companyId);
+                }
+            } catch (error) {
+                console.error('Error toggling company status:', error);
+                this.showError('Failed to update company status');
+            }
+        }
+
+        async viewCompanyDetails(companyId) {
+            try {
+                const response = await fetch(`${this.baseUrl}/companies/${companyId}`, {
+                    headers: this.getHeaders()
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch company details');
+                }
+
+                const company = await response.json();
+                this.currentCompanyId = companyId;
+                await this.renderCompanyDetails(company);
+                this.detailsModal.classList.add('show');
+
+                // Set the first tab as active by default
+                const firstTab = document.querySelector('.tab-btn');
+                if (firstTab) {
+                    this.switchTab(firstTab);
+                }
+            } catch (error) {
+                console.error('Error fetching company details:', error);
+                this.showError('Failed to load company details');
+            }
+        }
+
+        async renderCompanyDetails(company) {
+            const detailsContent = document.querySelector('.tab-content');
+            detailsContent.innerHTML = `
+                <div class="company-details-view">
+                    <div class="details-section">
+                        <h3>Company Information</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Company Name</label>
+                                <span>${this.escapeHtml(company.name)}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Industry</label>
+                                <span>${this.escapeHtml(company.industry)}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Company Size</label>
+                                <span>${company.companySize} employees</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Status</label>
+                                <span class="status-badge ${company.status}">
+                                    ${company.status.toUpperCase()}
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                ` : ''}
-                <div class="summary-row total">
-                    <span>Total:</span>
-                    <span>$${total.toFixed(2)}</span>
+
+                    <div class="details-section">
+                        <h3>Contact Information</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Email</label>
+                                <span>${this.escapeHtml(company.contactDetails.email)}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Phone</label>
+                                <span>${this.escapeHtml(company.contactDetails.phone)}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Address</label>
+                                <span>${this.escapeHtml(company.contactDetails.address)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="details-section">
+                        <h3>Subscription Details</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Current Plan</label>
+                                <span class="plan-badge ${company.subscriptionPlan}">
+                                    ${company.subscriptionPlan.toUpperCase()}
+                                </span>
+                            </div>
+                            <div class="info-item">
+                                <label>Start Date</label>
+                                <span>${new Date(company.subscriptionStartDate).toLocaleDateString()}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Next Billing</label>
+                                <span>${new Date(company.nextBillingDate).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
         }
 
+            // Subscription Management Methods
         async handlePlanChange(companyId) {
             try {
                 const planData = {
@@ -516,21 +659,53 @@
                     billingCycle: document.getElementById('billingCycle').value
                 };
 
+                if (!this.validatePlanChange(planData)) {
+                    return;
+                }
+
                 const response = await fetch(`${this.baseUrl}/companies/${companyId}/subscription`, {
                     method: 'POST',
                     headers: this.getHeaders(),
                     body: JSON.stringify(planData)
                 });
 
-                if (!response.ok) throw new Error('Failed to update subscription');
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to update subscription');
+                }
 
+                const result = await response.json();
                 this.showSuccess('Subscription updated successfully');
                 this.changePlanModal.classList.remove('show');
-                await this.renderSubscriptionTab({ _id: companyId });
+                
+                // Refresh subscription tab if it's active
+                const activeTab = document.querySelector('.tab-btn.active');
+                if (activeTab && activeTab.dataset.tab === 'subscription') {
+                    await this.renderSubscriptionTab({ _id: companyId });
+                }
             } catch (error) {
                 console.error('Error changing subscription plan:', error);
-                this.showError('Failed to update subscription');
+                this.showError(error.message);
             }
+        }
+
+        validatePlanChange(planData) {
+            if (!planData.plan) {
+                this.showError('Please select a plan');
+                return false;
+            }
+
+            if (!planData.billingCycle) {
+                this.showError('Please select a billing cycle');
+                return false;
+            }
+
+            if (!this.subscriptionPlans[planData.plan]) {
+                this.showError('Invalid plan selected');
+                return false;
+            }
+
+            return true;
         }
 
         async generateInvoice(companyId) {
@@ -540,30 +715,44 @@
                     headers: this.getHeaders()
                 });
 
-                if (!response.ok) throw new Error('Failed to generate invoice');
+                if (!response.ok) {
+                    throw new Error('Failed to generate invoice');
+                }
 
-                const invoice = await response.json();
+                const result = await response.json();
                 this.showSuccess('Invoice generated successfully');
-                await this.renderSubscriptionTab({ _id: companyId });
+                
+                // Offer invoice download
+                if (result.data.invoiceUrl) {
+                    this.downloadInvoice(result.data.invoiceUrl);
+                }
+
+                // Refresh billing history if visible
+                const activeTab = document.querySelector('.tab-btn.active');
+                if (activeTab && activeTab.dataset.tab === 'subscription') {
+                    await this.renderSubscriptionTab({ _id: companyId });
+                }
             } catch (error) {
                 console.error('Error generating invoice:', error);
                 this.showError('Failed to generate invoice');
             }
         }
 
-        async downloadInvoice(invoiceNumber) {
+        async downloadInvoice(invoiceUrl) {
             try {
-                const response = await fetch(`${this.baseUrl}/invoices/${invoiceNumber}/download`, {
+                const response = await fetch(invoiceUrl, {
                     headers: this.getHeaders()
                 });
 
-                if (!response.ok) throw new Error('Failed to download invoice');
+                if (!response.ok) {
+                    throw new Error('Failed to download invoice');
+                }
 
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `invoice-${invoiceNumber}.pdf`;
+                a.download = `invoice-${Date.now()}.pdf`;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
@@ -573,143 +762,8 @@
                 this.showError('Failed to download invoice');
             }
         }
-                // User Management Methods
-        async loadCompanyUsers(companyId) {
-            try {
-                const response = await fetch(`${this.baseUrl}/companies/${companyId}/users`, {
-                    headers: this.getHeaders()
-                });
 
-                if (!response.ok) throw new Error('Failed to load company users');
-
-                const data = await response.json();
-                return data.users;
-            } catch (error) {
-                console.error('Error loading company users:', error);
-                this.showError('Failed to load company users');
-                return [];
-            }
-        }
-
-        async renderUsersTab(company) {
-            try {
-                const users = await this.loadCompanyUsers(company._id);
-                const tabContent = document.querySelector('.tab-content');
-                
-                tabContent.innerHTML = `
-                    <div class="users-management">
-                        <div class="users-header">
-                            <div class="search-filters">
-                                <div class="search-box">
-                                    <i class="fas fa-search"></i>
-                                    <input type="text" id="userSearch" placeholder="Search users...">
-                                </div>
-                                <div class="filter-group">
-                                    <select id="roleFilter">
-                                        <option value="">All Roles</option>
-                                        <option value="admin">Admin</option>
-                                        <option value="manager">Manager</option>
-                                        <option value="employee">Employee</option>
-                                    </select>
-                                    <select id="userStatusFilter">
-                                        <option value="">All Status</option>
-                                        <option value="active">Active</option>
-                                        <option value="inactive">Inactive</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <button class="btn-primary" onclick="window.companiesManager.showAddUserModal('${company._id}')">
-                                <i class="fas fa-user-plus"></i> Add User
-                            </button>
-                        </div>
-
-                        <div class="users-table-container">
-                            ${this.renderUsersTable(users)}
-                        </div>
-                    </div>
-                `;
-
-                this.initializeUserManagementListeners();
-            } catch (error) {
-                console.error('Error rendering users tab:', error);
-                this.showError('Failed to load users information');
-            }
-        }
-
-        renderUsersTable(users) {
-            if (!users.length) {
-                return `
-                    <div class="empty-state">
-                        <i class="fas fa-users"></i>
-                        <h3>No Users Found</h3>
-                        <p>There are no users in this company yet.</p>
-                    </div>
-                `;
-            }
-
-            return `
-                <table class="users-table">
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Role</th>
-                            <th>Department</th>
-                            <th>Status</th>
-                            <th>Last Login</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${users.map(user => `
-                            <tr>
-                                <td>
-                                    <div class="user-cell">
-                                        <div class="user-avatar" style="background-color: ${this.getAvatarColor(user.name)}">
-                                            ${this.getInitials(user.name)}
-                                        </div>
-                                        <div class="user-info">
-                                            <span class="user-name">${this.escapeHtml(user.name)}</span>
-                                            <span class="user-email">${this.escapeHtml(user.email)}</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="role-badge ${user.role.toLowerCase()}">
-                                        ${user.role}
-                                    </span>
-                                </td>
-                                <td>${this.escapeHtml(user.department || '-')}</td>
-                                <td>
-                                    <span class="status-badge ${user.status}">
-                                        ${user.status.toUpperCase()}
-                                    </span>
-                                </td>
-                                <td>${user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}</td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <button class="btn-icon" onclick="window.companiesManager.editUser('${user._id}')">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn-icon" onclick="window.companiesManager.resetUserPassword('${user._id}')">
-                                            <i class="fas fa-key"></i>
-                                        </button>
-                                        <button class="btn-icon" onclick="window.companiesManager.toggleUserStatus('${user._id}')">
-                                            <i class="fas fa-power-off"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-        }
-
-        showAddUserModal(companyId) {
-            this.addUserModal.classList.add('show');
-            this.addUserModal.querySelector('form').dataset.companyId = companyId;
-        }
-
+        // User Management Methods
         async handleAddUser(event) {
             try {
                 const form = event.target;
@@ -722,19 +776,27 @@
                     department: document.getElementById('userDepartment').value
                 };
 
+                if (!this.validateUserData(userData)) {
+                    return;
+                }
+
                 const response = await fetch(`${this.baseUrl}/companies/${companyId}/users`, {
                     method: 'POST',
                     headers: this.getHeaders(),
                     body: JSON.stringify(userData)
                 });
 
-                if (!response.ok) throw new Error('Failed to add user');
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to add user');
+                }
 
                 const result = await response.json();
                 this.showSuccess('User added successfully');
                 
+                // Show temporary password if provided
                 if (result.data.tempPassword) {
-                    alert(`Temporary password for ${userData.email}: ${result.data.tempPassword}`);
+                    this.showTempPasswordModal(userData.email, result.data.tempPassword);
                 }
 
                 this.addUserModal.classList.remove('show');
@@ -742,62 +804,70 @@
                 await this.renderUsersTab({ _id: companyId });
             } catch (error) {
                 console.error('Error adding user:', error);
-                this.showError('Failed to add user');
+                this.showError(error.message);
             }
         }
 
-        async editUser(userId) {
-            try {
-                const response = await fetch(`${this.baseUrl}/companies/${this.currentCompanyId}/users/${userId}`, {
-                    headers: this.getHeaders()
-                });
-
-                if (!response.ok) throw new Error('Failed to fetch user details');
-
-                const user = await response.json();
-                this.populateEditUserForm(user);
-                this.editUserModal.classList.add('show');
-            } catch (error) {
-                console.error('Error loading user details:', error);
-                this.showError('Failed to load user details');
+        validateUserData(userData) {
+            if (!userData.name || userData.name.trim().length < 2) {
+                this.showError('Name must be at least 2 characters long');
+                return false;
             }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(userData.email)) {
+                this.showError('Please enter a valid email address');
+                return false;
+            }
+
+            if (!userData.role) {
+                this.showError('Please select a role');
+                return false;
+            }
+
+            return true;
         }
 
-        populateEditUserForm(user) {
-            document.getElementById('editUserName').value = user.name;
-            document.getElementById('editUserEmail').value = user.email;
-            document.getElementById('editUserRole').value = user.role;
-            document.getElementById('editUserDepartment').value = user.department || '';
-            document.getElementById('editUserForm').dataset.userId = user._id;
-        }
+        showTempPasswordModal(email, password) {
+            const modal = document.createElement('div');
+            modal.className = 'modal show';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Temporary Password</h2>
+                        <button class="close-btn"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Please securely share these credentials with the user:</p>
+                        <div class="credentials-box">
+                            <div class="credential-item">
+                                <label>Email:</label>
+                                <span>${this.escapeHtml(email)}</span>
+                            </div>
+                            <div class="credential-item">
+                                <label>Temporary Password:</label>
+                                <span>${this.escapeHtml(password)}</span>
+                            </div>
+                        </div>
+                        <div class="warning-message">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>This password will only be shown once. Please make sure to copy it.</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-primary" onclick="this.parentElement.parentElement.parentElement.remove()">
+                            I've copied the password
+                        </button>
+                    </div>
+                </div>
+            `;
 
-        async handleEditUser(event) {
-            try {
-                const form = event.target;
-                const userId = form.dataset.userId;
+            document.body.appendChild(modal);
 
-                const userData = {
-                    name: document.getElementById('editUserName').value,
-                    email: document.getElementById('editUserEmail').value,
-                    role: document.getElementById('editUserRole').value,
-                    department: document.getElementById('editUserDepartment').value
-                };
-
-                const response = await fetch(`${this.baseUrl}/companies/${this.currentCompanyId}/users/${userId}`, {
-                    method: 'PUT',
-                    headers: this.getHeaders(),
-                    body: JSON.stringify(userData)
-                });
-
-                if (!response.ok) throw new Error('Failed to update user');
-
-                this.showSuccess('User updated successfully');
-                this.editUserModal.classList.remove('show');
-                await this.renderUsersTab({ _id: this.currentCompanyId });
-            } catch (error) {
-                console.error('Error updating user:', error);
-                this.showError('Failed to update user');
-            }
+            // Add close button functionality
+            modal.querySelector('.close-btn').addEventListener('click', () => {
+                modal.remove();
+            });
         }
 
         async resetUserPassword(userId) {
@@ -814,18 +884,36 @@
                     }
                 );
 
-                if (!response.ok) throw new Error('Failed to reset password');
+                if (!response.ok) {
+                    throw new Error('Failed to reset password');
+                }
 
                 const result = await response.json();
                 this.showSuccess('Password reset successfully');
-                
+
                 if (result.data.tempPassword) {
-                    alert(`New temporary password: ${result.data.tempPassword}`);
+                    const user = await this.getUserDetails(userId);
+                    this.showTempPasswordModal(user.email, result.data.tempPassword);
                 }
             } catch (error) {
                 console.error('Error resetting password:', error);
                 this.showError('Failed to reset password');
             }
+        }
+
+        async getUserDetails(userId) {
+            const response = await fetch(
+                `${this.baseUrl}/companies/${this.currentCompanyId}/users/${userId}`,
+                {
+                    headers: this.getHeaders()
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch user details');
+            }
+
+            return await response.json();
         }
 
         async toggleUserStatus(userId) {
@@ -838,7 +926,9 @@
                     }
                 );
 
-                if (!response.ok) throw new Error('Failed to toggle user status');
+                if (!response.ok) {
+                    throw new Error('Failed to toggle user status');
+                }
 
                 this.showSuccess('User status updated successfully');
                 await this.renderUsersTab({ _id: this.currentCompanyId });
@@ -866,172 +956,7 @@
             });
         }
 
-        initializeUserManagementListeners() {
-            // User search
-            const searchInput = document.getElementById('userSearch');
-            if (searchInput) {
-                searchInput.addEventListener('input', this.debounce((e) => {
-                    this.filterUsers(
-                        e.target.value,
-                        document.getElementById('roleFilter').value,
-                        document.getElementById('userStatusFilter').value
-                    );
-                }, 300));
-            }
-
-            // Role filter
-            const roleFilter = document.getElementById('roleFilter');
-            if (roleFilter) {
-                roleFilter.addEventListener('change', (e) => {
-                    this.filterUsers(
-                        document.getElementById('userSearch').value,
-                        e.target.value,
-                        document.getElementById('userStatusFilter').value
-                    );
-                });
-            }
-
-            // Status filter
-            const statusFilter = document.getElementById('userStatusFilter');
-            if (statusFilter) {
-                statusFilter.addEventListener('change', (e) => {
-                    this.filterUsers(
-                        document.getElementById('userSearch').value,
-                        document.getElementById('roleFilter').value,
-                        e.target.value
-                    );
-                });
-            }
-        }
-
-        // Utility Methods for User Management
-        getInitials(name) {
-            return name
-                .split(' ')
-                .map(word => word[0])
-                .join('')
-                .toUpperCase()
-                .slice(0, 2);
-        }
-
-        getAvatarColor(name) {
-            let hash = 0;
-            for (let i = 0; i < name.length; i++) {
-                hash = name.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            const h = hash % 360;
-            return `hsl(${h}, 70%, 45%)`;
-        }
-
-            // Utility Methods
-        debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        escapeHtml(unsafe) {
-            if (!unsafe) return '';
-            return unsafe
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-
-        showLoading() {
-            const loader = document.createElement('div');
-            loader.className = 'content-loader';
-            loader.innerHTML = `
-                <div class="loader-spinner">
-                    <i class="fas fa-spinner fa-spin"></i>
-                </div>
-                <p>Loading content...</p>
-            `;
-            
-            if (this.companiesGrid) {
-                this.companiesGrid.innerHTML = '';
-                this.companiesGrid.appendChild(loader);
-            }
-        }
-
-        hideLoading() {
-            const loader = document.querySelector('.content-loader');
-            if (loader) {
-                loader.remove();
-            }
-        }
-
-        showError(message) {
-            if (window.dashboardApp?.userInterface) {
-                window.dashboardApp.userInterface.showErrorNotification(message);
-            } else {
-                console.error(message);
-                alert(message);
-            }
-        }
-
-        showSuccess(message) {
-            if (window.dashboardApp?.userInterface) {
-                window.dashboardApp.userInterface.showSuccessNotification(message);
-            } else {
-                console.log(message);
-                alert(message);
-            }
-        }
-
-        showWarning(message) {
-            if (window.dashboardApp?.userInterface) {
-                window.dashboardApp.userInterface.showWarningNotification(message);
-            } else {
-                console.warn(message);
-                alert(message);
-            }
-        }
-
-        // Modal Management
-        closeModals() {
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.classList.remove('show');
-            });
-            this.resetForms();
-        }
-
-        resetForms() {
-            // Reset company form
-            if (this.companyForm) {
-                this.companyForm.reset();
-            }
-
-            // Reset user forms
-            const addUserForm = document.getElementById('addUserForm');
-            if (addUserForm) {
-                addUserForm.reset();
-            }
-
-            const editUserForm = document.getElementById('editUserForm');
-            if (editUserForm) {
-                editUserForm.reset();
-            }
-
-            // Reset plan change form
-            const changePlanForm = document.getElementById('changePlanForm');
-            if (changePlanForm) {
-                changePlanForm.reset();
-            }
-
-            // Clear any stored IDs
-            this.currentCompanyId = null;
-        }
-
-        // Tab Management
+         // Tab Management Methods
         switchTab(tabButton) {
             if (!this.currentCompanyId) {
                 this.showError('No company selected');
@@ -1081,14 +1006,16 @@
             }
         }
 
-        // Activity Log Management
+        // Activity Log Methods
         async renderActivityTab(company) {
             try {
                 const response = await fetch(`${this.baseUrl}/companies/${company._id}/activity-logs`, {
                     headers: this.getHeaders()
                 });
 
-                if (!response.ok) throw new Error('Failed to fetch activity logs');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch activity logs');
+                }
 
                 const logs = await response.json();
                 const tabContent = document.querySelector('.tab-content');
@@ -1171,6 +1098,8 @@
                 'user': 'fa-user',
                 'subscription': 'fa-credit-card',
                 'system': 'fa-cog',
+                'login': 'fa-sign-in-alt',
+                'security': 'fa-shield-alt',
                 'default': 'fa-info-circle'
             };
             return icons[type.toLowerCase()] || icons.default;
@@ -1182,19 +1111,6 @@
             
             detailsDiv.classList.toggle('hidden');
             button.textContent = isHidden ? 'Hide Details' : 'Show Details';
-        }
-
-        initializeActivityFilters() {
-            const typeFilter = document.getElementById('activityTypeFilter');
-            const dateFilter = document.getElementById('activityDateFilter');
-
-            if (typeFilter) {
-                typeFilter.addEventListener('change', () => this.filterActivityLogs());
-            }
-
-            if (dateFilter) {
-                dateFilter.addEventListener('change', () => this.filterActivityLogs());
-            }
         }
 
         filterActivityLogs() {
@@ -1215,8 +1131,105 @@
             const compareDate = new Date(filterDate).toLocaleDateString();
             return itemDate === compareDate;
         }
+
+        // Utility Methods
+        getHeaders() {
+            return {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            };
+        }
+
+        showLoading() {
+            const loader = document.createElement('div');
+            loader.className = 'content-loader';
+            loader.innerHTML = `
+                <div class="loader-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <p>Loading content...</p>
+            `;
+            
+            if (this.companiesGrid) {
+                this.companiesGrid.innerHTML = '';
+                this.companiesGrid.appendChild(loader);
+            }
+        }
+
+        hideLoading() {
+            const loader = document.querySelector('.content-loader');
+            if (loader) {
+                loader.remove();
+            }
+        }
+
+        showError(message) {
+            if (window.dashboardApp?.userInterface) {
+                window.dashboardApp.userInterface.showErrorNotification(message);
+            } else {
+                console.error(message);
+                alert(message);
+            }
+        }
+
+        showSuccess(message) {
+            if (window.dashboardApp?.userInterface) {
+                window.dashboardApp.userInterface.showSuccessNotification(message);
+            } else {
+                console.log(message);
+                alert(message);
+            }
+        }
+
+        showWarning(message) {
+            if (window.dashboardApp?.userInterface) {
+                window.dashboardApp.userInterface.showWarningNotification(message);
+            } else {
+                console.warn(message);
+                alert(message);
+            }
+        }
+
+        escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        closeModals() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('show');
+            });
+            this.resetForms();
+        }
+
+        resetForms() {
+            // Reset all forms
+            document.querySelectorAll('form').forEach(form => {
+                form.reset();
+            });
+
+            // Clear any stored IDs
+            this.currentCompanyId = null;
+        }
     }
 
     // Initialize the Companies Manager globally
     window.CompaniesManager = CompaniesManager;
-})();
+})();   
