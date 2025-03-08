@@ -592,6 +592,35 @@
             }
         }
 
+        initializeActivityFilters() {
+    const typeFilter = document.getElementById('activityTypeFilter');
+    const dateFilter = document.getElementById('activityDateFilter');
+
+    if (typeFilter) {
+        typeFilter.addEventListener('change', () => this.filterActivityLogs());
+    }
+
+    if (dateFilter) {
+        dateFilter.addEventListener('change', () => this.filterActivityLogs());
+    }
+}
+
+filterActivityLogs() {
+    const type = document.getElementById('activityTypeFilter').value;
+    const date = document.getElementById('activityDateFilter').value;
+    
+    const items = document.querySelectorAll('.activity-item');
+    items.forEach(item => {
+        const activityType = item.querySelector('.activity-type').textContent.toLowerCase();
+        const activityDate = new Date(item.querySelector('.activity-date').textContent).toLocaleDateString();
+        
+        const matchesType = !type || activityType.includes(type.toLowerCase());
+        const matchesDate = !date || activityDate === new Date(date).toLocaleDateString();
+        
+        item.style.display = matchesType && matchesDate ? '' : 'none';
+    });
+}
+
         async viewCompanyDetails(companyId) {
             try {
                 const response = await fetch(`${this.baseUrl}/companies/${companyId}`, {
@@ -1156,24 +1185,46 @@ renderActivityList(logs) {
         }
 
         async generateInvoice(companyId) {
-            try {
-                const response = await fetch(`${this.baseUrl}/companies/${companyId}/generate-invoice`, {
-                    method: 'POST',
-                    headers: this.getHeaders()
-                });
+    try {
+        const response = await fetch(`${this.baseUrl}/companies/${companyId}/generate-invoice`, {
+            method: 'POST',
+            headers: this.getHeaders()
+        });
 
-                if (!response.ok) {
-                    throw new Error('Failed to generate invoice');
-                }
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to generate invoice');
+        }
 
-                const result = await response.json();
-                this.showSuccess('Invoice generated successfully');
-                await this.renderSubscriptionTab(this.currentCompany);
-            } catch (error) {
-                console.error('Error generating invoice:', error);
-                this.showError('Failed to generate invoice');
+        const result = await response.json();
+        this.showSuccess('Invoice generated successfully');
+        
+        // Refresh the billing history
+        if (this.currentCompany) {
+            await this.renderSubscriptionTab(this.currentCompany);
+        }
+
+        // If the invoice number is returned, offer download
+        if (result.data?.invoiceNumber) {
+            const downloadConfirmed = await this.showConfirmDialog(
+                'Would you like to download the invoice?'
+            );
+            if (downloadConfirmed) {
+                await this.downloadInvoice(result.data.invoiceNumber);
             }
         }
+    } catch (error) {
+        console.error('Error generating invoice:', error);
+        this.showError(error.message || 'Failed to generate invoice');
+    }
+}
+
+showConfirmDialog(message) {
+    return new Promise(resolve => {
+        const confirmed = window.confirm(message);
+        resolve(confirmed);
+    });
+}
 
         async downloadInvoice(invoiceNumber) {
             try {
