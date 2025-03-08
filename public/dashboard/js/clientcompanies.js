@@ -40,7 +40,93 @@
                 }
             };
             this.initialize();
+            this.initializeStyles();
         }
+
+initializeStyles() {
+        const styles = `
+            .alert {
+                padding: 16px;
+                border-radius: 12px;
+                margin-bottom: 16px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .alert-warning {
+                background-color: rgba(245, 158, 11, 0.1);
+                border: 1px solid rgba(245, 158, 11, 0.2);
+                color: var(--warning-color);
+            }
+
+            .credentials-box {
+                background-color: var(--bg-secondary);
+                border-radius: 12px;
+                padding: 20px;
+                margin: 20px 0;
+                border: 1px solid var(--border-light);
+            }
+
+            .credential-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 0;
+                border-bottom: 1px solid var(--border-light);
+            }
+
+            .credential-item:last-child {
+                border-bottom: none;
+            }
+
+            .credential-item label {
+                color: var(--text-secondary);
+                font-weight: 500;
+            }
+
+            .credential-item .password {
+                font-family: monospace;
+                font-size: 1.1rem;
+                color: var(--primary-color);
+                font-weight: 600;
+                padding: 4px 8px;
+                background-color: rgba(79, 70, 229, 0.1);
+                border-radius: 6px;
+            }
+
+            .warning-message {
+                background-color: rgba(239, 68, 68, 0.1);
+                color: var(--danger-color);
+                padding: 12px 16px;
+                border-radius: 12px;
+                margin-top: 16px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 0.9rem;
+            }
+
+            .warning-message i {
+                font-size: 1.1rem;
+            }
+
+            /* Additional modal styles */
+            .temp-password-modal .modal-content {
+                max-width: 500px;
+            }
+
+            .temp-password-modal .modal-body {
+                padding: 24px;
+            }
+        `;
+
+        // Create and append the stylesheet
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = styles;
+        document.head.appendChild(styleSheet);
+    }
+
 
         async initialize() {
             try {
@@ -453,6 +539,45 @@
                 this.showError(error.message);
             }
         }
+
+        async loadCompanyUsers(companyId) {
+    try {
+        const response = await fetch(`${this.baseUrl}/companies/${companyId}/users`, {
+            headers: this.getHeaders()
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to load company users');
+        }
+
+        const result = await response.json();
+        return result.data || [];
+    } catch (error) {
+        console.error('Error loading company users:', error);
+        this.showError('Failed to load company users');
+        return [];
+    }
+}
+        initializeUserActionButtons() {
+    // Reset Password buttons
+    document.querySelectorAll('.btn-icon.reset-password').forEach(button => {
+        button.addEventListener('click', async (e) => {
+            const userId = e.currentTarget.dataset.userId;
+            if (confirm('Are you sure you want to reset this user\'s password?')) {
+                await this.resetUserPassword(userId);
+            }
+        });
+    });
+
+    // Toggle Status buttons
+    document.querySelectorAll('.btn-icon.toggle-status').forEach(button => {
+        button.addEventListener('click', async (e) => {
+            const userId = e.currentTarget.dataset.userId;
+            await this.toggleUserStatus(userId);
+        });
+    });
+}
+
 
         validateCompanyData(data) {
             if (!data.name || data.name.trim().length < 2) {
@@ -1533,57 +1658,53 @@ showConfirmDialog(message) {
         }
 
         async resetUserPassword(userId) {
-            try {
-                if (!confirm('Are you sure you want to reset this user\'s password?')) {
-                    return;
-                }
-
-                const response = await fetch(
-                    `${this.baseUrl}/companies/${this.currentCompanyId}/users/${userId}/reset-password`,
-                    {
-                        method: 'POST',
-                        headers: this.getHeaders()
-                    }
-                );
-
-                if (!response.ok) {
-                    throw new Error('Failed to reset password');
-                }
-
-                const result = await response.json();
-                this.showSuccess('Password reset successfully');
-
-                if (result.data?.tempPassword) {
-                    const user = await this.getUserDetails(userId);
-                    this.showTempPasswordModal(user.email, result.data.tempPassword);
-                }
-            } catch (error) {
-                console.error('Error resetting password:', error);
-                this.showError('Failed to reset password');
+    try {
+        const response = await fetch(
+            `${this.baseUrl}/companies/${this.currentCompanyId}/users/${userId}/reset-password`,
+            {
+                method: 'POST',
+                headers: this.getHeaders()
             }
+        );
+
+        if (!response.ok) {
+            throw new Error('Failed to reset password');
         }
+
+        const result = await response.json();
+        this.showSuccess('Password reset successfully');
+
+        if (result.data?.tempPassword) {
+            await this.showTempPasswordModal(result.data.email, result.data.tempPassword);
+        }
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        this.showError('Failed to reset password');
+    }
+}
 
         async toggleUserStatus(userId) {
-            try {
-                const response = await fetch(
-                    `${this.baseUrl}/companies/${this.currentCompanyId}/users/${userId}/toggle-status`,
-                    {
-                        method: 'PATCH',
-                        headers: this.getHeaders()
-                    }
-                );
-
-                if (!response.ok) {
-                    throw new Error('Failed to toggle user status');
-                }
-
-                this.showSuccess('User status updated successfully');
-                await this.renderUsersTab({ _id: this.currentCompanyId });
-            } catch (error) {
-                console.error('Error toggling user status:', error);
-                this.showError('Failed to update user status');
+    try {
+        const response = await fetch(
+            `${this.baseUrl}/companies/${this.currentCompanyId}/users/${userId}/toggle-status`,
+            {
+                method: 'PATCH',
+                headers: this.getHeaders()
             }
+        );
+
+        if (!response.ok) {
+            throw new Error('Failed to toggle user status');
         }
+
+        this.showSuccess('User status updated successfully');
+        // Refresh the users list
+        await this.renderUsersTab({ _id: this.currentCompanyId });
+    } catch (error) {
+        console.error('Error toggling user status:', error);
+        this.showError('Failed to update user status');
+    }
+}
 
         initializeUserEventListeners() {
     const tableContainer = document.querySelector('.users-table-container');
@@ -1734,6 +1855,7 @@ showConfirmDialog(message) {
         modal.querySelector('#confirmPassword').addEventListener('click', closeModal);
     });
 }
+
         escapeHtml(unsafe) {
             if (!unsafe) return '';
             return unsafe
