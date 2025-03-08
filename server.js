@@ -3720,7 +3720,8 @@ app.get('/api/companies/:companyId/billing-history', verifyToken, verifyAdmin, a
 });
 
 // Generate invoice
-// Generate invoice
+
+// In server.js
 app.post('/api/companies/:companyId/generate-invoice', verifyToken, verifyAdmin, async (req, res) => {
     const session = client.startSession();
     try {
@@ -3734,10 +3735,9 @@ app.post('/api/companies/:companyId/generate-invoice', verifyToken, verifyAdmin,
                 });
             }
 
-            // Get company and subscription details
+            // Get company details
             const company = await companies.findOne(
-                { _id: new ObjectId(companyId) },
-                { session }
+                { _id: new ObjectId(companyId) }
             );
 
             if (!company) {
@@ -3747,39 +3747,34 @@ app.post('/api/companies/:companyId/generate-invoice', verifyToken, verifyAdmin,
                 });
             }
 
-            const subscription = await company_subscriptions.findOne(
-                { companyId: new ObjectId(companyId) },
-                { session }
-            );
+            // Use the subscription plan from company if no active subscription
+            const subscriptionPlan = company.subscriptionPlan || 'basic';
+            const planPrices = {
+                basic: 99,
+                premium: 199,
+                enterprise: 499
+            };
 
-            if (!subscription) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'No active subscription found'
-                });
-            }
-
-            // Generate invoice number
-            const invoiceNumber = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-
-            // Calculate amounts
-            const baseAmount = subscription.price || 0;
+            const baseAmount = planPrices[subscriptionPlan] || planPrices.basic;
             const taxRate = 0.20; // 20% tax
             const taxAmount = baseAmount * taxRate;
             const totalAmount = baseAmount + taxAmount;
+
+            // Generate invoice number
+            const invoiceNumber = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
             // Create invoice
             const invoice = {
                 invoiceNumber,
                 companyId: new ObjectId(companyId),
                 companyName: company.name,
-                companyAddress: company.contactDetails.address,
-                companyEmail: company.contactDetails.email,
+                companyAddress: company.contactDetails?.address || '',
+                companyEmail: company.contactDetails?.email || '',
                 date: new Date(),
-                dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+                dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
                 items: [
                     {
-                        description: `${subscription.plan} Plan Subscription`,
+                        description: `${subscriptionPlan.charAt(0).toUpperCase() + subscriptionPlan.slice(1)} Plan Subscription`,
                         quantity: 1,
                         unitPrice: baseAmount,
                         total: baseAmount
@@ -3794,20 +3789,8 @@ app.post('/api/companies/:companyId/generate-invoice', verifyToken, verifyAdmin,
                 createdBy: new ObjectId(req.user.userId)
             };
 
-            // Save invoice to billing history
-            await billing_history.insertOne(invoice, { session });
-
-            // Create audit log
-            await createAuditLog(
-                'INVOICE_GENERATED',
-                req.user.userId,
-                companyId,
-                {
-                    invoiceNumber,
-                    amount: totalAmount
-                },
-                session
-            );
+            // Save invoice
+            await billing_history.insertOne(invoice);
 
             res.json({
                 success: true,
@@ -3819,7 +3802,7 @@ app.post('/api/companies/:companyId/generate-invoice', verifyToken, verifyAdmin,
         console.error('Error generating invoice:', error);
         res.status(500).json({
             success: false,
-            message: 'Error generating invoice'
+            message: error.message || 'Error generating invoice'
         });
     } finally {
         await session.endSession();
