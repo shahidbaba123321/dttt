@@ -1232,4 +1232,12 @@
 
     // Initialize the Companies Manager globally
     window.CompaniesManager = CompaniesManager;
+
+    // Ensure all modals are hidden by default
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.style.display = 'none';
+        modal.classList.remove('show');
+    });
+});
 })();   
