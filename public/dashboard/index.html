@@ -1137,12 +1137,8 @@ class ContentLoader {
         const script = document.createElement('script');
         script.src = `${this.baseUrl}/dashboard/js/clientcompanies.js`;
         console.log('Loading Companies script from:', script.src);
-        
-        // Add error event listener
-        script.onerror = (error) => {
-            console.error('Error loading clientcompanies.js:', error);
-        };
 
+        // Wait for script to load
         await new Promise((resolve, reject) => {
             script.onload = () => {
                 console.log('Companies script loaded successfully');
@@ -1155,18 +1151,21 @@ class ContentLoader {
             document.body.appendChild(script);
         });
 
-        // Add a longer delay to ensure script is fully processed
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Add a delay to ensure script is processed
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         // Check if CompaniesManager is available
         if (typeof window.CompaniesManager === 'undefined') {
             throw new Error('CompaniesManager class not found after script load');
         }
 
-        console.log('Creating new CompaniesManager instance...');
-        const instance = new window.CompaniesManager(this.apiBaseUrl);
-        this.moduleInstances.set('companies', instance);
-        console.log('CompaniesManager initialized successfully');
+        // Create new instance and store it globally
+        if (!window.companiesManager) {
+            window.companiesManager = new window.CompaniesManager();
+            console.log('CompaniesManager initialized successfully');
+        }
+
+        return window.companiesManager;
 
     } catch (error) {
         console.error('Error initializing companies module:', error);
