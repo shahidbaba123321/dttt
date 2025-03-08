@@ -18,28 +18,43 @@ let RedisStore = null;
 
 app.set('trust proxy', 1);
 
-// Rate limiter configuration
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: {
-        success: false,
-        message: 'Too many requests, please try again later.'
+const createRateLimiter = (options) => {
+    const baseOptions = {
+        windowMs: options.windowMs || 15 * 60 * 1000,
+        max: options.max || 100,
+        standardHeaders: true,
+        legacyHeaders: false,
+        message: {
+            success: false,
+            message: options.message || 'Too many requests, please try again later.'
+        }
+    };
+
+    // If Redis is available, use it for storage
+    if (redis) {
+        const RedisStore = require('rate-limit-redis');
+        return rateLimit({
+            ...baseOptions,
+            store: new RedisStore({
+                sendCommand: (...args) => redis.call(...args)
+            })
+        });
     }
+
+    // Fall back to memory store
+    return rateLimit(baseOptions);
+};
+
+// Update the rate limiters
+const limiter = createRateLimiter({
+    windowMs: 15 * 60 * 1000,
+    max: 100
 });
 
-// Authentication rate limiter
-const authLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 5, // 5 failed attempts per hour
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: {
-        success: false,
-        message: 'Too many failed attempts, please try again later'
-    }
+const authLimiter = createRateLimiter({
+    windowMs: 60 * 60 * 1000,
+    max: 5,
+    message: 'Too many failed attempts, please try again later'
 });
 
 
@@ -133,7 +148,7 @@ const cacheMiddleware = (duration) => {
             res.json = (body) => {
                 const stringifiedBody = JSON.stringify(body);
                 if (redis) {
-                    redis.setex(key, duration, stringifiedBody);
+                    redis.setex(key, duration, stringifiedBody).catch(console.error);
                 } else {
                     memoryCache.set(key, stringifiedBody);
                     setTimeout(() => memoryCache.delete(key), duration * 1000);
@@ -196,46 +211,65 @@ let sessions;
 
 // Initialize Redis separately after ensuring connection
 async function initializeRedis() {
+    // Check if Redis is enabled via environment variable
+    if (process.env.USE_REDIS !== 'true') {
+        console.log('Redis is disabled by configuration. Using memory store.');
+        return null;
+    }
+
     try {
         const Redis = require('ioredis');
-        const RedisStore = require('rate-limit-redis');
-
-        redisClient = new Redis({
-            host: process.env.REDIS_HOST || 'localhost',
-            port: process.env.REDIS_PORT || 6379,
+        
+        const redisConfig = {
+            host: process.env.REDIS_HOST,
+            port: parseInt(process.env.REDIS_PORT),
             password: process.env.REDIS_PASSWORD,
+            maxRetriesPerRequest: 1,
             retryStrategy: (times) => {
-                const delay = Math.min(times * 50, 2000);
-                return delay;
-            }
-        });
+                if (times > 3) {
+                    console.log('Redis connection failed after 3 attempts, falling back to memory store');
+                    return null;
+                }
+                return Math.min(times * 100, 3000);
+            },
+            enableOfflineQueue: false
+        };
 
-        // Wait for Redis connection
+        // Only attempt Redis connection if host is configured
+        if (!redisConfig.host || redisConfig.host === 'localhost') {
+            console.log('Redis host not configured. Using memory store.');
+            return null;
+        }
+
+        const client = new Redis(redisConfig);
+
+        // Set a timeout for the initial connection attempt
+        const connectionTimeout = setTimeout(() => {
+            client.disconnect();
+            console.log('Redis connection timeout. Using memory store.');
+        }, 5000);
+
+        // Wait for connection
         await new Promise((resolve, reject) => {
-            redisClient.on('connect', resolve);
-            redisClient.on('error', reject);
+            client.once('ready', () => {
+                clearTimeout(connectionTimeout);
+                console.log('Redis connected successfully');
+                resolve();
+            });
+
+            client.once('error', (err) => {
+                clearTimeout(connectionTimeout);
+                console.log('Redis connection failed:', err.message);
+                reject(err);
+            });
         });
 
-        console.log('Redis connected successfully');
-
-        // Only setup Redis store after successful connection
-        const redisStore = new RedisStore({
-            sendCommand: (...args) => redisClient.call(...args),
-            prefix: 'rl:'
-        });
-
-        // Update rate limiters with Redis store
-        limiter.store = redisStore;
-        authLimiter.store = redisStore;
-
-        return redisClient;
+        return client;
     } catch (error) {
-        console.warn('Redis initialization failed, using memory store:', error.message);
+        console.log('Redis initialization failed:', error.message);
         return null;
     }
 }
-
-
 // Initialize database connection and collections
 async function initializeDatabase() {
     try {
@@ -736,7 +770,25 @@ async function createAuditLog(action, performedBy, targetUser = null, details = 
 // Token verification middleware
 const verifyToken = async (req, res, next) => {
     try {
-        const token = req.headers.authorization?.split(' ')[1];
+        const authHeader = req.headers.authorization;
+        
+        if (!authHeader) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'No authorization header provided' 
+            });
+        }
+
+        // Properly extract the token
+        const parts = authHeader.split(' ');
+        if (parts.length !== 2 || parts[0] !== 'Bearer') {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Invalid authorization format. Use: Bearer <token>' 
+            });
+        }
+
+        const token = parts[1];
         
         if (!token) {
             return res.status(401).json({ 
@@ -745,47 +797,46 @@ const verifyToken = async (req, res, next) => {
             });
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            req.user = decoded;
 
-        // Check if user still exists and is active
-        const user = await users.findOne({ 
-            _id: new ObjectId(decoded.userId),
-            status: 'active'
-        });
+            // Check if user still exists and is active
+            const user = await users.findOne({ 
+                _id: new ObjectId(decoded.userId),
+                status: 'active'
+            });
 
-        if (!user) {
+            if (!user) {
+                return res.status(401).json({ 
+                    success: false, 
+                    message: 'User not found or inactive' 
+                });
+            }
+
+            // Add user permissions to request
+            const userPerms = await user_permissions.findOne({ userId: user._id });
+            req.user.permissions = userPerms?.permissions || [];
+
+            // Update last activity
+            await users.updateOne(
+                { _id: user._id },
+                { $set: { lastActivity: new Date() } }
+            );
+
+            next();
+        } catch (error) {
+            console.error('Token verification error:', error);
             return res.status(401).json({ 
                 success: false, 
-                message: 'User not found or inactive' 
+                message: 'Invalid or expired token' 
             });
         }
-
-        // Check if token is in blacklist
-        const isBlacklisted = await redis?.get(`blacklist:${token}`);
-        if (isBlacklisted) {
-            return res.status(401).json({
-                success: false,
-                message: 'Token has been invalidated'
-            });
-        }
-
-        // Add user permissions to request
-        const userPerms = await user_permissions.findOne({ userId: user._id });
-        req.user.permissions = userPerms?.permissions || [];
-
-        // Update last activity
-        await users.updateOne(
-            { _id: user._id },
-            { $set: { lastActivity: new Date() } }
-        );
-
-        next();
     } catch (error) {
-        console.error('Token verification error:', error);
-        return res.status(401).json({ 
+        console.error('Auth middleware error:', error);
+        return res.status(500).json({ 
             success: false, 
-            message: 'Invalid token' 
+            message: 'Internal server error during authentication' 
         });
     }
 };
@@ -2667,6 +2718,994 @@ app.put('/api/users/:userId/password', verifyToken, verifyAdmin, async (req, res
     }
 });
 
+// Company Management Routes
+
+// Get all companies with filtering and pagination
+app.get('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const {
+            page = 1,
+            limit = 10,
+            search = '',
+            industry = '',
+            status = '',
+            plan = ''
+        } = req.query;
+
+        // Build filter
+        const filter = {};
+        
+        if (search) {
+            filter.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { 'contactDetails.email': { $regex: search, $options: 'i' } }
+            ];
+        }
+        
+        if (industry) filter.industry = industry;
+        if (status) filter.status = status;
+        if (plan) filter.subscriptionPlan = plan;
+
+        // Get total count
+        const total = await companies.countDocuments(filter);
+
+        // Get companies with pagination
+        const companiesList = await companies
+            .find(filter)
+            .sort({ createdAt: -1 })
+            .skip((parseInt(page) - 1) * parseInt(limit))
+            .limit(parseInt(limit))
+            .toArray();
+
+        // Create audit log
+        await createAuditLog(
+            'COMPANIES_VIEWED',
+            req.user.userId,
+            null,
+            {
+                filters: req.query,
+                resultsCount: companiesList.length
+            }
+        );
+
+        res.json({
+            success: true,
+            companies: companiesList,
+            total,
+            page: parseInt(page),
+            totalPages: Math.ceil(total / parseInt(limit))
+        });
+
+    } catch (error) {
+        console.error('Error fetching companies:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching companies'
+        });
+    }
+});
+
+// Get single company with detailed information
+app.get('/api/companies/:companyId', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { companyId } = req.params;
+
+        if (!ObjectId.isValid(companyId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid company ID'
+            });
+        }
+
+        const company = await companies.findOne({
+            _id: new ObjectId(companyId)
+        });
+
+        if (!company) {
+            return res.status(404).json({
+                success: false,
+                message: 'Company not found'
+            });
+        }
+
+        // Get additional company data
+        const [
+            usersCount,
+            subscription,
+            activityLogs
+        ] = await Promise.all([
+            company_users.countDocuments({ companyId: new ObjectId(companyId) }),
+            company_subscriptions.findOne({ companyId: new ObjectId(companyId) }),
+            company_audit_logs
+                .find({ companyId: new ObjectId(companyId) })
+                .sort({ timestamp: -1 })
+                .limit(50)
+                .toArray()
+        ]);
+
+        // Create audit log
+        await createAuditLog(
+            'COMPANY_DETAILS_VIEWED',
+            req.user.userId,
+            companyId,
+            { companyName: company.name }
+        );
+
+        res.json({
+            success: true,
+            data: {
+                ...company,
+                usersCount,
+                subscription,
+                activityLogs
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching company details:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching company details'
+        });
+    }
+});
+
+// Create new company
+app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const {
+                name,
+                industry,
+                companySize,
+                contactDetails,
+                subscriptionPlan,
+                status
+            } = req.body;
+
+            // Validate required fields
+            if (!name || !industry || !companySize || !contactDetails || !subscriptionPlan) {
+                throw new Error('Missing required fields');
+            }
+
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(contactDetails.email)) {
+                throw new Error('Invalid email format');
+            }
+
+            // Check if company exists
+            const existingCompany = await companies.findOne({
+                $or: [
+                    { name: { $regex: new RegExp(`^${name}$`, 'i') } },
+                    { 'contactDetails.email': contactDetails.email }
+                ]
+            }, { session });
+
+            if (existingCompany) {
+                throw new Error('Company with this name or email already exists');
+            }
+
+            // Create company
+            const company = {
+                name,
+                industry,
+                companySize,
+                contactDetails,
+                subscriptionPlan,
+                status: status || 'active',
+                createdAt: new Date(),
+                createdBy: new ObjectId(req.user.userId),
+                updatedAt: new Date()
+            };
+
+            const result = await companies.insertOne(company, { session });
+
+            // Create initial subscription
+            const subscription = {
+                companyId: result.insertedId,
+                plan: subscriptionPlan,
+                status: 'active',
+                startDate: new Date(),
+                endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+                billingCycle: 'monthly',
+                price: this.getPlanPrice(subscriptionPlan),
+                createdAt: new Date(),
+                createdBy: new ObjectId(req.user.userId)
+            };
+
+            await company_subscriptions.insertOne(subscription, { session });
+
+            // Create audit log
+            await createAuditLog(
+                'COMPANY_CREATED',
+                req.user.userId,
+                result.insertedId,
+                {
+                    companyName: name,
+                    industry,
+                    subscriptionPlan
+                },
+                session
+            );
+
+            res.status(201).json({
+                success: true,
+                message: 'Company created successfully',
+                data: {
+                    _id: result.insertedId,
+                    ...company
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error creating company:', error);
+        res.status(error.message.includes('already exists') ? 400 : 500).json({
+            success: false,
+            message: error.message || 'Error creating company'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Update company
+app.put('/api/companies/:companyId', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { companyId } = req.params;
+            const updateData = req.body;
+
+            if (!ObjectId.isValid(companyId)) {
+                throw new Error('Invalid company ID');
+            }
+
+            // Get existing company
+            const existingCompany = await companies.findOne({
+                _id: new ObjectId(companyId)
+            }, { session });
+
+            if (!existingCompany) {
+                throw new Error('Company not found');
+            }
+
+            // Check for name/email conflicts
+            if (updateData.name || updateData.contactDetails?.email) {
+                const conflicts = await companies.findOne({
+                    _id: { $ne: new ObjectId(companyId) },
+                    $or: [
+                        updateData.name ? { name: { $regex: new RegExp(`^${updateData.name}$`, 'i') } } : null,
+                        updateData.contactDetails?.email ? { 'contactDetails.email': updateData.contactDetails.email } : null
+                    ].filter(Boolean)
+                }, { session });
+
+                if (conflicts) {
+                    throw new Error('Company with this name or email already exists');
+                }
+            }
+
+            // Update company
+            const result = await companies.updateOne(
+                { _id: new ObjectId(companyId) },
+                {
+                    $set: {
+                        ...updateData,
+                        updatedAt: new Date(),
+                        updatedBy: new ObjectId(req.user.userId)
+                    }
+                },
+                { session }
+            );
+
+            // Create audit log
+            await createAuditLog(
+                'COMPANY_UPDATED',
+                req.user.userId,
+                companyId,
+                {
+                    companyName: existingCompany.name,
+                    changes: this.getChanges(existingCompany, updateData)
+                },
+                session
+            );
+
+            res.json({
+                success: true,
+                message: 'Company updated successfully',
+                data: result
+            });
+        });
+    } catch (error) {
+        console.error('Error updating company:', error);
+        res.status(error.message.includes('not found') ? 404 : 400).json({
+            success: false,
+            message: error.message || 'Error updating company'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Toggle company status
+app.patch('/api/companies/:companyId/toggle-status', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { companyId } = req.params;
+
+            if (!ObjectId.isValid(companyId)) {
+                throw new Error('Invalid company ID');
+            }
+
+            const company = await companies.findOne({
+                _id: new ObjectId(companyId)
+            }, { session });
+
+            if (!company) {
+                throw new Error('Company not found');
+            }
+
+            const newStatus = company.status === 'active' ? 'inactive' : 'active';
+
+            await companies.updateOne(
+                { _id: new ObjectId(companyId) },
+                {
+                    $set: {
+                        status: newStatus,
+                        updatedAt: new Date(),
+                        updatedBy: new ObjectId(req.user.userId)
+                    }
+                },
+                { session }
+            );
+
+            // Update subscription status if company is deactivated
+            if (newStatus === 'inactive') {
+                await company_subscriptions.updateOne(
+                    { companyId: new ObjectId(companyId) },
+                    {
+                        $set: {
+                            status: 'suspended',
+                            updatedAt: new Date(),
+                            updatedBy: new ObjectId(req.user.userId)
+                        }
+                    },
+                    { session }
+                );
+            }
+
+            // Create audit log
+            await createAuditLog(
+                'COMPANY_STATUS_CHANGED',
+                req.user.userId,
+                companyId,
+                {
+                    companyName: company.name,
+                    oldStatus: company.status,
+                    newStatus
+                },
+                session
+            );
+
+            res.json({
+                success: true,
+                message: `Company ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`
+            });
+        });
+    } catch (error) {
+        console.error('Error toggling company status:', error);
+        res.status(error.message.includes('not found') ? 404 : 500).json({
+            success: false,
+            message: error.message || 'Error toggling company status'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Get company users
+app.get('/api/companies/:companyId/users', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { companyId } = req.params;
+
+        if (!ObjectId.isValid(companyId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid company ID'
+            });
+        }
+
+        const users = await company_users
+            .find({ companyId: new ObjectId(companyId) })
+            .toArray();
+
+        res.json({
+            success: true,
+            data: users
+        });
+
+    } catch (error) {
+        console.error('Error fetching company users:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching company users'
+        });
+    }
+});
+
+// Helper function to get plan price
+function getPlanPrice(plan) {
+    const prices = {
+        'basic': 99,
+        'premium': 199,
+        'enterprise': 499
+    };
+    return prices[plan.toLowerCase()] || 0;
+}
+
+// Helper function to get changes between objects
+function getChanges(oldObj, newObj) {
+    const changes = {};
+    for (const key in newObj) {
+        if (JSON.stringify(oldObj[key]) !== JSON.stringify(newObj[key])) {
+            changes[key] = {
+                old: oldObj[key],
+                new: newObj[key]
+            };
+        }
+    }
+    return changes;
+}
+
+// Subscription Management Endpoints
+
+// Change company subscription plan
+app.post('/api/companies/:companyId/subscription', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { companyId } = req.params;
+            const { plan, billingCycle } = req.body;
+
+            if (!ObjectId.isValid(companyId)) {
+                throw new Error('Invalid company ID');
+            }
+
+            // Validate plan
+            const validPlans = ['basic', 'premium', 'enterprise'];
+            if (!validPlans.includes(plan.toLowerCase())) {
+                throw new Error('Invalid subscription plan');
+            }
+
+            // Validate billing cycle
+            const validCycles = ['monthly', 'annual'];
+            if (!validCycles.includes(billingCycle.toLowerCase())) {
+                throw new Error('Invalid billing cycle');
+            }
+
+            const company = await companies.findOne({
+                _id: new ObjectId(companyId)
+            }, { session });
+
+            if (!company) {
+                throw new Error('Company not found');
+            }
+
+            // Calculate subscription details
+            const startDate = new Date();
+            const endDate = new Date();
+            endDate.setMonth(endDate.getMonth() + (billingCycle === 'annual' ? 12 : 1));
+
+            const basePrice = getPlanPrice(plan);
+            const price = billingCycle === 'annual' ? basePrice * 12 * 0.9 : basePrice; // 10% discount for annual
+
+            // Update company subscription
+            await company_subscriptions.updateOne(
+                { companyId: new ObjectId(companyId) },
+                {
+                    $set: {
+                        plan,
+                        billingCycle,
+                        price,
+                        startDate,
+                        endDate,
+                        status: 'active',
+                        updatedAt: new Date(),
+                        updatedBy: new ObjectId(req.user.userId)
+                    },
+                    $push: {
+                        history: {
+                            previousPlan: company.subscriptionPlan,
+                            newPlan: plan,
+                            changedAt: new Date(),
+                            changedBy: new ObjectId(req.user.userId)
+                        }
+                    }
+                },
+                { upsert: true, session }
+            );
+
+            // Update company record
+            await companies.updateOne(
+                { _id: new ObjectId(companyId) },
+                {
+                    $set: {
+                        subscriptionPlan: plan,
+                        updatedAt: new Date(),
+                        updatedBy: new ObjectId(req.user.userId)
+                    }
+                },
+                { session }
+            );
+
+            // Create audit log
+            await createAuditLog(
+                'SUBSCRIPTION_CHANGED',
+                req.user.userId,
+                companyId,
+                {
+                    companyName: company.name,
+                    oldPlan: company.subscriptionPlan,
+                    newPlan: plan,
+                    billingCycle,
+                    price
+                },
+                session
+            );
+
+            // Generate invoice
+            const invoice = await generateInvoice(company, plan, price, billingCycle);
+
+            res.json({
+                success: true,
+                message: 'Subscription updated successfully',
+                data: {
+                    plan,
+                    billingCycle,
+                    price,
+                    startDate,
+                    endDate,
+                    invoice
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error updating subscription:', error);
+        res.status(error.message.includes('not found') ? 404 : 400).json({
+            success: false,
+            message: error.message || 'Error updating subscription'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Get subscription history
+app.get('/api/companies/:companyId/subscription/history', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { companyId } = req.params;
+
+        if (!ObjectId.isValid(companyId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid company ID'
+            });
+        }
+
+        const history = await company_subscriptions
+            .findOne(
+                { companyId: new ObjectId(companyId) },
+                { projection: { history: 1, billingHistory: 1 } }
+            );
+
+        res.json({
+            success: true,
+            data: history || { history: [], billingHistory: [] }
+        });
+
+    } catch (error) {
+        console.error('Error fetching subscription history:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching subscription history'
+        });
+    }
+});
+
+// Generate invoice
+app.post('/api/companies/:companyId/invoice', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { companyId } = req.params;
+
+        if (!ObjectId.isValid(companyId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid company ID'
+            });
+        }
+
+        const company = await companies.findOne({
+            _id: new ObjectId(companyId)
+        });
+
+        if (!company) {
+            return res.status(404).json({
+                success: false,
+                message: 'Company not found'
+            });
+        }
+
+        const subscription = await company_subscriptions.findOne({
+            companyId: new ObjectId(companyId)
+        });
+
+        const invoice = await generateInvoice(
+            company,
+            subscription.plan,
+            subscription.price,
+            subscription.billingCycle
+        );
+
+        res.json({
+            success: true,
+            data: invoice
+        });
+
+    } catch (error) {
+        console.error('Error generating invoice:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error generating invoice'
+        });
+    }
+});
+
+// Company User Management Endpoints
+
+// Add user to company
+app.post('/api/companies/:companyId/users', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { companyId } = req.params;
+            const { name, email, role, department } = req.body;
+
+            if (!ObjectId.isValid(companyId)) {
+                throw new Error('Invalid company ID');
+            }
+
+            // Validate required fields
+            if (!name || !email || !role) {
+                throw new Error('Missing required fields');
+            }
+
+            // Check if company exists and is active
+            const company = await companies.findOne({
+                _id: new ObjectId(companyId),
+                status: 'active'
+            }, { session });
+
+            if (!company) {
+                throw new Error('Company not found or inactive');
+            }
+
+            // Check if user email already exists
+            const existingUser = await company_users.findOne({
+                email: { $regex: new RegExp(`^${email}$`, 'i') }
+            }, { session });
+
+            if (existingUser) {
+                throw new Error('User with this email already exists');
+            }
+
+            // Generate temporary password
+            const tempPassword = crypto.randomBytes(10).toString('hex');
+            const hashedPassword = await bcrypt.hash(tempPassword, 12);
+
+            // Create user
+            const user = {
+                companyId: new ObjectId(companyId),
+                name,
+                email,
+                password: hashedPassword,
+                role,
+                department,
+                status: 'active',
+                passwordResetRequired: true,
+                createdAt: new Date(),
+                createdBy: new ObjectId(req.user.userId),
+                lastLogin: null
+            };
+
+            const result = await company_users.insertOne(user, { session });
+
+            // Create audit log
+            await createAuditLog(
+                'COMPANY_USER_CREATED',
+                req.user.userId,
+                companyId,
+                {
+                    companyName: company.name,
+                    userName: name,
+                    userEmail: email,
+                    userRole: role
+                },
+                session
+            );
+
+            // Send welcome email with temporary password
+            // TODO: Implement email sending functionality
+
+            res.status(201).json({
+                success: true,
+                message: 'User created successfully',
+                data: {
+                    _id: result.insertedId,
+                    name,
+                    email,
+                    role,
+                    department,
+                    tempPassword // Only in development environment
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error creating company user:', error);
+        res.status(error.message.includes('already exists') ? 400 : 500).json({
+            success: false,
+            message: error.message || 'Error creating company user'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Update company user
+app.put('/api/companies/:companyId/users/:userId', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { companyId, userId } = req.params;
+            const updateData = req.body;
+
+            if (!ObjectId.isValid(companyId) || !ObjectId.isValid(userId)) {
+                throw new Error('Invalid company or user ID');
+            }
+
+            // Get existing user
+            const existingUser = await company_users.findOne({
+                _id: new ObjectId(userId),
+                companyId: new ObjectId(companyId)
+            }, { session });
+
+            if (!existingUser) {
+                throw new Error('User not found');
+            }
+
+            // Check email uniqueness if email is being updated
+            if (updateData.email && updateData.email !== existingUser.email) {
+                const emailExists = await company_users.findOne({
+                    _id: { $ne: new ObjectId(userId) },
+                    email: { $regex: new RegExp(`^${updateData.email}$`, 'i') }
+                }, { session });
+
+                if (emailExists) {
+                    throw new Error('Email already in use');
+                }
+            }
+
+            // Update user
+            await company_users.updateOne(
+                { _id: new ObjectId(userId) },
+                {
+                    $set: {
+                        ...updateData,
+                        updatedAt: new Date(),
+                        updatedBy: new ObjectId(req.user.userId)
+                    }
+                },
+                { session }
+            );
+
+            // Create audit log
+            await createAuditLog(
+                'COMPANY_USER_UPDATED',
+                req.user.userId,
+                companyId,
+                {
+                    userId,
+                    changes: getChanges(existingUser, updateData)
+                },
+                session
+            );
+
+            res.json({
+                success: true,
+                message: 'User updated successfully'
+            });
+        });
+    } catch (error) {
+        console.error('Error updating company user:', error);
+        res.status(error.message.includes('not found') ? 404 : 400).json({
+            success: false,
+            message: error.message || 'Error updating company user'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Reset user password
+app.post('/api/companies/:companyId/users/:userId/reset-password', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { companyId, userId } = req.params;
+
+            if (!ObjectId.isValid(companyId) || !ObjectId.isValid(userId)) {
+                throw new Error('Invalid company or user ID');
+            }
+
+            const user = await company_users.findOne({
+                _id: new ObjectId(userId),
+                companyId: new ObjectId(companyId)
+            }, { session });
+
+            if (!user) {
+                throw new Error('User not found');
+            }
+
+            // Generate new temporary password
+            const tempPassword = crypto.randomBytes(10).toString('hex');
+            const hashedPassword = await bcrypt.hash(tempPassword, 12);
+
+            await company_users.updateOne(
+                { _id: new ObjectId(userId) },
+                {
+                    $set: {
+                        password: hashedPassword,
+                        passwordResetRequired: true,
+                        updatedAt: new Date(),
+                        updatedBy: new ObjectId(req.user.userId)
+                    }
+                },
+                { session }
+            );
+
+            // Create audit log
+            await createAuditLog(
+                'COMPANY_USER_PASSWORD_RESET',
+                req.user.userId,
+                companyId,
+                {
+                    userId,
+                    userEmail: user.email
+                },
+                session
+            );
+
+            // TODO: Send email with new temporary password
+
+            res.json({
+                success: true,
+                message: 'Password reset successfully',
+                data: {
+                    tempPassword // Only in development environment
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error resetting user password:', error);
+        res.status(error.message.includes('not found') ? 404 : 500).json({
+            success: false,
+            message: error.message || 'Error resetting user password'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Toggle user status
+app.patch('/api/companies/:companyId/users/:userId/toggle-status', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { companyId, userId } = req.params;
+
+            if (!ObjectId.isValid(companyId) || !ObjectId.isValid(userId)) {
+                throw new Error('Invalid company or user ID');
+            }
+
+            const user = await company_users.findOne({
+                _id: new ObjectId(userId),
+                companyId: new ObjectId(companyId)
+            }, { session });
+
+            if (!user) {
+                throw new Error('User not found');
+            }
+
+            const newStatus = user.status === 'active' ? 'inactive' : 'active';
+
+            await company_users.updateOne(
+                { _id: new ObjectId(userId) },
+                {
+                    $set: {
+                        status: newStatus,
+                        updatedAt: new Date(),
+                        updatedBy: new ObjectId(req.user.userId)
+                    }
+                },
+                { session }
+            );
+
+            // Create audit log
+            await createAuditLog(
+                'COMPANY_USER_STATUS_CHANGED',
+                req.user.userId,
+                companyId,
+                {
+                    userId,
+                    userEmail: user.email,
+                    oldStatus: user.status,
+                    newStatus
+                },
+                session
+            );
+
+            res.json({
+                success: true,
+                message: `User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`
+            });
+        });
+    } catch (error) {
+        console.error('Error toggling user status:', error);
+        res.status(error.message.includes('not found') ? 404 : 500).json({
+            success: false,
+            message: error.message || 'Error toggling user status'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Helper function to generate invoice
+async function generateInvoice(company, plan, amount, billingCycle) {
+    const invoiceNumber = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    
+    const invoice = {
+        invoiceNumber,
+        companyId: company._id,
+        companyName: company.name,
+        companyAddress: company.contactDetails.address,
+        plan,
+        amount,
+        billingCycle,
+        issuedDate: new Date(),
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        status: 'pending',
+        items: [
+            {
+                description: `${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan Subscription`,
+                quantity: 1,
+                unitPrice: amount,
+                total: amount
+            }
+        ],
+        subtotal: amount,
+        tax: amount * 0.2, // 20% tax
+        total: amount * 1.2,
+        notes: `${billingCycle.charAt(0).toUpperCase() + billingCycle.slice(1)} billing cycle`
+    };
+
+    // Save invoice to database
+    await database.collection('invoices').insertOne(invoice);
+
+    return invoice;
+}
+
 
 // Handle uncaught exceptions and unhandled rejections
 process.on('uncaughtException', (error) => {
@@ -2685,8 +3724,8 @@ const initializeApp = async () => {
         // Initialize database first
         await initializeDatabase();
 
-        // Initialize Redis
-        await initializeRedis();
+        // Try to initialize Redis, but continue if it fails
+        redis = await initializeRedis();
 
         // Apply middleware
         app.use(cors(corsOptions));
@@ -2701,12 +3740,13 @@ const initializeApp = async () => {
         const PORT = process.env.PORT || 8080;
         const server = app.listen(PORT, '0.0.0.0', () => {
             console.log(`Server running on port ${PORT}`);
+            console.log(`Redis status: ${redis ? 'Connected' : 'Disabled'}`);
         });
 
         // Handle server errors
         server.on('error', (error) => {
             console.error('Server error:', error);
-            gracefulShutdown('Server Error');
+            process.exit(1);
         });
 
     } catch (error) {
