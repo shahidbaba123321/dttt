@@ -751,58 +751,152 @@
         }
 
         async renderSubscriptionTab(company) {
-            try {
-                const subscription = company.subscription || {};
-                const tabContent = document.querySelector('.tab-content');
-                
-                tabContent.innerHTML = `
-                    <div class="subscription-details">
-                        <div class="current-plan">
-                            <h4>Current Subscription</h4>
-                            <div class="plan-info">
-                                <div class="info-group">
-                                    <label>Plan Type:</label>
-                                    <span class="plan-badge ${subscription.plan || 'basic'}">
-                                        ${(subscription.plan || 'Basic').toUpperCase()}
-                                    </span>
-                                </div>
-                                <div class="info-group">
-                                    <label>Status:</label>
-                                    <span class="status-badge ${subscription.status || 'inactive'}">
-                                        ${(subscription.status || 'Inactive').toUpperCase()}
-                                    </span>
-                                </div>
-                                <div class="info-group">
-                                    <label>Billing Cycle:</label>
-                                    <span>${subscription.billingCycle || 'Monthly'}</span>
-                                </div>
-                                <div class="info-group">
-                                    <label>Next Billing Date:</label>
-                                    <span>${subscription.nextBillingDate ? new Date(subscription.nextBillingDate).toLocaleDateString() : 'N/A'}</span>
-                                </div>
-                            </div>
+    try {
+        const subscription = company.subscription || {};
+        const tabContent = document.querySelector('.tab-content');
+        
+        tabContent.innerHTML = `
+            <div class="subscription-details">
+                <div class="current-plan">
+                    <h4>Current Subscription</h4>
+                    <div class="plan-info">
+                        <div class="info-group">
+                            <label>Plan Type:</label>
+                            <span class="plan-badge ${subscription.plan || 'basic'}">
+                                ${(subscription.plan || 'Basic').toUpperCase()}
+                            </span>
                         </div>
-
-                        <div class="subscription-actions">
-                            <button class="btn-primary" onclick="window.companiesManager.showChangePlanModal('${company._id}')">
-                                <i class="fas fa-exchange-alt"></i> Change Plan
-                            </button>
-                            <button class="btn-secondary" onclick="window.companiesManager.generateInvoice('${company._id}')">
-                                <i class="fas fa-file-invoice"></i> Generate Invoice
-                            </button>
+                        <div class="info-group">
+                            <label>Status:</label>
+                            <span class="status-badge ${subscription.status || 'inactive'}">
+                                ${(subscription.status || 'Inactive').toUpperCase()}
+                            </span>
                         </div>
-
-                        <div class="billing-history">
-                            <h4>Billing History</h4>
-                            ${await this.renderBillingHistory(company._id)}
+                        <div class="info-group">
+                            <label>Billing Cycle:</label>
+                            <span>${subscription.billingCycle || 'Monthly'}</span>
+                        </div>
+                        <div class="info-group">
+                            <label>Next Billing Date:</label>
+                            <span>${subscription.nextBillingDate ? new Date(subscription.nextBillingDate).toLocaleDateString() : 'N/A'}</span>
                         </div>
                     </div>
-                `;
-            } catch (error) {
-                console.error('Error rendering subscription tab:', error);
-                this.showError('Failed to load subscription information');
-            }
+                </div>
+
+                <div class="subscription-actions">
+                    <button class="btn-primary" data-action="changePlan">
+                        <i class="fas fa-exchange-alt"></i> Change Plan
+                    </button>
+                    <button class="btn-secondary" data-action="generateInvoice">
+                        <i class="fas fa-file-invoice"></i> Generate Invoice
+                    </button>
+                </div>
+
+                <div class="billing-history">
+                    <h4>Billing History</h4>
+                    ${await this.renderBillingHistory(company._id)}
+                </div>
+            </div>
+        `;
+
+        // Add event listeners after rendering
+        const actionsContainer = tabContent.querySelector('.subscription-actions');
+        if (actionsContainer) {
+            actionsContainer.addEventListener('click', (e) => {
+                const button = e.target.closest('button[data-action]');
+                if (!button) return;
+
+                const action = button.dataset.action;
+                if (action === 'changePlan') {
+                    this.showChangePlanModal(this.currentCompanyId);
+                } else if (action === 'generateInvoice') {
+                    this.generateInvoice(this.currentCompanyId);
+                }
+            });
         }
+    } catch (error) {
+        console.error('Error rendering subscription tab:', error);
+        this.showError('Failed to load subscription information');
+    }
+}
+        async renderActivityTab(company) {
+    try {
+        const response = await fetch(`${this.baseUrl}/companies/${company._id}/activity-logs`, {
+            headers: this.getHeaders()
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch activity logs');
+        }
+
+        const logs = await response.json();
+        const tabContent = document.querySelector('.tab-content');
+
+        tabContent.innerHTML = `
+            <div class="activity-logs">
+                <div class="activity-filters">
+                    <select id="activityTypeFilter">
+                        <option value="">All Activities</option>
+                        <option value="user">User Management</option>
+                        <option value="subscription">Subscription Changes</option>
+                        <option value="system">System Changes</option>
+                    </select>
+                    <input type="date" id="activityDateFilter">
+                </div>
+                <div class="activity-list">
+                    ${this.renderActivityList(logs.data || [])}
+                </div>
+            </div>
+        `;
+
+        this.initializeActivityFilters();
+    } catch (error) {
+        console.error('Error loading activity logs:', error);
+        const tabContent = document.querySelector('.tab-content');
+        tabContent.innerHTML = `
+            <div class="error-state">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Failed to load activity logs</p>
+            </div>
+        `;
+    }
+}
+
+renderActivityList(logs) {
+    if (!logs.length) {
+        return `
+            <div class="empty-state">
+                <i class="fas fa-history"></i>
+                <p>No activity logs found</p>
+            </div>
+        `;
+    }
+
+    return logs.map(log => `
+        <div class="activity-item ${log.type.toLowerCase()}">
+            <div class="activity-icon">
+                <i class="fas ${this.getActivityIcon(log.type)}"></i>
+            </div>
+            <div class="activity-details">
+                <div class="activity-header">
+                    <span class="activity-type">${log.type}</span>
+                    <span class="activity-date">
+                        ${new Date(log.timestamp).toLocaleString()}
+                    </span>
+                </div>
+                <p class="activity-description">${this.escapeHtml(log.description)}</p>
+                ${log.details ? `
+                    <button class="btn-link" data-action="toggleDetails">
+                        Show Details
+                    </button>
+                    <div class="activity-details-expanded hidden">
+                        <pre>${this.escapeHtml(JSON.stringify(log.details, null, 2))}</pre>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `).join('');
+}
 
             async renderBillingHistory(companyId) {
             try {
@@ -1108,45 +1202,23 @@
                         </thead>
                         <tbody>
                             ${users.map(user => `
-                                <tr>
-                                    <td>
-                                        <div class="user-cell">
-                                            <div class="user-avatar" style="background-color: ${this.getAvatarColor(user.name)}">
-                                                ${this.getInitials(user.name)}
-                                            </div>
-                                            <div class="user-info">
-                                                <span class="user-name">${this.escapeHtml(user.name)}</span>
-                                                <span class="user-email">${this.escapeHtml(user.email)}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="role-badge ${user.role.toLowerCase()}">
-                                            ${user.role}
-                                        </span>
-                                    </td>
-                                    <td>${this.escapeHtml(user.department || '-')}</td>
-                                    <td>
-                                        <span class="status-badge ${user.status}">
-                                            ${user.status.toUpperCase()}
-                                        </span>
-                                    </td>
-                                    <td>${user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}</td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="btn-icon" onclick="window.companiesManager.resetUserPassword('${user._id}')">
-                                                <i class="fas fa-key"></i>
-                                            </button>
-                                            <button class="btn-icon" onclick="window.companiesManager.toggleUserStatus('${user._id}')">
-                                                <i class="fas fa-power-off"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
+                        <tr>
+                            <!-- ... other cells ... -->
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-icon" data-action="resetPassword" data-user-id="${user._id}">
+                                        <i class="fas fa-key"></i>
+                                    </button>
+                                    <button class="btn-icon" data-action="toggleStatus" data-user-id="${user._id}">
+                                        <i class="fas fa-power-off"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
             `;
         }
 
@@ -1285,6 +1357,38 @@
                 this.showError('Failed to update user status');
             }
         }
+
+        initializeUserEventListeners() {
+    const tableContainer = document.querySelector('.users-table-container');
+    if (tableContainer) {
+        tableContainer.addEventListener('click', async (e) => {
+            const button = e.target.closest('button[data-action]');
+            if (!button) return;
+
+            const action = button.dataset.action;
+            const userId = button.dataset.userId;
+
+            switch (action) {
+                case 'resetPassword':
+                    await this.resetUserPassword(userId);
+                    break;
+                case 'toggleStatus':
+                    await this.toggleUserStatus(userId);
+                    break;
+            }
+        });
+    }
+
+    // Add User button
+    const addUserBtn = document.getElementById('addUserBtn');
+    if (addUserBtn) {
+        addUserBtn.addEventListener('click', () => {
+            if (this.currentCompanyId) {
+                this.showAddUserModal(this.currentCompanyId);
+            }
+        });
+    }
+}
 
             // Utility Methods
         showModal(modalId) {
@@ -1494,7 +1598,8 @@
     }
 
     // Initialize the Companies Manager globally
-    window.CompaniesManager = CompaniesManager;
+    window.companiesManager = new CompaniesManager();
+
 
     // Ensure all modals are hidden by default
     document.addEventListener('DOMContentLoaded', () => {
