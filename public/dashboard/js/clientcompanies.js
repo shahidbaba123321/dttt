@@ -1425,21 +1425,32 @@ showConfirmDialog(message) {
         this.showError('Failed to show add user modal');
     }
 }
-        async handleAddUser(companyId) {
+       async handleAddUser(companyId) {
     try {
         const form = document.getElementById('addUserForm');
         if (!form) {
             throw new Error('Add user form not found');
         }
 
+        // Validate form data
         const userData = {
-            name: document.getElementById('userName').value,
-            email: document.getElementById('userEmail').value,
+            name: document.getElementById('userName').value.trim(),
+            email: document.getElementById('userEmail').value.trim(),
             role: document.getElementById('userRole').value,
-            department: document.getElementById('userDepartment').value || null
+            department: document.getElementById('userDepartment').value.trim() || null
         };
 
-        if (!this.validateUserData(userData)) {
+        // Client-side validation
+        if (!userData.name) {
+            this.showError('Name is required');
+            return;
+        }
+        if (!userData.email || !userData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+            this.showError('Valid email is required');
+            return;
+        }
+        if (!userData.role) {
+            this.showError('Role is required');
             return;
         }
 
@@ -1450,23 +1461,27 @@ showConfirmDialog(message) {
         });
 
         const result = await response.json();
+
         if (!response.ok) {
             throw new Error(result.message || 'Failed to add user');
         }
 
         this.showSuccess('User added successfully');
         
+        // Show temporary password if provided
         if (result.data?.tempPassword) {
-            this.showTempPasswordModal(userData.email, result.data.tempPassword);
+            await this.showTempPasswordModal(userData.email, result.data.tempPassword);
         }
 
         this.closeModals();
         await this.renderUsersTab({ _id: companyId });
+
     } catch (error) {
         console.error('Error adding user:', error);
-        this.showError(error.message);
+        this.showError(error.message || 'Failed to add user');
     }
 }
+
 
         validateUserData(userData) {
             if (!userData.name || userData.name.trim().length < 2) {
@@ -1644,47 +1659,52 @@ showConfirmDialog(message) {
         }
 
         showTempPasswordModal(email, password) {
-            const modal = document.createElement('div');
-            modal.className = 'modal show';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>Temporary Password</h2>
-                        <button class="close-btn"><i class="fas fa-times"></i></button>
+    return new Promise((resolve) => {
+        const modalHtml = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Temporary Password</h2>
+                    <button class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Please securely share these credentials with the user.</p>
                     </div>
-                    <div class="modal-body">
-                        <p>Please securely share these credentials with the user:</p>
-                        <div class="credentials-box">
-                            <div class="credential-item">
-                                <label>Email:</label>
-                                <span>${this.escapeHtml(email)}</span>
-                            </div>
-                            <div class="credential-item">
-                                <label>Temporary Password:</label>
-                                <span>${this.escapeHtml(password)}</span>
-                            </div>
+                    <div class="credentials-box">
+                        <div class="credential-item">
+                            <label>Email:</label>
+                            <span>${this.escapeHtml(email)}</span>
                         </div>
-                        <div class="warning-message">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <p>This password will only be shown once. Please make sure to copy it.</p>
+                        <div class="credential-item">
+                            <label>Temporary Password:</label>
+                            <span class="password">${this.escapeHtml(password)}</span>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button class="btn-primary" onclick="this.parentElement.parentElement.parentElement.remove()">
-                            I've copied the password
-                        </button>
+                    <div class="warning-message">
+                        <p>This password will only be shown once. Make sure to copy it now.</p>
                     </div>
                 </div>
-            `;
+                <div class="modal-footer">
+                    <button class="btn-primary" id="confirmPassword">I've Copied the Password</button>
+                </div>
+            </div>
+        `;
 
-            document.body.appendChild(modal);
+        const modal = document.createElement('div');
+        modal.className = 'modal show';
+        modal.innerHTML = modalHtml;
+        document.body.appendChild(modal);
 
-            // Add close button functionality
-            modal.querySelector('.close-btn').addEventListener('click', () => {
-                modal.remove();
-            });
-        }
+        const closeModal = () => {
+            modal.remove();
+            resolve();
+        };
 
+        modal.querySelector('.close-btn').addEventListener('click', closeModal);
+        modal.querySelector('#confirmPassword').addEventListener('click', closeModal);
+    });
+}
         escapeHtml(unsafe) {
             if (!unsafe) return '';
             return unsafe
