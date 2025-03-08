@@ -829,7 +829,8 @@
             throw new Error('Failed to fetch activity logs');
         }
 
-        const logs = await response.json();
+        const result = await response.json();
+        const logs = result.data || [];
         const tabContent = document.querySelector('.tab-content');
 
         tabContent.innerHTML = `
@@ -843,13 +844,45 @@
                     </select>
                     <input type="date" id="activityDateFilter">
                 </div>
-                <div class="activity-list">
-                    ${this.renderActivityList(logs.data || [])}
-                </div>
+                ${logs.length === 0 ? `
+                    <div class="empty-state">
+                        <i class="fas fa-history"></i>
+                        <p>No activity logs found</p>
+                    </div>
+                ` : `
+                    <div class="activity-list">
+                        ${logs.map(log => `
+                            <div class="activity-item ${log.type.toLowerCase()}">
+                                <div class="activity-icon">
+                                    <i class="fas ${this.getActivityIcon(log.type)}"></i>
+                                </div>
+                                <div class="activity-details">
+                                    <div class="activity-header">
+                                        <span class="activity-type">${log.type}</span>
+                                        <span class="activity-date">
+                                            ${new Date(log.timestamp).toLocaleString()}
+                                        </span>
+                                    </div>
+                                    <p class="activity-description">${this.escapeHtml(log.description)}</p>
+                                    ${log.details ? `
+                                        <button class="btn-link" data-action="toggleDetails">
+                                            Show Details
+                                        </button>
+                                        <div class="activity-details-expanded hidden">
+                                            <pre>${this.escapeHtml(JSON.stringify(log.details, null, 2))}</pre>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `}
             </div>
         `;
 
+        // Initialize activity filters
         this.initializeActivityFilters();
+
     } catch (error) {
         console.error('Error loading activity logs:', error);
         const tabContent = document.querySelector('.tab-content');
@@ -965,24 +998,77 @@ renderActivityList(logs) {
         }
 
         async showChangePlanModal(companyId) {
-            try {
-                const subscription = this.currentCompany.subscription || {};
-                this.showModal('changePlanModal');
-                
-                // Populate current plan details
-                document.getElementById('currentPlan').textContent = 
-                    (subscription.plan || 'Basic').toUpperCase();
-                document.getElementById('newPlan').value = subscription.plan || 'basic';
-                document.getElementById('billingCycle').value = 
-                    subscription.billingCycle || 'monthly';
+    try {
+        const subscription = this.currentCompany.subscription || {};
+        
+        // First, ensure the modal HTML is correct
+        const modalContent = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Change Subscription Plan</h2>
+                    <button class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="current-plan-info">
+                        <label>Current Plan:</label>
+                        <span id="currentPlan" class="plan-badge ${subscription.plan || 'basic'}">
+                            ${(subscription.plan || 'Basic').toUpperCase()}
+                        </span>
+                    </div>
+                    <form id="changePlanForm">
+                        <div class="form-group">
+                            <label for="newPlan">Select New Plan</label>
+                            <select id="newPlan" required>
+                                <option value="basic">Basic Plan</option>
+                                <option value="premium">Premium Plan</option>
+                                <option value="enterprise">Enterprise Plan</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="billingCycle">Billing Cycle</label>
+                            <select id="billingCycle" required>
+                                <option value="monthly">Monthly</option>
+                                <option value="annual">Annual (10% discount)</option>
+                            </select>
+                        </div>
+                        <div id="planSummary" class="plan-summary">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="cancelPlanChange">Cancel</button>
+                    <button class="btn-primary" id="confirmPlanChange">Confirm Change</button>
+                </div>
+            </div>
+        `;
 
-                this.updatePlanSummary();
-            } catch (error) {
-                console.error('Error showing plan change modal:', error);
-                this.showError('Failed to load plan change options');
-            }
+        const modal = document.getElementById('changePlanModal');
+        if (!modal) {
+            throw new Error('Change plan modal not found');
         }
 
+        modal.innerHTML = modalContent;
+        this.showModal('changePlanModal');
+        
+        // Set initial values
+        document.getElementById('newPlan').value = subscription.plan || 'basic';
+        document.getElementById('billingCycle').value = subscription.billingCycle || 'monthly';
+
+        // Initialize event listeners
+        document.getElementById('newPlan').addEventListener('change', () => this.updatePlanSummary());
+        document.getElementById('billingCycle').addEventListener('change', () => this.updatePlanSummary());
+        document.getElementById('cancelPlanChange').addEventListener('click', () => this.closeModals());
+        document.getElementById('confirmPlanChange').addEventListener('click', () => this.handlePlanChange(companyId));
+
+        // Update plan summary
+        this.updatePlanSummary();
+
+    } catch (error) {
+        console.error('Error showing plan change modal:', error);
+        this.showError('Failed to load plan change options');
+    }
+}
         updatePlanSummary() {
             const plan = document.getElementById('newPlan').value;
             const cycle = document.getElementById('billingCycle').value;
