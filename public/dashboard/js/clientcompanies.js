@@ -1252,7 +1252,7 @@ showConfirmDialog(message) {
         }
 
             // User Management Methods
-        async renderUsersTab(company) {
+       async renderUsersTab(company) {
     try {
         const users = await this.loadCompanyUsers(company._id);
         const tabContent = document.querySelector('.tab-content');
@@ -1263,7 +1263,7 @@ showConfirmDialog(message) {
                     <div class="search-filters">
                         <div class="search-box">
                             <i class="fas fa-search"></i>
-                            <input type="text" id="userSearch" placeholder="Search users...">
+                            <input type="text" id="userSearch" placeholder="Search by name or email...">
                         </div>
                         <div class="filter-group">
                             <select id="roleFilter">
@@ -1283,43 +1283,72 @@ showConfirmDialog(message) {
                         <i class="fas fa-user-plus"></i> Add User
                     </button>
                 </div>
-                ${this.renderUsersTable(users)}
+                <div class="users-table-wrapper">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Department</th>
+                                <th>Status</th>
+                                <th>Last Login</th>
+                                <th class="actions-column">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${users.map(user => `
+                                <tr>
+                                    <td>
+                                        <div class="user-cell">
+                                            <div class="user-avatar" style="background-color: ${this.getAvatarColor(user.name)}">
+                                                ${this.getInitials(user.name)}
+                                            </div>
+                                            <div class="user-info">
+                                                <span class="user-name">${this.escapeHtml(user.name)}</span>
+                                                <span class="user-email">${this.escapeHtml(user.email)}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="role-badge ${user.role.toLowerCase()}">
+                                            ${user.role}
+                                        </span>
+                                    </td>
+                                    <td>${this.escapeHtml(user.department || '-')}</td>
+                                    <td>
+                                        <span class="status-badge ${user.status}">
+                                            ${user.status.toUpperCase()}
+                                        </span>
+                                    </td>
+                                    <td>${user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}</td>
+                                    <td class="actions-column">
+                                        <div class="action-buttons">
+                                            <button class="btn-icon reset-password" data-user-id="${user._id}" title="Reset Password">
+                                                <i class="fas fa-key"></i>
+                                            </button>
+                                            <button class="btn-icon toggle-status" data-user-id="${user._id}" title="Toggle Status">
+                                                <i class="fas fa-power-off"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         `;
 
-        // Add event listener for Add User button
-        const addUserBtn = document.getElementById('addUserBtn');
-        if (addUserBtn) {
-            addUserBtn.addEventListener('click', () => {
-                this.showAddUserModal(company._id);
-            });
-        }
-
+        // Initialize search and filters
         this.initializeUserFilters();
+        
+        // Add event listeners for action buttons
+        this.initializeUserActionButtons();
     } catch (error) {
         console.error('Error rendering users tab:', error);
         this.showError('Failed to load users information');
     }
 }
-
-        async loadCompanyUsers(companyId) {
-            try {
-                const response = await fetch(`${this.baseUrl}/companies/${companyId}/users`, {
-                    headers: this.getHeaders()
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to load company users');
-                }
-
-                const result = await response.json();
-                return result.data || [];
-            } catch (error) {
-                console.error('Error loading company users:', error);
-                this.showError('Failed to load company users');
-                return [];
-            }
-        }
 
         renderUsersTable(users) {
             if (!users.length) {
@@ -1782,22 +1811,23 @@ showConfirmDialog(message) {
         }
 
         filterUsers(search = '', role = '', status = '') {
-            const rows = document.querySelectorAll('.users-table tbody tr');
-            rows.forEach(row => {
-                const userName = row.querySelector('.user-name')?.textContent.toLowerCase() || '';
-                const userEmail = row.querySelector('.user-email')?.textContent.toLowerCase() || '';
-                const userRole = row.querySelector('.role-badge')?.textContent.toLowerCase() || '';
-                const userStatus = row.querySelector('.status-badge')?.textContent.toLowerCase() || '';
+    const rows = document.querySelectorAll('.users-table tbody tr');
+    rows.forEach(row => {
+        const userName = row.querySelector('.user-name')?.textContent.toLowerCase() || '';
+        const userEmail = row.querySelector('.user-email')?.textContent.toLowerCase() || '';
+        const userRole = row.querySelector('.role-badge')?.textContent.toLowerCase() || '';
+        const userStatus = row.querySelector('.status-badge')?.textContent.toLowerCase() || '';
 
-                const matchesSearch = !search || 
-                    userName.includes(search.toLowerCase()) || 
-                    userEmail.includes(search.toLowerCase());
-                const matchesRole = !role || userRole === role.toLowerCase();
-                const matchesStatus = !status || userStatus === status.toLowerCase();
+        const searchTerm = search.toLowerCase();
+        const matchesSearch = !searchTerm || 
+            userName.includes(searchTerm) || 
+            userEmail.includes(searchTerm);
+        const matchesRole = !role || userRole === role.toLowerCase();
+        const matchesStatus = !status || userStatus.includes(status.toLowerCase());
 
-                row.style.display = matchesSearch && matchesRole && matchesStatus ? '' : 'none';
-            });
-        }
+        row.style.display = matchesSearch && matchesRole && matchesStatus ? '' : 'none';
+    });
+}
     }
 
     // Initialize the Companies Manager globally
