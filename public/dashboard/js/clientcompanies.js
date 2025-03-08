@@ -1253,46 +1253,54 @@ showConfirmDialog(message) {
 
             // User Management Methods
         async renderUsersTab(company) {
-            try {
-                const users = await this.loadCompanyUsers(company._id);
-                const tabContent = document.querySelector('.tab-content');
-                
-                tabContent.innerHTML = `
-                    <div class="users-management">
-                        <div class="users-header">
-                            <div class="search-filters">
-                                <div class="search-box">
-                                    <i class="fas fa-search"></i>
-                                    <input type="text" id="userSearch" placeholder="Search users...">
-                                </div>
-                                <div class="filter-group">
-                                    <select id="roleFilter">
-                                        <option value="">All Roles</option>
-                                        <option value="admin">Admin</option>
-                                        <option value="manager">Manager</option>
-                                        <option value="employee">Employee</option>
-                                    </select>
-                                    <select id="userStatusFilter">
-                                        <option value="">All Status</option>
-                                        <option value="active">Active</option>
-                                        <option value="inactive">Inactive</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <button class="btn-primary" id="addUserBtn">
-                                <i class="fas fa-user-plus"></i> Add User
-                            </button>
+    try {
+        const users = await this.loadCompanyUsers(company._id);
+        const tabContent = document.querySelector('.tab-content');
+        
+        tabContent.innerHTML = `
+            <div class="users-management">
+                <div class="users-header">
+                    <div class="search-filters">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="userSearch" placeholder="Search users...">
                         </div>
-                        ${this.renderUsersTable(users)}
+                        <div class="filter-group">
+                            <select id="roleFilter">
+                                <option value="">All Roles</option>
+                                <option value="admin">Admin</option>
+                                <option value="manager">Manager</option>
+                                <option value="employee">Employee</option>
+                            </select>
+                            <select id="userStatusFilter">
+                                <option value="">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
                     </div>
-                `;
+                    <button class="btn-primary" id="addUserBtn">
+                        <i class="fas fa-user-plus"></i> Add User
+                    </button>
+                </div>
+                ${this.renderUsersTable(users)}
+            </div>
+        `;
 
-                this.initializeUserFilters();
-            } catch (error) {
-                console.error('Error rendering users tab:', error);
-                this.showError('Failed to load users information');
-            }
+        // Add event listener for Add User button
+        const addUserBtn = document.getElementById('addUserBtn');
+        if (addUserBtn) {
+            addUserBtn.addEventListener('click', () => {
+                this.showAddUserModal(company._id);
+            });
         }
+
+        this.initializeUserFilters();
+    } catch (error) {
+        console.error('Error rendering users tab:', error);
+        this.showError('Failed to load users information');
+    }
+}
 
         async loadCompanyUsers(companyId) {
             try {
@@ -1360,67 +1368,105 @@ showConfirmDialog(message) {
         }
 
         showAddUserModal(companyId) {
-            const modal = document.getElementById('addUserModal');
-            if (!modal) {
-                this.showError('User modal not found');
-                return;
-            }
+    try {
+        const modalHtml = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Add New User</h2>
+                    <button class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUserForm">
+                        <div class="form-group">
+                            <label for="userName">Full Name*</label>
+                            <input type="text" id="userName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="userEmail">Email*</label>
+                            <input type="email" id="userEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="userRole">Role*</label>
+                            <select id="userRole" required>
+                                <option value="">Select Role</option>
+                                <option value="admin">Admin</option>
+                                <option value="manager">Manager</option>
+                                <option value="employee">Employee</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="userDepartment">Department</label>
+                            <input type="text" id="userDepartment">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="cancelAddUser">Cancel</button>
+                    <button class="btn-primary" id="confirmAddUser">Add User</button>
+                </div>
+            </div>
+        `;
 
-            this.showModal('addUserModal');
-            const form = modal.querySelector('#addUserForm');
-            if (form) {
-                form.dataset.companyId = companyId;
-                form.reset();
-            }
+        const modal = document.getElementById('addUserModal');
+        if (!modal) {
+            throw new Error('Add user modal not found');
         }
 
-        async handleAddUser() {
-            try {
-                const form = document.getElementById('addUserForm');
-                if (!form) {
-                    throw new Error('Add user form not found');
-                }
+        modal.innerHTML = modalHtml;
+        this.showModal('addUserModal');
 
-                const companyId = this.currentCompanyId;
-                if (!companyId) {
-                    throw new Error('Company ID not found');
-                }
+        // Add event listeners
+        document.getElementById('cancelAddUser').addEventListener('click', () => this.closeModals());
+        document.getElementById('confirmAddUser').addEventListener('click', () => this.handleAddUser(companyId));
+        document.querySelector('#addUserModal .close-btn').addEventListener('click', () => this.closeModals());
 
-                const userData = {
-                    name: document.getElementById('userName').value,
-                    email: document.getElementById('userEmail').value,
-                    role: document.getElementById('userRole').value,
-                    department: document.getElementById('userDepartment').value || null
-                };
-
-                if (!this.validateUserData(userData)) {
-                    return;
-                }
-
-                const response = await fetch(`${this.baseUrl}/companies/${companyId}/users`, {
-                    method: 'POST',
-                    headers: this.getHeaders(),
-                    body: JSON.stringify(userData)
-                });
-
-                const result = await response.json();
-                if (!response.ok) {
-                    throw new Error(result.message || 'Failed to add user');
-                }
-
-                this.showSuccess('User added successfully');
-                
-                if (result.data?.tempPassword) {
-                    this.showTempPasswordModal(userData.email, result.data.tempPassword);
-                }
-
-                this.closeModals();
-                await this.renderUsersTab({ _id: companyId });
-            } catch (error) {
-                console.error('Error adding user:', error);
-                this.showError(error.message);
-            }
+    } catch (error) {
+        console.error('Error showing add user modal:', error);
+        this.showError('Failed to show add user modal');
+    }
+}
+        async handleAddUser(companyId) {
+    try {
+        const form = document.getElementById('addUserForm');
+        if (!form) {
+            throw new Error('Add user form not found');
         }
+
+        const userData = {
+            name: document.getElementById('userName').value,
+            email: document.getElementById('userEmail').value,
+            role: document.getElementById('userRole').value,
+            department: document.getElementById('userDepartment').value || null
+        };
+
+        if (!this.validateUserData(userData)) {
+            return;
+        }
+
+        const response = await fetch(`${this.baseUrl}/companies/${companyId}/users`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            body: JSON.stringify(userData)
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to add user');
+        }
+
+        this.showSuccess('User added successfully');
+        
+        if (result.data?.tempPassword) {
+            this.showTempPasswordModal(userData.email, result.data.tempPassword);
+        }
+
+        this.closeModals();
+        await this.renderUsersTab({ _id: companyId });
+    } catch (error) {
+        console.error('Error adding user:', error);
+        this.showError(error.message);
+    }
+}
 
         validateUserData(userData) {
             if (!userData.name || userData.name.trim().length < 2) {
