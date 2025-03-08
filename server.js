@@ -3720,72 +3720,111 @@ app.get('/api/companies/:companyId/billing-history', verifyToken, verifyAdmin, a
 });
 
 // Generate invoice
+// Generate invoice
 app.post('/api/companies/:companyId/generate-invoice', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
     try {
-        const { companyId } = req.params;
+        await session.withTransaction(async () => {
+            const { companyId } = req.params;
 
-        if (!ObjectId.isValid(companyId)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid company ID'
-            });
-        }
+            if (!ObjectId.isValid(companyId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid company ID'
+                });
+            }
 
-        const company = await companies.findOne({ _id: new ObjectId(companyId) });
-        if (!company) {
-            return res.status(404).json({
-                success: false,
-                message: 'Company not found'
-            });
-        }
+            // Get company and subscription details
+            const company = await companies.findOne(
+                { _id: new ObjectId(companyId) },
+                { session }
+            );
 
-        const subscription = await company_subscriptions.findOne({ 
-            companyId: new ObjectId(companyId) 
-        });
+            if (!company) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Company not found'
+                });
+            }
 
-        // Generate invoice number
-        const invoiceNumber = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+            const subscription = await company_subscriptions.findOne(
+                { companyId: new ObjectId(companyId) },
+                { session }
+            );
 
-        // Create invoice record
-        const invoice = {
-            invoiceNumber,
-            companyId: new ObjectId(companyId),
-            date: new Date(),
-            amount: subscription.price || 0,
-            status: 'pending',
-            items: [{
-                description: `${subscription.plan} Plan Subscription`,
-                quantity: 1,
-                unitPrice: subscription.price || 0,
-                total: subscription.price || 0
-            }],
-            billingDetails: {
+            if (!subscription) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No active subscription found'
+                });
+            }
+
+            // Generate invoice number
+            const invoiceNumber = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+            // Calculate amounts
+            const baseAmount = subscription.price || 0;
+            const taxRate = 0.20; // 20% tax
+            const taxAmount = baseAmount * taxRate;
+            const totalAmount = baseAmount + taxAmount;
+
+            // Create invoice
+            const invoice = {
+                invoiceNumber,
+                companyId: new ObjectId(companyId),
                 companyName: company.name,
-                address: company.contactDetails.address,
-                email: company.contactDetails.email
-            },
-            createdAt: new Date(),
-            createdBy: new ObjectId(req.user.userId)
-        };
+                companyAddress: company.contactDetails.address,
+                companyEmail: company.contactDetails.email,
+                date: new Date(),
+                dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+                items: [
+                    {
+                        description: `${subscription.plan} Plan Subscription`,
+                        quantity: 1,
+                        unitPrice: baseAmount,
+                        total: baseAmount
+                    }
+                ],
+                subtotal: baseAmount,
+                taxRate: taxRate,
+                taxAmount: taxAmount,
+                totalAmount: totalAmount,
+                status: 'pending',
+                createdAt: new Date(),
+                createdBy: new ObjectId(req.user.userId)
+            };
 
-        // Save invoice to billing history
-        await database.collection('billing_history').insertOne(invoice);
+            // Save invoice to billing history
+            await billing_history.insertOne(invoice, { session });
 
-        res.json({
-            success: true,
-            message: 'Invoice generated successfully',
-            data: invoice
+            // Create audit log
+            await createAuditLog(
+                'INVOICE_GENERATED',
+                req.user.userId,
+                companyId,
+                {
+                    invoiceNumber,
+                    amount: totalAmount
+                },
+                session
+            );
+
+            res.json({
+                success: true,
+                message: 'Invoice generated successfully',
+                data: invoice
+            });
         });
-
     } catch (error) {
         console.error('Error generating invoice:', error);
         res.status(500).json({
             success: false,
             message: 'Error generating invoice'
         });
+    } finally {
+        await session.endSession();
     }
 });
-
 // Download invoice
 app.get('/api/invoices/:invoiceNumber/download', verifyToken, verifyAdmin, async (req, res) => {
     try {
