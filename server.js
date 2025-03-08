@@ -46,10 +46,8 @@ const authLimiter = rateLimit({
 // Define CORS options
 const corsOptions = {
     origin: [
-        process.env.FRONTEND_URL || 'https://main.d1cfw592vg73f.amplifyapp.com',
-        'http://18.215.160.136.nip.io',
-        'https://18.215.160.136.nip.io',
-        'http://18.215.160.136:8080'
+        'https://main.d1cfw592vg73f.amplifyapp.com',
+        'https://18.215.160.136.nip.io'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: [
@@ -70,7 +68,6 @@ const corsOptions = {
     preflightContinue: false,
     optionsSuccessStatus: 204
 };
-
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
