@@ -551,7 +551,7 @@
             }
         }
 
-        async viewCompanyDetails(companyId) {
+          async viewCompanyDetails(companyId) {
             try {
                 const response = await fetch(`${this.baseUrl}/companies/${companyId}`, {
                     headers: this.getHeaders()
@@ -585,8 +585,105 @@
             }
         }
 
-        switchTab(tabButton) {
-            if (!this.currentCompanyId) {
+        renderCompanyDetails(company) {
+            try {
+                if (!company) {
+                    throw new Error('No company data provided');
+                }
+
+                const subscription = company.subscription || {};
+                const tabContent = document.querySelector('.tab-content');
+                
+                tabContent.innerHTML = `
+                    <div class="company-details-view">
+                        <div class="details-section">
+                            <h3>Company Information</h3>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <label>Company Name</label>
+                                    <span>${this.escapeHtml(company.name || '')}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Industry</label>
+                                    <span>${this.escapeHtml(company.industry || '')}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Company Size</label>
+                                    <span>${company.companySize || 0} employees</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Status</label>
+                                    <span class="status-badge ${company.status || 'inactive'}">
+                                        ${(company.status || 'Inactive').toUpperCase()}
+                                    </span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Total Users</label>
+                                    <span>${company.usersCount || 0}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="details-section">
+                            <h3>Contact Information</h3>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <label>Email</label>
+                                    <span>${this.escapeHtml(company.contactDetails?.email || '')}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Phone</label>
+                                    <span>${this.escapeHtml(company.contactDetails?.phone || '')}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Address</label>
+                                    <span>${this.escapeHtml(company.contactDetails?.address || '')}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="details-section">
+                            <h3>Subscription Details</h3>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <label>Current Plan</label>
+                                    <span class="plan-badge ${subscription.plan || 'basic'}">
+                                        ${(subscription.plan || 'Basic').toUpperCase()}
+                                    </span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Status</label>
+                                    <span class="status-badge ${subscription.status || 'inactive'}">
+                                        ${(subscription.status || 'Inactive').toUpperCase()}
+                                    </span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Start Date</label>
+                                    <span>${subscription.startDate ? new Date(subscription.startDate).toLocaleDateString() : 'N/A'}</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Next Billing</label>
+                                    <span>${subscription.endDate ? new Date(subscription.endDate).toLocaleDateString() : 'N/A'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error rendering company details:', error);
+                const tabContent = document.querySelector('.tab-content');
+                tabContent.innerHTML = `
+                    <div class="error-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Failed to display company details: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+
+       switchTab(tabButton) {
+            if (!this.currentCompanyId || !this.currentCompany) {
                 this.showError('No company selected');
                 return;
             }
@@ -611,29 +708,38 @@
             `;
 
             // Load tab content based on type
-            switch(tabName) {
-                case 'details':
-                    this.renderCompanyDetails(this.currentCompany);
-                    break;
-                case 'users':
-                    this.renderUsersTab(this.currentCompany);
-                    break;
-                case 'subscription':
-                    this.renderSubscriptionTab(this.currentCompany);
-                    break;
-                case 'activity':
-                    this.renderActivityTab(this.currentCompany);
-                    break;
-                default:
-                    tabContent.innerHTML = `
-                        <div class="error-state">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <p>Invalid tab selected</p>
-                        </div>
-                    `;
+            try {
+                switch(tabName) {
+                    case 'details':
+                        this.renderCompanyDetails(this.currentCompany);
+                        break;
+                    case 'users':
+                        this.renderUsersTab(this.currentCompany);
+                        break;
+                    case 'subscription':
+                        this.renderSubscriptionTab(this.currentCompany);
+                        break;
+                    case 'activity':
+                        this.renderActivityTab(this.currentCompany);
+                        break;
+                    default:
+                        tabContent.innerHTML = `
+                            <div class="error-state">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <p>Invalid tab selected</p>
+                            </div>
+                        `;
+                }
+            } catch (error) {
+                console.error('Error switching tab:', error);
+                tabContent.innerHTML = `
+                    <div class="error-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Failed to load tab content: ${error.message}</p>
+                    </div>
+                `;
             }
         }
-
             async renderSubscriptionTab(company) {
             try {
                 const subscription = company.subscription || {};
