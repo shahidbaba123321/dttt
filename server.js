@@ -3374,6 +3374,7 @@ app.post('/api/companies/:companyId/invoice', verifyToken, verifyAdmin, async (r
 // Company User Management Endpoints
 
 // Add user to company
+// Add user to company
 app.post('/api/companies/:companyId/users', verifyToken, verifyAdmin, async (req, res) => {
     const session = client.startSession();
     try {
@@ -3381,13 +3382,12 @@ app.post('/api/companies/:companyId/users', verifyToken, verifyAdmin, async (req
             const { companyId } = req.params;
             const { name, email, role, department } = req.body;
 
+            // Validate company ID
             if (!ObjectId.isValid(companyId)) {
-                throw new Error('Invalid company ID');
-            }
-
-            // Validate required fields
-            if (!name || !email || !role) {
-                throw new Error('Missing required fields');
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid company ID'
+                });
             }
 
             // Check if company exists and is active
@@ -3397,7 +3397,10 @@ app.post('/api/companies/:companyId/users', verifyToken, verifyAdmin, async (req
             }, { session });
 
             if (!company) {
-                throw new Error('Company not found or inactive');
+                return res.status(404).json({
+                    success: false,
+                    message: 'Company not found or inactive'
+                });
             }
 
             // Check if user email already exists
@@ -3406,15 +3409,22 @@ app.post('/api/companies/:companyId/users', verifyToken, verifyAdmin, async (req
             }, { session });
 
             if (existingUser) {
-                throw new Error('User with this email already exists');
+                return res.status(400).json({
+                    success: false,
+                    message: 'User with this email already exists'
+                });
             }
 
             // Generate temporary password
-            const tempPassword = crypto.randomBytes(10).toString('hex');
+            const tempPassword = require('crypto')
+                .randomBytes(8)
+                .toString('hex');
+            
+            // Hash the password
             const hashedPassword = await bcrypt.hash(tempPassword, 12);
 
-            // Create user
-            const user = {
+            // Create user object
+            const newUser = {
                 companyId: new ObjectId(companyId),
                 name,
                 email,
@@ -3422,30 +3432,28 @@ app.post('/api/companies/:companyId/users', verifyToken, verifyAdmin, async (req
                 role,
                 department,
                 status: 'active',
-                passwordResetRequired: true,
                 createdAt: new Date(),
                 createdBy: new ObjectId(req.user.userId),
-                lastLogin: null
+                lastLogin: null,
+                passwordResetRequired: true
             };
 
-            const result = await company_users.insertOne(user, { session });
+            // Insert user
+            const result = await company_users.insertOne(newUser, { session });
 
             // Create audit log
             await createAuditLog(
-                'COMPANY_USER_CREATED',
+                'USER_CREATED',
                 req.user.userId,
                 companyId,
                 {
-                    companyName: company.name,
+                    userId: result.insertedId,
                     userName: name,
                     userEmail: email,
                     userRole: role
                 },
                 session
             );
-
-            // Send welcome email with temporary password
-            // TODO: Implement email sending functionality
 
             res.status(201).json({
                 success: true,
@@ -3462,15 +3470,14 @@ app.post('/api/companies/:companyId/users', verifyToken, verifyAdmin, async (req
         });
     } catch (error) {
         console.error('Error creating company user:', error);
-        res.status(error.message.includes('already exists') ? 400 : 500).json({
+        res.status(500).json({
             success: false,
-            message: error.message || 'Error creating company user'
+            message: error.message || 'Error creating user'
         });
     } finally {
         await session.endSession();
     }
 });
-
 // Update company user
 app.put('/api/companies/:companyId/users/:userId', verifyToken, verifyAdmin, async (req, res) => {
     const session = client.startSession();
