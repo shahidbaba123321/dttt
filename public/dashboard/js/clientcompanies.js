@@ -13,6 +13,7 @@
             this.totalCompanies = 0;
             this.companies = [];
             this.currentCompanyId = null;
+            this.currentCompany = null;
             this.filters = {
                 search: '',
                 industry: '',
@@ -42,24 +43,21 @@
         }
 
         async initialize() {
-    try {
-        await this.initializeElements();
-        await this.initializeEventListeners();
-        await this.loadCompanies();
-        
-        // Initialize company card listeners
-        this.initializeCompanyCardListeners();
-        
-        // Hide all modals by default
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.style.display = 'none';
-            modal.classList.remove('show');
-        });
-    } catch (error) {
-        console.error('Initialization error:', error);
-        this.showError('Failed to initialize companies module');
-    }
-}
+            try {
+                // Hide all modals by default
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.style.display = 'none';
+                    modal.classList.remove('show');
+                });
+
+                await this.initializeElements();
+                await this.initializeEventListeners();
+                await this.loadCompanies();
+            } catch (error) {
+                console.error('Initialization error:', error);
+                this.showError('Failed to initialize companies module');
+            }
+        }
 
         async initializeElements() {
             // Main elements
@@ -89,43 +87,7 @@
             await this.populateIndustryDropdowns();
         }
 
-        async populateIndustryDropdowns() {
-            try {
-                // Get all industry select elements
-                const industrySelects = [
-                    this.industryFilter,
-                    document.querySelector('#industry'), // In the add/edit company form
-                ];
-
-                // Populate each select element
-                industrySelects.forEach(select => {
-                    if (select) {
-                        // Clear existing options
-                        select.innerHTML = '';
-
-                        // Add default option
-                        const defaultOption = document.createElement('option');
-                        defaultOption.value = '';
-                        defaultOption.textContent = select === this.industryFilter ? 'All Industries' : 'Select Industry';
-                        select.appendChild(defaultOption);
-
-                        // Add industry options
-                        this.industries.forEach(industry => {
-                            const option = document.createElement('option');
-                            option.value = industry.toLowerCase();
-                            option.textContent = industry;
-                            select.appendChild(option);
-                        });
-                    }
-                });
-            } catch (error) {
-                console.error('Error populating industry dropdowns:', error);
-                throw new Error('Failed to populate industry dropdowns');
-            }
-        }
-
-
-                initializeEventListeners() {
+        initializeEventListeners() {
             // Company Management Events
             if (this.addCompanyBtn) {
                 this.addCompanyBtn.addEventListener('click', () => this.showAddCompanyModal());
@@ -183,102 +145,38 @@
                 }
             });
 
-            // Subscription Plan Events
-            if (document.getElementById('changePlanForm')) {
-                document.getElementById('changePlanForm').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.handlePlanChange(this.currentCompanyId);
-                });
-            }
+            // Company Card Actions
+            if (this.companiesGrid) {
+                this.companiesGrid.addEventListener('click', (e) => {
+                    const button = e.target.closest('button[data-action]');
+                    if (!button) return;
 
-            // Plan calculation events
-            const planSelect = document.getElementById('newPlan');
-            const cycleSelect = document.getElementById('billingCycle');
-            if (planSelect && cycleSelect) {
-                [planSelect, cycleSelect].forEach(select => {
-                    select.addEventListener('change', () => {
-                        this.updatePlanSummary();
-                    });
-                });
-            }
+                    const action = button.dataset.action;
+                    const companyId = button.dataset.companyId;
 
-            // User Management Events
-            if (document.getElementById('addUserForm')) {
-                document.getElementById('addUserForm').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.handleAddUser(e);
-                });
-            }
-
-            if (document.getElementById('editUserForm')) {
-                document.getElementById('editUserForm').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.handleEditUser(e);
-                });
-            }
-
-            // User Filters
-            const userSearchInput = document.getElementById('userSearch');
-            if (userSearchInput) {
-                userSearchInput.addEventListener('input', this.debounce((e) => {
-                    this.filterUsers(
-                        e.target.value,
-                        document.getElementById('roleFilter')?.value,
-                        document.getElementById('userStatusFilter')?.value
-                    );
-                }, 300));
-            }
-
-            // Role and Status Filters for Users
-            ['roleFilter', 'userStatusFilter'].forEach(filterId => {
-                const element = document.getElementById(filterId);
-                if (element) {
-                    element.addEventListener('change', () => {
-                        this.filterUsers(
-                            document.getElementById('userSearch')?.value || '',
-                            document.getElementById('roleFilter')?.value || '',
-                            document.getElementById('userStatusFilter')?.value || ''
-                        );
-                    });
-                }
-            });
-
-            // Activity Log Filters
-            const activityTypeFilter = document.getElementById('activityTypeFilter');
-            const activityDateFilter = document.getElementById('activityDateFilter');
-
-            if (activityTypeFilter) {
-                activityTypeFilter.addEventListener('change', () => this.filterActivityLogs());
-            }
-
-            if (activityDateFilter) {
-                activityDateFilter.addEventListener('change', () => this.filterActivityLogs());
-            }
-
-            // Invoice Generation
-            const generateInvoiceBtn = document.getElementById('generateInvoiceBtn');
-            if (generateInvoiceBtn) {
-                generateInvoiceBtn.addEventListener('click', () => {
-                    if (this.currentCompanyId) {
-                        this.generateInvoice(this.currentCompanyId);
-                    }
-                });
-            }
-
-            // Pagination Events
-            if (this.paginationContainer) {
-                this.paginationContainer.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('btn-page')) {
-                        const page = parseInt(e.target.dataset.page);
-                        if (!isNaN(page)) {
-                            this.changePage(page);
-                        }
+                    switch (action) {
+                        case 'view':
+                            this.viewCompanyDetails(companyId);
+                            break;
+                        case 'edit':
+                            this.editCompany(companyId);
+                            break;
+                        case 'toggle-status':
+                            this.toggleCompanyStatus(companyId);
+                            break;
                     }
                 });
             }
         }
 
-        async loadCompanies() {
+        getHeaders() {
+            return {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            };
+        }
+
+            async loadCompanies() {
             try {
                 this.showLoading();
                 const queryParams = new URLSearchParams({
@@ -314,112 +212,48 @@
             }
         }
 
-       renderCompanies(companies) {
-    if (!companies.length) {
-        this.companiesGrid.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-building"></i>
-                <h3>No Companies Found</h3>
-                <p>There are no companies matching your criteria.</p>
-            </div>
-        `;
-        return;
-    }
+        renderCompanies(companies) {
+            if (!companies.length) {
+                this.companiesGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-building"></i>
+                        <h3>No Companies Found</h3>
+                        <p>There are no companies matching your criteria.</p>
+                    </div>
+                `;
+                return;
+            }
 
-    this.companiesGrid.innerHTML = companies.map(company => `
-        <div class="company-card" data-id="${company._id}">
-            <div class="company-header">
-                <h3>${this.escapeHtml(company.name)}</h3>
-                <span class="company-status status-${company.status}">
-                    ${company.status.charAt(0).toUpperCase() + company.status.slice(1)}
-                </span>
-            </div>
-            <div class="company-details">
-                <p><i class="fas fa-industry"></i> ${this.escapeHtml(company.industry)}</p>
-                <p><i class="fas fa-users"></i> ${company.companySize} employees</p>
-                <p><i class="fas fa-tag"></i> ${company.subscriptionPlan} plan</p>
-                <p><i class="fas fa-envelope"></i> ${this.escapeHtml(company.contactDetails.email)}</p>
-            </div>
-            <div class="company-actions">
-                <button class="btn-icon" data-action="view" data-company-id="${company._id}">
-                    <i class="fas fa-eye"></i>
-                </button>
-                <button class="btn-icon" data-action="edit" data-company-id="${company._id}">
-                    <i class="fas fa-edit"></i>
-                </button>
-                <button class="btn-icon" data-action="toggle-status" data-company-id="${company._id}">
-                    <i class="fas fa-power-off"></i>
-                </button>
-            </div>
-        </div>
-    `).join('');
-
-    // Add event listeners after rendering
-    this.initializeCompanyCardListeners();
-}
-initializeCompanyCardListeners() {
-    // Add event listeners for company actions
-    this.companiesGrid.addEventListener('click', (e) => {
-        const button = e.target.closest('button[data-action]');
-        if (!button) return;
-
-        const action = button.dataset.action;
-        const companyId = button.dataset.companyId;
-
-        switch (action) {
-            case 'view':
-                this.viewCompanyDetails(companyId);
-                break;
-            case 'edit':
-                this.editCompany(companyId);
-                break;
-            case 'toggle-status':
-                this.toggleCompanyStatus(companyId);
-                break;
-        }
-    });
-}
-        async initializeCompanies() {
-    try {
-        console.log('Initializing Companies module...');
-        
-        // Check if script is already loaded
-        const existingScript = document.querySelector('script[src*="clientcompanies.js"]');
-        if (existingScript) {
-            console.log('Removing existing Companies script...');
-            existingScript.remove();
+            this.companiesGrid.innerHTML = companies.map(company => `
+                <div class="company-card" data-id="${company._id}">
+                    <div class="company-header">
+                        <h3>${this.escapeHtml(company.name)}</h3>
+                        <span class="company-status status-${company.status}">
+                            ${company.status.charAt(0).toUpperCase() + company.status.slice(1)}
+                        </span>
+                    </div>
+                    <div class="company-details">
+                        <p><i class="fas fa-industry"></i> ${this.escapeHtml(company.industry)}</p>
+                        <p><i class="fas fa-users"></i> ${company.companySize} employees</p>
+                        <p><i class="fas fa-tag"></i> ${company.subscriptionPlan} plan</p>
+                        <p><i class="fas fa-envelope"></i> ${this.escapeHtml(company.contactDetails.email)}</p>
+                    </div>
+                    <div class="company-actions">
+                        <button class="btn-icon" data-action="view" data-company-id="${company._id}">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn-icon" data-action="edit" data-company-id="${company._id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-icon" data-action="toggle-status" data-company-id="${company._id}">
+                            <i class="fas fa-power-off"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        // Create and append the script
-        const script = document.createElement('script');
-        script.src = `${this.baseUrl}/dashboard/js/clientcompanies.js`;
-        
-        await new Promise((resolve, reject) => {
-            script.onload = resolve;
-            script.onerror = reject;
-            document.body.appendChild(script);
-        });
-
-        // Wait for script to be processed
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        // Initialize CompaniesManager
-        if (typeof CompaniesManager === 'undefined') {
-            throw new Error('CompaniesManager class not found');
-        }
-
-        // Create new instance
-        const companiesManager = new CompaniesManager();
-        window.companiesManager = companiesManager; // Make it globally available
-
-        console.log('CompaniesManager initialized successfully');
-    } catch (error) {
-        console.error('Error initializing companies module:', error);
-        throw error;
-    }
-}
-        
-            renderPagination() {
+        renderPagination() {
             const totalPages = Math.ceil(this.totalCompanies / this.pageSize);
             
             if (totalPages <= 1) {
@@ -445,6 +279,15 @@ initializeCompanyCardListeners() {
                     <i class="fas fa-angle-double-right"></i>
                 </button>
             `;
+
+            // Add click handlers for pagination
+            this.paginationContainer.querySelectorAll('.btn-page').forEach(button => {
+                button.addEventListener('click', () => {
+                    if (!button.disabled) {
+                        this.changePage(parseInt(button.dataset.page));
+                    }
+                });
+            });
         }
 
         getPaginationRange(current, total) {
@@ -482,8 +325,44 @@ initializeCompanyCardListeners() {
             }
         }
 
+        async populateIndustryDropdowns() {
+            try {
+                // Get all industry select elements
+                const industrySelects = [
+                    this.industryFilter,
+                    document.querySelector('#industry')
+                ];
+
+                // Populate each select element
+                industrySelects.forEach(select => {
+                    if (select) {
+                        // Clear existing options
+                        select.innerHTML = '';
+
+                        // Add default option
+                        const defaultOption = document.createElement('option');
+                        defaultOption.value = '';
+                        defaultOption.textContent = select === this.industryFilter ? 'All Industries' : 'Select Industry';
+                        select.appendChild(defaultOption);
+
+                        // Add industry options
+                        this.industries.forEach(industry => {
+                            const option = document.createElement('option');
+                            option.value = industry.toLowerCase();
+                            option.textContent = industry;
+                            select.appendChild(option);
+                        });
+                    }
+                });
+            } catch (error) {
+                console.error('Error populating industry dropdowns:', error);
+                throw new Error('Failed to populate industry dropdowns');
+            }
+        }
+
         async showAddCompanyModal() {
             this.currentCompanyId = null;
+            this.currentCompany = null;
             document.getElementById('modalTitle').textContent = 'Add New Company';
             this.companyForm.reset();
             this.companyModal.classList.add('show');
@@ -504,7 +383,6 @@ initializeCompanyCardListeners() {
                     status: document.getElementById('status').value
                 };
 
-                // Validate form data
                 if (!this.validateCompanyData(formData)) {
                     return;
                 }
@@ -535,7 +413,7 @@ initializeCompanyCardListeners() {
             }
         }
 
-        validateCompanyData(data) {
+            validateCompanyData(data) {
             if (!data.name || data.name.trim().length < 2) {
                 this.showError('Company name must be at least 2 characters long');
                 return false;
@@ -571,124 +449,81 @@ initializeCompanyCardListeners() {
             return true;
         }
 
-      async editCompany(companyId) {
-    try {
-        const response = await fetch(`${this.baseUrl}/companies/${companyId}`, {
-            headers: this.getHeaders()
-        });
+        async editCompany(companyId) {
+            try {
+                const response = await fetch(`${this.baseUrl}/companies/${companyId}`, {
+                    headers: this.getHeaders()
+                });
 
-        if (!response.ok) {
-            throw new Error('Failed to fetch company data');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch company data');
+                }
+
+                const result = await response.json();
+                
+                if (!result.success || !result.data) {
+                    throw new Error(result.message || 'Invalid response format');
+                }
+
+                const company = result.data;
+                this.currentCompanyId = companyId;
+                this.currentCompany = company;
+                this.populateCompanyForm(company);
+                document.getElementById('modalTitle').textContent = 'Edit Company';
+                this.companyModal.classList.add('show');
+            } catch (error) {
+                console.error('Error loading company for edit:', error);
+                this.showError('Failed to load company data');
+            }
         }
-
-        const result = await response.json();
-        
-        if (!result.success || !result.data) {
-            throw new Error(result.message || 'Invalid response format');
-        }
-
-        const company = result.data;
-        this.currentCompanyId = companyId;
-        this.populateCompanyForm(company);
-        document.getElementById('modalTitle').textContent = 'Edit Company';
-        this.companyModal.classList.add('show');
-    } catch (error) {
-        console.error('Error loading company for edit:', error);
-        this.showError('Failed to load company data');
-    }
-}
-
 
         populateCompanyForm(company) {
-    try {
-        if (!company) {
-            throw new Error('No company data provided');
-        }
+            try {
+                if (!company) {
+                    throw new Error('No company data provided');
+                }
 
-        // Get form elements
-        const elements = {
-            companyName: document.getElementById('companyName'),
-            industry: document.getElementById('industry'),
-            companySize: document.getElementById('companySize'),
-            email: document.getElementById('email'),
-            phone: document.getElementById('phone'),
-            address: document.getElementById('address'),
-            subscriptionPlan: document.getElementById('subscriptionPlan'),
-            status: document.getElementById('status')
-        };
+                // Get form elements
+                const elements = {
+                    companyName: document.getElementById('companyName'),
+                    industry: document.getElementById('industry'),
+                    companySize: document.getElementById('companySize'),
+                    email: document.getElementById('email'),
+                    phone: document.getElementById('phone'),
+                    address: document.getElementById('address'),
+                    subscriptionPlan: document.getElementById('subscriptionPlan'),
+                    status: document.getElementById('status')
+                };
 
-        // Verify all form elements exist
-        Object.entries(elements).forEach(([key, element]) => {
-            if (!element) {
-                throw new Error(`Form element '${key}' not found`);
+                // Verify all form elements exist
+                Object.entries(elements).forEach(([key, element]) => {
+                    if (!element) {
+                        throw new Error(`Form element '${key}' not found`);
+                    }
+                });
+
+                // Populate basic company info
+                elements.companyName.value = company.name || '';
+                elements.industry.value = company.industry || '';
+                elements.companySize.value = company.companySize || '';
+                elements.status.value = company.status || 'inactive';
+
+                // Handle contact details
+                if (company.contactDetails) {
+                    elements.email.value = company.contactDetails.email || '';
+                    elements.phone.value = company.contactDetails.phone || '';
+                    elements.address.value = company.contactDetails.address || '';
+                }
+
+                // Handle subscription plan
+                const subscription = company.subscription || {};
+                elements.subscriptionPlan.value = subscription.plan || company.subscriptionPlan || 'basic';
+
+            } catch (error) {
+                console.error('Error populating form:', error);
+                throw new Error(`Failed to populate form: ${error.message}`);
             }
-        });
-
-        // Populate basic company info
-        elements.companyName.value = company.name || '';
-        elements.industry.value = company.industry || '';
-        elements.companySize.value = company.companySize || '';
-        elements.status.value = company.status || 'inactive';
-
-        // Handle contact details
-        if (company.contactDetails) {
-            elements.email.value = company.contactDetails.email || '';
-            elements.phone.value = company.contactDetails.phone || '';
-            elements.address.value = company.contactDetails.address || '';
         }
-
-        // Handle subscription plan
-        // First check subscription object, then fallback to company.subscriptionPlan
-        const subscription = company.subscription || {};
-        elements.subscriptionPlan.value = subscription.plan || company.subscriptionPlan || 'basic';
-
-        // Log successful form population
-        console.log('Form populated successfully with company data:', {
-            name: elements.companyName.value,
-            industry: elements.industry.value,
-            size: elements.companySize.value,
-            email: elements.email.value,
-            status: elements.status.value,
-            plan: elements.subscriptionPlan.value
-        });
-
-    } catch (error) {
-        console.error('Error populating form:', error);
-        throw new Error(`Failed to populate form: ${error.message}`);
-    }
-}
-
-        async viewCompanyDetails(companyId) {
-    try {
-        const response = await fetch(`${this.baseUrl}/companies/${companyId}`, {
-            headers: this.getHeaders()
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to fetch company details');
-        }
-
-        const result = await response.json();
-        
-        if (!result.success || !result.data) {
-            throw new Error(result.message || 'Invalid response format');
-        }
-
-        const company = result.data;
-        this.currentCompanyId = companyId;
-        await this.renderCompanyDetails(company);
-        this.detailsModal.classList.add('show');
-
-        // Set the first tab as active by default
-        const firstTab = document.querySelector('.tab-btn');
-        if (firstTab) {
-            this.switchTab(firstTab);
-        }
-    } catch (error) {
-        console.error('Error fetching company details:', error);
-        this.showError('Failed to load company details');
-    }
-}
 
         async toggleCompanyStatus(companyId) {
             try {
@@ -702,7 +537,7 @@ initializeCompanyCardListeners() {
                 }
 
                 const result = await response.json();
-                this.showSuccess(result.message);
+                this.showSuccess(result.message || 'Company status updated successfully');
                 await this.loadCompanies();
 
                 // If the company details modal is open, refresh it
@@ -716,165 +551,264 @@ initializeCompanyCardListeners() {
             }
         }
 
-        async renderCompanyDetails(company) {
-    try {
-        if (!company) {
-            throw new Error('No company data provided');
+        async viewCompanyDetails(companyId) {
+            try {
+                const response = await fetch(`${this.baseUrl}/companies/${companyId}`, {
+                    headers: this.getHeaders()
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch company details');
+                }
+
+                const result = await response.json();
+                
+                if (!result.success || !result.data) {
+                    throw new Error(result.message || 'Invalid response format');
+                }
+
+                // Store the company data
+                this.currentCompany = result.data;
+                this.currentCompanyId = companyId;
+
+                // Show the modal
+                this.detailsModal.classList.add('show');
+
+                // Set the first tab as active and trigger its content
+                const firstTab = document.querySelector('.tab-btn');
+                if (firstTab) {
+                    this.switchTab(firstTab);
+                }
+            } catch (error) {
+                console.error('Error fetching company details:', error);
+                this.showError('Failed to load company details');
+            }
         }
 
-        const detailsContent = document.querySelector('.tab-content');
-        detailsContent.innerHTML = `
-            <div class="company-details-view">
-                <div class="details-section">
-                    <h3>Company Information</h3>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <label>Company Name</label>
-                            <span>${this.escapeHtml(company.name || '')}</span>
-                        </div>
-                        <div class="info-item">
-                            <label>Industry</label>
-                            <span>${this.escapeHtml(company.industry || '')}</span>
-                        </div>
-                        <div class="info-item">
-                            <label>Company Size</label>
-                            <span>${company.companySize || 0} employees</span>
-                        </div>
-                        <div class="info-item">
-                            <label>Status</label>
-                            <span class="status-badge ${company.status?.toLowerCase() || 'inactive'}">
-                                ${(company.status || 'INACTIVE').toUpperCase()}
-                            </span>
-                        </div>
-                    </div>
-                </div>
+        switchTab(tabButton) {
+            if (!this.currentCompanyId) {
+                this.showError('No company selected');
+                return;
+            }
 
-                <div class="details-section">
-                    <h3>Contact Information</h3>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <label>Email</label>
-                            <span>${this.escapeHtml(company.contactDetails?.email || '')}</span>
-                        </div>
-                        <div class="info-item">
-                            <label>Phone</label>
-                            <span>${this.escapeHtml(company.contactDetails?.phone || '')}</span>
-                        </div>
-                        <div class="info-item">
-                            <label>Address</label>
-                            <span>${this.escapeHtml(company.contactDetails?.address || '')}</span>
-                        </div>
-                    </div>
-                </div>
+            const tabName = tabButton.dataset.tab;
+            
+            // Update active tab button
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            tabButton.classList.add('active');
 
-                <div class="details-section">
-                    <h3>Subscription Details</h3>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <label>Current Plan</label>
-                            <span class="plan-badge ${(company.subscriptionPlan || 'basic').toLowerCase()}">
-                                ${(company.subscriptionPlan || 'BASIC').toUpperCase()}
-                            </span>
-                        </div>
-                        <div class="info-item">
-                            <label>Start Date</label>
-                            <span>${company.subscriptionStartDate ? new Date(company.subscriptionStartDate).toLocaleDateString() : 'N/A'}</span>
-                        </div>
-                        <div class="info-item">
-                            <label>Next Billing</label>
-                            <span>${company.nextBillingDate ? new Date(company.nextBillingDate).toLocaleDateString() : 'N/A'}</span>
-                        </div>
+            // Show loading state
+            const tabContent = document.querySelector('.tab-content');
+            tabContent.innerHTML = `
+                <div class="content-loader">
+                    <div class="loader-spinner">
+                        <i class="fas fa-spinner fa-spin"></i>
                     </div>
+                    <p>Loading ${tabName} content...</p>
                 </div>
-            </div>
-        `;
-    } catch (error) {
-        console.error('Error rendering company details:', error);
-        throw error;
-    }
-}
+            `;
 
-        renderCompanyDetails(company) {
-    const subscription = company.subscription || {};
-    const detailsContent = document.querySelector('.tab-content');
-    
-    detailsContent.innerHTML = `
-        <div class="company-details-view">
-            <div class="details-section">
-                <h3>Company Information</h3>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label>Company Name</label>
-                        <span>${this.escapeHtml(company.name || '')}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Industry</label>
-                        <span>${this.escapeHtml(company.industry || '')}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Company Size</label>
-                        <span>${company.companySize || 0} employees</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Status</label>
-                        <span class="status-badge ${company.status || 'inactive'}">
-                            ${(company.status || 'Inactive').toUpperCase()}
-                        </span>
-                    </div>
-                    <div class="info-item">
-                        <label>Total Users</label>
-                        <span>${company.usersCount || 0}</span>
-                    </div>
-                </div>
-            </div>
+            // Load tab content based on type
+            switch(tabName) {
+                case 'details':
+                    this.renderCompanyDetails(this.currentCompany);
+                    break;
+                case 'users':
+                    this.renderUsersTab(this.currentCompany);
+                    break;
+                case 'subscription':
+                    this.renderSubscriptionTab(this.currentCompany);
+                    break;
+                case 'activity':
+                    this.renderActivityTab(this.currentCompany);
+                    break;
+                default:
+                    tabContent.innerHTML = `
+                        <div class="error-state">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>Invalid tab selected</p>
+                        </div>
+                    `;
+            }
+        }
 
-            <div class="details-section">
-                <h3>Contact Information</h3>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label>Email</label>
-                        <span>${this.escapeHtml(company.contactDetails?.email || '')}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Phone</label>
-                        <span>${this.escapeHtml(company.contactDetails?.phone || '')}</span>
-                    </div>
-                    <div class="info-item">
-                        <label>Address</label>
-                        <span>${this.escapeHtml(company.contactDetails?.address || '')}</span>
-                    </div>
-                </div>
-            </div>
+            async renderSubscriptionTab(company) {
+            try {
+                const subscription = company.subscription || {};
+                const tabContent = document.querySelector('.tab-content');
+                
+                tabContent.innerHTML = `
+                    <div class="subscription-details">
+                        <div class="current-plan">
+                            <h4>Current Subscription</h4>
+                            <div class="plan-info">
+                                <div class="info-group">
+                                    <label>Plan Type:</label>
+                                    <span class="plan-badge ${subscription.plan || 'basic'}">
+                                        ${(subscription.plan || 'Basic').toUpperCase()}
+                                    </span>
+                                </div>
+                                <div class="info-group">
+                                    <label>Status:</label>
+                                    <span class="status-badge ${subscription.status || 'inactive'}">
+                                        ${(subscription.status || 'Inactive').toUpperCase()}
+                                    </span>
+                                </div>
+                                <div class="info-group">
+                                    <label>Billing Cycle:</label>
+                                    <span>${subscription.billingCycle || 'Monthly'}</span>
+                                </div>
+                                <div class="info-group">
+                                    <label>Next Billing Date:</label>
+                                    <span>${subscription.nextBillingDate ? new Date(subscription.nextBillingDate).toLocaleDateString() : 'N/A'}</span>
+                                </div>
+                            </div>
+                        </div>
 
-            <div class="details-section">
-                <h3>Subscription Details</h3>
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label>Current Plan</label>
-                        <span class="plan-badge ${subscription.plan || 'basic'}">
-                            ${(subscription.plan || 'Basic').toUpperCase()}
-                        </span>
+                        <div class="subscription-actions">
+                            <button class="btn-primary" onclick="window.companiesManager.showChangePlanModal('${company._id}')">
+                                <i class="fas fa-exchange-alt"></i> Change Plan
+                            </button>
+                            <button class="btn-secondary" onclick="window.companiesManager.generateInvoice('${company._id}')">
+                                <i class="fas fa-file-invoice"></i> Generate Invoice
+                            </button>
+                        </div>
+
+                        <div class="billing-history">
+                            <h4>Billing History</h4>
+                            ${await this.renderBillingHistory(company._id)}
+                        </div>
                     </div>
-                    <div class="info-item">
-                        <label>Status</label>
-                        <span class="status-badge ${subscription.status || 'inactive'}">
-                            ${(subscription.status || 'Inactive').toUpperCase()}
-                        </span>
+                `;
+            } catch (error) {
+                console.error('Error rendering subscription tab:', error);
+                this.showError('Failed to load subscription information');
+            }
+        }
+
+        async renderBillingHistory(companyId) {
+            try {
+                const response = await fetch(`${this.baseUrl}/companies/${companyId}/billing-history`, {
+                    headers: this.getHeaders()
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch billing history');
+                }
+
+                const history = await response.json();
+                
+                if (!history.length) {
+                    return `
+                        <div class="empty-state">
+                            <i class="fas fa-history"></i>
+                            <p>No billing history available</p>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="billing-table-container">
+                        <table class="billing-table">
+                            <thead>
+                                <tr>
+                                    <th>Invoice #</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${history.map(invoice => `
+                                    <tr>
+                                        <td>${invoice.invoiceNumber}</td>
+                                        <td>${new Date(invoice.date).toLocaleDateString()}</td>
+                                        <td>$${invoice.amount.toFixed(2)}</td>
+                                        <td>
+                                            <span class="status-badge ${invoice.status}">
+                                                ${invoice.status.toUpperCase()}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn-icon" onclick="window.companiesManager.downloadInvoice('${invoice.invoiceNumber}')">
+                                                <i class="fas fa-download"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="info-item">
-                        <label>Start Date</label>
-                        <span>${subscription.startDate ? new Date(subscription.startDate).toLocaleDateString() : 'N/A'}</span>
+                `;
+            } catch (error) {
+                console.error('Error loading billing history:', error);
+                return `
+                    <div class="error-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Failed to load billing history</p>
                     </div>
-                    <div class="info-item">
-                        <label>Next Billing</label>
-                        <span>${subscription.endDate ? new Date(subscription.endDate).toLocaleDateString() : 'N/A'}</span>
-                    </div>
+                `;
+            }
+        }
+
+        async showChangePlanModal(companyId) {
+            try {
+                const subscription = this.currentCompany.subscription || {};
+                this.changePlanModal.classList.add('show');
+                
+                // Populate current plan details
+                document.getElementById('currentPlan').textContent = 
+                    (subscription.plan || 'Basic').toUpperCase();
+                document.getElementById('newPlan').value = subscription.plan || 'basic';
+                document.getElementById('billingCycle').value = 
+                    subscription.billingCycle || 'monthly';
+
+                this.updatePlanSummary();
+            } catch (error) {
+                console.error('Error showing plan change modal:', error);
+                this.showError('Failed to load plan change options');
+            }
+        }
+
+        updatePlanSummary() {
+            const plan = document.getElementById('newPlan').value;
+            const cycle = document.getElementById('billingCycle').value;
+            const basePrice = this.subscriptionPlans[plan].price;
+            
+            const months = cycle === 'annual' ? 12 : 1;
+            const subtotal = basePrice * months;
+            const discount = cycle === 'annual' ? subtotal * 0.1 : 0; // 10% annual discount
+            const total = subtotal - discount;
+
+            document.getElementById('planSummary').innerHTML = `
+                <div class="summary-row">
+                    <span>Base Price:</span>
+                    <span>$${basePrice}/month</span>
                 </div>
-            </div>
-        </div>
-    `;
-}
-            // Subscription Management Methods
+                <div class="summary-row">
+                    <span>Billing Period:</span>
+                    <span>${months} month${months > 1 ? 's' : ''}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span>$${subtotal.toFixed(2)}</span>
+                </div>
+                ${discount > 0 ? `
+                    <div class="summary-row discount">
+                        <span>Annual Discount (10%):</span>
+                        <span>-$${discount.toFixed(2)}</span>
+                    </div>
+                ` : ''}
+                <div class="summary-row total">
+                    <span>Total:</span>
+                    <span>$${total.toFixed(2)}</span>
+                </div>
+            `;
+        }
+
         async handlePlanChange(companyId) {
             try {
                 const planData = {
@@ -897,15 +831,11 @@ initializeCompanyCardListeners() {
                     throw new Error(error.message || 'Failed to update subscription');
                 }
 
-                const result = await response.json();
                 this.showSuccess('Subscription updated successfully');
                 this.changePlanModal.classList.remove('show');
                 
-                // Refresh subscription tab if it's active
-                const activeTab = document.querySelector('.tab-btn.active');
-                if (activeTab && activeTab.dataset.tab === 'subscription') {
-                    await this.renderSubscriptionTab({ _id: companyId });
-                }
+                // Refresh company details
+                await this.viewCompanyDetails(companyId);
             } catch (error) {
                 console.error('Error changing subscription plan:', error);
                 this.showError(error.message);
@@ -945,25 +875,17 @@ initializeCompanyCardListeners() {
                 const result = await response.json();
                 this.showSuccess('Invoice generated successfully');
                 
-                // Offer invoice download
-                if (result.data.invoiceUrl) {
-                    this.downloadInvoice(result.data.invoiceUrl);
-                }
-
-                // Refresh billing history if visible
-                const activeTab = document.querySelector('.tab-btn.active');
-                if (activeTab && activeTab.dataset.tab === 'subscription') {
-                    await this.renderSubscriptionTab({ _id: companyId });
-                }
+                // Refresh billing history
+                await this.renderSubscriptionTab(this.currentCompany);
             } catch (error) {
                 console.error('Error generating invoice:', error);
                 this.showError('Failed to generate invoice');
             }
         }
 
-        async downloadInvoice(invoiceUrl) {
+        async downloadInvoice(invoiceNumber) {
             try {
-                const response = await fetch(invoiceUrl, {
+                const response = await fetch(`${this.baseUrl}/invoices/${invoiceNumber}/download`, {
                     headers: this.getHeaders()
                 });
 
@@ -975,7 +897,7 @@ initializeCompanyCardListeners() {
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `invoice-${Date.now()}.pdf`;
+                a.download = `invoice-${invoiceNumber}.pdf`;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
@@ -986,7 +908,208 @@ initializeCompanyCardListeners() {
             }
         }
 
-        // User Management Methods
+          // User Management Methods
+        async renderUsersTab(company) {
+            try {
+                const users = await this.loadCompanyUsers(company._id);
+                const tabContent = document.querySelector('.tab-content');
+                
+                tabContent.innerHTML = `
+                    <div class="users-management">
+                        <div class="users-header">
+                            <div class="search-filters">
+                                <div class="search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="userSearch" placeholder="Search users...">
+                                </div>
+                                <div class="filter-group">
+                                    <select id="roleFilter">
+                                        <option value="">All Roles</option>
+                                        <option value="admin">Admin</option>
+                                        <option value="manager">Manager</option>
+                                        <option value="employee">Employee</option>
+                                    </select>
+                                    <select id="userStatusFilter">
+                                        <option value="">All Status</option>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="btn-primary" onclick="window.companiesManager.showAddUserModal('${company._id}')">
+                                <i class="fas fa-user-plus"></i> Add User
+                            </button>
+                        </div>
+                        ${this.renderUsersTable(users)}
+                    </div>
+                `;
+
+                this.initializeUserFilters();
+            } catch (error) {
+                console.error('Error rendering users tab:', error);
+                this.showError('Failed to load users information');
+            }
+        }
+
+        async loadCompanyUsers(companyId) {
+            try {
+                const response = await fetch(`${this.baseUrl}/companies/${companyId}/users`, {
+                    headers: this.getHeaders()
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load company users');
+                }
+
+                const result = await response.json();
+                return result.data || [];
+            } catch (error) {
+                console.error('Error loading company users:', error);
+                this.showError('Failed to load company users');
+                return [];
+            }
+        }
+
+        renderUsersTable(users) {
+            if (!users.length) {
+                return `
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <h3>No Users Found</h3>
+                        <p>There are no users in this company yet.</p>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="users-table-container">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Department</th>
+                                <th>Status</th>
+                                <th>Last Login</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${users.map(user => `
+                                <tr>
+                                    <td>
+                                        <div class="user-cell">
+                                            <div class="user-avatar" style="background-color: ${this.getAvatarColor(user.name)}">
+                                                ${this.getInitials(user.name)}
+                                            </div>
+                                            <div class="user-info">
+                                                <span class="user-name">${this.escapeHtml(user.name)}</span>
+                                                <span class="user-email">${this.escapeHtml(user.email)}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="role-badge ${user.role.toLowerCase()}">
+                                            ${user.role}
+                                        </span>
+                                    </td>
+                                    <td>${this.escapeHtml(user.department || '-')}</td>
+                                    <td>
+                                        <span class="status-badge ${user.status}">
+                                            ${user.status.toUpperCase()}
+                                        </span>
+                                    </td>
+                                    <td>${user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn-icon" onclick="window.companiesManager.editUser('${user._id}')">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn-icon" onclick="window.companiesManager.resetUserPassword('${user._id}')">
+                                                <i class="fas fa-key"></i>
+                                            </button>
+                                            <button class="btn-icon" onclick="window.companiesManager.toggleUserStatus('${user._id}')">
+                                                <i class="fas fa-power-off"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        initializeUserFilters() {
+            const searchInput = document.getElementById('userSearch');
+            const roleFilter = document.getElementById('roleFilter');
+            const statusFilter = document.getElementById('userStatusFilter');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', this.debounce((e) => {
+                    this.filterUsers(
+                        e.target.value,
+                        roleFilter?.value || '',
+                        statusFilter?.value || ''
+                    );
+                }, 300));
+            }
+
+            if (roleFilter) {
+                roleFilter.addEventListener('change', () => {
+                    this.filterUsers(
+                        searchInput?.value || '',
+                        roleFilter.value,
+                        statusFilter?.value || ''
+                    );
+                });
+            }
+
+            if (statusFilter) {
+                statusFilter.addEventListener('change', () => {
+                    this.filterUsers(
+                        searchInput?.value || '',
+                        roleFilter?.value || '',
+                        statusFilter.value
+                    );
+                });
+            }
+        }
+
+        filterUsers(search = '', role = '', status = '') {
+            const rows = document.querySelectorAll('.users-table tbody tr');
+            rows.forEach(row => {
+                const userName = row.querySelector('.user-name')?.textContent.toLowerCase() || '';
+                const userEmail = row.querySelector('.user-email')?.textContent.toLowerCase() || '';
+                const userRole = row.querySelector('.role-badge')?.textContent.toLowerCase() || '';
+                const userStatus = row.querySelector('.status-badge')?.textContent.toLowerCase() || '';
+
+                const matchesSearch = !search || 
+                    userName.includes(search.toLowerCase()) || 
+                    userEmail.includes(search.toLowerCase());
+                const matchesRole = !role || userRole === role.toLowerCase();
+                const matchesStatus = !status || userStatus === status.toLowerCase();
+
+                row.style.display = matchesSearch && matchesRole && matchesStatus ? '' : 'none';
+            });
+        }
+
+        showAddUserModal(companyId) {
+            const modal = document.getElementById('addUserModal');
+            if (!modal) {
+                this.showError('User modal not found');
+                return;
+            }
+
+            modal.classList.add('show');
+            const form = modal.querySelector('form');
+            if (form) {
+                form.dataset.companyId = companyId;
+                form.reset();
+            }
+        }
+
         async handleAddUser(event) {
             try {
                 const form = event.target;
@@ -1017,12 +1140,11 @@ initializeCompanyCardListeners() {
                 const result = await response.json();
                 this.showSuccess('User added successfully');
                 
-                // Show temporary password if provided
                 if (result.data.tempPassword) {
                     this.showTempPasswordModal(userData.email, result.data.tempPassword);
                 }
 
-                this.addUserModal.classList.remove('show');
+                document.getElementById('addUserModal').classList.remove('show');
                 form.reset();
                 await this.renderUsersTab({ _id: companyId });
             } catch (error) {
@@ -1051,318 +1173,7 @@ initializeCompanyCardListeners() {
             return true;
         }
 
-        showTempPasswordModal(email, password) {
-            const modal = document.createElement('div');
-            modal.className = 'modal show';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>Temporary Password</h2>
-                        <button class="close-btn"><i class="fas fa-times"></i></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Please securely share these credentials with the user:</p>
-                        <div class="credentials-box">
-                            <div class="credential-item">
-                                <label>Email:</label>
-                                <span>${this.escapeHtml(email)}</span>
-                            </div>
-                            <div class="credential-item">
-                                <label>Temporary Password:</label>
-                                <span>${this.escapeHtml(password)}</span>
-                            </div>
-                        </div>
-                        <div class="warning-message">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <p>This password will only be shown once. Please make sure to copy it.</p>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn-primary" onclick="this.parentElement.parentElement.parentElement.remove()">
-                            I've copied the password
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            document.body.appendChild(modal);
-
-            // Add close button functionality
-            modal.querySelector('.close-btn').addEventListener('click', () => {
-                modal.remove();
-            });
-        }
-
-        async resetUserPassword(userId) {
-            try {
-                if (!confirm('Are you sure you want to reset this user\'s password?')) {
-                    return;
-                }
-
-                const response = await fetch(
-                    `${this.baseUrl}/companies/${this.currentCompanyId}/users/${userId}/reset-password`,
-                    {
-                        method: 'POST',
-                        headers: this.getHeaders()
-                    }
-                );
-
-                if (!response.ok) {
-                    throw new Error('Failed to reset password');
-                }
-
-                const result = await response.json();
-                this.showSuccess('Password reset successfully');
-
-                if (result.data.tempPassword) {
-                    const user = await this.getUserDetails(userId);
-                    this.showTempPasswordModal(user.email, result.data.tempPassword);
-                }
-            } catch (error) {
-                console.error('Error resetting password:', error);
-                this.showError('Failed to reset password');
-            }
-        }
-
-        async getUserDetails(userId) {
-            const response = await fetch(
-                `${this.baseUrl}/companies/${this.currentCompanyId}/users/${userId}`,
-                {
-                    headers: this.getHeaders()
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch user details');
-            }
-
-            return await response.json();
-        }
-
-        async toggleUserStatus(userId) {
-            try {
-                const response = await fetch(
-                    `${this.baseUrl}/companies/${this.currentCompanyId}/users/${userId}/toggle-status`,
-                    {
-                        method: 'PATCH',
-                        headers: this.getHeaders()
-                    }
-                );
-
-                if (!response.ok) {
-                    throw new Error('Failed to toggle user status');
-                }
-
-                this.showSuccess('User status updated successfully');
-                await this.renderUsersTab({ _id: this.currentCompanyId });
-            } catch (error) {
-                console.error('Error toggling user status:', error);
-                this.showError('Failed to update user status');
-            }
-        }
-
-        filterUsers(search = '', role = '', status = '') {
-            const rows = document.querySelectorAll('.users-table tbody tr');
-            rows.forEach(row => {
-                const userName = row.querySelector('.user-name')?.textContent.toLowerCase() || '';
-                const userEmail = row.querySelector('.user-email')?.textContent.toLowerCase() || '';
-                const userRole = row.querySelector('.role-badge')?.textContent.toLowerCase() || '';
-                const userStatus = row.querySelector('.status-badge')?.textContent.toLowerCase() || '';
-
-                const matchesSearch = !search || 
-                    userName.includes(search.toLowerCase()) || 
-                    userEmail.includes(search.toLowerCase());
-                const matchesRole = !role || userRole === role.toLowerCase();
-                const matchesStatus = !status || userStatus === status.toLowerCase();
-
-                row.style.display = matchesSearch && matchesRole && matchesStatus ? '' : 'none';
-            });
-        }
-
-         // Tab Management Methods
-        switchTab(tabButton) {
-            if (!this.currentCompanyId) {
-                this.showError('No company selected');
-                return;
-            }
-
-            const tabName = tabButton.dataset.tab;
-            
-            // Update active tab button
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            tabButton.classList.add('active');
-
-            // Show loading state
-            const tabContent = document.querySelector('.tab-content');
-            tabContent.innerHTML = `
-                <div class="content-loader">
-                    <div class="loader-spinner">
-                        <i class="fas fa-spinner fa-spin"></i>
-                    </div>
-                    <p>Loading ${tabName} content...</p>
-                </div>
-            `;
-
-            // Load tab content
-            switch(tabName) {
-                case 'details':
-                    this.renderDetailsTab({ _id: this.currentCompanyId });
-                    break;
-                case 'users':
-                    this.renderUsersTab({ _id: this.currentCompanyId });
-                    break;
-                case 'subscription':
-                    this.renderSubscriptionTab({ _id: this.currentCompanyId });
-                    break;
-                case 'activity':
-                    this.renderActivityTab({ _id: this.currentCompanyId });
-                    break;
-                default:
-                    tabContent.innerHTML = `
-                        <div class="error-state">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <p>Invalid tab selected</p>
-                        </div>
-                    `;
-            }
-        }
-
-        // Activity Log Methods
-        async renderActivityTab(company) {
-            try {
-                const response = await fetch(`${this.baseUrl}/companies/${company._id}/activity-logs`, {
-                    headers: this.getHeaders()
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch activity logs');
-                }
-
-                const logs = await response.json();
-                const tabContent = document.querySelector('.tab-content');
-
-                tabContent.innerHTML = `
-                    <div class="activity-logs">
-                        <div class="activity-filters">
-                            <select id="activityTypeFilter">
-                                <option value="">All Activities</option>
-                                <option value="user">User Management</option>
-                                <option value="subscription">Subscription Changes</option>
-                                <option value="system">System Changes</option>
-                            </select>
-                            <input type="date" id="activityDateFilter">
-                        </div>
-                        ${this.renderActivityLogs(logs)}
-                    </div>
-                `;
-
-                this.initializeActivityFilters();
-            } catch (error) {
-                console.error('Error loading activity logs:', error);
-                const tabContent = document.querySelector('.tab-content');
-                tabContent.innerHTML = `
-                    <div class="error-state">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <p>Failed to load activity logs</p>
-                    </div>
-                `;
-            }
-        }
-
-        renderActivityLogs(logs) {
-            if (!logs.length) {
-                return `
-                    <div class="empty-state">
-                        <i class="fas fa-history"></i>
-                        <p>No activity logs found</p>
-                    </div>
-                `;
-            }
-
-            return `
-                <div class="activity-list">
-                    ${logs.map(log => `
-                        <div class="activity-item ${log.type.toLowerCase()}">
-                            <div class="activity-icon">
-                                <i class="fas ${this.getActivityIcon(log.type)}"></i>
-                            </div>
-                            <div class="activity-details">
-                                <div class="activity-header">
-                                    <span class="activity-type">${log.type}</span>
-                                    <span class="activity-date">
-                                        ${new Date(log.timestamp).toLocaleString()}
-                                    </span>
-                                </div>
-                                <p class="activity-description">${this.escapeHtml(log.description)}</p>
-                                <div class="activity-meta">
-                                    <span class="activity-user">
-                                        <i class="fas fa-user"></i> ${this.escapeHtml(log.performedBy)}
-                                    </span>
-                                    ${log.details ? `
-                                        <button class="btn-link" onclick="window.companiesManager.toggleActivityDetails(this)">
-                                            Show Details
-                                        </button>
-                                        <div class="activity-details-expanded hidden">
-                                            <pre>${this.escapeHtml(JSON.stringify(log.details, null, 2))}</pre>
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        }
-
-        getActivityIcon(type) {
-            const icons = {
-                'user': 'fa-user',
-                'subscription': 'fa-credit-card',
-                'system': 'fa-cog',
-                'login': 'fa-sign-in-alt',
-                'security': 'fa-shield-alt',
-                'default': 'fa-info-circle'
-            };
-            return icons[type.toLowerCase()] || icons.default;
-        }
-
-        toggleActivityDetails(button) {
-            const detailsDiv = button.nextElementSibling;
-            const isHidden = detailsDiv.classList.contains('hidden');
-            
-            detailsDiv.classList.toggle('hidden');
-            button.textContent = isHidden ? 'Hide Details' : 'Show Details';
-        }
-
-        filterActivityLogs() {
-            const type = document.getElementById('activityTypeFilter').value;
-            const date = document.getElementById('activityDateFilter').value;
-            
-            const items = document.querySelectorAll('.activity-item');
-            items.forEach(item => {
-                const matchesType = !type || item.classList.contains(type);
-                const matchesDate = !date || this.checkActivityDate(item, date);
-                item.style.display = matchesType && matchesDate ? '' : 'none';
-            });
-        }
-
-        checkActivityDate(item, filterDate) {
-            const activityDate = item.querySelector('.activity-date').textContent;
-            const itemDate = new Date(activityDate).toLocaleDateString();
-            const compareDate = new Date(filterDate).toLocaleDateString();
-            return itemDate === compareDate;
-        }
-
         // Utility Methods
-        getHeaders() {
-            return {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            };
-        }
-
         showLoading() {
             const loader = document.createElement('div');
             loader.className = 'content-loader';
@@ -1404,15 +1215,6 @@ initializeCompanyCardListeners() {
             }
         }
 
-        showWarning(message) {
-            if (window.dashboardApp?.userInterface) {
-                window.dashboardApp.userInterface.showWarningNotification(message);
-            } else {
-                console.warn(message);
-                alert(message);
-            }
-        }
-
         escapeHtml(unsafe) {
             if (!unsafe) return '';
             return unsafe
@@ -1421,6 +1223,24 @@ initializeCompanyCardListeners() {
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
+        }
+
+        getInitials(name) {
+            return name
+                .split(' ')
+                .map(word => word[0])
+                .join('')
+                .toUpperCase()
+                .slice(0, 2);
+        }
+
+        getAvatarColor(name) {
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) {
+                hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const h = hash % 360;
+            return `hsl(${h}, 70%, 45%)`;
         }
 
         debounce(func, wait) {
@@ -1443,13 +1263,11 @@ initializeCompanyCardListeners() {
         }
 
         resetForms() {
-            // Reset all forms
             document.querySelectorAll('form').forEach(form => {
                 form.reset();
             });
-
-            // Clear any stored IDs
             this.currentCompanyId = null;
+            this.currentCompany = null;
         }
     }
 
@@ -1457,10 +1275,10 @@ initializeCompanyCardListeners() {
     window.CompaniesManager = CompaniesManager;
 
     // Ensure all modals are hidden by default
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.style.display = 'none';
-        modal.classList.remove('show');
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+        });
     });
-});
-})();   
+})();  
