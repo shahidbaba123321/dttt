@@ -102,7 +102,7 @@
         </div>
     </div>
 
-    <!-- Company Details Modal -->
+        <!-- Company Details Modal -->
     <div class="modal" id="companyDetailsModal">
         <div class="modal-content large">
             <div class="modal-header">
@@ -117,216 +117,236 @@
                     <button class="tab-btn" data-tab="activity">Activity</button>
                 </div>
                 <div class="tab-content">
-                    <!-- Will be populated dynamically -->
+                    <!-- Details Tab Content -->
+                    <div class="details-tab" data-tab="details">
+                        <!-- Will be populated dynamically -->
+                    </div>
+
+                    <!-- Users Tab Content -->
+                    <div class="users-tab" data-tab="users">
+                        <div class="users-header">
+                            <h3>Company Users</h3>
+                            <button class="btn-primary" id="addUserBtn">
+                                <i class="fas fa-user-plus"></i> Add User
+                            </button>
+                        </div>
+
+                        <div class="users-filters">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="userSearch" placeholder="Search users...">
+                            </div>
+                            <div class="filter-group">
+                                <select id="roleFilter">
+                                    <option value="">All Roles</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="manager">Manager</option>
+                                    <option value="user">User</option>
+                                </select>
+                                <select id="userStatusFilter">
+                                    <option value="">All Status</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="users-table-container">
+                            <table class="users-table">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Role</th>
+                                        <th>Department</th>
+                                        <th>Status</th>
+                                        <th>Last Login</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <!-- Will be populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Subscription Tab Content -->
+                    <div class="subscription-tab" data-tab="subscription">
+                        <div class="subscription-header">
+                            <h3>Subscription Management</h3>
+                            <div class="subscription-status">
+                                <span class="status-badge" id="subscriptionStatus"></span>
+                            </div>
+                        </div>
+
+                        <div class="subscription-details">
+                            <div class="current-plan">
+                                <h4>Current Plan</h4>
+                                <div class="plan-info">
+                                    <div class="info-row">
+                                        <label>Plan Type:</label>
+                                        <span id="currentPlanType"></span>
+                                    </div>
+                                    <div class="info-row">
+                                        <label>Billing Cycle:</label>
+                                        <span id="billingCycle"></span>
+                                    </div>
+                                    <div class="info-row">
+                                        <label>Start Date:</label>
+                                        <span id="startDate"></span>
+                                    </div>
+                                    <div class="info-row">
+                                        <label>Next Billing:</label>
+                                        <span id="nextBilling"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="plan-actions">
+                                <button class="btn-primary" id="changePlanBtn">
+                                    <i class="fas fa-exchange-alt"></i> Change Plan
+                                </button>
+                                <button class="btn-secondary" id="generateInvoiceBtn">
+                                    <i class="fas fa-file-invoice"></i> Generate Invoice
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="billing-history">
+                            <h4>Billing History</h4>
+                            <div class="billing-table-container">
+                                <table class="billing-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice #</th>
+                                            <th>Date</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="billingHistoryBody">
+                                        <!-- Will be populated dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Tab Content -->
+                    <div class="activity-tab" data-tab="activity">
+                        <div class="activity-filters">
+                            <select id="activityTypeFilter">
+                                <option value="">All Activities</option>
+                                <option value="user">User Management</option>
+                                <option value="subscription">Subscription Changes</option>
+                                <option value="system">System Changes</option>
+                            </select>
+                            <input type="date" id="activityDateFilter">
+                        </div>
+                        <div class="activity-list">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- Add this inside the company details modal tab-content div -->
-<div class="subscription-tab" data-tab="subscription">
-    <div class="subscription-header">
-        <h3>Subscription Management</h3>
-        <div class="subscription-status">
-            <span class="status-badge" id="subscriptionStatus"></span>
-        </div>
     </div>
 
-    <div class="subscription-details">
-        <div class="current-plan">
-            <h4>Current Plan</h4>
-            <div class="plan-info">
-                <div class="info-row">
-                    <label>Plan Type:</label>
-                    <span id="currentPlanType"></span>
-                </div>
-                <div class="info-row">
-                    <label>Billing Cycle:</label>
-                    <span id="billingCycle"></span>
-                </div>
-                <div class="info-row">
-                    <label>Start Date:</label>
-                    <span id="startDate"></span>
-                </div>
-                <div class="info-row">
-                    <label>Next Billing:</label>
-                    <span id="nextBilling"></span>
-                </div>
+    <!-- Add User Modal -->
+    <div class="modal" id="addUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New User</h2>
+                <button class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="form-group">
+                        <label for="userName">Full Name*</label>
+                        <input type="text" id="userName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userEmail">Email*</label>
+                        <input type="email" id="userEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userRole">Role*</label>
+                        <select id="userRole" required>
+                            <option value="admin">Admin</option>
+                            <option value="manager">Manager</option>
+                            <option value="user">User</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="userDepartment">Department</label>
+                        <input type="text" id="userDepartment">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelAddUser">Cancel</button>
+                <button class="btn-primary" id="confirmAddUser">Add User</button>
             </div>
         </div>
-
-        <div class="plan-actions">
-            <button class="btn-primary" id="changePlanBtn">
-                <i class="fas fa-exchange-alt"></i> Change Plan
-            </button>
-            <button class="btn-secondary" id="generateInvoiceBtn">
-                <i class="fas fa-file-invoice"></i> Generate Invoice
-            </button>
-        </div>
     </div>
 
-    <div class="billing-history">
-        <h4>Billing History</h4>
-        <div class="billing-table-container">
-            <table class="billing-table">
-                <thead>
-                    <tr>
-                        <th>Invoice #</th>
-                        <th>Date</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="billingHistoryBody">
-                    <!-- Will be populated dynamically -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<div class="users-tab" data-tab="users">
-    <div class="users-header">
-        <h3>Company Users</h3>
-        <button class="btn-primary" id="addUserBtn">
-            <i class="fas fa-user-plus"></i> Add User
-        </button>
-    </div>
-
-    <div class="users-filters">
-        <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" id="userSearch" placeholder="Search users...">
-        </div>
-        <div class="filter-group">
-            <select id="roleFilter">
-                <option value="">All Roles</option>
-                <option value="admin">Admin</option>
-                <option value="manager">Manager</option>
-                <option value="user">User</option>
-            </select>
-            <select id="statusFilter">
-                <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-            </select>
-        </div>
-    </div>
-
-    <div class="users-table-container">
-        <table class="users-table">
-            <thead>
-                <tr>
-                    <th>User</th>
-                    <th>Role</th>
-                    <th>Department</th>
-                    <th>Status</th>
-                    <th>Last Login</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="usersTableBody">
-                <!-- Will be populated dynamically -->
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- Add Plan Change Modal -->
-<div class="modal" id="changePlanModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Change Subscription Plan</h2>
-            <button class="close-btn"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body">
-            <form id="changePlanForm">
-                <div class="form-group">
-                    <label for="newPlan">Select Plan</label>
-                    <select id="newPlan" required>
-                        <option value="basic">Basic Plan</option>
-                        <option value="premium">Premium Plan</option>
-                        <option value="enterprise">Enterprise Plan</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="billingCycle">Billing Cycle</label>
-                    <select id="billingCycle" required>
-                        <option value="monthly">Monthly</option>
-                        <option value="annual">Annual (10% discount)</option>
-                    </select>
-                </div>
-                <div class="plan-summary">
-                    <h4>Plan Summary</h4>
-                    <div class="summary-row">
-                        <span>Base Price:</span>
-                        <span id="basePrice">$0</span>
+    <!-- Change Plan Modal -->
+    <div class="modal" id="changePlanModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Change Subscription Plan</h2>
+                <button class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="changePlanForm">
+                    <div class="form-group">
+                        <label for="newPlan">Select Plan</label>
+                        <select id="newPlan" required>
+                            <option value="basic">Basic Plan</option>
+                            <option value="premium">Premium Plan</option>
+                            <option value="enterprise">Enterprise Plan</option>
+                        </select>
                     </div>
-                    <div class="summary-row">
-                        <span>Discount:</span>
-                        <span id="discount">-$0</span>
+                    <div class="form-group">
+                        <label for="billingCycle">Billing Cycle</label>
+                        <select id="billingCycle" required>
+                            <option value="monthly">Monthly</option>
+                            <option value="annual">Annual (10% discount)</option>
+                        </select>
                     </div>
-                    <div class="summary-row total">
-                        <span>Total:</span>
-                        <span id="totalPrice">$0</span>
+                    <div class="plan-summary">
+                        <h4>Plan Summary</h4>
+                        <div class="summary-row">
+                            <span>Base Price:</span>
+                            <span id="basePrice">$0</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Discount:</span>
+                            <span id="discount">-$0</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total:</span>
+                            <span id="totalPrice">$0</span>
+                        </div>
                     </div>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-secondary" id="cancelPlanChange">Cancel</button>
-            <button class="btn-primary" id="confirmPlanChange">Confirm Change</button>
-        </div>
-    </div>
-</div>
-
-<!-- Add User Modal -->
-<div class="modal" id="addUserModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>Add New User</h2>
-            <button class="close-btn"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="modal-body">
-            <form id="addUserForm">
-                <div class="form-group">
-                    <label for="userName">Full Name*</label>
-                    <input type="text" id="userName" required>
-                </div>
-                <div class="form-group">
-                    <label for="userEmail">Email*</label>
-                    <input type="email" id="userEmail" required>
-                </div>
-                <div class="form-group">
-                    <label for="userRole">Role*</label>
-                    <select id="userRole" required>
-                        <option value="admin">Admin</option>
-                        <option value="manager">Manager</option>
-                        <option value="user">User</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="userDepartment">Department</label>
-                    <input type="text" id="userDepartment">
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-secondary" id="cancelAddUser">Cancel</button>
-            <button class="btn-primary" id="confirmAddUser">Add User</button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelPlanChange">Cancel</button>
+                <button class="btn-primary" id="confirmPlanChange">Confirm Change</button>
+            </div>
         </div>
     </div>
 </div>
-    </div>
-</div>
-
-<!-- Add the necessary styles -->
 <style>
+/* Base Container Styles */
 .companies-container {
     padding: var(--spacing-lg);
     background-color: var(--bg-secondary);
 }
 
+/* Header Section */
 .section-header {
     display: flex;
     justify-content: space-between;
@@ -334,6 +354,7 @@
     margin-bottom: var(--spacing-lg);
 }
 
+/* Filters Section */
 .filters-section {
     display: flex;
     gap: var(--spacing-md);
@@ -347,6 +368,29 @@
     flex-wrap: wrap;
 }
 
+.search-box {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+}
+
+.search-box i {
+    position: absolute;
+    left: var(--spacing-sm);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+}
+
+.search-box input {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-sm) calc(var(--spacing-lg) + 16px);
+    border: 1px solid var(--border-medium);
+    border-radius: var(--border-radius-md);
+    background-color: var(--bg-primary);
+}
+
+/* Companies Grid */
 .companies-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -374,24 +418,21 @@
     margin-bottom: var(--spacing-md);
 }
 
-.company-status {
-    padding: 4px 8px;
-    border-radius: var(--border-radius-sm);
-    font-size: 0.875rem;
-}
-
-.status-active {
-    background-color: var(--success-color);
-    color: white;
-}
-
-.status-inactive {
-    background-color: var(--danger-color);
-    color: white;
-}
-
 .company-details {
     margin-bottom: var(--spacing-md);
+}
+
+.company-details p {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-secondary);
+}
+
+.company-details i {
+    width: 16px;
+    color: var(--text-tertiary);
 }
 
 .company-actions {
@@ -400,258 +441,7 @@
     justify-content: flex-end;
 }
 
-.modal.large .modal-content {
-    width: 80%;
-    max-width: 1200px;
-}
-
-.tabs {
-    display: flex;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-md);
-    border-bottom: 1px solid var(--border-light);
-}
-
-.tab-btn {
-    padding: var(--spacing-sm) var(--spacing-md);
-    border: none;
-    background: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-    position: relative;
-}
-
-.tab-btn.active {
-    color: var(--primary-color);
-}
-
-.tab-btn.active::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background-color: var(--primary-color);
-}
-    /* Subscription Tab Styles */
-.subscription-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-lg);
-}
-
-.subscription-details {
-    background-color: var(--bg-primary);
-    border-radius: var(--border-radius-lg);
-    padding: var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
-    box-shadow: var(--shadow-sm);
-}
-
-.current-plan {
-    margin-bottom: var(--spacing-lg);
-}
-
-.plan-info {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--spacing-md);
-    margin-top: var(--spacing-md);
-}
-
-.info-row {
-    display: flex;
-    flex-direction: column;
-}
-
-.info-row label {
-    color: var(--text-tertiary);
-    font-size: 0.875rem;
-    margin-bottom: var(--spacing-xs);
-}
-
-.plan-actions {
-    display: flex;
-    gap: var(--spacing-md);
-    margin-top: var(--spacing-lg);
-}
-
-.billing-table-container {
-    overflow-x: auto;
-    margin-top: var(--spacing-md);
-}
-
-.billing-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.billing-table th,
-.billing-table td {
-    padding: var(--spacing-sm) var(--spacing-md);
-    text-align: left;
-    border-bottom: 1px solid var(--border-light);
-}
-
-.billing-table th {
-    background-color: var(--bg-secondary);
-    font-weight: 500;
-}
-
-/* Users Tab Styles */
-.users-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-lg);
-}
-
-.users-filters {
-    display: flex;
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-lg);
-}
-
-.users-table-container {
-    overflow-x: auto;
-}
-
-.users-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.users-table th,
-.users-table td {
-    padding: var(--spacing-sm) var(--spacing-md);
-    text-align: left;
-    border-bottom: 1px solid var(--border-light);
-}
-
-.users-table th {
-    background-color: var(--bg-secondary);
-    font-weight: 500;
-}
-
-.user-cell {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-}
-
-.user-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background-color: var(--primary-color);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.user-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.user-name {
-    font-weight: 500;
-}
-
-.user-email {
-    font-size: 0.875rem;
-    color: var(--text-tertiary);
-}
-
-/* Plan Change Modal Styles */
-.plan-summary {
-    background-color: var(--bg-secondary);
-    border-radius: var(--border-radius-md);
-    padding: var(--spacing-md);
-    margin-top: var(--spacing-lg);
-}
-
-.summary-row {
-    display: flex;
-    justify-content: space-between;
-    padding: var(--spacing-xs) 0;
-}
-
-.summary-row.total {
-    border-top: 1px solid var(--border-light);
-    margin-top: var(--spacing-xs);
-    padding-top: var(--spacing-sm);
-    font-weight: 500;
-}
-
-/* Status Badges */
-.status-badge {
-    padding: 4px 8px;
-    border-radius: var(--border-radius-sm);
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.status-badge.active {
-    background-color: var(--success-color);
-    color: white;
-}
-
-.status-badge.inactive {
-    background-color: var(--danger-color);
-    color: white;
-}
-
-.status-badge.pending {
-    background-color: var(--warning-color);
-    color: white;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .users-filters {
-        flex-direction: column;
-    }
-
-    .plan-info {
-        grid-template-columns: 1fr;
-    }
-
-    .plan-actions {
-        flex-direction: column;
-    }
-
-    .billing-table-container,
-    .users-table-container {
-        margin: 0 -var(--spacing-md);
-    }
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .filters-section {
-        flex-direction: column;
-    }
-
-    .filter-group {
-        width: 100%;
-    }
-
-    .companies-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .modal.large .modal-content {
-        width: 95%;
-    }
-}
-
- /* Modal Styles */
+/* Modal Styles */
 .modal {
     display: none;
     position: fixed;
@@ -764,38 +554,6 @@
     resize: vertical;
 }
 
-/* Button Styles */
-.btn-primary,
-.btn-secondary {
-    padding: var(--spacing-sm) var(--spacing-lg);
-    border-radius: var(--border-radius-md);
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: none;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-}
-
-.btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.btn-primary:hover {
-    background-color: var(--primary-dark);
-}
-
-.btn-secondary {
-    background-color: var(--bg-tertiary);
-    color: var(--text-secondary);
-}
-
-.btn-secondary:hover {
-    background-color: var(--border-medium);
-}
-
 /* Tab Styles */
 .tabs {
     display: flex;
@@ -837,104 +595,14 @@
     background-color: var(--primary-color);
 }
 
-/* Company Details Styles */
-.company-details-view {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-lg);
+/* Tab Content Visibility */
+.tab-content > div[data-tab] {
+    display: none;
 }
 
-.details-section {
-    background-color: var(--bg-primary);
-    border-radius: var(--border-radius-lg);
-    padding: var(--spacing-lg);
-    box-shadow: var(--shadow-sm);
-}
-
-.details-section h3 {
-    margin: 0 0 var(--spacing-md) 0;
-    color: var(--text-primary);
-}
-
-.info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--spacing-md);
-}
-
-.info-item {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-}
-
-.info-item label {
-    color: var(--text-tertiary);
-    font-size: 0.875rem;
-}
-
-.info-item span {
-    color: var(--text-primary);
-    font-weight: 500;
-}
-
-/* Subscription Management Styles */
-.subscription-details {
-    background-color: var(--bg-primary);
-    border-radius: var(--border-radius-lg);
-    padding: var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
-}
-
-.plan-summary {
-    background-color: var(--bg-secondary);
-    border-radius: var(--border-radius-md);
-    padding: var(--spacing-md);
-    margin-top: var(--spacing-md);
-}
-
-.summary-row {
-    display: flex;
-    justify-content: space-between;
-    padding: var(--spacing-xs) 0;
-}
-
-.summary-row.total {
-    border-top: 1px solid var(--border-light);
-    margin-top: var(--spacing-xs);
-    padding-top: var(--spacing-sm);
-    font-weight: 600;
-}
-
-/* User Management Styles */
-.users-management {
-    background-color: var(--bg-primary);
-    border-radius: var(--border-radius-lg);
-    padding: var(--spacing-lg);
-}
-
-.users-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-lg);
-}
-
-.users-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.users-table th,
-.users-table td {
-    padding: var(--spacing-sm) var(--spacing-md);
-    text-align: left;
-    border-bottom: 1px solid var(--border-light);
-}
-
-.users-table th {
-    background-color: var(--bg-secondary);
-    font-weight: 500;
+.tab-content > div[data-tab].active {
+    display: block;
+    animation: fadeIn 0.3s ease;
 }
 
 /* Status and Badge Styles */
@@ -981,15 +649,87 @@
     color: white;
 }
 
+/* Button Styles */
+.btn-primary,
+.btn-secondary {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+}
+
+.btn-secondary {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+.btn-secondary:hover {
+    background-color: var(--border-medium);
+}
+
+.btn-icon {
+    padding: var(--spacing-sm);
+    border: none;
+    background: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: var(--border-radius-sm);
+    transition: all 0.3s ease;
+}
+
+.btn-icon:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--primary-color);
+}
+
+/* Animation Styles */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from { 
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
+    .filters-section {
+        flex-direction: column;
+    }
+
+    .filter-group {
+        width: 100%;
+    }
+
+    .companies-grid {
+        grid-template-columns: 1fr;
+    }
+
     .modal-content {
         width: 95%;
         margin: var(--spacing-sm);
-    }
-
-    .info-grid {
-        grid-template-columns: 1fr;
     }
 
     .tabs {
@@ -1002,30 +742,12 @@
         padding: var(--spacing-sm);
     }
 
-    .users-header {
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .plan-actions {
         flex-direction: column;
-        gap: var(--spacing-md);
-    }
-
-    .users-table {
-        display: block;
-        overflow-x: auto;
     }
 }
-
-/* Animation Styles */
-@keyframes modalFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.modal.show .modal-content {
-    animation: modalFadeIn 0.3s ease forwards;
-}   
 </style>
