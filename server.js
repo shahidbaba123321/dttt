@@ -43,7 +43,7 @@ const authLimiter = rateLimit({
 
 // Define CORS options
 const corsOptions = {
-    origin: process.env.FRONTEND_URL || 'https://main.d1cfw592vg73f.amplifyapp.com',
+    origin: 'https://main.d1cfw592vg73f.amplifyapp.com',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: [
         'Content-Type', 
@@ -63,6 +63,7 @@ const corsOptions = {
     preflightContinue: false,
     optionsSuccessStatus: 204
 };
+
 
 // Middleware
 app.use(cors(corsOptions));
