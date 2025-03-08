@@ -571,37 +571,124 @@ initializeCompanyCardListeners() {
             return true;
         }
 
-        async editCompany(companyId) {
-            try {
-                const response = await fetch(`${this.baseUrl}/companies/${companyId}`, {
-                    headers: this.getHeaders()
-                });
+      async editCompany(companyId) {
+    try {
+        const response = await fetch(`${this.baseUrl}/companies/${companyId}`, {
+            headers: this.getHeaders()
+        });
 
-                if (!response.ok) {
-                    throw new Error('Failed to fetch company data');
-                }
-
-                const company = await response.json();
-                this.currentCompanyId = companyId;
-                this.populateCompanyForm(company);
-                document.getElementById('modalTitle').textContent = 'Edit Company';
-                this.companyModal.classList.add('show');
-            } catch (error) {
-                console.error('Error loading company for edit:', error);
-                this.showError('Failed to load company data');
-            }
+        if (!response.ok) {
+            throw new Error('Failed to fetch company data');
         }
+
+        const result = await response.json();
+        
+        if (!result.success || !result.data) {
+            throw new Error(result.message || 'Invalid response format');
+        }
+
+        const company = result.data;
+        this.currentCompanyId = companyId;
+        this.populateCompanyForm(company);
+        document.getElementById('modalTitle').textContent = 'Edit Company';
+        this.companyModal.classList.add('show');
+    } catch (error) {
+        console.error('Error loading company for edit:', error);
+        this.showError('Failed to load company data');
+    }
+}
+
 
         populateCompanyForm(company) {
-            document.getElementById('companyName').value = company.name;
-            document.getElementById('industry').value = company.industry;
-            document.getElementById('companySize').value = company.companySize;
-            document.getElementById('email').value = company.contactDetails.email;
-            document.getElementById('phone').value = company.contactDetails.phone;
-            document.getElementById('address').value = company.contactDetails.address;
-            document.getElementById('subscriptionPlan').value = company.subscriptionPlan;
-            document.getElementById('status').value = company.status;
+    try {
+        if (!company) {
+            throw new Error('No company data provided');
         }
+
+        // Get form elements
+        const elements = {
+            companyName: document.getElementById('companyName'),
+            industry: document.getElementById('industry'),
+            companySize: document.getElementById('companySize'),
+            email: document.getElementById('email'),
+            phone: document.getElementById('phone'),
+            address: document.getElementById('address'),
+            subscriptionPlan: document.getElementById('subscriptionPlan'),
+            status: document.getElementById('status')
+        };
+
+        // Verify all form elements exist
+        Object.entries(elements).forEach(([key, element]) => {
+            if (!element) {
+                throw new Error(`Form element '${key}' not found`);
+            }
+        });
+
+        // Populate basic company info
+        elements.companyName.value = company.name || '';
+        elements.industry.value = company.industry || '';
+        elements.companySize.value = company.companySize || '';
+        elements.status.value = company.status || 'inactive';
+
+        // Handle contact details
+        if (company.contactDetails) {
+            elements.email.value = company.contactDetails.email || '';
+            elements.phone.value = company.contactDetails.phone || '';
+            elements.address.value = company.contactDetails.address || '';
+        }
+
+        // Handle subscription plan
+        // First check subscription object, then fallback to company.subscriptionPlan
+        const subscription = company.subscription || {};
+        elements.subscriptionPlan.value = subscription.plan || company.subscriptionPlan || 'basic';
+
+        // Log successful form population
+        console.log('Form populated successfully with company data:', {
+            name: elements.companyName.value,
+            industry: elements.industry.value,
+            size: elements.companySize.value,
+            email: elements.email.value,
+            status: elements.status.value,
+            plan: elements.subscriptionPlan.value
+        });
+
+    } catch (error) {
+        console.error('Error populating form:', error);
+        throw new Error(`Failed to populate form: ${error.message}`);
+    }
+}
+
+        async viewCompanyDetails(companyId) {
+    try {
+        const response = await fetch(`${this.baseUrl}/companies/${companyId}`, {
+            headers: this.getHeaders()
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch company details');
+        }
+
+        const result = await response.json();
+        
+        if (!result.success || !result.data) {
+            throw new Error(result.message || 'Invalid response format');
+        }
+
+        const company = result.data;
+        this.currentCompanyId = companyId;
+        await this.renderCompanyDetails(company);
+        this.detailsModal.classList.add('show');
+
+        // Set the first tab as active by default
+        const firstTab = document.querySelector('.tab-btn');
+        if (firstTab) {
+            this.switchTab(firstTab);
+        }
+    } catch (error) {
+        console.error('Error fetching company details:', error);
+        this.showError('Failed to load company details');
+    }
+}
 
         async toggleCompanyStatus(companyId) {
             try {
@@ -629,105 +716,164 @@ initializeCompanyCardListeners() {
             }
         }
 
-        async viewCompanyDetails(companyId) {
-            try {
-                const response = await fetch(`${this.baseUrl}/companies/${companyId}`, {
-                    headers: this.getHeaders()
-                });
-
-                if (!companyId) {
-            throw new Error('Company ID is required');
-        }
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch company details');
-                }
-
-                const company = await response.json();
-                this.currentCompanyId = companyId;
-                await this.renderCompanyDetails(company);
-                this.detailsModal.classList.add('show');
-
-                // Set the first tab as active by default
-                const firstTab = document.querySelector('.tab-btn');
-                if (firstTab) {
-                    this.switchTab(firstTab);
-                }
-            } catch (error) {
-                console.error('Error fetching company details:', error);
-                this.showError('Failed to load company details');
-            }
-        }
-
         async renderCompanyDetails(company) {
-            const detailsContent = document.querySelector('.tab-content');
-            detailsContent.innerHTML = `
-                <div class="company-details-view">
-                    <div class="details-section">
-                        <h3>Company Information</h3>
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <label>Company Name</label>
-                                <span>${this.escapeHtml(company.name)}</span>
-                            </div>
-                            <div class="info-item">
-                                <label>Industry</label>
-                                <span>${this.escapeHtml(company.industry)}</span>
-                            </div>
-                            <div class="info-item">
-                                <label>Company Size</label>
-                                <span>${company.companySize} employees</span>
-                            </div>
-                            <div class="info-item">
-                                <label>Status</label>
-                                <span class="status-badge ${company.status}">
-                                    ${company.status.toUpperCase()}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+    try {
+        if (!company) {
+            throw new Error('No company data provided');
+        }
 
-                    <div class="details-section">
-                        <h3>Contact Information</h3>
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <label>Email</label>
-                                <span>${this.escapeHtml(company.contactDetails.email)}</span>
-                            </div>
-                            <div class="info-item">
-                                <label>Phone</label>
-                                <span>${this.escapeHtml(company.contactDetails.phone)}</span>
-                            </div>
-                            <div class="info-item">
-                                <label>Address</label>
-                                <span>${this.escapeHtml(company.contactDetails.address)}</span>
-                            </div>
+        const detailsContent = document.querySelector('.tab-content');
+        detailsContent.innerHTML = `
+            <div class="company-details-view">
+                <div class="details-section">
+                    <h3>Company Information</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Company Name</label>
+                            <span>${this.escapeHtml(company.name || '')}</span>
                         </div>
-                    </div>
-
-                    <div class="details-section">
-                        <h3>Subscription Details</h3>
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <label>Current Plan</label>
-                                <span class="plan-badge ${company.subscriptionPlan}">
-                                    ${company.subscriptionPlan.toUpperCase()}
-                                </span>
-                            </div>
-                            <div class="info-item">
-                                <label>Start Date</label>
-                                <span>${new Date(company.subscriptionStartDate).toLocaleDateString()}</span>
-                            </div>
-                            <div class="info-item">
-                                <label>Next Billing</label>
-                                <span>${new Date(company.nextBillingDate).toLocaleDateString()}</span>
-                            </div>
+                        <div class="info-item">
+                            <label>Industry</label>
+                            <span>${this.escapeHtml(company.industry || '')}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Company Size</label>
+                            <span>${company.companySize || 0} employees</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Status</label>
+                            <span class="status-badge ${company.status?.toLowerCase() || 'inactive'}">
+                                ${(company.status || 'INACTIVE').toUpperCase()}
+                            </span>
                         </div>
                     </div>
                 </div>
-            `;
-        }
 
+                <div class="details-section">
+                    <h3>Contact Information</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Email</label>
+                            <span>${this.escapeHtml(company.contactDetails?.email || '')}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Phone</label>
+                            <span>${this.escapeHtml(company.contactDetails?.phone || '')}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Address</label>
+                            <span>${this.escapeHtml(company.contactDetails?.address || '')}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <h3>Subscription Details</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Current Plan</label>
+                            <span class="plan-badge ${(company.subscriptionPlan || 'basic').toLowerCase()}">
+                                ${(company.subscriptionPlan || 'BASIC').toUpperCase()}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <label>Start Date</label>
+                            <span>${company.subscriptionStartDate ? new Date(company.subscriptionStartDate).toLocaleDateString() : 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Next Billing</label>
+                            <span>${company.nextBillingDate ? new Date(company.nextBillingDate).toLocaleDateString() : 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error rendering company details:', error);
+        throw error;
+    }
+}
+
+        renderCompanyDetails(company) {
+    const subscription = company.subscription || {};
+    const detailsContent = document.querySelector('.tab-content');
+    
+    detailsContent.innerHTML = `
+        <div class="company-details-view">
+            <div class="details-section">
+                <h3>Company Information</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Company Name</label>
+                        <span>${this.escapeHtml(company.name || '')}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Industry</label>
+                        <span>${this.escapeHtml(company.industry || '')}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Company Size</label>
+                        <span>${company.companySize || 0} employees</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Status</label>
+                        <span class="status-badge ${company.status || 'inactive'}">
+                            ${(company.status || 'Inactive').toUpperCase()}
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <label>Total Users</label>
+                        <span>${company.usersCount || 0}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="details-section">
+                <h3>Contact Information</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Email</label>
+                        <span>${this.escapeHtml(company.contactDetails?.email || '')}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Phone</label>
+                        <span>${this.escapeHtml(company.contactDetails?.phone || '')}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Address</label>
+                        <span>${this.escapeHtml(company.contactDetails?.address || '')}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="details-section">
+                <h3>Subscription Details</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Current Plan</label>
+                        <span class="plan-badge ${subscription.plan || 'basic'}">
+                            ${(subscription.plan || 'Basic').toUpperCase()}
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <label>Status</label>
+                        <span class="status-badge ${subscription.status || 'inactive'}">
+                            ${(subscription.status || 'Inactive').toUpperCase()}
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <label>Start Date</label>
+                        <span>${subscription.startDate ? new Date(subscription.startDate).toLocaleDateString() : 'N/A'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Next Billing</label>
+                        <span>${subscription.endDate ? new Date(subscription.endDate).toLocaleDateString() : 'N/A'}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
             // Subscription Management Methods
         async handlePlanChange(companyId) {
             try {
