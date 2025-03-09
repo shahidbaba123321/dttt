@@ -1124,151 +1124,250 @@ initializeTooltips() {
         }
 
             async showAddCompanyModal() {
-            this.currentCompanyId = null;
-            this.currentCompany = null;
-            document.getElementById('modalTitle').textContent = 'Add New Company';
-            this.companyForm.reset();
+    try {
+        this.currentCompanyId = null;
+        this.currentCompany = null;
+        
+        const modalContent = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Add New Company</h2>
+                    <button class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="companyForm">
+                        <div class="form-group">
+                            <label for="companyName">Company Name*</label>
+                            <input type="text" id="companyName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="industry">Industry Type*</label>
+                            <select id="industry" required>
+                                <option value="">Select Industry</option>
+                                ${this.industries.map(industry => 
+                                    `<option value="${industry.toLowerCase()}">${industry}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="companySize">Company Size*</label>
+                            <input type="number" id="companySize" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Contact Email*</label>
+                            <input type="email" id="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Contact Phone*</label>
+                            <input type="tel" id="phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="address">Address*</label>
+                            <textarea id="address" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="subscriptionPlan">Subscription Plan*</label>
+                            <select id="subscriptionPlan" required>
+                                <option value="basic">Basic</option>
+                                <option value="premium">Premium</option>
+                                <option value="enterprise">Enterprise</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">Status*</label>
+                            <select id="status" required>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="cancelBtn">Cancel</button>
+                    <button class="btn-primary" id="saveCompanyBtn">Save Company</button>
+                </div>
+            </div>
+        `;
+
+        const modal = document.getElementById('companyModal');
+        if (modal) {
+            modal.innerHTML = modalContent;
             this.showModal('companyModal');
+
+            // Add event listeners
+            modal.querySelector('.close-btn').addEventListener('click', () => this.closeModals());
+            modal.querySelector('#cancelBtn').addEventListener('click', () => this.closeModals());
+            modal.querySelector('#saveCompanyBtn').addEventListener('click', () => this.handleCompanySubmit());
         }
+    } catch (error) {
+        console.error('Error showing add company modal:', error);
+        this.showError('Failed to show add company form');
+    }
+}
 
         async handleCompanySubmit() {
-            try {
-                const formData = {
-                    name: document.getElementById('companyName').value,
-                    industry: document.getElementById('industry').value,
-                    companySize: parseInt(document.getElementById('companySize').value),
-                    contactDetails: {
-                        email: document.getElementById('email').value,
-                        phone: document.getElementById('phone').value,
-                        address: document.getElementById('address').value
-                    },
-                    subscriptionPlan: document.getElementById('subscriptionPlan').value,
-                    status: document.getElementById('status').value
-                };
+    try {
+        const formData = {
+            name: document.getElementById('companyName').value,
+            industry: document.getElementById('industry').value,
+            companySize: parseInt(document.getElementById('companySize').value),
+            contactDetails: {
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value
+            },
+            subscriptionPlan: document.getElementById('subscriptionPlan').value,
+            status: document.getElementById('status').value
+        };
 
-                if (!this.validateCompanyData(formData)) {
-                    return;
-                }
-
-                const endpoint = this.currentCompanyId 
-                    ? `/companies/${this.currentCompanyId}`
-                    : '/companies';
-
-                const method = this.currentCompanyId ? 'PUT' : 'POST';
-
-                const result = await this.handleApiRequest(endpoint, {
-                    method,
-                    body: JSON.stringify(formData)
-                });
-
-                if (result) {
-                    this.showSuccess(`Company successfully ${this.currentCompanyId ? 'updated' : 'created'}`);
-                    this.closeModals();
-                    await this.loadCompanies();
-                }
-            } catch (error) {
-                console.error('Error saving company:', error);
-                this.showError(error.message);
-            }
+        if (!this.validateCompanyData(formData)) {
+            return;
         }
+
+        const endpoint = this.currentCompanyId 
+            ? `/companies/${this.currentCompanyId}`
+            : '/companies';
+
+        const method = this.currentCompanyId ? 'PUT' : 'POST';
+
+        const result = await this.handleApiRequest(endpoint, {
+            method,
+            body: JSON.stringify(formData)
+        });
+
+        if (result) {
+            this.showSuccess(`Company successfully ${this.currentCompanyId ? 'updated' : 'created'}`);
+            this.closeModals();
+            await this.loadCompanies();
+        }
+    } catch (error) {
+        console.error('Error saving company:', error);
+        this.showError(error.message || 'Failed to save company');
+    }
+}
 
         validateCompanyData(data) {
-            if (!data.name || data.name.trim().length < 2) {
-                this.showError('Company name must be at least 2 characters long');
-                return false;
-            }
+    // Name validation
+    if (!data.name || data.name.trim().length < 2) {
+        this.showError('Company name must be at least 2 characters long');
+        return false;
+    }
 
-            if (!data.industry) {
-                this.showError('Please select an industry');
-                return false;
-            }
+    // Industry validation
+    if (!data.industry) {
+        this.showError('Please select an industry');
+        return false;
+    }
 
-            if (!data.companySize || data.companySize < 1) {
-                this.showError('Company size must be at least 1');
-                return false;
-            }
+    // Company size validation
+    if (!data.companySize || data.companySize < 1) {
+        this.showError('Company size must be at least 1');
+        return false;
+    }
 
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(data.contactDetails.email)) {
-                this.showError('Please enter a valid email address');
-                return false;
-            }
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.contactDetails.email)) {
+        this.showError('Please enter a valid email address');
+        return false;
+    }
 
-            const phoneRegex = /^\+?[\d\s-]{10,}$/;
-            if (!phoneRegex.test(data.contactDetails.phone)) {
-                this.showError('Please enter a valid phone number');
-                return false;
-            }
+    // Phone validation
+    const phoneRegex = /^\+?[\d\s-]{10,}$/;
+    if (!phoneRegex.test(data.contactDetails.phone)) {
+        this.showError('Please enter a valid phone number');
+        return false;
+    }
 
-            if (!data.contactDetails.address || data.contactDetails.address.trim().length < 5) {
-                this.showError('Please enter a valid address');
-                return false;
-            }
+    // Address validation
+    if (!data.contactDetails.address || data.contactDetails.address.trim().length < 5) {
+        this.showError('Please enter a valid address (minimum 5 characters)');
+        return false;
+    }
 
-            return true;
-        }
+    // Subscription plan validation
+    if (!['basic', 'premium', 'enterprise'].includes(data.subscriptionPlan.toLowerCase())) {
+        this.showError('Please select a valid subscription plan');
+        return false;
+    }
+
+    // Status validation
+    if (!['active', 'inactive'].includes(data.status.toLowerCase())) {
+        this.showError('Please select a valid status');
+        return false;
+    }
+
+    return true;
+}
 
         
 
         async editCompany(companyId) {
-            try {
-                const result = await this.handleApiRequest(`/companies/${companyId}`);
-                
-                if (result && result.data) {
-                    this.currentCompanyId = companyId;
-                    this.currentCompany = result.data;
-                    this.populateCompanyForm(result.data);
-                    document.getElementById('modalTitle').textContent = 'Edit Company';
-                    this.showModal('companyModal');
-                }
-            } catch (error) {
-                console.error('Error loading company for edit:', error);
-                this.showError('Failed to load company data');
+    try {
+        const result = await this.handleApiRequest(`/companies/${companyId}`);
+        
+        if (result && result.data) {
+            this.currentCompanyId = companyId;
+            this.currentCompany = result.data;
+            
+            // Show the modal first
+            await this.showAddCompanyModal();
+            
+            // Then populate the form
+            this.populateCompanyForm(result.data);
+            
+            // Update modal title
+            const modalTitle = document.querySelector('#companyModal .modal-header h2');
+            if (modalTitle) {
+                modalTitle.textContent = 'Edit Company';
             }
         }
+    } catch (error) {
+        console.error('Error loading company for edit:', error);
+        this.showError('Failed to load company data');
+    }
+}
+
 
         populateCompanyForm(company) {
-            try {
-                if (!company) {
-                    throw new Error('No company data provided');
-                }
-
-                const elements = {
-                    companyName: document.getElementById('companyName'),
-                    industry: document.getElementById('industry'),
-                    companySize: document.getElementById('companySize'),
-                    email: document.getElementById('email'),
-                    phone: document.getElementById('phone'),
-                    address: document.getElementById('address'),
-                    subscriptionPlan: document.getElementById('subscriptionPlan'),
-                    status: document.getElementById('status')
-                };
-
-                Object.entries(elements).forEach(([key, element]) => {
-                    if (!element) {
-                        throw new Error(`Form element '${key}' not found`);
-                    }
-                });
-
-                elements.companyName.value = company.name || '';
-                elements.industry.value = company.industry || '';
-                elements.companySize.value = company.companySize || '';
-                elements.status.value = company.status || 'inactive';
-
-                if (company.contactDetails) {
-                    elements.email.value = company.contactDetails.email || '';
-                    elements.phone.value = company.contactDetails.phone || '';
-                    elements.address.value = company.contactDetails.address || '';
-                }
-
-                const subscription = company.subscription || {};
-                elements.subscriptionPlan.value = subscription.plan || company.subscriptionPlan || 'basic';
-
-            } catch (error) {
-                console.error('Error populating form:', error);
-                throw new Error(`Failed to populate form: ${error.message}`);
-            }
+    try {
+        if (!company) {
+            throw new Error('No company data provided');
         }
+
+        const elements = {
+            companyName: document.getElementById('companyName'),
+            industry: document.getElementById('industry'),
+            companySize: document.getElementById('companySize'),
+            email: document.getElementById('email'),
+            phone: document.getElementById('phone'),
+            address: document.getElementById('address'),
+            subscriptionPlan: document.getElementById('subscriptionPlan'),
+            status: document.getElementById('status')
+        };
+
+        // Verify all form elements exist
+        Object.entries(elements).forEach(([key, element]) => {
+            if (!element) {
+                throw new Error(`Form element '${key}' not found`);
+            }
+        });
+
+        // Populate form fields
+        elements.companyName.value = company.name || '';
+        elements.industry.value = company.industry?.toLowerCase() || '';
+        elements.companySize.value = company.companySize || '';
+        elements.email.value = company.contactDetails?.email || '';
+        elements.phone.value = company.contactDetails?.phone || '';
+        elements.address.value = company.contactDetails?.address || '';
+        elements.subscriptionPlan.value = company.subscriptionPlan?.toLowerCase() || 'basic';
+        elements.status.value = company.status || 'active';
+
+    } catch (error) {
+        console.error('Error populating form:', error);
+        this.showError('Failed to populate form with company data');
+    }
+}
 
         async toggleCompanyStatus(companyId) {
             try {
