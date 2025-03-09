@@ -96,6 +96,8 @@
         async handleApiRequest(endpoint, options = {}) {
     try {
         const url = `${this.baseUrl}${endpoint}`;
+        console.log('Making API request:', { url, method: options.method }); // Debug log
+
         const response = await fetch(url, {
             ...options,
             headers: {
@@ -105,29 +107,10 @@
         });
 
         const data = await response.json();
+        console.log('API response:', data); // Debug log
 
         if (!response.ok) {
-            switch (response.status) {
-                case 400:
-                    if (data.message.includes('duplicate')) {
-                        throw new Error('A company with this name or email already exists');
-                    }
-                    throw new Error(data.message || 'Invalid request data');
-                case 401:
-                    localStorage.removeItem('token');
-                    window.location.href = '/login.html';
-                    return null;
-                case 403:
-                    throw new Error('Access denied');
-                case 404:
-                    throw new Error('Resource not found');
-                case 409:
-                    throw new Error('Conflict: Company with this name or email already exists');
-                case 500:
-                    throw new Error('Server error occurred. Please try again later.');
-                default:
-                    throw new Error(data.message || 'Request failed');
-            }
+            throw new Error(data.message || 'Request failed');
         }
 
         return data;
@@ -136,7 +119,6 @@
         throw error;
     }
 }
-
 
         showConnectionStatus(status) {
             const statusElement = document.createElement('div');
@@ -1225,26 +1207,12 @@ initializeTooltips() {
             status: document.getElementById('status').value
         };
 
-        if (!this.validateCompanyData(formData)) {
-            return;
-        }
+        console.log('Submitting form data:', formData); // Debug log
 
         const saveButton = document.getElementById('saveCompanyBtn');
         if (saveButton) {
             saveButton.disabled = true;
             saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-        }
-
-        // Check for duplicates only if name or email changed
-        if (this.currentCompanyId) {
-            const isDuplicate = await this.checkForDuplicates(
-                formData.name, 
-                formData.contactDetails.email, 
-                this.currentCompanyId
-            );
-            if (isDuplicate) {
-                throw new Error('A company with this name or email already exists');
-            }
         }
 
         const endpoint = this.currentCompanyId 
@@ -1255,10 +1223,7 @@ initializeTooltips() {
 
         const result = await this.handleApiRequest(endpoint, {
             method,
-            body: JSON.stringify({
-                ...formData,
-                ...(this.currentCompanyId && { id: this.currentCompanyId }) // Include ID for updates
-            })
+            body: JSON.stringify(formData)
         });
 
         if (result) {
