@@ -1546,7 +1546,7 @@ showConfirmDialog(message) {
         this.showError('Failed to load users information');
     }
 }
-        / Update the showAddUserModal method
+      
 showAddUserModal() {
     try {
         const modalHtml = `
