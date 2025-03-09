@@ -48,6 +48,11 @@
             this.init();
             this.initializeStyles();
         }
+         getPlanPrice(plan) {
+        const planKey = plan.toLowerCase();
+        return this.subscriptionPlans[planKey]?.price || 0;
+    }
+
 
         async init() {
             try {
@@ -1193,55 +1198,54 @@ initializeTooltips() {
 }
 
        async handleCompanySubmit() {
-    try {
-        const formData = {
-            name: document.getElementById('companyName').value.trim(),
-            industry: document.getElementById('industry').value,
-            companySize: parseInt(document.getElementById('companySize').value),
-            contactDetails: {
-                email: document.getElementById('email').value.trim(),
-                phone: document.getElementById('phone').value.trim(),
-                address: document.getElementById('address').value.trim()
-            },
-            subscriptionPlan: document.getElementById('subscriptionPlan').value,
-            status: document.getElementById('status').value
-        };
+        try {
+            const formData = {
+                name: document.getElementById('companyName').value.trim(),
+                industry: document.getElementById('industry').value,
+                companySize: parseInt(document.getElementById('companySize').value),
+                contactDetails: {
+                    email: document.getElementById('email').value.trim(),
+                    phone: document.getElementById('phone').value.trim(),
+                    address: document.getElementById('address').value.trim()
+                },
+                subscriptionPlan: document.getElementById('subscriptionPlan').value,
+                planPrice: this.getPlanPrice(document.getElementById('subscriptionPlan').value),
+                status: document.getElementById('status').value
+            };
 
-        console.log('Submitting form data:', formData); // Debug log
+            const saveButton = document.getElementById('saveCompanyBtn');
+            if (saveButton) {
+                saveButton.disabled = true;
+                saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            }
 
-        const saveButton = document.getElementById('saveCompanyBtn');
-        if (saveButton) {
-            saveButton.disabled = true;
-            saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-        }
+            const endpoint = this.currentCompanyId 
+                ? `/companies/${this.currentCompanyId}`
+                : '/companies';
 
-        const endpoint = this.currentCompanyId 
-            ? `/companies/${this.currentCompanyId}`
-            : '/companies';
+            const method = this.currentCompanyId ? 'PUT' : 'POST';
 
-        const method = this.currentCompanyId ? 'PUT' : 'POST';
+            const result = await this.handleApiRequest(endpoint, {
+                method,
+                body: JSON.stringify(formData)
+            });
 
-        const result = await this.handleApiRequest(endpoint, {
-            method,
-            body: JSON.stringify(formData)
-        });
-
-        if (result) {
-            this.showSuccess(`Company successfully ${this.currentCompanyId ? 'updated' : 'created'}`);
-            this.closeModals();
-            await this.loadCompanies();
-        }
-    } catch (error) {
-        console.error('Error saving company:', error);
-        this.showError(error.message || 'Failed to save company');
-    } finally {
-        const saveButton = document.getElementById('saveCompanyBtn');
-        if (saveButton) {
-            saveButton.disabled = false;
-            saveButton.innerHTML = this.currentCompanyId ? 'Update Company' : 'Save Company';
+            if (result) {
+                this.showSuccess(`Company successfully ${this.currentCompanyId ? 'updated' : 'created'}`);
+                this.closeModals();
+                await this.loadCompanies();
+            }
+        } catch (error) {
+            console.error('Error saving company:', error);
+            this.showError(error.message || 'Failed to save company');
+        } finally {
+            const saveButton = document.getElementById('saveCompanyBtn');
+            if (saveButton) {
+                saveButton.disabled = false;
+                saveButton.innerHTML = this.currentCompanyId ? 'Update Company' : 'Save Company';
+            }
         }
     }
-}
 async checkForDuplicates(name, email, excludeId) {
     try {
         const response = await this.handleApiRequest(`/companies/check-duplicates`, {
