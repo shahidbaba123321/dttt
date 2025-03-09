@@ -273,6 +273,97 @@
         width: 16px;
         text-align: center;
     }
+    .active-filter {
+            border-color: var(--primary-color) !important;
+            background-color: var(--bg-secondary) !important;
+        }
+
+        .filter-status {
+            display: none;
+            padding: 4px 8px;
+            background-color: var(--bg-secondary);
+            border-radius: var(--border-radius-sm);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .tooltip {
+            position: absolute;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 5px 10px;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.875rem;
+            box-shadow: var(--shadow-md);
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        [data-tooltip] {
+            position: relative;
+            cursor: help;
+        }
+        .filter-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group select {
+            min-width: 150px;
+            padding: 8px 12px;
+            border: 1px solid var(--border-medium);
+            border-radius: var(--border-radius-md);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-group select:hover {
+            border-color: var(--primary-color);
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .filter-status {
+            padding: 4px 8px;
+            background-color: var(--bg-secondary);
+            border-radius: var(--border-radius-sm);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .filtered-out {
+            opacity: 0.5;
+        }
+
+        /* Active Filter Indicators */
+        .filter-group select:not([value=""]) {
+            border-color: var(--primary-color);
+            background-color: var(--bg-secondary);
+        }
+
+        /* Responsive Filter Layout */
+        @media (max-width: 768px) {
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group select {
+                width: 100%;
+            }
+        }
+
+    
 
                 @keyframes slideIn {
                     from {
@@ -325,95 +416,248 @@
         }
 
         initializeEventListeners() {
-            if (this.addCompanyBtn) {
-                this.addCompanyBtn.addEventListener('click', () => this.showAddCompanyModal());
-            }
+    // Company Management Events
+    if (this.addCompanyBtn) {
+        this.addCompanyBtn.addEventListener('click', () => this.showAddCompanyModal());
+    }
 
-            if (this.companyForm) {
-                this.companyForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.handleCompanySubmit();
-                });
-            }
+    if (this.companyForm) {
+        this.companyForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleCompanySubmit();
+        });
+    }
 
-            if (this.searchInput) {
-                this.searchInput.addEventListener('input', this.debounce(() => {
-                    this.filters.search = this.searchInput.value;
-                    this.currentPage = 1;
-                    this.loadCompanies();
-                }, 300));
-            }
+    // Search and Filter Events
+    // Company Search
+    if (this.searchInput) {
+        this.searchInput.addEventListener('input', this.debounce(() => {
+            this.filters.search = this.searchInput.value;
+            this.currentPage = 1;
+            this.loadCompanies();
+        }, 300));
+    }
 
-            ['industryFilter', 'statusFilter', 'planFilter'].forEach(filterId => {
-                const element = document.getElementById(filterId);
-                if (element) {
-                    element.addEventListener('change', (e) => {
-                        this.filters[e.target.id.replace('Filter', '')] = e.target.value;
-                        this.currentPage = 1;
-                        this.loadCompanies();
-                    });
-                }
-            });
+    // Industry Filter
+    if (this.industryFilter) {
+        this.industryFilter.addEventListener('change', () => {
+            this.filters.industry = this.industryFilter.value;
+            this.currentPage = 1;
+            this.loadCompanies();
+            this.highlightActiveFilter(this.industryFilter);
+        });
+    }
 
-            document.querySelectorAll('.close-btn').forEach(btn => {
-                btn.addEventListener('click', () => this.closeModals());
-            });
+    // Status Filter
+    if (this.statusFilter) {
+        this.statusFilter.addEventListener('change', () => {
+            this.filters.status = this.statusFilter.value;
+            this.currentPage = 1;
+            this.loadCompanies();
+            this.highlightActiveFilter(this.statusFilter);
+        });
+    }
 
-            document.querySelectorAll('#cancelBtn, #cancelAddUser, #cancelPlanChange').forEach(btn => {
-                if (btn) {
-                    btn.addEventListener('click', () => this.closeModals());
-                }
-            });
+    // Plan Filter
+    if (this.planFilter) {
+        this.planFilter.addEventListener('change', () => {
+            this.filters.plan = this.planFilter.value;
+            this.currentPage = 1;
+            this.loadCompanies();
+            this.highlightActiveFilter(this.planFilter);
+        });
+    }
 
-            document.getElementById('addUserBtn')?.addEventListener('click', () => {
-                if (this.currentCompanyId) {
-                    this.showAddUserModal(this.currentCompanyId);
-                }
-            });
+    // Clear Filters Button
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', () => {
+            this.clearFilters();
+        });
+    }
 
-            document.getElementById('confirmAddUser')?.addEventListener('click', () => {
-                this.handleAddUser();
-            });
+    // Modal Close Buttons
+    document.querySelectorAll('.close-btn').forEach(btn => {
+        btn.addEventListener('click', () => this.closeModals());
+    });
 
-            document.getElementById('changePlanBtn')?.addEventListener('click', () => {
-                if (this.currentCompanyId) {
-                    this.showChangePlanModal(this.currentCompanyId);
-                }
-            });
-
-            document.getElementById('confirmPlanChange')?.addEventListener('click', () => {
-                this.handlePlanChange(this.currentCompanyId);
-            });
-
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const tabName = e.target.dataset.tab;
-                    this.activateTab(tabName);
-                });
-            });
-
-            document.addEventListener('click', (e) => {
-                if (e.target.classList.contains('modal')) {
-                    this.closeModals();
-                }
-            });
-
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    this.closeModals();
-                }
-            });
-
-            const planSelect = document.getElementById('newPlan');
-            const cycleSelect = document.getElementById('billingCycle');
-            if (planSelect && cycleSelect) {
-                [planSelect, cycleSelect].forEach(select => {
-                    select.addEventListener('change', () => {
-                        this.updatePlanSummary();
-                    });
-                });
-            }
+    // Cancel Buttons
+    document.querySelectorAll('#cancelBtn, #cancelAddUser, #cancelPlanChange').forEach(btn => {
+        if (btn) {
+            btn.addEventListener('click', () => this.closeModals());
         }
+    });
+
+    // User Management Events
+    document.getElementById('addUserBtn')?.addEventListener('click', () => {
+        if (this.currentCompanyId) {
+            this.showAddUserModal(this.currentCompanyId);
+        }
+    });
+
+    document.getElementById('confirmAddUser')?.addEventListener('click', () => {
+        this.handleAddUser();
+    });
+
+    // Subscription Management Events
+    document.getElementById('changePlanBtn')?.addEventListener('click', () => {
+        if (this.currentCompanyId) {
+            this.showChangePlanModal(this.currentCompanyId);
+        }
+    });
+
+    document.getElementById('confirmPlanChange')?.addEventListener('click', () => {
+        this.handlePlanChange(this.currentCompanyId);
+    });
+
+    // Tab Navigation
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const tabName = e.target.dataset.tab;
+            this.activateTab(tabName);
+        });
+    });
+
+    // Global Modal Close Events
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('modal')) {
+            this.closeModals();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            this.closeModals();
+        }
+    });
+
+    // Company Card Actions
+    if (this.companiesGrid) {
+        this.companiesGrid.addEventListener('click', (e) => {
+            const actionButton = e.target.closest('[data-action]');
+            if (!actionButton) return;
+
+            const action = actionButton.dataset.action;
+            const companyId = actionButton.dataset.companyId;
+
+            switch (action) {
+                case 'view':
+                    this.viewCompanyDetails(companyId);
+                    break;
+                case 'edit':
+                    this.editCompany(companyId);
+                    break;
+                case 'toggle-status':
+                    this.toggleCompanyStatus(companyId);
+                    break;
+            }
+        });
+    }
+
+    // Subscription Plan Selection Events
+    const planSelect = document.getElementById('newPlan');
+    const cycleSelect = document.getElementById('billingCycle');
+    if (planSelect && cycleSelect) {
+        [planSelect, cycleSelect].forEach(select => {
+            select.addEventListener('change', () => {
+                this.updatePlanSummary();
+            });
+        });
+    }
+
+    // Export Functionality
+    document.getElementById('exportBtn')?.addEventListener('click', () => {
+        this.exportData();
+    });
+
+    // Bulk Actions
+    document.getElementById('bulkActionBtn')?.addEventListener('click', () => {
+        this.handleBulkAction();
+    });
+
+    // Initialize Tooltips
+    this.initializeTooltips();
+}
+
+        
+// Helper methods for event listeners
+highlightActiveFilter(filterElement) {
+    if (filterElement.value) {
+        filterElement.classList.add('active-filter');
+    } else {
+        filterElement.classList.remove('active-filter');
+    }
+    this.updateFilterStatus();
+}
+clearFilters() {
+    // Reset all filter values
+    this.filters = {
+        search: '',
+        industry: '',
+        status: '',
+        plan: ''
+    };
+
+    // Reset form elements
+    if (this.searchInput) this.searchInput.value = '';
+    if (this.industryFilter) this.industryFilter.value = '';
+    if (this.statusFilter) this.statusFilter.value = '';
+    if (this.planFilter) this.planFilter.value = '';
+
+    // Remove active filter highlights
+    document.querySelectorAll('.filter-group select').forEach(select => {
+        select.classList.remove('active-filter');
+    });
+
+    // Reload companies with cleared filters
+    this.currentPage = 1;
+    this.loadCompanies();
+    this.updateFilterStatus();
+}
+
+   
+updateFilterStatus() {
+    const activeFilters = Object.entries(this.userFilters)
+        .filter(([_, value]) => value)
+        .length;
+
+    const filterStatus = document.querySelector('.filter-status');
+    if (!filterStatus) {
+        const statusDiv = document.createElement('div');
+        statusDiv.className = 'filter-status';
+        document.querySelector('.users-header')?.appendChild(statusDiv);
+    }
+
+    if (activeFilters > 0) {
+        filterStatus.textContent = `${activeFilters} filter${activeFilters > 1 ? 's' : ''} active`;
+        filterStatus.style.display = 'block';
+    } else {
+        filterStatus.style.display = 'none';
+    }
+}
+
+initializeTooltips() {
+    document.querySelectorAll('[data-tooltip]').forEach(element => {
+        element.addEventListener('mouseenter', (e) => {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            tooltip.textContent = e.target.dataset.tooltip;
+            document.body.appendChild(tooltip);
+
+            const rect = e.target.getBoundingClientRect();
+            tooltip.style.top = `${rect.bottom + 5}px`;
+            tooltip.style.left = `${rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2)}px`;
+        });
+
+        element.addEventListener('mouseleave', () => {
+            document.querySelector('.tooltip')?.remove();
+        });
+    });
+}
+
+     
+        
+        
 
             async loadCompanies() {
     try {
@@ -1502,41 +1746,67 @@ toggleGlobalLoading(show) {
             }
         }
 
-        initializeUserFilters() {
+       initializeUserFilters() {
     const searchInput = document.getElementById('userSearch');
     const roleFilter = document.getElementById('roleFilter');
     const statusFilter = document.getElementById('userStatusFilter');
 
+    // Store current filter values
+    this.userFilters = {
+        search: '',
+        role: '',
+        status: ''
+    };
+
     if (searchInput) {
         searchInput.addEventListener('input', this.debounce((e) => {
-            this.filterUsers(
-                e.target.value,
-                roleFilter?.value || '',
-                statusFilter?.value || ''
-            );
+            this.userFilters.search = e.target.value;
+            this.applyUserFilters();
         }, 300));
     }
 
     if (roleFilter) {
-        roleFilter.addEventListener('change', () => {
-            this.filterUsers(
-                searchInput?.value || '',
-                roleFilter.value,
-                statusFilter?.value || ''
-            );
+        roleFilter.addEventListener('change', (e) => {
+            this.userFilters.role = e.target.value;
+            this.applyUserFilters();
         });
     }
 
     if (statusFilter) {
-        statusFilter.addEventListener('change', () => {
-            this.filterUsers(
-                searchInput?.value || '',
-                roleFilter?.value || '',
-                statusFilter.value
-            );
+        statusFilter.addEventListener('change', (e) => {
+            this.userFilters.status = e.target.value;
+            this.applyUserFilters();
         });
     }
 }
+
+applyUserFilters() {
+    const rows = document.querySelectorAll('.users-table tbody tr');
+    const { search, role, status } = this.userFilters;
+
+    rows.forEach(row => {
+        const userName = row.querySelector('.user-name')?.textContent.toLowerCase() || '';
+        const userEmail = row.querySelector('.user-email')?.textContent.toLowerCase() || '';
+        const userRole = row.querySelector('.role-badge')?.textContent.toLowerCase() || '';
+        const userStatus = row.querySelector('.status-badge')?.textContent.toLowerCase() || '';
+
+        const matchesSearch = !search || 
+            userName.includes(search.toLowerCase()) || 
+            userEmail.includes(search.toLowerCase());
+            
+        const matchesRole = !role || userRole.includes(role.toLowerCase());
+        const matchesStatus = !status || userStatus.includes(status.toLowerCase());
+
+        row.style.display = matchesSearch && matchesRole && matchesStatus ? '' : 'none';
+
+        // Add visual feedback for filtered rows
+        row.classList.toggle('filtered-out', !(matchesSearch && matchesRole && matchesStatus));
+    });
+
+    // Update UI to show filter status
+    this.updateFilterStatus();
+}
+
 
 filterUsers(search = '', role = '', status = '') {
     const rows = document.querySelectorAll('.users-table tbody tr');
