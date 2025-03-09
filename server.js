@@ -3026,16 +3026,11 @@ app.put('/api/companies/:companyId', verifyToken, verifyAdmin, async (req, res) 
             const { companyId } = req.params;
             const updateData = req.body;
 
+            console.log('Updating company:', { companyId, updateData }); // Debug log
+
             // Validate company ID
             if (!ObjectId.isValid(companyId)) {
                 throw new Error('Invalid company ID');
-            }
-
-            // Validate company data
-            try {
-                validateCompanyData(updateData);
-            } catch (validationError) {
-                throw new Error(validationError.message);
             }
 
             // Get existing company
@@ -3047,12 +3042,14 @@ app.put('/api/companies/:companyId', verifyToken, verifyAdmin, async (req, res) 
                 throw new Error('Company not found');
             }
 
+            console.log('Existing company found:', existingCompany); // Debug log
+
             // Check for name/email conflicts
             const conflicts = await companies.findOne({
                 _id: { $ne: new ObjectId(companyId) },
                 $or: [
-                    { name: { $regex: new RegExp(`^${updateData.name}$`, 'i') } },
-                    { 'contactDetails.email': updateData.contactDetails.email }
+                    { name: updateData.name },
+                    { 'contactDetails.email': updateData.contactDetails?.email }
                 ]
             }, { session });
 
@@ -3060,15 +3057,15 @@ app.put('/api/companies/:companyId', verifyToken, verifyAdmin, async (req, res) 
                 throw new Error('Company with this name or email already exists');
             }
 
-            // Prepare update data
+            // Prepare update data with proper structure
             const companyUpdateData = {
                 name: updateData.name,
                 industry: updateData.industry,
-                companySize: updateData.companySize,
+                companySize: parseInt(updateData.companySize),
                 contactDetails: {
-                    email: updateData.contactDetails.email,
-                    phone: updateData.contactDetails.phone,
-                    address: updateData.contactDetails.address
+                    email: updateData.contactDetails?.email,
+                    phone: updateData.contactDetails?.phone,
+                    address: updateData.contactDetails?.address
                 },
                 subscriptionPlan: updateData.subscriptionPlan,
                 status: updateData.status,
@@ -3076,56 +3073,26 @@ app.put('/api/companies/:companyId', verifyToken, verifyAdmin, async (req, res) 
                 updatedBy: new ObjectId(req.user.userId)
             };
 
+            console.log('Update data prepared:', companyUpdateData); // Debug log
+
             // Update company
-            await companies.updateOne(
+            const updateResult = await companies.updateOne(
                 { _id: new ObjectId(companyId) },
                 { $set: companyUpdateData },
                 { session }
             );
+
+            console.log('Update result:', updateResult); // Debug log
+
+            if (updateResult.matchedCount === 0) {
+                throw new Error('Company not found');
+            }
 
             // Get updated company data
             const updatedCompany = await companies.findOne(
                 { _id: new ObjectId(companyId) },
                 { session }
             );
-
-            // Prepare changes for audit log
-            const changes = {
-                name: {
-                    previous: existingCompany.name,
-                    new: updateData.name
-                },
-                industry: {
-                    previous: existingCompany.industry,
-                    new: updateData.industry
-                },
-                companySize: {
-                    previous: existingCompany.companySize,
-                    new: updateData.companySize
-                },
-                contactDetails: {
-                    email: {
-                        previous: existingCompany.contactDetails?.email,
-                        new: updateData.contactDetails.email
-                    },
-                    phone: {
-                        previous: existingCompany.contactDetails?.phone,
-                        new: updateData.contactDetails.phone
-                    },
-                    address: {
-                        previous: existingCompany.contactDetails?.address,
-                        new: updateData.contactDetails.address
-                    }
-                },
-                subscriptionPlan: {
-                    previous: existingCompany.subscriptionPlan,
-                    new: updateData.subscriptionPlan
-                },
-                status: {
-                    previous: existingCompany.status,
-                    new: updateData.status
-                }
-            };
 
             // Create audit log
             await createAuditLog(
@@ -3134,12 +3101,14 @@ app.put('/api/companies/:companyId', verifyToken, verifyAdmin, async (req, res) 
                 companyId,
                 {
                     companyName: existingCompany.name,
-                    changes: changes
+                    changes: {
+                        before: existingCompany,
+                        after: updatedCompany
+                    }
                 },
                 session
             );
 
-            // Send success response
             res.json({
                 success: true,
                 message: 'Company updated successfully',
@@ -3147,24 +3116,36 @@ app.put('/api/companies/:companyId', verifyToken, verifyAdmin, async (req, res) 
             });
         });
     } catch (error) {
-        console.error('Error updating company:', error);
-        
-        // Determine appropriate status code
-        const statusCode = 
-            error.message.includes('not found') ? 404 :
-            error.message.includes('already exists') ? 409 :
-            error.message.includes('Invalid') || error.message.includes('required') ? 400 :
-            500;
+        console.error('Detailed error:', {
+            message: error.message,
+            stack: error.stack,
+            details: error
+        });
+
+        let statusCode = 500;
+        let errorMessage = 'Internal server error';
+
+        // Determine appropriate status code and message
+        if (error.message.includes('not found')) {
+            statusCode = 404;
+            errorMessage = 'Company not found';
+        } else if (error.message.includes('already exists')) {
+            statusCode = 409;
+            errorMessage = 'Company with this name or email already exists';
+        } else if (error.message.includes('Invalid') || error.message.includes('required')) {
+            statusCode = 400;
+            errorMessage = error.message;
+        }
 
         res.status(statusCode).json({
             success: false,
-            message: error.message || 'Error updating company'
+            message: errorMessage,
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     } finally {
         await session.endSession();
     }
 });
-
 // Toggle company status
 app.patch('/api/companies/:companyId/toggle-status', verifyToken, verifyAdmin, async (req, res) => {
     const session = client.startSession();
