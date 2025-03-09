@@ -275,18 +275,23 @@
     }
     .active-filter {
             border-color: var(--primary-color) !important;
-            background-color: var(--bg-secondary) !important;
+            background-color: rgba(79, 70, 229, 0.1) !important;
         }
 
         .filter-status {
             display: none;
-            padding: 4px 8px;
+            padding: 8px 12px;
             background-color: var(--bg-secondary);
-            border-radius: var(--border-radius-sm);
+            border-radius: var(--border-radius-md);
             font-size: 0.875rem;
             color: var(--text-secondary);
-            margin-top: 8px;
+            margin-top: 12px;
+            margin-bottom: 12px;
         }
+        .filters-section {
+            position: relative;
+        }
+
 
         .tooltip {
             position: absolute;
@@ -440,33 +445,45 @@
 
     // Industry Filter
     if (this.industryFilter) {
-        this.industryFilter.addEventListener('change', () => {
-            this.filters.industry = this.industryFilter.value;
+    this.industryFilter.addEventListener('change', (e) => {
+        try {
+            this.filters.industry = e.target.value;
             this.currentPage = 1;
             this.loadCompanies();
-            this.highlightActiveFilter(this.industryFilter);
-        });
-    }
+            this.highlightActiveFilter(e.target);
+        } catch (error) {
+            console.error('Error handling industry filter:', error);
+        }
+    });
+}
 
     // Status Filter
-    if (this.statusFilter) {
-        this.statusFilter.addEventListener('change', () => {
-            this.filters.status = this.statusFilter.value;
+   if (this.statusFilter) {
+    this.statusFilter.addEventListener('change', (e) => {
+        try {
+            this.filters.status = e.target.value;
             this.currentPage = 1;
             this.loadCompanies();
-            this.highlightActiveFilter(this.statusFilter);
-        });
-    }
+            this.highlightActiveFilter(e.target);
+        } catch (error) {
+            console.error('Error handling status filter:', error);
+        }
+    });
+}
 
     // Plan Filter
     if (this.planFilter) {
-        this.planFilter.addEventListener('change', () => {
-            this.filters.plan = this.planFilter.value;
+    this.planFilter.addEventListener('change', (e) => {
+        try {
+            this.filters.plan = e.target.value;
             this.currentPage = 1;
             this.loadCompanies();
-            this.highlightActiveFilter(this.planFilter);
-        });
-    }
+            this.highlightActiveFilter(e.target);
+        } catch (error) {
+            console.error('Error handling plan filter:', error);
+        }
+    });
+}
 
     // Clear Filters Button
     const clearFiltersBtn = document.getElementById('clearFiltersBtn');
@@ -582,57 +599,86 @@
         
 // Helper methods for event listeners
 highlightActiveFilter(filterElement) {
-    if (filterElement.value) {
-        filterElement.classList.add('active-filter');
-    } else {
-        filterElement.classList.remove('active-filter');
+    try {
+        if (!filterElement) return;
+
+        if (filterElement.value) {
+            filterElement.classList.add('active-filter');
+        } else {
+            filterElement.classList.remove('active-filter');
+        }
+        this.updateFilterStatus();
+    } catch (error) {
+        console.error('Error highlighting filter:', error);
     }
-    this.updateFilterStatus();
 }
 clearFilters() {
-    // Reset all filter values
-    this.filters = {
-        search: '',
-        industry: '',
-        status: '',
-        plan: ''
-    };
+    try {
+        // Reset all filter values
+        this.filters = {
+            search: '',
+            industry: '',
+            status: '',
+            plan: ''
+        };
 
-    // Reset form elements
-    if (this.searchInput) this.searchInput.value = '';
-    if (this.industryFilter) this.industryFilter.value = '';
-    if (this.statusFilter) this.statusFilter.value = '';
-    if (this.planFilter) this.planFilter.value = '';
+        // Reset form elements
+        if (this.searchInput) this.searchInput.value = '';
+        if (this.industryFilter) this.industryFilter.value = '';
+        if (this.statusFilter) this.statusFilter.value = '';
+        if (this.planFilter) this.planFilter.value = '';
 
-    // Remove active filter highlights
-    document.querySelectorAll('.filter-group select').forEach(select => {
-        select.classList.remove('active-filter');
-    });
+        // Remove active filter highlights
+        document.querySelectorAll('.filter-group select').forEach(select => {
+            select.classList.remove('active-filter');
+        });
 
-    // Reload companies with cleared filters
-    this.currentPage = 1;
-    this.loadCompanies();
-    this.updateFilterStatus();
+        // Reload companies with cleared filters
+        this.currentPage = 1;
+        this.loadCompanies();
+        this.updateFilterStatus();
+    } catch (error) {
+        console.error('Error clearing filters:', error);
+    }
 }
-
    
 updateFilterStatus() {
-    const activeFilters = Object.entries(this.userFilters)
-        .filter(([_, value]) => value)
-        .length;
+    try {
+        // Ensure filters object exists
+        if (!this.filters) {
+            this.filters = {
+                search: '',
+                industry: '',
+                status: '',
+                plan: ''
+            };
+        }
 
-    const filterStatus = document.querySelector('.filter-status');
-    if (!filterStatus) {
-        const statusDiv = document.createElement('div');
-        statusDiv.className = 'filter-status';
-        document.querySelector('.users-header')?.appendChild(statusDiv);
-    }
+        // Create or get filter status element
+        let filterStatus = document.querySelector('.filter-status');
+        if (!filterStatus) {
+            filterStatus = document.createElement('div');
+            filterStatus.className = 'filter-status';
+            const filtersSection = document.querySelector('.filters-section');
+            if (filtersSection) {
+                filtersSection.appendChild(filterStatus);
+            }
+        }
 
-    if (activeFilters > 0) {
-        filterStatus.textContent = `${activeFilters} filter${activeFilters > 1 ? 's' : ''} active`;
-        filterStatus.style.display = 'block';
-    } else {
-        filterStatus.style.display = 'none';
+        // Count active filters
+        const activeFilters = Object.values(this.filters).filter(Boolean).length;
+
+        // Update status display
+        if (filterStatus) {
+            if (activeFilters > 0) {
+                filterStatus.textContent = `${activeFilters} active filter${activeFilters > 1 ? 's' : ''}`;
+                filterStatus.style.display = 'block';
+            } else {
+                filterStatus.style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error('Error updating filter status:', error);
     }
 }
 
