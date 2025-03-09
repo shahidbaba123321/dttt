@@ -1126,18 +1126,17 @@ class ContentLoader {
     try {
         console.log('Initializing Companies module...');
         
-        // Check if script is already loaded
+        // Remove existing script if present
         const existingScript = document.querySelector('script[src*="clientcompanies.js"]');
         if (existingScript) {
-            console.log('Removing existing Companies script...');
             existingScript.remove();
         }
 
         // Create and append the script
         const script = document.createElement('script');
+        script.type = 'text/javascript';
         script.src = `${this.baseUrl}/dashboard/js/clientcompanies.js`;
-        console.log('Loading Companies script from:', script.src);
-
+        
         // Wait for script to load
         await new Promise((resolve, reject) => {
             script.onload = () => {
@@ -1151,21 +1150,21 @@ class ContentLoader {
             document.body.appendChild(script);
         });
 
-        // Add a delay to ensure script is processed
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        // Check if CompaniesManager is available
-        if (typeof window.CompaniesManager === 'undefined') {
-            throw new Error('CompaniesManager class not found after script load');
+        // Wait for CompaniesManager to be available
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        while (attempts < maxAttempts) {
+            if (window.CompaniesManager) {
+                const manager = new window.CompaniesManager();
+                window.companiesManager = manager;
+                return manager;
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
         }
 
-        // Create new instance and store it globally
-        if (!window.companiesManager) {
-            window.companiesManager = new window.CompaniesManager();
-            console.log('CompaniesManager initialized successfully');
-        }
-
-        return window.companiesManager;
+        throw new Error('CompaniesManager not available after waiting');
 
     } catch (error) {
         console.error('Error initializing companies module:', error);
