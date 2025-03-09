@@ -987,6 +987,107 @@
             }
         }
 
+        async showChangePlanModal(companyId) {
+    try {
+        const subscription = this.currentCompany.subscription || {};
+        
+        const modalHtml = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Change Subscription Plan</h2>
+                    <button class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="current-plan-info">
+                        <label>Current Plan:</label>
+                        <span class="plan-badge ${subscription.plan || 'basic'}">
+                            ${(subscription.plan || 'Basic').toUpperCase()}
+                        </span>
+                    </div>
+                    <form id="changePlanForm">
+                        <div class="form-group">
+                            <label for="newPlan">Select New Plan</label>
+                            <select id="newPlan" required>
+                                <option value="basic">Basic Plan ($${this.subscriptionPlans.basic.price}/month)</option>
+                                <option value="premium">Premium Plan ($${this.subscriptionPlans.premium.price}/month)</option>
+                                <option value="enterprise">Enterprise Plan ($${this.subscriptionPlans.enterprise.price}/month)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="billingCycle">Billing Cycle</label>
+                            <select id="billingCycle" required>
+                                <option value="monthly">Monthly</option>
+                                <option value="annual">Annual (10% discount)</option>
+                            </select>
+                        </div>
+                        <div id="planSummary" class="plan-summary">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="cancelPlanChange">Cancel</button>
+                    <button class="btn-primary" id="confirmPlanChange">Confirm Change</button>
+                </div>
+            </div>
+        `;
+
+        const modal = document.getElementById('changePlanModal');
+        if (!modal) {
+            throw new Error('Change plan modal not found');
+        }
+
+        modal.innerHTML = modalHtml;
+        this.showModal('changePlanModal');
+        
+        // Set initial values
+        document.getElementById('newPlan').value = subscription.plan || 'basic';
+        document.getElementById('billingCycle').value = subscription.billingCycle || 'monthly';
+
+        // Initialize event listeners
+        document.getElementById('newPlan').addEventListener('change', () => this.updatePlanSummary());
+        document.getElementById('billingCycle').addEventListener('change', () => this.updatePlanSummary());
+        document.getElementById('cancelPlanChange').addEventListener('click', () => this.closeModals());
+        document.getElementById('confirmPlanChange').addEventListener('click', () => this.handlePlanChange(companyId));
+        document.querySelector('#changePlanModal .close-btn').addEventListener('click', () => this.closeModals());
+
+        // Update initial summary
+        this.updatePlanSummary();
+
+    } catch (error) {
+        console.error('Error showing plan change modal:', error);
+        this.showError('Failed to load plan change options');
+    }
+}
+
+        async handlePlanChange(companyId) {
+    try {
+        const planData = {
+            plan: document.getElementById('newPlan').value,
+            billingCycle: document.getElementById('billingCycle').value
+        };
+
+        if (!this.validatePlanChange(planData)) {
+            return;
+        }
+
+        const result = await this.handleApiRequest(`/companies/${companyId}/subscription`, {
+            method: 'POST',
+            body: JSON.stringify(planData)
+        });
+
+        if (result) {
+            this.showSuccess('Subscription updated successfully');
+            this.closeModals();
+            await this.viewCompanyDetails(companyId);
+        }
+    } catch (error) {
+        console.error('Error changing subscription plan:', error);
+        this.showError(error.message || 'Failed to update subscription');
+    }
+}
+        
+
             async renderActivityTab(company) {
             try {
                 const result = await this.handleApiRequest(`/companies/${company._id}/activity-logs`);
@@ -1054,6 +1155,35 @@
             }
         }
 
+        initializeActivityFilters() {
+    const typeFilter = document.getElementById('activityTypeFilter');
+    const dateFilter = document.getElementById('activityDateFilter');
+
+    if (typeFilter) {
+        typeFilter.addEventListener('change', () => this.filterActivityLogs());
+    }
+
+    if (dateFilter) {
+        dateFilter.addEventListener('change', () => this.filterActivityLogs());
+    }
+}
+
+filterActivityLogs() {
+    const type = document.getElementById('activityTypeFilter').value;
+    const date = document.getElementById('activityDateFilter').value;
+    
+    const items = document.querySelectorAll('.activity-item');
+    items.forEach(item => {
+        const activityType = item.querySelector('.activity-type').textContent.toLowerCase();
+        const activityDate = new Date(item.querySelector('.activity-date').textContent).toLocaleDateString();
+        
+        const matchesType = !type || activityType.includes(type.toLowerCase());
+        const matchesDate = !date || activityDate === new Date(date).toLocaleDateString();
+        
+        item.style.display = matchesType && matchesDate ? '' : 'none';
+    });
+}
+
         getActivityIcon(type) {
             const icons = {
                 'USER_CREATED': 'fa-user-plus',
@@ -1069,63 +1199,63 @@
         }
 
         async renderBillingHistory(companyId) {
-            try {
-                const result = await this.handleApiRequest(`/companies/${companyId}/billing-history`);
-                const history = result?.data || [];
-                
-                if (!history.length) {
-                    return `
-                        <div class="empty-state">
-                            <i class="fas fa-history"></i>
-                            <p>No billing history available</p>
-                        </div>
-                    `;
-                }
-
-                return `
-                    <div class="billing-table-container">
-                        <table class="billing-table">
-                            <thead>
-                                <tr>
-                                    <th>Invoice #</th>
-                                    <th>Date</th>
-                                    <th>Amount</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${history.map(invoice => `
-                                    <tr>
-                                        <td>${invoice.invoiceNumber}</td>
-                                        <td>${new Date(invoice.date).toLocaleDateString()}</td>
-                                        <td>$${invoice.amount.toFixed(2)}</td>
-                                        <td>
-                                            <span class="status-badge ${invoice.status}">
-                                                ${invoice.status.toUpperCase()}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button class="btn-icon" onclick="window.companiesManager.downloadInvoice('${invoice.invoiceNumber}')">
-                                                <i class="fas fa-download"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-            } catch (error) {
-                console.error('Error loading billing history:', error);
-                return `
-                    <div class="error-state">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <p>Failed to load billing history</p>
-                    </div>
-                `;
-            }
+    try {
+        const result = await this.handleApiRequest(`/companies/${companyId}/billing-history`);
+        const history = result?.data || [];
+        
+        if (!history.length) {
+            return `
+                <div class="empty-state">
+                    <i class="fas fa-history"></i>
+                    <p>No billing history available</p>
+                </div>
+            `;
         }
+
+        return `
+            <div class="billing-table-container">
+                <table class="billing-table">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${history.map(invoice => `
+                            <tr>
+                                <td>${invoice.invoiceNumber}</td>
+                                <td>${new Date(invoice.date).toLocaleDateString()}</td>
+                                <td>$${(invoice.amount || 0).toFixed(2)}</td>
+                                <td>
+                                    <span class="status-badge ${invoice.status || 'pending'}">
+                                        ${(invoice.status || 'PENDING').toUpperCase()}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn-icon" onclick="window.companiesManager.downloadInvoice('${invoice.invoiceNumber}')">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Error loading billing history:', error);
+        return `
+            <div class="error-state">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Failed to load billing history</p>
+            </div>
+        `;
+    }
+}
 
         async generateInvoice(companyId) {
             try {
@@ -1755,25 +1885,32 @@ filterUsers(search = '', role = '', status = '') {
             return true;
         }
 
-        async resetUserPassword(userId) {
-            try {
-                const result = await this.handleApiRequest(
-                    `/companies/${this.currentCompanyId}/users/${userId}/reset-password`,
-                    { method: 'POST' }
-                );
+       async resetUserPassword(userId) {
+    try {
+        if (!this.currentCompanyId || !userId) {
+            throw new Error('Missing required information');
+        }
 
-                if (result) {
-                    this.showSuccess('Password reset successfully');
+        const result = await this.handleApiRequest(
+            `/companies/${this.currentCompanyId}/users/${userId}/reset-password`,
+            {
+                method: 'POST',
+                body: JSON.stringify({}) // Add empty body if your API expects it
+            }
+        );
 
-                    if (result.data?.tempPassword) {
-                        await this.showTempPasswordModal(result.data.email, result.data.tempPassword);
-                    }
-                }
-            } catch (error) {
-                console.error('Error resetting password:', error);
-                this.showError('Failed to reset password');
+        if (result) {
+            this.showSuccess('Password reset successfully');
+
+            if (result.data?.tempPassword) {
+                await this.showTempPasswordModal(result.data.email, result.data.tempPassword);
             }
         }
+    } catch (error) {
+        console.error('Error resetting password:', error);
+        this.showError('Failed to reset password');
+    }
+}
 
         async toggleUserStatus(userId) {
             try {
