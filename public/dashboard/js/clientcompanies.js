@@ -94,44 +94,46 @@
         }
 
         async handleApiRequest(endpoint, options = {}) {
-            try {
-                const url = `${this.baseUrl}${endpoint}`;
-                const response = await fetch(url, {
-                    ...options,
-                    headers: {
-                        ...this.getHeaders(),
-                        ...options.headers
-                    }
-                });
+    try {
+        const url = `${this.baseUrl}${endpoint}`;
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                ...this.getHeaders(),
+                ...options.headers
+            }
+        });
 
-                switch (response.status) {
-                    case 401:
-                        localStorage.removeItem('token');
-                        window.location.href = '/login.html';
-                        return null;
-                    case 403:
-                        this.showError('Access denied');
-                        return null;
-                    case 404:
-                        this.showError('Resource not found');
-                        return null;
-                    case 500:
-                        this.showError('Server error occurred');
-                        return null;
-                }
+        const data = await response.json();
 
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Request failed');
-                }
-
-                return await response.json();
-            } catch (error) {
-                console.error('API request error:', error);
-                this.showError(error.message || 'Failed to complete request');
-                return null;
+        if (!response.ok) {
+            // Handle specific error cases
+            switch (response.status) {
+                case 400:
+                    throw new Error(data.message || 'Invalid request data');
+                case 401:
+                    localStorage.removeItem('token');
+                    window.location.href = '/login.html';
+                    return null;
+                case 403:
+                    throw new Error('Access denied');
+                case 404:
+                    throw new Error('Resource not found');
+                case 409:
+                    throw new Error('Company with this name or email already exists');
+                case 500:
+                    throw new Error('Server error occurred. Please try again later.');
+                default:
+                    throw new Error(data.message || 'Request failed');
             }
         }
+
+        return data;
+    } catch (error) {
+        console.error('API request error:', error);
+        throw error;
+    }
+}
 
         showConnectionStatus(status) {
             const statusElement = document.createElement('div');
@@ -1205,23 +1207,44 @@ initializeTooltips() {
     }
 }
 
-        async handleCompanySubmit() {
+       async handleCompanySubmit() {
     try {
+        // Get the form element
+        const form = document.getElementById('companyForm');
+        if (!form) {
+            throw new Error('Company form not found');
+        }
+
+        // Check form validity
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        // Gather form data
         const formData = {
-            name: document.getElementById('companyName').value,
+            name: document.getElementById('companyName').value.trim(),
             industry: document.getElementById('industry').value,
             companySize: parseInt(document.getElementById('companySize').value),
             contactDetails: {
-                email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value,
-                address: document.getElementById('address').value
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                address: document.getElementById('address').value.trim()
             },
             subscriptionPlan: document.getElementById('subscriptionPlan').value,
             status: document.getElementById('status').value
         };
 
+        // Validate the data
         if (!this.validateCompanyData(formData)) {
             return;
+        }
+
+        // Show loading state
+        const saveButton = document.getElementById('saveCompanyBtn');
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
         }
 
         const endpoint = this.currentCompanyId 
@@ -1243,66 +1266,83 @@ initializeTooltips() {
     } catch (error) {
         console.error('Error saving company:', error);
         this.showError(error.message || 'Failed to save company');
+    } finally {
+        // Reset button state
+        const saveButton = document.getElementById('saveCompanyBtn');
+        if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.innerHTML = 'Save Company';
+        }
     }
 }
-
         validateCompanyData(data) {
-    // Name validation
-    if (!data.name || data.name.trim().length < 2) {
-        this.showError('Company name must be at least 2 characters long');
+    try {
+        // Name validation
+        if (!data.name || data.name.length < 2 || data.name.length > 100) {
+            throw new Error('Company name must be between 2 and 100 characters');
+        }
+
+        // Industry validation
+        if (!this.industries.map(i => i.toLowerCase()).includes(data.industry.toLowerCase())) {
+            throw new Error('Please select a valid industry');
+        }
+
+        // Company size validation
+        if (!Number.isInteger(data.companySize) || data.companySize < 1) {
+            throw new Error('Company size must be a positive number');
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(data.contactDetails.email)) {
+            throw new Error('Please enter a valid email address');
+        }
+
+        // Phone validation
+        const phoneRegex = /^\+?[\d\s-]{10,}$/;
+        if (!phoneRegex.test(data.contactDetails.phone)) {
+            throw new Error('Please enter a valid phone number (minimum 10 digits)');
+        }
+
+        // Address validation
+        if (!data.contactDetails.address || data.contactDetails.address.length < 5) {
+            throw new Error('Address must be at least 5 characters long');
+        }
+
+        // Subscription plan validation
+        const validPlans = ['basic', 'premium', 'enterprise'];
+        if (!validPlans.includes(data.subscriptionPlan.toLowerCase())) {
+            throw new Error('Please select a valid subscription plan');
+        }
+
+        // Status validation
+        const validStatuses = ['active', 'inactive'];
+        if (!validStatuses.includes(data.status.toLowerCase())) {
+            throw new Error('Please select a valid status');
+        }
+
+        return true;
+    } catch (error) {
+        this.showError(error.message);
         return false;
     }
-
-    // Industry validation
-    if (!data.industry) {
-        this.showError('Please select an industry');
-        return false;
-    }
-
-    // Company size validation
-    if (!data.companySize || data.companySize < 1) {
-        this.showError('Company size must be at least 1');
-        return false;
-    }
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(data.contactDetails.email)) {
-        this.showError('Please enter a valid email address');
-        return false;
-    }
-
-    // Phone validation
-    const phoneRegex = /^\+?[\d\s-]{10,}$/;
-    if (!phoneRegex.test(data.contactDetails.phone)) {
-        this.showError('Please enter a valid phone number');
-        return false;
-    }
-
-    // Address validation
-    if (!data.contactDetails.address || data.contactDetails.address.trim().length < 5) {
-        this.showError('Please enter a valid address (minimum 5 characters)');
-        return false;
-    }
-
-    // Subscription plan validation
-    if (!['basic', 'premium', 'enterprise'].includes(data.subscriptionPlan.toLowerCase())) {
-        this.showError('Please select a valid subscription plan');
-        return false;
-    }
-
-    // Status validation
-    if (!['active', 'inactive'].includes(data.status.toLowerCase())) {
-        this.showError('Please select a valid status');
-        return false;
-    }
-
-    return true;
 }
+        async checkCompanyExists(name, email, excludeId = null) {
+    try {
+        const query = new URLSearchParams({
+            name,
+            email,
+            ...(excludeId && { excludeId })
+        });
 
-        
-
-        async editCompany(companyId) {
+        const result = await this.handleApiRequest(`/companies/check-exists?${query}`);
+        return result.exists;
+    } catch (error) {
+        console.error('Error checking company existence:', error);
+        return false;
+    }
+}
+       async editCompany(companyId) {
     try {
         const result = await this.handleApiRequest(`/companies/${companyId}`);
         
@@ -1310,17 +1350,15 @@ initializeTooltips() {
             this.currentCompanyId = companyId;
             this.currentCompany = result.data;
             
-            // Show the modal first
             await this.showAddCompanyModal();
-            
-            // Then populate the form
             this.populateCompanyForm(result.data);
             
-            // Update modal title
+            // Update modal title and button
             const modalTitle = document.querySelector('#companyModal .modal-header h2');
-            if (modalTitle) {
-                modalTitle.textContent = 'Edit Company';
-            }
+            const saveButton = document.getElementById('saveCompanyBtn');
+            
+            if (modalTitle) modalTitle.textContent = 'Edit Company';
+            if (saveButton) saveButton.textContent = 'Update Company';
         }
     } catch (error) {
         console.error('Error loading company for edit:', error);
