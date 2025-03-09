@@ -378,30 +378,43 @@
         }
 
             async loadCompanies() {
-            try {
-                this.showLoading();
-                const queryParams = new URLSearchParams({
-                    page: this.currentPage,
-                    limit: this.pageSize,
-                    ...this.filters
-                });
+    try {
+        this.showLoading();
+        const queryParams = new URLSearchParams({
+            page: this.currentPage,
+            limit: this.pageSize,
+            ...this.filters
+        });
 
-                const result = await this.handleApiRequest(`/companies?${queryParams}`);
-                
-                if (result) {
-                    this.totalCompanies = result.total;
-                    this.companies = result.companies;
-                    this.renderCompanies(this.companies);
-                    this.renderPagination();
-                }
-            } catch (error) {
-                console.error('Error loading companies:', error);
-                this.showError('Failed to load companies');
-            } finally {
-                this.hideLoading();
-            }
+        const result = await this.handleApiRequest(`/companies?${queryParams}`);
+        
+        if (result) {
+            this.totalCompanies = result.total;
+            this.companies = result.companies;
+            this.renderCompanies(this.companies);
+            this.renderPagination();
         }
-
+    } catch (error) {
+        console.error('Error loading companies:', error);
+        this.showError('Failed to load companies');
+        
+        // Show empty state when there's an error
+        if (this.companiesGrid) {
+            this.companiesGrid.innerHTML = `
+                <div class="error-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h3>Error Loading Companies</h3>
+                    <p>Unable to load companies. Please try again later.</p>
+                    <button class="btn-primary" onclick="window.companiesManager.loadCompanies()">
+                        <i class="fas fa-redo"></i> Retry
+                    </button>
+                </div>
+            `;
+        }
+    } finally {
+        this.hideLoading();
+    }
+}
         renderCompanies(companies) {
             if (!companies.length) {
                 this.companiesGrid.innerHTML = `
@@ -642,6 +655,8 @@
 
             return true;
         }
+
+        
 
         async editCompany(companyId) {
             try {
@@ -1126,6 +1141,153 @@
                 this.showError('Failed to download invoice');
             }
         }
+        // Add these methods in the CompaniesManager class
+
+showLoading() {
+    const loader = document.createElement('div');
+    loader.className = 'content-loader';
+    loader.innerHTML = `
+        <div class="loader-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+        </div>
+        <p>Loading content...</p>
+    `;
+    
+    const container = document.querySelector('.companies-grid');
+    if (container) {
+        container.innerHTML = '';
+        container.appendChild(loader);
+    }
+
+    // Add loading styles if not already present
+    if (!document.querySelector('#loading-styles')) {
+        const styles = document.createElement('style');
+        styles.id = 'loading-styles';
+        styles.textContent = `
+            .content-loader {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 2rem;
+                text-align: center;
+                background-color: var(--bg-primary);
+                border-radius: var(--border-radius-lg);
+                box-shadow: var(--shadow-sm);
+            }
+
+            .loader-spinner {
+                font-size: 2rem;
+                color: var(--primary-color);
+                margin-bottom: 1rem;
+            }
+
+            .loader-spinner i {
+                animation: spin 1s linear infinite;
+            }
+
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+
+            .content-loader p {
+                color: var(--text-secondary);
+                margin: 0;
+            }
+        `;
+        document.head.appendChild(styles);
+    }
+}
+
+hideLoading() {
+    const loader = document.querySelector('.content-loader');
+    if (loader) {
+        loader.remove();
+    }
+}
+
+// Also add a method to show loading state in any container
+showLoadingIn(container) {
+    if (!container) return;
+    
+    const loader = document.createElement('div');
+    loader.className = 'content-loader';
+    loader.innerHTML = `
+        <div class="loader-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+        </div>
+        <p>Loading content...</p>
+    `;
+    
+    container.innerHTML = '';
+    container.appendChild(loader);
+}
+
+// And a method to handle global loading state
+toggleGlobalLoading(show) {
+    let globalLoader = document.getElementById('global-loader');
+    
+    if (show && !globalLoader) {
+        globalLoader = document.createElement('div');
+        globalLoader.id = 'global-loader';
+        globalLoader.className = 'global-loader';
+        globalLoader.innerHTML = `
+            <div class="loader-content">
+                <div class="loader-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <p>Loading...</p>
+            </div>
+        `;
+        
+        // Add global loader styles
+        if (!document.querySelector('#global-loader-styles')) {
+            const styles = document.createElement('style');
+            styles.id = 'global-loader-styles';
+            styles.textContent = `
+                .global-loader {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0, 0, 0, 0.5);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 9999;
+                    backdrop-filter: blur(4px);
+                }
+
+                .loader-content {
+                    background-color: var(--bg-primary);
+                    padding: 2rem;
+                    border-radius: var(--border-radius-lg);
+                    box-shadow: var(--shadow-lg);
+                    text-align: center;
+                }
+
+                .global-loader .loader-spinner {
+                    font-size: 2.5rem;
+                    color: var(--primary-color);
+                    margin-bottom: 1rem;
+                }
+
+                .global-loader p {
+                    color: var(--text-primary);
+                    margin: 0;
+                    font-weight: 500;
+                }
+            `;
+            document.head.appendChild(styles);
+        }
+        
+        document.body.appendChild(globalLoader);
+    } else if (!show && globalLoader) {
+        globalLoader.remove();
+    }
+}
 
             async renderUsersTab(company) {
             try {
