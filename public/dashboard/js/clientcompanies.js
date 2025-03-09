@@ -1457,13 +1457,23 @@ async checkForDuplicates(name, email, excludeId) {
     }
 }
 
-        async toggleCompanyStatus(companyId) {
+       async toggleCompanyStatus(companyId) {
     try {
-        const confirmMessage = 'Are you sure you want to change the company status?';
+        // First, find the current status
+        const company = this.companies.find(c => c._id === companyId);
+        if (!company) {
+            throw new Error('Company not found');
+        }
+
+        const currentStatus = company.status;
+        const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+        const confirmMessage = `Are you sure you want to ${newStatus === 'active' ? 'activate' : 'deactivate'} this company?`;
+
         if (!await this.showConfirmDialog(confirmMessage)) {
             return;
         }
 
+        // Disable the button to prevent multiple clicks
         const toggleButton = document.querySelector(`button[data-action="toggle-status"][data-company-id="${companyId}"]`);
         if (toggleButton) {
             toggleButton.disabled = true;
@@ -1471,17 +1481,40 @@ async checkForDuplicates(name, email, excludeId) {
         }
 
         const result = await this.handleApiRequest(`/companies/${companyId}/toggle-status`, {
-            method: 'PATCH'
+            method: 'PATCH',
+            body: JSON.stringify({ status: newStatus }) // Send the new status to the server
         });
 
-        if (result) {
-            this.showSuccess(result.message || 'Company status updated successfully');
-            await this.loadCompanies();
+        if (result && result.success) {
+            // Update the local company data
+            const companyIndex = this.companies.findIndex(c => c._id === companyId);
+            if (companyIndex !== -1) {
+                this.companies[companyIndex].status = newStatus;
+            }
+
+            this.showSuccess(`Company ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
+            
+            // Refresh only the affected company card instead of reloading all companies
+            const companyCard = document.querySelector(`.company-card[data-id="${companyId}"]`);
+            if (companyCard) {
+                const statusBadge = companyCard.querySelector('.status-badge');
+                if (statusBadge) {
+                    statusBadge.className = `status-badge ${newStatus}`;
+                    statusBadge.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+                }
+            }
+
+            // If the company details modal is open, update it as well
+            if (this.currentCompanyId === companyId && 
+                document.getElementById('companyDetailsModal').classList.contains('show')) {
+                await this.viewCompanyDetails(companyId);
+            }
         }
     } catch (error) {
         console.error('Error toggling company status:', error);
         this.showError(error.message || 'Failed to update company status');
     } finally {
+        // Re-enable the button and restore its original appearance
         const toggleButton = document.querySelector(`button[data-action="toggle-status"][data-company-id="${companyId}"]`);
         if (toggleButton) {
             toggleButton.disabled = false;
