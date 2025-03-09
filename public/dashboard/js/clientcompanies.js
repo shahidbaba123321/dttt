@@ -30,25 +30,18 @@
                 'Transportation', 'Energy', 'Media', 'Agriculture'
             ];
             this.subscriptionPlans = {
-                basic: {
-                    price: 99,
-                    features: ['Basic HRMS', 'Up to 50 employees', 'Email support']
-                },
-                premium: {
-                    price: 199,
-                    features: ['Advanced HRMS', 'Up to 200 employees', '24/7 support', 'Custom reports']
-                },
-                enterprise: {
-                    price: 499,
-                    features: ['Full HRMS suite', 'Unlimited employees', 'Dedicated support', 'Custom development']
-                }
+                 basic: { price: 99 },
+            premium: { price: 199 },
+            enterprise: { price: 499 }
             };
             
             // Initialize with async wrapper
             this.init();
             this.initializeStyles();
         }
-         getPlanPrice(plan) {
+        
+        getPlanPrice(plan) {
+        if (!plan) return 0;
         const planKey = plan.toLowerCase();
         return this.subscriptionPlans[planKey]?.price || 0;
     }
@@ -1197,7 +1190,7 @@ initializeTooltips() {
     }
 }
 
-       async handleCompanySubmit() {
+      async handleCompanySubmit() {
         try {
             const formData = {
                 name: document.getElementById('companyName').value.trim(),
@@ -1209,9 +1202,11 @@ initializeTooltips() {
                     address: document.getElementById('address').value.trim()
                 },
                 subscriptionPlan: document.getElementById('subscriptionPlan').value,
-                planPrice: this.getPlanPrice(document.getElementById('subscriptionPlan').value),
                 status: document.getElementById('status').value
             };
+
+            // Add plan price
+            formData.planPrice = this.getPlanPrice(formData.subscriptionPlan);
 
             const saveButton = document.getElementById('saveCompanyBtn');
             if (saveButton) {
@@ -1331,16 +1326,17 @@ async checkForDuplicates(name, email, excludeId) {
         return false;
     }
 }
-       editCompany(companyId) {
+       async editCompany(companyId) {
     try {
-        // Store the original company data for comparison
-        this.originalCompanyData = this.companies.find(c => c._id === companyId);
-        if (!this.originalCompanyData) {
-            throw new Error('Company not found');
+        const result = await this.handleApiRequest(`/companies/${companyId}`);
+        
+        if (!result || !result.data) {
+            throw new Error('Failed to fetch company data');
         }
 
         this.currentCompanyId = companyId;
-        
+        this.currentCompany = result.data;
+
         // Show the modal with edit form
         const modalContent = `
             <div class="modal-content">
@@ -1350,12 +1346,50 @@ async checkForDuplicates(name, email, excludeId) {
                 </div>
                 <div class="modal-body">
                     <form id="companyForm">
-                        <input type="hidden" id="companyId" value="${companyId}">
                         <div class="form-group">
                             <label for="companyName">Company Name*</label>
-                            <input type="text" id="companyName" value="${this.escapeHtml(this.originalCompanyData.name)}" required>
+                            <input type="text" id="companyName" required>
                         </div>
-                        <!-- ... rest of the form fields ... -->
+                        <div class="form-group">
+                            <label for="industry">Industry Type*</label>
+                            <select id="industry" required>
+                                <option value="">Select Industry</option>
+                                ${this.industries.map(industry => 
+                                    `<option value="${industry.toLowerCase()}">${industry}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="companySize">Company Size*</label>
+                            <input type="number" id="companySize" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Contact Email*</label>
+                            <input type="email" id="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Contact Phone*</label>
+                            <input type="tel" id="phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="address">Address*</label>
+                            <textarea id="address" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="subscriptionPlan">Subscription Plan*</label>
+                            <select id="subscriptionPlan" required>
+                                <option value="basic">Basic</option>
+                                <option value="premium">Premium</option>
+                                <option value="enterprise">Enterprise</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">Status*</label>
+                            <select id="status" required>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -1369,19 +1403,20 @@ async checkForDuplicates(name, email, excludeId) {
         if (modal) {
             modal.innerHTML = modalContent;
             this.showModal('companyModal');
-            this.populateCompanyForm(this.originalCompanyData);
+
+            // Wait for DOM to update before populating
+            setTimeout(() => {
+                this.populateCompanyForm(this.currentCompany);
+            }, 0);
 
             // Add event listeners
             modal.querySelector('.close-btn').addEventListener('click', () => this.closeModals());
             modal.querySelector('#cancelBtn').addEventListener('click', () => this.closeModals());
-            modal.querySelector('#saveCompanyBtn').addEventListener('click', (e) => {
-                e.preventDefault();
-                this.handleCompanySubmit();
-            });
+            modal.querySelector('#saveCompanyBtn').addEventListener('click', () => this.handleCompanySubmit());
         }
     } catch (error) {
         console.error('Error in editCompany:', error);
-        this.showError(error.message || 'Failed to load company data');
+        this.showError('Failed to load company data');
     }
 }
 
