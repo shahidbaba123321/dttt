@@ -3173,6 +3173,19 @@ app.patch('/api/companies/:companyId/toggle-status', verifyToken, verifyAdmin, a
                     },
                     { session }
                 );
+            } else {
+                // Reactivate subscription if company is activated
+                await company_subscriptions.updateOne(
+                    { companyId: new ObjectId(companyId) },
+                    {
+                        $set: {
+                            status: 'active',
+                            updatedAt: new Date(),
+                            updatedBy: new ObjectId(req.user.userId)
+                        }
+                    },
+                    { session }
+                );
             }
 
             // Create audit log
@@ -3183,7 +3196,8 @@ app.patch('/api/companies/:companyId/toggle-status', verifyToken, verifyAdmin, a
                 {
                     companyName: company.name,
                     oldStatus: company.status,
-                    newStatus
+                    newStatus,
+                    changedAt: new Date()
                 },
                 session
             );
@@ -3191,7 +3205,10 @@ app.patch('/api/companies/:companyId/toggle-status', verifyToken, verifyAdmin, a
             res.json({
                 success: true,
                 message: `Company ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`,
-                data: { status: newStatus }
+                data: {
+                    status: newStatus,
+                    companyId: company._id
+                }
             });
         });
     } catch (error) {
@@ -3204,7 +3221,6 @@ app.patch('/api/companies/:companyId/toggle-status', verifyToken, verifyAdmin, a
         await session.endSession();
     }
 });
-
 // Get company users
 app.get('/api/companies/:companyId/users', verifyToken, verifyAdmin, async (req, res) => {
     try {
