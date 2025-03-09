@@ -2955,13 +2955,17 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
                 throw new Error('Company with this name or email already exists');
             }
 
-            // Create company
+            // Calculate plan price
+            const planPrice = getPlanPrice(subscriptionPlan);
+
+            // Create company object
             const company = {
                 name,
                 industry,
-                companySize,
+                companySize: parseInt(companySize),
                 contactDetails,
                 subscriptionPlan,
+                planPrice,
                 status: status || 'active',
                 createdAt: new Date(),
                 createdBy: new ObjectId(req.user.userId),
@@ -2978,7 +2982,7 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
                 startDate: new Date(),
                 endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
                 billingCycle: 'monthly',
-                price: this.getPlanPrice(subscriptionPlan),
+                price: planPrice,
                 createdAt: new Date(),
                 createdBy: new ObjectId(req.user.userId)
             };
@@ -2998,13 +3002,16 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
                 session
             );
 
+            // Get the created company
+            const createdCompany = await companies.findOne(
+                { _id: result.insertedId },
+                { session }
+            );
+
             res.status(201).json({
                 success: true,
                 message: 'Company created successfully',
-                data: {
-                    _id: result.insertedId,
-                    ...company
-                }
+                data: createdCompany
             });
         });
     } catch (error) {
@@ -3017,7 +3024,6 @@ app.post('/api/companies', verifyToken, verifyAdmin, async (req, res) => {
         await session.endSession();
     }
 });
-
 // Update company
 app.put('/api/companies/:companyId', verifyToken, verifyAdmin, async (req, res) => {
     const session = client.startSession();
