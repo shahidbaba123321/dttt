@@ -235,6 +235,44 @@
                     background-color: var(--danger-color);
                     color: white;
                 }
+                .user-action-menu {
+        position: absolute;
+        background: var(--bg-primary);
+        border-radius: var(--border-radius-md);
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--border-light);
+        z-index: 1000;
+        min-width: 200px;
+        overflow: hidden;
+    }
+
+    .menu-item {
+        padding: 12px 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-primary);
+        transition: all 0.2s ease;
+    }
+
+    .menu-item:hover {
+        background-color: var(--bg-secondary);
+    }
+
+    .menu-item.danger {
+        color: var(--danger-color);
+    }
+
+    .menu-item.danger:hover {
+        background-color: var(--danger-color);
+        color: white;
+    }
+
+    .menu-item i {
+        width: 16px;
+        text-align: center;
+    }
 
                 @keyframes slideIn {
                     from {
@@ -1333,6 +1371,208 @@ toggleGlobalLoading(show) {
                 this.showError('Failed to load users information');
             }
         }
+
+        initializeUserFilters() {
+    const searchInput = document.getElementById('userSearch');
+    const roleFilter = document.getElementById('roleFilter');
+    const statusFilter = document.getElementById('userStatusFilter');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', this.debounce((e) => {
+            this.filterUsers(
+                e.target.value,
+                roleFilter?.value || '',
+                statusFilter?.value || ''
+            );
+        }, 300));
+    }
+
+    if (roleFilter) {
+        roleFilter.addEventListener('change', () => {
+            this.filterUsers(
+                searchInput?.value || '',
+                roleFilter.value,
+                statusFilter?.value || ''
+            );
+        });
+    }
+
+    if (statusFilter) {
+        statusFilter.addEventListener('change', () => {
+            this.filterUsers(
+                searchInput?.value || '',
+                roleFilter?.value || '',
+                statusFilter.value
+            );
+        });
+    }
+}
+
+filterUsers(search = '', role = '', status = '') {
+    const rows = document.querySelectorAll('.users-table tbody tr');
+    
+    rows.forEach(row => {
+        const userName = row.querySelector('.user-name')?.textContent.toLowerCase() || '';
+        const userEmail = row.querySelector('.user-email')?.textContent.toLowerCase() || '';
+        const userRole = row.querySelector('.role-badge')?.textContent.toLowerCase() || '';
+        const userStatus = row.querySelector('.status-badge')?.textContent.toLowerCase() || '';
+
+        const searchTerm = search.toLowerCase();
+        const matchesSearch = !searchTerm || 
+            userName.includes(searchTerm) || 
+            userEmail.includes(searchTerm);
+        const matchesRole = !role || userRole === role.toLowerCase();
+        const matchesStatus = !status || userStatus.includes(status.toLowerCase());
+
+        row.style.display = matchesSearch && matchesRole && matchesStatus ? '' : 'none';
+    });
+}
+
+ initializeUserEventListeners() {
+    // Add User button
+    const addUserBtn = document.getElementById('addUserBtn');
+    if (addUserBtn) {
+        addUserBtn.addEventListener('click', () => {
+            this.showAddUserModal();
+        });
+    }
+
+    // Reset Password buttons
+    document.querySelectorAll('.btn-icon.reset-password').forEach(button => {
+        button.addEventListener('click', async (e) => {
+            const userId = e.currentTarget.dataset.userId;
+            if (await this.showConfirmDialog('Are you sure you want to reset this user\'s password?')) {
+                await this.resetUserPassword(userId);
+            }
+        });
+    });
+
+    // Toggle Status buttons
+    document.querySelectorAll('.btn-icon.toggle-status').forEach(button => {
+        button.addEventListener('click', async (e) => {
+            const userId = e.currentTarget.dataset.userId;
+            const userName = e.currentTarget.closest('tr').querySelector('.user-name').textContent;
+            if (await this.showConfirmDialog(`Are you sure you want to toggle the status for ${userName}?`)) {
+                await this.toggleUserStatus(userId);
+            }
+        });
+    });
+
+    // Export Users button (if exists)
+    const exportBtn = document.getElementById('exportUsersBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            this.exportUsers();
+        });
+    }
+}
+
+        async exportUsers() {
+    try {
+        const users = await this.loadCompanyUsers(this.currentCompanyId);
+        if (!users.length) {
+            this.showError('No users to export');
+            return;
+        }
+
+        // Create CSV content
+        const headers = ['Name', 'Email', 'Role', 'Department', 'Status', 'Last Login'];
+        const csvContent = [
+            headers.join(','),
+            ...users.map(user => [
+                `"${user.name}"`,
+                `"${user.email}"`,
+                `"${user.role}"`,
+                `"${user.department || ''}"`,
+                `"${user.status}"`,
+                `"${user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}"`
+            ].join(','))
+        ].join('\n');
+
+        // Create and trigger download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', `users_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        this.showSuccess('Users exported successfully');
+    } catch (error) {
+        console.error('Error exporting users:', error);
+        this.showError('Failed to export users');
+    }
+}
+
+        showUserActionMenu(userId) {
+    const menu = document.createElement('div');
+    menu.className = 'user-action-menu';
+    menu.innerHTML = `
+        <div class="menu-item" data-action="edit">
+            <i class="fas fa-edit"></i> Edit User
+        </div>
+        <div class="menu-item" data-action="reset-password">
+            <i class="fas fa-key"></i> Reset Password
+        </div>
+        <div class="menu-item" data-action="toggle-status">
+            <i class="fas fa-power-off"></i> Toggle Status
+        </div>
+        <div class="menu-item danger" data-action="delete">
+            <i class="fas fa-trash"></i> Delete User
+        </div>
+    `;
+
+    // Position the menu
+    const button = document.querySelector(`[data-user-id="${userId}"]`);
+    const rect = button.getBoundingClientRect();
+    menu.style.position = 'absolute';
+    menu.style.top = `${rect.bottom + window.scrollY}px`;
+    menu.style.left = `${rect.left + window.scrollX}px`;
+
+    // Add event listeners
+    menu.addEventListener('click', async (e) => {
+        const action = e.target.closest('.menu-item')?.dataset.action;
+        if (!action) return;
+
+        menu.remove();
+        
+        switch (action) {
+            case 'edit':
+                await this.editUser(userId);
+                break;
+            case 'reset-password':
+                if (await this.showConfirmDialog('Are you sure you want to reset the password?')) {
+                    await this.resetUserPassword(userId);
+                }
+                break;
+            case 'toggle-status':
+                if (await this.showConfirmDialog('Are you sure you want to toggle the user status?')) {
+                    await this.toggleUserStatus(userId);
+                }
+                break;
+            case 'delete':
+                if (await this.showConfirmDialog('Are you sure you want to delete this user?')) {
+                    await this.deleteUser(userId);
+                }
+                break;
+        }
+    });
+
+    // Close menu when clicking outside
+    const closeMenu = (e) => {
+        if (!menu.contains(e.target)) {
+            menu.remove();
+            document.removeEventListener('click', closeMenu);
+        }
+    };
+    document.addEventListener('click', closeMenu);
+
+    document.body.appendChild(menu);
+}
+
+       
+
 
         renderUsersTable(users) {
             if (!users.length) {
