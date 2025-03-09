@@ -907,6 +907,65 @@ const validateRequest = (validations) => {
     };
 };
 
+// Validation helper functions
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function validateCompanyData(data) {
+    // Check for required fields
+    if (!data.name || data.name.trim().length < 2) {
+        throw new Error('Company name must be at least 2 characters long');
+    }
+
+    if (!data.industry) {
+        throw new Error('Industry is required');
+    }
+
+    if (!data.companySize || data.companySize < 1) {
+        throw new Error('Company size must be at least 1');
+    }
+
+    if (!data.contactDetails || !data.contactDetails.email) {
+        throw new Error('Contact email is required');
+    }
+
+    if (!isValidEmail(data.contactDetails.email)) {
+        throw new Error('Invalid email format');
+    }
+
+    if (!data.contactDetails.phone) {
+        throw new Error('Contact phone is required');
+    }
+
+    if (!data.contactDetails.address) {
+        throw new Error('Contact address is required');
+    }
+
+    if (!data.subscriptionPlan) {
+        throw new Error('Subscription plan is required');
+    }
+
+    if (!data.status) {
+        throw new Error('Status is required');
+    }
+
+    // Validate subscription plan
+    const validPlans = ['basic', 'premium', 'enterprise'];
+    if (!validPlans.includes(data.subscriptionPlan.toLowerCase())) {
+        throw new Error('Invalid subscription plan');
+    }
+
+    // Validate status
+    const validStatuses = ['active', 'inactive'];
+    if (!validStatuses.includes(data.status.toLowerCase())) {
+        throw new Error('Invalid status');
+    }
+
+    return true;
+}
+
 // API Routes Start Here
 
 // Test route
@@ -2967,37 +3026,16 @@ app.put('/api/companies/:companyId', verifyToken, verifyAdmin, async (req, res) 
             const { companyId } = req.params;
             const updateData = req.body;
 
+            // Validate company ID
             if (!ObjectId.isValid(companyId)) {
                 throw new Error('Invalid company ID');
             }
 
-            // Add this validation block here
-            const requiredFields = {
-                name: updateData.name,
-                industry: updateData.industry,
-                companySize: updateData.companySize,
-                contactDetails: {
-                    email: updateData.contactDetails?.email,
-                    phone: updateData.contactDetails?.phone,
-                    address: updateData.contactDetails?.address
-                },
-                subscriptionPlan: updateData.subscriptionPlan,
-                status: updateData.status
-            };
-
-            // Validate required fields
-            const missingFields = [];
-            if (!requiredFields.name) missingFields.push('name');
-            if (!requiredFields.industry) missingFields.push('industry');
-            if (!requiredFields.companySize) missingFields.push('companySize');
-            if (!requiredFields.contactDetails.email) missingFields.push('email');
-            if (!requiredFields.contactDetails.phone) missingFields.push('phone');
-            if (!requiredFields.contactDetails.address) missingFields.push('address');
-            if (!requiredFields.subscriptionPlan) missingFields.push('subscriptionPlan');
-            if (!requiredFields.status) missingFields.push('status');
-
-            if (missingFields.length > 0) {
-                throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+            // Validate company data
+            try {
+                validateCompanyData(updateData);
+            } catch (validationError) {
+                throw new Error(validationError.message);
             }
 
             // Get existing company
@@ -3010,30 +3048,38 @@ app.put('/api/companies/:companyId', verifyToken, verifyAdmin, async (req, res) 
             }
 
             // Check for name/email conflicts
-            if (updateData.name || updateData.contactDetails?.email) {
-                const conflicts = await companies.findOne({
-                    _id: { $ne: new ObjectId(companyId) },
-                    $or: [
-                        updateData.name ? { name: { $regex: new RegExp(`^${updateData.name}$`, 'i') } } : null,
-                        updateData.contactDetails?.email ? { 'contactDetails.email': updateData.contactDetails.email } : null
-                    ].filter(Boolean)
-                }, { session });
+            const conflicts = await companies.findOne({
+                _id: { $ne: new ObjectId(companyId) },
+                $or: [
+                    { name: { $regex: new RegExp(`^${updateData.name}$`, 'i') } },
+                    { 'contactDetails.email': updateData.contactDetails.email }
+                ]
+            }, { session });
 
-                if (conflicts) {
-                    throw new Error('Company with this name or email already exists');
-                }
+            if (conflicts) {
+                throw new Error('Company with this name or email already exists');
             }
+
+            // Prepare update data
+            const companyUpdateData = {
+                name: updateData.name,
+                industry: updateData.industry,
+                companySize: updateData.companySize,
+                contactDetails: {
+                    email: updateData.contactDetails.email,
+                    phone: updateData.contactDetails.phone,
+                    address: updateData.contactDetails.address
+                },
+                subscriptionPlan: updateData.subscriptionPlan,
+                status: updateData.status,
+                updatedAt: new Date(),
+                updatedBy: new ObjectId(req.user.userId)
+            };
 
             // Update company
             await companies.updateOne(
                 { _id: new ObjectId(companyId) },
-                {
-                    $set: {
-                        ...requiredFields, // Use the validated fields
-                        updatedAt: new Date(),
-                        updatedBy: new ObjectId(req.user.userId)
-                    }
-                },
+                { $set: companyUpdateData },
                 { session }
             );
 
@@ -3043,8 +3089,43 @@ app.put('/api/companies/:companyId', verifyToken, verifyAdmin, async (req, res) 
                 { session }
             );
 
-            // Get changes for audit log
-            const changes = getChanges(existingCompany, requiredFields);
+            // Prepare changes for audit log
+            const changes = {
+                name: {
+                    previous: existingCompany.name,
+                    new: updateData.name
+                },
+                industry: {
+                    previous: existingCompany.industry,
+                    new: updateData.industry
+                },
+                companySize: {
+                    previous: existingCompany.companySize,
+                    new: updateData.companySize
+                },
+                contactDetails: {
+                    email: {
+                        previous: existingCompany.contactDetails?.email,
+                        new: updateData.contactDetails.email
+                    },
+                    phone: {
+                        previous: existingCompany.contactDetails?.phone,
+                        new: updateData.contactDetails.phone
+                    },
+                    address: {
+                        previous: existingCompany.contactDetails?.address,
+                        new: updateData.contactDetails.address
+                    }
+                },
+                subscriptionPlan: {
+                    previous: existingCompany.subscriptionPlan,
+                    new: updateData.subscriptionPlan
+                },
+                status: {
+                    previous: existingCompany.status,
+                    new: updateData.status
+                }
+            };
 
             // Create audit log
             await createAuditLog(
@@ -3058,6 +3139,7 @@ app.put('/api/companies/:companyId', verifyToken, verifyAdmin, async (req, res) 
                 session
             );
 
+            // Send success response
             res.json({
                 success: true,
                 message: 'Company updated successfully',
@@ -3066,7 +3148,15 @@ app.put('/api/companies/:companyId', verifyToken, verifyAdmin, async (req, res) 
         });
     } catch (error) {
         console.error('Error updating company:', error);
-        res.status(error.message.includes('not found') ? 404 : 400).json({
+        
+        // Determine appropriate status code
+        const statusCode = 
+            error.message.includes('not found') ? 404 :
+            error.message.includes('already exists') ? 409 :
+            error.message.includes('Invalid') || error.message.includes('required') ? 400 :
+            500;
+
+        res.status(statusCode).json({
             success: false,
             message: error.message || 'Error updating company'
         });
