@@ -235,6 +235,44 @@
                     background-color: var(--danger-color);
                     color: white;
                 }
+
+                .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+
+        .summary-row.total {
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 2px solid var(--border-medium);
+        }
+
+        .summary-row.discount {
+            color: var(--success-color);
+        }
+
+        .bulk-action-container {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .bulk-action-select {
+            min-width: 200px;
+            padding: 8px 12px;
+            border-radius: var(--border-radius-md);
+            border: 1px solid var(--border-medium);
+        }
+        
                 .user-action-menu {
         position: absolute;
         background: var(--bg-primary);
@@ -641,6 +679,192 @@ clearFilters() {
         console.error('Error clearing filters:', error);
     }
 }
+
+        updatePlanSummary() {
+    try {
+        const plan = document.getElementById('newPlan').value;
+        const cycle = document.getElementById('billingCycle').value;
+        
+        if (!plan || !this.subscriptionPlans[plan]) {
+            console.error('Invalid plan selected');
+            return;
+        }
+
+        const basePrice = this.subscriptionPlans[plan].price;
+        const months = cycle === 'annual' ? 12 : 1;
+        const subtotal = basePrice * months;
+        const discount = cycle === 'annual' ? subtotal * 0.1 : 0; // 10% annual discount
+        const total = subtotal - discount;
+
+        const summaryElement = document.getElementById('planSummary');
+        if (summaryElement) {
+            summaryElement.innerHTML = `
+                <div class="summary-row">
+                    <span>Base Price:</span>
+                    <span>$${basePrice}/month</span>
+                </div>
+                <div class="summary-row">
+                    <span>Billing Period:</span>
+                    <span>${months} month${months > 1 ? 's' : ''}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span>$${subtotal.toFixed(2)}</span>
+                </div>
+                ${discount > 0 ? `
+                    <div class="summary-row discount">
+                        <span>Annual Discount (10%):</span>
+                        <span>-$${discount.toFixed(2)}</span>
+                    </div>
+                ` : ''}
+                <div class="summary-row total">
+                    <span>Total:</span>
+                    <span>$${total.toFixed(2)}</span>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error updating plan summary:', error);
+        this.showError('Failed to update plan summary');
+    }
+}
+
+  handleBulkAction() {
+    try {
+        const selectedItems = document.querySelectorAll('.company-checkbox:checked');
+        if (selectedItems.length === 0) {
+            this.showError('Please select items to perform bulk action');
+            return;
+        }
+
+        const actionSelect = document.getElementById('bulkActionSelect');
+        if (!actionSelect) {
+            this.showError('Bulk action selector not found');
+            return;
+        }
+
+        const action = actionSelect.value;
+        const selectedIds = Array.from(selectedItems).map(item => item.value);
+
+        switch (action) {
+            case 'activate':
+                this.bulkActivate(selectedIds);
+                break;
+            case 'deactivate':
+                this.bulkDeactivate(selectedIds);
+                break;
+            case 'delete':
+                this.bulkDelete(selectedIds);
+                break;
+            default:
+                this.showError('Please select a valid action');
+        }
+    } catch (error) {
+        console.error('Error handling bulk action:', error);
+        this.showError('Failed to perform bulk action');
+    }
+}
+
+        async bulkActivate(ids) {
+    try {
+        const result = await this.handleApiRequest('/companies/bulk/activate', {
+            method: 'POST',
+            body: JSON.stringify({ ids })
+        });
+
+        if (result) {
+            this.showSuccess('Companies activated successfully');
+            await this.loadCompanies();
+        }
+    } catch (error) {
+        console.error('Error activating companies:', error);
+        this.showError('Failed to activate companies');
+    }
+}
+
+async bulkDeactivate(ids) {
+    try {
+        const result = await this.handleApiRequest('/companies/bulk/deactivate', {
+            method: 'POST',
+            body: JSON.stringify({ ids })
+        });
+
+        if (result) {
+            this.showSuccess('Companies deactivated successfully');
+            await this.loadCompanies();
+        }
+    } catch (error) {
+        console.error('Error deactivating companies:', error);
+        this.showError('Failed to deactivate companies');
+    }
+}
+
+async bulkDelete(ids) {
+    try {
+        if (await this.showConfirmDialog('Are you sure you want to delete the selected companies?')) {
+            const result = await this.handleApiRequest('/companies/bulk/delete', {
+                method: 'POST',
+                body: JSON.stringify({ ids })
+            });
+
+            if (result) {
+                this.showSuccess('Companies deleted successfully');
+                await this.loadCompanies();
+            }
+        }
+    } catch (error) {
+        console.error('Error deleting companies:', error);
+        this.showError('Failed to delete companies');
+    }
+}
+
+exportData() {
+    try {
+        const data = this.companies.map(company => ({
+            'Company Name': company.name,
+            'Industry': company.industry,
+            'Company Size': company.companySize,
+            'Status': company.status,
+            'Subscription Plan': company.subscriptionPlan,
+            'Email': company.contactDetails?.email || '',
+            'Phone': company.contactDetails?.phone || '',
+            'Address': company.contactDetails?.address || '',
+            'Created Date': new Date(company.createdAt).toLocaleDateString()
+        }));
+
+        if (data.length === 0) {
+            this.showError('No data to export');
+            return;
+        }
+
+        // Convert to CSV
+        const headers = Object.keys(data[0]);
+        const csvContent = [
+            headers.join(','),
+            ...data.map(row => 
+                headers.map(header => 
+                    `"${(row[header] || '').toString().replace(/"/g, '""')}"`
+                ).join(',')
+            )
+        ].join('\n');
+
+        // Create and trigger download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', `companies_export_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        this.showSuccess('Data exported successfully');
+    } catch (error) {
+        console.error('Error exporting data:', error);
+        this.showError('Failed to export data');
+    }
+}
+
+        
    
 updateFilterStatus() {
     try {
