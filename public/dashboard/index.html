@@ -1137,7 +1137,6 @@ class ContentLoader {
         script.type = 'text/javascript';
         script.src = `${this.baseUrl}/dashboard/js/clientcompanies.js`;
         
-        // Wait for script to load
         await new Promise((resolve, reject) => {
             script.onload = () => {
                 console.log('Companies script loaded successfully');
@@ -1155,7 +1154,7 @@ class ContentLoader {
         const maxAttempts = 10;
         
         while (attempts < maxAttempts) {
-            if (window.CompaniesManager) {
+            if (typeof window.CompaniesManager === 'function') {
                 const manager = new window.CompaniesManager();
                 window.companiesManager = manager;
                 return manager;
@@ -1165,7 +1164,6 @@ class ContentLoader {
         }
 
         throw new Error('CompaniesManager not available after waiting');
-
     } catch (error) {
         console.error('Error initializing companies module:', error);
         throw error;
