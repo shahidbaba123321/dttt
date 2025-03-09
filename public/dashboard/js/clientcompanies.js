@@ -314,6 +314,73 @@
         .filters-section {
             position: relative;
         }
+        .temp-password-modal .modal-content {
+        max-width: 500px;
+    }
+
+    .password-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .password {
+        font-family: 'Courier New', monospace;
+        font-size: 1.1rem;
+        background-color: var(--bg-secondary);
+        padding: 8px 12px;
+        border-radius: var(--border-radius-md);
+        border: 1px solid var(--border-light);
+        color: var(--primary-color);
+        flex: 1;
+    }
+
+    .copy-btn {
+        padding: 8px;
+        border: none;
+        background-color: var(--bg-secondary);
+        color: var(--text-secondary);
+        border-radius: var(--border-radius-sm);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .credential-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .credential-item:last-child {
+        border-bottom: none;
+    }
+
+    .credential-item label {
+        font-weight: 500;
+        color: var(--text-secondary);
+    }
+
+    .credential-value {
+        color: var(--text-primary);
+    }
+
+    .warning-message {
+        margin-top: 16px;
+        padding: 12px;
+        background-color: var(--bg-secondary);
+        border-radius: var(--border-radius-md);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--warning-color);
+    }
 
 
         .tooltip {
@@ -377,6 +444,79 @@
         .filter-group select:not([value=""]) {
             border-color: var(--primary-color);
             background-color: var(--bg-secondary);
+        }
+
+         .custom-dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .custom-dialog-overlay.show {
+            opacity: 1;
+        }
+
+        .custom-dialog {
+            background-color: var(--bg-primary);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-lg);
+            width: 90%;
+            max-width: 400px;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+            border: 1px solid var(--border-light);
+        }
+
+        .custom-dialog-overlay.show .custom-dialog {
+            transform: translateY(0);
+        }
+
+        .dialog-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .dialog-header h3 {
+            margin: 0;
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .dialog-content {
+            padding: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .dialog-actions {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .modal-stack {
+            position: relative;
+            z-index: 1000;
+        }
+
+        .modal-stack .modal {
+            z-index: 1001;
+        }
+
+        .modal-stack .modal + .modal {
+            z-index: 1002;
         }
 
         /* Responsive Filter Layout */
@@ -1459,21 +1599,25 @@ async checkForDuplicates(name, email, excludeId) {
 
        async toggleCompanyStatus(companyId) {
     try {
-        // First, find the current status
         const company = this.companies.find(c => c._id === companyId);
         if (!company) {
             throw new Error('Company not found');
         }
 
-        const currentStatus = company.status;
-        const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-        const confirmMessage = `Are you sure you want to ${newStatus === 'active' ? 'activate' : 'deactivate'} this company?`;
+        const newStatus = company.status === 'active' ? 'inactive' : 'active';
+        
+        // Show custom confirmation dialog
+        const confirmed = await this.showCustomDialog({
+            title: `${newStatus === 'active' ? 'Activate' : 'Deactivate'} Company`,
+            message: `Are you sure you want to ${newStatus === 'active' ? 'activate' : 'deactivate'} ${company.name}?`,
+            confirmText: newStatus === 'active' ? 'Yes, Activate' : 'Yes, Deactivate',
+            cancelText: 'Cancel',
+            type: newStatus === 'active' ? 'success' : 'warning'
+        });
 
-        if (!await this.showConfirmDialog(confirmMessage)) {
-            return;
-        }
+        if (!confirmed) return;
 
-        // Disable the button to prevent multiple clicks
+        // Disable the toggle button
         const toggleButton = document.querySelector(`button[data-action="toggle-status"][data-company-id="${companyId}"]`);
         if (toggleButton) {
             toggleButton.disabled = true;
@@ -1481,20 +1625,17 @@ async checkForDuplicates(name, email, excludeId) {
         }
 
         const result = await this.handleApiRequest(`/companies/${companyId}/toggle-status`, {
-            method: 'PATCH',
-            body: JSON.stringify({ status: newStatus }) // Send the new status to the server
+            method: 'PATCH'
         });
 
         if (result && result.success) {
-            // Update the local company data
-            const companyIndex = this.companies.findIndex(c => c._id === companyId);
-            if (companyIndex !== -1) {
-                this.companies[companyIndex].status = newStatus;
-            }
-
-            this.showSuccess(`Company ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`);
+            // Update local data
+            company.status = newStatus;
             
-            // Refresh only the affected company card instead of reloading all companies
+            // Show success message
+            this.showSuccess(`Company successfully ${newStatus === 'active' ? 'activated' : 'deactivated'}`);
+
+            // Update UI without full reload
             const companyCard = document.querySelector(`.company-card[data-id="${companyId}"]`);
             if (companyCard) {
                 const statusBadge = companyCard.querySelector('.status-badge');
@@ -1504,7 +1645,7 @@ async checkForDuplicates(name, email, excludeId) {
                 }
             }
 
-            // If the company details modal is open, update it as well
+            // If company details modal is open, refresh it
             if (this.currentCompanyId === companyId && 
                 document.getElementById('companyDetailsModal').classList.contains('show')) {
                 await this.viewCompanyDetails(companyId);
@@ -1514,7 +1655,7 @@ async checkForDuplicates(name, email, excludeId) {
         console.error('Error toggling company status:', error);
         this.showError(error.message || 'Failed to update company status');
     } finally {
-        // Re-enable the button and restore its original appearance
+        // Re-enable the toggle button
         const toggleButton = document.querySelector(`button[data-action="toggle-status"][data-company-id="${companyId}"]`);
         if (toggleButton) {
             toggleButton.disabled = false;
@@ -1522,7 +1663,6 @@ async checkForDuplicates(name, email, excludeId) {
         }
     }
 }
-            
 
 
         async viewCompanyDetails(companyId) {
@@ -1584,29 +1724,98 @@ async checkForDuplicates(name, email, excludeId) {
 
 
             activateTab(tabName) {
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.tab === tabName);
-            });
+    try {
+        // Update tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tabName);
+        });
 
-            document.querySelectorAll('.tab-content > div[data-tab]').forEach(content => {
-                content.classList.toggle('active', content.dataset.tab === tabName);
-            });
+        // Store current tab
+        this.currentTab = tabName;
 
-            switch(tabName) {
-                case 'details':
-                    this.renderCompanyDetails(this.currentCompany);
-                    break;
-                case 'users':
-                    this.renderUsersTab(this.currentCompany);
-                    break;
-                case 'subscription':
-                    this.renderSubscriptionTab(this.currentCompany);
-                    break;
-                case 'activity':
-                    this.renderActivityTab(this.currentCompany);
-                    break;
-            }
+        // Update tab content visibility
+        document.querySelectorAll('.tab-content > div[data-tab]').forEach(content => {
+            content.style.display = content.dataset.tab === tabName ? 'block' : 'none';
+        });
+
+        // Load tab content based on type
+        switch(tabName) {
+            case 'details':
+                this.renderCompanyDetails(this.currentCompany);
+                break;
+            case 'users':
+                this.renderUsersTab(this.currentCompany);
+                break;
+            case 'subscription':
+                this.renderSubscriptionTab(this.currentCompany);
+                break;
+            case 'activity':
+                this.renderActivityTab(this.currentCompany);
+                break;
         }
+    } catch (error) {
+        console.error('Error switching tabs:', error);
+        this.showError('Failed to switch tabs');
+    }
+}
+
+        showCustomDialog({ title, message, confirmText = 'Confirm', cancelText = 'Cancel', type = 'confirm' }) {
+    return new Promise((resolve) => {
+        const dialog = document.createElement('div');
+        dialog.className = 'custom-dialog-overlay';
+        
+        dialog.innerHTML = `
+            <div class="custom-dialog ${type}">
+                <div class="dialog-header">
+                    <h3>${title}</h3>
+                </div>
+                <div class="dialog-content">
+                    <p>${message}</p>
+                </div>
+                <div class="dialog-actions">
+                    ${type === 'confirm' ? `
+                        <button class="btn-secondary" id="dialogCancel">${cancelText}</button>
+                        <button class="btn-primary" id="dialogConfirm">${confirmText}</button>
+                    ` : `
+                        <button class="btn-primary" id="dialogOk">OK</button>
+                    `}
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(dialog);
+
+        // Add animation class after a brief delay
+        setTimeout(() => dialog.classList.add('show'), 10);
+
+        const closeDialog = (result) => {
+            dialog.classList.remove('show');
+            setTimeout(() => {
+                dialog.remove();
+                resolve(result);
+            }, 300);
+        };
+
+        dialog.querySelector('#dialogCancel')?.addEventListener('click', () => closeDialog(false));
+        dialog.querySelector('#dialogConfirm')?.addEventListener('click', () => closeDialog(true));
+        dialog.querySelector('#dialogOk')?.addEventListener('click', () => closeDialog(true));
+
+        // Close on overlay click
+        dialog.addEventListener('click', (e) => {
+            if (e.target === dialog) {
+                closeDialog(false);
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', function handler(e) {
+            if (e.key === 'Escape') {
+                document.removeEventListener('keydown', handler);
+                closeDialog(false);
+            }
+        });
+    });
+}
 
         renderCompanyDetails(company) {
             try {
@@ -2727,17 +2936,28 @@ filterUsers(search = '', role = '', status = '') {
             return true;
         }
 
-       async resetUserPassword(userId) {
+      async resetUserPassword(userId) {
     try {
         if (!this.currentCompanyId || !userId) {
             throw new Error('Missing required information');
         }
 
-        const confirmMessage = 'Are you sure you want to reset this user\'s password?';
-        if (!await this.showConfirmDialog(confirmMessage)) {
-            return;
-        }
+        // Get user info for confirmation dialog
+        const userRow = document.querySelector(`button[data-user-id="${userId}"]`)?.closest('tr');
+        const userName = userRow?.querySelector('.user-name')?.textContent || 'this user';
 
+        // Show custom confirmation dialog
+        const confirmed = await this.showCustomDialog({
+            title: 'Reset User Password',
+            message: `Are you sure you want to reset the password for ${userName}? A new temporary password will be generated.`,
+            confirmText: 'Yes, Reset Password',
+            cancelText: 'Cancel',
+            type: 'warning'
+        });
+
+        if (!confirmed) return;
+
+        // Disable the reset button
         const resetButton = document.querySelector(`button[data-action="reset-password"][data-user-id="${userId}"]`);
         if (resetButton) {
             resetButton.disabled = true;
@@ -2748,13 +2968,15 @@ filterUsers(search = '', role = '', status = '') {
             `/companies/${this.currentCompanyId}/users/${userId}/reset-password`,
             {
                 method: 'POST',
-                body: JSON.stringify({}) // Empty body or add any required data
+                body: JSON.stringify({})
             }
         );
 
-        if (result) {
+        if (result && result.success) {
+            // Show success message
             this.showSuccess('Password reset successfully');
 
+            // Show temporary password modal if provided
             if (result.data?.tempPassword) {
                 await this.showTempPasswordModal(result.data.email, result.data.tempPassword);
             }
@@ -2763,6 +2985,7 @@ filterUsers(search = '', role = '', status = '') {
         console.error('Error resetting password:', error);
         this.showError(error.message || 'Failed to reset password');
     } finally {
+        // Re-enable the reset button
         const resetButton = document.querySelector(`button[data-action="reset-password"][data-user-id="${userId}"]`);
         if (resetButton) {
             resetButton.disabled = false;
@@ -2770,6 +2993,7 @@ filterUsers(search = '', role = '', status = '') {
         }
     }
 }
+
 async handleUserAction(action, userId) {
     try {
         switch (action) {
@@ -2814,79 +3038,118 @@ async handleUserAction(action, userId) {
 
         // Utility Methods
         showModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.style.display = 'flex';
-                setTimeout(() => modal.classList.add('show'), 10);
-                document.body.style.overflow = 'hidden';
-            }
-        }
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        // Add to modal stack
+        modal.classList.add('modal-stack');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('show'), 10);
+        document.body.style.overflow = 'hidden';
+    }
+}
 
-        closeModals() {
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.classList.remove('show');
-                setTimeout(() => {
-                    modal.style.display = 'none';
-                }, 300);
-            });
-            document.body.style.overflow = '';
-        }
+closeModals(specificModalId = null) {
+    const modals = specificModalId 
+        ? [document.getElementById(specificModalId)]
+        : document.querySelectorAll('.modal');
 
+    modals.forEach(modal => {
+        if (modal) {
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modal.classList.remove('modal-stack');
+            }, 300);
+        }
+    });
+
+    // Only restore scroll if closing all modals or closing the last modal
+    if (!specificModalId || document.querySelectorAll('.modal.show').length === 0) {
+        document.body.style.overflow = '';
+    }
+}
         showTempPasswordModal(email, password) {
-            return new Promise((resolve) => {
-                const modalHtml = `
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h2>Temporary Password</h2>
-                            <button class="close-btn"><i class="fas fa-times"></i></button>
+    return new Promise((resolve) => {
+        const modalHtml = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fas fa-key"></i> Temporary Password</h2>
+                    <button class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Please securely share these credentials with the user.</p>
+                    </div>
+                    <div class="credentials-box">
+                        <div class="credential-item">
+                            <label>Email:</label>
+                            <span class="credential-value">${this.escapeHtml(email)}</span>
                         </div>
-                        <div class="modal-body">
-                            <div class="alert alert-warning">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <p>Please securely share these credentials with the user.</p>
+                        <div class="credential-item">
+                            <label>Temporary Password:</label>
+                            <div class="password-container">
+                                <span class="password" id="tempPassword">${this.escapeHtml(password)}</span>
+                                <button class="btn-icon copy-btn" onclick="navigator.clipboard.writeText('${password}')">
+                                    <i class="fas fa-copy"></i>
+                                </button>
                             </div>
-                            <div class="credentials-box">
-                                <div class="credential-item">
-                                    <label>Email:</label>
-                                    <span>${this.escapeHtml(email)}</span>
-                                </div>
-                                <div class="credential-item">
-                                    <label>Temporary Password:</label>
-                                    <span class="password">${this.escapeHtml(password)}</span>
-                                </div>
-                            </div>
-                            <div class="warning-message">
-                                <i class="fas fa-info-circle"></i>
-                                <p>This password will only be shown once. Make sure to copy it now.</p>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button class="btn-primary" id="confirmPassword">I've Copied the Password</button>
                         </div>
                     </div>
-                `;
+                    <div class="warning-message">
+                        <i class="fas fa-info-circle"></i>
+                        <p>This password will only be shown once. Make sure to copy it now.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-primary" id="confirmPassword">
+                        <i class="fas fa-check"></i> I've Copied the Password
+                    </button>
+                </div>
+            </div>
+        `;
 
-                const modal = document.createElement('div');
-                modal.className = 'modal temp-password-modal show';
-                modal.innerHTML = modalHtml;
-                document.body.appendChild(modal);
+        const modal = document.createElement('div');
+        modal.className = 'modal temp-password-modal';
+        modal.innerHTML = modalHtml;
 
-                const closeModal = () => {
-                    modal.remove();
-                    resolve();
-                };
+        // Add to modal stack and show
+        document.body.appendChild(modal);
+        this.showModal(modal);
 
-                modal.querySelector('.close-btn').addEventListener('click', closeModal);
-                modal.querySelector('#confirmPassword').addEventListener('click', closeModal);
-            });
-        }
+        // Add event listeners
+        const closeModal = () => {
+            this.closeModals(modal);
+            setTimeout(() => {
+                modal.remove();
+                resolve();
+            }, 300);
+        };
 
-        showConfirmDialog(message) {
-            return new Promise(resolve => {
-                const confirmed = window.confirm(message);
-                resolve(confirmed);
-            });
-        }
+        modal.querySelector('.close-btn').addEventListener('click', closeModal);
+        modal.querySelector('#confirmPassword').addEventListener('click', closeModal);
+
+        // Add copy button functionality
+        modal.querySelector('.copy-btn').addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(password);
+                this.showSuccess('Password copied to clipboard');
+            } catch (error) {
+                this.showError('Failed to copy password');
+            }
+        });
+    });
+}
+async showConfirmDialog(message, title = 'Confirm Action') {
+    return await this.showCustomDialog({
+        title,
+        message,
+        type: 'confirm',
+        confirmText: 'Confirm',
+        cancelText: 'Cancel'
+    });
+}
+
 
         showError(message) {
             if (window.dashboardApp?.userInterface) {
