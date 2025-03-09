@@ -1488,6 +1488,8 @@ async checkForDuplicates(name, email, excludeId) {
             toggleButton.innerHTML = '<i class="fas fa-power-off"></i>';
         }
     }
+}
+            
 
 
         async viewCompanyDetails(companyId) {
@@ -2735,6 +2737,30 @@ filterUsers(search = '', role = '', status = '') {
         }
     }
 }
+async handleUserAction(action, userId) {
+    try {
+        switch (action) {
+            case 'edit':
+                await this.editUser(userId);
+                break;
+            case 'reset-password':
+                await this.resetUserPassword(userId);
+                break;
+            case 'toggle-status':
+                await this.toggleUserStatus(userId);
+                break;
+            case 'delete':
+                await this.deleteUser(userId);
+                break;
+            default:
+                throw new Error('Invalid action');
+        }
+    } catch (error) {
+        console.error(`Error performing user action ${action}:`, error);
+        this.showError(error.message || `Failed to perform ${action}`);
+    }
+}
+        
 
         async toggleUserStatus(userId) {
             try {
@@ -2889,8 +2915,9 @@ filterUsers(search = '', role = '', status = '') {
     }
 
     // Initialize the Companies Manager globally
-    window.CompaniesManager = CompaniesManager;
-
+    if (typeof window !== 'undefined') {
+        window.CompaniesManager = CompaniesManager;
+    }
     // Ensure all modals are hidden by default
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.modal').forEach(modal => {
