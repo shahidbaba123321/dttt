@@ -543,6 +543,99 @@
                         opacity: 1;
                     }
                 }
+                .activity-logs {
+            padding: 20px;
+        }
+
+        .activity-filters {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .activity-filters select,
+        .activity-filters input {
+            padding: 8px 12px;
+            border: 1px solid var(--border-medium);
+            border-radius: var(--border-radius-md);
+            background-color: var(--bg-primary);
+        }
+
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background-color: var(--bg-primary);
+            border-radius: var(--border-radius-md);
+            border: 1px solid var(--border-light);
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+        }
+
+        .activity-details {
+            flex: 1;
+        }
+
+        .activity-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .activity-type {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .activity-date {
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+        }
+
+        .activity-description {
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .btn-link {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            padding: 0;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .activity-details-expanded {
+            margin-top: 8px;
+            padding: 12px;
+            background-color: var(--bg-secondary);
+            border-radius: var(--border-radius-sm);
+            font-family: monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+        }
+
+        .activity-details-expanded.hidden {
+            display: none;
+        }
+    
             `;
 
             const styleSheet = document.createElement('style');
@@ -2114,71 +2207,105 @@ async checkForDuplicates(name, email, excludeId) {
         
 
             async renderActivityTab(company) {
-            try {
-                const result = await this.handleApiRequest(`/companies/${company._id}/activity-logs`);
-                const logs = result?.data || [];
-                const tabContent = document.querySelector('.tab-content');
+    try {
+        const result = await this.handleApiRequest(`/companies/${company._id}/activity-logs`);
+        const logs = result?.data || [];
+        const tabContent = document.querySelector('.tab-content');
 
-                tabContent.innerHTML = `
-                    <div class="activity-logs">
-                        <div class="activity-filters">
-                            <select id="activityTypeFilter">
-                                <option value="">All Activities</option>
-                                <option value="user">User Management</option>
-                                <option value="subscription">Subscription Changes</option>
-                                <option value="system">System Changes</option>
-                            </select>
-                            <input type="date" id="activityDateFilter">
-                        </div>
-                        ${logs.length === 0 ? `
-                            <div class="empty-state">
-                                <i class="fas fa-history"></i>
-                                <p>No activity logs found</p>
-                            </div>
-                        ` : `
-                            <div class="activity-list">
-                                ${logs.map(log => `
-                                    <div class="activity-item ${log.type.toLowerCase()}">
-                                        <div class="activity-icon">
-                                            <i class="fas ${this.getActivityIcon(log.type)}"></i>
-                                        </div>
-                                        <div class="activity-details">
-                                            <div class="activity-header">
-                                                <span class="activity-type">${log.type}</span>
-                                                <span class="activity-date">
-                                                    ${new Date(log.timestamp).toLocaleString()}
-                                                </span>
-                                            </div>
-                                            <p class="activity-description">${this.escapeHtml(log.description)}</p>
-                                            ${log.details ? `
-                                                <button class="btn-link" data-action="toggleDetails">
-                                                    Show Details
-                                                </button>
-                                                <div class="activity-details-expanded hidden">
-                                                    <pre>${this.escapeHtml(JSON.stringify(log.details, null, 2))}</pre>
-                                                </div>
-                                            ` : ''}
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        `}
+        tabContent.innerHTML = `
+            <div class="activity-logs">
+                <div class="activity-filters">
+                    <select id="activityTypeFilter">
+                        <option value="">All Activities</option>
+                        <option value="COMPANY_UPDATED">Company Updates</option>
+                        <option value="COMPANY_STATUS_CHANGED">Status Changes</option>
+                        <option value="USER_CREATED">User Created</option>
+                        <option value="USER_UPDATED">User Updated</option>
+                        <option value="USER_STATUS_CHANGED">User Status Changes</option>
+                        <option value="SUBSCRIPTION_CHANGED">Subscription Changes</option>
+                    </select>
+                    <input type="date" id="activityDateFilter">
+                </div>
+                ${logs.length === 0 ? `
+                    <div class="empty-state">
+                        <i class="fas fa-history"></i>
+                        <p>No activity logs found</p>
                     </div>
-                `;
-
-                this.initializeActivityFilters();
-
-            } catch (error) {
-                console.error('Error loading activity logs:', error);
-                const tabContent = document.querySelector('.tab-content');
-                tabContent.innerHTML = `
-                    <div class="error-state">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <p>Failed to load activity logs</p>
+                ` : `
+                    <div class="activity-list">
+                        ${logs.map(log => this.renderActivityLogItem(log)).join('')}
                     </div>
-                `;
-            }
-        }
+                `}
+            </div>
+        `;
+
+        this.initializeActivityFilters();
+
+    } catch (error) {
+        console.error('Error loading activity logs:', error);
+        const tabContent = document.querySelector('.tab-content');
+        tabContent.innerHTML = `
+            <div class="error-state">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Failed to load activity logs</p>
+            </div>
+        `;
+    }
+}
+
+        renderActivityLogItem(log) {
+    const icon = this.getActivityIcon(log.type);
+    const timestamp = new Date(log.timestamp).toLocaleString();
+    const description = this.formatActivityDescription(log);
+
+    return `
+        <div class="activity-item ${log.type.toLowerCase()}">
+            <div class="activity-icon">
+                <i class="fas ${icon}"></i>
+            </div>
+            <div class="activity-details">
+                <div class="activity-header">
+                    <span class="activity-type">${this.formatActivityType(log.type)}</span>
+                    <span class="activity-date">${timestamp}</span>
+                </div>
+                <p class="activity-description">${description}</p>
+                ${log.details ? `
+                    <button class="btn-link" onclick="window.companiesManager.toggleActivityDetails(this)">
+                        Show Details
+                    </button>
+                    <div class="activity-details-expanded hidden">
+                        <pre>${this.escapeHtml(JSON.stringify(log.details, null, 2))}</pre>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+}
+
+        formatActivityType(type) {
+    return type.split('_').map(word => 
+        word.charAt(0) + word.slice(1).toLowerCase()
+    ).join(' ');
+}
+        formatActivityDescription(log) {
+    switch (log.type) {
+        case 'COMPANY_UPDATED':
+            return `Company information was updated`;
+        case 'COMPANY_STATUS_CHANGED':
+            return `Company status was changed from ${log.details?.oldStatus || 'unknown'} to ${log.details?.newStatus || 'unknown'}`;
+        case 'USER_CREATED':
+            return `New user "${log.details?.userName || 'Unknown'}" was added`;
+        case 'USER_UPDATED':
+            return `User "${log.details?.userName || 'Unknown'}" information was updated`;
+        case 'USER_STATUS_CHANGED':
+            return `User "${log.details?.userName || 'Unknown'}" status was changed to ${log.details?.newStatus || 'unknown'}`;
+        case 'SUBSCRIPTION_CHANGED':
+            return `Subscription plan was changed from ${log.details?.oldPlan || 'unknown'} to ${log.details?.newPlan || 'unknown'}`;
+        default:
+            return log.description || 'Activity logged';
+    }
+}
+
 
         initializeActivityFilters() {
     const typeFilter = document.getElementById('activityTypeFilter');
@@ -2210,18 +2337,28 @@ filterActivityLogs() {
 }
 
         getActivityIcon(type) {
-            const icons = {
-                'USER_CREATED': 'fa-user-plus',
-                'USER_UPDATED': 'fa-user-edit',
-                'USER_DELETED': 'fa-user-minus',
-                'SUBSCRIPTION_CHANGED': 'fa-sync',
-                'PAYMENT_PROCESSED': 'fa-credit-card',
-                'SYSTEM_UPDATE': 'fa-cog',
-                'LOGIN': 'fa-sign-in-alt',
-                'LOGOUT': 'fa-sign-out-alt'
-            };
-            return icons[type] || 'fa-info-circle';
-        }
+    const icons = {
+        'COMPANY_UPDATED': 'fa-building',
+        'COMPANY_STATUS_CHANGED': 'fa-toggle-on',
+        'USER_CREATED': 'fa-user-plus',
+        'USER_UPDATED': 'fa-user-edit',
+        'USER_STATUS_CHANGED': 'fa-user-clock',
+        'SUBSCRIPTION_CHANGED': 'fa-sync',
+        'PASSWORD_RESET': 'fa-key',
+        'LOGIN': 'fa-sign-in-alt',
+        'LOGOUT': 'fa-sign-out-alt'
+    };
+    return icons[type] || 'fa-info-circle';
+}
+        
+toggleActivityDetails(button) {
+    const detailsDiv = button.nextElementSibling;
+    const isHidden = detailsDiv.classList.contains('hidden');
+    
+    detailsDiv.classList.toggle('hidden');
+    button.textContent = isHidden ? 'Hide Details' : 'Show Details';
+}
+
 
         async renderBillingHistory(companyId) {
     try {
