@@ -1458,25 +1458,37 @@ async checkForDuplicates(name, email, excludeId) {
 }
 
         async toggleCompanyStatus(companyId) {
-            try {
-                const result = await this.handleApiRequest(`/companies/${companyId}/toggle-status`, {
-                    method: 'PATCH'
-                });
-
-                if (result) {
-                    this.showSuccess(result.message || 'Company status updated successfully');
-                    await this.loadCompanies();
-
-                    if (this.currentCompanyId === companyId && 
-                        this.detailsModal.classList.contains('show')) {
-                        await this.viewCompanyDetails(companyId);
-                    }
-                }
-            } catch (error) {
-                console.error('Error toggling company status:', error);
-                this.showError('Failed to update company status');
-            }
+    try {
+        const confirmMessage = 'Are you sure you want to change the company status?';
+        if (!await this.showConfirmDialog(confirmMessage)) {
+            return;
         }
+
+        const toggleButton = document.querySelector(`button[data-action="toggle-status"][data-company-id="${companyId}"]`);
+        if (toggleButton) {
+            toggleButton.disabled = true;
+            toggleButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        }
+
+        const result = await this.handleApiRequest(`/companies/${companyId}/toggle-status`, {
+            method: 'PATCH'
+        });
+
+        if (result) {
+            this.showSuccess(result.message || 'Company status updated successfully');
+            await this.loadCompanies();
+        }
+    } catch (error) {
+        console.error('Error toggling company status:', error);
+        this.showError(error.message || 'Failed to update company status');
+    } finally {
+        const toggleButton = document.querySelector(`button[data-action="toggle-status"][data-company-id="${companyId}"]`);
+        if (toggleButton) {
+            toggleButton.disabled = false;
+            toggleButton.innerHTML = '<i class="fas fa-power-off"></i>';
+        }
+    }
+
 
         async viewCompanyDetails(companyId) {
             try {
@@ -1760,33 +1772,63 @@ async checkForDuplicates(name, email, excludeId) {
         this.showError('Failed to load plan change options');
     }
 }
+        validatePlanChange(planData) {
+        if (!planData.plan) {
+            this.showError('Please select a plan');
+            return false;
+        }
+
+        if (!planData.billingCycle) {
+            this.showError('Please select a billing cycle');
+            return false;
+        }
+
+        if (!this.subscriptionPlans[planData.plan.toLowerCase()]) {
+            this.showError('Invalid plan selected');
+            return false;
+        }
+
+        return true;
+    }
 
         async handlePlanChange(companyId) {
-    try {
-        const planData = {
-            plan: document.getElementById('newPlan').value,
-            billingCycle: document.getElementById('billingCycle').value
-        };
+        try {
+            const planData = {
+                plan: document.getElementById('newPlan').value,
+                billingCycle: document.getElementById('billingCycle').value
+            };
 
-        if (!this.validatePlanChange(planData)) {
-            return;
+            if (!this.validatePlanChange(planData)) {
+                return;
+            }
+
+            const confirmBtn = document.getElementById('confirmPlanChange');
+            if (confirmBtn) {
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+            }
+
+            const result = await this.handleApiRequest(`/companies/${companyId}/subscription`, {
+                method: 'POST',
+                body: JSON.stringify(planData)
+            });
+
+            if (result) {
+                this.showSuccess('Subscription updated successfully');
+                this.closeModals();
+                await this.viewCompanyDetails(companyId);
+            }
+        } catch (error) {
+            console.error('Error changing subscription plan:', error);
+            this.showError(error.message || 'Failed to update subscription');
+        } finally {
+            const confirmBtn = document.getElementById('confirmPlanChange');
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = 'Confirm Change';
+            }
         }
-
-        const result = await this.handleApiRequest(`/companies/${companyId}/subscription`, {
-            method: 'POST',
-            body: JSON.stringify(planData)
-        });
-
-        if (result) {
-            this.showSuccess('Subscription updated successfully');
-            this.closeModals();
-            await this.viewCompanyDetails(companyId);
-        }
-    } catch (error) {
-        console.error('Error changing subscription plan:', error);
-        this.showError(error.message || 'Failed to update subscription');
     }
-}
         
 
             async renderActivityTab(company) {
@@ -2618,11 +2660,22 @@ filterUsers(search = '', role = '', status = '') {
             throw new Error('Missing required information');
         }
 
+        const confirmMessage = 'Are you sure you want to reset this user\'s password?';
+        if (!await this.showConfirmDialog(confirmMessage)) {
+            return;
+        }
+
+        const resetButton = document.querySelector(`button[data-action="reset-password"][data-user-id="${userId}"]`);
+        if (resetButton) {
+            resetButton.disabled = true;
+            resetButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        }
+
         const result = await this.handleApiRequest(
             `/companies/${this.currentCompanyId}/users/${userId}/reset-password`,
             {
                 method: 'POST',
-                body: JSON.stringify({}) // Add empty body if your API expects it
+                body: JSON.stringify({}) // Empty body or add any required data
             }
         );
 
@@ -2635,7 +2688,13 @@ filterUsers(search = '', role = '', status = '') {
         }
     } catch (error) {
         console.error('Error resetting password:', error);
-        this.showError('Failed to reset password');
+        this.showError(error.message || 'Failed to reset password');
+    } finally {
+        const resetButton = document.querySelector(`button[data-action="reset-password"][data-user-id="${userId}"]`);
+        if (resetButton) {
+            resetButton.disabled = false;
+            resetButton.innerHTML = '<i class="fas fa-key"></i>';
+        }
     }
 }
 
