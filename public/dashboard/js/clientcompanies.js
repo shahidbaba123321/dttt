@@ -107,9 +107,11 @@
         const data = await response.json();
 
         if (!response.ok) {
-            // Handle specific error cases
             switch (response.status) {
                 case 400:
+                    if (data.message.includes('duplicate')) {
+                        throw new Error('A company with this name or email already exists');
+                    }
                     throw new Error(data.message || 'Invalid request data');
                 case 401:
                     localStorage.removeItem('token');
@@ -120,7 +122,7 @@
                 case 404:
                     throw new Error('Resource not found');
                 case 409:
-                    throw new Error('Company with this name or email already exists');
+                    throw new Error('Conflict: Company with this name or email already exists');
                 case 500:
                     throw new Error('Server error occurred. Please try again later.');
                 default:
@@ -134,6 +136,7 @@
         throw error;
     }
 }
+
 
         showConnectionStatus(status) {
             const statusElement = document.createElement('div');
@@ -1209,19 +1212,6 @@ initializeTooltips() {
 
        async handleCompanySubmit() {
     try {
-        // Get the form element
-        const form = document.getElementById('companyForm');
-        if (!form) {
-            throw new Error('Company form not found');
-        }
-
-        // Check form validity
-        if (!form.checkValidity()) {
-            form.reportValidity();
-            return;
-        }
-
-        // Gather form data
         const formData = {
             name: document.getElementById('companyName').value.trim(),
             industry: document.getElementById('industry').value,
@@ -1235,16 +1225,26 @@ initializeTooltips() {
             status: document.getElementById('status').value
         };
 
-        // Validate the data
         if (!this.validateCompanyData(formData)) {
             return;
         }
 
-        // Show loading state
         const saveButton = document.getElementById('saveCompanyBtn');
         if (saveButton) {
             saveButton.disabled = true;
             saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        }
+
+        // Check for duplicates only if name or email changed
+        if (this.currentCompanyId) {
+            const isDuplicate = await this.checkForDuplicates(
+                formData.name, 
+                formData.contactDetails.email, 
+                this.currentCompanyId
+            );
+            if (isDuplicate) {
+                throw new Error('A company with this name or email already exists');
+            }
         }
 
         const endpoint = this.currentCompanyId 
@@ -1255,7 +1255,10 @@ initializeTooltips() {
 
         const result = await this.handleApiRequest(endpoint, {
             method,
-            body: JSON.stringify(formData)
+            body: JSON.stringify({
+                ...formData,
+                ...(this.currentCompanyId && { id: this.currentCompanyId }) // Include ID for updates
+            })
         });
 
         if (result) {
@@ -1267,14 +1270,31 @@ initializeTooltips() {
         console.error('Error saving company:', error);
         this.showError(error.message || 'Failed to save company');
     } finally {
-        // Reset button state
         const saveButton = document.getElementById('saveCompanyBtn');
         if (saveButton) {
             saveButton.disabled = false;
-            saveButton.innerHTML = 'Save Company';
+            saveButton.innerHTML = this.currentCompanyId ? 'Update Company' : 'Save Company';
         }
     }
 }
+async checkForDuplicates(name, email, excludeId) {
+    try {
+        const response = await this.handleApiRequest(`/companies/check-duplicates`, {
+            method: 'POST',
+            body: JSON.stringify({
+                name,
+                email,
+                excludeId
+            })
+        });
+        return response.isDuplicate;
+    } catch (error) {
+        console.error('Error checking for duplicates:', error);
+        return false;
+    }
+}
+
+        
         validateCompanyData(data) {
     try {
         // Name validation
@@ -1342,30 +1362,59 @@ initializeTooltips() {
         return false;
     }
 }
-       async editCompany(companyId) {
+       editCompany(companyId) {
     try {
-        const result = await this.handleApiRequest(`/companies/${companyId}`);
+        // Store the original company data for comparison
+        this.originalCompanyData = this.companies.find(c => c._id === companyId);
+        if (!this.originalCompanyData) {
+            throw new Error('Company not found');
+        }
+
+        this.currentCompanyId = companyId;
         
-        if (result && result.data) {
-            this.currentCompanyId = companyId;
-            this.currentCompany = result.data;
-            
-            await this.showAddCompanyModal();
-            this.populateCompanyForm(result.data);
-            
-            // Update modal title and button
-            const modalTitle = document.querySelector('#companyModal .modal-header h2');
-            const saveButton = document.getElementById('saveCompanyBtn');
-            
-            if (modalTitle) modalTitle.textContent = 'Edit Company';
-            if (saveButton) saveButton.textContent = 'Update Company';
+        // Show the modal with edit form
+        const modalContent = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Edit Company</h2>
+                    <button class="close-btn"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="modal-body">
+                    <form id="companyForm">
+                        <input type="hidden" id="companyId" value="${companyId}">
+                        <div class="form-group">
+                            <label for="companyName">Company Name*</label>
+                            <input type="text" id="companyName" value="${this.escapeHtml(this.originalCompanyData.name)}" required>
+                        </div>
+                        <!-- ... rest of the form fields ... -->
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="cancelBtn">Cancel</button>
+                    <button class="btn-primary" id="saveCompanyBtn">Update Company</button>
+                </div>
+            </div>
+        `;
+
+        const modal = document.getElementById('companyModal');
+        if (modal) {
+            modal.innerHTML = modalContent;
+            this.showModal('companyModal');
+            this.populateCompanyForm(this.originalCompanyData);
+
+            // Add event listeners
+            modal.querySelector('.close-btn').addEventListener('click', () => this.closeModals());
+            modal.querySelector('#cancelBtn').addEventListener('click', () => this.closeModals());
+            modal.querySelector('#saveCompanyBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                this.handleCompanySubmit();
+            });
         }
     } catch (error) {
-        console.error('Error loading company for edit:', error);
-        this.showError('Failed to load company data');
+        console.error('Error in editCompany:', error);
+        this.showError(error.message || 'Failed to load company data');
     }
 }
-
 
         populateCompanyForm(company) {
     try {
