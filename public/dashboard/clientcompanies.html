@@ -34,16 +34,20 @@
 <button id="clearFiltersBtn" class="btn-secondary">
     <i class="fas fa-times"></i> Clear Filters
 </button>
-
-<!-- Add this for export functionality -->
-<button id="exportBtn" class="btn-secondary" data-tooltip="Export data to CSV">
-    <i class="fas fa-download"></i> Export
-</button>
-
-<!-- Add this for bulk actions if needed -->
-<button id="bulkActionBtn" class="btn-secondary" data-tooltip="Perform bulk actions">
-    <i class="fas fa-tasks"></i> Bulk Actions
-</button>
+        <div class="bulk-action-container">
+    <select id="bulkActionSelect" class="bulk-action-select">
+        <option value="">Select Bulk Action</option>
+        <option value="activate">Activate Selected</option>
+        <option value="deactivate">Deactivate Selected</option>
+        <option value="delete">Delete Selected</option>
+    </select>
+    <button id="bulkActionBtn" class="btn-secondary">
+        <i class="fas fa-tasks"></i> Apply
+    </button>
+    <button id="exportBtn" class="btn-secondary">
+        <i class="fas fa-download"></i> Export
+    </button>
+</div>
     </div>
 
     <!-- Companies List -->
