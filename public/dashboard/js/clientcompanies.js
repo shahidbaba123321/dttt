@@ -41,6 +41,7 @@
             };
             this.initialize();
             this.initializeStyles();
+            this.validateApiEndpoint();
         }
 
 initializeStyles() {
@@ -190,6 +191,22 @@ initializeStyles() {
         styleSheet.textContent = styles;
         document.head.appendChild(styleSheet);
     }
+
+        async validateApiEndpoint() {
+    try {
+        const response = await fetch(`${this.baseUrl}/verify-token`, {
+            headers: this.getHeaders()
+        });
+        
+        if (!response.ok) {
+            throw new Error('API endpoint validation failed');
+        }
+    } catch (error) {
+        console.error('API endpoint validation error:', error);
+        // Handle gracefully instead of throwing
+        this.showError('API connection error. Please try again later.');
+    }
+}
 
 
         async initialize() {
@@ -606,9 +623,17 @@ initializeStyles() {
 
         async loadCompanyUsers(companyId) {
     try {
+        if (!companyId) {
+            throw new Error('Company ID is required');
+        }
+
         const response = await fetch(`${this.baseUrl}/companies/${companyId}/users`, {
             headers: this.getHeaders()
         });
+
+        if (response.status === 404) {
+            return []; // Return empty array instead of throwing error
+        }
 
         if (!response.ok) {
             throw new Error('Failed to load company users');
@@ -1037,6 +1062,42 @@ filterActivityLogs() {
         this.showError('Failed to load subscription information');
     }
 }
+
+async handleApiRequest(url, options = {}) {
+    try {
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                ...this.getHeaders(),
+                ...options.headers
+            }
+        });
+
+        if (response.status === 401) {
+            // Handle unauthorized access
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+            return null;
+        }
+
+        if (response.status === 404) {
+            throw new Error('Resource not found');
+        }
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'API request failed');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('API request error:', error);
+        this.showError(error.message);
+        return null;
+    }
+}
+
+        
         async renderActivityTab(company) {
     try {
         const response = await fetch(`${this.baseUrl}/companies/${company._id}/activity-logs`, {
@@ -1722,11 +1783,33 @@ showAddUserModal() {
         this.showError('Failed to show add user modal');
     }
 }
-       async handleAddUser() {
+        
+      async handleAddUser() {
     try {
+        if (!this.currentCompanyId) {
+            throw new Error('No company selected');
+        }
+
         const form = document.getElementById('addUserForm');
         if (!form) {
             throw new Error('Add user form not found');
+        }
+
+        // Validate company status first
+        const companyResponse = await fetch(`${this.baseUrl}/companies/${this.currentCompanyId}`, {
+            headers: this.getHeaders()
+        });
+
+        if (!companyResponse.ok) {
+            if (companyResponse.status === 404) {
+                throw new Error('Company not found');
+            }
+            throw new Error('Failed to verify company status');
+        }
+
+        const companyData = await companyResponse.json();
+        if (companyData.data?.status !== 'active') {
+            throw new Error('Company is not active');
         }
 
         const userData = {
@@ -1736,7 +1819,6 @@ showAddUserModal() {
             department: document.getElementById('userDepartment').value.trim() || null
         };
 
-        // Validate form data
         if (!this.validateUserData(userData)) {
             return;
         }
@@ -1748,25 +1830,25 @@ showAddUserModal() {
         });
 
         const result = await response.json();
+        
         if (!response.ok) {
             throw new Error(result.message || 'Failed to add user');
         }
 
         this.showSuccess('User added successfully');
         
-        // Show temporary password if provided
         if (result.data?.tempPassword) {
             await this.showTempPasswordModal(userData.email, result.data.tempPassword);
         }
 
         this.closeModals();
         await this.renderUsersTab({ _id: this.currentCompanyId });
+
     } catch (error) {
         console.error('Error adding user:', error);
         this.showError(error.message || 'Failed to add user');
     }
 }
-
 
 
         validateUserData(userData) {
@@ -1791,6 +1873,10 @@ showAddUserModal() {
 
         async resetUserPassword(userId) {
     try {
+        if (!this.currentCompanyId || !userId) {
+            throw new Error('Missing required information');
+        }
+
         const response = await fetch(
             `${this.baseUrl}/companies/${this.currentCompanyId}/users/${userId}/reset-password`,
             {
@@ -1800,7 +1886,8 @@ showAddUserModal() {
         );
 
         if (!response.ok) {
-            throw new Error('Failed to reset password');
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to reset password');
         }
 
         const result = await response.json();
@@ -1811,10 +1898,10 @@ showAddUserModal() {
         }
     } catch (error) {
         console.error('Error resetting password:', error);
-        this.showError('Failed to reset password');
+        this.showError(error.message || 'Failed to reset password');
     }
 }
-
+        
         async toggleUserStatus(userId) {
     try {
         const response = await fetch(
