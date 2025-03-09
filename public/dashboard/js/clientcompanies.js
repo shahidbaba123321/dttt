@@ -1491,24 +1491,62 @@ async checkForDuplicates(name, email, excludeId) {
 
 
         async viewCompanyDetails(companyId) {
-            try {
-                const result = await this.handleApiRequest(`/companies/${companyId}`);
-                
-                if (result && result.data) {
-                    this.currentCompany = result.data;
-                    this.currentCompanyId = companyId;
-                    this.showModal('companyDetailsModal');
-
-                    const firstTab = document.querySelector('.tab-btn');
-                    if (firstTab) {
-                        this.activateTab(firstTab.dataset.tab);
-                    }
-                }
-            } catch (error) {
-                console.error('Error fetching company details:', error);
-                this.showError('Failed to load company details');
+        try {
+            const result = await this.handleApiRequest(`/companies/${companyId}`);
+            
+            if (!result || !result.data) {
+                throw new Error('Failed to fetch company details');
             }
+
+            this.currentCompanyId = companyId;
+            this.currentCompany = result.data;
+
+            // Show the modal with details
+            const modalContent = `
+                <div class="modal-content large">
+                    <div class="modal-header">
+                        <h2>Company Details</h2>
+                        <button class="close-btn"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="tabs">
+                            <button class="tab-btn active" data-tab="details">Details</button>
+                            <button class="tab-btn" data-tab="users">Users</button>
+                            <button class="tab-btn" data-tab="subscription">Subscription</button>
+                            <button class="tab-btn" data-tab="activity">Activity</button>
+                        </div>
+                        <div class="tab-content">
+                            <!-- Content will be loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const modal = document.getElementById('companyDetailsModal');
+            if (modal) {
+                modal.innerHTML = modalContent;
+                this.showModal('companyDetailsModal');
+
+                // Initialize tabs
+                const firstTab = modal.querySelector('.tab-btn');
+                if (firstTab) {
+                    this.activateTab(firstTab.dataset.tab);
+                }
+
+                // Add event listeners
+                modal.querySelector('.close-btn').addEventListener('click', () => this.closeModals());
+                modal.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.activateTab(e.target.dataset.tab);
+                    });
+                });
+            }
+        } catch (error) {
+            console.error('Error viewing company details:', error);
+            this.showError('Failed to load company details');
         }
+    }
+
 
             activateTab(tabName) {
             document.querySelectorAll('.tab-btn').forEach(btn => {
