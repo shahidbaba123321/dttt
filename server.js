@@ -8,6 +8,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
 const { validationResult } = require('express-validator');
+const crypto = require('crypto');
 require('dotenv').config();
 
 // Redis Configuration
@@ -3189,7 +3190,8 @@ app.patch('/api/companies/:companyId/toggle-status', verifyToken, verifyAdmin, a
 
             res.json({
                 success: true,
-                message: `Company ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`
+                message: `Company ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`,
+                data: { status: newStatus }
             });
         });
     } catch (error) {
