@@ -2971,6 +2971,35 @@ app.put('/api/companies/:companyId', verifyToken, verifyAdmin, async (req, res) 
                 throw new Error('Invalid company ID');
             }
 
+            // Add this validation block here
+            const requiredFields = {
+                name: updateData.name,
+                industry: updateData.industry,
+                companySize: updateData.companySize,
+                contactDetails: {
+                    email: updateData.contactDetails?.email,
+                    phone: updateData.contactDetails?.phone,
+                    address: updateData.contactDetails?.address
+                },
+                subscriptionPlan: updateData.subscriptionPlan,
+                status: updateData.status
+            };
+
+            // Validate required fields
+            const missingFields = [];
+            if (!requiredFields.name) missingFields.push('name');
+            if (!requiredFields.industry) missingFields.push('industry');
+            if (!requiredFields.companySize) missingFields.push('companySize');
+            if (!requiredFields.contactDetails.email) missingFields.push('email');
+            if (!requiredFields.contactDetails.phone) missingFields.push('phone');
+            if (!requiredFields.contactDetails.address) missingFields.push('address');
+            if (!requiredFields.subscriptionPlan) missingFields.push('subscriptionPlan');
+            if (!requiredFields.status) missingFields.push('status');
+
+            if (missingFields.length > 0) {
+                throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+            }
+
             // Get existing company
             const existingCompany = await companies.findOne({
                 _id: new ObjectId(companyId)
@@ -2996,17 +3025,26 @@ app.put('/api/companies/:companyId', verifyToken, verifyAdmin, async (req, res) 
             }
 
             // Update company
-            const result = await companies.updateOne(
+            await companies.updateOne(
                 { _id: new ObjectId(companyId) },
                 {
                     $set: {
-                        ...updateData,
+                        ...requiredFields, // Use the validated fields
                         updatedAt: new Date(),
                         updatedBy: new ObjectId(req.user.userId)
                     }
                 },
                 { session }
             );
+
+            // Get updated company data
+            const updatedCompany = await companies.findOne(
+                { _id: new ObjectId(companyId) },
+                { session }
+            );
+
+            // Get changes for audit log
+            const changes = getChanges(existingCompany, requiredFields);
 
             // Create audit log
             await createAuditLog(
@@ -3015,7 +3053,7 @@ app.put('/api/companies/:companyId', verifyToken, verifyAdmin, async (req, res) 
                 companyId,
                 {
                     companyName: existingCompany.name,
-                    changes: this.getChanges(existingCompany, updateData)
+                    changes: changes
                 },
                 session
             );
@@ -3023,7 +3061,7 @@ app.put('/api/companies/:companyId', verifyToken, verifyAdmin, async (req, res) 
             res.json({
                 success: true,
                 message: 'Company updated successfully',
-                data: result
+                data: updatedCompany
             });
         });
     } catch (error) {
@@ -3158,16 +3196,22 @@ function getPlanPrice(plan) {
 function getChanges(oldObj, newObj) {
     const changes = {};
     for (const key in newObj) {
-        if (JSON.stringify(oldObj[key]) !== JSON.stringify(newObj[key])) {
+        if (key === '_id' || key === 'createdAt' || key === 'updatedAt' || key === 'updatedBy') continue;
+        
+        if (typeof newObj[key] === 'object' && newObj[key] !== null) {
+            const nestedChanges = getChanges(oldObj[key] || {}, newObj[key]);
+            if (Object.keys(nestedChanges).length > 0) {
+                changes[key] = nestedChanges;
+            }
+        } else if (oldObj[key] !== newObj[key]) {
             changes[key] = {
-                old: oldObj[key],
+                previous: oldObj[key],
                 new: newObj[key]
             };
         }
     }
     return changes;
 }
-
 // Subscription Management Endpoints
 
 // Change company subscription plan
