@@ -39,9 +39,9 @@
                     features: ['Full HRMS suite', 'Unlimited employees', 'Dedicated support', 'Custom development']
                 }
             };
-            this.initialize();
+          
             this.initializeStyles();
-            this.validateApiEndpoint();
+           this.init();
         }
 
 initializeStyles() {
@@ -192,21 +192,42 @@ initializeStyles() {
         document.head.appendChild(styleSheet);
     }
 
-        async validateApiEndpoint() {
-    try {
-        const response = await fetch(`${this.baseUrl}/verify-token`, {
-            headers: this.getHeaders()
-        });
-        
-        if (!response.ok) {
-            throw new Error('API endpoint validation failed');
+        async init() {
+        try {
+            await this.validateApiEndpoint();
+            await this.initialize();
+        } catch (error) {
+            console.error('Initialization error:', error);
+            this.showError('Failed to initialize companies module');
         }
-    } catch (error) {
-        console.error('API endpoint validation error:', error);
-        // Handle gracefully instead of throwing
-        this.showError('API connection error. Please try again later.');
     }
-}
+
+
+        async validateApiEndpoint() {
+        try {
+            // Use companies endpoint instead of verify-token
+            const response = await fetch(`${this.baseUrl}/companies`, {
+                method: 'GET',
+                headers: this.getHeaders()
+            });
+
+            if (response.status === 401) {
+                // Handle unauthorized access
+                localStorage.removeItem('token');
+                window.location.href = '/login.html';
+                return false;
+            }
+
+            if (!response.ok) {
+                throw new Error(`API validation failed: ${response.status}`);
+            }
+
+            return true;
+        } catch (error) {
+            console.error('API endpoint validation error:', error);
+            return false;
+        }
+    }
 
 
         async initialize() {
@@ -357,47 +378,38 @@ initializeStyles() {
         }
 
         getHeaders() {
-            return {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            };
-        }
+        return {
+            'Authorization': `Bearer ${this.token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        };
+    }
 
             async loadCompanies() {
-            try {
-                this.showLoading();
-                const queryParams = new URLSearchParams({
-                    page: this.currentPage,
-                    limit: this.pageSize,
-                    ...this.filters
-                });
+        try {
+            this.showLoading();
+            const queryParams = new URLSearchParams({
+                page: this.currentPage,
+                limit: this.pageSize,
+                ...this.filters
+            });
 
-                const response = await fetch(`${this.baseUrl}/companies?${queryParams}`, {
-                    headers: this.getHeaders()
-                });
-
-                if (response.status === 401) {
-                    localStorage.removeItem('token');
-                    window.location.href = '/login.html';
-                    return;
-                }
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch companies');
-                }
-
-                const data = await response.json();
-                this.totalCompanies = data.total;
-                this.companies = data.companies;
+            const result = await this.handleApiRequest(`/companies?${queryParams}`);
+            
+            if (result) {
+                this.totalCompanies = result.total;
+                this.companies = result.companies;
                 this.renderCompanies(this.companies);
                 this.renderPagination();
-            } catch (error) {
-                console.error('Error loading companies:', error);
-                this.showError('Failed to load companies');
-            } finally {
-                this.hideLoading();
             }
+        } catch (error) {
+            console.error('Error loading companies:', error);
+            this.showError('Failed to load companies');
+        } finally {
+            this.hideLoading();
         }
+    }
+}
 
         renderCompanies(companies) {
             if (!companies.length) {
@@ -1063,39 +1075,46 @@ filterActivityLogs() {
     }
 }
 
-async handleApiRequest(url, options = {}) {
-    try {
-        const response = await fetch(url, {
-            ...options,
-            headers: {
-                ...this.getHeaders(),
-                ...options.headers
-            }
-        });
+async handleApiRequest(endpoint, options = {}) {
+        try {
+            const url = `${this.baseUrl}${endpoint}`;
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    ...this.getHeaders(),
+                    ...options.headers
+                }
+            });
 
-        if (response.status === 401) {
-            // Handle unauthorized access
-            localStorage.removeItem('token');
-            window.location.href = '/login.html';
+            // Handle different response statuses
+            switch (response.status) {
+                case 401:
+                    localStorage.removeItem('token');
+                    window.location.href = '/login.html';
+                    return null;
+                case 403:
+                    this.showError('Access denied');
+                    return null;
+                case 404:
+                    this.showError('Resource not found');
+                    return null;
+                case 500:
+                    this.showError('Server error occurred');
+                    return null;
+            }
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Request failed');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('API request error:', error);
+            this.showError(error.message || 'Failed to complete request');
             return null;
         }
-
-        if (response.status === 404) {
-            throw new Error('Resource not found');
-        }
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'API request failed');
-        }
-
-        return await response.json();
-    } catch (error) {
-        console.error('API request error:', error);
-        this.showError(error.message);
-        return null;
     }
-}
 
         
         async renderActivityTab(company) {
