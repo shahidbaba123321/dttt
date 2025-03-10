@@ -337,6 +337,7 @@ async function initializeDatabase() {
         security_logs = database.collection('security_logs');
         sessions = database.collection('sessions');
         billing_history = database.collection('billing_history');
+        company_audit_logs = database.collection('company_audit_logs');
 
         // Function to check and create index if needed
         const ensureIndex = async (collection, indexSpec, options = {}) => {
@@ -400,7 +401,11 @@ const indexPromises = [
      // Add billing history indexes
             ensureIndex(billing_history, { companyId: 1 }),
             ensureIndex(billing_history, { invoiceNumber: 1 }, { unique: true }),
-            ensureIndex(billing_history, { date: -1 })
+            ensureIndex(billing_history, { date: -1 }),
+    //company index
+    ensureIndex(company_audit_logs, { companyId: 1 }),
+            ensureIndex(company_audit_logs, { timestamp: -1 }),
+            ensureIndex(company_audit_logs, { type: 1 })
 ];
         await Promise.all(indexPromises);
         
@@ -757,21 +762,39 @@ async function initializeDefaultRoles() {
 
 
 // Audit logging functions
-async function createAuditLog(action, performedBy, targetUser = null, details = {}) {
+async function createAuditLog(logType, userId, companyId, details, session = null) {
     try {
         const auditLog = {
-            action,
-            performedBy: performedBy ? new ObjectId(performedBy) : null,
-            targetUser: targetUser ? new ObjectId(targetUser) : null,
-            details,
+            type: logType,
             timestamp: new Date(),
-            ip: details.ip || null,
-            userAgent: details.userAgent || null
+            userId: new ObjectId(userId),
+            details: details,
+            ip: details?.ip || null, // Access IP from details object
+            userAgent: details?.userAgent || null // Access User Agent from details object
         };
 
-        await audit_logs.insertOne(auditLog);
+        // Add companyId if provided
+        if (companyId) {
+            auditLog.companyId = new ObjectId(companyId);
+            if (session) {
+                await company_audit_logs.insertOne(auditLog, { session });
+            } else {
+                await company_audit_logs.insertOne(auditLog);
+            }
+        } else {
+            // If companyId is not provided, log to the general audit_logs collection
+            if (session) {
+                await audit_logs.insertOne(auditLog, { session });
+            } else {
+                await audit_logs.insertOne(auditLog);
+            }
+        }
+
+        console.log('Audit log created:', auditLog);
     } catch (error) {
         console.error('Error creating audit log:', error);
+        // Consider throwing the error to handle it at a higher level
+        throw error; 
     }
 }
 
@@ -3160,35 +3183,7 @@ app.patch('/api/companies/:companyId/toggle-status', verifyToken, verifyAdmin, a
                 { session }
             );
 
-            // Update subscription status if company is deactivated
-            if (newStatus === 'inactive') {
-                await company_subscriptions.updateOne(
-                    { companyId: new ObjectId(companyId) },
-                    {
-                        $set: {
-                            status: 'suspended',
-                            updatedAt: new Date(),
-                            updatedBy: new ObjectId(req.user.userId)
-                        }
-                    },
-                    { session }
-                );
-            } else {
-                // Reactivate subscription if company is activated
-                await company_subscriptions.updateOne(
-                    { companyId: new ObjectId(companyId) },
-                    {
-                        $set: {
-                            status: 'active',
-                            updatedAt: new Date(),
-                            updatedBy: new ObjectId(req.user.userId)
-                        }
-                    },
-                    { session }
-                );
-            }
-
-            // Create audit log
+            // Create audit log for status change
             await createAuditLog(
                 'COMPANY_STATUS_CHANGED',
                 req.user.userId,
@@ -3196,7 +3191,7 @@ app.patch('/api/companies/:companyId/toggle-status', verifyToken, verifyAdmin, a
                 {
                     companyName: company.name,
                     oldStatus: company.status,
-                    newStatus,
+                    newStatus: newStatus,
                     changedAt: new Date()
                 },
                 session
@@ -3205,10 +3200,7 @@ app.patch('/api/companies/:companyId/toggle-status', verifyToken, verifyAdmin, a
             res.json({
                 success: true,
                 message: `Company ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`,
-                data: {
-                    status: newStatus,
-                    companyId: company._id
-                }
+                data: { status: newStatus }
             });
         });
     } catch (error) {
@@ -3221,6 +3213,7 @@ app.patch('/api/companies/:companyId/toggle-status', verifyToken, verifyAdmin, a
         await session.endSession();
     }
 });
+
 // Get company users
 app.get('/api/companies/:companyId/users', verifyToken, verifyAdmin, async (req, res) => {
     try {
@@ -3363,34 +3356,25 @@ app.post('/api/companies/:companyId/subscription', verifyToken, verifyAdmin, asy
             );
 
             // Create audit log
-            await createAuditLog(
+           await createAuditLog(
                 'SUBSCRIPTION_CHANGED',
                 req.user.userId,
                 companyId,
                 {
-                    companyName: company.name,
                     oldPlan: company.subscriptionPlan,
                     newPlan: plan,
-                    billingCycle,
-                    price
+                    oldBillingCycle: company.billingCycle,
+                    newBillingCycle: billingCycle,
+                    changedAt: new Date()
                 },
                 session
             );
-
+            
             // Generate invoice
-            const invoice = await generateInvoice(company, plan, price, billingCycle);
-
-            res.json({
+             res.json({
                 success: true,
                 message: 'Subscription updated successfully',
-                data: {
-                    plan,
-                    billingCycle,
-                    price,
-                    startDate,
-                    endDate,
-                    invoice
-                }
+                data: updatedSubscription
             });
         });
     } catch (error) {
@@ -3555,15 +3539,16 @@ app.post('/api/companies/:companyId/users', verifyToken, verifyAdmin, async (req
             const result = await company_users.insertOne(newUser, { session });
 
             // Create audit log
-            await createAuditLog(
+          await createAuditLog(
                 'USER_CREATED',
                 req.user.userId,
                 companyId,
                 {
-                    userId: result.insertedId,
                     userName: name,
                     userEmail: email,
-                    userRole: role
+                    userRole: role,
+                    userDepartment: department,
+                    createdAt: new Date()
                 },
                 session
             );
@@ -3704,24 +3689,24 @@ app.post('/api/companies/:companyId/users/:userId/reset-password', verifyToken, 
             );
 
             // Create audit log
-            await createAuditLog(
-                'COMPANY_USER_PASSWORD_RESET',
+           await createAuditLog(
+                'PASSWORD_RESET',
                 req.user.userId,
                 companyId,
                 {
-                    userId,
-                    userEmail: user.email
+                    userId: userId,
+                    userEmail: user.email,
+                    resetAt: new Date()
                 },
                 session
             );
 
-            // TODO: Send email with new temporary password
-
             res.json({
                 success: true,
-                message: 'Password reset successfully',
+                message: 'Password reset successful',
                 data: {
-                    tempPassword // Only in development environment
+                    email: user.email,
+                    tempPassword
                 }
             });
         });
