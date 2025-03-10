@@ -301,7 +301,19 @@ async function initializeDatabase() {
             'migration_jobs',
             'security_logs',
             'sessions',
-            'billing_history'
+            'billing_history',
+            'plans', // Add this for pricing plans
+            'features', // Add this for features
+            'discounts', // Add this for discounts
+            'referral_discounts', // Add this for referral discounts
+            'invoices', // Add this for invoices
+            'subscription_logs', // Add this for subscription logs
+            'data_retention_policies', // Add this for data retention policies
+            'deleted_plans', // Add this for deleted plans
+            'deleted_features', // Add this for deleted features
+            'deleted_discounts', // Add this for deleted discounts
+            'deleted_referral_discounts', // Add this for deleted referral discounts
+            'deleted_payments' // Add this for deleted payments
         ];
 
         // Create collections if they don't exist
@@ -337,76 +349,102 @@ async function initializeDatabase() {
         security_logs = database.collection('security_logs');
         sessions = database.collection('sessions');
         billing_history = database.collection('billing_history');
-        company_audit_logs = database.collection('company_audit_logs');
+        plans = database.collection('plans'); // Add this for pricing plans
+        features = database.collection('features'); // Add this for features
+        discounts = database.collection('discounts'); // Add this for discounts
+        referral_discounts = database.collection('referral_discounts'); // Add this for referral discounts
+        invoices = database.collection('invoices'); // Add this for invoices
+        subscription_logs = database.collection('subscription_logs'); // Add this for subscription logs
+        data_retention_policies = database.collection('data_retention_policies'); // Add this for data retention policies
+        deleted_plans = database.collection('deleted_plans'); // Add this for deleted plans
+        deleted_features = database.collection('deleted_features'); // Add this for deleted features
+        deleted_discounts = database.collection('deleted_discounts'); // Add this for deleted discounts
+        deleted_referral_discounts = database.collection('deleted_referral_discounts'); // Add this for deleted referral discounts
+        deleted_payments = database.collection('deleted_payments'); // Add this for deleted payments
 
         // Function to check and create index if needed
         const ensureIndex = async (collection, indexSpec, options = {}) => {
-    try {
-        // Check if index already exists
-        const indexName = options.name || Object.keys(indexSpec).map(key => `${key}_${indexSpec[key]}`).join('_');
-        const existingIndexes = await collection.listIndexes().toArray();
-        
-        const indexExists = existingIndexes.some(idx => {
-            // Compare index specification
-            const keyMatch = Object.keys(indexSpec).every(k => 
-                idx.key[k] === indexSpec[k]
-            );
-            return keyMatch;
-        });
+            try {
+                // Check if index already exists
+                const indexName = options.name || Object.keys(indexSpec).map(key => `${key}_${indexSpec[key]}`).join('_');
+                const existingIndexes = await collection.listIndexes().toArray();
+                
+                const indexExists = existingIndexes.some(idx => {
+                    // Compare index specification
+                    const keyMatch = Object.keys(indexSpec).every(k => 
+                        idx.key[k] === indexSpec[k]
+                    );
+                    return keyMatch;
+                });
 
-        if (!indexExists) {
-            await collection.createIndex(indexSpec, options);
-            console.log(`Created index for ${collection.collectionName}`);
-        } else {
-            console.log(`Index already exists for ${collection.collectionName}`);
-        }
-    } catch (error) {
-        console.warn(`Warning handling index for ${collection.collectionName}:`, error.message);
-    }
-};
+                if (!indexExists) {
+                    await collection.createIndex(indexSpec, options);
+                    console.log(`Created index for ${collection.collectionName}`);
+                } else {
+                    console.log(`Index already exists for ${collection.collectionName}`);
+                }
+            } catch (error) {
+                console.warn(`Warning handling index for ${collection.collectionName}:`, error.message);
+            }
+        };
 
-// Update the initialization promises in initializeDatabase
-const indexPromises = [
-    // User-related indexes
-    ensureIndex(users, { email: 1 }, { unique: true }),
-    ensureIndex(users, { status: 1 }),
-    ensureIndex(audit_logs, { timestamp: -1 }),
-    ensureIndex(deleted_users, { originalId: 1 }),
-    ensureIndex(user_permissions, { userId: 1 }, { unique: true, name: 'user_permissions_userId' }),
+        // Update the initialization promises in initializeDatabase
+        const indexPromises = [
+            // User-related indexes
+            ensureIndex(users, { email: 1 }, { unique: true }),
+            ensureIndex(users, { status: 1 }),
+            ensureIndex(audit_logs, { timestamp: -1 }),
+            ensureIndex(deleted_users, { originalId: 1 }),
+            ensureIndex(user_permissions, { userId: 1 }, { unique: true, name: 'user_permissions_userId' }),
 
-    // Company-related indexes
-    ensureIndex(companies, { name: 1 }, { unique: true }),
-    ensureIndex(companies, { 'contactDetails.email': 1 }, { unique: true }),
-    ensureIndex(companies, { status: 1 }),
-    ensureIndex(company_users, { companyId: 1 }),
-    ensureIndex(company_users, { email: 1 }, { unique: true }),
-    ensureIndex(company_subscriptions, { companyId: 1 }, { unique: true }),
-    ensureIndex(company_audit_logs, { companyId: 1 }),
+            // Company-related indexes
+            ensureIndex(companies, { name: 1 }, { unique: true }),
+            ensureIndex(companies, { 'contactDetails.email': 1 }, { unique: true }),
+            ensureIndex(companies, { status: 1 }),
+            ensureIndex(company_users, { companyId: 1 }),
+            ensureIndex(company_users, { email: 1 }, { unique: true }),
+            ensureIndex(company_subscriptions, { companyId: 1 }, { unique: true }),
+            ensureIndex(company_audit_logs, { companyId: 1 }),
 
-    // Role and permission indexes
-    ensureIndex(roles, { name: 1 }, { unique: true }),
-    ensureIndex(role_permissions, { roleId: 1 }, { unique: true }),
-    ensureIndex(user_role_assignments, { userId: 1 }, { unique: true }),
+            // Role and permission indexes
+            ensureIndex(roles, { name: 1 }, { unique: true }),
+            ensureIndex(role_permissions, { roleId: 1 }, { unique: true }),
+            ensureIndex(user_role_assignments, { userId: 1 }, { unique: true }),
 
-    // Integration and security indexes
-    ensureIndex(webhooks, { companyId: 1 }),
-    ensureIndex(api_keys, { companyId: 1 }),
-    ensureIndex(notifications, { companyId: 1 }),
-    ensureIndex(security_logs, { timestamp: -1 }),
-    ensureIndex(security_logs, { type: 1 }),
-    ensureIndex(sessions, { userId: 1 }),
-    ensureIndex(sessions, { expires: 1 }),
-    ensureIndex(migration_jobs, { status: 1 }),
+            // Integration and security indexes
+            ensureIndex(webhooks, { companyId: 1 }),
+            ensureIndex(api_keys, { companyId: 1 }),
+            ensureIndex(notifications, { companyId: 1 }),
+            ensureIndex(security_logs, { timestamp: -1 }),
+            ensureIndex(security_logs, { type: 1 }),
+            ensureIndex(sessions, { userId: 1 }),
+            ensureIndex(sessions, { expires: 1 }),
+            ensureIndex(migration_jobs, { status: 1 }),
 
-     // Add billing history indexes
+            // Add billing history indexes
             ensureIndex(billing_history, { companyId: 1 }),
             ensureIndex(billing_history, { invoiceNumber: 1 }, { unique: true }),
             ensureIndex(billing_history, { date: -1 }),
-    //company index
-    ensureIndex(company_audit_logs, { companyId: 1 }),
+
+            // Company index
+            ensureIndex(company_audit_logs, { companyId: 1 }),
             ensureIndex(company_audit_logs, { timestamp: -1 }),
-            ensureIndex(company_audit_logs, { type: 1 })
-];
+            ensureIndex(company_audit_logs, { type: 1 }),
+
+            // Add indexes for new collections
+            ensureIndex(plans, { name: 1 }, { unique: true }),
+            ensureIndex(features, { name: 1 }, { unique: true }),
+            ensureIndex(discounts, { code: 1 }, { unique: true }),
+            ensureIndex(referral_discounts, { code: 1 }, { unique: true }),
+            ensureIndex(invoices, { invoiceNumber: 1 }, { unique: true }),
+            ensureIndex(subscription_logs, { timestamp: -1 }),
+            ensureIndex(data_retention_policies, { retentionPeriod: 1 }),
+            ensureIndex(deleted_plans, { name: 1 }),
+            ensureIndex(deleted_features, { name: 1 }),
+            ensureIndex(deleted_discounts, { code: 1 }),
+            ensureIndex(deleted_referral_discounts, { code: 1 }),
+            ensureIndex(deleted_payments, { type: 1 })
+        ];
         await Promise.all(indexPromises);
         
         // Initialize default data
@@ -435,7 +473,14 @@ const indexPromises = [
             migration_jobs,
             security_logs,
             sessions,
-            billing_history
+            billing_history,
+            plans, // Add this for pricing plans
+            features, // Add this for features
+            discounts, // Add this for discounts
+            referral_discounts, // Add this for referral discounts
+            invoices, // Add this for invoices
+            subscription_logs, // Add this for subscription logs
+            data_retention_policies // Add this for data retention policies
         };
     } catch (err) {
         console.error("MongoDB initialization error:", err);
@@ -3977,6 +4022,2937 @@ app.get('/api/companies/:companyId/activity-logs', verifyToken, verifyAdmin, asy
             success: false,
             message: 'Error fetching activity logs'
         });
+    }
+});
+
+// Plan Management Endpoints
+
+// Get all plans
+app.get('/api/plans', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const plans = await database.collection('plans').find().toArray();
+        res.json({
+            success: true,
+            data: plans
+        });
+    } catch (error) {
+        console.error('Error fetching plans:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching plans'
+        });
+    }
+});
+
+// Create new plan
+app.post('/api/plans', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const {
+                name,
+                description,
+                monthlyPrice,
+                annualPrice,
+                trialPeriod = 0,
+                isActive = true,
+                features
+            } = req.body;
+
+            // Validate required fields
+            if (!name || !description || !monthlyPrice || !annualPrice || !features || features.length === 0) {
+                throw new Error('Missing required fields');
+            }
+
+            // Check if plan exists
+            const existingPlan = await database.collection('plans').findOne({
+                name: { $regex: new RegExp(`^${name}$`, 'i') }
+            }, { session });
+
+            if (existingPlan) {
+                throw new Error('Plan with this name already exists');
+            }
+
+            // Create plan object
+            const plan = {
+                name,
+                description,
+                monthlyPrice: parseFloat(monthlyPrice),
+                annualPrice: parseFloat(annualPrice),
+                trialPeriod: parseInt(trialPeriod),
+                isActive,
+                features,
+                createdAt: new Date(),
+                createdBy: new ObjectId(req.user.userId),
+                updatedAt: new Date()
+            };
+
+            const result = await database.collection('plans').insertOne(plan, { session });
+
+            // Create audit log
+            await createAuditLog(
+                'PLAN_CREATED',
+                req.user.userId,
+                null,
+                {
+                    planName: name,
+                    planDetails: plan
+                },
+                session
+            );
+
+            res.status(201).json({
+                success: true,
+                message: 'Plan created successfully',
+                data: {
+                    _id: result.insertedId,
+                    ...plan
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error creating plan:', error);
+        res.status(error.message.includes('already exists') ? 400 : 500).json({
+            success: false,
+            message: error.message || 'Error creating plan'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Update existing plan
+app.put('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { planId } = req.params;
+            const {
+                name,
+                description,
+                monthlyPrice,
+                annualPrice,
+                trialPeriod,
+                isActive,
+                features
+            } = req.body;
+
+            // Validate planId format
+            if (!ObjectId.isValid(planId)) {
+                throw new Error('Invalid plan ID');
+            }
+
+            // Get existing plan
+            const existingPlan = await database.collection('plans').findOne({
+                _id: new ObjectId(planId)
+            }, { session });
+
+            if (!existingPlan) {
+                throw new Error('Plan not found');
+            }
+
+            // Check if new name conflicts with other plans
+            if (name && name !== existingPlan.name) {
+                const nameExists = await database.collection('plans').findOne({
+                    _id: { $ne: new ObjectId(planId) },
+                    name: { $regex: new RegExp(`^${name}$`, 'i') }
+                }, { session });
+
+                if (nameExists) {
+                    throw new Error('Plan name already exists');
+                }
+            }
+
+            // Prepare update data
+            const updateData = {
+                ...(name && { name }),
+                ...(description && { description }),
+                ...(monthlyPrice && { monthlyPrice: parseFloat(monthlyPrice) }),
+                ...(annualPrice && { annualPrice: parseFloat(annualPrice) }),
+                ...(trialPeriod !== undefined && { trialPeriod: parseInt(trialPeriod) }),
+                ...(isActive !== undefined && { isActive }),
+                ...(features && { features }),
+                updatedAt: new Date(),
+                updatedBy: new ObjectId(req.user.userId)
+            };
+
+            // Update plan
+            const result = await database.collection('plans').updateOne(
+                { _id: new ObjectId(planId) },
+                { $set: updateData },
+                { session }
+            );
+
+            if (result.matchedCount === 0) {
+                throw new Error('Plan not found');
+            }
+
+            // Get updated plan
+            const updatedPlan = await database.collection('plans').findOne(
+                { _id: new ObjectId(planId) },
+                { session }
+            );
+
+            // Create audit log
+            await createAuditLog(
+                'PLAN_UPDATED',
+                req.user.userId,
+                null,
+                {
+                    planId,
+                    planName: updatedPlan.name,
+                    changes: getChanges(existingPlan, updatedPlan)
+                },
+                session
+            );
+
+            res.json({
+                success: true,
+                message: 'Plan updated successfully',
+                data: updatedPlan
+            });
+        });
+    } catch (error) {
+        console.error('Error updating plan:', error);
+        res.status(
+            error.message.includes('not found') ? 404 :
+            error.message.includes('already exists') ? 400 :
+            500
+        ).json({
+            success: false,
+            message: error.message || 'Error updating plan'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Delete plan
+app.delete('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { planId } = req.params;
+
+            // Validate planId format
+            if (!ObjectId.isValid(planId)) {
+                throw new Error('Invalid plan ID');
+            }
+
+            // Get plan before deletion
+            const plan = await database.collection('plans').findOne({
+                _id: new ObjectId(planId)
+            }, { session });
+
+            if (!plan) {
+                throw new Error('Plan not found');
+            }
+
+            // Check if plan has active subscriptions
+            const activeSubscriptions = await database.collection('subscriptions').countDocuments({
+                planId: new ObjectId(planId),
+                status: 'active'
+            }, { session });
+
+            if (activeSubscriptions > 0) {
+                throw new Error(`Cannot delete plan. ${activeSubscriptions} active subscriptions exist.`);
+            }
+
+            // Delete plan
+            const result = await database.collection('plans').deleteOne({
+                _id: new ObjectId(planId)
+            }, { session });
+
+            if (result.deletedCount === 0) {
+                throw new Error('Plan not found');
+            }
+
+            // Create audit log
+            await createAuditLog(
+                'PLAN_DELETED',
+                req.user.userId,
+                null,
+                {
+                    planId,
+                    planName: plan.name
+                },
+                session
+            );
+
+            // Archive plan data
+            await database.collection('deleted_plans').insertOne({
+                ...plan,
+                deletedAt: new Date(),
+                deletedBy: new ObjectId(req.user.userId)
+            }, { session });
+
+            res.json({
+                success: true,
+                message: 'Plan deleted successfully',
+                data: {
+                    planId,
+                    planName: plan.name
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error deleting plan:', error);
+        res.status(
+            error.message.includes('not found') ? 404 :
+            error.message.includes('active subscriptions') ? 400 :
+            500
+        ).json({
+            success: false,
+            message: error.message || 'Error deleting plan'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+// Helper function to get changes between objects
+function getChanges(oldObj, newObj) {
+    const changes = {};
+    for (const key in newObj) {
+        if (key === '_id' || key === 'createdAt' || key === 'updatedAt' || key === 'updatedBy') continue;
+
+        if (typeof newObj[key] === 'object' && newObj[key] !== null) {
+            const nestedChanges = getChanges(oldObj[key] || {}, newObj[key]);
+            if (Object.keys(nestedChanges).length > 0) {
+                changes[key] = nestedChanges;
+            }
+        } else if (oldObj[key] !== newObj[key]) {
+            changes[key] = {
+                previous: oldObj[key],
+                new: newObj[key]
+            };
+        }
+    }
+    return changes;
+}
+
+// Helper function to validate plan data
+function validatePlanData(data) {
+    if (!data.name || typeof data.name !== 'string' || data.name.trim().length < 3) {
+        throw new Error('Plan name must be at least 3 characters long');
+    }
+
+    if (!data.description || typeof data.description !== 'string' || data.description.trim().length < 10) {
+        throw new Error('Plan description must be at least 10 characters long');
+    }
+
+    if (typeof data.monthlyPrice !== 'number' || data.monthlyPrice < 0) {
+        throw new Error('Monthly price must be a non-negative number');
+    }
+
+    if (typeof data.annualPrice !== 'number' || data.annualPrice < 0) {
+        throw new Error('Annual price must be a non-negative number');
+    }
+
+    if (data.trialPeriod !== undefined && (typeof data.trialPeriod !== 'number' || data.trialPeriod < 0)) {
+        throw new Error('Trial period must be a non-negative number');
+    }
+
+    if (data.isActive !== undefined && typeof data.isActive !== 'boolean') {
+        throw new Error('isActive must be a boolean');
+    }
+
+    if (!Array.isArray(data.features) || data.features.length === 0) {
+        throw new Error('Features must be a non-empty array');
+    }
+
+    data.features.forEach((feature, index) => {
+        if (typeof feature !== 'object' || !feature.name || typeof feature.name !== 'string') {
+            throw new Error(`Invalid feature at index ${index}. Each feature must have a name.`);
+        }
+    });
+
+    return true;
+}
+
+// Helper function to initialize default plans
+async function initializeDefaultPlans() {
+    try {
+        const existingPlans = await database.collection('plans').countDocuments();
+        if (existingPlans === 0) {
+            console.log('Initializing default plans...');
+
+            const defaultPlans = [
+                {
+                    name: 'Free',
+                    description: 'Basic access to core HRMS features',
+                    monthlyPrice: 0,
+                    annualPrice: 0,
+                    trialPeriod: 30,
+                    isActive: true,
+                    features: [
+                        { name: 'Employee Management' },
+                        { name: 'Attendance Tracking' }
+                    ]
+                },
+                {
+                    name: 'Basic',
+                    description: 'Essential HRMS features for small businesses',
+                    monthlyPrice: 99,
+                    annualPrice: 999,
+                    trialPeriod: 14,
+                    isActive: true,
+                    features: [
+                        { name: 'Employee Management' },
+                        { name: 'Attendance Tracking' },
+                        { name: 'Payroll Processing' }
+                    ]
+                },
+                {
+                    name: 'Pro',
+                    description: 'Advanced HRMS features for growing companies',
+                    monthlyPrice: 199,
+                    annualPrice: 1999,
+                    trialPeriod: 7,
+                    isActive: true,
+                    features: [
+                        { name: 'Employee Management' },
+                        { name: 'Attendance Tracking' },
+                        { name: 'Payroll Processing' },
+                        { name: 'Performance Management' },
+                        { name: 'Recruitment' }
+                    ]
+                },
+                {
+                    name: 'Enterprise',
+                    description: 'Comprehensive HRMS solution with premium support',
+                    monthlyPrice: 499,
+                    annualPrice: 4999,
+                    trialPeriod: 0,
+                    isActive: true,
+                    features: [
+                        { name: 'Employee Management' },
+                        { name: 'Attendance Tracking' },
+                        { name: 'Payroll Processing' },
+                        { name: 'Performance Management' },
+                        { name: 'Recruitment' },
+                        { name: 'Advanced Analytics' },
+                        { name: 'Custom Integrations' },
+                        { name: 'Premium Support' }
+                    ]
+                }
+            ];
+
+            await database.collection('plans').insertMany(defaultPlans);
+            console.log('Default plans initialized');
+        }
+    } catch (error) {
+        console.error('Error initializing default plans:', error);
+        throw error;
+    }
+}
+// Feature Management Endpoints
+
+// Get all features
+app.get('/api/features', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const features = await database.collection('features').find().toArray();
+        res.json({
+            success: true,
+            data: features
+        });
+    } catch (error) {
+        console.error('Error fetching features:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching features'
+        });
+    }
+});
+
+// Create new feature
+app.post('/api/features', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const {
+                name,
+                description,
+                category
+            } = req.body;
+
+            // Validate required fields
+            if (!name || !description || !category) {
+                throw new Error('Missing required fields');
+            }
+
+            // Check if feature exists
+            const existingFeature = await database.collection('features').findOne({
+                name: { $regex: new RegExp(`^${name}$`, 'i') }
+            }, { session });
+
+            if (existingFeature) {
+                throw new Error('Feature with this name already exists');
+            }
+
+            // Create feature object
+            const feature = {
+                name,
+                description,
+                category,
+                createdAt: new Date(),
+                createdBy: new ObjectId(req.user.userId),
+                updatedAt: new Date()
+            };
+
+            const result = await database.collection('features').insertOne(feature, { session });
+
+            // Create audit log
+            await createAuditLog(
+                'FEATURE_CREATED',
+                req.user.userId,
+                null,
+                {
+                    featureName: name,
+                    featureDetails: feature
+                },
+                session
+            );
+
+            res.status(201).json({
+                success: true,
+                message: 'Feature created successfully',
+                data: {
+                    _id: result.insertedId,
+                    ...feature
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error creating feature:', error);
+        res.status(error.message.includes('already exists') ? 400 : 500).json({
+            success: false,
+            message: error.message || 'Error creating feature'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Delete feature
+app.delete('/api/features/:featureId', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { featureId } = req.params;
+
+            // Validate featureId format
+            if (!ObjectId.isValid(featureId)) {
+                throw new Error('Invalid feature ID');
+            }
+
+            // Get feature before deletion
+            const feature = await database.collection('features').findOne({
+                _id: new ObjectId(featureId)
+            }, { session });
+
+            if (!feature) {
+                throw new Error('Feature not found');
+            }
+
+            // Check if feature is used in any plans
+            const usedInPlans = await database.collection('plans').countDocuments({
+                'features.name': feature.name
+            }, { session });
+
+            if (usedInPlans > 0) {
+                throw new Error(`Cannot delete feature. It is used in ${usedInPlans} plans.`);
+            }
+
+            // Delete feature
+            const result = await database.collection('features').deleteOne({
+                _id: new ObjectId(featureId)
+            }, { session });
+
+            if (result.deletedCount === 0) {
+                throw new Error('Feature not found');
+            }
+
+            // Create audit log
+            await createAuditLog(
+                'FEATURE_DELETED',
+                req.user.userId,
+                null,
+                {
+                    featureId,
+                    featureName: feature.name
+                },
+                session
+            );
+
+            // Archive feature data
+            await database.collection('deleted_features').insertOne({
+                ...feature,
+                deletedAt: new Date(),
+                deletedBy: new ObjectId(req.user.userId)
+            }, { session });
+
+            res.json({
+                success: true,
+                message: 'Feature deleted successfully',
+                data: {
+                    featureId,
+                    featureName: feature.name
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error deleting feature:', error);
+        res.status(
+            error.message.includes('not found') ? 404 :
+            error.message.includes('used in') ? 400 :
+            500
+        ).json({
+            success: false,
+            message: error.message || 'Error deleting feature'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Helper function to validate feature data
+function validateFeatureData(data) {
+    if (!data.name || typeof data.name !== 'string' || data.name.trim().length < 3) {
+        throw new Error('Feature name must be at least 3 characters long');
+    }
+
+    if (!data.description || typeof data.description !== 'string' || data.description.trim().length < 10) {
+        throw new Error('Feature description must be at least 10 characters long');
+    }
+
+    if (!data.category || typeof data.category !== 'string' || data.category.trim().length < 3) {
+        throw new Error('Feature category must be at least 3 characters long');
+    }
+
+    return true;
+}
+
+// Helper function to initialize default features
+async function initializeDefaultFeatures() {
+    try {
+        const existingFeatures = await database.collection('features').countDocuments();
+        if (existingFeatures === 0) {
+            console.log('Initializing default features...');
+
+            const defaultFeatures = [
+                { name: 'Employee Management', description: 'Manage employee records and profiles', category: 'HRMS' },
+                { name: 'Attendance Tracking', description: 'Track employee attendance and time off', category: 'HRMS' },
+                { name: 'Payroll Processing', description: 'Automate payroll calculations and payments', category: 'Payroll' },
+                { name: 'Performance Management', description: 'Set goals, conduct reviews, and track performance', category: 'Performance' },
+                { name: 'Recruitment', description: 'Manage job postings, applications, and hiring process', category: 'Recruitment' },
+                { name: 'Advanced Analytics', description: 'Generate detailed reports and analytics', category: 'Analytics' },
+                { name: 'Custom Integrations', description: 'Integrate with third-party systems and tools', category: 'Integration' },
+                { name: 'Premium Support', description: 'Access to priority support and dedicated account manager', category: 'Support' }
+            ];
+
+            await database.collection('features').insertMany(defaultFeatures);
+            console.log('Default features initialized');
+        }
+    } catch (error) {
+        console.error('Error initializing default features:', error);
+        throw error;
+    }
+}
+
+// Discount Management Endpoints
+
+// Get all discounts
+app.get('/api/discounts', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const discounts = await database.collection('discounts').find().toArray();
+        res.json({
+            success: true,
+            data: discounts
+        });
+    } catch (error) {
+        console.error('Error fetching discounts:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching discounts'
+        });
+    }
+});
+
+// Create new discount
+app.post('/api/discounts', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const {
+                code,
+                type,
+                value,
+                expiryDate,
+                usageLimit = 0,
+                applicablePlans
+            } = req.body;
+
+            // Validate required fields
+            if (!code || !type || !value || !expiryDate || !applicablePlans || applicablePlans.length === 0) {
+                throw new Error('Missing required fields');
+            }
+
+            // Validate discount type
+            if (type !== 'percentage' && type !== 'fixed') {
+                throw new Error('Invalid discount type. Must be "percentage" or "fixed".');
+            }
+
+            // Validate discount value
+            if (typeof value !== 'number' || value <= 0) {
+                throw new Error('Discount value must be a positive number');
+            }
+
+            // Validate expiry date
+            const expiry = new Date(expiryDate);
+            if (isNaN(expiry.getTime())) {
+                throw new Error('Invalid expiry date');
+            }
+
+            // Validate usage limit
+            if (typeof usageLimit !== 'number' || usageLimit < 0) {
+                throw new Error('Usage limit must be a non-negative number');
+            }
+
+            // Check if discount code exists
+            const existingDiscount = await database.collection('discounts').findOne({
+                code: { $regex: new RegExp(`^${code}$`, 'i') }
+            }, { session });
+
+            if (existingDiscount) {
+                throw new Error('Discount code already exists');
+            }
+
+            // Validate applicable plans
+            const validPlans = await database.collection('plans').find({
+                _id: { $in: applicablePlans.map(id => new ObjectId(id)) }
+            }, { session }).toArray();
+
+            if (validPlans.length !== applicablePlans.length) {
+                throw new Error('One or more specified plans do not exist');
+            }
+
+            // Create discount object
+            const discount = {
+                code,
+                type,
+                value,
+                expiryDate: expiry.toISOString(),
+                usageLimit,
+                usageCount: 0,
+                applicablePlans: validPlans.map(plan => plan._id),
+                createdAt: new Date(),
+                createdBy: new ObjectId(req.user.userId),
+                updatedAt: new Date()
+            };
+
+            const result = await database.collection('discounts').insertOne(discount, { session });
+
+            // Create audit log
+            await createAuditLog(
+                'DISCOUNT_CREATED',
+                req.user.userId,
+                null,
+                {
+                    discountCode: code,
+                    discountDetails: discount
+                },
+                session
+            );
+
+            res.status(201).json({
+                success: true,
+                message: 'Discount created successfully',
+                data: {
+                    _id: result.insertedId,
+                    ...discount
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error creating discount:', error);
+        res.status(error.message.includes('already exists') ? 400 : 500).json({
+            success: false,
+            message: error.message || 'Error creating discount'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Update existing discount
+app.put('/api/discounts/:discountId', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { discountId } = req.params;
+            const {
+                code,
+                type,
+                value,
+                expiryDate,
+                usageLimit,
+                applicablePlans
+            } = req.body;
+
+            // Validate discountId format
+            if (!ObjectId.isValid(discountId)) {
+                throw new Error('Invalid discount ID');
+            }
+
+            // Get existing discount
+            const existingDiscount = await database.collection('discounts').findOne({
+                _id: new ObjectId(discountId)
+            }, { session });
+
+            if (!existingDiscount) {
+                throw new Error('Discount not found');
+            }
+
+            // Check if new code conflicts with other discounts
+            if (code && code !== existingDiscount.code) {
+                const codeExists = await database.collection('discounts').findOne({
+                    _id: { $ne: new ObjectId(discountId) },
+                    code: { $regex: new RegExp(`^${code}$`, 'i') }
+                }, { session });
+
+                if (codeExists) {
+                    throw new Error('Discount code already exists');
+                }
+            }
+
+            // Validate discount type
+            if (type && type !== 'percentage' && type !== 'fixed') {
+                throw new Error('Invalid discount type. Must be "percentage" or "fixed".');
+            }
+
+            // Validate discount value
+            if (value !== undefined && (typeof value !== 'number' || value <= 0)) {
+                throw new Error('Discount value must be a positive number');
+            }
+
+            // Validate expiry date
+            let expiry;
+            if (expiryDate) {
+                expiry = new Date(expiryDate);
+                if (isNaN(expiry.getTime())) {
+                    throw new Error('Invalid expiry date');
+                }
+            }
+
+            // Validate usage limit
+            if (usageLimit !== undefined && (typeof usageLimit !== 'number' || usageLimit < 0)) {
+                throw new Error('Usage limit must be a non-negative number');
+            }
+
+            // Validate applicable plans
+            let validPlans;
+            if (applicablePlans) {
+                validPlans = await database.collection('plans').find({
+                    _id: { $in: applicablePlans.map(id => new ObjectId(id)) }
+                }, { session }).toArray();
+
+                if (validPlans.length !== applicablePlans.length) {
+                    throw new Error('One or more specified plans do not exist');
+                }
+            }
+
+            // Prepare update data
+            const updateData = {
+                ...(code && { code }),
+                ...(type && { type }),
+                ...(value !== undefined && { value }),
+                ...(expiryDate && { expiryDate: expiry.toISOString() }),
+                ...(usageLimit !== undefined && { usageLimit }),
+                ...(applicablePlans && { applicablePlans: validPlans.map(plan => plan._id) }),
+                updatedAt: new Date(),
+                updatedBy: new ObjectId(req.user.userId)
+            };
+
+            // Update discount
+            const result = await database.collection('discounts').updateOne(
+                { _id: new ObjectId(discountId) },
+                { $set: updateData },
+                { session }
+            );
+
+            if (result.matchedCount === 0) {
+                throw new Error('Discount not found');
+            }
+
+            // Get updated discount
+            const updatedDiscount = await database.collection('discounts').findOne(
+                { _id: new ObjectId(discountId) },
+                { session }
+            );
+
+            // Create audit log
+            await createAuditLog(
+                'DISCOUNT_UPDATED',
+                req.user.userId,
+                null,
+                {
+                    discountId,
+                    discountCode: updatedDiscount.code,
+                    changes: getChanges(existingDiscount, updatedDiscount)
+                },
+                session
+            );
+
+            res.json({
+                success: true,
+                message: 'Discount updated successfully',
+                data: updatedDiscount
+            });
+        });
+    } catch (error) {
+        console.error('Error updating discount:', error);
+        res.status(
+            error.message.includes('not found') ? 404 :
+            error.message.includes('already exists') ? 400 :
+            500
+        ).json({
+            success: false,
+            message: error.message || 'Error updating discount'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Delete discount
+app.delete('/api/discounts/:discountId', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { discountId } = req.params;
+
+            // Validate discountId format
+            if (!ObjectId.isValid(discountId)) {
+                throw new Error('Invalid discount ID');
+            }
+
+            // Get discount before deletion
+            const discount = await database.collection('discounts').findOne({
+                _id: new ObjectId(discountId)
+            }, { session });
+
+            if (!discount) {
+                throw new Error('Discount not found');
+            }
+
+            // Check if discount has been used
+            const usedInSubscriptions = await database.collection('subscriptions').countDocuments({
+                discountCode: discount.code
+            }, { session });
+
+            if (usedInSubscriptions > 0) {
+                throw new Error(`Cannot delete discount. It has been used in ${usedInSubscriptions} subscriptions.`);
+            }
+
+            // Delete discount
+            const result = await database.collection('discounts').deleteOne({
+                _id: new ObjectId(discountId)
+            }, { session });
+
+            if (result.deletedCount === 0) {
+                throw new Error('Discount not found');
+            }
+
+            // Create audit log
+            await createAuditLog(
+                'DISCOUNT_DELETED',
+                req.user.userId,
+                null,
+                {
+                    discountId,
+                    discountCode: discount.code
+                },
+                session
+            );
+
+            // Archive discount data
+            await database.collection('deleted_discounts').insertOne({
+                ...discount,
+                deletedAt: new Date(),
+                deletedBy: new ObjectId(req.user.userId)
+            }, { session });
+
+            res.json({
+                success: true,
+                message: 'Discount deleted successfully',
+                data: {
+                    discountId,
+                    discountCode: discount.code
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error deleting discount:', error);
+        res.status(
+            error.message.includes('not found') ? 404 :
+            error.message.includes('used in') ? 400 :
+            500
+        ).json({
+            success: false,
+            message: error.message || 'Error deleting discount'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Apply discount to a plan
+app.post('/api/discounts/apply', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { code, planId } = req.body;
+
+            // Validate required fields
+            if (!code || !planId) {
+                throw new Error('Missing required fields');
+            }
+
+            // Validate planId format
+            if (!ObjectId.isValid(planId)) {
+                throw new Error('Invalid plan ID');
+            }
+
+            // Find discount
+            const discount = await database.collection('discounts').findOne({
+                code: { $regex: new RegExp(`^${code}$`, 'i') }
+            }, { session });
+
+            if (!discount) {
+                throw new Error('Discount not found');
+            }
+
+            // Check if discount is still valid
+            const now = new Date();
+            const expiry = new Date(discount.expiryDate);
+            if (now > expiry) {
+                throw new Error('Discount has expired');
+            }
+
+            // Check if discount has reached usage limit
+            if (discount.usageLimit > 0 && discount.usageCount >= discount.usageLimit) {
+                throw new Error('Discount usage limit reached');
+            }
+
+            // Find plan
+            const plan = await database.collection('plans').findOne({
+                _id: new ObjectId(planId)
+            }, { session });
+
+            if (!plan) {
+                throw new Error('Plan not found');
+            }
+
+            // Check if discount is applicable to the plan
+            if (!discount.applicablePlans.includes(plan._id)) {
+                throw new Error('Discount is not applicable to this plan');
+            }
+
+            // Apply discount to plan
+            let updatedPlan;
+            if (discount.type === 'percentage') {
+                const discountAmount = plan.monthlyPrice * (discount.value / 100);
+                updatedPlan = {
+                    ...plan,
+                    monthlyPrice: Math.max(0, plan.monthlyPrice - discountAmount),
+                    annualPrice: Math.max(0, plan.annualPrice - (discountAmount * 12))
+                };
+            } else if (discount.type === 'fixed') {
+                updatedPlan = {
+                    ...plan,
+                    monthlyPrice: Math.max(0, plan.monthlyPrice - discount.value),
+                    annualPrice: Math.max(0, plan.annualPrice - (discount.value * 12))
+                };
+            }
+
+            // Update plan with discounted prices
+            await database.collection('plans').updateOne(
+                { _id: new ObjectId(planId) },
+                { $set: { monthlyPrice: updatedPlan.monthlyPrice, annualPrice: updatedPlan.annualPrice } },
+                { session }
+            );
+
+            // Increment usage count of discount
+            await database.collection('discounts').updateOne(
+                { _id: discount._id },
+                { $inc: { usageCount: 1 } },
+                { session }
+            );
+
+            // Create audit log
+            await createAuditLog(
+                'DISCOUNT_APPLIED',
+                req.user.userId,
+                null,
+                {
+                    discountCode: discount.code,
+                    planId: plan._id,
+                    planName: plan.name,
+                    discountType: discount.type,
+                    discountValue: discount.value,
+                    newMonthlyPrice: updatedPlan.monthlyPrice,
+                    newAnnualPrice: updatedPlan.annualPrice
+                },
+                session
+            );
+
+            res.json({
+                success: true,
+                message: 'Discount applied successfully',
+                data: {
+                    planId: plan._id,
+                    planName: plan.name,
+                    newMonthlyPrice: updatedPlan.monthlyPrice,
+                    newAnnualPrice: updatedPlan.annualPrice
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error applying discount:', error);
+        res.status(
+            error.message.includes('not found') ? 404 :
+            error.message.includes('expired') || error.message.includes('limit reached') || error.message.includes('not applicable') ? 400 :
+            500
+        ).json({
+            success: false,
+            message: error.message || 'Error applying discount'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Subscription Management Endpoints
+
+// Get all subscriptions
+app.get('/api/subscriptions', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const subscriptions = await database.collection('subscriptions').find().toArray();
+        res.json({
+            success: true,
+            data: subscriptions
+        });
+    } catch (error) {
+        console.error('Error fetching subscriptions:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching subscriptions'
+        });
+    }
+});
+
+// Get subscriptions for a specific plan
+app.get('/api/subscriptions', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { planId } = req.query;
+
+        // Validate planId format
+        if (planId && !ObjectId.isValid(planId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid plan ID'
+            });
+        }
+
+        const filter = planId ? { planId: new ObjectId(planId) } : {};
+        const subscriptions = await database.collection('subscriptions').find(filter).toArray();
+
+        res.json({
+            success: true,
+            data: subscriptions
+        });
+    } catch (error) {
+        console.error('Error fetching subscriptions for specific plan:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching subscriptions'
+        });
+    }
+});
+
+// Create new subscription
+app.post('/api/subscriptions', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const {
+                companyId,
+                planId,
+                billingCycle,
+                startDate,
+                endDate,
+                discountCode = null
+            } = req.body;
+
+            // Validate required fields
+            if (!companyId || !planId || !billingCycle || !startDate || !endDate) {
+                throw new Error('Missing required fields');
+            }
+
+            // Validate companyId format
+            if (!ObjectId.isValid(companyId)) {
+                throw new Error('Invalid company ID');
+            }
+
+            // Validate planId format
+            if (!ObjectId.isValid(planId)) {
+                throw new Error('Invalid plan ID');
+            }
+
+            // Validate billing cycle
+            if (billingCycle !== 'monthly' && billingCycle !== 'annual') {
+                throw new Error('Invalid billing cycle. Must be "monthly" or "annual".');
+            }
+
+            // Validate dates
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            if (isNaN(start.getTime()) || isNaN(end.getTime()) || start >= end) {
+                throw new Error('Invalid start or end date');
+            }
+
+            // Find company
+            const company = await database.collection('companies').findOne({
+                _id: new ObjectId(companyId)
+            }, { session });
+
+            if (!company) {
+                throw new Error('Company not found');
+            }
+
+            // Find plan
+            const plan = await database.collection('plans').findOne({
+                _id: new ObjectId(planId)
+            }, { session });
+
+            if (!plan) {
+                throw new Error('Plan not found');
+            }
+
+            // Calculate subscription price
+            let price = billingCycle === 'monthly' ? plan.monthlyPrice : plan.annualPrice;
+
+            // Apply discount if provided
+            if (discountCode) {
+                const discount = await database.collection('discounts').findOne({
+                    code: { $regex: new RegExp(`^${discountCode}$`, 'i') }
+                }, { session });
+
+                if (!discount) {
+                    throw new Error('Invalid discount code');
+                }
+
+                const now = new Date();
+                const expiry = new Date(discount.expiryDate);
+                if (now > expiry) {
+                    throw new Error('Discount has expired');
+                }
+
+                if (discount.usageLimit > 0 && discount.usageCount >= discount.usageLimit) {
+                    throw new Error('Discount usage limit reached');
+                }
+
+                if (!discount.applicablePlans.includes(plan._id)) {
+                    throw new Error('Discount is not applicable to this plan');
+                }
+
+                if (discount.type === 'percentage') {
+                    price = price * (1 - discount.value / 100);
+                } else if (discount.type === 'fixed') {
+                    price = Math.max(0, price - discount.value * (billingCycle === 'annual' ? 12 : 1));
+                }
+
+                // Increment usage count of discount
+                await database.collection('discounts').updateOne(
+                    { _id: discount._id },
+                    { $inc: { usageCount: 1 } },
+                    { session }
+                );
+            }
+
+            // Create subscription object
+            const subscription = {
+                companyId: new ObjectId(companyId),
+                planId: new ObjectId(planId),
+                planName: plan.name,
+                billingCycle,
+                startDate: start.toISOString(),
+                endDate: end.toISOString(),
+                price,
+                status: 'active',
+                discountCode: discountCode || null,
+                createdAt: new Date(),
+                createdBy: new ObjectId(req.user.userId),
+                updatedAt: new Date()
+            };
+
+            const result = await database.collection('subscriptions').insertOne(subscription, { session });
+
+            // Update company subscription
+            await database.collection('companies').updateOne(
+                { _id: new ObjectId(companyId) },
+                { $set: { subscriptionPlan: plan.name, subscriptionStatus: 'active' } },
+                { session }
+            );
+
+            // Create audit log
+            await createAuditLog(
+                'SUBSCRIPTION_CREATED',
+                req.user.userId,
+                companyId,
+                {
+                    companyName: company.name,
+                    planName: plan.name,
+                    billingCycle,
+                    startDate: start.toISOString(),
+                    endDate: end.toISOString(),
+                    price,
+                    discountCode
+                },
+                session
+            );
+
+            res.status(201).json({
+                success: true,
+                message: 'Subscription created successfully',
+                data: {
+                    _id: result.insertedId,
+                    ...subscription
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error creating subscription:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Error creating subscription'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Update existing subscription
+app.put('/api/subscriptions/:subscriptionId', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { subscriptionId } = req.params;
+            const {
+                planId,
+                billingCycle,
+                startDate,
+                endDate,
+                discountCode = null
+            } = req.body;
+
+            // Validate subscriptionId format
+            if (!ObjectId.isValid(subscriptionId)) {
+                throw new Error('Invalid subscription ID');
+            }
+
+            // Get existing subscription
+            const existingSubscription = await database.collection('subscriptions').findOne({
+                _id: new ObjectId(subscriptionId)
+            }, { session });
+
+            if (!existingSubscription) {
+                throw new Error('Subscription not found');
+            }
+
+            // Validate planId format if provided
+            if (planId && !ObjectId.isValid(planId)) {
+                throw new Error('Invalid plan ID');
+            }
+
+            // Validate billing cycle if provided
+            if (billingCycle && billingCycle !== 'monthly' && billingCycle !== 'annual') {
+                throw new Error('Invalid billing cycle. Must be "monthly" or "annual".');
+            }
+
+            // Validate dates if provided
+            let start, end;
+            if (startDate || endDate) {
+                start = startDate ? new Date(startDate) : new Date(existingSubscription.startDate);
+                end = endDate ? new Date(endDate) : new Date(existingSubscription.endDate);
+                if (isNaN(start.getTime()) || isNaN(end.getTime()) || start >= end) {
+                    throw new Error('Invalid start or end date');
+                }
+            }
+
+            // Find company
+            const company = await database.collection('companies').findOne({
+                _id: existingSubscription.companyId
+            }, { session });
+
+            if (!company) {
+                throw new Error('Company not found');
+            }
+
+            // Find new plan if planId is provided
+            let newPlan;
+            if (planId) {
+                newPlan = await database.collection('plans').findOne({
+                    _id: new ObjectId(planId)
+                }, { session });
+
+                if (!newPlan) {
+                    throw new Error('Plan not found');
+                }
+            }
+
+            // Calculate new subscription price
+            let newPrice = existingSubscription.price;
+            if (planId || billingCycle || discountCode !== null) {
+                const plan = newPlan || await database.collection('plans').findOne({
+                    _id: existingSubscription.planId
+                }, { session });
+
+                const cycle = billingCycle || existingSubscription.billingCycle;
+                newPrice = cycle === 'monthly' ? plan.monthlyPrice : plan.annualPrice;
+
+                // Apply discount if provided
+                if (discountCode !== null) {
+                    if (discountCode) {
+                        const discount = await database.collection('discounts').findOne({
+                            code: { $regex: new RegExp(`^${discountCode}$`, 'i') }
+                        }, { session });
+
+                        if (!discount) {
+                            throw new Error('Invalid discount code');
+                        }
+
+                        const now = new Date();
+                        const expiry = new Date(discount.expiryDate);
+                        if (now > expiry) {
+                            throw new Error('Discount has expired');
+                        }
+
+                        if (discount.usageLimit > 0 && discount.usageCount >= discount.usageLimit) {
+                            throw new Error('Discount usage limit reached');
+                        }
+
+                        if (!discount.applicablePlans.includes(plan._id)) {
+                            throw new Error('Discount is not applicable to this plan');
+                        }
+
+                        if (discount.type === 'percentage') {
+                            newPrice = newPrice * (1 - discount.value / 100);
+                        } else if (discount.type === 'fixed') {
+                            newPrice = Math.max(0, newPrice - discount.value * (cycle === 'annual' ? 12 : 1));
+                        }
+
+                        // Increment usage count of discount
+                        await database.collection('discounts').updateOne(
+                            { _id: discount._id },
+                            { $inc: { usageCount: 1 } },
+                            { session }
+                        );
+                    } else {
+                        // Remove discount if discountCode is null
+                        await database.collection('discounts').updateOne(
+                            { code: existingSubscription.discountCode },
+                            { $inc: { usageCount: -1 } },
+                            { session }
+                        );
+                    }
+                }
+            }
+
+            // Prepare update data
+            const updateData = {
+                ...(planId && { planId: new ObjectId(planId), planName: newPlan.name }),
+                ...(billingCycle && { billingCycle }),
+                ...(startDate && { startDate: start.toISOString() }),
+                ...(endDate && { endDate: end.toISOString() }),
+                ...(newPrice !== existingSubscription.price && { price: newPrice }),
+                ...(discountCode !== null && { discountCode }),
+                updatedAt: new Date(),
+                updatedBy: new ObjectId(req.user.userId)
+            };
+
+            // Update subscription
+            const result = await database.collection('subscriptions').updateOne(
+                { _id: new ObjectId(subscriptionId) },
+                { $set: updateData },
+                { session }
+            );
+
+            if (result.matchedCount === 0) {
+                throw new Error('Subscription not found');
+            }
+
+            // Update company subscription
+            if (planId) {
+                await database.collection('companies').updateOne(
+                    { _id: existingSubscription.companyId },
+                    { $set: { subscriptionPlan: newPlan.name } },
+                    { session }
+                );
+            }
+
+            // Get updated subscription
+            const updatedSubscription = await database.collection('subscriptions').findOne(
+                { _id: new ObjectId(subscriptionId) },
+                { session }
+            );
+
+            // Create audit log
+            await createAuditLog(
+                'SUBSCRIPTION_UPDATED',
+                req.user.userId,
+                existingSubscription.companyId,
+                {
+                    subscriptionId,
+                    companyName: company.name,
+                    changes: getChanges(existingSubscription, updatedSubscription)
+                },
+                session
+            );
+
+            res.json({
+                success: true,
+                message: 'Subscription updated successfully',
+                data: updatedSubscription
+            });
+        });
+    } catch (error) {
+        console.error('Error updating subscription:', error);
+        res.status(
+            error.message.includes('not found') ? 404 :
+            500
+        ).json({
+            success: false,
+            message: error.message || 'Error updating subscription'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Payment Management Endpoints
+
+// Get all payment methods
+app.get('/api/payments', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const payments = await database.collection('payments').find().toArray();
+        res.json({
+            success: true,
+            data: payments
+        });
+    } catch (error) {
+        console.error('Error fetching payments:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching payments'
+        });
+    }
+});
+
+// Add new payment method
+app.post('/api/payments', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const {
+                type,
+                details
+            } = req.body;
+
+            // Validate required fields
+            if (!type || !details) {
+                throw new Error('Missing required fields');
+            }
+
+            // Validate payment type
+            const validTypes = ['creditCard', 'bankTransfer', 'paypal', 'razorpay'];
+            if (!validTypes.includes(type)) {
+                throw new Error('Invalid payment type');
+            }
+
+            // Validate payment details based on type
+            let validatedDetails;
+            switch (type) {
+                case 'creditCard':
+                    validatedDetails = validateCreditCardDetails(details);
+                    break;
+                case 'bankTransfer':
+                    validatedDetails = validateBankTransferDetails(details);
+                    break;
+                case 'paypal':
+                    validatedDetails = validatePayPalDetails(details);
+                    break;
+                case 'razorpay':
+                    validatedDetails = validateRazorpayDetails(details);
+                    break;
+                default:
+                    throw new Error('Unsupported payment type');
+            }
+
+            // Create payment object
+            const payment = {
+                type,
+                details: validatedDetails,
+                createdAt: new Date(),
+                createdBy: new ObjectId(req.user.userId),
+                updatedAt: new Date()
+            };
+
+            const result = await database.collection('payments').insertOne(payment, { session });
+
+            // Create audit log
+            await createAuditLog(
+                'PAYMENT_METHOD_ADDED',
+                req.user.userId,
+                null,
+                {
+                    paymentType: type,
+                    paymentDetails: validatedDetails
+                },
+                session
+            );
+
+            res.status(201).json({
+                success: true,
+                message: 'Payment method added successfully',
+                data: {
+                    _id: result.insertedId,
+                    ...payment
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error adding payment method:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Error adding payment method'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Helper function to validate credit card details
+function validateCreditCardDetails(details) {
+    const { cardNumber, expiryDate, cvv } = details;
+
+    if (!cardNumber || !expiryDate || !cvv) {
+        throw new Error('Missing required credit card details');
+    }
+
+    if (!/^\d{16}$/.test(cardNumber)) {
+        throw new Error('Invalid card number format');
+    }
+
+    if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
+        throw new Error('Invalid expiry date format (MM/YY)');
+    }
+
+    if (!/^\d{3,4}$/.test(cvv)) {
+        throw new Error('Invalid CVV format');
+    }
+
+    return { cardNumber, expiryDate, cvv };
+}
+
+// Helper function to validate bank transfer details
+function validateBankTransferDetails(details) {
+    const { accountNumber, bankName, swiftCode } = details;
+
+    if (!accountNumber || !bankName || !swiftCode) {
+        throw new Error('Missing required bank transfer details');
+    }
+
+    if (!/^\d{10,18}$/.test(accountNumber)) {
+        throw new Error('Invalid account number format');
+    }
+
+    if (typeof bankName !== 'string' || bankName.trim().length < 3) {
+        throw new Error('Invalid bank name');
+    }
+
+    if (!/^[A-Z]{6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3})?$/.test(swiftCode)) {
+        throw new Error('Invalid SWIFT code format');
+    }
+
+    return { accountNumber, bankName, swiftCode };
+}
+
+// Helper function to validate PayPal details
+function validatePayPalDetails(details) {
+    const { paypalEmail } = details;
+
+    if (!paypalEmail) {
+        throw new Error('Missing required PayPal email');
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(paypalEmail)) {
+        throw new Error('Invalid PayPal email format');
+    }
+
+    return { paypalEmail };
+}
+
+// Helper function to validate Razorpay details
+function validateRazorpayDetails(details) {
+    const { razorpayId } = details;
+
+    if (!razorpayId) {
+        throw new Error('Missing required Razorpay ID');
+    }
+
+    if (typeof razorpayId !== 'string' || razorpayId.trim().length < 10) {
+        throw new Error('Invalid Razorpay ID format');
+    }
+
+    return { razorpayId };
+}
+
+// Update existing payment method
+app.put('/api/payments/:paymentId', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { paymentId } = req.params;
+            const {
+                type,
+                details
+            } = req.body;
+
+            // Validate paymentId format
+            if (!ObjectId.isValid(paymentId)) {
+                throw new Error('Invalid payment ID');
+            }
+
+            // Get existing payment method
+            const existingPayment = await database.collection('payments').findOne({
+                _id: new ObjectId(paymentId)
+            }, { session });
+
+            if (!existingPayment) {
+                throw new Error('Payment method not found');
+            }
+
+            // Validate payment type if provided
+            if (type && !['creditCard', 'bankTransfer', 'paypal', 'razorpay'].includes(type)) {
+                throw new Error('Invalid payment type');
+            }
+
+            // Validate payment details based on type
+            let validatedDetails;
+            if (details) {
+                switch (type || existingPayment.type) {
+                    case 'creditCard':
+                        validatedDetails = validateCreditCardDetails(details);
+                        break;
+                    case 'bankTransfer':
+                        validatedDetails = validateBankTransferDetails(details);
+                        break;
+                    case 'paypal':
+                        validatedDetails = validatePayPalDetails(details);
+                        break;
+                    case 'razorpay':
+                        validatedDetails = validateRazorpayDetails(details);
+                        break;
+                    default:
+                        throw new Error('Unsupported payment type');
+                }
+            }
+
+            // Prepare update data
+            const updateData = {
+                ...(type && { type }),
+                ...(validatedDetails && { details: validatedDetails }),
+                updatedAt: new Date(),
+                updatedBy: new ObjectId(req.user.userId)
+            };
+
+            // Update payment method
+            const result = await database.collection('payments').updateOne(
+                { _id: new ObjectId(paymentId) },
+                { $set: updateData },
+                { session }
+            );
+
+            if (result.matchedCount === 0) {
+                throw new Error('Payment method not found');
+            }
+
+            // Get updated payment method
+            const updatedPayment = await database.collection('payments').findOne(
+                { _id: new ObjectId(paymentId) },
+                { session }
+            );
+
+            // Create audit log
+            await createAuditLog(
+                'PAYMENT_METHOD_UPDATED',
+                req.user.userId,
+                null,
+                {
+                    paymentId,
+                    changes: getChanges(existingPayment, updatedPayment)
+                },
+                session
+            );
+
+            res.json({
+                success: true,
+                message: 'Payment method updated successfully',
+                data: updatedPayment
+            });
+        });
+    } catch (error) {
+        console.error('Error updating payment method:', error);
+        res.status(
+            error.message.includes('not found') ? 404 :
+            500
+        ).json({
+            success: false,
+            message: error.message || 'Error updating payment method'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Delete payment method
+app.delete('/api/payments/:paymentId', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { paymentId } = req.params;
+
+            // Validate paymentId format
+            if (!ObjectId.isValid(paymentId)) {
+                throw new Error('Invalid payment ID');
+            }
+
+            // Get payment method before deletion
+            const payment = await database.collection('payments').findOne({
+                _id: new ObjectId(paymentId)
+            }, { session });
+
+            if (!payment) {
+                throw new Error('Payment method not found');
+            }
+
+            // Check if payment method is used in any subscriptions
+            const usedInSubscriptions = await database.collection('subscriptions').countDocuments({
+                paymentMethodId: new ObjectId(paymentId)
+            }, { session });
+
+            if (usedInSubscriptions > 0) {
+                throw new Error(`Cannot delete payment method. It is used in ${usedInSubscriptions} subscriptions.`);
+            }
+
+            // Delete payment method
+            const result = await database.collection('payments').deleteOne({
+                _id: new ObjectId(paymentId)
+            }, { session });
+
+            if (result.deletedCount === 0) {
+                throw new Error('Payment method not found');
+            }
+
+            // Create audit log
+            await createAuditLog(
+                'PAYMENT_METHOD_DELETED',
+                req.user.userId,
+                null,
+                {
+                    paymentId,
+                    paymentType: payment.type
+                },
+                session
+            );
+
+            // Archive payment method data
+            await database.collection('deleted_payments').insertOne({
+                ...payment,
+                deletedAt: new Date(),
+                deletedBy: new ObjectId(req.user.userId)
+            }, { session });
+
+            res.json({
+                success: true,
+                message: 'Payment method deleted successfully',
+                data: {
+                    paymentId,
+                    paymentType: payment.type
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error deleting payment method:', error);
+        res.status(
+            error.message.includes('not found') ? 404 :
+            error.message.includes('used in') ? 400 :
+            500
+        ).json({
+            success: false,
+            message: error.message || 'Error deleting payment method'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Invoice Management Endpoints
+
+// Get all invoices
+app.get('/api/invoices', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const invoices = await database.collection('invoices').find().toArray();
+        res.json({
+            success: true,
+            data: invoices
+        });
+    } catch (error) {
+        console.error('Error fetching invoices:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching invoices'
+        });
+    }
+});
+
+// Get invoices for a specific subscription
+app.get('/api/invoices', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { subscriptionId } = req.query;
+
+        // Validate subscriptionId format
+        if (subscriptionId && !ObjectId.isValid(subscriptionId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid subscription ID'
+            });
+        }
+
+        const filter = subscriptionId ? { subscriptionId: new ObjectId(subscriptionId) } : {};
+        const invoices = await database.collection('invoices').find(filter).toArray();
+
+        res.json({
+            success: true,
+            data: invoices
+        });
+    } catch (error) {
+        console.error('Error fetching invoices for specific subscription:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching invoices'
+        });
+    }
+});
+
+// Generate new invoice
+app.post('/api/invoices', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const {
+                subscriptionId,
+                amount,
+                billingCycle,
+                date,
+                dueDate
+            } = req.body;
+
+            // Validate required fields
+            if (!subscriptionId || !amount || !billingCycle || !date || !dueDate) {
+                throw new Error('Missing required fields');
+            }
+
+            // Validate subscriptionId format
+            if (!ObjectId.isValid(subscriptionId)) {
+                throw new Error('Invalid subscription ID');
+            }
+
+            // Validate amount
+            if (typeof amount !== 'number' || amount <= 0) {
+                throw new Error('Invalid amount');
+            }
+
+            // Validate billing cycle
+            if (billingCycle !== 'monthly' && billingCycle !== 'annual') {
+                throw new Error('Invalid billing cycle. Must be "monthly" or "annual".');
+            }
+
+            // Validate dates
+            const invoiceDate = new Date(date);
+            const invoiceDueDate = new Date(dueDate);
+            if (isNaN(invoiceDate.getTime()) || isNaN(invoiceDueDate.getTime()) || invoiceDate > invoiceDueDate) {
+                throw new Error('Invalid invoice date or due date');
+            }
+
+            // Find subscription
+            const subscription = await database.collection('subscriptions').findOne({
+                _id: new ObjectId(subscriptionId)
+            }, { session });
+
+            if (!subscription) {
+                throw new Error('Subscription not found');
+            }
+
+            // Find company
+            const company = await database.collection('companies').findOne({
+                _id: subscription.companyId
+            }, { session });
+
+            if (!company) {
+                throw new Error('Company not found');
+            }
+
+            // Generate invoice number
+            const invoiceNumber = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+            // Create invoice object
+            const invoice = {
+                invoiceNumber,
+                subscriptionId: new ObjectId(subscriptionId),
+                companyId: subscription.companyId,
+                companyName: company.name,
+                planName: subscription.planName,
+                amount,
+                billingCycle,
+                date: invoiceDate.toISOString(),
+                dueDate: invoiceDueDate.toISOString(),
+                status: 'pending',
+                createdAt: new Date(),
+                createdBy: new ObjectId(req.user.userId),
+                updatedAt: new Date()
+            };
+
+            const result = await database.collection('invoices').insertOne(invoice, { session });
+
+            // Create audit log
+            await createAuditLog(
+                'INVOICE_GENERATED',
+                req.user.userId,
+                subscription.companyId,
+                {
+                    invoiceNumber,
+                    subscriptionId: subscription._id,
+                    companyName: company.name,
+                    planName: subscription.planName,
+                    amount,
+                    billingCycle,
+                    date: invoiceDate.toISOString(),
+                    dueDate: invoiceDueDate.toISOString()
+                },
+                session
+            );
+
+            res.status(201).json({
+                success: true,
+                message: 'Invoice generated successfully',
+                data: {
+                    _id: result.insertedId,
+                    ...invoice
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error generating invoice:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Error generating invoice'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// View invoice
+app.get('/api/invoices/:invoiceId', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { invoiceId } = req.params;
+
+        // Validate invoiceId format
+        if (!ObjectId.isValid(invoiceId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid invoice ID'
+            });
+        }
+
+        const invoice = await database.collection('invoices').findOne({
+            _id: new ObjectId(invoiceId)
+        });
+
+        if (!invoice) {
+            return res.status(404).json({
+                success: false,
+                message: 'Invoice not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: invoice
+        });
+    } catch (error) {
+        console.error('Error fetching invoice:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching invoice'
+        });
+    }
+});
+
+// Download invoice
+app.get('/api/invoices/:invoiceId/download', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { invoiceId } = req.params;
+
+        // Validate invoiceId format
+        if (!ObjectId.isValid(invoiceId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid invoice ID'
+            });
+        }
+
+        const invoice = await database.collection('invoices').findOne({
+            _id: new ObjectId(invoiceId)
+        });
+
+        if (!invoice) {
+            return res.status(404).json({
+                success: false,
+                message: 'Invoice not found'
+            });
+        }
+
+        // Create audit log
+        await createAuditLog(
+            'INVOICE_DOWNLOADED',
+            req.user.userId,
+            invoice.companyId,
+            {
+                invoiceId: invoice._id,
+                invoiceNumber: invoice.invoiceNumber,
+                companyName: invoice.companyName
+            }
+        );
+
+        // In a real implementation, you would generate a PDF here
+        // For now, we'll just send the invoice data as JSON
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', `attachment; filename="invoice_${invoice.invoiceNumber}.json"`);
+        res.json(invoice);
+
+    } catch (error) {
+        console.error('Error downloading invoice:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error downloading invoice'
+        });
+    }
+});
+
+// Reports & Analytics Endpoints
+
+// Generate report
+app.get('/api/reports/:reportType', verifyToken, verifyAdmin, async (req, res) => {
+    const { reportType } = req.params;
+    const { startDate, endDate } = req.query;
+
+    // Validate report type
+    const validReportTypes = ['activeSubscribers', 'revenueBreakdown', 'featureUsage'];
+    if (!validReportTypes.includes(reportType)) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid report type'
+        });
+    }
+
+    // Validate date range
+    if (!startDate || !endDate) {
+        return res.status(400).json({
+            success: false,
+            message: 'Start date and end date are required'
+        });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid date range'
+        });
+    }
+
+    try {
+        let reportData;
+        switch (reportType) {
+            case 'activeSubscribers':
+                reportData = await generateActiveSubscribersReport(start, end);
+                break;
+            case 'revenueBreakdown':
+                reportData = await generateRevenueBreakdownReport(start, end);
+                break;
+            case 'featureUsage':
+                reportData = await generateFeatureUsageReport(start, end);
+                break;
+            default:
+                throw new Error('Unsupported report type');
+        }
+
+        // Create audit log
+        await createAuditLog(
+            'REPORT_GENERATED',
+            req.user.userId,
+            null,
+            {
+                reportType,
+                startDate: start.toISOString(),
+                endDate: end.toISOString()
+            }
+        );
+
+        res.json({
+            success: true,
+            data: reportData
+        });
+    } catch (error) {
+        console.error('Error generating report:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error generating report'
+        });
+    }
+});
+
+// Helper function to generate active subscribers report
+async function generateActiveSubscribersReport(startDate, endDate) {
+    const pipeline = [
+        {
+            $match: {
+                startDate: { $lte: endDate },
+                endDate: { $gte: startDate },
+                status: 'active'
+            }
+        },
+        {
+            $group: {
+                _id: '$planName',
+                activeSubscribers: { $sum: 1 }
+            }
+        },
+        {
+            $project: {
+                planName: '$_id',
+                activeSubscribers: 1,
+                _id: 0
+            }
+        }
+    ];
+
+    return await database.collection('subscriptions').aggregate(pipeline).toArray();
+}
+
+// Helper function to generate revenue breakdown report
+async function generateRevenueBreakdownReport(startDate, endDate) {
+    const pipeline = [
+        {
+            $match: {
+                startDate: { $lte: endDate },
+                endDate: { $gte: startDate },
+                status: 'active'
+            }
+        },
+        {
+            $group: {
+                _id: '$planName',
+                revenue: { $sum: '$price' }
+            }
+        },
+        {
+            $project: {
+                planName: '$_id',
+                revenue: 1,
+                _id: 0
+            }
+        }
+    ];
+
+    return await database.collection('subscriptions').aggregate(pipeline).toArray();
+}
+
+// Helper function to generate feature usage report
+async function generateFeatureUsageReport(startDate, endDate) {
+    const pipeline = [
+        {
+            $match: {
+                startDate: { $lte: endDate },
+                endDate: { $gte: startDate },
+                status: 'active'
+            }
+        },
+        {
+            $lookup: {
+                from: 'plans',
+                localField: 'planId',
+                foreignField: '_id',
+                as: 'planDetails'
+            }
+        },
+        {
+            $unwind: '$planDetails'
+        },
+        {
+            $unwind: '$planDetails.features'
+        },
+        {
+            $group: {
+                _id: '$planDetails.features.name',
+                usageCount: { $sum: 1 }
+            }
+        },
+        {
+            $project: {
+                featureName: '$_id',
+                usageCount: 1,
+                _id: 0
+            }
+        }
+    ];
+
+    return await database.collection('subscriptions').aggregate(pipeline).toArray();
+}
+
+// Export report
+app.get('/api/reports/:reportType/export', verifyToken, verifyAdmin, async (req, res) => {
+    const { reportType } = req.params;
+    const { startDate, endDate } = req.query;
+
+    // Validate report type
+    const validReportTypes = ['activeSubscribers', 'revenueBreakdown', 'featureUsage'];
+    if (!validReportTypes.includes(reportType)) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid report type'
+        });
+    }
+
+    // Validate date range
+    if (!startDate || !endDate) {
+        return res.status(400).json({
+            success: false,
+            message: 'Start date and end date are required'
+        });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid date range'
+        });
+    }
+
+    try {
+        let reportData;
+        switch (reportType) {
+            case 'activeSubscribers':
+                reportData = await generateActiveSubscribersReport(start, end);
+                break;
+            case 'revenueBreakdown':
+                reportData = await generateRevenueBreakdownReport(start, end);
+                break;
+            case 'featureUsage':
+                reportData = await generateFeatureUsageReport(start, end);
+                break;
+            default:
+                throw new Error('Unsupported report type');
+        }
+
+        // Convert report data to CSV
+        const csvData = convertToCSV(reportData, reportType);
+
+        // Create audit log
+        await createAuditLog(
+            'REPORT_EXPORTED',
+            req.user.userId,
+            null,
+            {
+                reportType,
+                startDate: start.toISOString(),
+                endDate: end.toISOString()
+            }
+        );
+
+        // Set response headers for CSV download
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="${reportType}_report_${startDate}_to_${endDate}.csv"`);
+        res.send(csvData);
+    } catch (error) {
+        console.error('Error exporting report:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error exporting report'
+        });
+    }
+});
+
+// Helper function to convert data to CSV
+function convertToCSV(data, reportType) {
+    let headers;
+    switch (reportType) {
+        case 'activeSubscribers':
+            headers = ['Plan Name', 'Active Subscribers'];
+            break;
+        case 'revenueBreakdown':
+            headers = ['Plan Name', 'Revenue'];
+            break;
+        case 'featureUsage':
+            headers = ['Feature Name', 'Usage Count'];
+            break;
+        default:
+            throw new Error('Unsupported report type');
+    }
+
+    const rows = [headers.join(',')];
+    data.forEach(item => {
+        let values;
+        switch (reportType) {
+            case 'activeSubscribers':
+                values = [item.planName, item.activeSubscribers];
+                break;
+            case 'revenueBreakdown':
+                values = [item.planName, item.revenue];
+                break;
+            case 'featureUsage':
+                values = [item.featureName, item.usageCount];
+                break;
+        }
+        rows.push(values.join(','));
+    });
+
+    return rows.join('\n');
+}
+
+// Referral & Partner Discounts Endpoints
+
+// Get all referral discounts
+app.get('/api/referral-discounts', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const referralDiscounts = await database.collection('referral_discounts').find().toArray();
+        res.json({
+            success: true,
+            data: referralDiscounts
+        });
+    } catch (error) {
+        console.error('Error fetching referral discounts:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching referral discounts'
+        });
+    }
+});
+
+// Create new referral discount
+app.post('/api/referral-discounts', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const {
+                code,
+                type,
+                value,
+                expiryDate,
+                usageLimit = 0
+            } = req.body;
+
+            // Validate required fields
+            if (!code || !type || !value || !expiryDate) {
+                throw new Error('Missing required fields');
+            }
+
+            // Validate discount type
+            if (type !== 'percentage' && type !== 'fixed') {
+                throw new Error('Invalid discount type. Must be "percentage" or "fixed".');
+            }
+
+            // Validate discount value
+            if (typeof value !== 'number' || value <= 0) {
+                throw new Error('Discount value must be a positive number');
+            }
+
+            // Validate expiry date
+            const expiry = new Date(expiryDate);
+            if (isNaN(expiry.getTime())) {
+                throw new Error('Invalid expiry date');
+            }
+
+            // Validate usage limit
+            if (typeof usageLimit !== 'number' || usageLimit < 0) {
+                throw new Error('Usage limit must be a non-negative number');
+            }
+
+            // Check if referral discount code exists
+            const existingDiscount = await database.collection('referral_discounts').findOne({
+                code: { $regex: new RegExp(`^${code}$`, 'i') }
+            }, { session });
+
+            if (existingDiscount) {
+                throw new Error('Referral discount code already exists');
+            }
+
+            // Create referral discount object
+            const referralDiscount = {
+                code,
+                type,
+                value,
+                expiryDate: expiry.toISOString(),
+                usageLimit,
+                usageCount: 0,
+                createdAt: new Date(),
+                createdBy: new ObjectId(req.user.userId),
+                updatedAt: new Date()
+            };
+
+            const result = await database.collection('referral_discounts').insertOne(referralDiscount, { session });
+
+            // Create audit log
+            await createAuditLog(
+                'REFERRAL_DISCOUNT_CREATED',
+                req.user.userId,
+                null,
+                {
+                    referralDiscountCode: code,
+                    referralDiscountDetails: referralDiscount
+                },
+                session
+            );
+
+            res.status(201).json({
+                success: true,
+                message: 'Referral discount created successfully',
+                data: {
+                    _id: result.insertedId,
+                    ...referralDiscount
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error creating referral discount:', error);
+        res.status(error.message.includes('already exists') ? 400 : 500).json({
+            success: false,
+            message: error.message || 'Error creating referral discount'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Update existing referral discount
+app.put('/api/referral-discounts/:referralDiscountId', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { referralDiscountId } = req.params;
+            const {
+                code,
+                type,
+                value,
+                expiryDate,
+                usageLimit
+            } = req.body;
+
+            // Validate referralDiscountId format
+            if (!ObjectId.isValid(referralDiscountId)) {
+                throw new Error('Invalid referral discount ID');
+            }
+
+            // Get existing referral discount
+            const existingDiscount = await database.collection('referral_discounts').findOne({
+                _id: new ObjectId(referralDiscountId)
+            }, { session });
+
+            if (!existingDiscount) {
+                throw new Error('Referral discount not found');
+            }
+
+            // Check if new code conflicts with other referral discounts
+            if (code && code !== existingDiscount.code) {
+                const codeExists = await database.collection('referral_discounts').findOne({
+                    _id: { $ne: new ObjectId(referralDiscountId) },
+                    code: { $regex: new RegExp(`^${code}$`, 'i') }
+                }, { session });
+
+                if (codeExists) {
+                    throw new Error('Referral discount code already exists');
+                }
+            }
+
+            // Validate discount type
+            if (type && type !== 'percentage' && type !== 'fixed') {
+                throw new Error('Invalid discount type. Must be "percentage" or "fixed".');
+            }
+
+            // Validate discount value
+            if (value !== undefined && (typeof value !== 'number' || value <= 0)) {
+                throw new Error('Discount value must be a positive number');
+            }
+
+            // Validate expiry date
+            let expiry;
+            if (expiryDate) {
+                expiry = new Date(expiryDate);
+                if (isNaN(expiry.getTime())) {
+                    throw new Error('Invalid expiry date');
+                }
+            }
+
+            // Validate usage limit
+            if (usageLimit !== undefined && (typeof usageLimit !== 'number' || usageLimit < 0)) {
+                throw new Error('Usage limit must be a non-negative number');
+            }
+
+            // Prepare update data
+            const updateData = {
+                ...(code && { code }),
+                ...(type && { type }),
+                ...(value !== undefined && { value }),
+                ...(expiryDate && { expiryDate: expiry.toISOString() }),
+                ...(usageLimit !== undefined && { usageLimit }),
+                updatedAt: new Date(),
+                updatedBy: new ObjectId(req.user.userId)
+            };
+
+            // Update referral discount
+            const result = await database.collection('referral_discounts').updateOne(
+                { _id: new ObjectId(referralDiscountId) },
+                { $set: updateData },
+                { session }
+            );
+
+            if (result.matchedCount === 0) {
+                throw new Error('Referral discount not found');
+            }
+
+            // Get updated referral discount
+            const updatedDiscount = await database.collection('referral_discounts').findOne(
+                { _id: new ObjectId(referralDiscountId) },
+                { session }
+            );
+
+            // Create audit log
+            await createAuditLog(
+                'REFERRAL_DISCOUNT_UPDATED',
+                req.user.userId,
+                null,
+                {
+                    referralDiscountId,
+                    referralDiscountCode: updatedDiscount.code,
+                    changes: getChanges(existingDiscount, updatedDiscount)
+                },
+                session
+            );
+
+            res.json({
+                success: true,
+                message: 'Referral discount updated successfully',
+                data: updatedDiscount
+            });
+        });
+    } catch (error) {
+        console.error('Error updating referral discount:', error);
+        res.status(
+            error.message.includes('not found') ? 404 :
+            error.message.includes('already exists') ? 400 :
+            500
+        ).json({
+            success: false,
+            message: error.message || 'Error updating referral discount'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Delete referral discount
+app.delete('/api/referral-discounts/:referralDiscountId', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { referralDiscountId } = req.params;
+
+            // Validate referralDiscountId format
+            if (!ObjectId.isValid(referralDiscountId)) {
+                throw new Error('Invalid referral discount ID');
+            }
+
+            // Get referral discount before deletion
+            const referralDiscount = await database.collection('referral_discounts').findOne({
+                _id: new ObjectId(referralDiscountId)
+            }, { session });
+
+            if (!referralDiscount) {
+                throw new Error('Referral discount not found');
+            }
+
+            // Check if referral discount has been used
+            const usedInSubscriptions = await database.collection('subscriptions').countDocuments({
+                referralDiscountCode: referralDiscount.code
+            }, { session });
+
+            if (usedInSubscriptions > 0) {
+                throw new Error(`Cannot delete referral discount. It has been used in ${usedInSubscriptions} subscriptions.`);
+            }
+
+            // Delete referral discount
+            const result = await database.collection('referral_discounts').deleteOne({
+                _id: new ObjectId(referralDiscountId)
+            }, { session });
+
+            if (result.deletedCount === 0) {
+                throw new Error('Referral discount not found');
+            }
+
+            // Create audit log
+            await createAuditLog(
+                'REFERRAL_DISCOUNT_DELETED',
+                req.user.userId,
+                null,
+                {
+                    referralDiscountId,
+                    referralDiscountCode: referralDiscount.code
+                },
+                session
+            );
+
+            // Archive referral discount data
+            await database.collection('deleted_referral_discounts').insertOne({
+                ...referralDiscount,
+                deletedAt: new Date(),
+                deletedBy: new ObjectId(req.user.userId)
+            }, { session });
+
+            res.json({
+                success: true,
+                message: 'Referral discount deleted successfully',
+                data: {
+                    referralDiscountId,
+                    referralDiscountCode: referralDiscount.code
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error deleting referral discount:', error);
+        res.status(
+            error.message.includes('not found') ? 404 :
+            error.message.includes('used in') ? 400 :
+            500
+        ).json({
+            success: false,
+            message: error.message || 'Error deleting referral discount'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Subscription Logs Endpoints
+
+// Get all subscription logs
+app.get('/api/subscription-logs', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const subscriptionLogs = await database.collection('subscription_logs').find().sort({ timestamp: -1 }).toArray();
+        res.json({
+            success: true,
+            data: subscriptionLogs
+        });
+    } catch (error) {
+        console.error('Error fetching subscription logs:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching subscription logs'
+        });
+    }
+});
+
+// Data Retention Policies Endpoints
+
+// Get all data retention policies
+app.get('/api/data-retention', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const dataRetentionPolicies = await database.collection('data_retention_policies').find().toArray();
+        res.json({
+            success: true,
+            data: dataRetentionPolicies
+        });
+    } catch (error) {
+        console.error('Error fetching data retention policies:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching data retention policies'
+        });
+    }
+});
+
+// Create new data retention policy
+app.post('/api/data-retention', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const {
+                retentionPeriod,
+                policyDescription
+            } = req.body;
+
+            // Validate required fields
+            if (!retentionPeriod || !policyDescription) {
+                throw new Error('Missing required fields');
+            }
+
+            // Validate retention period
+            if (typeof retentionPeriod !== 'number' || retentionPeriod < 0) {
+                throw new Error('Retention period must be a non-negative number');
+            }
+
+            // Create data retention policy object
+            const dataRetentionPolicy = {
+                retentionPeriod,
+                policyDescription,
+                createdAt: new Date(),
+                createdBy: new ObjectId(req.user.userId),
+                updatedAt: new Date()
+            };
+
+            const result = await database.collection('data_retention_policies').insertOne(dataRetentionPolicy, { session });
+
+            // Create audit log
+            await createAuditLog(
+                'DATA_RETENTION_POLICY_CREATED',
+                req.user.userId,
+                null,
+                {
+                    retentionPeriod,
+                    policyDescription
+                },
+                session
+            );
+
+            res.status(201).json({
+                success: true,
+                message: 'Data retention policy created successfully',
+                data: {
+                    _id: result.insertedId,
+                    ...dataRetentionPolicy
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error creating data retention policy:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Error creating data retention policy'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// Update existing data retention policy
+app.put('/api/data-retention/:policyId', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { policyId } = req.params;
+            const {
+                retentionPeriod,
+                policyDescription
+            } = req.body;
+
+            // Validate policyId format
+            if (!ObjectId.isValid(policyId)) {
+                throw new Error('Invalid policy ID');
+            }
+
+            // Get existing data retention policy
+            const existingPolicy = await database.collection('data_retention_policies').findOne({
+                _id: new ObjectId(policyId)
+            }, { session });
+
+            if (!existingPolicy) {
+                throw new Error('Data retention policy not found');
+            }
+
+            // Validate retention period
+            if (retentionPeriod !== undefined && (typeof retentionPeriod !== 'number' || retentionPeriod < 0)) {
+                throw new Error('Retention period must be a non-negative number');
+            }
+
+            // Prepare update data
+            const updateData = {
+                ...(retentionPeriod !== undefined && { retentionPeriod }),
+                ...(policyDescription && { policyDescription }),
+                updatedAt: new Date(),
+                updatedBy: new ObjectId(req.user.userId)
+            };
+
+            // Update data retention policy
+            const result = await database.collection('data_retention_policies').updateOne(
+                { _id: new ObjectId(policyId) },
+                { $set: updateData },
+                { session }
+            );
+
+            if (result.matchedCount === 0) {
+                throw new Error('Data retention policy not found');
+            }
+
+            // Get updated data retention policy
+            const updatedPolicy = await database.collection('data_retention_policies').findOne(
+                { _id: new ObjectId(policyId) },
+                { session }
+            );
+
+            // Create audit log
+            await createAuditLog(
+                'DATA_RETENTION_POLICY_UPDATED',
+                req.user.userId,
+                null,
+                {
+                    policyId,
+                    changes: getChanges(existingPolicy, updatedPolicy)
+                },
+                session
+            );
+
+            res.json({
+                success: true,
+                message: 'Data retention policy updated successfully',
+                data: updatedPolicy
+            });
+        });
+    } catch (error) {
+        console.error('Error updating data retention policy:', error);
+        res.status(
+            error.message.includes('not found') ? 404 :
+            500
+        ).json({
+            success: false,
+            message: error.message || 'Error updating data retention policy'
+        });
+    } finally {
+        await session.endSession();
     }
 });
 
