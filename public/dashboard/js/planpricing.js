@@ -218,22 +218,7 @@ class PricingManager {
         }
     }
 
-    // Helper method to create audit log
-    async createAuditLog(action, details) {
-        try {
-            await this.fetchData('audit-logs', 'POST', {
-                action,
-                details
-            });
-        } catch (error) {
-            console.error('Error creating audit log:', error);
-        }
-    }
-}
-
-     // Plan Management Methods
-
-    async loadPlans() {
+    async loadPlans() { // Place the loadPlans function here
         try {
             this.showLoadingState(this.planList);
             const response = await this.fetchData('plans');
@@ -250,6 +235,19 @@ class PricingManager {
             this.showErrorState(this.planList, error.message || 'An error occurred while loading plans');
         }
     }
+
+    // Helper method to create audit log
+    async createAuditLog(action, details) {
+        try {
+            await this.fetchData('audit-logs', 'POST', {
+                action,
+                details
+            });
+        } catch (error) {
+            console.error('Error creating audit log:', error);
+        }
+    }
+}
 
     createPlanCard(plan) {
         const planCard = document.createElement('div');
