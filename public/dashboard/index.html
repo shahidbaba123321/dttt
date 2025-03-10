@@ -1016,6 +1016,8 @@ class ContentLoader {
                 await this.initializeRolesPermissions();
             } else if (section === 'users') {
                 await this.initializeUsers();
+            }else if (section === 'pricing') { 
+                await this.initializePricing();
             }
 
             this.currentPage = section;
@@ -1090,6 +1092,37 @@ class ContentLoader {
             throw error;
         }
     }
+
+    async initializePricing() {
+    try {
+        // Check if script is already loaded
+        const existingScript = document.querySelector('script[src*="pricing.js"]');
+        if (existingScript) {
+            existingScript.remove();
+        }
+
+        // Create and append the script with updated path
+        const script = document.createElement('script');
+        script.src = `${this.baseUrl}/dashboard/js/pricing.js`;
+
+        await new Promise((resolve, reject) => {
+            script.onload = resolve;
+            script.onerror = reject;
+            document.body.appendChild(script);
+        });
+
+        // Initialize new instance
+        if (typeof window.PricingManager !== 'undefined') {
+            const instance = new window.PricingManager();
+            this.moduleInstances.set('pricing', instance);
+        } else {
+            throw new Error('PricingManager not loaded properly');
+        }
+    } catch (error) {
+        console.error('Error initializing pricing module:', error);
+        throw error;
+    }
+}
 
     async initializeUsers() {
         try {
