@@ -1113,7 +1113,7 @@ class ContentLoader {
 
         // Initialize new instance
         if (typeof window.PricingManager !== 'undefined') {
-            const instance = new window.PricingManager();
+            const instance = new window.PricingManager(this.apiBaseUrl);
             this.moduleInstances.set('pricing', instance);
         } else {
             throw new Error('PricingManager not loaded properly');
