@@ -1046,7 +1046,7 @@ class ContentLoader {
             'roles': 'roles-permissions.html',
             'users': 'users.html',
             'general-settings': 'settings.html',
-            'pricing': 'pricing.html',
+            'pricing': 'planpricing.html',
             'security': 'security.html',
             'modules': 'modules.html',
             'module-settings': 'module-settings.html',
@@ -1096,14 +1096,14 @@ class ContentLoader {
     async initializePricing() {
     try {
         // Check if script is already loaded
-        const existingScript = document.querySelector('script[src*="pricing.js"]');
+        const existingScript = document.querySelector('script[src*="planpricing.js"]');
         if (existingScript) {
             existingScript.remove();
         }
 
         // Create and append the script with updated path
         const script = document.createElement('script');
-        script.src = `${this.baseUrl}/dashboard/js/pricing.js`;
+        script.src = `${this.baseUrl}/dashboard/js/planpricing.js`;
 
         await new Promise((resolve, reject) => {
             script.onload = resolve;
