@@ -3,64 +3,223 @@
 
     // Check if PricingManager already exists
     if (window.PricingManager) {
-        console.log('PricingManager already exists');
+        console.warn('PricingManager is already defined');
         return;
     }
 
     class PricingManager {
         constructor(baseUrl) {
-            // Base configuration
-            this.baseUrl = baseUrl;
-            this.token = localStorage.getItem('token');
-            
-            // Currency options
+            // Validate and sanitize base URL
+            if (!baseUrl || typeof baseUrl !== 'string') {
+                console.error('Invalid base URL provided');
+                throw new Error('Base URL is required and must be a string');
+            }
+
+            // Remove trailing slashes and ensure proper URL format
+            this.baseUrl = baseUrl.replace(/\/+$/, '');
+
+            // Retrieve authentication token with enhanced security
+            this.token = (() => {
+                try {
+                    const token = localStorage.getItem('token');
+                    
+                    // Additional token validation
+                    if (!token) {
+                        console.warn('No authentication token found');
+                        window.location.href = '/login.html';
+                        return null;
+                    }
+
+                    // Optional: Basic token format validation
+                    if (token.split('.').length !== 3) {
+                        console.error('Invalid token format');
+                        localStorage.removeItem('token');
+                        window.location.href = '/login.html';
+                        return null;
+                    }
+
+                    return token;
+                } catch (error) {
+                    console.error('Token retrieval error:', error);
+                    return null;
+                }
+            })();
+
+            // Currency options with comprehensive details
             this.currencyOptions = [
-                { code: 'USD', symbol: '$', name: 'US Dollar', country: 'USA' },
-                { code: 'INR', symbol: '₹', name: 'Indian Rupee', country: 'India' },
-                { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham', country: 'UAE' },
-                { code: 'QAR', symbol: 'ر.ق', name: 'Qatari Riyal', country: 'Qatar' },
-                { code: 'GBP', symbol: '£', name: 'British Pound', country: 'UK' }
+                { 
+                    code: 'USD', 
+                    symbol: '$', 
+                    name: 'US Dollar', 
+                    country: 'USA',
+                    locale: 'en-US',
+                    decimalPlaces: 2
+                },
+                { 
+                    code: 'INR', 
+                    symbol: '₹', 
+                    name: 'Indian Rupee', 
+                    country: 'India',
+                    locale: 'en-IN',
+                    decimalPlaces: 2
+                },
+                { 
+                    code: 'AED', 
+                    symbol: 'د.إ', 
+                    name: 'UAE Dirham', 
+                    country: 'UAE',
+                    locale: 'ar-AE',
+                    decimalPlaces: 2
+                },
+                { 
+                    code: 'QAR', 
+                    symbol: 'ر.ق', 
+                    name: 'Qatari Riyal', 
+                    country: 'Qatar',
+                    locale: 'ar-QA',
+                    decimalPlaces: 2
+                },
+                { 
+                    code: 'GBP', 
+                    symbol: '£', 
+                    name: 'British Pound', 
+                    country: 'UK',
+                    locale: 'en-GB',
+                    decimalPlaces: 2
+                }
             ];
-            
-            // DOM Element References
-            this.elements = {
-                plansContainer: document.getElementById('plansContainer'),
-                createPlanBtn: document.getElementById('createNewPlanBtn'),
-                planModal: document.getElementById('planModal'),
-                modalOverlay: document.getElementById('modalOverlay'),
-                closePlanModal: document.getElementById('closePlanModal'),
-                cancelPlanModal: document.getElementById('cancelPlanModal'),
-                planForm: document.getElementById('planForm'),
-                featuresContainer: document.getElementById('featuresContainer')
+
+            // Helper method to get DOM element with error handling
+            this.getElement = (id) => {
+                const element = document.getElementById(id);
+                if (!element) {
+                    console.warn(`Element not found: ${id}`);
+                }
+                return element;
             };
 
-            // Bind methods
-            this.initializeEventListeners = this.initializeEventListeners.bind(this);
-            this.loadPlans = this.loadPlans.bind(this);
-            this.openPlanModal = this.openPlanModal.bind(this);
-            this.closePlanModal = this.closePlanModal.bind(this);
-            this.handlePlanSubmission = this.handlePlanSubmission.bind(this);
-            this.initializeCurrencySelection = this.initializeCurrencySelection.bind(this);
+            // DOM Element References
+            this.elements = {
+                plansContainer: this.getElement('plansContainer'),
+                createPlanBtn: this.getElement('createNewPlanBtn'),
+                planModal: this.getElement('planModal'),
+                modalOverlay: this.getElement('modalOverlay'),
+                closePlanModal: this.getElement('closePlanModal'),
+                cancelPlanModal: this.getElement('cancelPlanModal'),
+                planForm: this.getElement('planForm'),
+                featuresContainer: this.getElement('featuresContainer')
+            };
 
-            // Initialize the module
-            this.init();
+            // Validate all required elements
+            this.validateElements();
+
+            // Bind methods to ensure correct context
+            this.bindMethods([
+                'initializeEventListeners',
+                'loadPlans',
+                'openPlanModal',
+                'closePlanModal',
+                'handlePlanSubmission',
+                'initializeCurrencySelection'
+            ]);
+
+            // Performance tracking
+            this.initializePerformanceTracking();
         }
 
+        // Validate all required elements
+        validateElements() {
+            const missingElements = Object.entries(this.elements)
+                .filter(([key, element]) => !element)
+                .map(([key]) => key);
+
+            if (missingElements.length > 0) {
+                console.error('Missing UI elements:', missingElements);
+                throw new Error(`Missing required UI elements: ${missingElements.join(', ')}`);
+            }
+        }
+
+        // Method to bind multiple methods
+        bindMethods(methodNames) {
+            methodNames.forEach(methodName => {
+                if (typeof this[methodName] === 'function') {
+                    this[methodName] = this[methodName].bind(this);
+                } else {
+                    console.warn(`Method not found: ${methodName}`);
+                }
+            });
+        }
+
+        // Performance tracking
+        initializePerformanceTracking() {
+            const startTime = performance.now();
+            
+            window.addEventListener('load', () => {
+                const endTime = performance.now();
+                const loadTime = endTime - startTime;
+                
+                console.log(`Pricing Module Initialization Time: ${loadTime.toFixed(2)}ms`);
+            });
+        }
+
+        // Currency formatting method
+        formatCurrency(amount, currencyCode = 'USD') {
+            const currency = this.currencyOptions.find(c => c.code === currencyCode) || 
+                             this.currencyOptions.find(c => c.code === 'USD');
+            
+            return new Intl.NumberFormat(currency.locale, {
+                style: 'currency',
+                currency: currency.code,
+                minimumFractionDigits: currency.decimalPlaces,
+                maximumFractionDigits: currency.decimalPlaces
+            }).format(amount);
+        }
+
+        // Notification methods
+        showErrorNotification(message) {
+            if (window.dashboardApp && window.dashboardApp.userInterface) {
+                window.dashboardApp.userInterface.showErrorNotification(message);
+            } else {
+                console.error(message);
+            }
+        }
+
+        showSuccessNotification(message) {
+            if (window.dashboardApp && window.dashboardApp.userInterface) {
+                window.dashboardApp.userInterface.showSuccessNotification(message);
+            } else {
+                console.log(message);
+            }
+        }
+
+        // Initialize method
         init() {
             try {
                 this.initializeEventListeners();
+                this.initializeCurrencySelection();
                 this.loadPlans();
                 this.loadAvailableFeatures();
-                this.initializeCurrencySelection();
             } catch (error) {
                 console.error('Pricing Manager Initialization Error:', error);
                 this.showErrorNotification('Failed to initialize Pricing Module');
             }
         }
 
+            // Initialize event listeners
         initializeEventListeners() {
+            // Validate elements before adding listeners
+            if (!this.elements.createPlanBtn || 
+                !this.elements.closePlanModal || 
+                !this.elements.cancelPlanModal || 
+                !this.elements.planForm) {
+                console.error('Missing required elements for event listeners');
+                return;
+            }
+
             // Create Plan Button
-            this.elements.createPlanBtn.addEventListener('click', this.openPlanModal);
+            this.elements.createPlanBtn.addEventListener('click', () => {
+                this.openPlanModal();
+            });
 
             // Modal Close Buttons
             this.elements.closePlanModal.addEventListener('click', this.closePlanModal);
@@ -70,10 +229,16 @@
             this.elements.planForm.addEventListener('submit', this.handlePlanSubmission);
         }
 
+        // Initialize currency selection
         initializeCurrencySelection() {
             const currencySelect = document.getElementById('planCurrency');
             const monthlyPriceLabel = document.getElementById('currencySymbolMonthly');
             const annualPriceLabel = document.getElementById('currencySymbolAnnual');
+
+            if (!currencySelect || !monthlyPriceLabel || !annualPriceLabel) {
+                console.warn('Currency selection elements not found');
+                return;
+            }
 
             currencySelect.addEventListener('change', (e) => {
                 const selectedCurrency = this.currencyOptions.find(c => c.code === e.target.value);
@@ -84,183 +249,172 @@
             });
         }
 
-        formatCurrency(amount, currencyCode = 'USD') {
-            const currency = this.currencyOptions.find(c => c.code === currencyCode) || 
-                             this.currencyOptions.find(c => c.code === 'USD');
-            return `${currency.symbol}${amount.toFixed(2)}`;
-        }
-
-        // Currency selection initialization in modal
+        // Open Plan Modal
         openPlanModal(planId = null) {
-            // Reset form
-            this.elements.planForm.reset();
-            
-            // Populate currency dropdown
-            const currencySelect = document.getElementById('planCurrency');
-            currencySelect.innerHTML = this.currencyOptions.map(currency => `
-                <option value="${currency.code}">${currency.name} (${currency.symbol})</option>
-            `).join('');
+            try {
+                // Reset form
+                this.elements.planForm.reset();
+                
+                // Populate currency dropdown
+                const currencySelect = document.getElementById('planCurrency');
+                currencySelect.innerHTML = this.currencyOptions.map(currency => `
+                    <option value="${currency.code}">${currency.name} (${currency.symbol})</option>
+                `).join('');
 
-            // Set modal title
-            const modalTitle = document.getElementById('planModalTitle');
-            modalTitle.textContent = planId ? 'Edit Plan' : 'Create New Plan';
+                // Set modal title
+                const modalTitle = document.getElementById('planModalTitle');
+                modalTitle.textContent = planId ? 'Edit Plan' : 'Create New Plan';
 
-            // Initialize currency symbol
-            const selectedCurrency = this.currencyOptions.find(c => c.code === currencySelect.value);
-            document.getElementById('currencySymbolMonthly').textContent = `(${selectedCurrency.symbol})`;
-            document.getElementById('currencySymbolAnnual').textContent = `(${selectedCurrency.symbol})`;
+                // Initialize currency symbol
+                const selectedCurrency = this.currencyOptions.find(c => c.code === currencySelect.value);
+                document.getElementById('currencySymbolMonthly').textContent = `(${selectedCurrency.symbol})`;
+                document.getElementById('currencySymbolAnnual').textContent = `(${selectedCurrency.symbol})`;
 
-            // If editing, populate existing plan details
-            if (planId) {
-                this.populatePlanEditModal(planId);
+                // If editing, populate existing plan details
+                if (planId) {
+                    this.populatePlanEditModal(planId);
+                }
+
+                // Show modal
+                this.elements.modalOverlay.classList.add('show');
+            } catch (error) {
+                console.error('Open Plan Modal Error:', error);
+                this.showErrorNotification('Failed to open plan modal');
             }
-
-            // Show modal
-            this.elements.modalOverlay.classList.add('show');
-        }
-                async populatePlanEditModal(planId) {
-    try {
-        // Log the attempt to populate plan edit modal
-        console.log(`Attempting to populate plan edit modal for planId: ${planId}`);
-
-        // Validate planId
-        if (!planId) {
-            console.error('Invalid planId: No plan ID provided');
-            this.showErrorNotification('Invalid Plan ID');
-            return;
         }
 
-        // Fetch plan details with comprehensive error handling
-        const response = await fetch(`${this.baseUrl}/plans/${planId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
+        // Populate Plan Edit Modal
+        async populatePlanEditModal(planId) {
+            try {
+                // Log the attempt to populate plan edit modal
+                console.log(`Attempting to populate plan edit modal for planId: ${planId}`);
+
+                // Validate planId
+                if (!planId) {
+                    console.error('Invalid planId: No plan ID provided');
+                    this.showErrorNotification('Invalid Plan ID');
+                    return;
+                }
+
+                // Fetch plan details with comprehensive error handling
+                const response = await fetch(`${this.baseUrl}/plans/${planId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                // Check response status
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`Plan fetch error: ${response.status}`, errorText);
+                    
+                    // Handle specific error scenarios
+                    if (response.status === 404) {
+                        this.showErrorNotification('Plan not found');
+                        return;
+                    }
+                    if (response.status === 403) {
+                        this.showErrorNotification('You do not have permission to edit this plan');
+                        return;
+                    }
+
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // Parse response
+                const result = await response.json();
+
+                // Validate response structure
+                if (!result.success) {
+                    console.error('API returned unsuccessful response', result);
+                    this.showErrorNotification(result.message || 'Failed to fetch plan details');
+                    return;
+                }
+
+                const plan = result.data;
+
+                // Validate plan object
+                if (!plan) {
+                    console.error('No plan data received');
+                    this.showErrorNotification('No plan details found');
+                    return;
+                }
+
+                // Populate form fields
+                document.getElementById('planName').value = plan.name || '';
+                document.getElementById('planDescription').value = plan.description || '';
+                document.getElementById('monthlyPrice').value = plan.monthlyPrice?.toFixed(2) || '0.00';
+                document.getElementById('annualPrice').value = plan.annualPrice?.toFixed(2) || '0.00';
+                document.getElementById('trialPeriod').value = plan.trialPeriod || 0;
+                document.getElementById('planCurrency').value = plan.currency || 'USD';
+                document.getElementById('planActiveStatus').checked = plan.isActive || false;
+                document.getElementById('planId').value = planId;
+
+                // Update currency symbols
+                const selectedCurrency = this.currencyOptions.find(c => c.code === (plan.currency || 'USD'));
+                document.getElementById('currencySymbolMonthly').textContent = `(${selectedCurrency.symbol})`;
+                document.getElementById('currencySymbolAnnual').textContent = `(${selectedCurrency.symbol})`;
+
+                // Handle features
+                const featuresContainer = document.getElementById('featuresContainer');
+                if (featuresContainer) {
+                    const featureCheckboxes = featuresContainer.querySelectorAll('input[type="checkbox"]');
+                    featureCheckboxes.forEach(checkbox => {
+                        checkbox.checked = plan.features && 
+                            plan.features.some(f => f._id === checkbox.value || f.name === checkbox.value);
+                    });
+                }
+
+                // Log successful population
+                console.log('Plan edit modal populated successfully', plan);
+
+            } catch (error) {
+                // Comprehensive error handling
+                console.error('Populate Plan Edit Modal Error:', error);
+                
+                // User-friendly error notification
+                this.showErrorNotification(
+                    error.message || 'Failed to load plan details. Please try again.'
+                );
             }
-        });
-
-        // Check response status
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`Plan fetch error: ${response.status}`, errorText);
-            
-            // Handle specific error scenarios
-            if (response.status === 404) {
-                this.showErrorNotification('Plan not found');
-                return;
-            }
-            if (response.status === 403) {
-                this.showErrorNotification('You do not have permission to edit this plan');
-                return;
-            }
-
-            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        // Parse response
-        const result = await response.json();
-
-        // Validate response structure
-        if (!result.success) {
-            console.error('API returned unsuccessful response', result);
-            this.showErrorNotification(result.message || 'Failed to fetch plan details');
-            return;
+        // Close Plan Modal
+        closePlanModal() {
+            this.elements.modalOverlay.classList.remove('show');
         }
 
-        const plan = result.data;
-
-        // Validate plan object
-        if (!plan) {
-            console.error('No plan data received');
-            this.showErrorNotification('No plan details found');
-            return;
-        }
-
-        // Populate form fields with comprehensive validation
-        const elements = {
-            planName: document.getElementById('planName'),
-            planDescription: document.getElementById('planDescription'),
-            monthlyPrice: document.getElementById('monthlyPrice'),
-            annualPrice: document.getElementById('annualPrice'),
-            trialPeriod: document.getElementById('trialPeriod'),
-            planCurrency: document.getElementById('planCurrency'),
-            planActiveStatus: document.getElementById('planActiveStatus'),
-            planId: document.getElementById('planId'),
-            featuresContainer: document.getElementById('featuresContainer')
-        };
-
-        // Validate all required elements exist
-        Object.entries(elements).forEach(([key, element]) => {
-            if (!element) {
-                console.error(`Element not found: ${key}`);
-                throw new Error(`Missing UI element: ${key}`);
-            }
-        });
-
-        // Populate basic plan details
-        elements.planName.value = plan.name || '';
-        elements.planDescription.value = plan.description || '';
-        elements.monthlyPrice.value = plan.monthlyPrice?.toFixed(2) || '0.00';
-        elements.annualPrice.value = plan.annualPrice?.toFixed(2) || '0.00';
-        elements.trialPeriod.value = plan.trialPeriod || 0;
-        elements.planCurrency.value = plan.currency || 'USD';
-        elements.planActiveStatus.checked = plan.isActive || false;
-        elements.planId.value = planId;
-
-        // Update currency symbols
-        const selectedCurrency = this.currencyOptions.find(c => c.code === (plan.currency || 'USD'));
-        document.getElementById('currencySymbolMonthly').textContent = `(${selectedCurrency.symbol})`;
-        document.getElementById('currencySymbolAnnual').textContent = `(${selectedCurrency.symbol})`;
-
-        // Handle features
-        if (elements.featuresContainer) {
-            const featureCheckboxes = elements.featuresContainer.querySelectorAll('input[type="checkbox"]');
-            featureCheckboxes.forEach(checkbox => {
-                // Check if this feature is in the plan's features
-                checkbox.checked = plan.features && 
-                    plan.features.some(f => f._id === checkbox.value || f.name === checkbox.value);
-            });
-        }
-
-        // Log successful population
-        console.log('Plan edit modal populated successfully', plan);
-
-    } catch (error) {
-        // Comprehensive error handling
-        console.error('Populate Plan Edit Modal Error:', error);
-        
-        // User-friendly error notification
-        this.showErrorNotification(
-            error.message || 'Failed to load plan details. Please try again.'
-        );
-    }
-}
+            // Handle Plan Submission
         async handlePlanSubmission(e) {
             e.preventDefault();
 
-            // Collect form data
-            const formData = {
-                name: document.getElementById('planName').value,
-                description: document.getElementById('planDescription').value,
-                monthlyPrice: parseFloat(document.getElementById('monthlyPrice').value),
-                annualPrice: parseFloat(document.getElementById('annualPrice').value),
-                trialPeriod: parseInt(document.getElementById('trialPeriod').value) || 0,
-                isActive: document.getElementById('planActiveStatus').checked,
-                currency: document.getElementById('planCurrency').value,
-                features: Array.from(
-                    document.querySelectorAll('input[name="features"]:checked')
-                ).map(el => el.value)
-            };
-
-            // Get existing plan ID if in edit mode
-            const planId = document.getElementById('planId').value;
-
             try {
-                let response;
-                let endpoint = planId ? `${this.baseUrl}/plans/${planId}` : `${this.baseUrl}/plans`;
-                let method = planId ? 'PUT' : 'POST';
+                // Collect form data with comprehensive validation
+                const formData = {
+                    name: document.getElementById('planName').value.trim(),
+                    description: document.getElementById('planDescription').value.trim(),
+                    monthlyPrice: this.validatePrice(document.getElementById('monthlyPrice').value),
+                    annualPrice: this.validatePrice(document.getElementById('annualPrice').value),
+                    trialPeriod: this.validateTrialPeriod(document.getElementById('trialPeriod').value),
+                    isActive: document.getElementById('planActiveStatus').checked,
+                    currency: document.getElementById('planCurrency').value,
+                    features: this.collectSelectedFeatures()
+                };
 
-                response = await fetch(endpoint, {
+                // Validate form data
+                this.validatePlanData(formData);
+
+                // Determine method and endpoint
+                const planId = document.getElementById('planId').value;
+                const method = planId ? 'PUT' : 'POST';
+                const endpoint = planId 
+                    ? `${this.baseUrl}/plans/${planId}` 
+                    : `${this.baseUrl}/plans`;
+
+                // Perform API request
+                const response = await fetch(endpoint, {
                     method: method,
                     headers: {
                         'Authorization': `Bearer ${this.token}`,
@@ -269,6 +423,7 @@
                     body: JSON.stringify(formData)
                 });
 
+                // Handle response
                 const result = await response.json();
 
                 if (!response.ok) {
@@ -277,7 +432,9 @@
 
                 // Show success notification
                 this.showSuccessNotification(
-                    planId ? 'Plan updated successfully' : 'New plan created successfully'
+                    planId 
+                        ? 'Plan updated successfully' 
+                        : 'New plan created successfully'
                 );
 
                 // Reload plans
@@ -285,14 +442,71 @@
 
                 // Close modal
                 this.closePlanModal();
+
             } catch (error) {
                 console.error('Plan Submission Error:', error);
                 this.showErrorNotification(error.message);
             }
         }
 
+        // Validate price input
+        validatePrice(price) {
+            const parsedPrice = parseFloat(price);
+            if (isNaN(parsedPrice) || parsedPrice < 0) {
+                throw new Error('Invalid price. Price must be a non-negative number.');
+            }
+            return parsedPrice;
+        }
+
+        // Validate trial period
+        validateTrialPeriod(period) {
+            const parsedPeriod = parseInt(period);
+            if (isNaN(parsedPeriod) || parsedPeriod < 0 || parsedPeriod > 90) {
+                throw new Error('Invalid trial period. Must be between 0 and 90 days.');
+            }
+            return parsedPeriod;
+        }
+
+        // Collect selected features
+        collectSelectedFeatures() {
+            const featureCheckboxes = document.querySelectorAll('input[name="features"]:checked');
+            return Array.from(featureCheckboxes).map(checkbox => checkbox.value);
+        }
+
+        // Validate plan data
+        validatePlanData(data) {
+            // Name validation
+            if (!data.name || data.name.length < 3 || data.name.length > 50) {
+                throw new Error('Plan name must be between 3 and 50 characters.');
+            }
+
+            // Description validation
+            if (!data.description || data.description.length < 10 || data.description.length > 500) {
+                throw new Error('Description must be between 10 and 500 characters.');
+            }
+
+            // Price validations
+            if (data.monthlyPrice < 0 || data.annualPrice < 0) {
+                throw new Error('Prices cannot be negative.');
+            }
+
+            // Currency validation
+            const validCurrencies = this.currencyOptions.map(c => c.code);
+            if (!validCurrencies.includes(data.currency)) {
+                throw new Error('Invalid currency selected.');
+            }
+        }
+
+        // Load Plans
         async loadPlans() {
             try {
+                // Validate elements
+                if (!this.elements.plansContainer) {
+                    console.error('Plans container not found');
+                    return;
+                }
+
+                // Fetch plans
                 const response = await fetch(`${this.baseUrl}/plans`, {
                     method: 'GET',
                     headers: {
@@ -301,19 +515,23 @@
                     }
                 });
 
+                // Handle response
                 const result = await response.json();
 
                 if (!response.ok) {
                     throw new Error(result.message || 'Failed to load plans');
                 }
 
+                // Render plans
                 this.renderPlans(result.data);
+
             } catch (error) {
                 console.error('Load Plans Error:', error);
                 this.showErrorNotification('Failed to load pricing plans');
             }
         }
 
+        // Render Plans
         renderPlans(plans) {
             // Clear existing plans
             this.elements.plansContainer.innerHTML = '';
@@ -350,27 +568,31 @@
             this.addPlanActionListeners();
         }
 
+        // Add Plan Action Listeners
         addPlanActionListeners() {
             const editButtons = this.elements.plansContainer.querySelectorAll('.edit-plan');
             const deleteButtons = this.elements.plansContainer.querySelectorAll('.delete-plan');
 
             editButtons.forEach(button => {
-                button.addEventListener('click', (e) => this.openPlanModal(e.target.dataset.id));
+                button.addEventListener('click', (e) => {
+                    const planId = e.target.dataset.id;
+                    this.openPlanModal(planId);
+                });
             });
 
             deleteButtons.forEach(button => {
-                button.addEventListener('click', (e) => this.confirmDeletePlan(e.target.dataset.id));
+                button.addEventListener('click', (e) => {
+                    const planId = e.target.dataset.id;
+                    this.confirmDeletePlan(planId);
+                });
             });
         }
 
-        closePlanModal() {
-            this.elements.modalOverlay.classList.remove('show');
-        }
-
-    async confirmDeletePlan(planId) {
+            // Confirm Plan Deletion
+        async confirmDeletePlan(planId) {
             try {
-                // First, fetch plan details to check if it's a system plan
-                const response = await fetch(`${this.baseUrl}/plans/${planId}`, {
+                // Fetch plan details to check system status and active subscriptions
+                const planResponse = await fetch(`${this.baseUrl}/plans/${planId}`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${this.token}`,
@@ -378,13 +600,13 @@
                     }
                 });
 
-                const result = await response.json();
+                const planResult = await planResponse.json();
 
-                if (!response.ok) {
-                    throw new Error(result.message || 'Failed to fetch plan details');
+                if (!planResponse.ok) {
+                    throw new Error(planResult.message || 'Failed to fetch plan details');
                 }
 
-                const plan = result.data;
+                const plan = planResult.data;
 
                 // Check if it's a system plan
                 if (plan.isSystem) {
@@ -392,7 +614,7 @@
                     return;
                 }
 
-                // Check if plan has active subscriptions
+                // Check active subscriptions
                 const subscriptionsResponse = await fetch(`${this.baseUrl}/subscriptions?planId=${planId}`, {
                     method: 'GET',
                     headers: {
@@ -436,6 +658,7 @@
             }
         }
 
+        // Delete Plan
         async deletePlan(planId, activeSubscriptionsCount) {
             // Check if there are active subscriptions
             if (activeSubscriptionsCount > 0) {
@@ -473,6 +696,7 @@
             }
         }
 
+        // Load Available Features
         async loadAvailableFeatures() {
             try {
                 const response = await fetch(`${this.baseUrl}/features`, {
@@ -496,9 +720,18 @@
             }
         }
 
+        // Render Features
         renderFeatures(features) {
+            // Validate features container
+            if (!this.elements.featuresContainer) {
+                console.error('Features container not found');
+                return;
+            }
+
+            // Clear existing features
             this.elements.featuresContainer.innerHTML = '';
 
+            // Render features
             features.forEach(feature => {
                 const featureCheckbox = document.createElement('div');
                 featureCheckbox.innerHTML = `
@@ -511,26 +744,15 @@
             });
         }
 
-        showErrorNotification(message) {
-            if (window.dashboardApp && window.dashboardApp.userInterface) {
-                window.dashboardApp.userInterface.showErrorNotification(message);
-            } else {
-                console.error(message);
-            }
-        }
-
-        showSuccessNotification(message) {
-            if (window.dashboardApp && window.dashboardApp.userInterface) {
-                window.dashboardApp.userInterface.showSuccessNotification(message);
-            } else {
-                console.log(message);
-            }
-        }
-
         // Pricing Toggle Functionality
         initializePricingToggle() {
             const monthlyToggle = document.querySelector('.pricing-toggle button:first-child');
             const annualToggle = document.querySelector('.pricing-toggle button:last-child');
+
+            if (!monthlyToggle || !annualToggle) {
+                console.warn('Pricing toggle buttons not found');
+                return;
+            }
 
             monthlyToggle.addEventListener('click', () => {
                 monthlyToggle.classList.add('active');
@@ -545,6 +767,7 @@
             });
         }
 
+        // Update Plan Prices
         updatePlanPrices(billingCycle) {
             const planCards = document.querySelectorAll('.plan-card');
             
@@ -552,21 +775,21 @@
                 const priceValue = card.querySelector('.plan-price-value');
                 const pricePeriod = card.querySelector('.plan-price-period');
                 
-                // This would typically come from the plan data
+                // Extract numeric price
                 const monthlyPrice = parseFloat(priceValue.textContent.replace(/[^\d.]/g, ''));
                 const annualPrice = monthlyPrice * 12 * 0.9; // 10% discount for annual
 
                 if (billingCycle === 'monthly') {
-                    priceValue.textContent = `$${monthlyPrice.toFixed(2)}`;
+                    priceValue.textContent = this.formatCurrency(monthlyPrice);
                     pricePeriod.textContent = '/month';
                 } else {
-                    priceValue.textContent = `$${annualPrice.toFixed(2)}`;
+                    priceValue.textContent = this.formatCurrency(annualPrice);
                     pricePeriod.textContent = '/year';
                 }
             });
         }
 
-                // Subscription Management Methods
+            // Subscription Management Methods
         async loadSubscriptions() {
             try {
                 const response = await fetch(`${this.baseUrl}/subscriptions`, {
@@ -592,6 +815,12 @@
 
         renderSubscriptions(subscriptions) {
             const subscriptionContainer = document.getElementById('subscriptionsContainer');
+            
+            if (!subscriptionContainer) {
+                console.error('Subscriptions container not found');
+                return;
+            }
+
             subscriptionContainer.innerHTML = '';
 
             subscriptions.forEach(subscription => {
@@ -667,26 +896,42 @@
         populateSubscriptionModal(subscription) {
             const modal = document.getElementById('subscriptionDetailsModal');
             
-            // Populate company details
-            document.getElementById('companyName').textContent = subscription.companyName;
-            document.getElementById('companyEmail').textContent = subscription.companyEmail;
+            if (!modal) {
+                console.error('Subscription details modal not found');
+                return;
+            }
 
-            // Populate subscription details
-            document.getElementById('currentPlanName').textContent = subscription.planName;
-            document.getElementById('billingCycle').textContent = subscription.billingCycle;
-            document.getElementById('subscriptionStartDate').textContent = 
-                new Date(subscription.startDate).toLocaleDateString();
-            document.getElementById('nextRenewalDate').textContent = 
-                new Date(subscription.endDate).toLocaleDateString();
+            // Populate company details
+            const companyNameEl = document.getElementById('companyName');
+            const companyEmailEl = document.getElementById('companyEmail');
+            const currentPlanNameEl = document.getElementById('currentPlanName');
+            const billingCycleEl = document.getElementById('billingCycle');
+            const subscriptionStartDateEl = document.getElementById('subscriptionStartDate');
+            const nextRenewalDateEl = document.getElementById('nextRenewalDate');
+            const statusBadgeEl = document.getElementById('subscriptionStatusBadge');
+            const featuresListEl = document.getElementById('activeFeaturesList');
+
+            if (!companyNameEl || !companyEmailEl || !currentPlanNameEl || 
+                !billingCycleEl || !subscriptionStartDateEl || !nextRenewalDateEl || 
+                !statusBadgeEl || !featuresListEl) {
+                console.error('One or more subscription modal elements not found');
+                return;
+            }
+
+            // Populate details
+            companyNameEl.textContent = subscription.companyName;
+            companyEmailEl.textContent = subscription.companyEmail;
+            currentPlanNameEl.textContent = subscription.planName;
+            billingCycleEl.textContent = subscription.billingCycle;
+            subscriptionStartDateEl.textContent = new Date(subscription.startDate).toLocaleDateString();
+            nextRenewalDateEl.textContent = new Date(subscription.endDate).toLocaleDateString();
 
             // Set status badge
-            const statusBadge = document.getElementById('subscriptionStatusBadge');
-            statusBadge.textContent = subscription.status;
-            statusBadge.className = `badge ${this.getSubscriptionStatusClass(subscription.status)}`;
+            statusBadgeEl.textContent = subscription.status;
+            statusBadgeEl.className = `badge ${this.getSubscriptionStatusClass(subscription.status)}`;
 
             // Populate active features
-            const featuresList = document.getElementById('activeFeaturesList');
-            featuresList.innerHTML = subscription.features.map(feature => `
+            featuresListEl.innerHTML = subscription.features.map(feature => `
                 <li>
                     <i class="fas fa-check"></i> ${feature.name}
                 </li>
@@ -694,14 +939,109 @@
 
             // Show modal
             modal.classList.add('show');
+
+            // Setup upgrade and payment method buttons
+            this.setupSubscriptionActions(subscription);
         }
-                // Discount Management Methods
+
+        setupSubscriptionActions(subscription) {
+            const upgradeBtn = document.getElementById('upgradeSubscriptionBtn');
+            const changePaymentBtn = document.getElementById('changePaymentMethodBtn');
+
+            if (!upgradeBtn || !changePaymentBtn) {
+                console.warn('Subscription action buttons not found');
+                return;
+            }
+
+            // Upgrade subscription
+            upgradeBtn.onclick = () => this.initiateSubscriptionUpgrade(subscription);
+
+            // Change payment method
+            changePaymentBtn.onclick = () => this.initiatePaymentMethodChange(subscription);
+        }
+
+        async initiateSubscriptionUpgrade(subscription) {
+            try {
+                // Fetch available plans
+                const plansResponse = await fetch(`${this.baseUrl}/plans`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const plansResult = await plansResponse.json();
+
+                if (!plansResponse.ok) {
+                    throw new Error(plansResult.message || 'Failed to load plans');
+                }
+
+                // Filter out current plan and create upgrade options
+                const upgradePlans = plansResult.data.filter(
+                    plan => plan._id !== subscription.planId
+                );
+
+                // Open upgrade modal with plan options
+                this.openUpgradeModal(subscription, upgradePlans);
+            } catch (error) {
+                console.error('Upgrade Subscription Error:', error);
+                this.showErrorNotification('Failed to initiate subscription upgrade');
+            }
+        }
+
+        openUpgradeModal(currentSubscription, upgradePlans) {
+            const upgradeModal = document.getElementById('upgradeSubscriptionModal');
+            const plansContainer = document.getElementById('upgradePlansContainer');
+
+            if (!upgradeModal || !plansContainer) {
+                console.error('Upgrade modal elements not found');
+                return;
+            }
+
+            // Clear existing plans
+            plansContainer.innerHTML = '';
+
+            // Render upgrade plan options
+            upgradePlans.forEach(plan => {
+                const planOption = document.createElement('div');
+                planOption.className = 'upgrade-plan-option';
+                planOption.innerHTML = `
+                    <input type="radio" 
+                           name="upgradePlan" 
+                           id="plan-${plan._id}" 
+                           value="${plan._id}">
+                    <label for="plan-${plan._id}">
+                        <h4>${plan.name}</h4>
+                        <p>${this.formatCurrency(plan.monthlyPrice)}/month</p>
+                        <ul>
+                            ${plan.features.map(feature => `
+                                <li>${feature.name}</li>
+                            `).join('')}
+                        </ul>
+                    </label>
+                `;
+
+                plansContainer.appendChild(planOption);
+            });
+
+            // Show modal
+            upgradeModal.classList.add('show');
+        }
+
+            // Discount Management Methods
         initializeDiscountManagement() {
             const createDiscountBtn = document.getElementById('createDiscountBtn');
             const discountModal = document.getElementById('discountModal');
             const closeDiscountModal = document.getElementById('closeDiscountModal');
             const cancelDiscountBtn = document.getElementById('cancelDiscountBtn');
             const discountForm = document.getElementById('discountForm');
+
+            if (!createDiscountBtn || !discountModal || !closeDiscountModal || 
+                !cancelDiscountBtn || !discountForm) {
+                console.error('One or more discount management elements not found');
+                return;
+            }
 
             // Create discount button
             createDiscountBtn.addEventListener('click', () => {
@@ -745,6 +1085,12 @@
                 }
 
                 const applicablePlansContainer = document.getElementById('applicablePlansContainer');
+                
+                if (!applicablePlansContainer) {
+                    console.error('Applicable plans container not found');
+                    return;
+                }
+
                 applicablePlansContainer.innerHTML = '';
 
                 result.data.forEach(plan => {
@@ -764,6 +1110,13 @@
         }
 
         generateDiscountCode() {
+            const codeInput = document.getElementById('discountCode');
+            
+            if (!codeInput) {
+                console.error('Discount code input not found');
+                return;
+            }
+
             const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             const codeLength = 8;
             let code = '';
@@ -772,7 +1125,7 @@
                 code += characters.charAt(Math.floor(Math.random() * characters.length));
             }
 
-            document.getElementById('discountCode').value = code;
+            codeInput.value = code;
         }
 
         async handleDiscountSubmission(e) {
@@ -791,6 +1144,9 @@
             };
 
             try {
+                // Validate form data
+                this.validateDiscountData(formData);
+
                 const response = await fetch(`${this.baseUrl}/discounts`, {
                     method: 'POST',
                     headers: {
@@ -819,6 +1175,44 @@
             }
         }
 
+        validateDiscountData(data) {
+            // Validate discount code
+            if (!data.code || data.code.length < 6) {
+                throw new Error('Discount code must be at least 6 characters long');
+            }
+
+            // Validate discount type
+            if (!['percentage', 'fixed'].includes(data.type)) {
+                throw new Error('Invalid discount type');
+            }
+
+            // Validate discount value
+            if (isNaN(data.value) || data.value <= 0) {
+                throw new Error('Discount value must be a positive number');
+            }
+
+            // Validate percentage discount
+            if (data.type === 'percentage' && data.value > 100) {
+                throw new Error('Percentage discount cannot exceed 100%');
+            }
+
+            // Validate expiry date
+            const expiryDate = new Date(data.expiryDate);
+            if (isNaN(expiryDate.getTime())) {
+                throw new Error('Invalid expiry date');
+            }
+
+            // Validate usage limit
+            if (data.usageLimit < 0) {
+                throw new Error('Usage limit cannot be negative');
+            }
+
+            // Validate applicable plans
+            if (!data.applicablePlans || data.applicablePlans.length === 0) {
+                throw new Error('At least one plan must be selected');
+            }
+        }
+
         async loadDiscounts() {
             try {
                 const response = await fetch(`${this.baseUrl}/discounts`, {
@@ -844,6 +1238,12 @@
 
         renderDiscounts(discounts) {
             const discountsContainer = document.getElementById('discountsContainer');
+            
+            if (!discountsContainer) {
+                console.error('Discounts container not found');
+                return;
+            }
+
             discountsContainer.innerHTML = '';
 
             discounts.forEach(discount => {
@@ -860,7 +1260,7 @@
                         <p>
                             ${discount.type === 'percentage' 
                                 ? `${discount.value}% off` 
-                                : `${this.formatCurrency(discount.value, 'USD')} off`}
+                                : `${this.formatCurrency(discount.value)} off`}
                         </p>
                         <p>Expires: ${new Date(discount.expiryDate).toLocaleDateString()}</p>
                         <p>Usage: ${discount.usageCount}/${discount.usageLimit || '∞'}</p>
@@ -915,13 +1315,141 @@
             });
         }
 
-            // Reporting and Analytics Methods
+            async editDiscount(discountId) {
+            try {
+                const response = await fetch(`${this.baseUrl}/discounts/${discountId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Failed to fetch discount details');
+                }
+
+                this.populateDiscountModal(result.data);
+            } catch (error) {
+                console.error('Edit Discount Error:', error);
+                this.showErrorNotification('Failed to retrieve discount details');
+            }
+        }
+
+        populateDiscountModal(discount) {
+            const discountModal = document.getElementById('discountModal');
+            
+            if (!discountModal) {
+                console.error('Discount modal not found');
+                return;
+            }
+
+            // Populate form fields
+            const elements = {
+                discountCode: document.getElementById('discountCode'),
+                discountType: document.getElementById('discountType'),
+                discountValue: document.getElementById('discountValue'),
+                discountExpiryDate: document.getElementById('discountExpiryDate'),
+                discountUsageLimit: document.getElementById('discountUsageLimit'),
+                applicablePlansContainer: document.getElementById('applicablePlansContainer')
+            };
+
+            // Validate all elements exist
+            Object.entries(elements).forEach(([key, element]) => {
+                if (!element) {
+                    console.error(`Element not found: ${key}`);
+                    throw new Error(`Missing UI element: ${key}`);
+                }
+            });
+
+            // Populate basic discount details
+            elements.discountCode.value = discount.code;
+            elements.discountType.value = discount.type;
+            elements.discountValue.value = discount.value;
+            elements.discountExpiryDate.value = 
+                new Date(discount.expiryDate).toISOString().split('T')[0];
+            elements.discountUsageLimit.value = discount.usageLimit || '';
+
+            // Reset and check applicable plans
+            const planCheckboxes = elements.applicablePlansContainer.querySelectorAll('input[type="checkbox"]');
+            planCheckboxes.forEach(checkbox => {
+                checkbox.checked = discount.applicablePlans.includes(checkbox.value);
+            });
+
+            // Show modal
+            discountModal.classList.add('show');
+        }
+
+        confirmDeleteDiscount(discountId) {
+            const confirmModal = document.getElementById('confirmDeleteModal');
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            const cancelDeleteBtn = document.getElementById('cancelDelete');
+            const closeConfirmDelete = document.getElementById('closeConfirmDelete');
+
+            if (!confirmModal || !confirmDeleteBtn || !cancelDeleteBtn || !closeConfirmDelete) {
+                console.error('Confirm delete modal elements not found');
+                return;
+            }
+
+            // Show modal
+            confirmModal.classList.add('show');
+
+            // Remove previous event listeners
+            confirmDeleteBtn.onclick = null;
+            cancelDeleteBtn.onclick = null;
+            closeConfirmDelete.onclick = null;
+
+            // Add new event listeners
+            confirmDeleteBtn.onclick = () => this.deleteDiscount(discountId);
+            cancelDeleteBtn.onclick = () => confirmModal.classList.remove('show');
+            closeConfirmDelete.onclick = () => confirmModal.classList.remove('show');
+        }
+
+        async deleteDiscount(discountId) {
+            try {
+                const response = await fetch(`${this.baseUrl}/discounts/${discountId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Failed to delete discount');
+                }
+
+                this.showSuccessNotification('Discount deleted successfully');
+                
+                // Close confirmation modal
+                const confirmModal = document.getElementById('confirmDeleteModal');
+                confirmModal.classList.remove('show');
+
+                // Reload discounts
+                this.loadDiscounts();
+            } catch (error) {
+                console.error('Delete Discount Error:', error);
+                this.showErrorNotification(error.message);
+            }
+        }
+
+        // Reporting and Analytics Methods
         initializeReportingModule() {
             const generateReportBtn = document.getElementById('generateReportBtn');
             const exportReportBtn = document.getElementById('exportReportBtn');
             const reportTypeSelector = document.getElementById('reportTypeSelector');
             const reportStartDate = document.getElementById('reportStartDate');
             const reportEndDate = document.getElementById('reportEndDate');
+
+            if (!generateReportBtn || !exportReportBtn || !reportTypeSelector || 
+                !reportStartDate || !reportEndDate) {
+                console.error('One or more reporting module elements not found');
+                return;
+            }
 
             // Set default date range (last 30 days)
             const endDate = new Date();
@@ -971,6 +1499,12 @@
 
         renderReport(reportType, reportData) {
             const reportContainer = document.getElementById('reportContainer');
+            
+            if (!reportContainer) {
+                console.error('Report container not found');
+                return;
+            }
+
             reportContainer.innerHTML = '';
 
             switch(reportType) {
@@ -988,7 +1522,7 @@
             }
         }
 
-        renderActiveSubscribersReport(data) {
+            renderActiveSubscribersReport(data) {
             const reportContainer = document.getElementById('reportContainer');
             
             // Create table
@@ -1214,13 +1748,20 @@
             });
         }
 
-            // Data Retention Policy Management
+        // Data Retention Policy Management
         initializeDataRetentionModule() {
             const createRetentionPolicyBtn = document.getElementById('createRetentionPolicyBtn');
             const retentionPolicyModal = document.getElementById('retentionPolicyModal');
             const closeRetentionPolicyModal = document.getElementById('closeRetentionPolicyModal');
             const cancelRetentionPolicyBtn = document.getElementById('cancelRetentionPolicyBtn');
             const retentionPolicyForm = document.getElementById('retentionPolicyForm');
+
+            if (!createRetentionPolicyBtn || !retentionPolicyModal || 
+                !closeRetentionPolicyModal || !cancelRetentionPolicyBtn || 
+                !retentionPolicyForm) {
+                console.error('One or more data retention module elements not found');
+                return;
+            }
 
             // Create retention policy button
             createRetentionPolicyBtn.addEventListener('click', () => {
@@ -1239,10 +1780,18 @@
             this.loadDataRetentionPolicies();
         }
 
-        prepareRetentionPolicyModal() {
+             prepareRetentionPolicyModal() {
             // Reset form
-            document.getElementById('retentionPeriod').value = '';
-            document.getElementById('policyDescription').value = '';
+            const retentionPeriodInput = document.getElementById('retentionPeriod');
+            const policyDescriptionInput = document.getElementById('policyDescription');
+
+            if (!retentionPeriodInput || !policyDescriptionInput) {
+                console.error('Retention policy modal elements not found');
+                return;
+            }
+
+            retentionPeriodInput.value = '';
+            policyDescriptionInput.value = '';
         }
 
         async handleRetentionPolicySubmission(e) {
@@ -1254,6 +1803,9 @@
             };
 
             try {
+                // Validate retention policy data
+                this.validateRetentionPolicyData(formData);
+
                 const response = await fetch(`${this.baseUrl}/data-retention`, {
                     method: 'POST',
                     headers: {
@@ -1282,6 +1834,18 @@
             }
         }
 
+        validateRetentionPolicyData(data) {
+            // Validate retention period
+            if (isNaN(data.retentionPeriod) || data.retentionPeriod < 0 || data.retentionPeriod > 365) {
+                throw new Error('Retention period must be between 0 and 365 days');
+            }
+
+            // Validate policy description
+            if (!data.policyDescription || data.policyDescription.trim().length < 10) {
+                throw new Error('Policy description must be at least 10 characters long');
+            }
+        }
+
         async loadDataRetentionPolicies() {
             try {
                 const response = await fetch(`${this.baseUrl}/data-retention`, {
@@ -1307,6 +1871,12 @@
 
         renderDataRetentionPolicies(policies) {
             const policiesContainer = document.getElementById('dataRetentionPoliciesContainer');
+            
+            if (!policiesContainer) {
+                console.error('Data retention policies container not found');
+                return;
+            }
+
             policiesContainer.innerHTML = '';
 
             policies.forEach(policy => {
@@ -1406,6 +1976,11 @@
         populateRetentionPolicyModal(policy) {
             const retentionPolicyModal = document.getElementById('retentionPolicyModal');
             
+            if (!retentionPolicyModal) {
+                console.error('Retention policy modal not found');
+                return;
+            }
+
             // Populate form fields
             document.getElementById('retentionPeriod').value = policy.retentionPeriod;
             document.getElementById('policyDescription').value = policy.policyDescription;
@@ -1418,6 +1993,11 @@
             const confirmModal = document.getElementById('confirmDeleteModal');
             const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
             const cancelDeleteBtn = document.getElementById('cancelDelete');
+
+            if (!confirmModal || !confirmDeleteBtn || !cancelDeleteBtn) {
+                console.error('Confirm delete modal elements not found');
+                return;
+            }
 
             // Show modal
             confirmModal.classList.add('show');
@@ -1487,4 +2067,5 @@
 
     // Expose the class to the global scope
     window.PricingManager = PricingManager;
-})();
+})();   
+    
