@@ -1062,6 +1062,10 @@ class ContentLoader {
         return fileMap[section] || `${section}.html`;
     }
 
+    initializePricing() {
+        const pricingManager = new PricingManager(this.apiBaseUrl);
+    }
+
     async initializeRolesPermissions() {
         try {
             // Check if script is already loaded
