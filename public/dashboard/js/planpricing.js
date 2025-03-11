@@ -229,6 +229,8 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 // Helper Methods and Data Fetching
 PricingManager.prototype.fetchData = async function(endpoint, method = 'GET', body = null) {
+    console.log('Fetching data:', { endpoint, method, body });
+
     const headers = {
         'Authorization': `Bearer ${this.token}`,
         'Content-Type': 'application/json'
@@ -236,6 +238,8 @@ PricingManager.prototype.fetchData = async function(endpoint, method = 'GET', bo
 
     try {
         const url = `${this.baseUrl}/${endpoint}`;
+        console.log('Full URL:', url);
+
         const config = {
             method,
             headers,
@@ -252,7 +256,12 @@ PricingManager.prototype.fetchData = async function(endpoint, method = 'GET', bo
 
         return await response.json();
     } catch (error) {
-        console.error('Fetch error:', error);
+        console.error('Fetch error details:', {
+            message: error.message,
+            endpoint: endpoint,
+            method: method,
+            body: body
+        });
         
         // Enhanced error handling
         if (window.dashboardApp && window.dashboardApp.userInterface) {
@@ -487,12 +496,17 @@ PricingManager.prototype.handlePlanListClick = function(e) {
         return;
     }
 
+    // Prevent default behavior and stop propagation
+    e.preventDefault();
+    e.stopPropagation();
+
     if (target.classList.contains('edit-plan')) {
-        this.openPlanModal(planId);
+        // Ensure planId is a string
+        this.openPlanModal(String(planId));
     } else if (target.classList.contains('delete-plan')) {
-        this.deletePlan(planId);
+        this.deletePlan(String(planId));
     } else if (target.classList.contains('view-subscriptions')) {
-        this.viewSubscriptions(planId);
+        this.viewSubscriptions(String(planId));
     }
 };
 
@@ -510,6 +524,9 @@ PricingManager.prototype.openPlanModal = async function(planId = null) {
     try {
         let plan = null;
         if (planId) {
+            // Ensure planId is a valid string
+            planId = String(planId).trim();
+            
             // Fetch plan details if editing
             const response = await this.fetchData(`plans/${planId}`);
             if (response.success) {
