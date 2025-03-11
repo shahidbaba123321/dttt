@@ -218,6 +218,8 @@
 
             // Create Plan Button
             this.elements.createPlanBtn.addEventListener('click', () => {
+                        console.log('Create New Plan Button Clicked');
+
                 this.openPlanModal();
             });
 
@@ -250,38 +252,57 @@
         }
 
         // Open Plan Modal
-        openPlanModal(planId = null) {
-            try {
-                // Reset form
-                this.elements.planForm.reset();
-                
-                // Populate currency dropdown
-                const currencySelect = document.getElementById('planCurrency');
-                currencySelect.innerHTML = this.currencyOptions.map(currency => `
-                    <option value="${currency.code}">${currency.name} (${currency.symbol})</option>
-                `).join('');
+       openPlanModal(planId = null) {
+    try {
+        console.log('Opening Plan Modal', { planId });
 
-                // Set modal title
-                const modalTitle = document.getElementById('planModalTitle');
-                modalTitle.textContent = planId ? 'Edit Plan' : 'Create New Plan';
-
-                // Initialize currency symbol
-                const selectedCurrency = this.currencyOptions.find(c => c.code === currencySelect.value);
-                document.getElementById('currencySymbolMonthly').textContent = `(${selectedCurrency.symbol})`;
-                document.getElementById('currencySymbolAnnual').textContent = `(${selectedCurrency.symbol})`;
-
-                // If editing, populate existing plan details
-                if (planId) {
-                    this.populatePlanEditModal(planId);
-                }
-
-                // Show modal
-                this.elements.modalOverlay.classList.add('show');
-            } catch (error) {
-                console.error('Open Plan Modal Error:', error);
-                this.showErrorNotification('Failed to open plan modal');
-            }
+        // Reset form
+        if (this.elements.planForm) {
+            this.elements.planForm.reset();
         }
+        
+        // Populate currency dropdown
+        const currencySelect = document.getElementById('planCurrency');
+        if (currencySelect) {
+            currencySelect.innerHTML = this.currencyOptions.map(currency => `
+                <option value="${currency.code}">${currency.name} (${currency.symbol})</option>
+            `).join('');
+        }
+
+        // Set modal title
+        const modalTitle = document.getElementById('planModalTitle');
+        if (modalTitle) {
+            modalTitle.textContent = planId ? 'Edit Plan' : 'Create New Plan';
+        }
+
+        // Initialize currency symbol
+        const selectedCurrency = this.currencyOptions.find(c => c.code === (currencySelect ? currencySelect.value : 'USD'));
+        const monthlySymbol = document.getElementById('currencySymbolMonthly');
+        const annualSymbol = document.getElementById('currencySymbolAnnual');
+        
+        if (monthlySymbol && annualSymbol) {
+            monthlySymbol.textContent = `(${selectedCurrency.symbol})`;
+            annualSymbol.textContent = `(${selectedCurrency.symbol})`;
+        }
+
+        // If editing, populate existing plan details
+        if (planId) {
+            this.populatePlanEditModal(planId);
+        }
+
+        // Show modal
+        const modalOverlay = document.getElementById('modalOverlay');
+        if (modalOverlay) {
+            modalOverlay.classList.add('show');
+        } else {
+            console.error('Modal overlay not found');
+        }
+
+    } catch (error) {
+        console.error('Open Plan Modal Error:', error);
+        this.showErrorNotification('Failed to open plan modal');
+    }
+}
 
         // Populate Plan Edit Modal
         async populatePlanEditModal(planId) {
@@ -389,65 +410,76 @@
             // Handle Plan Submission
         async handlePlanSubmission(e) {
             e.preventDefault();
+          console.log('Plan Submission Started');
 
-            try {
-                // Collect form data with comprehensive validation
-                const formData = {
-                    name: document.getElementById('planName').value.trim(),
-                    description: document.getElementById('planDescription').value.trim(),
-                    monthlyPrice: this.validatePrice(document.getElementById('monthlyPrice').value),
-                    annualPrice: this.validatePrice(document.getElementById('annualPrice').value),
-                    trialPeriod: this.validateTrialPeriod(document.getElementById('trialPeriod').value),
-                    isActive: document.getElementById('planActiveStatus').checked,
-                    currency: document.getElementById('planCurrency').value,
-                    features: this.collectSelectedFeatures()
-                };
+    try {
+        // Collect form data with comprehensive validation
+        const formData = {
+            name: document.getElementById('planName').value.trim(),
+            description: document.getElementById('planDescription').value.trim(),
+            monthlyPrice: this.validatePrice(document.getElementById('monthlyPrice').value),
+            annualPrice: this.validatePrice(document.getElementById('annualPrice').value),
+            trialPeriod: this.validateTrialPeriod(document.getElementById('trialPeriod').value),
+            isActive: document.getElementById('planActiveStatus').checked,
+            currency: document.getElementById('planCurrency').value,
+            features: this.collectSelectedFeatures()
+        };
 
-                // Validate form data
-                this.validatePlanData(formData);
+        console.log('Form Data:', formData);
 
-                // Determine method and endpoint
-                const planId = document.getElementById('planId').value;
-                const method = planId ? 'PUT' : 'POST';
-                const endpoint = planId 
-                    ? `${this.baseUrl}/plans/${planId}` 
-                    : `${this.baseUrl}/plans`;
+        // Validate form data
+        this.validatePlanData(formData);
 
-                // Perform API request
-                const response = await fetch(endpoint, {
-                    method: method,
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
+        // Determine method and endpoint
+        const planId = document.getElementById('planId').value;
+        const method = planId ? 'PUT' : 'POST';
+        const endpoint = planId 
+            ? `${this.baseUrl}/plans/${planId}` 
+            : `${this.baseUrl}/plans`;
 
-                // Handle response
-                const result = await response.json();
+        console.log('Submission Method:', method);
+        console.log('Endpoint:', endpoint);
 
-                if (!response.ok) {
-                    throw new Error(result.message || 'Failed to save plan');
-                }
+        // Perform API request
+        fetch(endpoint, {
+            method: method,
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(result => {
+            console.log('API Response:', result);
 
-                // Show success notification
-                this.showSuccessNotification(
-                    planId 
-                        ? 'Plan updated successfully' 
-                        : 'New plan created successfully'
-                );
-
-                // Reload plans
-                this.loadPlans();
-
-                // Close modal
-                this.closePlanModal();
-
-            } catch (error) {
-                console.error('Plan Submission Error:', error);
-                this.showErrorNotification(error.message);
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to save plan');
             }
-        }
+
+            // Show success notification
+            this.showSuccessNotification(
+                planId 
+                    ? 'Plan updated successfully' 
+                    : 'New plan created successfully'
+            );
+
+            // Reload plans
+            this.loadPlans();
+
+            // Close modal
+            this.closePlanModal();
+        })
+        .catch(error => {
+            console.error('Plan Submission Error:', error);
+            this.showErrorNotification(error.message);
+        });
+
+    } catch (error) {
+        console.error('Plan Submission Validation Error:', error);
+        this.showErrorNotification(error.message);
+    }
+}
 
         // Validate price input
         validatePrice(price) {
