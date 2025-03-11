@@ -229,6 +229,12 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 // Helper Methods and Data Fetching
 PricingManager.prototype.fetchData = async function(endpoint, method = 'GET', body = null) {
+    // Validate endpoint
+    if (!endpoint || typeof endpoint !== 'string') {
+        console.error('Invalid endpoint:', endpoint);
+        throw new Error('Invalid API endpoint');
+    }
+
     console.log('Fetching data:', { endpoint, method, body });
 
     const headers = {
@@ -488,6 +494,10 @@ PricingManager.prototype.handlePlanListClick = function(e) {
     const target = e.target.closest('button');
     if (!target) return;
 
+    // Prevent default behavior and stop propagation
+    e.preventDefault();
+    e.stopPropagation();
+
     const planCard = target.closest('.plan-card');
     const planId = planCard?.dataset.planId;
 
@@ -496,19 +506,16 @@ PricingManager.prototype.handlePlanListClick = function(e) {
         return;
     }
 
-    // Prevent default behavior and stop propagation
-    e.preventDefault();
-    e.stopPropagation();
-
     if (target.classList.contains('edit-plan')) {
-        // Ensure planId is a string
-        this.openPlanModal(String(planId));
+        // Ensure planId is a string and not an event
+        this.openPlanModal(planId);
     } else if (target.classList.contains('delete-plan')) {
-        this.deletePlan(String(planId));
+        this.deletePlan(planId);
     } else if (target.classList.contains('view-subscriptions')) {
-        this.viewSubscriptions(String(planId));
+        this.viewSubscriptions(planId);
     }
 };
+
 
 PricingManager.prototype.openPlanModal = async function(planId = null) {
     // Ensure plan form exists
@@ -524,9 +531,13 @@ PricingManager.prototype.openPlanModal = async function(planId = null) {
     try {
         let plan = null;
         if (planId) {
-            // Ensure planId is a valid string
-            planId = String(planId).trim();
-            
+            // Validate planId is a string and not an event
+            if (typeof planId !== 'string' || planId.includes('[object')) {
+                console.error('Invalid plan ID:', planId);
+                this.showErrorNotification('Invalid plan selection');
+                return;
+            }
+
             // Fetch plan details if editing
             const response = await this.fetchData(`plans/${planId}`);
             if (response.success) {
