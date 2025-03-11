@@ -13,6 +13,15 @@
             this.baseUrl = baseUrl;
             this.token = localStorage.getItem('token');
             
+            // Currency options
+            this.currencyOptions = [
+                { code: 'USD', symbol: '$', name: 'US Dollar', country: 'USA' },
+                { code: 'INR', symbol: '₹', name: 'Indian Rupee', country: 'India' },
+                { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham', country: 'UAE' },
+                { code: 'QAR', symbol: 'ر.ق', name: 'Qatari Riyal', country: 'Qatar' },
+                { code: 'GBP', symbol: '£', name: 'British Pound', country: 'UK' }
+            ];
+            
             // DOM Element References
             this.elements = {
                 plansContainer: document.getElementById('plansContainer'),
@@ -31,6 +40,7 @@
             this.openPlanModal = this.openPlanModal.bind(this);
             this.closePlanModal = this.closePlanModal.bind(this);
             this.handlePlanSubmission = this.handlePlanSubmission.bind(this);
+            this.initializeCurrencySelection = this.initializeCurrencySelection.bind(this);
 
             // Initialize the module
             this.init();
@@ -41,6 +51,7 @@
                 this.initializeEventListeners();
                 this.loadPlans();
                 this.loadAvailableFeatures();
+                this.initializeCurrencySelection();
             } catch (error) {
                 console.error('Pricing Manager Initialization Error:', error);
                 this.showErrorNotification('Failed to initialize Pricing Module');
@@ -59,97 +70,57 @@
             this.elements.planForm.addEventListener('submit', this.handlePlanSubmission);
         }
 
-        async loadPlans() {
-            try {
-                const response = await fetch(`${this.baseUrl}/plans`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+        initializeCurrencySelection() {
+            const currencySelect = document.getElementById('planCurrency');
+            const monthlyPriceLabel = document.getElementById('currencySymbolMonthly');
+            const annualPriceLabel = document.getElementById('currencySymbolAnnual');
 
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.message || 'Failed to load plans');
-                }
-
-                this.renderPlans(result.data);
-            } catch (error) {
-                console.error('Load Plans Error:', error);
-                this.showErrorNotification('Failed to load pricing plans');
-            }
-        }
-
-        renderPlans(plans) {
-            // Clear existing plans
-            this.elements.plansContainer.innerHTML = '';
-
-            // Render each plan
-            plans.forEach(plan => {
-                const planCard = document.createElement('div');
-                planCard.className = 'plan-card';
-                planCard.innerHTML = `
-                    <div class="plan-header">
-                        <h3 class="plan-title">${plan.name}</h3>
-                        ${plan.isSystem ? '<span class="plan-badge">System Plan</span>' : ''}
-                    </div>
-                    <div class="plan-price">
-                        <span class="plan-price-value">$${plan.monthlyPrice}</span>
-                        <span class="plan-price-period">/month</span>
-                    </div>
-                    <p>${plan.description}</p>
-                    <div class="plan-actions">
-                        <button class="plan-action-btn edit-plan" data-id="${plan._id}">Edit Plan</button>
-                        <button class="plan-action-btn delete-plan" data-id="${plan._id}">Delete Plan</button>
-                    </div>
-                `;
-
-                this.elements.plansContainer.appendChild(planCard);
-            });
-
-            // Add event listeners for edit and delete buttons
-            this.addPlanActionListeners();
-        }
-
-        addPlanActionListeners() {
-            const editButtons = this.elements.plansContainer.querySelectorAll('.edit-plan');
-            const deleteButtons = this.elements.plansContainer.querySelectorAll('.delete-plan');
-
-            editButtons.forEach(button => {
-                button.addEventListener('click', (e) => this.openPlanModal(e.target.dataset.id));
-            });
-
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', (e) => this.confirmDeletePlan(e.target.dataset.id));
+            currencySelect.addEventListener('change', (e) => {
+                const selectedCurrency = this.currencyOptions.find(c => c.code === e.target.value);
+                
+                // Update label symbols
+                monthlyPriceLabel.textContent = `(${selectedCurrency.symbol})`;
+                annualPriceLabel.textContent = `(${selectedCurrency.symbol})`;
             });
         }
 
+        formatCurrency(amount, currencyCode = 'USD') {
+            const currency = this.currencyOptions.find(c => c.code === currencyCode) || 
+                             this.currencyOptions.find(c => c.code === 'USD');
+            return `${currency.symbol}${amount.toFixed(2)}`;
+        }
+
+        // Currency selection initialization in modal
         openPlanModal(planId = null) {
             // Reset form
             this.elements.planForm.reset();
             
+            // Populate currency dropdown
+            const currencySelect = document.getElementById('planCurrency');
+            currencySelect.innerHTML = this.currencyOptions.map(currency => `
+                <option value="${currency.code}">${currency.name} (${currency.symbol})</option>
+            `).join('');
+
             // Set modal title
             const modalTitle = document.getElementById('planModalTitle');
             modalTitle.textContent = planId ? 'Edit Plan' : 'Create New Plan';
 
+            // Initialize currency symbol
+            const selectedCurrency = this.currencyOptions.find(c => c.code === currencySelect.value);
+            document.getElementById('currencySymbolMonthly').textContent = `(${selectedCurrency.symbol})`;
+            document.getElementById('currencySymbolAnnual').textContent = `(${selectedCurrency.symbol})`;
+
+            // If editing, populate existing plan details
+            if (planId) {
+                this.populatePlanEditModal(planId);
+            }
+
             // Show modal
             this.elements.modalOverlay.classList.add('show');
         }
-
-        closePlanModal() {
-            this.elements.modalOverlay.classList.remove('show');
-        }
-
-        async handlePlanSubmission(e) {
-            e.preventDefault();
-            // Plan submission logic will be implemented in the next part
-        }
-
-        async loadAvailableFeatures() {
+                async populatePlanEditModal(planId) {
             try {
-                const response = await fetch(`${this.baseUrl}/features`, {
+                const response = await fetch(`${this.baseUrl}/plans/${planId}`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${this.token}`,
@@ -160,60 +131,42 @@
                 const result = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(result.message || 'Failed to load features');
+                    throw new Error(result.message || 'Failed to fetch plan details');
                 }
 
-                this.renderFeatures(result.data);
+                const plan = result.data;
+
+                // Populate form fields
+                document.getElementById('planName').value = plan.name;
+                document.getElementById('planDescription').value = plan.description;
+                document.getElementById('monthlyPrice').value = plan.monthlyPrice;
+                document.getElementById('annualPrice').value = plan.annualPrice;
+                document.getElementById('trialPeriod').value = plan.trialPeriod;
+                document.getElementById('planCurrency').value = plan.currency || 'USD';
+                document.getElementById('planActiveStatus').checked = plan.isActive;
+
+                // Update currency symbols
+                const selectedCurrency = this.currencyOptions.find(c => c.code === (plan.currency || 'USD'));
+                document.getElementById('currencySymbolMonthly').textContent = `(${selectedCurrency.symbol})`;
+                document.getElementById('currencySymbolAnnual').textContent = `(${selectedCurrency.symbol})`;
+
+                // Populate features
+                const featuresContainer = document.getElementById('featuresContainer');
+                featuresContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = plan.features.some(f => f._id === checkbox.value);
+                });
+
+                // Store plan ID for update
+                document.getElementById('planId').value = planId;
             } catch (error) {
-                console.error('Load Features Error:', error);
-                this.showErrorNotification('Failed to load available features');
-            }
-        }
-
-        renderFeatures(features) {
-            this.elements.featuresContainer.innerHTML = '';
-
-            features.forEach(feature => {
-                const featureCheckbox = document.createElement('div');
-                featureCheckbox.innerHTML = `
-                    <label>
-                        <input type="checkbox" name="features" value="${feature._id}">
-                        ${feature.name}
-                    </label>
-                `;
-                this.elements.featuresContainer.appendChild(featureCheckbox);
-            });
-        }
-
-        showErrorNotification(message) {
-            // Implement error notification logic
-            console.error(message);
-        }
-
-        confirmDeletePlan(planId) {
-            // Confirmation and deletion logic will be implemented later
-            console.log('Confirm delete plan:', planId);
-        }
-                // Placeholder for error notification method
-        showErrorNotification(message) {
-            if (window.dashboardApp && window.dashboardApp.userInterface) {
-                window.dashboardApp.userInterface.showErrorNotification(message);
-            } else {
-                console.error(message);
-            }
-        }
-
-        showSuccessNotification(message) {
-            if (window.dashboardApp && window.dashboardApp.userInterface) {
-                window.dashboardApp.userInterface.showSuccessNotification(message);
-            } else {
-                console.log(message);
+                console.error('Populate Plan Edit Modal Error:', error);
+                this.showErrorNotification('Failed to load plan details');
             }
         }
 
         async handlePlanSubmission(e) {
             e.preventDefault();
-            
+
             // Collect form data
             const formData = {
                 name: document.getElementById('planName').value,
@@ -222,6 +175,7 @@
                 annualPrice: parseFloat(document.getElementById('annualPrice').value),
                 trialPeriod: parseInt(document.getElementById('trialPeriod').value) || 0,
                 isActive: document.getElementById('planActiveStatus').checked,
+                currency: document.getElementById('planCurrency').value,
                 features: Array.from(
                     document.querySelectorAll('input[name="features"]:checked')
                 ).map(el => el.value)
@@ -266,34 +220,85 @@
             }
         }
 
-        async confirmDeletePlan(planId) {
-            // Show confirmation modal
-            const confirmModal = document.getElementById('confirmDeleteModal');
-            const deletePlanName = document.getElementById('deletePlanName');
-            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-            const cancelDeleteBtn = document.getElementById('cancelDelete');
-            const closeConfirmDelete = document.getElementById('closeConfirmDelete');
+        async loadPlans() {
+            try {
+                const response = await fetch(`${this.baseUrl}/plans`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
 
-            // Find plan name
-            const plan = await this.getPlanDetails(planId);
-            deletePlanName.textContent = plan.name;
+                const result = await response.json();
 
-            // Show modal
-            confirmModal.classList.add('show');
+                if (!response.ok) {
+                    throw new Error(result.message || 'Failed to load plans');
+                }
 
-            // Remove previous event listeners to prevent multiple bindings
-            confirmDeleteBtn.onclick = null;
-            cancelDeleteBtn.onclick = null;
-            closeConfirmDelete.onclick = null;
-
-            // Add event listeners
-            confirmDeleteBtn.onclick = () => this.deletePlan(planId);
-            cancelDeleteBtn.onclick = () => confirmModal.classList.remove('show');
-            closeConfirmDelete.onclick = () => confirmModal.classList.remove('show');
+                this.renderPlans(result.data);
+            } catch (error) {
+                console.error('Load Plans Error:', error);
+                this.showErrorNotification('Failed to load pricing plans');
+            }
         }
 
-        async getPlanDetails(planId) {
+        renderPlans(plans) {
+            // Clear existing plans
+            this.elements.plansContainer.innerHTML = '';
+
+            // Render each plan
+            plans.forEach(plan => {
+                // Determine if the plan is a system plan
+                const isSystemPlan = plan.isSystem || false;
+
+                const planCard = document.createElement('div');
+                planCard.className = 'plan-card';
+                planCard.innerHTML = `
+                    <div class="plan-header">
+                        <h3 class="plan-title">${plan.name}</h3>
+                        ${isSystemPlan ? '<span class="plan-badge">System Plan</span>' : ''}
+                    </div>
+                    <div class="plan-price">
+                        <span class="plan-price-value">${this.formatCurrency(plan.monthlyPrice, plan.currency)}</span>
+                        <span class="plan-price-period">/month</span>
+                    </div>
+                    <p>${plan.description}</p>
+                    <div class="plan-actions">
+                        <button class="plan-action-btn edit-plan" data-id="${plan._id}">Edit Plan</button>
+                        ${!isSystemPlan ? `
+                            <button class="plan-action-btn delete-plan" data-id="${plan._id}">Delete Plan</button>
+                        ` : ''}
+                    </div>
+                `;
+
+                this.elements.plansContainer.appendChild(planCard);
+            });
+
+            // Add event listeners for edit and delete buttons
+            this.addPlanActionListeners();
+        }
+
+        addPlanActionListeners() {
+            const editButtons = this.elements.plansContainer.querySelectorAll('.edit-plan');
+            const deleteButtons = this.elements.plansContainer.querySelectorAll('.delete-plan');
+
+            editButtons.forEach(button => {
+                button.addEventListener('click', (e) => this.openPlanModal(e.target.dataset.id));
+            });
+
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', (e) => this.confirmDeletePlan(e.target.dataset.id));
+            });
+        }
+
+        closePlanModal() {
+            this.elements.modalOverlay.classList.remove('show');
+        }
+
+    async confirmDeletePlan(planId) {
             try {
+                // First, fetch plan details to check if it's a system plan
                 const response = await fetch(`${this.baseUrl}/plans/${planId}`, {
                     method: 'GET',
                     headers: {
@@ -308,15 +313,65 @@
                     throw new Error(result.message || 'Failed to fetch plan details');
                 }
 
-                return result.data;
+                const plan = result.data;
+
+                // Check if it's a system plan
+                if (plan.isSystem) {
+                    this.showErrorNotification('System plans cannot be deleted');
+                    return;
+                }
+
+                // Check if plan has active subscriptions
+                const subscriptionsResponse = await fetch(`${this.baseUrl}/subscriptions?planId=${planId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const subscriptionsResult = await subscriptionsResponse.json();
+
+                if (!subscriptionsResponse.ok) {
+                    throw new Error(subscriptionsResult.message || 'Failed to check subscriptions');
+                }
+
+                // Show confirmation modal
+                const confirmModal = document.getElementById('confirmDeleteModal');
+                const deletePlanName = document.getElementById('deletePlanName');
+                const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+                const cancelDeleteBtn = document.getElementById('cancelDelete');
+                const closeConfirmDelete = document.getElementById('closeConfirmDelete');
+
+                // Populate plan name
+                deletePlanName.textContent = plan.name;
+
+                // Show modal
+                confirmModal.classList.add('show');
+
+                // Remove previous event listeners to prevent multiple bindings
+                confirmDeleteBtn.onclick = null;
+                cancelDeleteBtn.onclick = null;
+                closeConfirmDelete.onclick = null;
+
+                // Add event listeners
+                confirmDeleteBtn.onclick = () => this.deletePlan(planId, subscriptionsResult.data.length);
+                cancelDeleteBtn.onclick = () => confirmModal.classList.remove('show');
+                closeConfirmDelete.onclick = () => confirmModal.classList.remove('show');
+
             } catch (error) {
-                console.error('Get Plan Details Error:', error);
-                this.showErrorNotification('Failed to retrieve plan details');
-                return null;
+                console.error('Confirm Delete Plan Error:', error);
+                this.showErrorNotification(error.message);
             }
         }
 
-        async deletePlan(planId) {
+        async deletePlan(planId, activeSubscriptionsCount) {
+            // Check if there are active subscriptions
+            if (activeSubscriptionsCount > 0) {
+                this.showErrorNotification(`Cannot delete plan. ${activeSubscriptionsCount} active subscriptions exist.`);
+                return;
+            }
+
             try {
                 const response = await fetch(`${this.baseUrl}/plans/${planId}`, {
                     method: 'DELETE',
@@ -347,6 +402,60 @@
             }
         }
 
+        async loadAvailableFeatures() {
+            try {
+                const response = await fetch(`${this.baseUrl}/features`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Failed to load features');
+                }
+
+                this.renderFeatures(result.data);
+            } catch (error) {
+                console.error('Load Features Error:', error);
+                this.showErrorNotification('Failed to load available features');
+            }
+        }
+
+        renderFeatures(features) {
+            this.elements.featuresContainer.innerHTML = '';
+
+            features.forEach(feature => {
+                const featureCheckbox = document.createElement('div');
+                featureCheckbox.innerHTML = `
+                    <label>
+                        <input type="checkbox" name="features" value="${feature._id}">
+                        ${feature.name}
+                    </label>
+                `;
+                this.elements.featuresContainer.appendChild(featureCheckbox);
+            });
+        }
+
+        showErrorNotification(message) {
+            if (window.dashboardApp && window.dashboardApp.userInterface) {
+                window.dashboardApp.userInterface.showErrorNotification(message);
+            } else {
+                console.error(message);
+            }
+        }
+
+        showSuccessNotification(message) {
+            if (window.dashboardApp && window.dashboardApp.userInterface) {
+                window.dashboardApp.userInterface.showSuccessNotification(message);
+            } else {
+                console.log(message);
+            }
+        }
+
         // Pricing Toggle Functionality
         initializePricingToggle() {
             const monthlyToggle = document.querySelector('.pricing-toggle button:first-child');
@@ -373,7 +482,7 @@
                 const pricePeriod = card.querySelector('.plan-price-period');
                 
                 // This would typically come from the plan data
-                const monthlyPrice = parseFloat(priceValue.textContent.replace('$', ''));
+                const monthlyPrice = parseFloat(priceValue.textContent.replace(/[^\d.]/g, ''));
                 const annualPrice = monthlyPrice * 12 * 0.9; // 10% discount for annual
 
                 if (billingCycle === 'monthly') {
@@ -386,7 +495,7 @@
             });
         }
 
-            // Subscription Management Methods
+                // Subscription Management Methods
         async loadSubscriptions() {
             try {
                 const response = await fetch(`${this.baseUrl}/subscriptions`, {
@@ -411,50 +520,35 @@
         }
 
         renderSubscriptions(subscriptions) {
-            const subscriptionTable = document.createElement('table');
-            subscriptionTable.className = 'subscriptions-table';
-            subscriptionTable.innerHTML = `
-                <thead>
-                    <tr>
-                        <th>Company</th>
-                        <th>Plan</th>
-                        <th>Status</th>
-                        <th>Start Date</th>
-                        <th>Next Renewal</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${subscriptions.map(subscription => `
-                        <tr>
-                            <td>${subscription.companyName}</td>
-                            <td>${subscription.planName}</td>
-                            <td>
-                                <span class="badge ${this.getSubscriptionStatusClass(subscription.status)}">
-                                    ${subscription.status}
-                                </span>
-                            </td>
-                            <td>${new Date(subscription.startDate).toLocaleDateString()}</td>
-                            <td>${new Date(subscription.endDate).toLocaleDateString()}</td>
-                            <td>
-                                <button class="btn btn-sm btn-details" data-id="${subscription._id}">
-                                    View Details
-                                </button>
-                            </td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            `;
+            const subscriptionContainer = document.getElementById('subscriptionsContainer');
+            subscriptionContainer.innerHTML = '';
 
-            // Replace existing content or create a new container
-            const subscriptionsContainer = document.getElementById('subscriptionsContainer');
-            if (subscriptionsContainer) {
-                subscriptionsContainer.innerHTML = '';
-                subscriptionsContainer.appendChild(subscriptionTable);
-            }
+            subscriptions.forEach(subscription => {
+                const subscriptionCard = document.createElement('div');
+                subscriptionCard.className = 'subscription-card';
+                subscriptionCard.innerHTML = `
+                    <div class="subscription-header">
+                        <h3>${subscription.companyName}</h3>
+                        <span class="badge ${this.getSubscriptionStatusClass(subscription.status)}">
+                            ${subscription.status}
+                        </span>
+                    </div>
+                    <div class="subscription-details">
+                        <p>Plan: ${subscription.planName}</p>
+                        <p>Start Date: ${new Date(subscription.startDate).toLocaleDateString()}</p>
+                        <p>Next Renewal: ${new Date(subscription.endDate).toLocaleDateString()}</p>
+                    </div>
+                    <div class="subscription-actions">
+                        <button class="btn btn-sm btn-details" data-id="${subscription._id}">
+                            View Details
+                        </button>
+                    </div>
+                `;
 
-            // Add event listeners for view details
-            this.addSubscriptionDetailsListeners();
+                subscriptionContainer.appendChild(subscriptionCard);
+            });
+
+            this.addSubscriptionActionListeners();
         }
 
         getSubscriptionStatusClass(status) {
@@ -466,7 +560,7 @@
             }
         }
 
-        addSubscriptionDetailsListeners() {
+        addSubscriptionActionListeners() {
             const detailButtons = document.querySelectorAll('.btn-details');
             detailButtons.forEach(button => {
                 button.addEventListener('click', (e) => {
@@ -529,163 +623,8 @@
 
             // Show modal
             modal.classList.add('show');
-
-            // Setup upgrade and payment method buttons
-            this.setupSubscriptionActions(subscription);
         }
-
-        setupSubscriptionActions(subscription) {
-            const upgradeBtn = document.getElementById('upgradeSubscriptionBtn');
-            const changePaymentBtn = document.getElementById('changePaymentMethodBtn');
-
-            // Upgrade subscription
-            upgradeBtn.onclick = () => this.initiateSubscriptionUpgrade(subscription);
-
-            // Change payment method
-            changePaymentBtn.onclick = () => this.initiatePaymentMethodChange(subscription);
-        }
-
-        async initiateSubscriptionUpgrade(subscription) {
-            try {
-                // Fetch available plans
-                const plansResponse = await fetch(`${this.baseUrl}/plans`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                const plansResult = await plansResponse.json();
-
-                if (!plansResponse.ok) {
-                    throw new Error(plansResult.message || 'Failed to load plans');
-                }
-
-                // Filter out current plan and create upgrade options
-                const upgradePlans = plansResult.data.filter(
-                    plan => plan._id !== subscription.planId
-                );
-
-                // Open upgrade modal with plan options
-                this.openUpgradeModal(subscription, upgradePlans);
-            } catch (error) {
-                console.error('Upgrade Subscription Error:', error);
-                this.showErrorNotification('Failed to initiate subscription upgrade');
-            }
-        }
-
-        openUpgradeModal(currentSubscription, upgradePlans) {
-            const upgradeModal = document.getElementById('upgradeSubscriptionModal');
-            const plansContainer = document.getElementById('upgradePlansContainer');
-
-            // Clear existing plans
-            plansContainer.innerHTML = '';
-
-            // Render upgrade plan options
-            upgradePlans.forEach(plan => {
-                const planOption = document.createElement('div');
-                planOption.className = 'upgrade-plan-option';
-                planOption.innerHTML = `
-                    <input type="radio" 
-                           name="upgradePlan" 
-                           id="plan-${plan._id}" 
-                           value="${plan._id}">
-                    <label for="plan-${plan._id}">
-                        <h4>${plan.name}</h4>
-                        <p>$${plan.monthlyPrice}/month</p>
-                        <ul>
-                            ${plan.features.map(feature => `
-                                <li>${feature.name}</li>
-                            `).join('')}
-                        </ul>
-                    </label>
-                `;
-
-                plansContainer.appendChild(planOption);
-            });
-
-            // Show modal
-            upgradeModal.classList.add('show');
-        }
-
-        initiatePaymentMethodChange(subscription) {
-            // Open payment method modal
-            const paymentModal = document.getElementById('paymentMethodModal');
-            paymentModal.classList.add('show');
-
-            // Populate existing payment methods
-            this.loadPaymentMethods(subscription);
-        }
-
-        async loadPaymentMethods(subscription) {
-            try {
-                const response = await fetch(`${this.baseUrl}/payments`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.message || 'Failed to load payment methods');
-                }
-
-                this.renderPaymentMethods(result.data);
-            } catch (error) {
-                console.error('Payment Methods Error:', error);
-                this.showErrorNotification('Failed to load payment methods');
-            }
-        }
-
-        renderPaymentMethods(paymentMethods) {
-            const methodsContainer = document.getElementById('paymentMethodsContainer');
-            methodsContainer.innerHTML = '';
-
-            paymentMethods.forEach(method => {
-                const methodCard = document.createElement('div');
-                methodCard.className = 'payment-method-card';
-                methodCard.innerHTML = `
-                    <input type="radio" 
-                           name="paymentMethod" 
-                           id="method-${method._id}" 
-                           value="${method._id}">
-                    <label for="method-${method._id}">
-                        <i class="fas fa-${this.getPaymentMethodIcon(method.type)}"></i>
-                        <span>${method.type}</span>
-                        <small>${this.maskPaymentDetails(method)}</small>
-                    </label>
-                `;
-
-                methodsContainer.appendChild(methodCard);
-            });
-        }
-
-        getPaymentMethodIcon(type) {
-            switch(type.toLowerCase()) {
-                case 'creditcard': return 'credit-card';
-                case 'paypal': return 'paypal';
-                case 'banktransfer': return 'university';
-                default: return 'money-bill-alt';
-            }
-        }
-
-        maskPaymentDetails(method) {
-            // Implement masking logic based on payment method type
-            switch(method.type.toLowerCase()) {
-                case 'creditcard':
-                    return `**** **** **** ${method.details.cardNumber.slice(-4)}`;
-                case 'banktransfer':
-                    return `**** ${method.details.accountNumber.slice(-4)}`;
-                default:
-                    return method.details.email || '';
-            }
-        }
-
-            // Discount and Coupon Management
+                // Discount Management Methods
         initializeDiscountManagement() {
             const createDiscountBtn = document.getElementById('createDiscountBtn');
             const discountModal = document.getElementById('discountModal');
@@ -850,7 +789,7 @@
                         <p>
                             ${discount.type === 'percentage' 
                                 ? `${discount.value}% off` 
-                                : `$${discount.value} off`}
+                                : `${this.formatCurrency(discount.value, 'USD')} off`}
                         </p>
                         <p>Expires: ${new Date(discount.expiryDate).toLocaleDateString()}</p>
                         <p>Usage: ${discount.usageCount}/${discount.usageLimit || '∞'}</p>
@@ -903,97 +842,6 @@
                     this.confirmDeleteDiscount(discountId);
                 });
             });
-        }
-
-        async editDiscount(discountId) {
-            try {
-                const response = await fetch(`${this.baseUrl}/discounts/${discountId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.message || 'Failed to fetch discount details');
-                }
-
-                this.populateDiscountModal(result.data);
-            } catch (error) {
-                console.error('Edit Discount Error:', error);
-                this.showErrorNotification('Failed to retrieve discount details');
-            }
-        }
-
-        populateDiscountModal(discount) {
-            const discountModal = document.getElementById('discountModal');
-            
-            // Populate form fields
-            document.getElementById('discountCode').value = discount.code;
-            document.getElementById('discountType').value = discount.type;
-            document.getElementById('discountValue').value = discount.value;
-            document.getElementById('discountExpiryDate').value = 
-                new Date(discount.expiryDate).toISOString().split('T')[0];
-            document.getElementById('discountUsageLimit').value = discount.usageLimit || '';
-
-            // Reset and check applicable plans
-            const applicablePlansContainer = document.getElementById('applicablePlansContainer');
-            const planCheckboxes = applicablePlansContainer.querySelectorAll('input[type="checkbox"]');
-            planCheckboxes.forEach(checkbox => {
-                checkbox.checked = discount.applicablePlans.includes(checkbox.value);
-            });
-
-            // Show modal
-            discountModal.classList.add('show');
-        }
-
-        confirmDeleteDiscount(discountId) {
-            const confirmModal = document.getElementById('confirmDeleteModal');
-            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-            const cancelDeleteBtn = document.getElementById('cancelDelete');
-
-            // Show modal
-            confirmModal.classList.add('show');
-
-            // Remove previous event listeners
-            confirmDeleteBtn.onclick = null;
-            cancelDeleteBtn.onclick = null;
-
-            // Add new event listeners
-            confirmDeleteBtn.onclick = () => this.deleteDiscount(discountId);
-            cancelDeleteBtn.onclick = () => confirmModal.classList.remove('show');
-        }
-
-        async deleteDiscount(discountId) {
-            try {
-                const response = await fetch(`${this.baseUrl}/discounts/${discountId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.message || 'Failed to delete discount');
-                }
-
-                this.showSuccessNotification('Discount deleted successfully');
-                
-                // Close confirmation modal
-                document.getElementById('confirmDeleteModal').classList.remove('show');
-
-                // Reload discounts
-                this.loadDiscounts();
-            } catch (error) {
-                console.error('Delete Discount Error:', error);
-                this.showErrorNotification(error.message);
-            }
         }
 
             // Reporting and Analytics Methods
@@ -1092,7 +940,7 @@
                 </tbody>
             `;
 
-            // Create chart
+            // Create chart container
             const chartContainer = document.createElement('div');
             chartContainer.id = 'activeSubscribersChart';
             chartContainer.style.height = '300px';
@@ -1126,13 +974,13 @@
                     ${data.map(item => `
                         <tr>
                             <td>${item.planName}</td>
-                            <td>$${item.revenue.toFixed(2)}</td>
+                            <td>${this.formatCurrency(item.revenue)}</td>
                         </tr>
                     `).join('')}
                 </tbody>
             `;
 
-            // Create chart
+            // Create chart container
             const chartContainer = document.createElement('div');
             chartContainer.id = 'revenueBreakdownChart';
             chartContainer.style.height = '300px';
@@ -1172,7 +1020,7 @@
                 </tbody>
             `;
 
-            // Create chart
+            // Create chart container
             const chartContainer = document.createElement('div');
             chartContainer.id = 'featureUsageChart';
             chartContainer.style.height = '300px';
@@ -1541,7 +1389,7 @@
             }
         }
 
-        // Initialization method to set up all modules
+        // Final Initialization Method
         initializeModule() {
             try {
                 // Initialize various modules
@@ -1549,6 +1397,7 @@
                 this.initializeReportingModule();
                 this.initializeDiscountManagement();
                 this.initializeDataRetentionModule();
+                this.initializeCurrencySelection();
 
                 // Load initial data
                 this.loadPlans();
