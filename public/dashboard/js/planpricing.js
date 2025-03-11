@@ -9,24 +9,14 @@ if (window.PricingManager) {
 
 class PricingManager {
     constructor(baseUrl) {
-        // Base configuration
         this.baseUrl = baseUrl || 'https://18.215.160.136.nip.io/api';
         this.token = localStorage.getItem('token');
-
-        // Bind all methods to ensure correct context
         this.bindMethods();
-
-        // Defer DOM element selection
         this.initializeDOMElements();
-
-        // Initialize event listeners with retry mechanism
         this.initializeEventListenersWithRetry();
-
-        // Load initial data
         this.loadInitialData();
     }
 
-    // Method to bind all class methods
     bindMethods() {
         const methodsToBind = [
             'initializeEventListeners',
@@ -57,7 +47,75 @@ class PricingManager {
             'saveDataRetention',
             'fetchData',
             'createAuditLog',
-            'showErrorNotification'
+            'showErrorNotification',
+            'handlePlanListClick',
+            'closeModal',
+            'openModal',
+            'handleGenericError',
+            'validateForm',
+            'createFormError',
+            'removeFormErrors',
+            'showLoadingState',
+            'showErrorState',
+            'showSuccessState',
+            'safeGetValue',
+            'createPlanCard',
+            'populatePlanForm',
+            'populateFeatureList',
+            'addFeatureToForm',
+            'validatePlanData',
+            'viewSubscriptions',
+            'populateDiscountPlans',
+            'populateDiscountForm',
+            'saveDiscount',
+            'validateDiscountData',
+            'deleteDiscount',
+            'openSubscriptionModal',
+            'createSubscriptionsTable',
+            'populateSubscriptionCompanies',
+            'populateSubscriptionPlans',
+            'setupSubscriptionDateHandlers',
+            'saveSubscription',
+            'validateSubscriptionData',
+            'openPaymentMethodModal',
+            'updatePaymentMethodDetails',
+            'createCreditCardFields',
+            'createBankTransferFields',
+            'createPayPalFields',
+            'createRazorpayFields',
+            'populatePaymentMethodForm',
+            'safeSetPaymentValue',
+            'savePaymentMethod',
+            'collectPaymentMethodDetails',
+            'validatePaymentMethodData',
+            'openInvoiceModal',
+            'populateInvoiceCompanies',
+            'setupInvoiceDateHandlers',
+            'populateInvoiceForm',
+            'generateInvoice',
+            'validateInvoiceData',
+            'downloadInvoice',
+            'openReportsModal',
+            'generateReport',
+            'displayReport',
+            'createActiveSubscribersReport',
+            'createRevenueBreakdownReport',
+            'createFeatureUsageReport',
+            'createReportVisualization',
+            'exportReport',
+            'openReferralDiscountModal',
+            'populateReferralDiscountForm',
+            'saveReferralDiscount',
+            'validateReferralDiscountData',
+            'openSubscriptionLogsModal',
+            'createSubscriptionLogsTable',
+            'formatLogDetails',
+            'openDataRetentionModal',
+            'populateDataRetentionForm',
+            'saveDataRetention',
+            'validateDataRetentionData',
+            'cleanup',
+            'handleGenericError'
         ];
 
         methodsToBind.forEach(method => {
@@ -69,9 +127,7 @@ class PricingManager {
         });
     }
 
-    // Method to safely initialize DOM elements
     initializeDOMElements() {
-        // DOM Elements
         this.planList = this.safeGetElement('#planList');
         this.planModal = this.safeGetElement('#planModal');
         this.featureModal = this.safeGetElement('#featureModal');
@@ -85,7 +141,6 @@ class PricingManager {
         this.subscriptionLogsModal = this.safeGetElement('#subscriptionLogsModal');
         this.dataRetentionModal = this.safeGetElement('#dataRetentionModal');
 
-        // Form Elements
         this.planForm = null;
         this.featureForm = null;
         this.discountForm = null;
@@ -96,7 +151,6 @@ class PricingManager {
         this.referralDiscountForm = null;
         this.dataRetentionForm = null;
 
-        // Buttons and Critical Elements
         this.buttons = {
             createPlan: this.safeGetElement('#createPlanButton'),
             savePlan: this.safeGetElement('#savePlanButton'),
@@ -115,7 +169,6 @@ class PricingManager {
         };
     }
 
-    // Safe element retrieval method
     safeGetElement(selector) {
         const element = document.querySelector(selector);
         if (!element) {
@@ -124,29 +177,24 @@ class PricingManager {
         return element;
     }
 
-    // Method to load initial data
     loadInitialData() {
         try {
             this.loadPlans();
         } catch (error) {
-            console.error('Error loading initial data:', error);
+            console.error('Error loading initial ', error);
             this.showErrorNotification('Failed to load initial pricing data');
         }
     }
 
-    // Robust event listener initialization with retry
     initializeEventListenersWithRetry(maxAttempts = 10) {
         let attempts = 0;
-        
         const tryInitialize = () => {
             attempts++;
-            
             try {
                 this.initializeEventListeners();
                 console.log('Event listeners initialized successfully');
             } catch (error) {
                 console.warn(`Event listener initialization failed. Retrying (${attempts}/${maxAttempts})...`, error);
-                
                 if (attempts < maxAttempts) {
                     setTimeout(tryInitialize, 500);
                 } else {
@@ -155,13 +203,10 @@ class PricingManager {
                 }
             }
         };
-
         tryInitialize();
     }
 
-    // Comprehensive event listener initialization
     initializeEventListeners() {
-        // Validate and attach event listeners
         Object.entries(this.buttons).forEach(([key, button]) => {
             if (button) {
                 const methodName = this.getMethodForButton(key);
@@ -172,13 +217,11 @@ class PricingManager {
             }
         });
 
-        // Additional event listeners for dynamic content
         if (this.planList) {
             this.planList.addEventListener('click', this.handlePlanListClick);
         }
     }
 
-    // Map button names to method names
     getMethodForButton(buttonKey) {
         const buttonMethodMap = {
             createPlan: 'openPlanModal',
@@ -196,11 +239,9 @@ class PricingManager {
             saveReferralDiscount: 'saveReferralDiscount',
             saveDataRetention: 'saveDataRetention'
         };
-
         return buttonMethodMap[buttonKey];
     }
 
-    // Error notification method
     showErrorNotification(message) {
         if (window.dashboardApp && window.dashboardApp.userInterface) {
             window.dashboardApp.userInterface.showErrorNotification(message);
@@ -211,10 +252,8 @@ class PricingManager {
     }
 }
 
-// Expose the class to the window object
 window.PricingManager = PricingManager;
 
-// Initialize the module
 document.addEventListener('DOMContentLoaded', () => {
     try {
         console.log('Attempting to initialize PricingManager');
@@ -223,19 +262,24 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('PricingManager initialized successfully');
     } catch (error) {
         console.error('Error initializing PricingManager:', error);
+        if (window.dashboardApp && window.dashboardApp.userInterface) {
+            window.dashboardApp.userInterface.showErrorNotification(
+                'Failed to load pricing module. Please refresh the page.'
+            );
+        } else {
+            alert('Failed to load pricing module. Please refresh the page.');
+        }
     }
 });
 
 })();
-// Helper Methods and Data Fetching
 PricingManager.prototype.fetchData = async function(endpoint, method = 'GET', body = null) {
-    // Validate endpoint
     if (!endpoint || typeof endpoint !== 'string') {
         console.error('Invalid endpoint:', endpoint);
         throw new Error('Invalid API endpoint');
     }
 
-    console.log('Fetching data:', { endpoint, method, body });
+    console.log('Fetching ', { endpoint, method, body });
 
     const headers = {
         'Authorization': `Bearer ${this.token}`,
@@ -268,31 +312,21 @@ PricingManager.prototype.fetchData = async function(endpoint, method = 'GET', bo
             method: method,
             body: body
         });
-        
-        // Enhanced error handling
-        if (window.dashboardApp && window.dashboardApp.userInterface) {
-            window.dashboardApp.userInterface.showErrorNotification(
-                error.message || 'An unexpected error occurred during the API call'
-            );
-        }
 
+        this.handleGenericError(error, `API call to ${endpoint}`);
         throw error;
     }
 };
 
-// Audit Log Creation Method
 PricingManager.prototype.createAuditLog = async function(action, details) {
     try {
-        await this.fetchData('audit-logs', 'POST', {
-            action,
-            details: JSON.stringify(details)
-        });
+        await this.fetchData('audit-logs', 'POST', { action, details: JSON.stringify(details) });
     } catch (error) {
         console.error('Error creating audit log:', error);
+        this.handleGenericError(error, 'Audit log creation');
     }
 };
 
-// Form Validation Method
 PricingManager.prototype.validateForm = function(form) {
     if (!form) {
         console.error('Form for validation is undefined');
@@ -313,14 +347,12 @@ PricingManager.prototype.validateForm = function(form) {
     return isValid;
 };
 
-// Create Form Error Method
 PricingManager.prototype.createFormError = function(element, message) {
     if (!element) {
         console.error('Element for form error is undefined');
         return;
     }
 
-    // Remove any existing error
     const existingError = element.parentNode.querySelector('.form-error');
     if (existingError) {
         existingError.remove();
@@ -332,7 +364,6 @@ PricingManager.prototype.createFormError = function(element, message) {
     element.parentNode.insertBefore(errorElement, element.nextSibling);
 };
 
-// Remove Form Errors Method
 PricingManager.prototype.removeFormErrors = function(form) {
     if (!form) {
         console.error('Form for error removal is undefined');
@@ -343,7 +374,6 @@ PricingManager.prototype.removeFormErrors = function(form) {
     errorElements.forEach(error => error.remove());
 };
 
-// Show Loading State Method
 PricingManager.prototype.showLoadingState = function(element) {
     if (!element) {
         console.error('Element for loading state is undefined');
@@ -358,7 +388,6 @@ PricingManager.prototype.showLoadingState = function(element) {
     `;
 };
 
-// Show Error State Method
 PricingManager.prototype.showErrorState = function(element, message) {
     if (!element) {
         console.error('Element for error state is undefined');
@@ -373,7 +402,6 @@ PricingManager.prototype.showErrorState = function(element, message) {
     `;
 };
 
-// Show Success State Method
 PricingManager.prototype.showSuccessState = function(element, message) {
     if (!element) {
         console.error('Element for success state is undefined');
@@ -388,12 +416,9 @@ PricingManager.prototype.showSuccessState = function(element, message) {
     `;
 };
 
-// Safe Value Extraction Method
 PricingManager.prototype.safeGetValue = function(input, type = 'string') {
     if (!input) return null;
-    
     const value = input.value.trim();
-    
     switch(type) {
         case 'number':
             return isNaN(parseFloat(value)) ? null : parseFloat(value);
@@ -405,32 +430,25 @@ PricingManager.prototype.safeGetValue = function(input, type = 'string') {
             return value;
     }
 };
-// Plan Management Methods
+
 PricingManager.prototype.loadPlans = async function() {
     try {
-        // Ensure planList exists
         if (!this.planList) {
             console.error('Plan list element not found');
             return;
         }
 
-        // Show loading state
         this.showLoadingState(this.planList);
 
-        // Fetch plans from API
         const response = await this.fetchData('plans');
 
         if (response.success && Array.isArray(response.data)) {
-            // Clear existing content
             this.planList.innerHTML = '';
-
-            // Create plan cards for each plan
             response.data.forEach(plan => {
                 const planCard = this.createPlanCard(plan);
                 this.planList.appendChild(planCard);
             });
         } else {
-            // Handle unexpected response structure
             this.showErrorState(this.planList, response.message || 'Failed to load plans');
         }
     } catch (error) {
@@ -440,7 +458,6 @@ PricingManager.prototype.loadPlans = async function() {
 };
 
 PricingManager.prototype.createPlanCard = function(plan) {
-    // Validate plan object
     if (!plan || !plan._id) {
         console.error('Invalid plan object', plan);
         return document.createElement('div');
@@ -450,7 +467,6 @@ PricingManager.prototype.createPlanCard = function(plan) {
     planCard.className = 'plan-card';
     planCard.dataset.planId = plan._id;
 
-    // Safely handle features
     const featuresHTML = plan.features && Array.isArray(plan.features)
         ? plan.features.map(feature => 
             `<li class="plan-feature">
@@ -494,51 +510,35 @@ PricingManager.prototype.handlePlanListClick = function(e) {
     const target = e.target.closest('button');
     if (!target) return;
 
-    // Prevent default behavior and stop propagation
     e.preventDefault();
     e.stopPropagation();
 
     const planCard = target.closest('.plan-card');
     const planId = planCard?.dataset.planId;
 
-    if (!planId) {
-        console.error('No plan ID found');
-        return;
-    }
-
-    if (target.classList.contains('edit-plan')) {
-        // Ensure planId is a string and not an event
+    if (target.id === 'createPlanButton') {
+        this.openPlanModal();
+    } else if (planId && target.classList.contains('edit-plan')) {
         this.openPlanModal(planId);
-    } else if (target.classList.contains('delete-plan')) {
+    } else if (planId && target.classList.contains('delete-plan')) {
         this.deletePlan(planId);
-    } else if (target.classList.contains('view-subscriptions')) {
+    } else if (planId && target.classList.contains('view-subscriptions')) {
         this.viewSubscriptions(planId);
     }
 };
 
-
 PricingManager.prototype.openPlanModal = async function(planId = null) {
-    // Ensure plan form exists
     this.planForm = document.getElementById('planForm');
     if (!this.planForm) {
         console.error('Plan form not found');
         return;
     }
 
-    // Reset form
     this.planForm.reset();
 
     try {
         let plan = null;
         if (planId) {
-            // Validate planId is a string and not an event
-            if (typeof planId !== 'string' || planId.includes('[object')) {
-                console.error('Invalid plan ID:', planId);
-                this.showErrorNotification('Invalid plan selection');
-                return;
-            }
-
-            // Fetch plan details if editing
             const response = await this.fetchData(`plans/${planId}`);
             if (response.success) {
                 plan = response.data;
@@ -547,10 +547,8 @@ PricingManager.prototype.openPlanModal = async function(planId = null) {
             }
         }
 
-        // Populate form
         this.populatePlanForm(plan);
 
-        // Set modal title and visibility of delete button
         const modalTitle = this.planModal.querySelector('.modal-title');
         const deleteButton = this.buttons.deletePlan;
 
@@ -564,10 +562,7 @@ PricingManager.prototype.openPlanModal = async function(planId = null) {
             this.planForm.dataset.planId = '';
         }
 
-        // Open modal
         this.openModal(this.planModal);
-
-        // Populate features
         this.populateFeatureList(plan?.features || []);
     } catch (error) {
         console.error('Error opening plan modal:', error);
@@ -604,17 +599,14 @@ PricingManager.prototype.populateFeatureList = function(features) {
         return;
     }
 
-    // Clear existing features
     featureList.innerHTML = '';
-
-    // Add features
     features.forEach(feature => {
         this.addFeatureToForm(feature);
     });
 };
 
 PricingManager.prototype.addFeatureToForm = function(feature = null) {
-    const featureList = this.planForm?.querySelector('#featureList');
+    const featureList = this.planForm.querySelector('#featureList');
     if (!featureList) {
         console.error('Feature list container not found');
         return;
@@ -650,28 +642,21 @@ PricingManager.prototype.addFeatureToForm = function(feature = null) {
     return featureItem;
 };
 
-// Plan Saving and Deletion Methods
 PricingManager.prototype.savePlan = async function(e) {
     e.preventDefault();
 
-    // Ensure plan form exists
     this.planForm = document.getElementById('planForm');
     if (!this.planForm) {
         console.error('Plan form not found');
         return;
     }
 
-    // Validate form
     if (!this.validateForm(this.planForm)) return;
 
-    // Collect feature data
     const features = Array.from(this.planForm.querySelectorAll('.feature-name'))
-        .map(input => ({ 
-            name: this.safeGetValue(input) 
-        }))
-        .filter(feature => feature.name); // Remove empty features
+        .map(input => ({ name: this.safeGetValue(input) }))
+        .filter(feature => feature.name);
 
-    // Prepare plan data
     const planData = {
         name: this.safeGetValue(this.planForm.querySelector('#planName')),
         description: this.safeGetValue(this.planForm.querySelector('#planDescription')),
@@ -682,90 +667,58 @@ PricingManager.prototype.savePlan = async function(e) {
         features: features
     };
 
-    // Validate plan data
     const validationErrors = this.validatePlanData(planData);
     if (validationErrors.length > 0) {
-        validationErrors.forEach(error => {
-            this.showErrorNotification(error);
-        });
+        validationErrors.forEach(error => this.showErrorNotification(error));
         return;
     }
 
-    // Determine if updating or creating
     const planId = this.planForm.dataset.planId;
     const method = planId ? 'PUT' : 'POST';
     const endpoint = planId ? `plans/${planId}` : 'plans';
 
     try {
-        // Show loading state
         this.showLoadingState(this.planForm);
 
-        // Send API request
         const response = await this.fetchData(endpoint, method, planData);
-        
+
         if (response.success) {
-            // Show success message
-            this.showSuccessState(
-                this.planForm, 
-                `Plan ${planId ? 'updated' : 'created'} successfully`
-            );
-
-            // Close plan modal
+            this.showSuccessState(this.planForm, `Plan ${planId ? 'updated' : 'created'} successfully`);
             this.closeModal(this.planModal);
-
-            // Reload plans
             await this.loadPlans();
-
-            // Create audit log
-            await this.createAuditLog(
-                planId ? 'PLAN_UPDATED' : 'PLAN_CREATED', 
-                planData
-            );
+            await this.createAuditLog(planId ? 'PLAN_UPDATED' : 'PLAN_CREATED', planData);
         } else {
-            // Show error message
-            this.showErrorState(
-                this.planForm, 
-                response.message || 'Failed to save plan'
-            );
+            this.showErrorState(this.planForm, response.message || 'Failed to save plan');
         }
     } catch (error) {
         console.error('Error saving plan:', error);
-        this.showErrorState(
-            this.planForm, 
-            error.message || 'An unexpected error occurred'
-        );
+        this.showErrorState(this.planForm, error.message || 'An unexpected error occurred');
     }
 };
 
 PricingManager.prototype.validatePlanData = function(data) {
     const errors = [];
 
-    // Validate plan name
     if (!data.name || data.name.trim().length < 3) {
         errors.push('Plan name must be at least 3 characters long');
     }
 
-    // Validate description
     if (!data.description || data.description.trim().length < 10) {
         errors.push('Plan description must be at least 10 characters long');
     }
 
-    // Validate monthly price
     if (typeof data.monthlyPrice !== 'number' || data.monthlyPrice < 0) {
         errors.push('Monthly price must be a non-negative number');
     }
 
-    // Validate annual price
     if (typeof data.annualPrice !== 'number' || data.annualPrice < 0) {
         errors.push('Annual price must be a non-negative number');
     }
 
-    // Validate trial period
     if (typeof data.trialPeriod !== 'number' || data.trialPeriod < 0) {
         errors.push('Trial period must be a non-negative number');
     }
 
-    // Validate features
     if (!Array.isArray(data.features) || data.features.length === 0) {
         errors.push('At least one feature is required');
     }
@@ -774,81 +727,50 @@ PricingManager.prototype.validatePlanData = function(data) {
 };
 
 PricingManager.prototype.deletePlan = async function(planId) {
-    // Confirm deletion
     if (!confirm('Are you sure you want to delete this plan?')) return;
 
     try {
-        // Show loading state on plan list
         this.showLoadingState(this.planList);
 
-        // Send delete request
         const response = await this.fetchData(`plans/${planId}`, 'DELETE');
 
         if (response.success) {
-            // Show success notification
-            this.showSuccessState(
-                this.planList, 
-                'Plan deleted successfully'
-            );
-
-            // Reload plans
+            this.showSuccessState(this.planList, 'Plan deleted successfully');
             await this.loadPlans();
-
-            // Create audit log
-            await this.createAuditLog(
-                'PLAN_DELETED', 
-                { planId }
-            );
-
-            // Close plan modal if open
+            await this.createAuditLog('PLAN_DELETED', { planId });
             if (this.planModal.classList.contains('active')) {
                 this.closeModal(this.planModal);
             }
         } else {
-            // Show error message
-            this.showErrorState(
-                this.planList, 
-                response.message || 'Failed to delete plan'
-            );
+            this.showErrorState(this.planList, response.message || 'Failed to delete plan');
         }
     } catch (error) {
         console.error('Error deleting plan:', error);
-        this.showErrorState(
-            this.planList, 
-            error.message || 'An unexpected error occurred'
-        );
+        this.showErrorState(this.planList, error.message || 'An unexpected error occurred');
     }
 };
 
 PricingManager.prototype.viewSubscriptions = async function(planId) {
     try {
-        // Fetch subscriptions for the specific plan
         const response = await this.fetchData(`subscriptions?planId=${planId}`);
 
         if (response.success) {
-            // Open subscription modal with plan subscriptions
             this.openSubscriptionModal(response.data, planId);
         } else {
-            this.showErrorNotification(
-                response.message || 'Failed to fetch subscriptions'
-            );
+            this.showErrorNotification(response.message || 'Failed to fetch subscriptions');
         }
     } catch (error) {
         console.error('Error viewing subscriptions:', error);
-        this.showErrorNotification(
-            error.message || 'An unexpected error occurred'
-        );
+        this.showErrorNotification(error.message || 'An unexpected error occurred');
     }
 };
 
-// Utility method to close modal
 PricingManager.prototype.closeModal = function(modal) {
     if (modal) {
         modal.classList.remove('active');
     }
 };
 
-// Utility method to open modal
 PricingManager.prototype.openModal = function(modal, title = '') {
     if (!modal) {
         console.error('Modal element is undefined');
@@ -861,34 +783,24 @@ PricingManager.prototype.openModal = function(modal, title = '') {
     }
     modal.classList.add('active');
 };
-// Feature Management Methods
+
 PricingManager.prototype.openFeatureModal = function(feature = null) {
-    // Ensure feature form exists
     this.featureForm = document.getElementById('featureForm');
     if (!this.featureForm) {
         console.error('Feature form not found');
         return;
     }
 
-    // Reset form
     this.featureForm.reset();
 
-    // Populate form if editing existing feature
     if (feature) {
         this.featureForm.querySelector('#featureName').value = feature.name || '';
         this.featureForm.querySelector('#featureDescription').value = feature.description || '';
         this.featureForm.querySelector('#featureCategory').value = feature.category || '';
-        
-        // Store feature ID for update
         this.featureForm.dataset.featureId = feature._id;
-        
-        // Open modal with edit title
         this.openModal(this.featureModal, 'Edit Feature');
     } else {
-        // Clear feature ID for new feature
         this.featureForm.dataset.featureId = '';
-        
-        // Open modal with create title
         this.openModal(this.featureModal, 'Create New Feature');
     }
 };
@@ -896,92 +808,60 @@ PricingManager.prototype.openFeatureModal = function(feature = null) {
 PricingManager.prototype.saveFeature = async function(e) {
     e.preventDefault();
 
-    // Ensure feature form exists
     this.featureForm = document.getElementById('featureForm');
     if (!this.featureForm) {
         console.error('Feature form not found');
         return;
     }
 
-    // Validate form
     if (!this.validateForm(this.featureForm)) return;
 
-    // Prepare feature data
     const featureData = {
         name: this.safeGetValue(this.featureForm.querySelector('#featureName')),
         description: this.safeGetValue(this.featureForm.querySelector('#featureDescription')),
         category: this.safeGetValue(this.featureForm.querySelector('#featureCategory'))
     };
 
-    // Validate feature data
     const validationErrors = this.validateFeatureData(featureData);
     if (validationErrors.length > 0) {
-        validationErrors.forEach(error => {
-            this.showErrorNotification(error);
-        });
+        validationErrors.forEach(error => this.showErrorNotification(error));
         return;
     }
 
-    // Determine if creating or updating
     const featureId = this.featureForm.dataset.featureId;
     const method = featureId ? 'PUT' : 'POST';
     const endpoint = featureId ? `features/${featureId}` : 'features';
 
     try {
-        // Show loading state
         this.showLoadingState(this.featureForm);
 
-        // Send API request
         const response = await this.fetchData(endpoint, method, featureData);
 
         if (response.success) {
-            // Show success message
-            this.showSuccessState(
-                this.featureForm, 
-                `Feature ${featureId ? 'updated' : 'created'} successfully`
-            );
-
-            // Close feature modal
+            this.showSuccessState(this.featureForm, `Feature ${featureId ? 'updated' : 'created'} successfully`);
             this.closeModal(this.featureModal);
-
-            // Create audit log
-            await this.createAuditLog(
-                featureId ? 'FEATURE_UPDATED' : 'FEATURE_CREATED', 
-                featureData
-            );
-
-            // Optionally refresh features or update UI
+            await this.createAuditLog(featureId ? 'FEATURE_UPDATED' : 'FEATURE_CREATED', featureData);
             this.updateFeatureList();
         } else {
-            // Show error message
-            this.showErrorState(
-                this.featureForm, 
-                response.message || 'Failed to save feature'
-            );
+            this.showErrorState(this.featureForm, response.message || 'Failed to save feature');
         }
     } catch (error) {
         console.error('Error saving feature:', error);
-        this.showErrorState(
-            this.featureForm, 
-            error.message || 'An unexpected error occurred'
-        );
+        this.showErrorState(this.featureForm, error.message || 'An unexpected error occurred');
     }
 };
 
 PricingManager.prototype.validateFeatureData = function(data) {
     const errors = [];
 
-    // Validate feature name
     if (!data.name || data.name.trim().length < 3) {
         errors.push('Feature name must be at least 3 characters long');
     }
 
-    // Validate description
     if (!data.description || data.description.trim().length < 10) {
         errors.push('Feature description must be at least 10 characters long');
     }
 
-    // Validate category
     if (!data.category || data.category.trim().length < 3) {
         errors.push('Feature category must be at least 3 characters long');
     }
@@ -991,29 +871,24 @@ PricingManager.prototype.validateFeatureData = function(data) {
 
 PricingManager.prototype.updateFeatureList = async function() {
     try {
-        // Fetch updated features from API
         const response = await this.fetchData('features');
 
         if (response.success && Array.isArray(response.data)) {
-            // Update feature selections in various forms or dropdowns
             this.updateFeatureSelections(response.data);
         } else {
             console.error('Failed to fetch features:', response.message);
         }
     } catch (error) {
         console.error('Error updating feature list:', error);
+        this.handleGenericError(error, 'Updating feature list');
     }
 };
 
 PricingManager.prototype.updateFeatureSelections = function(features) {
-    // Update feature selections in various contexts
     const updateSelect = (selectId) => {
         const select = document.getElementById(selectId);
         if (select) {
-            // Clear existing options
             select.innerHTML = '';
-
-            // Add new feature options
             features.forEach(feature => {
                 const option = document.createElement('option');
                 option.value = feature._id;
@@ -1023,96 +898,55 @@ PricingManager.prototype.updateFeatureSelections = function(features) {
         }
     };
 
-    // Update feature category select in feature form
     updateSelect('featureCategory');
-
-   
 };
 
 PricingManager.prototype.deleteFeature = async function(featureId) {
-    // Confirm deletion
     if (!confirm('Are you sure you want to delete this feature?')) return;
 
     try {
-        // Show loading state
         this.showLoadingState(this.featureModal);
 
-        // Send delete request
         const response = await this.fetchData(`features/${featureId}`, 'DELETE');
 
         if (response.success) {
-            // Show success notification
-            this.showSuccessState(
-                this.featureModal, 
-                'Feature deleted successfully'
-            );
-
-            // Close feature modal
+            this.showSuccessState(this.featureModal, 'Feature deleted successfully');
             this.closeModal(this.featureModal);
-
-            // Create audit log
-            await this.createAuditLog(
-                'FEATURE_DELETED', 
-                { featureId }
-            );
-
-            // Update feature list
+            await this.createAuditLog('FEATURE_DELETED', { featureId });
             await this.updateFeatureList();
         } else {
-            // Show error message
-            this.showErrorState(
-                this.featureModal, 
-                response.message || 'Failed to delete feature'
-            );
+            this.showErrorState(this.featureModal, response.message || 'Failed to delete feature');
         }
     } catch (error) {
         console.error('Error deleting feature:', error);
-        this.showErrorState(
-            this.featureModal, 
-            error.message || 'An unexpected error occurred'
-        );
+        this.showErrorState(this.featureModal, error.message || 'An unexpected error occurred');
     }
 };
-// Discount Management Methods
+
 PricingManager.prototype.openDiscountModal = async function(discount = null) {
-    // Ensure discount form exists
     this.discountForm = document.getElementById('discountForm');
     if (!this.discountForm) {
         console.error('Discount form not found');
         return;
     }
 
-    // Reset form
     this.discountForm.reset();
 
     try {
-        // Populate applicable plans dropdown
         await this.populateDiscountPlans();
 
-        // Populate form if editing existing discount
         if (discount) {
             this.populateDiscountForm(discount);
-            
-            // Store discount ID for update
             this.discountForm.dataset.discountId = discount._id;
-            
-            // Show delete button
             if (this.buttons.deleteDiscount) {
                 this.buttons.deleteDiscount.style.display = 'inline-block';
             }
-            
-            // Open modal with edit title
             this.openModal(this.discountModal, 'Edit Discount');
         } else {
-            // Clear discount ID for new discount
             this.discountForm.dataset.discountId = '';
-            
-            // Hide delete button
             if (this.buttons.deleteDiscount) {
                 this.buttons.deleteDiscount.style.display = 'none';
             }
-            
-            // Open modal with create title
             this.openModal(this.discountModal, 'Create New Discount');
         }
     } catch (error) {
@@ -1123,16 +957,11 @@ PricingManager.prototype.openDiscountModal = async function(discount = null) {
 
 PricingManager.prototype.populateDiscountPlans = async function() {
     try {
-        // Fetch plans from API
         const response = await this.fetchData('plans');
 
         if (response.success && Array.isArray(response.data)) {
             const plansSelect = this.discountForm.querySelector('#discountApplicablePlans');
-            
-            // Clear existing options
             plansSelect.innerHTML = '';
-
-            // Add plans to dropdown
             response.data.forEach(plan => {
                 const option = document.createElement('option');
                 option.value = plan._id;
@@ -1141,10 +970,11 @@ PricingManager.prototype.populateDiscountPlans = async function() {
             });
         } else {
             console.error('Failed to fetch plans:', response.message);
+            this.handleGenericError(new Error(response.message || 'Failed to fetch plans'), 'Populating discount plans');
         }
     } catch (error) {
         console.error('Error populating discount plans:', error);
-        this.showErrorNotification('Failed to load plans');
+        this.handleGenericError(error, 'Populating discount plans');
     }
 };
 
@@ -1156,12 +986,10 @@ PricingManager.prototype.populateDiscountForm = function(discount) {
         }
     };
 
-    // Set form values
     safeSetValue('#discountCode', discount.code);
     safeSetValue('#discountType', discount.type);
     safeSetValue('#discountValue', discount.value);
-    
-    // Format and set expiry date
+
     if (discount.expiryDate) {
         const expiryDate = new Date(discount.expiryDate);
         safeSetValue('#discountExpiry', expiryDate.toISOString().split('T')[0]);
@@ -1169,7 +997,6 @@ PricingManager.prototype.populateDiscountForm = function(discount) {
 
     safeSetValue('#discountUsageLimit', discount.usageLimit);
 
-    // Set applicable plans
     const applicablePlansSelect = this.discountForm.querySelector('#discountApplicablePlans');
     if (applicablePlansSelect && discount.applicablePlans) {
         Array.from(applicablePlansSelect.options).forEach(option => {
@@ -1181,20 +1008,15 @@ PricingManager.prototype.populateDiscountForm = function(discount) {
 PricingManager.prototype.saveDiscount = async function(e) {
     e.preventDefault();
 
-    // Ensure discount form exists
     this.discountForm = document.getElementById('discountForm');
     if (!this.discountForm) {
         console.error('Discount form not found');
         return;
     }
 
-    // Validate form
     if (!this.validateForm(this.discountForm)) return;
 
-    // Prepare discount data
-    const applicablePlans = Array.from(
-        this.discountForm.querySelector('#discountApplicablePlans').selectedOptions
-    ).map(option => option.value);
+    const applicablePlans = Array.from(this.discountForm.querySelector('#discountApplicablePlans').selectedOptions).map(option => option.value);
 
     const discountData = {
         code: this.safeGetValue(this.discountForm.querySelector('#discountCode')),
@@ -1205,88 +1027,58 @@ PricingManager.prototype.saveDiscount = async function(e) {
         applicablePlans: applicablePlans
     };
 
-    // Validate discount data
     const validationErrors = this.validateDiscountData(discountData);
     if (validationErrors.length > 0) {
-        validationErrors.forEach(error => {
-            this.showErrorNotification(error);
-        });
+        validationErrors.forEach(error => this.showErrorNotification(error));
         return;
     }
 
-    // Determine if creating or updating
     const discountId = this.discountForm.dataset.discountId;
     const method = discountId ? 'PUT' : 'POST';
     const endpoint = discountId ? `discounts/${discountId}` : 'discounts';
 
     try {
-        // Show loading state
         this.showLoadingState(this.discountForm);
 
-        // Send API request
         const response = await this.fetchData(endpoint, method, discountData);
 
         if (response.success) {
-            // Show success message
-            this.showSuccessState(
-                this.discountForm, 
-                `Discount ${discountId ? 'updated' : 'created'} successfully`
-            );
-
-            // Close discount modal
+            this.showSuccessState(this.discountForm, `Discount ${discountId ? 'updated' : 'created'} successfully`);
             this.closeModal(this.discountModal);
-
-            // Create audit log
-            await this.createAuditLog(
-                discountId ? 'DISCOUNT_UPDATED' : 'DISCOUNT_CREATED', 
-                discountData
-            );
+            await this.createAuditLog(discountId ? 'DISCOUNT_UPDATED' : 'DISCOUNT_CREATED', discountData);
         } else {
-            // Show error message
-            this.showErrorState(
-                this.discountForm, 
-                response.message || 'Failed to save discount'
-            );
+            this.showErrorState(this.discountForm, response.message || 'Failed to save discount');
         }
     } catch (error) {
         console.error('Error saving discount:', error);
-        this.showErrorState(
-            this.discountForm, 
-            error.message || 'An unexpected error occurred'
-        );
+        this.showErrorState(this.discountForm, error.message || 'An unexpected error occurred');
     }
 };
 
 PricingManager.prototype.validateDiscountData = function(data) {
     const errors = [];
 
-    // Validate discount code
     if (!data.code || data.code.trim().length < 3) {
         errors.push('Discount code must be at least 3 characters long');
     }
 
-    // Validate discount type
     if (!['percentage', 'fixed'].includes(data.type)) {
         errors.push('Invalid discount type. Must be "percentage" or "fixed".');
     }
 
-    // Validate discount value
     if (typeof data.value !== 'number' || data.value <= 0) {
         errors.push('Discount value must be a positive number');
     }
 
-    // Validate expiry date
     const expiryDate = new Date(data.expiryDate);
     if (isNaN(expiryDate.getTime()) || expiryDate <= new Date()) {
         errors.push('Invalid or past expiry date');
     }
 
-    // Validate usage limit
     if (typeof data.usageLimit !== 'number' || data.usageLimit < 0) {
         errors.push('Usage limit must be a non-negative number');
     }
 
-    // Validate applicable plans
     if (!Array.isArray(data.applicablePlans) || data.applicablePlans.length === 0) {
         errors.push('At least one applicable plan is required');
     }
@@ -1295,78 +1087,49 @@ PricingManager.prototype.validateDiscountData = function(data) {
 };
 
 PricingManager.prototype.deleteDiscount = async function(discountId) {
-    // Confirm deletion
     if (!confirm('Are you sure you want to delete this discount?')) return;
 
     try {
-        // Show loading state
         this.showLoadingState(this.discountModal);
 
-        // Send delete request
         const response = await this.fetchData(`discounts/${discountId}`, 'DELETE');
 
         if (response.success) {
-            // Show success notification
-            this.showSuccessState(
-                this.discountModal, 
-                'Discount deleted successfully'
-            );
-
-            // Close discount modal
+            this.showSuccessState(this.discountModal, 'Discount deleted successfully');
             this.closeModal(this.discountModal);
-
-            // Create audit log
-            await this.createAuditLog(
-                'DISCOUNT_DELETED', 
-                { discountId }
-            );
+            await this.createAuditLog('DISCOUNT_DELETED', { discountId });
         } else {
-            // Show error message
-            this.showErrorState(
-                this.discountModal, 
-                response.message || 'Failed to delete discount'
-            );
+            this.showErrorState(this.discountModal, response.message || 'Failed to delete discount');
         }
     } catch (error) {
         console.error('Error deleting discount:', error);
-        this.showErrorState(
-            this.discountModal, 
-            error.message || 'An unexpected error occurred'
-        );
+        this.showErrorState(this.discountModal, error.message || 'An unexpected error occurred');
     }
 };
-// Subscription Management Methods
+
 PricingManager.prototype.openSubscriptionModal = async function(subscriptions = [], planId = null) {
-    // Ensure subscription form exists
     this.subscriptionForm = document.getElementById('subscriptionForm');
     if (!this.subscriptionForm) {
         console.error('Subscription form not found');
         return;
     }
 
-    // Reset form
     this.subscriptionForm.reset();
 
     try {
-        // Populate companies and plans dropdowns
         await Promise.all([
             this.populateSubscriptionCompanies(),
             this.populateSubscriptionPlans()
         ]);
 
-        // Set modal title
         const modalTitle = this.subscriptionModal.querySelector('.modal-title');
-        modalTitle.textContent = planId 
-            ? 'Manage Subscriptions for Plan' 
-            : 'Create New Subscription';
+        modalTitle.textContent = planId ? 'Manage Subscriptions for Plan' : 'Create New Subscription';
 
-        // Populate subscriptions table if exists
         const subscriptionList = this.subscriptionModal.querySelector('.modal-content');
         if (subscriptionList && subscriptions.length > 0) {
             subscriptionList.innerHTML = this.createSubscriptionsTable(subscriptions);
         }
 
-        // If a specific plan is selected, pre-select it
         if (planId) {
             const planSelect = this.subscriptionForm.querySelector('#newPlan');
             if (planSelect) {
@@ -1375,10 +1138,7 @@ PricingManager.prototype.openSubscriptionModal = async function(subscriptions = 
             }
         }
 
-        // Open modal
         this.openModal(this.subscriptionModal);
-
-        // Set up date-related functionality
         this.setupSubscriptionDateHandlers();
     } catch (error) {
         console.error('Error opening subscription modal:', error);
@@ -1420,16 +1180,11 @@ PricingManager.prototype.createSubscriptionsTable = function(subscriptions) {
 
 PricingManager.prototype.populateSubscriptionCompanies = async function() {
     try {
-        // Fetch companies from API
         const response = await this.fetchData('companies');
 
         if (response.success && Array.isArray(response.companies)) {
             const companiesSelect = this.subscriptionForm.querySelector('#companyName');
-            
-            // Clear existing options
             companiesSelect.innerHTML = '';
-
-            // Add companies to dropdown
             response.companies.forEach(company => {
                 const option = document.createElement('option');
                 option.value = company._id;
@@ -1438,25 +1193,21 @@ PricingManager.prototype.populateSubscriptionCompanies = async function() {
             });
         } else {
             console.error('Failed to fetch companies:', response.message);
+            this.handleGenericError(new Error(response.message || 'Failed to fetch companies'), 'Populating subscription companies');
         }
     } catch (error) {
         console.error('Error populating subscription companies:', error);
-        this.showErrorNotification('Failed to load companies');
+        this.handleGenericError(error, 'Populating subscription companies');
     }
 };
 
 PricingManager.prototype.populateSubscriptionPlans = async function() {
     try {
-        // Fetch plans from API
         const response = await this.fetchData('plans');
 
         if (response.success && Array.isArray(response.data)) {
             const plansSelect = this.subscriptionForm.querySelector('#newPlan');
-            
-            // Clear existing options
             plansSelect.innerHTML = '';
-
-            // Add plans to dropdown
             response.data.forEach(plan => {
                 const option = document.createElement('option');
                 option.value = plan._id;
@@ -1465,10 +1216,11 @@ PricingManager.prototype.populateSubscriptionPlans = async function() {
             });
         } else {
             console.error('Failed to fetch plans:', response.message);
+            this.handleGenericError(new Error(response.message || 'Failed to fetch plans'), 'Populating subscription plans');
         }
     } catch (error) {
         console.error('Error populating subscription plans:', error);
-        this.showErrorNotification('Failed to load plans');
+        this.handleGenericError(error, 'Populating subscription plans');
     }
 };
 
@@ -1477,13 +1229,11 @@ PricingManager.prototype.setupSubscriptionDateHandlers = function() {
     const endDateInput = this.subscriptionForm.querySelector('#endDate');
     const billingCycleSelect = this.subscriptionForm.querySelector('#billingCycle');
 
-    // Update end date based on start date and billing cycle
     const updateEndDate = () => {
         if (startDateInput.value) {
             const startDate = new Date(startDateInput.value);
             const billingCycle = billingCycleSelect.value;
-            
-            // Set end date based on billing cycle
+
             const endDate = new Date(startDate);
             if (billingCycle === 'monthly') {
                 endDate.setMonth(endDate.getMonth() + 1);
@@ -1491,13 +1241,11 @@ PricingManager.prototype.setupSubscriptionDateHandlers = function() {
                 endDate.setFullYear(endDate.getFullYear() + 1);
             }
 
-            // Format end date for input
             const formattedEndDate = endDate.toISOString().split('T')[0];
             endDateInput.value = formattedEndDate;
         }
     };
 
-    // Add event listeners
     startDateInput.addEventListener('change', updateEndDate);
     billingCycleSelect.addEventListener('change', updateEndDate);
 };
@@ -1505,17 +1253,14 @@ PricingManager.prototype.setupSubscriptionDateHandlers = function() {
 PricingManager.prototype.saveSubscription = async function(e) {
     e.preventDefault();
 
-    // Ensure subscription form exists
     this.subscriptionForm = document.getElementById('subscriptionForm');
     if (!this.subscriptionForm) {
         console.error('Subscription form not found');
         return;
     }
 
-    // Validate form
     if (!this.validateForm(this.subscriptionForm)) return;
 
-    // Prepare subscription data
     const subscriptionData = {
         companyId: this.safeGetValue(this.subscriptionForm.querySelector('#companyName')),
         planId: this.safeGetValue(this.subscriptionForm.querySelector('#newPlan')),
@@ -1525,83 +1270,54 @@ PricingManager.prototype.saveSubscription = async function(e) {
         discountCode: this.safeGetValue(this.subscriptionForm.querySelector('#discountCode')) || null
     };
 
-    // Validate subscription data
     const validationErrors = this.validateSubscriptionData(subscriptionData);
     if (validationErrors.length > 0) {
-        validationErrors.forEach(error => {
-            this.showErrorNotification(error);
-        });
+        validationErrors.forEach(error => this.showErrorNotification(error));
         return;
     }
 
-    // Determine if creating or updating
     const subscriptionId = this.subscriptionForm.dataset.subscriptionId;
     const method = subscriptionId ? 'PUT' : 'POST';
     const endpoint = subscriptionId ? `subscriptions/${subscriptionId}` : 'subscriptions';
 
     try {
-        // Show loading state
         this.showLoadingState(this.subscriptionForm);
 
-        // Send API request
         const response = await this.fetchData(endpoint, method, subscriptionData);
 
         if (response.success) {
-            // Show success message
-            this.showSuccessState(
-                this.subscriptionForm, 
-                `Subscription ${subscriptionId ? 'updated' : 'created'} successfully`
-            );
-
-            // Close subscription modal
+            this.showSuccessState(this.subscriptionForm, `Subscription ${subscriptionId ? 'updated' : 'created'} successfully`);
             this.closeModal(this.subscriptionModal);
-
-            // Create audit log
-            await this.createAuditLog(
-                subscriptionId ? 'SUBSCRIPTION_UPDATED' : 'SUBSCRIPTION_CREATED', 
-                subscriptionData
-            );
+            await this.createAuditLog(subscriptionId ? 'SUBSCRIPTION_UPDATED' : 'SUBSCRIPTION_CREATED', subscriptionData);
         } else {
-            // Show error message
-            this.showErrorState(
-                this.subscriptionForm, 
-                response.message || 'Failed to save subscription'
-            );
+            this.showErrorState(this.subscriptionForm, response.message || 'Failed to save subscription');
         }
     } catch (error) {
         console.error('Error saving subscription:', error);
-        this.showErrorState(
-            this.subscriptionForm, 
-            error.message || 'An unexpected error occurred'
-        );
+        this.showErrorState(this.subscriptionForm, error.message || 'An unexpected error occurred');
     }
 };
 
 PricingManager.prototype.validateSubscriptionData = function(data) {
     const errors = [];
 
-    // Validate company ID
     if (!data.companyId) {
         errors.push('Company is required');
     }
 
-    // Validate plan ID
     if (!data.planId) {
         errors.push('Plan is required');
     }
 
-    // Validate billing cycle
     if (!['monthly', 'annual'].includes(data.billingCycle)) {
         errors.push('Invalid billing cycle');
     }
 
-    // Validate start date
     const startDate = new Date(data.startDate);
     if (isNaN(startDate.getTime())) {
         errors.push('Invalid start date');
     }
 
-    // Validate end date
     const endDate = new Date(data.endDate);
     if (isNaN(endDate.getTime()) || endDate <= startDate) {
         errors.push('Invalid end date');
@@ -1609,40 +1325,28 @@ PricingManager.prototype.validateSubscriptionData = function(data) {
 
     return errors;
 };
-// Payment Method Management Methods
+
 PricingManager.prototype.openPaymentMethodModal = function(paymentMethod = null) {
-    // Ensure payment form exists
     this.paymentForm = document.getElementById('paymentForm');
     if (!this.paymentForm) {
         console.error('Payment form not found');
         return;
     }
 
-    // Reset form
     this.paymentForm.reset();
 
-    // Set up event listener for payment method type change
     const paymentMethodSelect = this.paymentForm.querySelector('#paymentMethod');
     paymentMethodSelect.addEventListener('change', () => this.updatePaymentMethodDetails());
 
-    // Populate form if editing existing payment method
     if (paymentMethod) {
         this.populatePaymentMethodForm(paymentMethod);
-        
-        // Store payment method ID for update
         this.paymentForm.dataset.paymentMethodId = paymentMethod._id;
-        
-        // Open modal with edit title
         this.openModal(this.paymentModal, 'Edit Payment Method');
     } else {
-        // Clear payment method ID for new method
         this.paymentForm.dataset.paymentMethodId = '';
-        
-        // Open modal with create title
         this.openModal(this.paymentModal, 'Add New Payment Method');
     }
 
-    // Initial population of payment method details
     this.updatePaymentMethodDetails();
 };
 
@@ -1650,10 +1354,8 @@ PricingManager.prototype.updatePaymentMethodDetails = function() {
     const paymentMethodSelect = this.paymentForm.querySelector('#paymentMethod');
     const paymentDetailsContainer = this.paymentForm.querySelector('#paymentDetails');
 
-    // Clear existing details
     paymentDetailsContainer.innerHTML = '';
 
-    // Dynamically create input fields based on payment method
     switch (paymentMethodSelect.value) {
         case 'creditCard':
             paymentDetailsContainer.innerHTML = this.createCreditCardFields();
@@ -1737,10 +1439,8 @@ PricingManager.prototype.populatePaymentMethodForm = function(paymentMethod) {
     const paymentMethodSelect = this.paymentForm.querySelector('#paymentMethod');
     paymentMethodSelect.value = paymentMethod.type;
 
-    // Trigger details update
     this.updatePaymentMethodDetails();
 
-    // Populate specific details based on payment method type
     switch (paymentMethod.type) {
         case 'creditCard':
             this.safeSetPaymentValue('#cardNumber', paymentMethod.details.cardNumber);
@@ -1772,71 +1472,44 @@ PricingManager.prototype.safeSetPaymentValue = function(selector, value) {
 PricingManager.prototype.savePaymentMethod = async function(e) {
     e.preventDefault();
 
-    // Ensure payment form exists
     this.paymentForm = document.getElementById('paymentForm');
     if (!this.paymentForm) {
         console.error('Payment form not found');
         return;
     }
 
-    // Validate form
     if (!this.validateForm(this.paymentForm)) return;
 
-    // Prepare payment method data
     const paymentMethodData = {
         type: this.safeGetValue(this.paymentForm.querySelector('#paymentMethod')),
         details: this.collectPaymentMethodDetails()
     };
 
-    // Validate payment method data
     const validationErrors = this.validatePaymentMethodData(paymentMethodData);
     if (validationErrors.length > 0) {
-        validationErrors.forEach(error => {
-            this.showErrorNotification(error);
-        });
+        validationErrors.forEach(error => this.showErrorNotification(error));
         return;
     }
 
-    // Determine if creating or updating
     const paymentMethodId = this.paymentForm.dataset.paymentMethodId;
     const method = paymentMethodId ? 'PUT' : 'POST';
     const endpoint = paymentMethodId ? `payments/${paymentMethodId}` : 'payments';
 
     try {
-        // Show loading state
         this.showLoadingState(this.paymentForm);
 
-        // Send API request
         const response = await this.fetchData(endpoint, method, paymentMethodData);
 
         if (response.success) {
-            // Show success message
-            this.showSuccessState(
-                this.paymentForm, 
-                `Payment method ${paymentMethodId ? 'updated' : 'added'} successfully`
-            );
-
-            // Close payment method modal
+            this.showSuccessState(this.paymentForm, `Payment method ${paymentMethodId ? 'updated' : 'added'} successfully`);
             this.closeModal(this.paymentModal);
-
-            // Create audit log
-            await this.createAuditLog(
-                paymentMethodId ? 'PAYMENT_METHOD_UPDATED' : 'PAYMENT_METHOD_CREATED', 
-                paymentMethodData
-            );
+            await this.createAuditLog(paymentMethodId ? 'PAYMENT_METHOD_UPDATED' : 'PAYMENT_METHOD_CREATED', paymentMethodData);
         } else {
-            // Show error message
-            this.showErrorState(
-                this.paymentForm, 
-                response.message || 'Failed to save payment method'
-            );
+            this.showErrorState(this.paymentForm, response.message || 'Failed to save payment method');
         }
     } catch (error) {
         console.error('Error saving payment method:', error);
-        this.showErrorState(
-            this.paymentForm, 
-            error.message || 'An unexpected error occurred'
-        );
+        this.showErrorState(this.paymentForm, error.message || 'An unexpected error occurred');
     }
 };
 
@@ -1870,13 +1543,11 @@ PricingManager.prototype.collectPaymentMethodDetails = function() {
 PricingManager.prototype.validatePaymentMethodData = function(data) {
     const errors = [];
 
-    // Validate payment method type
     const validTypes = ['creditCard', 'bankTransfer', 'paypal', 'razorpay'];
     if (!validTypes.includes(data.type)) {
         errors.push('Invalid payment method type');
     }
 
-    // Validate details based on payment method type
     switch (data.type) {
         case 'creditCard':
             if (!data.details.cardNumber || !/^\d{16}$/.test(data.details.cardNumber)) {
@@ -1917,40 +1588,28 @@ PricingManager.prototype.validatePaymentMethodData = function(data) {
 
     return errors;
 };
-// Invoice Management Methods
+
 PricingManager.prototype.openInvoiceModal = async function(invoice = null) {
-    // Ensure invoice form exists
     this.invoiceForm = document.getElementById('invoiceForm');
     if (!this.invoiceForm) {
         console.error('Invoice form not found');
         return;
     }
 
-    // Reset form
     this.invoiceForm.reset();
 
     try {
-        // Populate companies dropdown
         await this.populateInvoiceCompanies();
 
-        // Populate form if editing existing invoice
         if (invoice) {
             this.populateInvoiceForm(invoice);
-            
-            // Store invoice ID for update
             this.invoiceForm.dataset.invoiceId = invoice._id;
-            
-            // Open modal with edit title
             this.openModal(this.invoiceModal, 'Edit Invoice');
         } else {
-            // Clear invoice ID for new invoice
             this.invoiceForm.dataset.invoiceId = '';
-            
-            // Open modal with create title
             this.openModal(this.invoiceModal, 'Generate New Invoice');
         }
 
-        // Set up date-related functionality
         this.setupInvoiceDateHandlers();
     } catch (error) {
         console.error('Error opening invoice modal:', error);
@@ -1960,16 +1619,11 @@ PricingManager.prototype.openInvoiceModal = async function(invoice = null) {
 
 PricingManager.prototype.populateInvoiceCompanies = async function() {
     try {
-        // Fetch companies from API
         const response = await this.fetchData('companies');
 
         if (response.success && Array.isArray(response.companies)) {
             const companiesSelect = this.invoiceForm.querySelector('#invoiceCompany');
-            
-            // Clear existing options
             companiesSelect.innerHTML = '';
-
-            // Add companies to dropdown
             response.companies.forEach(company => {
                 const option = document.createElement('option');
                 option.value = company._id;
@@ -1978,10 +1632,11 @@ PricingManager.prototype.populateInvoiceCompanies = async function() {
             });
         } else {
             console.error('Failed to fetch companies:', response.message);
+            this.handleGenericError(new Error(response.message || 'Failed to fetch companies'), 'Populating invoice companies');
         }
     } catch (error) {
         console.error('Error populating invoice companies:', error);
-        this.showErrorNotification('Failed to load companies');
+        this.handleGenericError(error, 'Populating invoice companies');
     }
 };
 
@@ -1989,22 +1644,16 @@ PricingManager.prototype.setupInvoiceDateHandlers = function() {
     const invoiceDateInput = this.invoiceForm.querySelector('#invoiceDate');
     const dueDateInput = this.invoiceForm.querySelector('#invoiceDueDate');
 
-    // Update due date based on invoice date
     const updateDueDate = () => {
         if (invoiceDateInput.value) {
             const invoiceDate = new Date(invoiceDateInput.value);
             const dueDate = new Date(invoiceDate);
-            
-            // Set due date to 30 days after invoice date
             dueDate.setDate(dueDate.getDate() + 30);
-
-            // Format due date for input
             const formattedDueDate = dueDate.toISOString().split('T')[0];
             dueDateInput.value = formattedDueDate;
         }
     };
 
-    // Add event listener
     invoiceDateInput.addEventListener('change', updateDueDate);
 };
 
@@ -2016,13 +1665,11 @@ PricingManager.prototype.populateInvoiceForm = function(invoice) {
         }
     };
 
-    // Set form values
     safeSetValue('#invoiceCompany', invoice.companyId);
     safeSetValue('#invoicePlan', invoice.planName);
     safeSetValue('#invoiceAmount', invoice.amount.toFixed(2));
     safeSetValue('#invoiceBillingCycle', invoice.billingCycle);
-    
-    // Format and set dates
+
     if (invoice.date) {
         const invoiceDate = new Date(invoice.date);
         safeSetValue('#invoiceDate', invoiceDate.toISOString().split('T')[0]);
@@ -2037,17 +1684,14 @@ PricingManager.prototype.populateInvoiceForm = function(invoice) {
 PricingManager.prototype.generateInvoice = async function(e) {
     e.preventDefault();
 
-    // Ensure invoice form exists
     this.invoiceForm = document.getElementById('invoiceForm');
     if (!this.invoiceForm) {
         console.error('Invoice form not found');
         return;
     }
 
-    // Validate form
     if (!this.validateForm(this.invoiceForm)) return;
 
-    // Prepare invoice data
     const invoiceData = {
         companyId: this.safeGetValue(this.invoiceForm.querySelector('#invoiceCompany')),
         plan: this.safeGetValue(this.invoiceForm.querySelector('#invoicePlan')),
@@ -2057,83 +1701,54 @@ PricingManager.prototype.generateInvoice = async function(e) {
         dueDate: new Date(this.safeGetValue(this.invoiceForm.querySelector('#invoiceDueDate'))).toISOString()
     };
 
-    // Validate invoice data
     const validationErrors = this.validateInvoiceData(invoiceData);
     if (validationErrors.length > 0) {
-        validationErrors.forEach(error => {
-            this.showErrorNotification(error);
-        });
+        validationErrors.forEach(error => this.showErrorNotification(error));
         return;
     }
 
     try {
-        // Show loading state
         this.showLoadingState(this.invoiceForm);
 
-        // Send API request
         const response = await this.fetchData('invoices', 'POST', invoiceData);
 
         if (response.success) {
-            // Show success message
-            this.showSuccessState(
-                this.invoiceForm, 
-                'Invoice generated successfully'
-            );
-
-            // Close invoice modal
+            this.showSuccessState(this.invoiceForm, 'Invoice generated successfully');
             this.closeModal(this.invoiceModal);
-
-            // Create audit log
-            await this.createAuditLog(
-                'INVOICE_GENERATED', 
-                invoiceData
-            );
+            await this.createAuditLog('INVOICE_GENERATED', invoiceData);
         } else {
-            // Show error message
-            this.showErrorState(
-                this.invoiceForm, 
-                response.message || 'Failed to generate invoice'
-            );
+            this.showErrorState(this.invoiceForm, response.message || 'Failed to generate invoice');
         }
     } catch (error) {
         console.error('Error generating invoice:', error);
-        this.showErrorState(
-            this.invoiceForm, 
-            error.message || 'An unexpected error occurred'
-        );
+        this.showErrorState(this.invoiceForm, error.message || 'An unexpected error occurred');
     }
 };
 
 PricingManager.prototype.validateInvoiceData = function(data) {
     const errors = [];
 
-    // Validate company ID
     if (!data.companyId) {
         errors.push('Company is required');
     }
 
-    // Validate plan
     if (!data.plan) {
         errors.push('Plan is required');
     }
 
-    // Validate amount
     if (typeof data.amount !== 'number' || data.amount <= 0) {
         errors.push('Invalid invoice amount');
     }
 
-    // Validate billing cycle
     if (!['monthly', 'annual'].includes(data.billingCycle)) {
         errors.push('Invalid billing cycle');
     }
 
-    // Validate invoice date
     const invoiceDate = new Date(data.date);
     if (isNaN(invoiceDate.getTime())) {
         errors.push('Invalid invoice date');
     }
 
-    // Validate due date
     const dueDate = new Date(data.dueDate);
     if (isNaN(dueDate.getTime()) || dueDate <= invoiceDate) {
         errors.push('Invalid due date');
@@ -2144,14 +1759,11 @@ PricingManager.prototype.validateInvoiceData = function(data) {
 
 PricingManager.prototype.downloadInvoice = async function(invoiceId) {
     try {
-        // Show loading state
         this.showLoadingState(this.invoiceModal);
 
-        // Fetch invoice download
         const response = await this.fetchData(`invoices/${invoiceId}/download`);
 
         if (response.success) {
-            // Create and trigger download
             const blob = new Blob([JSON.stringify(response.data)], { type: 'application/json' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -2162,67 +1774,50 @@ PricingManager.prototype.downloadInvoice = async function(invoiceId) {
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
 
-            // Create audit log
-            await this.createAuditLog(
-                'INVOICE_DOWNLOADED', 
-                { invoiceId }
-            );
+            await this.createAuditLog('INVOICE_DOWNLOADED', { invoiceId });
         } else {
-            // Show error message
-            this.showErrorNotification(
-                response.message || 'Failed to download invoice'
-            );
+            this.showErrorNotification(response.message || 'Failed to download invoice');
         }
     } catch (error) {
         console.error('Error downloading invoice:', error);
-        this.showErrorNotification(
-            error.message || 'An unexpected error occurred'
-        );
+        this.showErrorNotification(error.message || 'An unexpected error occurred');
     }
 };
 
-// Reporting and Analytics Methods
 PricingManager.prototype.openReportsModal = function() {
-    // Ensure reports modal exists
     if (!this.reportsModal) {
         console.error('Reports modal not found');
         return;
     }
 
-    // Reset report content
     const reportContent = this.reportsModal.querySelector('#reportContent');
     if (reportContent) {
         reportContent.innerHTML = '';
     }
 
-    // Reset date inputs
     const startDateInput = this.reportsModal.querySelector('#reportStartDate');
     const endDateInput = this.reportsModal.querySelector('#reportEndDate');
-    
+
     if (startDateInput && endDateInput) {
-        // Set default date range (last 30 days)
         const endDate = new Date();
         const startDate = new Date();
         startDate.setDate(endDate.getDate() - 30);
-        
+
         startDateInput.value = startDate.toISOString().split('T')[0];
         endDateInput.value = endDate.toISOString().split('T')[0];
     }
 
-    // Open modal
     this.openModal(this.reportsModal, 'Generate Reports');
 };
 
 PricingManager.prototype.generateReport = async function(e) {
     e.preventDefault();
 
-    // Ensure reports modal exists
     if (!this.reportsModal) {
         console.error('Reports modal not found');
         return;
     }
 
-    // Get report parameters
     const reportTypeSelect = this.reportsModal.querySelector('#reportType');
     const startDateInput = this.reportsModal.querySelector('#reportStartDate');
     const endDateInput = this.reportsModal.querySelector('#reportEndDate');
@@ -2232,55 +1827,36 @@ PricingManager.prototype.generateReport = async function(e) {
     const startDate = startDateInput.value;
     const endDate = endDateInput.value;
 
-    // Validate date range
     if (!startDate || !endDate) {
         this.showErrorNotification('Please select both start and end dates');
         return;
     }
 
     try {
-        // Show loading state in report content area
         this.showLoadingState(reportContent);
 
-        // Fetch report data
         const response = await this.fetchData(
             `reports/${reportType}?startDate=${startDate}&endDate=${endDate}`
         );
 
         if (response.success) {
-            // Display report
             this.displayReport(reportType, response.data, reportContent);
-
-            // Create audit log
-            await this.createAuditLog(
-                'REPORT_GENERATED', 
-                { reportType, startDate, endDate }
-            );
+            await this.createAuditLog('REPORT_GENERATED', { reportType, startDate, endDate });
         } else {
-            // Show error message
-            this.showErrorState(
-                reportContent, 
-                response.message || 'Failed to generate report'
-            );
+            this.showErrorState(reportContent, response.message || 'Failed to generate report');
         }
     } catch (error) {
         console.error('Error generating report:', error);
-        this.showErrorState(
-            reportContent, 
-            error.message || 'An unexpected error occurred'
-        );
+        this.showErrorState(reportContent, error.message || 'An unexpected error occurred');
     }
 };
 
 PricingManager.prototype.displayReport = function(reportType, data, container) {
-    // Clear previous content
     container.innerHTML = '';
 
-    // Create report table based on report type
     const table = document.createElement('table');
     table.className = 'report-table';
 
-    // Generate table headers and rows based on report type
     switch (reportType) {
         case 'activeSubscribers':
             this.createActiveSubscribersReport(table, data);
@@ -2296,10 +1872,7 @@ PricingManager.prototype.displayReport = function(reportType, data, container) {
             return;
     }
 
-    // Append table to container
     container.appendChild(table);
-
-    // Add chart visualization
     this.createReportVisualization(reportType, data);
 };
 
@@ -2361,24 +1934,20 @@ PricingManager.prototype.createFeatureUsageReport = function(table, data) {
 };
 
 PricingManager.prototype.createReportVisualization = function(reportType, data) {
-    // Ensure Chart.js is available
     if (typeof Chart === 'undefined') {
         console.warn('Chart.js not loaded. Skipping visualization.');
         return;
     }
 
-    // Create canvas for chart
     const chartContainer = document.createElement('div');
     chartContainer.className = 'chart-container';
     const canvas = document.createElement('canvas');
     canvas.id = 'reportChart';
     chartContainer.appendChild(canvas);
 
-    // Insert chart after the report table
     const reportContent = this.reportsModal.querySelector('#reportContent');
     reportContent.appendChild(chartContainer);
 
-    // Prepare chart data
     const chartData = {
         labels: [],
         values: []
@@ -2399,15 +1968,14 @@ PricingManager.prototype.createReportVisualization = function(reportType, data) 
             break;
     }
 
-    // Create chart
     new Chart(canvas, {
         type: 'bar',
-        data: {
+         {
             labels: chartData.labels,
             datasets: [{
                 label: reportType === 'activeSubscribers' ? 'Active Subscribers' :
                        reportType === 'revenueBreakdown' ? 'Revenue' : 'Feature Usage',
-                data: chartData.values,
+                 chartData.values,
                 backgroundColor: 'rgba(79, 70, 229, 0.6)',
                 borderColor: 'rgba(79, 70, 229, 1)',
                 borderWidth: 1
@@ -2427,7 +1995,6 @@ PricingManager.prototype.createReportVisualization = function(reportType, data) 
 PricingManager.prototype.exportReport = async function(e) {
     e.preventDefault();
 
-    // Get report parameters
     const reportTypeSelect = this.reportsModal.querySelector('#reportType');
     const startDateInput = this.reportsModal.querySelector('#reportStartDate');
     const endDateInput = this.reportsModal.querySelector('#reportEndDate');
@@ -2436,20 +2003,17 @@ PricingManager.prototype.exportReport = async function(e) {
     const startDate = startDateInput.value;
     const endDate = endDateInput.value;
 
-    // Validate date range
     if (!startDate || !endDate) {
         this.showErrorNotification('Please select both start and end dates');
         return;
     }
 
     try {
-        // Fetch exported report
         const response = await this.fetchData(
             `reports/${reportType}/export?startDate=${startDate}&endDate=${endDate}`
         );
 
         if (response.success) {
-            // Create and trigger CSV download
             const blob = new Blob([response.data], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -2460,11 +2024,7 @@ PricingManager.prototype.exportReport = async function(e) {
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
 
-            // Create audit log
-            await this.createAuditLog(
-                'REPORT_EXPORTED', 
-                { reportType, startDate, endDate }
-            );
+            await this.createAuditLog('REPORT_EXPORTED', { reportType, startDate, endDate });
         } else {
             this.showErrorNotification(response.message || 'Failed to export report');
         }
@@ -2474,32 +2034,21 @@ PricingManager.prototype.exportReport = async function(e) {
     }
 };
 
-// Referral Discount Management Methods
 PricingManager.prototype.openReferralDiscountModal = function(referralDiscount = null) {
-    // Ensure referral discount form exists
     this.referralDiscountForm = document.getElementById('referralDiscountForm');
     if (!this.referralDiscountForm) {
         console.error('Referral discount form not found');
         return;
     }
 
-    // Reset form
     this.referralDiscountForm.reset();
 
-    // Populate form if editing existing referral discount
     if (referralDiscount) {
         this.populateReferralDiscountForm(referralDiscount);
-        
-        // Store referral discount ID for update
         this.referralDiscountForm.dataset.referralDiscountId = referralDiscount._id;
-        
-        // Open modal with edit title
         this.openModal(this.referralDiscountModal, 'Edit Referral Discount');
     } else {
-        // Clear referral discount ID for new discount
         this.referralDiscountForm.dataset.referralDiscountId = '';
-        
-        // Open modal with create title
         this.openModal(this.referralDiscountModal, 'Create Referral Discount');
     }
 };
@@ -2512,12 +2061,10 @@ PricingManager.prototype.populateReferralDiscountForm = function(referralDiscoun
         }
     };
 
-    // Set form values
     safeSetValue('#referralCode', referralDiscount.code);
     safeSetValue('#referralDiscountType', referralDiscount.type);
     safeSetValue('#referralDiscountValue', referralDiscount.value);
-    
-    // Format and set expiry date
+
     if (referralDiscount.expiryDate) {
         const expiryDate = new Date(referralDiscount.expiryDate);
         safeSetValue('#referralExpiry', expiryDate.toISOString().split('T')[0]);
@@ -2529,17 +2076,14 @@ PricingManager.prototype.populateReferralDiscountForm = function(referralDiscoun
 PricingManager.prototype.saveReferralDiscount = async function(e) {
     e.preventDefault();
 
-    // Ensure referral discount form exists
     this.referralDiscountForm = document.getElementById('referralDiscountForm');
     if (!this.referralDiscountForm) {
         console.error('Referral discount form not found');
         return;
     }
 
-    // Validate form
     if (!this.validateForm(this.referralDiscountForm)) return;
 
-    // Prepare referral discount data
     const referralDiscountData = {
         code: this.safeGetValue(this.referralDiscountForm.querySelector('#referralCode')),
         type: this.safeGetValue(this.referralDiscountForm.querySelector('#referralDiscountType')),
@@ -2548,83 +2092,54 @@ PricingManager.prototype.saveReferralDiscount = async function(e) {
         usageLimit: this.safeGetValue(this.referralDiscountForm.querySelector('#referralUsageLimit'), 'integer') || 0
     };
 
-    // Validate referral discount data
     const validationErrors = this.validateReferralDiscountData(referralDiscountData);
     if (validationErrors.length > 0) {
-        validationErrors.forEach(error => {
-            this.showErrorNotification(error);
-        });
+        validationErrors.forEach(error => this.showErrorNotification(error));
         return;
     }
 
-    // Determine if creating or updating
     const referralDiscountId = this.referralDiscountForm.dataset.referralDiscountId;
     const method = referralDiscountId ? 'PUT' : 'POST';
     const endpoint = referralDiscountId ? `referral-discounts/${referralDiscountId}` : 'referral-discounts';
 
     try {
-        // Show loading state
         this.showLoadingState(this.referralDiscountForm);
 
-        // Send API request
         const response = await this.fetchData(endpoint, method, referralDiscountData);
 
         if (response.success) {
-            // Show success message
-            this.showSuccessState(
-                this.referralDiscountForm, 
-                `Referral discount ${referralDiscountId ? 'updated' : 'created'} successfully`
-            );
-
-            // Close referral discount modal
+            this.showSuccessState(this.referralDiscountForm, `Referral discount ${referralDiscountId ? 'updated' : 'created'} successfully`);
             this.closeModal(this.referralDiscountModal);
-
-            // Create audit log
-            await this.createAuditLog(
-                referralDiscountId ? 'REFERRAL_DISCOUNT_UPDATED' : 'REFERRAL_DISCOUNT_CREATED', 
-                referralDiscountData
-            );
+            await this.createAuditLog(referralDiscountId ? 'REFERRAL_DISCOUNT_UPDATED' : 'REFERRAL_DISCOUNT_CREATED', referralDiscountData);
         } else {
-            // Show error message
-            this.showErrorState(
-                this.referralDiscountForm, 
-                response.message || 'Failed to save referral discount'
-            );
+            this.showErrorState(this.referralDiscountForm, response.message || 'Failed to save referral discount');
         }
     } catch (error) {
         console.error('Error saving referral discount:', error);
-        this.showErrorState(
-            this.referralDiscountForm, 
-            error.message || 'An unexpected error occurred'
-        );
+        this.showErrorState(this.referralDiscountForm, error.message || 'An unexpected error occurred');
     }
 };
 
 PricingManager.prototype.validateReferralDiscountData = function(data) {
     const errors = [];
 
-    // Validate referral code
     if (!data.code || data.code.trim().length < 3) {
         errors.push('Referral code must be at least 3 characters long');
     }
 
-    // Validate discount type
     if (!['percentage', 'fixed'].includes(data.type)) {
         errors.push('Invalid discount type. Must be "percentage" or "fixed".');
     }
 
-    // Validate discount value
     if (typeof data.value !== 'number' || data.value <= 0) {
         errors.push('Discount value must be a positive number');
     }
 
-    // Validate expiry date
     const expiryDate = new Date(data.expiryDate);
     if (isNaN(expiryDate.getTime()) || expiryDate <= new Date()) {
         errors.push('Invalid or past expiry date');
     }
 
-    // Validate usage limit
     if (typeof data.usageLimit !== 'number' || data.usageLimit < 0) {
         errors.push('Usage limit must be a non-negative number');
     }
@@ -2632,50 +2147,34 @@ PricingManager.prototype.validateReferralDiscountData = function(data) {
     return errors;
 };
 
-// Subscription Logs Management Methods
 PricingManager.prototype.openSubscriptionLogsModal = async function() {
-    // Ensure subscription logs modal exists
     if (!this.subscriptionLogsModal) {
         console.error('Subscription logs modal not found');
         return;
     }
 
-    // Reset logs content
     const logsContent = this.subscriptionLogsModal.querySelector('#subscriptionLogsContent');
     if (logsContent) {
         logsContent.innerHTML = '';
     }
 
     try {
-        // Show loading state
         this.showLoadingState(logsContent);
 
-        // Fetch subscription logs
         const response = await this.fetchData('subscription-logs');
 
         if (response.success && Array.isArray(response.data)) {
-            // Create logs table
             const table = this.createSubscriptionLogsTable(response.data);
-            
-            // Clear loading state and append table
             logsContent.innerHTML = '';
             logsContent.appendChild(table);
         } else {
-            // Show error message
-            this.showErrorState(
-                logsContent, 
-                response.message || 'No subscription logs found'
-            );
+            this.showErrorState(logsContent, response.message || 'No subscription logs found');
         }
 
-        // Open modal
         this.openModal(this.subscriptionLogsModal, 'Subscription Logs');
     } catch (error) {
         console.error('Error loading subscription logs:', error);
-        this.showErrorState(
-            logsContent, 
-            error.message || 'An unexpected error occurred'
-        );
+        this.showErrorState(logsContent, error.message || 'An unexpected error occurred');
     }
 };
 
@@ -2704,7 +2203,6 @@ PricingManager.prototype.createSubscriptionLogsTable = function(logs) {
 };
 
 PricingManager.prototype.formatLogDetails = function(details) {
-    // Safely convert details to a readable string
     try {
         if (typeof details === 'object') {
             return JSON.stringify(details, null, 2);
@@ -2715,32 +2213,21 @@ PricingManager.prototype.formatLogDetails = function(details) {
     }
 };
 
-// Data Retention Policies Management Methods
 PricingManager.prototype.openDataRetentionModal = function(policy = null) {
-    // Ensure data retention form exists
     this.dataRetentionForm = document.getElementById('dataRetentionForm');
     if (!this.dataRetentionForm) {
         console.error('Data retention form not found');
         return;
     }
 
-    // Reset form
     this.dataRetentionForm.reset();
 
-    // Populate form if editing existing policy
     if (policy) {
         this.populateDataRetentionForm(policy);
-        
-        // Store policy ID for update
         this.dataRetentionForm.dataset.policyId = policy._id;
-        
-        // Open modal with edit title
         this.openModal(this.dataRetentionModal, 'Edit Data Retention Policy');
     } else {
-        // Clear policy ID for new policy
         this.dataRetentionForm.dataset.policyId = '';
-        
-        // Open modal with create title
         this.openModal(this.dataRetentionModal, 'Create Data Retention Policy');
     }
 };
@@ -2753,7 +2240,6 @@ PricingManager.prototype.populateDataRetentionForm = function(policy) {
         }
     };
 
-    // Set form values
     safeSetValue('#retentionPeriod', policy.retentionPeriod);
     safeSetValue('#retentionPolicy', policy.policyDescription);
 };
@@ -2761,88 +2247,54 @@ PricingManager.prototype.populateDataRetentionForm = function(policy) {
 PricingManager.prototype.saveDataRetention = async function(e) {
     e.preventDefault();
 
-    // Ensure data retention form exists
     this.dataRetentionForm = document.getElementById('dataRetentionForm');
     if (!this.dataRetentionForm) {
         console.error('Data retention form not found');
         return;
     }
 
-    // Validate form
     if (!this.validateForm(this.dataRetentionForm)) return;
 
-    // Prepare data retention policy data
     const policyData = {
-        retentionPeriod: this.safeGetValue(
-            this.dataRetentionForm.querySelector('#retentionPeriod'), 
-            'integer'
-        ),
-        policyDescription: this.safeGetValue(
-            this.dataRetentionForm.querySelector('#retentionPolicy')
-        )
+        retentionPeriod: this.safeGetValue(this.dataRetentionForm.querySelector('#retentionPeriod'), 'integer'),
+        policyDescription: this.safeGetValue(this.dataRetentionForm.querySelector('#retentionPolicy'))
     };
 
-    // Validate policy data
     const validationErrors = this.validateDataRetentionData(policyData);
     if (validationErrors.length > 0) {
-        validationErrors.forEach(error => {
-            this.showErrorNotification(error);
-        });
+        validationErrors.forEach(error => this.showErrorNotification(error));
         return;
     }
 
-    // Determine if creating or updating
     const policyId = this.dataRetentionForm.dataset.policyId;
     const method = policyId ? 'PUT' : 'POST';
     const endpoint = policyId ? `data-retention/${policyId}` : 'data-retention';
 
     try {
-        // Show loading state
         this.showLoadingState(this.dataRetentionForm);
 
-        // Send API request
         const response = await this.fetchData(endpoint, method, policyData);
 
         if (response.success) {
-            // Show success message
-            this.showSuccessState(
-                this.dataRetentionForm, 
-                `Data retention policy ${policyId ? 'updated' : 'created'} successfully`
-            );
-
-            // Close data retention modal
+            this.showSuccessState(this.dataRetentionForm, `Data retention policy ${policyId ? 'updated' : 'created'} successfully`);
             this.closeModal(this.dataRetentionModal);
-
-            // Create audit log
-            await this.createAuditLog(
-                policyId ? 'DATA_RETENTION_POLICY_UPDATED' : 'DATA_RETENTION_POLICY_CREATED', 
-                policyData
-            );
+            await this.createAuditLog(policyId ? 'DATA_RETENTION_POLICY_UPDATED' : 'DATA_RETENTION_POLICY_CREATED', policyData);
         } else {
-            // Show error message
-            this.showErrorState(
-                this.dataRetentionForm, 
-                response.message || 'Failed to save data retention policy'
-            );
+            this.showErrorState(this.dataRetentionForm, response.message || 'Failed to save data retention policy');
         }
     } catch (error) {
         console.error('Error saving data retention policy:', error);
-        this.showErrorState(
-            this.dataRetentionForm, 
-            error.message || 'An unexpected error occurred'
-        );
+        this.showErrorState(this.dataRetentionForm, error.message || 'An unexpected error occurred');
     }
 };
 
 PricingManager.prototype.validateDataRetentionData = function(data) {
     const errors = [];
 
-    // Validate retention period
     if (typeof data.retentionPeriod !== 'number' || data.retentionPeriod < 0) {
         errors.push('Retention period must be a non-negative number');
     }
 
-    // Validate policy description
     if (!data.policyDescription || data.policyDescription.trim().length < 10) {
         errors.push('Policy description must be at least 10 characters long');
     }
@@ -2850,16 +2302,13 @@ PricingManager.prototype.validateDataRetentionData = function(data) {
     return errors;
 };
 
-// Cleanup and Utility Methods
 PricingManager.prototype.cleanup = function() {
-    // Remove event listeners
     const removeListeners = (button, method) => {
         if (button) {
             button.removeEventListener('click', method);
         }
     };
 
-    // Remove listeners for critical buttons
     Object.entries(this.buttons).forEach(([key, button]) => {
         const methodName = this.getMethodForButton(key);
         if (methodName && typeof this[methodName] === 'function') {
@@ -2867,47 +2316,11 @@ PricingManager.prototype.cleanup = function() {
         }
     });
 
-    // Clear any ongoing processes or timers
     console.log('PricingManager cleanup initiated');
 };
 
-// Error Handling Utility
 PricingManager.prototype.handleGenericError = function(error, context = 'Operation') {
     console.error(`${context} error:`, error);
-    
-    // Log error to server if possible
-    this.createAuditLog('ERROR', {
-        context,
-        errorMessage: error.message,
-        errorStack: error.stack
-    });
-
-    // Show user-friendly error notification
-    this.showErrorNotification(
-        `${context} failed. ${error.message || 'Please try again later.'}`
-    );
+    this.createAuditLog('ERROR', { context, errorMessage: error.message, errorStack: error.stack });
+    this.showErrorNotification(`${context} failed. ${error.message || 'Please try again later.'}`);
 };
-
-// Expose the class to the window object
-window.PricingManager = PricingManager;
-
-// Initialize the module
-document.addEventListener('DOMContentLoaded', () => {
-    try {
-        console.log('Attempting to initialize PricingManager');
-        const pricingManager = new PricingManager();
-        window.pricingManager = pricingManager;
-        console.log('PricingManager initialized successfully');
-    } catch (error) {
-        console.error('Error initializing PricingManager:', error);
-        
-        // Fallback error handling
-        if (window.dashboardApp && window.dashboardApp.userInterface) {
-            window.dashboardApp.userInterface.showErrorNotification(
-                'Failed to load pricing module. Please refresh the page.'
-            );
-        } else {
-            alert('Failed to load pricing module. Please refresh the page.');
-        }
-    }
-});
