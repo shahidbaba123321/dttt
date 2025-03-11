@@ -4055,6 +4055,157 @@ app.get('/api/plans', verifyToken, verifyAdmin, async (req, res) => {
     }
 });
 
+// Get single plan details
+app.get('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { planId } = req.params;
+
+        // Validate planId format
+        if (!ObjectId.isValid(planId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid plan ID format'
+            });
+        }
+
+        // Log request details
+        console.log('Plan Fetch Request:', {
+            planId: planId,
+            requestingUser: {
+                id: req.user.userId,
+                email: req.user.email,
+                role: req.user.role
+            },
+            timestamp: new Date().toISOString()
+        });
+
+        // Find plan in database
+        const plan = await database.collection('plans').findOne({ 
+            _id: new ObjectId(planId) 
+        });
+
+        // Check if plan exists
+        if (!plan) {
+            return res.status(404).json({
+                success: false,
+                message: 'Plan not found'
+            });
+        }
+
+        // Define supported currencies
+        const supportedCurrencies = [
+            { 
+                code: 'USD', 
+                symbol: '$', 
+                name: 'US Dollar', 
+                country: 'USA',
+                locale: 'en-US',
+                decimalPlaces: 2
+            },
+            { 
+                code: 'INR', 
+                symbol: '₹', 
+                name: 'Indian Rupee', 
+                country: 'India',
+                locale: 'en-IN',
+                decimalPlaces: 2
+            },
+            { 
+                code: 'AED', 
+                symbol: 'د.إ', 
+                name: 'UAE Dirham', 
+                country: 'UAE',
+                locale: 'ar-AE',
+                decimalPlaces: 2
+            },
+            { 
+                code: 'QAR', 
+                symbol: 'ر.ق', 
+                name: 'Qatari Riyal', 
+                country: 'Qatar',
+                locale: 'ar-QA',
+                decimalPlaces: 2
+            },
+            { 
+                code: 'GBP', 
+                symbol: '£', 
+                name: 'British Pound', 
+                country: 'UK',
+                locale: 'en-GB',
+                decimalPlaces: 2
+            }
+        ];
+
+        // Validate currency
+        const currency = supportedCurrencies.find(c => c.code === plan.currency) || 
+                         supportedCurrencies.find(c => c.code === 'USD');
+
+        // Create audit log
+        await createAuditLog(
+            'PLAN_DETAILS_VIEWED',
+            req.user.userId,
+            null,
+            {
+                planId: plan._id,
+                planName: plan.name,
+                currency: currency.code
+            }
+        );
+
+        // Return plan details with comprehensive currency information
+        res.json({
+            success: true,
+            data: {
+                _id: plan._id,
+                name: plan.name,
+                description: plan.description,
+                monthlyPrice: plan.monthlyPrice,
+                annualPrice: plan.annualPrice,
+                trialPeriod: plan.trialPeriod,
+                currency: {
+                    code: currency.code,
+                    symbol: currency.symbol,
+                    name: currency.name,
+                    country: currency.country
+                },
+                isActive: plan.isActive,
+                isSystem: plan.isSystem || false,
+                features: plan.features || [],
+                createdAt: plan.createdAt,
+                updatedAt: plan.updatedAt,
+                supportedCurrencies: supportedCurrencies.map(c => ({
+                    code: c.code,
+                    symbol: c.symbol,
+                    name: c.name,
+                    country: c.country
+                }))
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching plan details:', {
+            error: error.message,
+            stack: error.stack,
+            planId: req.params.planId
+        });
+
+        // Create security log for unexpected errors
+        await security_logs.insertOne({
+            type: 'PLAN_FETCH_ERROR',
+            timestamp: new Date(),
+            userId: req.user.userId,
+            error: error.message,
+            planId: req.params.planId
+        });
+
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching plan details',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+
 // Create new plan
 app.post('/api/plans', verifyToken, verifyAdmin, async (req, res) => {
     const session = client.startSession();
