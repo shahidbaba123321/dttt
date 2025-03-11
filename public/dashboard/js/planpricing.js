@@ -119,51 +119,122 @@
             this.elements.modalOverlay.classList.add('show');
         }
                 async populatePlanEditModal(planId) {
-            try {
-                const response = await fetch(`${this.baseUrl}/plans/${planId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+    try {
+        // Log the attempt to populate plan edit modal
+        console.log(`Attempting to populate plan edit modal for planId: ${planId}`);
 
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.message || 'Failed to fetch plan details');
-                }
-
-                const plan = result.data;
-
-                // Populate form fields
-                document.getElementById('planName').value = plan.name;
-                document.getElementById('planDescription').value = plan.description;
-                document.getElementById('monthlyPrice').value = plan.monthlyPrice;
-                document.getElementById('annualPrice').value = plan.annualPrice;
-                document.getElementById('trialPeriod').value = plan.trialPeriod;
-                document.getElementById('planCurrency').value = plan.currency || 'USD';
-                document.getElementById('planActiveStatus').checked = plan.isActive;
-
-                // Update currency symbols
-                const selectedCurrency = this.currencyOptions.find(c => c.code === (plan.currency || 'USD'));
-                document.getElementById('currencySymbolMonthly').textContent = `(${selectedCurrency.symbol})`;
-                document.getElementById('currencySymbolAnnual').textContent = `(${selectedCurrency.symbol})`;
-
-                // Populate features
-                const featuresContainer = document.getElementById('featuresContainer');
-                featuresContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-                    checkbox.checked = plan.features.some(f => f._id === checkbox.value);
-                });
-
-                // Store plan ID for update
-                document.getElementById('planId').value = planId;
-            } catch (error) {
-                console.error('Populate Plan Edit Modal Error:', error);
-                this.showErrorNotification('Failed to load plan details');
-            }
+        // Validate planId
+        if (!planId) {
+            console.error('Invalid planId: No plan ID provided');
+            this.showErrorNotification('Invalid Plan ID');
+            return;
         }
 
+        // Fetch plan details with comprehensive error handling
+        const response = await fetch(`${this.baseUrl}/plans/${planId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        // Check response status
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Plan fetch error: ${response.status}`, errorText);
+            
+            // Handle specific error scenarios
+            if (response.status === 404) {
+                this.showErrorNotification('Plan not found');
+                return;
+            }
+            if (response.status === 403) {
+                this.showErrorNotification('You do not have permission to edit this plan');
+                return;
+            }
+
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Parse response
+        const result = await response.json();
+
+        // Validate response structure
+        if (!result.success) {
+            console.error('API returned unsuccessful response', result);
+            this.showErrorNotification(result.message || 'Failed to fetch plan details');
+            return;
+        }
+
+        const plan = result.data;
+
+        // Validate plan object
+        if (!plan) {
+            console.error('No plan data received');
+            this.showErrorNotification('No plan details found');
+            return;
+        }
+
+        // Populate form fields with comprehensive validation
+        const elements = {
+            planName: document.getElementById('planName'),
+            planDescription: document.getElementById('planDescription'),
+            monthlyPrice: document.getElementById('monthlyPrice'),
+            annualPrice: document.getElementById('annualPrice'),
+            trialPeriod: document.getElementById('trialPeriod'),
+            planCurrency: document.getElementById('planCurrency'),
+            planActiveStatus: document.getElementById('planActiveStatus'),
+            planId: document.getElementById('planId'),
+            featuresContainer: document.getElementById('featuresContainer')
+        };
+
+        // Validate all required elements exist
+        Object.entries(elements).forEach(([key, element]) => {
+            if (!element) {
+                console.error(`Element not found: ${key}`);
+                throw new Error(`Missing UI element: ${key}`);
+            }
+        });
+
+        // Populate basic plan details
+        elements.planName.value = plan.name || '';
+        elements.planDescription.value = plan.description || '';
+        elements.monthlyPrice.value = plan.monthlyPrice?.toFixed(2) || '0.00';
+        elements.annualPrice.value = plan.annualPrice?.toFixed(2) || '0.00';
+        elements.trialPeriod.value = plan.trialPeriod || 0;
+        elements.planCurrency.value = plan.currency || 'USD';
+        elements.planActiveStatus.checked = plan.isActive || false;
+        elements.planId.value = planId;
+
+        // Update currency symbols
+        const selectedCurrency = this.currencyOptions.find(c => c.code === (plan.currency || 'USD'));
+        document.getElementById('currencySymbolMonthly').textContent = `(${selectedCurrency.symbol})`;
+        document.getElementById('currencySymbolAnnual').textContent = `(${selectedCurrency.symbol})`;
+
+        // Handle features
+        if (elements.featuresContainer) {
+            const featureCheckboxes = elements.featuresContainer.querySelectorAll('input[type="checkbox"]');
+            featureCheckboxes.forEach(checkbox => {
+                // Check if this feature is in the plan's features
+                checkbox.checked = plan.features && 
+                    plan.features.some(f => f._id === checkbox.value || f.name === checkbox.value);
+            });
+        }
+
+        // Log successful population
+        console.log('Plan edit modal populated successfully', plan);
+
+    } catch (error) {
+        // Comprehensive error handling
+        console.error('Populate Plan Edit Modal Error:', error);
+        
+        // User-friendly error notification
+        this.showErrorNotification(
+            error.message || 'Failed to load plan details. Please try again.'
+        );
+    }
+}
         async handlePlanSubmission(e) {
             e.preventDefault();
 
