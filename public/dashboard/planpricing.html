@@ -1,55 +1,730 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pricing Plans</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        /* Add your styles here */
-        .container {
-            padding: 20px;
+        /* Pricing Module Specific Styles */
+        :root {
+            /* Extending existing color variables */
+            --pricing-primary: #4F46E5;
+            --pricing-secondary: #6366F1;
+            --pricing-accent: #A5B4FC;
+            --pricing-background: #F5F5F5;
+            --pricing-border: #E5E7EB;
         }
-        .plan-card {
-            border: 1px solid var(--border-light);
-            border-radius: var(--border-radius-md);
-            padding: var(--spacing-md);
-            margin: var(--spacing-md);
-            text-align: center;
+
+        .pricing-container {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+            padding: var(--spacing-lg);
+            background-color: var(--pricing-background);
         }
-        .plan-title {
+
+        .pricing-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .pricing-header h1 {
+            color: var(--text-primary);
             font-size: 1.5rem;
-            font-weight: bold;
+            font-weight: 600;
         }
-        .plan-price {
-            font-size: 1.25rem;
-            color: var(--primary-color);
+
+        .pricing-actions {
+            display: flex;
+            gap: var(--spacing-md);
         }
-        .plan-description {
-            margin: var(--spacing-md) 0;
+
+        .pricing-toggle {
+            display: flex;
+            background-color: var(--bg-tertiary);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-xs);
         }
-        .button {
-            background-color: var(--primary-color);
-            color: white;
-            padding: var(--spacing-sm) var(--spacing-lg);
+
+        .pricing-toggle button {
+            padding: var(--spacing-sm) var(--spacing-md);
             border: none;
+            background: none;
             border-radius: var(--border-radius-md);
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all var(--transition-speed) ease;
         }
-        .button:hover {
-            background-color: var(--primary-dark);
+
+        .pricing-toggle button.active {
+            background-color: var(--pricing-primary);
+            color: white;
+        }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        .plan-card {
+            background-color: white;
+            border-radius: var(--border-radius-lg);
+            border: 1px solid var(--pricing-border);
+            padding: var(--spacing-lg);
+            display: flex;
+            flex-direction: column;
+            transition: all var(--transition-speed) ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .plan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .plan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .plan-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--pricing-primary);
+        }
+
+        .plan-badge {
+            background-color: var(--pricing-accent);
+            color: var(--pricing-primary);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius-sm);
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .plan-price {
+            display: flex;
+            align-items: baseline;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .plan-price-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .plan-price-period {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .plan-features {
+            flex-grow: 1;
+        }
+
+        .plan-features-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .plan-features-list li {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-secondary);
+        }
+
+        .plan-features-list li i {
+            color: var(--success-color);
+        }
+
+        .plan-features-list li.disabled {
+            color: var(--text-tertiary);
+            text-decoration: line-through;
+        }
+
+        .plan-features-list li.disabled i {
+            color: var(--text-tertiary);
+        }
+
+        .plan-actions {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-md);
+        }
+
+        .plan-action-btn {
+            width: 100%;
+            padding: var(--spacing-sm);
+            border: none;
+            border-radius: var(--border-radius-md);
+            background-color: var(--pricing-primary);
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .plan-action-btn:hover {
+            background-color: var(--pricing-secondary);
+        }
+
+        .plan-action-btn.disabled {
+            background-color: var(--text-tertiary);
+            cursor: not-allowed;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Manage Pricing Plans</h1>
-        <div id="planList"></div>
-        <button class="button" id="createPlanButton">Create New Plan</button>
+    <div class="pricing-container">
+        <div class="pricing-header">
+            <h1>Pricing & Plans Management</h1>
+            <div class="pricing-actions">
+                <div class="pricing-toggle">
+                    <button class="active">Monthly</button>
+                    <button>Annually</button>
+                </div>
+                <button class="btn btn-primary" id="createNewPlanBtn">
+                    <i class="fas fa-plus"></i> Create New Plan
+                </button>
+            </div>
+        </div>
+
+        <div class="plans-grid" id="plansContainer">
+            <!-- Plans will be dynamically rendered here -->
+        </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-   <script src="js/planpricing.js"></script>
-</body>
-</html>
+    <!-- Add this after the existing body content -->
+<div class="modal-overlay" id="modalOverlay">
+    <!-- Create/Edit Plan Modal -->
+    <div class="modal" id="planModal">
+        <div class="modal-header">
+            <h2 id="planModalTitle">Create New Plan</h2>
+            <button class="modal-close" id="closePlanModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-content">
+            <form id="planForm">
+                <input type="hidden" id="planId">
+                <div class="form-group">
+                    <label for="planName">Plan Name</label>
+                    <input type="text" id="planName" required>
+                </div>
+                <div class="form-group">
+                    <label for="planDescription">Description</label>
+                    <textarea id="planDescription" rows="3" required></textarea>
+                </div>
+                <div class="pricing-grid">
+                    <div class="form-group">
+                        <label for="monthlyPrice">Monthly Price ($)</label>
+                        <input type="number" id="monthlyPrice" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="annualPrice">Annual Price ($)</label>
+                        <input type="number" id="annualPrice" min="0" step="0.01" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="trialPeriod">Trial Period (Days)</label>
+                    <input type="number" id="trialPeriod" min="0" max="90">
+                </div>
+                <div class="form-group">
+                    <label>Plan Features</label>
+                    <div id="featuresContainer" class="features-selector">
+                        <!-- Dynamically populated features checkboxes -->
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Plan Status</label>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="planActiveStatus" checked>
+                        <label for="planActiveStatus">Active Plan</label>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelPlanModal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="savePlanBtn">Save Plan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div class="modal" id="confirmDeleteModal">
+        <div class="modal-header">
+            <h2>Confirm Deletion</h2>
+            <button class="modal-close" id="closeConfirmDelete">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-content">
+            <p>Are you sure you want to delete the plan <strong id="deletePlanName"></strong>?</p>
+            <div class="warning-text">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>This action cannot be undone. Existing subscribers will be notified.</span>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="cancelDelete">Cancel</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn">Delete Plan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity var(--transition-speed) ease;
+    }
+
+    .modal-overlay.show {
+        display: flex;
+        opacity: 1;
+    }
+
+    .modal {
+        background-color: white;
+        border-radius: var(--border-radius-lg);
+        width: 100%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: var(--shadow-lg);
+        transform: scale(0.9);
+        transition: transform var(--transition-speed) ease;
+    }
+
+    .modal.show {
+        transform: scale(1);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--spacing-lg);
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        color: var(--text-primary);
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 1.25rem;
+        cursor: pointer;
+        transition: color var(--transition-speed) ease;
+    }
+
+    .modal-close:hover {
+        color: var(--danger-color);
+    }
+
+    .modal-content {
+        padding: var(--spacing-lg);
+    }
+
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: var(--spacing-sm);
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: var(--spacing-sm);
+        border: 1px solid var(--border-light);
+        border-radius: var(--border-radius-md);
+        transition: border-color var(--transition-speed) ease;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+    }
+
+    .pricing-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-md);
+    }
+
+    .features-selector {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: var(--spacing-sm);
+    }
+
+    .features-selector label {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-lg);
+    }
+
+    .btn {
+        padding: var(--spacing-sm) var(--spacing-md);
+        border: none;
+        border-radius: var(--border-radius-md);
+        cursor: pointer;
+        transition: all var(--transition-speed) ease;
+    }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .btn-secondary {
+        background-color: var(--bg-tertiary);
+        color: var(--text-secondary);
+    }
+
+    .btn-danger {
+        background-color: var(--danger-color);
+        color: white;
+    }
+
+    .warning-text {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        background-color: var(--warning-color);
+        color: white;
+        padding: var(--spacing-sm);
+        border-radius: var(--border-radius-md);
+        margin-top: var(--spacing-md);
+    }
+
+    .toggle-switch {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .toggle-switch input[type="checkbox"] {
+        appearance: none;
+        width: 40px;
+        height: 20px;
+        background-color: var(--bg-tertiary);
+        border-radius: 20px;
+        position: relative;
+        cursor: pointer;
+        transition: background-color var(--transition-speed) ease;
+    }
+
+    .toggle-switch input[type="checkbox"]:checked {
+        background-color: var(--success-color);
+    }
+
+    .toggle-switch input[type="checkbox"]::before {
+        content: '';
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background-color: white;
+        top: 2px;
+        left: 2px;
+        transition: transform var(--transition-speed) ease;
+    }
+
+    .toggle-switch input[type="checkbox"]:checked::before {
+        transform: translateX(20px);
+    }
+</style>
+<!-- Add after the previous modal content -->
+<div class="modal" id="subscriptionDetailsModal">
+    <div class="modal-header">
+        <h2>Subscription Details</h2>
+        <button class="modal-close" id="closeSubscriptionDetails">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="modal-content">
+        <div class="subscription-overview">
+            <div class="subscription-header">
+                <div class="subscription-company">
+                    <h3 id="companyName"></h3>
+                    <span id="companyEmail" class="text-muted"></span>
+                </div>
+                <div class="subscription-status">
+                    <span id="subscriptionStatusBadge" class="badge"></span>
+                </div>
+            </div>
+            <div class="subscription-details-grid">
+                <div class="subscription-detail">
+                    <label>Current Plan</label>
+                    <span id="currentPlanName"></span>
+                </div>
+                <div class="subscription-detail">
+                    <label>Billing Cycle</label>
+                    <span id="billingCycle"></span>
+                </div>
+                <div class="subscription-detail">
+                    <label>Start Date</label>
+                    <span id="subscriptionStartDate"></span>
+                </div>
+                <div class="subscription-detail">
+                    <label>Next Renewal</label>
+                    <span id="nextRenewalDate"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="subscription-actions">
+            <button class="btn btn-primary" id="upgradeSubscriptionBtn">
+                <i class="fas fa-arrow-up"></i> Upgrade Plan
+            </button>
+            <button class="btn btn-secondary" id="changePaymentMethodBtn">
+                <i class="fas fa-credit-card"></i> Change Payment Method
+            </button>
+        </div>
+
+        <div class="subscription-features">
+            <h4>Active Features</h4>
+            <ul id="activeFeaturesList" class="features-list"></ul>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="reportsModal">
+    <div class="modal-header">
+        <h2>Subscription Reports</h2>
+        <button class="modal-close" id="closeReportsModal">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="modal-content">
+        <div class="reports-filters">
+            <div class="form-group">
+                <label>Date Range</label>
+                <div class="date-range-picker">
+                    <input type="date" id="reportStartDate">
+                    <span>to</span>
+                    <input type="date" id="reportEndDate">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Report Type</label>
+                <select id="reportTypeSelector">
+                    <option value="activeSubscribers">Active Subscribers</option>
+                    <option value="revenueBreakdown">Revenue Breakdown</option>
+                    <option value="featureUsage">Feature Usage</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="reports-actions">
+            <button class="btn btn-primary" id="generateReportBtn">
+                <i class="fas fa-chart-bar"></i> Generate Report
+            </button>
+            <button class="btn btn-secondary" id="exportReportBtn">
+                <i class="fas fa-file-export"></i> Export Report
+            </button>
+        </div>
+
+        <div id="reportContainer" class="report-display">
+            <!-- Report will be dynamically rendered here -->
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="discountModal">
+    <div class="modal-header">
+        <h2>Create Discount</h2>
+        <button class="modal-close" id="closeDiscountModal">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="modal-content">
+        <form id="discountForm">
+            <div class="form-group">
+                <label>Discount Code</label>
+                <input type="text" id="discountCode" required>
+            </div>
+            <div class="form-group">
+                <label>Discount Type</label>
+                <select id="discountType">
+                    <option value="percentage">Percentage</option>
+                    <option value="fixed">Fixed Amount</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Discount Value</label>
+                <input type="number" id="discountValue" min="0" required>
+            </div>
+            <div class="form-group">
+                <label>Applicable Plans</label>
+                <div id="applicablePlansContainer" class="plans-checkbox-grid">
+                    <!-- Dynamically populated plan checkboxes -->
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Expiry Date</label>
+                <input type="date" id="discountExpiryDate">
+            </div>
+            <div class="form-group">
+                <label>Usage Limit</label>
+                <input type="number" id="discountUsageLimit" min="0">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="cancelDiscountBtn">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="saveDiscountBtn">Save Discount</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Additional Modal Styles */
+    .subscription-overview {
+        background-color: var(--bg-secondary);
+        border-radius: var(--border-radius-md);
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .subscription-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .subscription-details-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+    }
+
+    .subscription-detail {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .subscription-detail label {
+        color: var(--text-tertiary);
+        font-size: 0.875rem;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .subscription-actions {
+        display: flex;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .subscription-features {
+        border-top: 1px solid var(--border-light);
+        padding-top: var(--spacing-lg);
+    }
+
+    .features-list {
+        list-style-type: none;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: var(--spacing-sm);
+    }
+
+    .features-list li {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .features-list li i {
+        color: var(--success-color);
+    }
+
+    .reports-filters {
+        display: flex;
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .date-range-picker {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .date-range-picker input {
+        flex: 1;
+    }
+
+    .report-display {
+        border: 1px solid var(--border-light);
+        border-radius: var(--border-radius-md);
+        min-height: 300px;
+        padding: var(--spacing-md);
+    }
+
+    .plans-checkbox-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: var(--spacing-sm);
+    }
+
+    .badge {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--border-radius-sm);
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .badge.active {
+        background-color: var(--success-color);
+        color: white;
+    }
+
+    .badge.expired {
+        background-color: var(--danger-color);
+        color: white;
+    }
+
+    .badge.pending {
+        background-color: var(--warning-color);
+        color: white;
+    }
+
+    .text-muted {
+        color: var(--text-tertiary);
+    }
+</style>
