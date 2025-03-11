@@ -227,8 +227,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 })();
-// Continuing directly after the previous code's closing })();
-
 // Helper Methods and Data Fetching
 PricingManager.prototype.fetchData = async function(endpoint, method = 'GET', body = null) {
     const headers = {
@@ -1000,9 +998,7 @@ PricingManager.prototype.updateFeatureSelections = function(features) {
     // Update feature category select in feature form
     updateSelect('featureCategory');
 
-    // If you have other selects that need feature updates, add them here
-    // For example:
-    // updateSelect('planFeatureSelect');
+   
 };
 
 PricingManager.prototype.deleteFeature = async function(featureId) {
@@ -2888,4 +2884,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-})(); // End of IIFE
+})(); 
