@@ -83,35 +83,47 @@
         }
 
         renderPlans(plans) {
-            // Clear existing plans
-            this.elements.plansContainer.innerHTML = '';
+    // Clear existing plans
+    this.elements.plansContainer.innerHTML = '';
 
-            // Render each plan
-            plans.forEach(plan => {
-                const planCard = document.createElement('div');
-                planCard.className = 'plan-card';
-                planCard.innerHTML = `
-                    <div class="plan-header">
-                        <h3 class="plan-title">${plan.name}</h3>
-                        ${plan.isSystem ? '<span class="plan-badge">System Plan</span>' : ''}
-                    </div>
-                    <div class="plan-price">
-                        <span class="plan-price-value">$${plan.monthlyPrice}</span>
-                        <span class="plan-price-period">/month</span>
-                    </div>
-                    <p>${plan.description}</p>
-                    <div class="plan-actions">
-                        <button class="plan-action-btn edit-plan" data-id="${plan._id}">Edit Plan</button>
-                        <button class="plan-action-btn delete-plan" data-id="${plan._id}">Delete Plan</button>
-                    </div>
-                `;
+    // Render each plan
+    plans.forEach(plan => {
+        // Define currency symbols
+        const currencySymbols = {
+            'USD': '$',
+            'INR': '₹',
+            'AED': 'د.إ',
+            'QAR': 'ر.ق',
+            'GBP': '£'
+        };
 
-                this.elements.plansContainer.appendChild(planCard);
-            });
+        // Get currency symbol, default to USD if not found
+        const currencySymbol = currencySymbols[plan.currency] || '$';
 
-            // Add event listeners for edit and delete buttons
-            this.addPlanActionListeners();
-        }
+        const planCard = document.createElement('div');
+        planCard.className = 'plan-card';
+        planCard.innerHTML = `
+            <div class="plan-header">
+                <h3 class="plan-title">${plan.name}</h3>
+                ${plan.isSystem ? '<span class="plan-badge">System Plan</span>' : ''}
+            </div>
+            <div class="plan-price">
+                <span class="plan-price-value">${currencySymbol}${plan.monthlyPrice.toFixed(2)}</span>
+                <span class="plan-price-period">/month</span>
+            </div>
+            <p>${plan.description}</p>
+            <div class="plan-actions">
+                <button class="plan-action-btn edit-plan" data-id="${plan._id}">Edit Plan</button>
+                <button class="plan-action-btn delete-plan" data-id="${plan._id}">Delete Plan</button>
+            </div>
+        `;
+
+        this.elements.plansContainer.appendChild(planCard);
+    });
+
+    // Add event listeners for edit and delete buttons
+    this.addPlanActionListeners();
+}
 
         addPlanActionListeners() {
             const editButtons = this.elements.plansContainer.querySelectorAll('.edit-plan');
@@ -142,10 +154,7 @@
             this.elements.modalOverlay.classList.remove('show');
         }
 
-        async handlePlanSubmission(e) {
-            e.preventDefault();
-            // Plan submission logic will be implemented in the next part
-        }
+        
 
         async loadAvailableFeatures() {
             try {
@@ -215,17 +224,19 @@
             e.preventDefault();
             
             // Collect form data
-            const formData = {
-                name: document.getElementById('planName').value,
-                description: document.getElementById('planDescription').value,
-                monthlyPrice: parseFloat(document.getElementById('monthlyPrice').value),
-                annualPrice: parseFloat(document.getElementById('annualPrice').value),
-                trialPeriod: parseInt(document.getElementById('trialPeriod').value) || 0,
-                isActive: document.getElementById('planActiveStatus').checked,
-                features: Array.from(
-                    document.querySelectorAll('input[name="features"]:checked')
-                ).map(el => el.value)
-            };
+           const formData = {
+        name: document.getElementById('planName').value,
+        description: document.getElementById('planDescription').value,
+        monthlyPrice: parseFloat(document.getElementById('monthlyPrice').value),
+        annualPrice: parseFloat(document.getElementById('annualPrice').value),
+        trialPeriod: parseInt(document.getElementById('trialPeriod').value) || 0,
+        isActive: document.getElementById('planActiveStatus').checked,
+        currency: document.getElementById('planCurrency').value, // Add currency
+        features: Array.from(
+            document.querySelectorAll('input[name="features"]:checked')
+        ).map(el => el.value)
+    };
+
 
             // Get existing plan ID if in edit mode
             const planId = document.getElementById('planId').value;
