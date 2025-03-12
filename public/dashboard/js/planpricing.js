@@ -147,13 +147,21 @@
 }
 
         openPlanModal(planId = null) {
-    // Ensure planId is a string
-    const validPlanId = planId ? planId.toString().trim() : null;
+    // Ensure planId is a valid string
+    const validPlanId = planId && typeof planId === 'string' 
+        ? planId.toString().trim() 
+        : null;
 
-    // Reset form
+    // Reset form completely
     this.elements.planForm.reset();
     
-    // Close any open modals first
+    // Clear any pre-existing plan ID
+    const planIdInput = document.getElementById('planId');
+    if (planIdInput) {
+        planIdInput.value = '';
+    }
+
+    // Close any open modals
     const modals = document.querySelectorAll('.modal');
     modals.forEach(modal => {
         if (modal.id !== 'planModal') {
@@ -165,7 +173,7 @@
     const modalTitle = document.getElementById('planModalTitle');
     modalTitle.textContent = validPlanId ? 'Edit Plan' : 'Create New Plan';
 
-    // If editing, fetch and populate plan details
+    // If editing and valid ID, fetch plan details
     if (validPlanId) {
         this.fetchPlanDetails(validPlanId);
     }
@@ -173,8 +181,6 @@
     // Show modal
     this.elements.modalOverlay.classList.add('show');
 }
-        
-
 
         closePlanModal() {
             this.elements.modalOverlay.classList.remove('show');
@@ -182,12 +188,21 @@
 
        async fetchPlanDetails(planId) {
     try {
-        // Validate planId before making the request
-        if (!planId || typeof planId !== 'string') {
-            throw new Error('Invalid plan ID');
+        // Validate planId format before making the request
+        if (!planId) {
+            throw new Error('Plan ID is required');
         }
 
-        const response = await fetch(`${this.baseUrl}/plans/${planId}`, {
+        // Ensure planId is a string and trim any whitespace
+        const formattedPlanId = planId.toString().trim();
+
+        // Optional: Add a regex check for MongoDB ObjectId format
+        const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+        if (!objectIdRegex.test(formattedPlanId)) {
+            throw new Error('Invalid plan ID format');
+        }
+
+        const response = await fetch(`${this.baseUrl}/plans/${formattedPlanId}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${this.token}`,
@@ -195,60 +210,79 @@
             }
         });
 
-        const result = await response.json();
+        // Log the full response for debugging
+        const responseText = await response.text();
+        console.log('Response:', responseText);
+
+        // Parse the response
+        let result;
+        try {
+            result = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('JSON Parse Error:', parseError);
+            throw new Error('Failed to parse server response');
+        }
 
         if (!response.ok) {
             throw new Error(result.message || 'Failed to fetch plan details');
         }
 
-        // Populate form with plan details
-        const plan = result.data;
-        
-        // Ensure all form elements exist before setting values
-        const elements = {
-            planId: document.getElementById('planId'),
-            planName: document.getElementById('planName'),
-            planDescription: document.getElementById('planDescription'),
-            monthlyPrice: document.getElementById('monthlyPrice'),
-            annualPrice: document.getElementById('annualPrice'),
-            trialPeriod: document.getElementById('trialPeriod'),
-            planActiveStatus: document.getElementById('planActiveStatus'),
-            planCurrency: document.getElementById('planCurrency')
-        };
+        // Validate result data
+        if (!result.data) {
+            throw new Error('No plan data received');
+        }
 
-        // Check if all elements exist
-        const missingElements = Object.entries(elements)
-            .filter(([key, element]) => !element)
-            .map(([key]) => key);
+        const plan = result.data;
+
+        // Comprehensive form element validation
+        const requiredElements = [
+            'planId', 'planName', 'planDescription', 
+            'monthlyPrice', 'annualPrice', 'trialPeriod', 
+            'planActiveStatus', 'planCurrency'
+        ];
+
+        const missingElements = requiredElements.filter(elementId => 
+            !document.getElementById(elementId)
+        );
 
         if (missingElements.length > 0) {
             throw new Error(`Missing form elements: ${missingElements.join(', ')}`);
         }
 
-        // Set form values
-        elements.planId.value = plan._id;
-        elements.planName.value = plan.name;
-        elements.planDescription.value = plan.description;
-        elements.monthlyPrice.value = plan.monthlyPrice;
-        elements.annualPrice.value = plan.annualPrice;
-        elements.trialPeriod.value = plan.trialPeriod || 0;
-        elements.planActiveStatus.checked = plan.isActive;
-        elements.planCurrency.value = plan.currency || 'USD';
+        // Set form values with additional checks
+        document.getElementById('planId').value = plan._id || '';
+        document.getElementById('planName').value = plan.name || '';
+        document.getElementById('planDescription').value = plan.description || '';
+        document.getElementById('monthlyPrice').value = plan.monthlyPrice || 0;
+        document.getElementById('annualPrice').value = plan.annualPrice || 0;
+        document.getElementById('trialPeriod').value = plan.trialPeriod || 0;
+        document.getElementById('planActiveStatus').checked = plan.isActive || false;
+        document.getElementById('planCurrency').value = plan.currency || 'USD';
 
-        // Reset and check features
+        // Feature selection with robust checking
         const featureCheckboxes = document.querySelectorAll('input[name="features"]');
         featureCheckboxes.forEach(checkbox => {
-            // Ensure plan.features exists and is an array
-            const isFeatureSelected = plan.features && 
-                Array.isArray(plan.features) && 
-                plan.features.some(f => f._id === checkbox.value);
+            // Ensure plan.features is a valid array
+            const isFeatureSelected = Array.isArray(plan.features) && 
+                plan.features.some(f => 
+                    f && 
+                    (f._id === checkbox.value || f.name === checkbox.value)
+                );
             
             checkbox.checked = !!isFeatureSelected;
         });
 
     } catch (error) {
-        console.error('Fetch Plan Details Error:', error);
-        this.showErrorNotification(error.message || 'Failed to retrieve plan details');
+        console.error('Fetch Plan Details Error:', {
+            message: error.message,
+            stack: error.stack,
+            planId: planId
+        });
+
+        // More informative error notification
+        this.showErrorNotification(
+            `Failed to retrieve plan details: ${error.message}`
+        );
     }
 }
 
