@@ -164,20 +164,88 @@
 
 
         openPlanModal(planId = null) {
-            // Reset form
-            this.elements.planForm.reset();
-            
-            // Set modal title
-            const modalTitle = document.getElementById('planModalTitle');
-            modalTitle.textContent = planId ? 'Edit Plan' : 'Create New Plan';
-
-            // Show modal
-            this.elements.modalOverlay.classList.add('show');
+    // Close any open modals first
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        if (modal.id !== 'planModal') {
+            modal.classList.remove('show');
         }
+    });
+
+    // Close modal overlays
+    const modalOverlays = document.querySelectorAll('.modal-overlay');
+    modalOverlays.forEach(overlay => {
+        if (overlay.id !== 'modalOverlay') {
+            overlay.classList.remove('show');
+        }
+    });
+
+    // Reset form
+    this.elements.planForm.reset();
+    
+    // Clear any existing hidden plan ID
+    const planIdInput = document.getElementById('planId');
+    if (planIdInput) {
+        planIdInput.value = '';
+    }
+
+    // Set modal title
+    const modalTitle = document.getElementById('planModalTitle');
+    modalTitle.textContent = planId ? 'Edit Plan' : 'Create New Plan';
+
+    // If editing, fetch and populate plan details
+    if (planId) {
+        this.fetchPlanDetails(planId);
+    }
+
+    // Show modal
+    this.elements.modalOverlay.classList.add('show');
+}
+        
+
 
         closePlanModal() {
             this.elements.modalOverlay.classList.remove('show');
         }
+
+        async fetchPlanDetails(planId) {
+    try {
+        const response = await fetch(`${this.baseUrl}/plans/${planId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to fetch plan details');
+        }
+
+        // Populate form with plan details
+        const plan = result.data;
+        document.getElementById('planId').value = plan._id;
+        document.getElementById('planName').value = plan.name;
+        document.getElementById('planDescription').value = plan.description;
+        document.getElementById('monthlyPrice').value = plan.monthlyPrice;
+        document.getElementById('annualPrice').value = plan.annualPrice;
+        document.getElementById('trialPeriod').value = plan.trialPeriod;
+        document.getElementById('planActiveStatus').checked = plan.isActive;
+        document.getElementById('planCurrency').value = plan.currency;
+
+        // Reset and check features
+        const featureCheckboxes = document.querySelectorAll('input[name="features"]');
+        featureCheckboxes.forEach(checkbox => {
+            checkbox.checked = plan.features.some(f => f._id === checkbox.value);
+        });
+    } catch (error) {
+        console.error('Fetch Plan Details Error:', error);
+        this.showErrorNotification('Failed to retrieve plan details');
+    }
+}
+
 
         
 
@@ -224,17 +292,28 @@
             console.error(message);
         }
 
-        confirmDeletePlan(planId) {
-    // Ensure only delete modal is shown
+       confirmDeletePlan(planId) {
+    // Explicitly close other modals
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        if (modal.id !== 'confirmDeleteModal') {
+            modal.classList.remove('show');
+        }
+    });
+
+    const modalOverlays = document.querySelectorAll('.modal-overlay');
+    modalOverlays.forEach(overlay => {
+        if (overlay.id !== 'modalOverlay') {
+            overlay.classList.remove('show');
+        }
+    });
+
+    // Show only delete confirmation modal
     const confirmModal = document.getElementById('confirmDeleteModal');
     const deletePlanName = document.getElementById('deletePlanName');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
     const cancelDeleteBtn = document.getElementById('cancelDelete');
     const closeConfirmDelete = document.getElementById('closeConfirmDelete');
-
-    // Prevent any other modals from being open
-    const modalOverlays = document.querySelectorAll('.modal-overlay');
-    modalOverlays.forEach(overlay => overlay.classList.remove('show'));
 
     // Find plan name and populate delete confirmation
     this.getPlanDetails(planId).then(plan => {
