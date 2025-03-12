@@ -4207,6 +4207,7 @@ app.get('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
 });
 
 // Create new plan
+// Create new plan
 app.post('/api/plans', verifyToken, verifyAdmin, async (req, res) => {
     const session = client.startSession();
     try {
@@ -4218,12 +4219,19 @@ app.post('/api/plans', verifyToken, verifyAdmin, async (req, res) => {
                 annualPrice,
                 trialPeriod = 0,
                 isActive = true,
-                features
+                currency = 'USD',
+                features = []
             } = req.body;
 
             // Validate required fields
-            if (!name || !description || !monthlyPrice || !annualPrice || !features || features.length === 0) {
+            if (!name || !description || !monthlyPrice || !annualPrice) {
                 throw new Error('Missing required fields');
+            }
+
+            // Validate currency
+            const validCurrencies = ['USD', 'INR', 'AED', 'QAR', 'GBP'];
+            if (!validCurrencies.includes(currency)) {
+                throw new Error('Invalid currency');
             }
 
             // Check if plan exists
@@ -4243,7 +4251,8 @@ app.post('/api/plans', verifyToken, verifyAdmin, async (req, res) => {
                 annualPrice: parseFloat(annualPrice),
                 trialPeriod: parseInt(trialPeriod),
                 isActive,
-                features,
+                currency,
+                features: features.map(f => ({ name: f })),
                 createdAt: new Date(),
                 createdBy: new ObjectId(req.user.userId),
                 updatedAt: new Date()
@@ -4255,7 +4264,7 @@ app.post('/api/plans', verifyToken, verifyAdmin, async (req, res) => {
             await createAuditLog(
                 'PLAN_CREATED',
                 req.user.userId,
-                null,
+                result.insertedId,
                 {
                     planName: name,
                     planDetails: plan
