@@ -125,45 +125,34 @@
     this.addPlanActionListeners();
 }
 
-        addPlanActionListeners() {
-    // Remove any existing event listeners first to prevent multiple bindings
+      addPlanActionListeners() {
     const editButtons = this.elements.plansContainer.querySelectorAll('.edit-plan');
     const deleteButtons = this.elements.plansContainer.querySelectorAll('.delete-plan');
 
-    // Clear previous listeners
     editButtons.forEach(button => {
-        const newButton = button.cloneNode(true);
-        button.parentNode.replaceChild(newButton, button);
-    });
-
-    deleteButtons.forEach(button => {
-        const newButton = button.cloneNode(true);
-        button.parentNode.replaceChild(newButton, button);
-    });
-
-    // Add new event listeners with proper scoping
-    const editButtonsNew = this.elements.plansContainer.querySelectorAll('.edit-plan');
-    const deleteButtonsNew = this.elements.plansContainer.querySelectorAll('.delete-plan');
-
-    editButtonsNew.forEach(button => {
         button.addEventListener('click', (e) => {
-            // Stop event propagation to prevent unintended modal openings
             e.stopPropagation();
-            this.openPlanModal(e.target.dataset.id);
+            const planId = e.target.getAttribute('data-id');
+            this.openPlanModal(planId);
         });
     });
 
-    deleteButtonsNew.forEach(button => {
+    deleteButtons.forEach(button => {
         button.addEventListener('click', (e) => {
-            // Stop event propagation to prevent unintended modal openings
             e.stopPropagation();
-            this.confirmDeletePlan(e.target.dataset.id);
+            const planId = e.target.getAttribute('data-id');
+            this.confirmDeletePlan(planId);
         });
     });
 }
 
-
         openPlanModal(planId = null) {
+    // Ensure planId is a string
+    const validPlanId = planId ? planId.toString().trim() : null;
+
+    // Reset form
+    this.elements.planForm.reset();
+    
     // Close any open modals first
     const modals = document.querySelectorAll('.modal');
     modals.forEach(modal => {
@@ -172,30 +161,13 @@
         }
     });
 
-    // Close modal overlays
-    const modalOverlays = document.querySelectorAll('.modal-overlay');
-    modalOverlays.forEach(overlay => {
-        if (overlay.id !== 'modalOverlay') {
-            overlay.classList.remove('show');
-        }
-    });
-
-    // Reset form
-    this.elements.planForm.reset();
-    
-    // Clear any existing hidden plan ID
-    const planIdInput = document.getElementById('planId');
-    if (planIdInput) {
-        planIdInput.value = '';
-    }
-
     // Set modal title
     const modalTitle = document.getElementById('planModalTitle');
-    modalTitle.textContent = planId ? 'Edit Plan' : 'Create New Plan';
+    modalTitle.textContent = validPlanId ? 'Edit Plan' : 'Create New Plan';
 
     // If editing, fetch and populate plan details
-    if (planId) {
-        this.fetchPlanDetails(planId);
+    if (validPlanId) {
+        this.fetchPlanDetails(validPlanId);
     }
 
     // Show modal
@@ -208,8 +180,13 @@
             this.elements.modalOverlay.classList.remove('show');
         }
 
-        async fetchPlanDetails(planId) {
+       async fetchPlanDetails(planId) {
     try {
+        // Validate planId before making the request
+        if (!planId || typeof planId !== 'string') {
+            throw new Error('Invalid plan ID');
+        }
+
         const response = await fetch(`${this.baseUrl}/plans/${planId}`, {
             method: 'GET',
             headers: {
@@ -226,28 +203,55 @@
 
         // Populate form with plan details
         const plan = result.data;
-        document.getElementById('planId').value = plan._id;
-        document.getElementById('planName').value = plan.name;
-        document.getElementById('planDescription').value = plan.description;
-        document.getElementById('monthlyPrice').value = plan.monthlyPrice;
-        document.getElementById('annualPrice').value = plan.annualPrice;
-        document.getElementById('trialPeriod').value = plan.trialPeriod;
-        document.getElementById('planActiveStatus').checked = plan.isActive;
-        document.getElementById('planCurrency').value = plan.currency;
+        
+        // Ensure all form elements exist before setting values
+        const elements = {
+            planId: document.getElementById('planId'),
+            planName: document.getElementById('planName'),
+            planDescription: document.getElementById('planDescription'),
+            monthlyPrice: document.getElementById('monthlyPrice'),
+            annualPrice: document.getElementById('annualPrice'),
+            trialPeriod: document.getElementById('trialPeriod'),
+            planActiveStatus: document.getElementById('planActiveStatus'),
+            planCurrency: document.getElementById('planCurrency')
+        };
+
+        // Check if all elements exist
+        const missingElements = Object.entries(elements)
+            .filter(([key, element]) => !element)
+            .map(([key]) => key);
+
+        if (missingElements.length > 0) {
+            throw new Error(`Missing form elements: ${missingElements.join(', ')}`);
+        }
+
+        // Set form values
+        elements.planId.value = plan._id;
+        elements.planName.value = plan.name;
+        elements.planDescription.value = plan.description;
+        elements.monthlyPrice.value = plan.monthlyPrice;
+        elements.annualPrice.value = plan.annualPrice;
+        elements.trialPeriod.value = plan.trialPeriod || 0;
+        elements.planActiveStatus.checked = plan.isActive;
+        elements.planCurrency.value = plan.currency || 'USD';
 
         // Reset and check features
         const featureCheckboxes = document.querySelectorAll('input[name="features"]');
         featureCheckboxes.forEach(checkbox => {
-            checkbox.checked = plan.features.some(f => f._id === checkbox.value);
+            // Ensure plan.features exists and is an array
+            const isFeatureSelected = plan.features && 
+                Array.isArray(plan.features) && 
+                plan.features.some(f => f._id === checkbox.value);
+            
+            checkbox.checked = !!isFeatureSelected;
         });
+
     } catch (error) {
         console.error('Fetch Plan Details Error:', error);
-        this.showErrorNotification('Failed to retrieve plan details');
+        this.showErrorNotification(error.message || 'Failed to retrieve plan details');
     }
 }
 
-
-        
 
         async loadAvailableFeatures() {
             try {
