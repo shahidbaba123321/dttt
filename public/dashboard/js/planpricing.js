@@ -126,17 +126,42 @@
 }
 
         addPlanActionListeners() {
-            const editButtons = this.elements.plansContainer.querySelectorAll('.edit-plan');
-            const deleteButtons = this.elements.plansContainer.querySelectorAll('.delete-plan');
+    // Remove any existing event listeners first to prevent multiple bindings
+    const editButtons = this.elements.plansContainer.querySelectorAll('.edit-plan');
+    const deleteButtons = this.elements.plansContainer.querySelectorAll('.delete-plan');
 
-            editButtons.forEach(button => {
-                button.addEventListener('click', (e) => this.openPlanModal(e.target.dataset.id));
-            });
+    // Clear previous listeners
+    editButtons.forEach(button => {
+        const newButton = button.cloneNode(true);
+        button.parentNode.replaceChild(newButton, button);
+    });
 
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', (e) => this.confirmDeletePlan(e.target.dataset.id));
-            });
-        }
+    deleteButtons.forEach(button => {
+        const newButton = button.cloneNode(true);
+        button.parentNode.replaceChild(newButton, button);
+    });
+
+    // Add new event listeners with proper scoping
+    const editButtonsNew = this.elements.plansContainer.querySelectorAll('.edit-plan');
+    const deleteButtonsNew = this.elements.plansContainer.querySelectorAll('.delete-plan');
+
+    editButtonsNew.forEach(button => {
+        button.addEventListener('click', (e) => {
+            // Stop event propagation to prevent unintended modal openings
+            e.stopPropagation();
+            this.openPlanModal(e.target.dataset.id);
+        });
+    });
+
+    deleteButtonsNew.forEach(button => {
+        button.addEventListener('click', (e) => {
+            // Stop event propagation to prevent unintended modal openings
+            e.stopPropagation();
+            this.confirmDeletePlan(e.target.dataset.id);
+        });
+    });
+}
+
 
         openPlanModal(planId = null) {
             // Reset form
@@ -200,9 +225,38 @@
         }
 
         confirmDeletePlan(planId) {
-            // Confirmation and deletion logic will be implemented later
-            console.log('Confirm delete plan:', planId);
+    // Ensure only delete modal is shown
+    const confirmModal = document.getElementById('confirmDeleteModal');
+    const deletePlanName = document.getElementById('deletePlanName');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const cancelDeleteBtn = document.getElementById('cancelDelete');
+    const closeConfirmDelete = document.getElementById('closeConfirmDelete');
+
+    // Prevent any other modals from being open
+    const modalOverlays = document.querySelectorAll('.modal-overlay');
+    modalOverlays.forEach(overlay => overlay.classList.remove('show'));
+
+    // Find plan name and populate delete confirmation
+    this.getPlanDetails(planId).then(plan => {
+        if (plan) {
+            deletePlanName.textContent = plan.name;
+
+            // Show only the delete confirmation modal
+            confirmModal.classList.add('show');
+
+            // Remove previous event listeners to prevent multiple bindings
+            confirmDeleteBtn.onclick = null;
+            cancelDeleteBtn.onclick = null;
+            closeConfirmDelete.onclick = null;
+
+            // Add new event listeners
+            confirmDeleteBtn.onclick = () => this.deletePlan(planId);
+            cancelDeleteBtn.onclick = () => confirmModal.classList.remove('show');
+            closeConfirmDelete.onclick = () => confirmModal.classList.remove('show');
         }
+    });
+}
+        
                 // Placeholder for error notification method
         showErrorNotification(message) {
             if (window.dashboardApp && window.dashboardApp.userInterface) {
