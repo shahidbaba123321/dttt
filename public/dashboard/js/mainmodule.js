@@ -1,190 +1,110 @@
-// public/dashboard/js/mainmodule.js
 (function() {
     // Check if ModulesManager already exists
     if (window.ModulesManager) {
-        return; // Exit if already defined
+        return;
     }
 
 class ModulesManager {
     constructor(apiBaseUrl) {
-    this.baseUrl = apiBaseUrl || 'https://18.215.160.136.nip.io/api';
-    this.token = localStorage.getItem('token');
-    
-    // Bind methods ONCE to ensure correct context
-    this.fetchModules = this.fetchModules.bind(this);
-    this.renderModules = this.renderModules.bind(this);
-    this.addNewModule = this.addNewModule.bind(this);
-    this.updateModule = this.updateModule.bind(this);
-    this.deleteModule = this.deleteModule.bind(this);
-    this.toggleModuleStatus = this.toggleModuleStatus.bind(this);
-    this.showAddModuleModal = this.showAddModuleModal.bind(this);
-    this.closeModal = this.closeModal.bind(this);
+        this.baseUrl = apiBaseUrl || 'https://18.215.160.136.nip.io/api';
+        this.token = localStorage.getItem('token');
+        
+        // Comprehensive method binding
+        this.fetchModules = this.fetchModules.bind(this);
+        this.renderModules = this.renderModules.bind(this);
+        this.showAddModuleModal = this.showAddModuleModal.bind(this);
+        this.closeModal = this.closeModal.bind(this);
+        this.addNewModule = this.addNewModule.bind(this);
+        this.updateModule = this.updateModule.bind(this);
+        this.deleteModule = this.deleteModule.bind(this);
+        this.toggleModuleStatus = this.toggleModuleStatus.bind(this);
+        this.fetchActivityLogs = this.fetchActivityLogs.bind(this);
+        this.renderActivityLogs = this.renderActivityLogs.bind(this);
+        this.filterActivityLogs = this.filterActivityLogs.bind(this);
 
-    // Use setTimeout to ensure DOM is fully loaded
-    setTimeout(() => {
-        this.initializeEventListeners();
-    }, 100);
-
-    this.fetchModules();
-}
-
-
-    initializeEventListeners() {
-    console.log('Initializing event listeners'); // Debug log
-
-    // Add New Module Button
-    const addNewModuleBtn = document.getElementById('addNewModuleBtn');
-    console.log('Add New Module Button:', addNewModuleBtn); // Debug log
-    
-    if (addNewModuleBtn) {
-        addNewModuleBtn.addEventListener('click', this.showAddModuleModal);
-        console.log('Event listener added to Add New Module Button');
+        // Initialize with delay to ensure DOM readiness
+        this.initializeWithDelay();
     }
 
-    // Add Module Form Submission
-    const addModuleForm = document.getElementById('addModuleForm');
-    if (addModuleForm) {
-        addModuleForm.addEventListener('submit', this.addNewModule);
+    initializeWithDelay() {
+        setTimeout(() => {
+            this.setupEventListeners();
+            this.fetchModules();
+            this.fetchActivityLogs();
+        }, 100);
     }
 
-    // Modal Close Buttons
-    const modalCloseButtons = document.querySelectorAll('.modal-close');
-    modalCloseButtons.forEach(button => {
-        button.addEventListener('click', this.closeModal);
-    });
+    setupEventListeners() {
+        // Add New Module Button
+        const addNewModuleBtn = document.getElementById('addNewModuleBtn');
+        if (addNewModuleBtn) {
+            addNewModuleBtn.addEventListener('click', this.showAddModuleModal);
+        }
 
-    // Cancel Buttons
-    const cancelAddModuleBtn = document.getElementById('cancelAddModule');
-    if (cancelAddModuleBtn) {
-        cancelAddModuleBtn.addEventListener('click', this.closeModal);
-    }
-}
+        // Add Module Form Submission
+        const addModuleForm = document.getElementById('addModuleForm');
+        if (addModuleForm) {
+            addModuleForm.addEventListener('submit', this.addNewModule);
+        }
 
-    showAddModuleModal(event) {
-    console.log('showAddModuleModal called'); // Debug log
-    
-    // Prevent any default form submission
-    if (event) {
-        event.preventDefault();
-    }
+        // Modal Close Buttons
+        const closeButtons = document.querySelectorAll('.modal-close');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', this.closeModal);
+        });
 
-    // Ensure the modal exists
-    const modal = document.getElementById('addModuleModal');
-    console.log('Modal element:', modal); // Debug log
+        // Cancel Button
+        const cancelButton = document.getElementById('cancelAddModule');
+        if (cancelButton) {
+            cancelButton.addEventListener('click', this.closeModal);
+        }
 
-    if (!modal) {
-        console.error('Add Module Modal not found');
-        return;
-    }
-
-    // Reset the form
-    const form = modal.querySelector('form');
-    if (form) {
-        form.reset();
-    }
-
-    // Show the modal
-    modal.style.display = 'flex'; // Use display instead of class
-    modal.classList.add('show');
-
-    console.log('Modal should now be visible'); // Debug log
-
-    // Optional: Focus on the first input
-    const firstInput = modal.querySelector('input[name="moduleName"]');
-    if (firstInput) {
-        firstInput.focus();
-    }
-}
-
-
-    addModalCloseOnOutsideClick(modal) {
-        const closeOnOutside = (event) => {
-            if (event.target === modal) {
-                this.closeModal();
-                modal.removeEventListener('click', closeOnOutside);
-            }
-        };
-
-        modal.addEventListener('click', closeOnOutside);
-    }
-
-    closeModal(event) {
-    console.log('closeModal called'); // Debug log
-    
-    // Prevent any default form submission
-    if (event) {
-        event.preventDefault();
-    }
-
-    // Close all modals
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        modal.style.display = 'none';
-        modal.classList.remove('show');
-    });
-}
-
-async addNewModule(event) {
-        // Prevent default form submission
-        event.preventDefault();
-
-        // Get the form
-        const form = event.target;
-
-        try {
-            // Validate form
-            if (!form.checkValidity()) {
-                form.reportValidity();
-                return;
-            }
-
-            // Collect form data
-            const formData = new FormData(form);
-            const moduleData = {
-                name: formData.get('moduleName'),
-                category: formData.get('moduleCategory'),
-                description: formData.get('moduleDescription'),
-                complianceLevel: formData.get('complianceLevel'),
-                isActive: true
-            };
-
-            // Validate module data
-            if (!moduleData.name || !moduleData.category || !moduleData.description) {
-                this.showNotification('Please fill in all required fields', 'error');
-                return;
-            }
-
-            // Send API request
-            const response = await fetch(`${this.baseUrl}/modules`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(moduleData)
-            });
-
-            // Parse response
-            const result = await response.json();
-
-            // Handle response
-            if (result.success) {
-                this.showNotification('Module added successfully', 'success');
-                this.closeModal();
-                this.fetchModules();
-                
-                // Reset form
-                form.reset();
-            } else {
-                throw new Error(result.message || 'Failed to add module');
-            }
-        } catch (error) {
-            this.showNotification(error.message, 'error');
-            console.error('Add module error:', error);
+        // Activity Log Filter
+        const activityLogFilter = document.getElementById('activityLogFilter');
+        if (activityLogFilter) {
+            activityLogFilter.addEventListener('change', this.filterActivityLogs);
         }
     }
 
-    
+    showAddModuleModal(event) {
+        if (event) {
+            event.preventDefault();
+        }
+
+        const modal = document.getElementById('addModuleModal');
+        if (!modal) {
+            this.showNotification('Modal not found', 'error');
+            return;
+        }
+
+        // Reset form
+        const form = modal.querySelector('form');
+        if (form) {
+            form.reset();
+        }
+
+        // Show modal
+        modal.style.display = 'flex';
+        modal.classList.add('show');
+
+        // Focus first input
+        const firstInput = modal.querySelector('input[name="moduleName"]');
+        if (firstInput) {
+            firstInput.focus();
+        }
+    }
+
+    closeModal(event) {
+        if (event) {
+            event.preventDefault();
+        }
+
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+        });
+    }
 
     async fetchModules() {
         try {
@@ -196,17 +116,12 @@ async addNewModule(event) {
                 }
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch modules');
-            }
+            const result = await response.json();
 
-            const data = await response.json();
-            
-            if (data.success) {
-                this.renderModules(data.data);
-                this.fetchActivityLogs();
+            if (result.success) {
+                this.renderModules(result.data);
             } else {
-                throw new Error(data.message || 'Unknown error fetching modules');
+                throw new Error(result.message || 'Failed to fetch modules');
             }
         } catch (error) {
             this.showNotification(error.message, 'error');
@@ -252,9 +167,7 @@ async addNewModule(event) {
 
         card.innerHTML = `
             <div class="module-card-header">
-                <div class="module-icon">
-                    <i class="fas ${this.getModuleIcon(module.category)}"></i>
-                </div>
+                <h4 class="module-title">${module.name}</h4>
                 <div class="module-status-toggle">
                     <input type="checkbox" id="moduleStatus-${module._id}" 
                            ${module.isActive ? 'checked' : ''}>
@@ -262,28 +175,23 @@ async addNewModule(event) {
                 </div>
             </div>
             <div class="module-card-content">
-                <h4 class="module-title">${module.name}</h4>
                 <p class="module-description">${module.description}</p>
                 <div class="module-meta">
-                    <span class="module-compliance-badge ${complianceClass[module.complianceLevel]}">
+                    <span class="module-category">${module.category.toUpperCase()}</span>
+                    <span class="module-compliance ${complianceClass[module.complianceLevel]}">
                         ${module.complianceLevel.toUpperCase()} Compliance
                     </span>
-                    <span class="module-tier">${module.subscriptionTiers.join(', ')}</span>
                 </div>
             </div>
             <div class="module-actions">
-                <button class="module-action-btn edit-module">
-                    <i class="fas fa-edit"></i> Edit
-                </button>
-                <button class="module-action-btn delete-module">
-                    <i class="fas fa-trash"></i> Delete
-                </button>
+                <button class="btn btn-sm btn-edit">Edit</button>
+                <button class="btn btn-sm btn-delete">Delete</button>
             </div>
         `;
 
-        // Add event listeners for module actions
-        const editBtn = card.querySelector('.edit-module');
-        const deleteBtn = card.querySelector('.delete-module');
+        // Add event listeners
+        const editBtn = card.querySelector('.btn-edit');
+        const deleteBtn = card.querySelector('.btn-delete');
         const statusToggle = card.querySelector('input[type="checkbox"]');
 
         editBtn.addEventListener('click', () => this.showEditModuleModal(module));
@@ -292,75 +200,31 @@ async addNewModule(event) {
 
         return card;
     }
+        async addNewModule(event) {
+        event.preventDefault();
 
-        getModuleIcon(category) {
-        const icons = {
-            'hr': 'fa-users',
-            'finance': 'fa-chart-line',
-            'operations': 'fa-cogs',
-            'integrations': 'fa-plug'
+        const form = event.target;
+        const formData = new FormData(form);
+
+        // Collect form data
+        const moduleData = {
+            name: formData.get('moduleName'),
+            category: formData.get('moduleCategory'),
+            description: formData.get('moduleDescription'),
+            complianceLevel: formData.get('complianceLevel'),
+            permissions: Array.from(form.querySelectorAll('input[name="permissions"]:checked'))
+                .map(checkbox => checkbox.value),
+            subscriptionTiers: Array.from(form.querySelectorAll('input[name="subscriptionTiers"]:checked'))
+                .map(checkbox => checkbox.value),
+            isActive: true
         };
-        return icons[category] || 'fa-cube';
-    }
 
-    showAddModuleModal() {
-        const modal = document.getElementById('addModuleModal');
-        if (modal) {
-            // Reset form
-            const form = modal.querySelector('form');
-            form.reset();
-            modal.classList.add('show');
-        }
-    }
-
-    showEditModuleModal(module) {
-        const modal = document.getElementById('editModuleModal');
-        if (!modal) return;
-
-        // Populate form with module data
-        const form = modal.querySelector('form');
-        form.querySelector('input[name="moduleId"]').value = module._id;
-        form.querySelector('input[name="moduleName"]').value = module.name;
-        form.querySelector('select[name="moduleCategory"]').value = module.category;
-        form.querySelector('textarea[name="moduleDescription"]').value = module.description;
-
-        // Set compliance level
-        form.querySelector('select[name="complianceLevel"]').value = module.complianceLevel;
-        
-        // Set permissions
-        const permissionCheckboxes = form.querySelectorAll('input[name="permissions"]');
-        permissionCheckboxes.forEach(checkbox => {
-            checkbox.checked = module.permissions.includes(checkbox.value);
-        });
-
-        // Set subscription tiers
-        const tierCheckboxes = form.querySelectorAll('input[name="subscriptionTiers"]');
-        tierCheckboxes.forEach(checkbox => {
-            checkbox.checked = module.subscriptionTiers.includes(checkbox.value);
-        });
-
-        modal.classList.add('show');
-    }
-
-    closeModal() {
-        const modals = document.querySelectorAll('.modal');
-        modals.forEach(modal => modal.classList.remove('show'));
-    }
-
-    async addNewModule(form) {
         try {
-            const formData = new FormData(form);
-            const moduleData = {
-                name: formData.get('moduleName'),
-                category: formData.get('moduleCategory'),
-                description: formData.get('moduleDescription'),
-                complianceLevel: formData.get('complianceLevel'),
-                permissions: Array.from(form.querySelectorAll('input[name="permissions"]:checked'))
-                    .map(checkbox => checkbox.value),
-                subscriptionTiers: Array.from(form.querySelectorAll('input[name="subscriptionTiers"]:checked'))
-                    .map(checkbox => checkbox.value),
-                isActive: true
-            };
+            // Validate required fields
+            if (!moduleData.name || !moduleData.category || !moduleData.description) {
+                this.showNotification('Please fill in all required fields', 'error');
+                return;
+            }
 
             const response = await fetch(`${this.baseUrl}/modules`, {
                 method: 'POST',
@@ -373,34 +237,72 @@ async addNewModule(event) {
 
             const result = await response.json();
 
-            if (!result.success) {
+            if (result.success) {
+                this.showNotification('Module added successfully', 'success');
+                this.closeModal();
+                this.fetchModules();
+                this.fetchActivityLogs();
+                form.reset();
+            } else {
                 throw new Error(result.message || 'Failed to add module');
             }
-
-            this.showNotification('Module added successfully', 'success');
-            this.closeModal();
-            this.fetchModules();
         } catch (error) {
             this.showNotification(error.message, 'error');
             console.error('Add module error:', error);
         }
     }
 
-    async updateModule(form) {
-        try {
-            const formData = new FormData(form);
-            const moduleId = formData.get('moduleId');
-            const moduleData = {
-                name: formData.get('moduleName'),
-                category: formData.get('moduleCategory'),
-                description: formData.get('moduleDescription'),
-                complianceLevel: formData.get('complianceLevel'),
-                permissions: Array.from(form.querySelectorAll('input[name="permissions"]:checked'))
-                    .map(checkbox => checkbox.value),
-                subscriptionTiers: Array.from(form.querySelectorAll('input[name="subscriptionTiers"]:checked'))
-                    .map(checkbox => checkbox.value)
-            };
+    showEditModuleModal(module) {
+        const modal = document.getElementById('editModuleModal');
+        if (!modal) {
+            this.showNotification('Edit Modal not found', 'error');
+            return;
+        }
 
+        // Populate form fields
+        const form = modal.querySelector('form');
+        form.querySelector('input[name="moduleId"]').value = module._id;
+        form.querySelector('input[name="moduleName"]').value = module.name;
+        form.querySelector('select[name="moduleCategory"]').value = module.category;
+        form.querySelector('textarea[name="moduleDescription"]').value = module.description;
+        form.querySelector('select[name="complianceLevel"]').value = module.complianceLevel;
+
+        // Set permissions
+        const permissionCheckboxes = form.querySelectorAll('input[name="permissions"]');
+        permissionCheckboxes.forEach(checkbox => {
+            checkbox.checked = module.permissions.includes(checkbox.value);
+        });
+
+        // Set subscription tiers
+        const tierCheckboxes = form.querySelectorAll('input[name="subscriptionTiers"]');
+        tierCheckboxes.forEach(checkbox => {
+            checkbox.checked = module.subscriptionTiers.includes(checkbox.value);
+        });
+
+        // Show modal
+        modal.style.display = 'flex';
+        modal.classList.add('show');
+    }
+
+    async updateModule(event) {
+        event.preventDefault();
+
+        const form = event.target;
+        const formData = new FormData(form);
+        const moduleId = formData.get('moduleId');
+
+        const moduleData = {
+            name: formData.get('moduleName'),
+            category: formData.get('moduleCategory'),
+            description: formData.get('moduleDescription'),
+            complianceLevel: formData.get('complianceLevel'),
+            permissions: Array.from(form.querySelectorAll('input[name="permissions"]:checked'))
+                .map(checkbox => checkbox.value),
+            subscriptionTiers: Array.from(form.querySelectorAll('input[name="subscriptionTiers"]:checked'))
+                .map(checkbox => checkbox.value)
+        };
+
+        try {
             const response = await fetch(`${this.baseUrl}/modules/${moduleId}`, {
                 method: 'PUT',
                 headers: {
@@ -412,13 +314,14 @@ async addNewModule(event) {
 
             const result = await response.json();
 
-            if (!result.success) {
+            if (result.success) {
+                this.showNotification('Module updated successfully', 'success');
+                this.closeModal();
+                this.fetchModules();
+                this.fetchActivityLogs();
+            } else {
                 throw new Error(result.message || 'Failed to update module');
             }
-
-            this.showNotification('Module updated successfully', 'success');
-            this.closeModal();
-            this.fetchModules();
         } catch (error) {
             this.showNotification(error.message, 'error');
             console.error('Update module error:', error);
@@ -427,7 +330,6 @@ async addNewModule(event) {
 
     async deleteModule(moduleId) {
         try {
-            // Confirm deletion
             const confirmDelete = window.confirm('Are you sure you want to delete this module?');
             if (!confirmDelete) return;
 
@@ -441,19 +343,20 @@ async addNewModule(event) {
 
             const result = await response.json();
 
-            if (!result.success) {
+            if (result.success) {
+                this.showNotification('Module deleted successfully', 'success');
+                this.fetchModules();
+                this.fetchActivityLogs();
+            } else {
                 throw new Error(result.message || 'Failed to delete module');
             }
-
-            this.showNotification('Module deleted successfully', 'success');
-            this.fetchModules();
         } catch (error) {
             this.showNotification(error.message, 'error');
             console.error('Delete module error:', error);
         }
     }
 
-        async toggleModuleStatus(moduleId, isActive) {
+    async toggleModuleStatus(moduleId, isActive) {
         try {
             const response = await fetch(`${this.baseUrl}/modules/${moduleId}/status`, {
                 method: 'PATCH',
@@ -466,31 +369,22 @@ async addNewModule(event) {
 
             const result = await response.json();
 
-            if (!result.success) {
+            if (result.success) {
+                this.showNotification(
+                    `Module ${isActive ? 'activated' : 'deactivated'} successfully`, 
+                    'success'
+                );
+                this.fetchModules();
+                this.fetchActivityLogs();
+            } else {
                 throw new Error(result.message || 'Failed to update module status');
             }
-
-            this.showNotification(
-                `Module ${isActive ? 'activated' : 'deactivated'} successfully`, 
-                'success'
-            );
-
-            // Optionally refresh modules or update specific module card
-            this.fetchModules();
         } catch (error) {
-            // Revert the toggle if API call fails
-            const moduleCard = document.querySelector(`.module-card[data-module-id="${moduleId}"]`);
-            if (moduleCard) {
-                const statusToggle = moduleCard.querySelector('input[type="checkbox"]');
-                statusToggle.checked = !isActive;
-            }
-
             this.showNotification(error.message, 'error');
             console.error('Toggle module status error:', error);
         }
     }
-
-    async fetchActivityLogs() {
+        async fetchActivityLogs() {
         try {
             const response = await fetch(`${this.baseUrl}/modules/activity-logs`, {
                 method: 'GET',
@@ -502,14 +396,14 @@ async addNewModule(event) {
 
             const result = await response.json();
 
-            if (!result.success) {
+            if (result.success) {
+                this.renderActivityLogs(result.data);
+            } else {
                 throw new Error(result.message || 'Failed to fetch activity logs');
             }
-
-            this.renderActivityLogs(result.data);
         } catch (error) {
             this.showNotification(error.message, 'error');
-            console.error('Fetch activity logs error:', error);
+            console.error('Activity logs fetch error:', error);
         }
     }
 
@@ -528,12 +422,12 @@ async addNewModule(event) {
 
             row.innerHTML = `
                 <td>${new Date(log.timestamp).toLocaleString()}</td>
-                <td>${log.moduleName}</td>
-                <td>${log.activity}</td>
-                <td>${log.userName}</td>
+                <td>${log.moduleName || 'Unknown Module'}</td>
+                <td>${log.activity || 'No Activity'}</td>
+                <td>${log.userName || 'System'}</td>
                 <td>
                     <span class="activity-status ${statusClass}">
-                        ${log.type.replace('_', ' ').toUpperCase()}
+                        ${this.formatActivityType(log.type)}
                     </span>
                 </td>
             `;
@@ -550,25 +444,34 @@ async addNewModule(event) {
             const activityCell = row.querySelector('td:nth-child(3)');
             const statusCell = row.querySelector('.activity-status');
 
-            if (filter === 'all' || 
-                filter === activityCell.textContent.toLowerCase() || 
-                filter === statusCell.textContent.toLowerCase().replace(' ', '-')) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
+            const matchesFilter = 
+                filter === 'all' || 
+                (filter === 'created' && statusCell.textContent.toLowerCase().includes('created')) ||
+                (filter === 'updated' && statusCell.textContent.toLowerCase().includes('updated')) ||
+                (filter === 'deleted' && statusCell.textContent.toLowerCase().includes('deleted')) ||
+                (filter === 'status-changed' && statusCell.textContent.toLowerCase().includes('status'));
+
+            row.style.display = matchesFilter ? '' : 'none';
         });
     }
 
     getActivityStatusClass(type) {
         const statusClasses = {
-            'created': 'status-success',
-            'updated': 'status-warning',
-            'deleted': 'status-danger',
-            'status_changed': 'status-warning'
+            'MODULE_CREATED': 'status-success',
+            'MODULE_UPDATED': 'status-warning',
+            'MODULE_DELETED': 'status-danger',
+            'MODULE_STATUS_CHANGED': 'status-warning'
         };
 
-        return statusClasses[type.toLowerCase()] || 'status-warning';
+        return statusClasses[type] || 'status-warning';
+    }
+
+    formatActivityType(type) {
+        return type
+            .replace('MODULE_', '')
+            .replace(/_/g, ' ')
+            .toLowerCase()
+            .replace(/\b\w/g, l => l.toUpperCase());
     }
 
     showNotification(message, type = 'info') {
@@ -604,8 +507,8 @@ async addNewModule(event) {
     }
 
     generateComplianceReport() {
-        // Placeholder for generating a detailed compliance report
-        const modules = this.getCurrentModules(); // Implement this method to get current modules
+        // This method would typically fetch current modules and generate a report
+        const modules = []; // In a real implementation, this would come from a method that retrieves current modules
         const complianceReports = modules.map(module => ({
             moduleName: module.name,
             complianceLevel: module.complianceLevel,
@@ -616,18 +519,16 @@ async addNewModule(event) {
     }
 }
 
-// Initialize the Modules Manager when the script loads
+// Global initialization
 window.ModulesManager = ModulesManager;
 
-// Ensure the module is initialized when content is loaded
+// Content loaded event listener
 document.addEventListener('contentLoaded', (event) => {
-    console.log('Content loaded event:', event.detail); // Add debug logging
+    console.log('Content Loaded Event:', event.detail);
     
     if (event.detail.section === 'modules') {
-        // Ensure API base URL is correctly passed
-        const apiBaseUrl = 'https://18.215.160.136.nip.io/api';
-        window.modulesManagerInstance = new ModulesManager(apiBaseUrl);
-        console.log('Modules Manager initialized'); // Confirm initialization
+        console.log('Initializing Modules Manager');
+        window.modulesManagerInstance = new ModulesManager('https://18.215.160.136.nip.io/api');
     }
 });
-})(); 
+})(); // End of IIFE
