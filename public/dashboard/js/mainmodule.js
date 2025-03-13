@@ -17,6 +17,10 @@ class ModulesManager {
         this.updateModule = this.updateModule.bind(this);
         this.deleteModule = this.deleteModule.bind(this);
         this.toggleModuleStatus = this.toggleModuleStatus.bind(this);
+        this.initializeEventListeners = this.initializeEventListeners.bind(this);
+        this.showAddModuleModal = this.showAddModuleModal.bind(this);
+        this.closeModal = this.closeModal.bind(this);
+        this.addNewModule = this.addNewModule.bind(this);
 
         // Initialize the module management interface
         this.initializeEventListeners();
@@ -25,18 +29,17 @@ class ModulesManager {
 
     initializeEventListeners() {
         // Add New Module Button
-        const addNewModuleBtn = document.getElementById('addNewModuleBtn');
+       const addNewModuleBtn = document.getElementById('addNewModuleBtn');
         if (addNewModuleBtn) {
-            addNewModuleBtn.addEventListener('click', () => this.showAddModuleModal());
+            addNewModuleBtn.removeEventListener('click', this.showAddModuleModal);
+            addNewModuleBtn.addEventListener('click', this.showAddModuleModal);
         }
 
         // Add Module Form Submission
         const addModuleForm = document.getElementById('addModuleForm');
         if (addModuleForm) {
-            addModuleForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.addNewModule(e.target);
-            });
+            addModuleForm.removeEventListener('submit', this.addNewModule);
+            addModuleForm.addEventListener('submit', this.addNewModule);
         }
 
         // Edit Module Form Submission
@@ -51,14 +54,17 @@ class ModulesManager {
         // Modal Close Buttons
         const modalCloseButtons = document.querySelectorAll('.modal-close');
         modalCloseButtons.forEach(button => {
-            button.addEventListener('click', () => this.closeModal());
+            button.removeEventListener('click', this.closeModal);
+            button.addEventListener('click', this.closeModal);
         });
 
+
         // Cancel Buttons
-        const cancelButtons = document.querySelectorAll('#cancelAddModule, #cancelEditModule');
-        cancelButtons.forEach(button => {
-            button.addEventListener('click', () => this.closeModal());
-        });
+        const cancelAddModuleBtn = document.getElementById('cancelAddModule');
+        if (cancelAddModuleBtn) {
+            cancelAddModuleBtn.removeEventListener('click', this.closeModal);
+            cancelAddModuleBtn.addEventListener('click', this.closeModal);
+        }
 
         // Activity Log Filter
         const activityLogFilter = document.getElementById('activityLogFilter');
@@ -66,6 +72,124 @@ class ModulesManager {
             activityLogFilter.addEventListener('change', () => this.filterActivityLogs());
         }
     }
+
+    showAddModuleModal(event) {
+        // Prevent any default form submission
+        if (event) {
+            event.preventDefault();
+        }
+
+        // Ensure the modal exists
+        const modal = document.getElementById('addModuleModal');
+        if (!modal) {
+            console.error('Add Module Modal not found');
+            return;
+        }
+
+        // Reset the form
+        const form = modal.querySelector('form');
+        if (form) {
+            form.reset();
+        }
+
+        // Show the modal
+        modal.classList.add('show');
+
+        // Optional: Focus on the first input
+        const firstInput = modal.querySelector('input[name="moduleName"]');
+        if (firstInput) {
+            firstInput.focus();
+        }
+
+        // Add click outside to close functionality
+        this.addModalCloseOnOutsideClick(modal);
+    }
+
+    addModalCloseOnOutsideClick(modal) {
+        const closeOnOutside = (event) => {
+            if (event.target === modal) {
+                this.closeModal();
+                modal.removeEventListener('click', closeOnOutside);
+            }
+        };
+
+        modal.addEventListener('click', closeOnOutside);
+    }
+
+    closeModal(event) {
+        // Prevent any default form submission
+        if (event) {
+            event.preventDefault();
+        }
+
+        // Close all modals
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            modal.classList.remove('show');
+        });
+    }
+
+async addNewModule(event) {
+        // Prevent default form submission
+        event.preventDefault();
+
+        // Get the form
+        const form = event.target;
+
+        try {
+            // Validate form
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // Collect form data
+            const formData = new FormData(form);
+            const moduleData = {
+                name: formData.get('moduleName'),
+                category: formData.get('moduleCategory'),
+                description: formData.get('moduleDescription'),
+                complianceLevel: formData.get('complianceLevel'),
+                isActive: true
+            };
+
+            // Validate module data
+            if (!moduleData.name || !moduleData.category || !moduleData.description) {
+                this.showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+
+            // Send API request
+            const response = await fetch(`${this.baseUrl}/modules`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(moduleData)
+            });
+
+            // Parse response
+            const result = await response.json();
+
+            // Handle response
+            if (result.success) {
+                this.showNotification('Module added successfully', 'success');
+                this.closeModal();
+                this.fetchModules();
+                
+                // Reset form
+                form.reset();
+            } else {
+                throw new Error(result.message || 'Failed to add module');
+            }
+        } catch (error) {
+            this.showNotification(error.message, 'error');
+            console.error('Add module error:', error);
+        }
+    }
+
+    
 
     async fetchModules() {
         try {
