@@ -258,14 +258,17 @@ populatePlanForm(plan) {
         formElements.planCurrency.value = plan.currency || 'USD';
 
         // Handle features
-        const featureCheckboxes = document.querySelectorAll('input[name="features"]');
+        console.log('Plan Features:', plan.features);
+
+    // Handle features selection
+    const featureCheckboxes = document.querySelectorAll('input[name="features"]');
     featureCheckboxes.forEach(checkbox => {
-        // Check if the feature is in the plan's features
+        // Multiple ways to check feature selection
         const isFeatureSelected = Array.isArray(plan.features) && 
             plan.features.some(f => 
                 f._id === checkbox.value || 
-                f.name === checkbox.value ||
-                f.name === checkbox.textContent.trim()
+                f.name === checkbox.value || 
+                f.name === checkbox.getAttribute('data-feature-name')
             );
         
         checkbox.checked = !!isFeatureSelected;
@@ -275,9 +278,6 @@ populatePlanForm(plan) {
         this.showErrorNotification('Failed to populate plan form');
     }
 }
-
-        
-
 
 
         showSuccessNotification(message) {
@@ -401,23 +401,53 @@ populatePlanForm(plan) {
             }
         })
         .then(response => {
+            // Log full response for debugging
+            console.log('Features Response Status:', response.status);
+            console.log('Features Response Headers:', 
+                Object.fromEntries(response.headers.entries())
+            );
+
             if (!response.ok) {
                 throw new Error('Failed to load features');
             }
             return response.json();
         })
         .then(result => {
+            // Log raw result for debugging
+            console.log('Features Raw Result:', result);
+
             if (!result.data) {
                 throw new Error('No feature data received');
             }
-            this.renderFeatures(result.data);
+
+            // Validate features data
+            if (!Array.isArray(result.data)) {
+                throw new Error('Invalid features data format');
+            }
+
+            // Ensure features have required properties
+            const validFeatures = result.data.filter(feature => 
+                feature._id && feature.name && feature.category
+            );
+
+            if (validFeatures.length === 0) {
+                throw new Error('No valid features found');
+            }
+
+            this.renderFeatures(validFeatures);
         })
         .catch(error => {
-            console.error('Load Features Error:', error);
+            console.error('Load Features Error:', {
+                message: error.message,
+                stack: error.stack
+            });
             this.showErrorNotification('Failed to load available features');
         });
     } catch (error) {
-        console.error('Load Features Fetch Error:', error);
+        console.error('Load Features Fetch Error:', {
+            message: error.message,
+            stack: error.stack
+        });
         this.showErrorNotification('An unexpected error occurred while loading features');
     }
 }
@@ -463,6 +493,7 @@ populatePlanForm(plan) {
                         type="checkbox" 
                         name="features" 
                         value="${feature._id}"
+                        data-feature-name="${feature.name}"
                     >
                     ${feature.name}
                 </label>
@@ -474,7 +505,11 @@ populatePlanForm(plan) {
         categoryContainer.appendChild(featuresGrid);
         this.elements.featuresContainer.appendChild(categoryContainer);
     });
+
+    // Debug logging
+    console.log('Rendered Features:', features);
 }
+
 
 
         handlePlanSubmission(e) {
