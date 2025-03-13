@@ -436,64 +436,148 @@ populatePlanForm(plan) {
         }
 
         handlePlanSubmission(e) {
-            e.preventDefault();
-            
-            // Collect form data
-            const formData = {
-                name: document.getElementById('planName').value,
-                description: document.getElementById('planDescription').value,
-                monthlyPrice: parseFloat(document.getElementById('monthlyPrice').value),
-                annualPrice: parseFloat(document.getElementById('annualPrice').value),
-                trialPeriod: parseInt(document.getElementById('trialPeriod').value) || 0,
-                isActive: document.getElementById('planActiveStatus').checked,
-                currency: document.getElementById('planCurrency').value,
-                features: Array.from(
-                    document.querySelectorAll('input[name="features"]:checked')
-                ).map(el => el.value)
-            };
+    e.preventDefault();
+    
+    // Collect form data
+    const formData = {
+        name: document.getElementById('planName').value,
+        description: document.getElementById('planDescription').value,
+        monthlyPrice: parseFloat(document.getElementById('monthlyPrice').value),
+        annualPrice: parseFloat(document.getElementById('annualPrice').value),
+        trialPeriod: parseInt(document.getElementById('trialPeriod').value) || 0,
+        isActive: document.getElementById('planActiveStatus').checked,
+        currency: document.getElementById('planCurrency').value,
+        features: Array.from(
+            document.querySelectorAll('input[name="features"]:checked')
+        ).map(el => el.value)
+    };
 
-            // Get existing plan ID if in edit mode
-            const planId = document.getElementById('planId').value;
+    // Validate form data
+    try {
+        this.validatePlanData(formData);
+    } catch (validationError) {
+        this.showErrorNotification(validationError.message);
+        return;
+    }
 
-            try {
-                let endpoint = planId ? `${this.baseUrl}/plans/${planId}` : `${this.baseUrl}/plans`;
-                let method = planId ? 'PUT' : 'POST';
+    // Get existing plan ID if in edit mode
+    const planId = document.getElementById('planId').value;
 
-                fetch(endpoint, {
-                    method: method,
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Failed to save plan');
-                    }
-                    return response.json();
-                })
-                .then(result => {
-                    // Show success notification
-                    this.showSuccessNotification(
-                        planId ? 'Plan updated successfully' : 'New plan created successfully'
-                    );
+    // Prepare fetch options
+    const fetchOptions = {
+        method: planId ? 'PUT' : 'POST',
+        headers: {
+            'Authorization': `Bearer ${this.token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    };
 
-                    // Reload plans
-                    this.loadPlans();
+    // Construct endpoint
+    const endpoint = planId 
+        ? `${this.baseUrl}/plans/${planId}` 
+        : `${this.baseUrl}/plans`;
 
-                    // Close modal
-                    this.closeAllModals();
-                })
-                .catch(error => {
-                    console.error('Plan Submission Error:', error);
-                    this.showErrorNotification(error.message);
+    // Fetch with enhanced error handling
+    fetch(endpoint, fetchOptions)
+        .then(response => {
+            // Log response status and headers for debugging
+            console.log('Response Status:', response.status);
+            console.log('Response Headers:', Object.fromEntries(response.headers.entries()));
+
+            // Check response content type
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                return response.text().then(text => {
+                    console.error('Non-JSON response:', text);
+                    throw new Error('Received non-JSON response from server');
                 });
-            } catch (error) {
-                console.error('Plan Submission Fetch Error:', error);
-                this.showErrorNotification('An unexpected error occurred while saving the plan');
             }
-        }
+
+            // Parse JSON response
+            return response.json();
+        })
+        .then(result => {
+            // Log full result for debugging
+            console.log('Server Response:', result);
+
+            // Check for success status
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to save plan');
+            }
+
+            // Show success notification
+            this.showSuccessNotification(
+                planId ? 'Plan updated successfully' : 'New plan created successfully'
+            );
+
+            // Reload plans
+            this.loadPlans();
+
+            // Close modal
+            this.closeAllModals();
+        })
+        .catch(error => {
+            // Comprehensive error logging
+            console.error('Plan Submission Error:', {
+                message: error.message,
+                stack: error.stack,
+                formData: formData
+            });
+
+            // Provide user-friendly error message
+            let errorMessage = 'Failed to save plan';
+            
+            if (error.message.includes('network')) {
+                errorMessage = 'Network error. Please check your connection.';
+            } else if (error.message.includes('unauthorized')) {
+                errorMessage = 'You are not authorized to perform this action.';
+            } else if (error.message.includes('validation')) {
+                errorMessage = 'Invalid plan data. Please check your inputs.';
+            }
+
+            this.showErrorNotification(errorMessage);
+        });
+}
+
+        // Validation method
+validatePlanData(data) {
+    // Name validation
+    if (!data.name || data.name.trim().length < 3) {
+        throw new Error('Plan name must be at least 3 characters long');
+    }
+
+    // Description validation
+    if (!data.description || data.description.trim().length < 10) {
+        throw new Error('Plan description must be at least 10 characters long');
+    }
+
+    // Price validations
+    if (isNaN(data.monthlyPrice) || data.monthlyPrice < 0) {
+        throw new Error('Monthly price must be a non-negative number');
+    }
+
+    if (isNaN(data.annualPrice) || data.annualPrice < 0) {
+        throw new Error('Annual price must be a non-negative number');
+    }
+
+    // Trial period validation
+    if (isNaN(data.trialPeriod) || data.trialPeriod < 0) {
+        throw new Error('Trial period must be a non-negative number');
+    }
+
+    // Features validation
+    if (!Array.isArray(data.features) || data.features.length === 0) {
+        throw new Error('At least one feature must be selected');
+    }
+
+    // Currency validation
+    const validCurrencies = ['USD', 'INR', 'AED', 'QAR', 'GBP'];
+    if (!validCurrencies.includes(data.currency)) {
+        throw new Error('Invalid currency selected');
+    }
+}
+
 
             addPlanActionListeners() {
             // Remove existing listeners to prevent multiple bindings
