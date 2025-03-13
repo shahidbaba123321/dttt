@@ -528,17 +528,22 @@ populatePlanForm(plan) {
             // Provide user-friendly error message
             let errorMessage = 'Failed to save plan';
             
-            if (error.message.includes('network')) {
+            if (error.message.includes('Missing required fields')) {
+                errorMessage = 'Please fill in all required fields';
+            } else if (error.message.includes('Plan with this name already exists')) {
+                errorMessage = 'A plan with this name already exists';
+            } else if (error.message.includes('Invalid currency')) {
+                errorMessage = 'Invalid currency selected';
+            } else if (error.message.includes('network')) {
                 errorMessage = 'Network error. Please check your connection.';
             } else if (error.message.includes('unauthorized')) {
                 errorMessage = 'You are not authorized to perform this action.';
-            } else if (error.message.includes('validation')) {
-                errorMessage = 'Invalid plan data. Please check your inputs.';
             }
 
             this.showErrorNotification(errorMessage);
         });
 }
+
 
         // Validation method
 validatePlanData(data) {
@@ -553,22 +558,17 @@ validatePlanData(data) {
     }
 
     // Price validations
-    if (isNaN(data.monthlyPrice) || data.monthlyPrice < 0) {
-        throw new Error('Monthly price must be a non-negative number');
+    if (data.monthlyPrice === undefined || isNaN(data.monthlyPrice) || data.monthlyPrice < 0) {
+        throw new Error('Monthly price is required and must be a non-negative number');
     }
 
-    if (isNaN(data.annualPrice) || data.annualPrice < 0) {
-        throw new Error('Annual price must be a non-negative number');
+    if (data.annualPrice === undefined || isNaN(data.annualPrice) || data.annualPrice < 0) {
+        throw new Error('Annual price is required and must be a non-negative number');
     }
 
     // Trial period validation
-    if (isNaN(data.trialPeriod) || data.trialPeriod < 0) {
+    if (data.trialPeriod !== undefined && (isNaN(data.trialPeriod) || data.trialPeriod < 0)) {
         throw new Error('Trial period must be a non-negative number');
-    }
-
-    // Features validation
-    if (!Array.isArray(data.features) || data.features.length === 0) {
-        throw new Error('At least one feature must be selected');
     }
 
     // Currency validation
@@ -576,8 +576,12 @@ validatePlanData(data) {
     if (!validCurrencies.includes(data.currency)) {
         throw new Error('Invalid currency selected');
     }
-}
 
+    // Features validation
+    if (!Array.isArray(data.features)) {
+        throw new Error('Features must be an array');
+    }
+}
 
             addPlanActionListeners() {
             // Remove existing listeners to prevent multiple bindings
