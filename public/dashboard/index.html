@@ -1048,7 +1048,7 @@ class ContentLoader {
             'general-settings': 'settings.html',
             'pricing': 'planpricing.html',
             'security': 'security.html',
-            'modules': 'mainmodule.html',
+            'modules': 'wise.html',
             'module-settings': 'module-settings.html',
             'org-chart': 'org-chart.html',
             'analytics': 'analytics.html',
@@ -1093,45 +1093,71 @@ class ContentLoader {
     }
 }
 
- /*  async initializeModules() {
+async initializeModules() {
     try {
-        // Check if script is already loaded
-        const existingScript = document.querySelector('script[src*="mainmodule.js"]');
+        // Remove existing script if present
+        const existingScript = document.querySelector('script[src*="wise.js"]');
         if (existingScript) {
             existingScript.remove();
         }
 
         // Create and append the script with updated path
         const script = document.createElement('script');
-        script.src = `${this.baseUrl}/dashboard/js/mainmodule.js`;
+        script.src = `${this.baseUrl}/dashboard/js/wise.js`;
         
         await new Promise((resolve, reject) => {
             script.onload = () => {
                 console.log('Modules script loaded successfully');
                 
-                // Directly create an instance of ModulesManager
-                const modulesManager = new window.ModulesManager(this.apiBaseUrl);
+                // Directly create an instance of WiseManager
+                const wiseManager = new window.WiseManager(this.apiBaseUrl);
                 
                 // Store the instance in the moduleInstances map
-                this.moduleInstances.set('modules', modulesManager);
+                this.moduleInstances.set('modules', wiseManager);
                 
-                // Make it globally accessible if needed
-                window.modulesManager = modulesManager;
+                // Make it globally accessible
+                window.wiseManager = wiseManager;
+                
+                // Trigger any necessary initialization
+                this.initializeWiseElements();
                 
                 resolve();
             };
             script.onerror = (error) => {
-                console.error('Error loading modules script:', error);
+                console.error('Error loading wise script:', error);
                 reject(error);
             };
             document.body.appendChild(script);
         });
     } catch (error) {
-        console.error('Error initializing modules module:', error);
+        console.error('Error initializing wise module:', error);
         throw error;
     }
-}*/
+}
 
+initializeWiseElements() {
+    // Ensure add module button works
+    const addWiseBtn = document.getElementById('addWiseBtn');
+    if (addWiseBtn && window.wiseManager) {
+        // Remove existing listeners first
+        const newAddWiseBtn = addWiseBtn.cloneNode(true);
+        addWiseBtn.parentNode.replaceChild(newAddWiseBtn, addWiseBtn);
+        
+        // Add new listener
+        newAddWiseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('Add Wise Button Clicked from Index');
+            
+            if (window.wiseManager && typeof window.wiseManager.showAddWiseModal === 'function') {
+                window.wiseManager.showAddWiseModal();
+            } else {
+                console.error('WiseManager or showAddWiseModal not available');
+            }
+        });
+    }
+}
     async initializeRolesPermissions() {
         try {
             // Check if script is already loaded
