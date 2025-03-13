@@ -22,18 +22,22 @@
                 closePlanModal: document.getElementById('closePlanModal'),
                 cancelPlanModal: document.getElementById('cancelPlanModal'),
                 planForm: document.getElementById('planForm'),
-                confirmDeleteModal: document.getElementById('confirmDeleteModal'),
-                featuresContainer: document.getElementById('featuresContainer')
+                featuresContainer: document.getElementById('featuresContainer'),
+                confirmDeleteModal: document.getElementById('confirmDeleteModal')
             };
 
-            // Bind methods
+            // Bind methods to ensure correct context
             this.initializeEventListeners = this.initializeEventListeners.bind(this);
             this.loadPlans = this.loadPlans.bind(this);
             this.openPlanModal = this.openPlanModal.bind(this);
             this.closePlanModal = this.closePlanModal.bind(this);
             this.handlePlanSubmission = this.handlePlanSubmission.bind(this);
-                this.closeAllModals = this.closeAllModals.bind(this);
-
+            this.closeAllModals = this.closeAllModals.bind(this);
+            this.fetchPlanDetails = this.fetchPlanDetails.bind(this);
+            this.populatePlanForm = this.populatePlanForm.bind(this);
+            this.addPlanActionListeners = this.addPlanActionListeners.bind(this);
+            this.confirmDeletePlan = this.confirmDeletePlan.bind(this);
+            this.deletePlan = this.deletePlan.bind(this);
 
             // Initialize the module
             this.init();
@@ -44,6 +48,10 @@
                 this.initializeEventListeners();
                 this.loadPlans();
                 this.loadAvailableFeatures();
+                this.initializePricingToggle();
+                this.initializeReportingModule();
+                this.initializeDiscountManagement();
+                this.initializeDataRetentionModule();
             } catch (error) {
                 console.error('Pricing Manager Initialization Error:', error);
                 this.showErrorNotification('Failed to initialize Pricing Module');
@@ -52,295 +60,188 @@
 
         initializeEventListeners() {
             // Create Plan Button
-            this.elements.createPlanBtn.addEventListener('click', this.openPlanModal);
+            this.elements.createPlanBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.openPlanModal();
+            });
 
             // Modal Close Buttons
-            this.elements.closePlanModal.addEventListener('click', this.closePlanModal);
-            this.elements.cancelPlanModal.addEventListener('click', this.closePlanModal);
+            this.elements.closePlanModal.addEventListener('click', this.closeAllModals);
+            this.elements.cancelPlanModal.addEventListener('click', this.closeAllModals);
 
             // Form Submission
             this.elements.planForm.addEventListener('submit', this.handlePlanSubmission);
 
-            // Add close modal listeners
-    const modalCloseButtons = document.querySelectorAll('.modal-close');
-    modalCloseButtons.forEach(button => {
-        button.addEventListener('click', this.closeAllModals);
-    });
+            // Add plan action listeners
+            this.addPlanActionListeners();
 
-    // Add overlay click listener to close modals
-    this.elements.modalOverlay.addEventListener('click', (e) => {
-        if (e.target === this.elements.modalOverlay) {
-            this.closeAllModals();
-        }
-    });
+            // Modal close listeners
+            const modalCloseButtons = document.querySelectorAll('.modal-close');
+            modalCloseButtons.forEach(button => {
+                button.addEventListener('click', this.closeAllModals);
+            });
+
+            // Add overlay click listener to close modals
+            this.elements.modalOverlay.addEventListener('click', (e) => {
+                if (e.target === this.elements.modalOverlay) {
+                    this.closeAllModals();
+                }
+            });
         }
 
-        async loadPlans() {
+        closeAllModals() {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => modal.classList.remove('show'));
+            
+            const modalOverlays = document.querySelectorAll('.modal-overlay');
+            modalOverlays.forEach(overlay => overlay.classList.remove('show'));
+        }
+
+        showErrorNotification(message) {
+            console.error(message);
+            // Implement your error notification logic
+            if (window.dashboardApp && window.dashboardApp.userInterface) {
+                window.dashboardApp.userInterface.showErrorNotification(message);
+            }
+        }
+
+        showSuccessNotification(message) {
+            console.log(message);
+            // Implement your success notification logic
+            if (window.dashboardApp && window.dashboardApp.userInterface) {
+                window.dashboardApp.userInterface.showSuccessNotification(message);
+            }
+        }
+
+            loadPlans() {
             try {
-                const response = await fetch(`${this.baseUrl}/plans`, {
+                fetch(`${this.baseUrl}/plans`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${this.token}`,
                         'Content-Type': 'application/json'
                     }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to load plans');
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    if (!result.data) {
+                        throw new Error('No plan data received');
+                    }
+                    this.renderPlans(result.data);
+                })
+                .catch(error => {
+                    console.error('Load Plans Error:', error);
+                    this.showErrorNotification('Failed to load pricing plans');
                 });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.message || 'Failed to load plans');
-                }
-
-                this.renderPlans(result.data);
             } catch (error) {
-                console.error('Load Plans Error:', error);
-                this.showErrorNotification('Failed to load pricing plans');
+                console.error('Load Plans Fetch Error:', error);
+                this.showErrorNotification('An unexpected error occurred while loading plans');
             }
         }
 
         renderPlans(plans) {
-    // Clear existing plans
-    this.elements.plansContainer.innerHTML = '';
+            // Clear existing plans
+            this.elements.plansContainer.innerHTML = '';
 
-    // Render each plan
-    plans.forEach(plan => {
-        // Define currency symbols
-        const currencySymbols = {
-            'USD': '$',
-            'INR': '₹',
-            'AED': 'د.إ',
-            'QAR': 'ر.ق',
-            'GBP': '£'
-        };
+            // Define currency symbols
+            const currencySymbols = {
+                'USD': '$',
+                'INR': '₹',
+                'AED': 'د.إ',
+                'QAR': 'ر.ق',
+                'GBP': '£'
+            };
 
-        // Get currency symbol, default to USD if not found
-        const currencySymbol = currencySymbols[plan.currency] || '$';
+            // Render each plan
+            plans.forEach(plan => {
+                // Get currency symbol, default to USD if not found
+                const currencySymbol = currencySymbols[plan.currency] || '$';
 
-        const planCard = document.createElement('div');
-        planCard.className = 'plan-card';
-        planCard.innerHTML = `
-            <div class="plan-header">
-                <h3 class="plan-title">${plan.name}</h3>
-                ${plan.isSystem ? '<span class="plan-badge">System Plan</span>' : ''}
-            </div>
-            <div class="plan-price">
-                <span class="plan-price-value">${currencySymbol}${plan.monthlyPrice.toFixed(2)}</span>
-                <span class="plan-price-period">/month</span>
-            </div>
-            <p>${plan.description}</p>
-            <div class="plan-actions">
-                <button class="plan-action-btn edit-plan" data-id="${plan._id}">Edit Plan</button>
-                <button class="plan-action-btn delete-plan" data-id="${plan._id}">Delete Plan</button>
-            </div>
-        `;
+                const planCard = document.createElement('div');
+                planCard.className = 'plan-card';
+                planCard.innerHTML = `
+                    <div class="plan-header">
+                        <h3 class="plan-title">${plan.name}</h3>
+                        ${plan.isSystem ? '<span class="plan-badge">System Plan</span>' : ''}
+                    </div>
+                    <div class="plan-price">
+                        <span class="plan-price-value">${currencySymbol}${plan.monthlyPrice.toFixed(2)}</span>
+                        <span class="plan-price-period">/month</span>
+                    </div>
+                    <p>${plan.description}</p>
+                    <div class="plan-actions">
+                        <button class="plan-action-btn edit-plan" data-id="${plan._id}">Edit Plan</button>
+                        <button class="plan-action-btn delete-plan" data-id="${plan._id}">Delete Plan</button>
+                    </div>
+                `;
 
-        this.elements.plansContainer.appendChild(planCard);
-    });
+                this.elements.plansContainer.appendChild(planCard);
+            });
 
-    // Add event listeners for edit and delete buttons
-    this.addPlanActionListeners();
-}
-
-      addPlanActionListeners() {
-    // Remove existing listeners to prevent multiple bindings
-    const editButtons = this.elements.plansContainer.querySelectorAll('.edit-plan');
-    const deleteButtons = this.elements.plansContainer.querySelectorAll('.delete-plan');
-
-    // Clear previous listeners
-    editButtons.forEach(button => {
-        const newButton = button.cloneNode(true);
-        button.parentNode.replaceChild(newButton, button);
-    });
-
-    deleteButtons.forEach(button => {
-        const newButton = button.cloneNode(true);
-        button.parentNode.replaceChild(newButton, button);
-    });
-
-    // Re-query the buttons after cloning
-    const newEditButtons = this.elements.plansContainer.querySelectorAll('.edit-plan');
-    const newDeleteButtons = this.elements.plansContainer.querySelectorAll('.delete-plan');
-
-    // Add new edit listeners
-    newEditButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const planId = button.getAttribute('data-id');
-            this.openPlanModal(planId);
-        });
-    });
-
-    // Add new delete listeners
-    newDeleteButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const planId = button.getAttribute('data-id');
-            this.confirmDeletePlan(planId);
-        });
-    });
-}
-
-        closeAllModals() {
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => modal.classList.remove('show'));
-    
-    const modalOverlays = document.querySelectorAll('.modal-overlay');
-    modalOverlays.forEach(overlay => overlay.classList.remove('show'));
-}
-
+            // Add event listeners for edit and delete buttons
+            this.addPlanActionListeners();
+        }
 
         openPlanModal(planId = null) {
-    // Close all modals first
-    this.closeAllModals();
+            // Close all modals first
+            this.closeAllModals();
 
-    // Reset form
-    this.elements.planForm.reset();
-    
-    // Clear any pre-existing plan ID
-    const planIdInput = document.getElementById('planId');
-    if (planIdInput) {
-        planIdInput.value = '';
-    }
-
-    // Set modal title
-    const modalTitle = document.getElementById('planModalTitle');
-    modalTitle.textContent = planId ? 'Edit Plan' : 'Create New Plan';
-
-    // If editing, fetch and populate plan details
-    if (planId) {
-        this.fetchPlanDetails(planId);
-    }
-
-    // Show plan modal
-    this.elements.planModal.classList.add('show');
-    this.elements.modalOverlay.classList.add('show');
-}
-
-        closePlanModal() {
-            this.elements.modalOverlay.classList.remove('show');
-        }
-
-       async fetchPlanDetails(planId) {
-    try {
-        // Validate planId format before making the request
-        if (!planId) {
-            throw new Error('Plan ID is required');
-        }
-
-        // Ensure planId is a string and trim any whitespace
-        const formattedPlanId = planId.toString().trim();
-
-        // Optional: Add a regex check for MongoDB ObjectId format
-        const objectIdRegex = /^[0-9a-fA-F]{24}$/;
-        if (!objectIdRegex.test(formattedPlanId)) {
-            throw new Error('Invalid plan ID format');
-        }
-
-        const response = await fetch(`${this.baseUrl}/plans/${formattedPlanId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        // Log the full response for debugging
-        const responseText = await response.text();
-        console.log('Response:', responseText);
-
-        // Parse the response
-        let result;
-        try {
-            result = JSON.parse(responseText);
-        } catch (parseError) {
-            console.error('JSON Parse Error:', parseError);
-            throw new Error('Failed to parse server response');
-        }
-
-        if (!response.ok) {
-            throw new Error(result.message || 'Failed to fetch plan details');
-        }
-
-        // Validate result data
-        if (!result.data) {
-            throw new Error('No plan data received');
-        }
-
-        const plan = result.data;
-
-        // Comprehensive form element validation
-        const requiredElements = [
-            'planId', 'planName', 'planDescription', 
-            'monthlyPrice', 'annualPrice', 'trialPeriod', 
-            'planActiveStatus', 'planCurrency'
-        ];
-
-        const missingElements = requiredElements.filter(elementId => 
-            !document.getElementById(elementId)
-        );
-
-        if (missingElements.length > 0) {
-            throw new Error(`Missing form elements: ${missingElements.join(', ')}`);
-        }
-
-        // Set form values with additional checks
-        document.getElementById('planId').value = plan._id || '';
-        document.getElementById('planName').value = plan.name || '';
-        document.getElementById('planDescription').value = plan.description || '';
-        document.getElementById('monthlyPrice').value = plan.monthlyPrice || 0;
-        document.getElementById('annualPrice').value = plan.annualPrice || 0;
-        document.getElementById('trialPeriod').value = plan.trialPeriod || 0;
-        document.getElementById('planActiveStatus').checked = plan.isActive || false;
-        document.getElementById('planCurrency').value = plan.currency || 'USD';
-
-        // Feature selection with robust checking
-        const featureCheckboxes = document.querySelectorAll('input[name="features"]');
-        featureCheckboxes.forEach(checkbox => {
-            // Ensure plan.features is a valid array
-            const isFeatureSelected = Array.isArray(plan.features) && 
-                plan.features.some(f => 
-                    f && 
-                    (f._id === checkbox.value || f.name === checkbox.value)
-                );
+            // Reset form completely
+            this.elements.planForm.reset();
             
-            checkbox.checked = !!isFeatureSelected;
-        });
+            // Clear any pre-existing plan ID
+            const planIdInput = document.getElementById('planId');
+            if (planIdInput) {
+                planIdInput.value = '';
+            }
 
-    } catch (error) {
-        console.error('Fetch Plan Details Error:', {
-            message: error.message,
-            stack: error.stack,
-            planId: planId
-        });
+            // Set modal title
+            const modalTitle = document.getElementById('planModalTitle');
+            modalTitle.textContent = planId ? 'Edit Plan' : 'Create New Plan';
 
-        // More informative error notification
-        this.showErrorNotification(
-            `Failed to retrieve plan details: ${error.message}`
-        );
-    }
-}
+            // Only fetch details if planId is a valid string
+            if (planId && typeof planId === 'string' && planId.trim() !== '') {
+                this.fetchPlanDetails(planId);
+            }
 
+            // Show plan modal
+            this.elements.planModal.classList.add('show');
+            this.elements.modalOverlay.classList.add('show');
+        }
 
-        async loadAvailableFeatures() {
+        loadAvailableFeatures() {
             try {
-                const response = await fetch(`${this.baseUrl}/features`, {
+                fetch(`${this.baseUrl}/features`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${this.token}`,
                         'Content-Type': 'application/json'
                     }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to load features');
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    if (!result.data) {
+                        throw new Error('No feature data received');
+                    }
+                    this.renderFeatures(result.data);
+                })
+                .catch(error => {
+                    console.error('Load Features Error:', error);
+                    this.showErrorNotification('Failed to load available features');
                 });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.message || 'Failed to load features');
-                }
-
-                this.renderFeatures(result.data);
             } catch (error) {
-                console.error('Load Features Error:', error);
-                this.showErrorNotification('Failed to load available features');
+                console.error('Load Features Fetch Error:', error);
+                this.showErrorNotification('An unexpected error occurred while loading features');
             }
         }
 
@@ -359,141 +260,120 @@
             });
         }
 
-        showErrorNotification(message) {
-            // Implement error notification logic
-            console.error(message);
-        }
-
-       confirmDeletePlan(planId) {
-    // Close all modals first
-    this.closeAllModals();
-
-    const deletePlanName = document.getElementById('deletePlanName');
-    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-    const cancelDeleteBtn = document.getElementById('cancelDelete');
-    const closeConfirmDelete = document.getElementById('closeConfirmDelete');
-
-    // Find plan name and populate delete confirmation
-    this.getPlanDetails(planId).then(plan => {
-        if (plan) {
-            deletePlanName.textContent = plan.name;
-
-            // Show only the delete confirmation modal
-            this.elements.confirmDeleteModal.classList.add('show');
-            this.elements.modalOverlay.classList.add('show');
-
-            // Remove previous event listeners to prevent multiple bindings
-            confirmDeleteBtn.onclick = null;
-            cancelDeleteBtn.onclick = null;
-            closeConfirmDelete.onclick = null;
-
-            // Add new event listeners
-            confirmDeleteBtn.onclick = () => this.deletePlan(planId);
-            cancelDeleteBtn.onclick = () => this.closeAllModals();
-            closeConfirmDelete.onclick = () => this.closeAllModals();
-        }
-    });
-}
-
-        
-                // Placeholder for error notification method
-        showErrorNotification(message) {
-            if (window.dashboardApp && window.dashboardApp.userInterface) {
-                window.dashboardApp.userInterface.showErrorNotification(message);
-            } else {
-                console.error(message);
-            }
-        }
-
-        showSuccessNotification(message) {
-            if (window.dashboardApp && window.dashboardApp.userInterface) {
-                window.dashboardApp.userInterface.showSuccessNotification(message);
-            } else {
-                console.log(message);
-            }
-        }
-
-        async handlePlanSubmission(e) {
+        handlePlanSubmission(e) {
             e.preventDefault();
             
             // Collect form data
-           const formData = {
-        name: document.getElementById('planName').value,
-        description: document.getElementById('planDescription').value,
-        monthlyPrice: parseFloat(document.getElementById('monthlyPrice').value),
-        annualPrice: parseFloat(document.getElementById('annualPrice').value),
-        trialPeriod: parseInt(document.getElementById('trialPeriod').value) || 0,
-        isActive: document.getElementById('planActiveStatus').checked,
-        currency: document.getElementById('planCurrency').value, // Add currency
-        features: Array.from(
-            document.querySelectorAll('input[name="features"]:checked')
-        ).map(el => el.value)
-    };
-
+            const formData = {
+                name: document.getElementById('planName').value,
+                description: document.getElementById('planDescription').value,
+                monthlyPrice: parseFloat(document.getElementById('monthlyPrice').value),
+                annualPrice: parseFloat(document.getElementById('annualPrice').value),
+                trialPeriod: parseInt(document.getElementById('trialPeriod').value) || 0,
+                isActive: document.getElementById('planActiveStatus').checked,
+                currency: document.getElementById('planCurrency').value,
+                features: Array.from(
+                    document.querySelectorAll('input[name="features"]:checked')
+                ).map(el => el.value)
+            };
 
             // Get existing plan ID if in edit mode
             const planId = document.getElementById('planId').value;
 
             try {
-                let response;
                 let endpoint = planId ? `${this.baseUrl}/plans/${planId}` : `${this.baseUrl}/plans`;
                 let method = planId ? 'PUT' : 'POST';
 
-                response = await fetch(endpoint, {
+                fetch(endpoint, {
                     method: method,
                     headers: {
                         'Authorization': `Bearer ${this.token}`,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(formData)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to save plan');
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    // Show success notification
+                    this.showSuccessNotification(
+                        planId ? 'Plan updated successfully' : 'New plan created successfully'
+                    );
+
+                    // Reload plans
+                    this.loadPlans();
+
+                    // Close modal
+                    this.closeAllModals();
+                })
+                .catch(error => {
+                    console.error('Plan Submission Error:', error);
+                    this.showErrorNotification(error.message);
                 });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.message || 'Failed to save plan');
-                }
-
-                // Show success notification
-                this.showSuccessNotification(
-                    planId ? 'Plan updated successfully' : 'New plan created successfully'
-                );
-
-                // Reload plans
-                this.loadPlans();
-
-                // Close modal
-                this.closePlanModal();
             } catch (error) {
-                console.error('Plan Submission Error:', error);
-                this.showErrorNotification(error.message);
+                console.error('Plan Submission Fetch Error:', error);
+                this.showErrorNotification('An unexpected error occurred while saving the plan');
             }
         }
 
-        async confirmDeletePlan(planId) {
-            // Show confirmation modal
+            addPlanActionListeners() {
+            // Remove existing listeners to prevent multiple bindings
+            const container = this.elements.plansContainer;
+            
+            // Use event delegation to handle edit and delete actions
+            container.addEventListener('click', (e) => {
+                const editButton = e.target.closest('.edit-plan');
+                const deleteButton = e.target.closest('.delete-plan');
+
+                if (editButton) {
+                    e.stopPropagation();
+                    const planId = editButton.getAttribute('data-id');
+                    this.openPlanModal(planId);
+                }
+
+                if (deleteButton) {
+                    e.stopPropagation();
+                    const planId = deleteButton.getAttribute('data-id');
+                    this.confirmDeletePlan(planId);
+                }
+            });
+        }
+
+        confirmDeletePlan(planId) {
+            // Ensure only delete modal is shown
             const confirmModal = document.getElementById('confirmDeleteModal');
             const deletePlanName = document.getElementById('deletePlanName');
             const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
             const cancelDeleteBtn = document.getElementById('cancelDelete');
             const closeConfirmDelete = document.getElementById('closeConfirmDelete');
 
-            // Find plan name
-            const plan = await this.getPlanDetails(planId);
-            deletePlanName.textContent = plan.name;
+            // Prevent any other modals from being open
+            this.closeAllModals();
 
-            // Show modal
-            confirmModal.classList.add('show');
+            // Find plan name and populate delete confirmation
+            this.getPlanDetails(planId).then(plan => {
+                if (plan) {
+                    deletePlanName.textContent = plan.name;
 
-            // Remove previous event listeners to prevent multiple bindings
-            confirmDeleteBtn.onclick = null;
-            cancelDeleteBtn.onclick = null;
-            closeConfirmDelete.onclick = null;
+                    // Show only the delete confirmation modal
+                    confirmModal.classList.add('show');
+                    this.elements.modalOverlay.classList.add('show');
 
-            // Add event listeners
-            confirmDeleteBtn.onclick = () => this.deletePlan(planId);
-            cancelDeleteBtn.onclick = () => confirmModal.classList.remove('show');
-            closeConfirmDelete.onclick = () => confirmModal.classList.remove('show');
+                    // Remove previous event listeners to prevent multiple bindings
+                    confirmDeleteBtn.onclick = null;
+                    cancelDeleteBtn.onclick = null;
+                    closeConfirmDelete.onclick = null;
+
+                    // Add new event listeners
+                    confirmDeleteBtn.onclick = () => this.deletePlan(planId);
+                    cancelDeleteBtn.onclick = () => this.closeAllModals();
+                    closeConfirmDelete.onclick = () => this.closeAllModals();
+                }
+            });
         }
 
         async getPlanDetails(planId) {
@@ -520,38 +400,41 @@
             }
         }
 
-        async deletePlan(planId) {
+        deletePlan(planId) {
             try {
-                const response = await fetch(`${this.baseUrl}/plans/${planId}`, {
+                fetch(`${this.baseUrl}/plans/${planId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${this.token}`,
                         'Content-Type': 'application/json'
                     }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to delete plan');
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    // Show success notification
+                    this.showSuccessNotification('Plan deleted successfully');
+
+                    // Close confirmation modal
+                    this.closeAllModals();
+
+                    // Reload plans
+                    this.loadPlans();
+                })
+                .catch(error => {
+                    console.error('Delete Plan Error:', error);
+                    this.showErrorNotification(error.message);
                 });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.message || 'Failed to delete plan');
-                }
-
-                // Show success notification
-                this.showSuccessNotification('Plan deleted successfully');
-
-                // Close confirmation modal
-                const confirmModal = document.getElementById('confirmDeleteModal');
-                confirmModal.classList.remove('show');
-
-                // Reload plans
-                this.loadPlans();
             } catch (error) {
-                console.error('Delete Plan Error:', error);
-                this.showErrorNotification(error.message);
+                console.error('Delete Plan Fetch Error:', error);
+                this.showErrorNotification('An unexpected error occurred while deleting the plan');
             }
         }
 
-        // Pricing Toggle Functionality
         initializePricingToggle() {
             const monthlyToggle = document.querySelector('.pricing-toggle button:first-child');
             const annualToggle = document.querySelector('.pricing-toggle button:last-child');
@@ -577,7 +460,7 @@
                 const pricePeriod = card.querySelector('.plan-price-period');
                 
                 // This would typically come from the plan data
-                const monthlyPrice = parseFloat(priceValue.textContent.replace('$', ''));
+                const monthlyPrice = parseFloat(priceValue.textContent.replace(/[^\d.]/g, ''));
                 const annualPrice = monthlyPrice * 12 * 0.9; // 10% discount for annual
 
                 if (billingCycle === 'monthly') {
@@ -590,8 +473,7 @@
             });
         }
 
-            // Subscription Management Methods
-        async loadSubscriptions() {
+            async loadSubscriptions() {
             try {
                 const response = await fetch(`${this.baseUrl}/subscriptions`, {
                     method: 'GET',
@@ -813,84 +695,7 @@
             upgradeModal.classList.add('show');
         }
 
-        initiatePaymentMethodChange(subscription) {
-            // Open payment method modal
-            const paymentModal = document.getElementById('paymentMethodModal');
-            paymentModal.classList.add('show');
-
-            // Populate existing payment methods
-            this.loadPaymentMethods(subscription);
-        }
-
-        async loadPaymentMethods(subscription) {
-            try {
-                const response = await fetch(`${this.baseUrl}/payments`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.message || 'Failed to load payment methods');
-                }
-
-                this.renderPaymentMethods(result.data);
-            } catch (error) {
-                console.error('Payment Methods Error:', error);
-                this.showErrorNotification('Failed to load payment methods');
-            }
-        }
-
-        renderPaymentMethods(paymentMethods) {
-            const methodsContainer = document.getElementById('paymentMethodsContainer');
-            methodsContainer.innerHTML = '';
-
-            paymentMethods.forEach(method => {
-                const methodCard = document.createElement('div');
-                methodCard.className = 'payment-method-card';
-                methodCard.innerHTML = `
-                    <input type="radio" 
-                           name="paymentMethod" 
-                           id="method-${method._id}" 
-                           value="${method._id}">
-                    <label for="method-${method._id}">
-                        <i class="fas fa-${this.getPaymentMethodIcon(method.type)}"></i>
-                        <span>${method.type}</span>
-                        <small>${this.maskPaymentDetails(method)}</small>
-                    </label>
-                `;
-
-                methodsContainer.appendChild(methodCard);
-            });
-        }
-
-        getPaymentMethodIcon(type) {
-            switch(type.toLowerCase()) {
-                case 'creditcard': return 'credit-card';
-                case 'paypal': return 'paypal';
-                case 'banktransfer': return 'university';
-                default: return 'money-bill-alt';
-            }
-        }
-
-        maskPaymentDetails(method) {
-            // Implement masking logic based on payment method type
-            switch(method.type.toLowerCase()) {
-                case 'creditcard':
-                    return `**** **** **** ${method.details.cardNumber.slice(-4)}`;
-                case 'banktransfer':
-                    return `**** ${method.details.accountNumber.slice(-4)}`;
-                default:
-                    return method.details.email || '';
-            }
-        }
-
-            // Discount and Coupon Management
-        initializeDiscountManagement() {
+            initializeDiscountManagement() {
             const createDiscountBtn = document.getElementById('createDiscountBtn');
             const discountModal = document.getElementById('discountModal');
             const closeDiscountModal = document.getElementById('closeDiscountModal');
@@ -1200,8 +1005,7 @@
             }
         }
 
-            // Reporting and Analytics Methods
-        initializeReportingModule() {
+            initializeReportingModule() {
             const generateReportBtn = document.getElementById('generateReportBtn');
             const exportReportBtn = document.getElementById('exportReportBtn');
             const reportTypeSelector = document.getElementById('reportTypeSelector');
@@ -1499,8 +1303,7 @@
             });
         }
 
-            // Data Retention Policy Management
-        initializeDataRetentionModule() {
+            initializeDataRetentionModule() {
             const createRetentionPolicyBtn = document.getElementById('createRetentionPolicyBtn');
             const retentionPolicyModal = document.getElementById('retentionPolicyModal');
             const closeRetentionPolicyModal = document.getElementById('closeRetentionPolicyModal');
@@ -1745,7 +1548,557 @@
             }
         }
 
-        // Initialization method to set up all modules
+            initializeFeatureManagement() {
+            const createFeatureBtn = document.getElementById('createFeatureBtn');
+            const featureModal = document.getElementById('featureModal');
+            const closeFeatureModal = document.getElementById('closeFeatureModal');
+            const cancelFeatureBtn = document.getElementById('cancelFeatureBtn');
+            const featureForm = document.getElementById('featureForm');
+
+            // Create feature button
+            createFeatureBtn.addEventListener('click', () => {
+                this.prepareFeatureModal();
+                featureModal.classList.add('show');
+            });
+
+            // Close modal buttons
+            closeFeatureModal.addEventListener('click', () => featureModal.classList.remove('show'));
+            cancelFeatureBtn.addEventListener('click', () => featureModal.classList.remove('show'));
+
+            // Form submission
+            featureForm.addEventListener('submit', this.handleFeatureSubmission.bind(this));
+
+            // Load existing features
+            this.loadFeatures();
+        }
+
+        prepareFeatureModal() {
+            // Reset form
+            document.getElementById('featureName').value = '';
+            document.getElementById('featureDescription').value = '';
+            document.getElementById('featureCategory').value = '';
+        }
+
+        async handleFeatureSubmission(e) {
+            e.preventDefault();
+
+            const formData = {
+                name: document.getElementById('featureName').value,
+                description: document.getElementById('featureDescription').value,
+                category: document.getElementById('featureCategory').value
+            };
+
+            try {
+                const response = await fetch(`${this.baseUrl}/features`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Failed to create feature');
+                }
+
+                this.showSuccessNotification('Feature created successfully');
+                
+                // Close modal
+                document.getElementById('featureModal').classList.remove('show');
+
+                // Reload features
+                this.loadFeatures();
+            } catch (error) {
+                console.error('Feature Submission Error:', error);
+                this.showErrorNotification(error.message);
+            }
+        }
+
+        async loadFeatures() {
+            try {
+                const response = await fetch(`${this.baseUrl}/features`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Failed to load features');
+                }
+
+                this.renderFeatures(result.data);
+            } catch (error) {
+                console.error('Load Features Error:', error);
+                this.showErrorNotification('Failed to load features');
+            }
+        }
+
+        renderFeatures(features) {
+            const featuresContainer = document.getElementById('featuresContainer');
+            featuresContainer.innerHTML = '';
+
+            features.forEach(feature => {
+                const featureCard = document.createElement('div');
+                featureCard.className = 'feature-card';
+                featureCard.innerHTML = `
+                    <div class="feature-header">
+                        <h3>${feature.name}</h3>
+                        <span class="badge">${feature.category}</span>
+                    </div>
+                    <div class="feature-details">
+                        <p>${feature.description}</p>
+                        <div class="feature-metadata">
+                            <p>Created: ${new Date(feature.createdAt).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    <div class="feature-actions">
+                        <button class="btn btn-sm btn-edit" data-id="${feature._id}">Edit</button>
+                        <button class="btn btn-sm btn-delete" data-id="${feature._id}">Delete</button>
+                    </div>
+                `;
+
+                featuresContainer.appendChild(featureCard);
+            });
+
+            // Add event listeners for edit and delete
+            this.addFeatureActionListeners();
+        }
+
+        addFeatureActionListeners() {
+            const editButtons = document.querySelectorAll('.btn-edit');
+            const deleteButtons = document.querySelectorAll('.btn-delete');
+
+            editButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const featureId = e.target.dataset.id;
+                    this.editFeature(featureId);
+                });
+            });
+
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const featureId = e.target.dataset.id;
+                    this.confirmDeleteFeature(featureId);
+                });
+            });
+        }
+
+        async editFeature(featureId) {
+            try {
+                const response = await fetch(`${this.baseUrl}/features/${featureId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Failed to fetch feature details');
+                }
+
+                this.populateFeatureModal(result.data);
+            } catch (error) {
+                console.error('Edit Feature Error:', error);
+                this.showErrorNotification('Failed to retrieve feature details');
+            }
+        }
+
+        populateFeatureModal(feature) {
+            const featureModal = document.getElementById('featureModal');
+            
+            // Populate form fields
+            document.getElementById('featureName').value = feature.name;
+            document.getElementById('featureDescription').value = feature.description;
+            document.getElementById('featureCategory').value = feature.category;
+
+            // Show modal
+            featureModal.classList.add('show');
+        }
+
+        confirmDeleteFeature(featureId) {
+            const confirmModal = document.getElementById('confirmDeleteModal');
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            const cancelDeleteBtn = document.getElementById('cancelDelete');
+
+            // Show modal
+            confirmModal.classList.add('show');
+
+            // Remove previous event listeners
+            confirmDeleteBtn.onclick = null;
+            cancelDeleteBtn.onclick = null;
+
+            // Add new event listeners
+            confirmDeleteBtn.onclick = () => this.deleteFeature(featureId);
+            cancelDeleteBtn.onclick = () => confirmModal.classList.remove('show');
+        }
+
+        async deleteFeature(featureId) {
+            try {
+                const response = await fetch(`${this.baseUrl}/features/${featureId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Failed to delete feature');
+                }
+
+                this.showSuccessNotification('Feature deleted successfully');
+                
+                // Close confirmation modal
+                document.getElementById('confirmDeleteModal').classList.remove('show');
+
+                // Reload features
+                this.loadFeatures();
+            } catch (error) {
+                console.error('Delete Feature Error:', error);
+                this.showErrorNotification(error.message);
+            }
+        }
+
+            initializePaymentMethodManagement() {
+            const addPaymentMethodBtn = document.getElementById('addPaymentMethodBtn');
+            const paymentMethodModal = document.getElementById('paymentMethodModal');
+            const closePaymentMethodModal = document.getElementById('closePaymentMethodModal');
+            const cancelPaymentMethodBtn = document.getElementById('cancelPaymentMethodBtn');
+            const paymentMethodForm = document.getElementById('paymentMethodForm');
+
+            // Add payment method button
+            addPaymentMethodBtn.addEventListener('click', () => {
+                this.preparePaymentMethodModal();
+                paymentMethodModal.classList.add('show');
+            });
+
+            // Close modal buttons
+            closePaymentMethodModal.addEventListener('click', () => paymentMethodModal.classList.remove('show'));
+            cancelPaymentMethodBtn.addEventListener('click', () => paymentMethodModal.classList.remove('show'));
+
+            // Payment method type change listener
+            document.getElementById('paymentMethodType').addEventListener('change', this.togglePaymentMethodFields.bind(this));
+
+            // Form submission
+            paymentMethodForm.addEventListener('submit', this.handlePaymentMethodSubmission.bind(this));
+
+            // Load existing payment methods
+            this.loadPaymentMethods();
+        }
+
+        preparePaymentMethodModal() {
+            // Reset form
+            document.getElementById('paymentMethodType').value = '';
+            this.togglePaymentMethodFields();
+        }
+
+        togglePaymentMethodFields() {
+            const paymentMethodType = document.getElementById('paymentMethodType').value;
+            const paymentDetailsContainer = document.getElementById('paymentDetailsContainer');
+            
+            // Hide all payment method specific fields
+            const creditCardFields = document.getElementById('creditCardFields');
+            const bankTransferFields = document.getElementById('bankTransferFields');
+            const paypalFields = document.getElementById('paypalFields');
+            const razorpayFields = document.getElementById('razorpayFields');
+
+            creditCardFields.style.display = 'none';
+            bankTransferFields.style.display = 'none';
+            paypalFields.style.display = 'none';
+            razorpayFields.style.display = 'none';
+
+            // Show relevant fields based on payment method type
+            switch(paymentMethodType) {
+                case 'creditCard':
+                    creditCardFields.style.display = 'block';
+                    break;
+                case 'bankTransfer':
+                    bankTransferFields.style.display = 'block';
+                    break;
+                case 'paypal':
+                    paypalFields.style.display = 'block';
+                    break;
+                case 'razorpay':
+                    razorpayFields.style.display = 'block';
+                    break;
+            }
+        }
+
+        async handlePaymentMethodSubmission(e) {
+            e.preventDefault();
+
+            const paymentMethodType = document.getElementById('paymentMethodType').value;
+            let paymentDetails = {};
+
+            // Collect payment method specific details
+            switch(paymentMethodType) {
+                case 'creditCard':
+                    paymentDetails = {
+                        cardNumber: document.getElementById('cardNumber').value,
+                        expiryDate: document.getElementById('expiryDate').value,
+                        cvv: document.getElementById('cvv').value
+                    };
+                    break;
+                case 'bankTransfer':
+                    paymentDetails = {
+                        accountNumber: document.getElementById('accountNumber').value,
+                        bankName: document.getElementById('bankName').value,
+                        swiftCode: document.getElementById('swiftCode').value
+                    };
+                    break;
+                case 'paypal':
+                    paymentDetails = {
+                        paypalEmail: document.getElementById('paypalEmail').value
+                    };
+                    break;
+                case 'razorpay':
+                    paymentDetails = {
+                        razorpayId: document.getElementById('razorpayId').value
+                    };
+                    break;
+            }
+
+            const formData = {
+                type: paymentMethodType,
+                details: paymentDetails
+            };
+
+            try {
+                const response = await fetch(`${this.baseUrl}/payments`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Failed to add payment method');
+                }
+
+                this.showSuccessNotification('Payment method added successfully');
+                
+                // Close modal
+                document.getElementById('paymentMethodModal').classList.remove('show');
+
+                // Reload payment methods
+                this.loadPaymentMethods();
+            } catch (error) {
+                console.error('Payment Method Submission Error:', error);
+                this.showErrorNotification(error.message);
+            }
+        }
+
+        async loadPaymentMethods() {
+            try {
+                const response = await fetch(`${this.baseUrl}/payments`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Failed to load payment methods');
+                }
+
+                this.renderPaymentMethods(result.data);
+            } catch (error) {
+                console.error('Load Payment Methods Error:', error);
+                this.showErrorNotification('Failed to load payment methods');
+            }
+        }
+
+        renderPaymentMethods(paymentMethods) {
+            const paymentMethodsContainer = document.getElementById('paymentMethodsContainer');
+            paymentMethodsContainer.innerHTML = '';
+
+            paymentMethods.forEach(method => {
+                const methodCard = document.createElement('div');
+                methodCard.className = 'payment-method-card';
+                methodCard.innerHTML = `
+                    <div class="payment-method-header">
+                        <h3>${this.getPaymentMethodIcon(method.type)} ${method.type}</h3>
+                    </div>
+                    <div class="payment-method-details">
+                        ${this.maskPaymentDetails(method)}
+                    </div>
+                    <div class="payment-method-actions">
+                        <button class="btn btn-sm btn-edit" data-id="${method._id}">Edit</button>
+                        <button class="btn btn-sm btn-delete" data-id="${method._id}">Delete</button>
+                    </div>
+                `;
+
+                paymentMethodsContainer.appendChild(methodCard);
+            });
+
+            // Add event listeners for edit and delete
+            this.addPaymentMethodActionListeners();
+        }
+
+        getPaymentMethodIcon(type) {
+            switch(type.toLowerCase()) {
+                case 'creditcard': return '<i class="fas fa-credit-card"></i>';
+                case 'paypal': return '<i class="fab fa-paypal"></i>';
+                case 'banktransfer': return '<i class="fas fa-university"></i>';
+                case 'razorpay': return '<i class="fas fa-rupee-sign"></i>';
+                default: return '<i class="fas fa-money-bill-alt"></i>';
+            }
+        }
+
+        maskPaymentDetails(method) {
+            switch(method.type.toLowerCase()) {
+                case 'creditcard':
+                    return `**** **** **** ${method.details.cardNumber.slice(-4)}`;
+                case 'banktransfer':
+                    return `**** ${method.details.accountNumber.slice(-4)}`;
+                case 'paypal':
+                    return method.details.paypalEmail;
+                case 'razorpay':
+                    return `Razorpay ID: ${method.details.razorpayId.slice(0, 8)}...`;
+                default:
+                    return 'Payment Method Details';
+            }
+        }
+
+        addPaymentMethodActionListeners() {
+            const editButtons = document.querySelectorAll('.btn-edit');
+            const deleteButtons = document.querySelectorAll('.btn-delete');
+
+            editButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const paymentMethodId = e.target.dataset.id;
+                    this.editPaymentMethod(paymentMethodId);
+                });
+            });
+
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const paymentMethodId = e.target.dataset.id;
+                    this.confirmDeletePaymentMethod(paymentMethodId);
+                });
+            });
+        }
+
+        async editPaymentMethod(paymentMethodId) {
+            try {
+                const response = await fetch(`${this.baseUrl}/payments/${paymentMethodId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Failed to fetch payment method details');
+                }
+
+                this.populatePaymentMethodModal(result.data);
+            } catch (error) {
+                console.error('Edit Payment Method Error:', error);
+                this.showErrorNotification('Failed to retrieve payment method details');
+            }
+        }
+
+        populatePaymentMethodModal(paymentMethod) {
+            const paymentMethodModal = document.getElementById('paymentMethodModal');
+            
+            // Set payment method type
+            document.getElementById('paymentMethodType').value = paymentMethod.type;
+            this.togglePaymentMethodFields();
+
+            // Populate fields based on payment method type
+            switch(paymentMethod.type.toLowerCase()) {
+                case 'creditcard':
+                    document.getElementById('cardNumber').value = paymentMethod.details.cardNumber;
+                    document.getElementById('expiryDate').value = paymentMethod.details.expiryDate;
+                    document.getElementById('cvv').value = ''; // CVV is not returned for security
+                    break;
+                case 'banktransfer':
+                    document.getElementById('accountNumber').value = paymentMethod.details.accountNumber;
+                    document.getElementById('bankName').value = paymentMethod.details.bankName;
+                    document.getElementById('swiftCode').value = paymentMethod.details.swiftCode;
+                    break;
+                case 'paypal':
+                    document.getElementById('paypalEmail').value = paymentMethod.details.paypalEmail;
+                    break;
+                case 'razorpay':
+                    document.getElementById('razorpayId').value = paymentMethod.details.razorpayId;
+                    break;
+            }
+
+            // Show modal
+            paymentMethodModal.classList.add('show');
+        }
+
+        confirmDeletePaymentMethod(paymentMethodId) {
+            const confirmModal = document.getElementById('confirmDeleteModal');
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            const cancelDeleteBtn = document.getElementById('cancelDelete');
+
+            // Show modal
+            confirmModal.classList.add('show');
+
+            // Remove previous event listeners
+            confirmDeleteBtn.onclick = null;
+            cancelDeleteBtn.onclick = null;
+
+            // Add new event listeners
+            confirmDeleteBtn.onclick = () => this.deletePaymentMethod(paymentMethodId);
+            cancelDeleteBtn.onclick = () => confirmModal.classList.remove('show');
+        }
+
+        async deletePaymentMethod(paymentMethodId) {
+            try {
+                const response = await fetch(`${this.baseUrl}/payments/${paymentMethodId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Failed to delete payment method');
+                }
+
+                this.showSuccessNotification('Payment method deleted successfully');
+                
+                // Close confirmation modal
+                document.getElementById('confirmDeleteModal').classList.remove('show');
+
+                // Reload payment methods
+                this.loadPaymentMethods();
+            } catch (error) {
+                console.error('Delete Payment Method Error:', error);
+                this.showErrorNotification(error.message);
+            }
+        }
+
+            // Initialization method to set up all modules
         initializeModule() {
             try {
                 // Initialize various modules
@@ -1753,12 +2106,16 @@
                 this.initializeReportingModule();
                 this.initializeDiscountManagement();
                 this.initializeDataRetentionModule();
+                this.initializeFeatureManagement();
+                this.initializePaymentMethodManagement();
 
                 // Load initial data
                 this.loadPlans();
                 this.loadSubscriptions();
                 this.loadDiscounts();
                 this.loadDataRetentionPolicies();
+                this.loadFeatures();
+                this.loadPaymentMethods();
 
                 // Show success message
                 this.showSuccessNotification('Pricing Module Initialized Successfully');
@@ -1767,8 +2124,257 @@
                 this.showErrorNotification('Failed to initialize Pricing Module');
             }
         }
+
+        // Utility method for deep cloning objects
+        deepClone(obj) {
+            if (obj === null || typeof obj !== 'object') {
+                return obj;
+            }
+
+            // Handle Date
+            if (obj instanceof Date) {
+                return new Date(obj.getTime());
+            }
+
+            // Handle Array
+            if (Array.isArray(obj)) {
+                return obj.map(item => this.deepClone(item));
+            }
+
+            // Handle Object
+            const clonedObj = {};
+            for (const key in obj) {
+                if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                    clonedObj[key] = this.deepClone(obj[key]);
+                }
+            }
+
+            return clonedObj;
+        }
+
+        // Utility method for comparing objects
+        isEqual(obj1, obj2) {
+            // Check if both are the same object reference
+            if (obj1 === obj2) return true;
+
+            // Check if either is null or not an object
+            if (obj1 == null || obj2 == null || 
+                typeof obj1 !== 'object' || typeof obj2 !== 'object') {
+                return false;
+            }
+
+            // Compare keys
+            const keys1 = Object.keys(obj1);
+            const keys2 = Object.keys(obj2);
+
+            if (keys1.length !== keys2.length) return false;
+
+            // Compare each key's value
+            for (const key of keys1) {
+                const val1 = obj1[key];
+                const val2 = obj2[key];
+
+                // Recursive comparison for nested objects
+                if (typeof val1 === 'object' && typeof val2 === 'object') {
+                    if (!this.isEqual(val1, val2)) return false;
+                } else if (val1 !== val2) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // Utility method for debouncing function calls
+        debounce(func, delay) {
+            let timeoutId;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => {
+                    func.apply(context, args);
+                }, delay);
+            };
+        }
+
+        // Utility method for throttling function calls
+        throttle(func, limit) {
+            let inThrottle;
+            return function(...args) {
+                const context = this;
+                if (!inThrottle) {
+                    func.apply(context, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            };
+        }
+
+        // Utility method for generating unique identifiers
+        generateUniqueId() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        // Utility method for formatting currency
+        formatCurrency(amount, currency = 'USD') {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: currency
+            }).format(amount);
+        }
+
+        // Utility method for date formatting
+        formatDate(date, format = 'short') {
+            const options = {
+                short: { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                },
+                long: { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }
+            };
+
+            return new Intl.DateTimeFormat('en-US', options[format]).format(new Date(date));
+        }
+
+        // Error handling utility
+        handleError(error, customMessage = '') {
+            console.error('Error:', error);
+            
+            // Log to server or error tracking service
+            this.logErrorToServer(error);
+
+            // Show user-friendly notification
+            const message = customMessage || error.message || 'An unexpected error occurred';
+            this.showErrorNotification(message);
+        }
+
+        // Log errors to server (optional implementation)
+        async logErrorToServer(error) {
+            try {
+                await fetch(`${this.baseUrl}/error-log`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.token}`
+                    },
+                    body: JSON.stringify({
+                        message: error.message,
+                        stack: error.stack,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+            } catch (logError) {
+                console.error('Failed to log error to server', logError);
+            }
+        }
+
+            // Final initialization method to set up the entire module
+        initializeModuleWithConfig(config) {
+            try {
+                // Validate configuration
+                if (!config || !config.baseUrl) {
+                    throw new Error('Invalid configuration: baseUrl is required');
+                }
+
+                // Set base URL and token from configuration
+                this.baseUrl = config.baseUrl;
+                this.token = config.token || localStorage.getItem('token');
+
+                // Optional: Set custom error handling
+                if (config.errorHandler) {
+                    this.handleError = config.errorHandler;
+                }
+
+                // Optional: Set custom notification methods
+                if (config.notificationMethods) {
+                    if (config.notificationMethods.success) {
+                        this.showSuccessNotification = config.notificationMethods.success;
+                    }
+                    if (config.notificationMethods.error) {
+                        this.showErrorNotification = config.notificationMethods.error;
+                    }
+                }
+
+                // Initialize all modules
+                this.initializeModule();
+
+                // Optional: Run custom initialization callbacks
+                if (typeof config.onInit === 'function') {
+                    config.onInit(this);
+                }
+
+                // Return the instance for chaining or further configuration
+                return this;
+            } catch (error) {
+                this.handleError(error, 'Failed to initialize Pricing Module');
+                return null;
+            }
+        }
+
+        // Method to destroy and clean up the module
+        destroyModule() {
+            try {
+                // Remove all event listeners
+                const removeEventListeners = (element, eventType, handler) => {
+                    if (element) {
+                        element.removeEventListener(eventType, handler);
+                    }
+                };
+
+                // Remove specific event listeners
+                removeEventListeners(this.elements.createPlanBtn, 'click', this.openPlanModal);
+                removeEventListeners(this.elements.closePlanModal, 'click', this.closeAllModals);
+                removeEventListeners(this.elements.cancelPlanModal, 'click', this.closeAllModals);
+
+                // Clear containers
+                Object.values(this.elements).forEach(element => {
+                    if (element) {
+                        element.innerHTML = '';
+                    }
+                });
+
+                // Reset instance properties
+                this.baseUrl = null;
+                this.token = null;
+
+                // Optional: Call cleanup callback
+                if (typeof this.onDestroy === 'function') {
+                    this.onDestroy();
+                }
+
+                return true;
+            } catch (error) {
+                this.handleError(error, 'Error during module destruction');
+                return false;
+            }
+        }
     }
 
     // Expose the class to the global scope
     window.PricingManager = PricingManager;
+
+    // Optional: Automatic initialization
+    document.addEventListener('DOMContentLoaded', () => {
+        // Check if auto-initialization is desired
+        if (window.PRICING_MANAGER_CONFIG) {
+            try {
+                window.pricingManagerInstance = new PricingManager().initializeModuleWithConfig(
+                    window.PRICING_MANAGER_CONFIG
+                );
+            } catch (error) {
+                console.error('Automatic Pricing Manager Initialization Failed:', error);
+            }
+        }
+    });
 })();
