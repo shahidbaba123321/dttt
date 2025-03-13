@@ -25,27 +25,43 @@ class ModulesManager {
 
         // Initialize with delay to ensure DOM readiness
         this.initializeWithDelay();
+          // Add fallback initialization
+    this.initializeFallbackListeners();
     }
 
     initializeWithDelay() {
         setTimeout(() => {
-            this.setupEventListeners();
-            this.fetchModules();
-            this.fetchActivityLogs();
-        }, 100);
+        this.setupEventListeners();
+        this.fetchModules();
+        this.fetchActivityLogs();
+        
+        // Force re-setup of event listeners
+        this.setupEventListeners();
+    }, 500); 
     }
+
+    initializeFallbackListeners() {
+    document.addEventListener('DOMContentLoaded', () => {
+        const addNewModuleBtn = document.getElementById('addNewModuleBtn');
+        if (addNewModuleBtn) {
+            addNewModuleBtn.addEventListener('click', this.showAddModuleModal);
+        }
+    });
+}
 
     setupEventListeners() {
         console.log('Setting up event listeners');
 
         // Add New Module Button
         const addNewModuleBtn = document.getElementById('addNewModuleBtn');
-        if (addNewModuleBtn) {
-            addNewModuleBtn.addEventListener('click', this.showAddModuleModal);
-            console.log('Add New Module Button event listener added');
-        } else {
-            console.error('Add New Module Button not found');
-        }
+    if (addNewModuleBtn) {
+        // Remove existing listeners first
+        addNewModuleBtn.removeEventListener('click', this.showAddModuleModal);
+        addNewModuleBtn.addEventListener('click', this.showAddModuleModal);
+        console.log('Add New Module Button event listener added');
+    } else {
+        console.error('Add New Module Button not found');
+    }
 
         // Add Module Form Submission
         const addModuleForm = document.getElementById('addModuleForm');
@@ -105,8 +121,10 @@ class ModulesManager {
         }
 
         // Show modal with multiple methods for compatibility
-        modal.style.display = 'flex';
-        modal.classList.add('show');
+       modal.style.display = 'flex';
+    modal.style.visibility = 'visible';
+    modal.style.opacity = '1';
+    modal.classList.add('show');
 
         // Focus first input
         const firstInput = modal.querySelector('input[name="moduleName"]');
