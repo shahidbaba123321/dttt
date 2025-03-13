@@ -4,27 +4,41 @@
             this.baseUrl = apiBaseUrl;
             this.token = localStorage.getItem('token');
             
-            // Bind methods
+            // Bind methods to ensure correct context
             this.initializeModules = this.initializeModules.bind(this);
-            this.setupModalHandlers = this.setupModalHandlers.bind(this);
             this.showAddModuleModal = this.showAddModuleModal.bind(this);
             this.closeModal = this.closeModal.bind(this);
             this.addNewModule = this.addNewModule.bind(this);
 
             // Initialize after a short delay
-            setTimeout(this.initializeModules, 500);
+            this.initializeModules();
         }
 
         initializeModules() {
+            // Create modal
             this.createModuleModal();
-            this.setupModalHandlers();
+            
+            // Setup event listeners
+            this.setupEventListeners();
         }
 
         createModuleModal() {
-            const modalHTML = `
-                <div class="modal" id="addModuleModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
-                    <div style="background:white; padding:20px; border-radius:8px; width:500px;">
+            // Remove any existing modal first
+            const existingModal = document.getElementById('addModuleModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            const modalDiv = document.createElement('div');
+            modalDiv.id = 'addModuleModal';
+            modalDiv.className = 'modal';
+            modalDiv.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
                         <h2>Add New Module</h2>
+                        <button class="modal-close" id="closeModalBtn">&times;</button>
+                    </div>
+                    <div class="modal-body">
                         <form id="addModuleForm">
                             <div>
                                 <label>Module Name</label>
@@ -43,62 +57,84 @@
                                 <label>Description</label>
                                 <textarea name="moduleDescription" required></textarea>
                             </div>
-                            <button type="submit">Add Module</button>
-                            <button type="button" id="closeModalBtn">Cancel</button>
+                            <div>
+                                <button type="submit">Add Module</button>
+                                <button type="button" id="cancelModalBtn">Cancel</button>
+                            </div>
                         </form>
                     </div>
                 </div>
             `;
-
-            // Create a container and append to body
-            const container = document.createElement('div');
-            container.innerHTML = modalHTML;
-            document.body.appendChild(container.firstChild);
-        }
-
-        setupModalHandlers() {
-            const addNewModuleBtn = document.getElementById('addNewModuleBtn');
-            const addModuleModal = document.getElementById('addModuleModal');
-            const closeModalBtn = document.getElementById('closeModalBtn');
-            const addModuleForm = document.getElementById('addModuleForm');
-
-            console.log('Setup Modal Handlers:', {
-                addNewModuleBtn,
-                addModuleModal,
-                closeModalBtn,
-                addModuleForm
-            });
-
-            if (addNewModuleBtn) {
-                addNewModuleBtn.addEventListener('click', this.showAddModuleModal);
-            } else {
-                console.error('Add New Module Button not found');
-            }
-
-            if (closeModalBtn) {
-                closeModalBtn.addEventListener('click', this.closeModal);
-            }
-
-            if (addModuleForm) {
-                addModuleForm.addEventListener('submit', this.addNewModule);
-            }
-        }
-
-        showAddModuleModal(event) {
-            if (event) event.preventDefault();
             
+            // Append to body
+            document.body.appendChild(modalDiv);
+        }
+
+        setupEventListeners() {
+            // Timeout to ensure DOM is ready
+            setTimeout(() => {
+                const addNewModuleBtn = document.getElementById('addNewModuleBtn');
+                const closeModalBtn = document.getElementById('closeModalBtn');
+                const cancelModalBtn = document.getElementById('cancelModalBtn');
+                const addModuleForm = document.getElementById('addModuleForm');
+                const addModuleModal = document.getElementById('addModuleModal');
+
+                console.log('Debugging Event Listeners:', {
+                    addNewModuleBtn,
+                    closeModalBtn,
+                    cancelModalBtn,
+                    addModuleForm,
+                    addModuleModal
+                });
+
+                // Add New Module Button
+                if (addNewModuleBtn) {
+                    addNewModuleBtn.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        this.showAddModuleModal();
+                    });
+                } else {
+                    console.error('Add New Module Button not found');
+                }
+
+                // Close Modal Button
+                if (closeModalBtn) {
+                    closeModalBtn.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        this.closeModal();
+                    });
+                }
+
+                // Cancel Modal Button
+                if (cancelModalBtn) {
+                    cancelModalBtn.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        this.closeModal();
+                    });
+                }
+
+                // Form Submission
+                if (addModuleForm) {
+                    addModuleForm.addEventListener('submit', (event) => {
+                        event.preventDefault();
+                        this.addNewModule(event);
+                    });
+                }
+            }, 500);
+        }
+
+        showAddModuleModal() {
             const modal = document.getElementById('addModuleModal');
             if (modal) {
                 modal.style.display = 'flex';
-                console.log('Modal should be visible now');
+                console.log('Modal displayed');
             } else {
                 console.error('Modal not found');
             }
         }
 
-        closeModal(event) {
-            if (event) event.preventDefault();
-            
+        closeModal() {
             const modal = document.getElementById('addModuleModal');
             if (modal) {
                 modal.style.display = 'none';
@@ -132,6 +168,7 @@
                 if (result.success) {
                     alert('Module added successfully');
                     this.closeModal();
+                    // Optionally refresh modules list
                 } else {
                     alert('Failed to add module');
                 }
@@ -149,6 +186,14 @@
     document.addEventListener('contentLoaded', (event) => {
         if (event.detail.section === 'modules') {
             console.log('Initializing Modules Manager');
+            window.modulesManagerInstance = new ModulesManager('https://18.215.160.136.nip.io/api');
+        }
+    });
+
+    // Fallback initialization
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!window.modulesManagerInstance) {
+            console.log('Fallback Modules Manager Initialization');
             window.modulesManagerInstance = new ModulesManager('https://18.215.160.136.nip.io/api');
         }
     });
