@@ -1,303 +1,179 @@
-<div class="modules-management-container">
-    <div class="page-header">
-        <h1>Modules Management</h1>
-        <div class="header-actions">
-            <button class="btn btn-primary" id="addNewModuleBtn">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Module Management</title>
+    <style>
+        /* Modules-specific styles */
+        .modules-management {
+            padding: var(--spacing-lg);
+            background-color: var(--bg-secondary);
+        }
+
+        .modules-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        .module-card {
+            background-color: var(--bg-primary);
+            border-radius: var(--border-radius-lg);
+            border: 1px solid var(--border-light);
+            padding: var(--spacing-md);
+            transition: all var(--transition-speed) ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .module-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-5px);
+        }
+
+        .module-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .module-status {
+            display: inline-block;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius-sm);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .module-status.active {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .module-status.inactive {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+
+        .module-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .module-category {
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .module-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .module-compliance {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-size: 0.8rem;
+        }
+
+        .compliance-badge {
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius-sm);
+            font-weight: 600;
+        }
+
+        .compliance-badge.low {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .compliance-badge.medium {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--info-color);
+        }
+
+        .compliance-badge.high {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .filters-section {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .filter-group select {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--border-radius-md);
+        }
+    </style>
+</head>
+<body>
+    <div class="modules-management">
+        <div class="modules-header">
+            <h2>Module Management</h2>
+            <button id="addModuleBtn" class="btn-primary">
                 <i class="fas fa-plus"></i> Add New Module
             </button>
         </div>
-    </div>
 
-    <div class="modules-filter-section">
-        <!-- Filters will be dynamically added by JS -->
-        <div id="modulesFilterContainer"></div>
-    </div>
-
-    <div class="modules-grid" id="modulesGridContainer">
-        <!-- Modules will be dynamically loaded here -->
-    </div>
-
-    <div class="module-activity-section">
-        <div class="section-header">
-            <h2>Module Activity Logs</h2>
-            <div id="activityLogsFilterContainer"></div>
+        <div class="filters-section">
+            <div class="filter-group">
+                <label>Category:</label>
+                <select id="moduleCategoryFilter">
+                    <option value="">All Categories</option>
+                    <option value="hr">HR</option>
+                    <option value="finance">Finance</option>
+                    <option value="operations">Operations</option>
+                    <option value="integrations">Integrations</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Compliance Level:</label>
+                <select id="moduleComplianceFilter">
+                    <option value="">All Levels</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Status:</label>
+                <select id="moduleStatusFilter">
+                    <option value="">All Statuses</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
         </div>
-        <div class="activity-logs-table" id="activityLogsContainer">
-            <!-- Activity logs will be dynamically loaded here -->
+
+        <div id="modulesGrid" class="modules-grid">
+            <!-- Modules will be dynamically populated here -->
         </div>
     </div>
-</div>
 
-<div id="moduleFormModalContainer"></div>
+    <!-- Modals will be dynamically created by JavaScript -->
+    <div id="moduleModal" class="modal"></div>
+    <div id="moduleDetailsModal" class="modal"></div>
 
-<style>
-    :root {
-    /* Existing color variables */
-    --primary-color: #4F46E5;
-    --secondary-color: #3B82F6;
-    --success-color: #10B981;
-    --danger-color: #EF4444;
-    --warning-color: #F59E0B;
     
-    /* Background Colors */
-    --bg-primary: #FFFFFF;
-    --bg-secondary: #F9FAFB;
-    --bg-tertiary: #F3F4F6;
-    
-    /* Text Colors */
-    --text-primary: #111827;
-    --text-secondary: #4B5563;
-    --text-tertiary: #9CA3AF;
-    
-    /* Border Colors */
-    --border-light: #E5E7EB;
-    --border-medium: #D1D5DB;
-    
-    /* Spacing */
-    --spacing-sm: 0.5rem;
-    --spacing-md: 1rem;
-    --spacing-lg: 1.5rem;
-}
-
-/* Modules Management Container */
-.modules-management-container {
-    background-color: var(--bg-primary);
-    border-radius: 8px;
-    padding: var(--spacing-lg);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-/* Page Header */
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-lg);
-    border-bottom: 1px solid var(--border-light);
-    padding-bottom: var(--spacing-md);
-}
-
-.page-header h1 {
-    font-size: 1.5rem;
-    color: var(--text-primary);
-}
-
-.header-actions .btn {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    padding: 0.5rem 1rem;
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    transition: background-color 0.3s ease;
-}
-
-.header-actions .btn:hover {
-    background-color: #4338CA;
-}
-
-/* Modules Grid */
-.modules-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: var(--spacing-lg);
-}
-
-.module-card {
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-light);
-    border-radius: 8px;
-    overflow: hidden;
-    transition: box-shadow 0.3s ease;
-}
-
-.module-card:hover {
-    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-}
-
-.module-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-md);
-    background-color: var(--bg-tertiary);
-}
-
-.module-card-header h3 {
-    margin: 0;
-    font-size: 1.1rem;
-    color: var(--text-primary);
-}
-
-.module-status {
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 600;
-}
-
-.module-status.active {
-    background-color: rgba(16, 185, 129, 0.1);
-    color: var(--success-color);
-}
-
-.module-status.inactive {
-    background-color: rgba(239, 68, 68, 0.1);
-    color: var(--danger-color);
-}
-
-.module-card-body {
-    padding: var(--spacing-md);
-}
-
-.module-card-body p {
-    color: var(--text-secondary);
-    margin-bottom: var(--spacing-md);
-}
-
-.module-details {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.875rem;
-    color: var(--text-tertiary);
-}
-
-/* Modal Styles */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.modal.show {
-    display: flex;
-}
-
-.modal-dialog {
-    background-color: white;
-    border-radius: 8px;
-    width: 100%;
-    max-width: 500px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-}
-
-.modal-content {
-    padding: var(--spacing-lg);
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--border-light);
-    padding-bottom: var(--spacing-md);
-    margin-bottom: var(--spacing-lg);
-}
-
-.modal-header h2 {
-    margin: 0;
-    font-size: 1.25rem;
-    color: var(--text-primary);
-}
-
-.modal-close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-}
-
-.modal-body {
-    margin-bottom: var(--spacing-lg);
-}
-
-.form-group {
-    margin-bottom: var(--spacing-md);
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: var(--spacing-sm);
-    color: var(--text-secondary);
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
-    padding: var(--spacing-sm);
-    border: 1px solid var(--border-light);
-    border-radius: 6px;
-    background-color: var(--bg-secondary);
-}
-
-.modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--spacing-md);
-    border-top: 1px solid var(--border-light);
-    padding-top: var(--spacing-md);
-}
-
-.btn-secondary {
-    background-color: var(--bg-tertiary);
-    color: var(--text-secondary);
-    border: none;
-    padding: var(--spacing-sm) var(--spacing-md);
-    border-radius: 6px;
-}
-
-.btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: var(--spacing-sm) var(--spacing-md);
-    border-radius: 6px;
-}
-
-/* Activity Logs Section */
-.module-activity-section {
-    margin-top: var(--spacing-lg);
-    background-color: var(--bg-secondary);
-    border-radius: 8px;
-    padding: var(--spacing-lg);
-}
-
-.activity-logs-table {
-    display: grid;
-    gap: var(--spacing-sm);
-}
-
-.activity-log {
-    display: flex;
-    justify-content: space-between;
-    background-color: var(--bg-primary);
-    padding: var(--spacing-sm);
-    border-radius: 6px;
-    border: 1px solid var(--border-light);
-}
-
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-    .modules-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .modal-dialog {
-        margin: var(--spacing-md);
-        max-width: calc(100% - 2rem);
-    }
-}
-</style>
+</body>
+</html>
