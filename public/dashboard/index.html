@@ -1109,10 +1109,14 @@ class ContentLoader {
             script.onload = () => {
                 console.log('Modules script loaded successfully');
                 
-                // Trigger initialization if function exists
-                if (typeof window.initializeModulesManager === 'function') {
-                    window.initializeModulesManager();
-                }
+                // Directly create an instance of ModulesManager
+                const modulesManager = new window.ModulesManager(this.apiBaseUrl);
+                
+                // Store the instance in the moduleInstances map
+                this.moduleInstances.set('modules', modulesManager);
+                
+                // Make it globally accessible if needed
+                window.modulesManager = modulesManager;
                 
                 resolve();
             };
@@ -1122,14 +1126,6 @@ class ContentLoader {
             };
             document.body.appendChild(script);
         });
-
-        // Initialize new instance
-        if (typeof window.ModulesManager !== 'undefined') {
-            const instance = new window.ModulesManager(this.apiBaseUrl);
-            this.moduleInstances.set('modules', instance);
-        } else {
-            throw new Error('ModulesManager not loaded properly');
-        }
     } catch (error) {
         console.error('Error initializing modules module:', error);
         throw error;
