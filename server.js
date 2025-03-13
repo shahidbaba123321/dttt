@@ -222,6 +222,11 @@ let deleted_features;
 let deleted_discounts;
 let deleted_referral_discounts;
 let deleted_payments;
+let modules;
+let module_activity_logs;
+let company_modules;
+let deleted_modules;
+
 
 // Initialize Redis separately after ensuring connection
 async function initializeRedis() {
@@ -325,7 +330,11 @@ async function initializeDatabase() {
             'deleted_features', // Add this for deleted features
             'deleted_discounts', // Add this for deleted discounts
             'deleted_referral_discounts', // Add this for deleted referral discounts
-            'deleted_payments' // Add this for deleted payments
+            'deleted_payments', // Add this for deleted payments
+            'modules',
+    'module_activity_logs',
+    'company_modules',
+    'deleted_modules'
         ];
 
         // Create collections if they don't exist
@@ -373,6 +382,10 @@ async function initializeDatabase() {
         deleted_discounts = database.collection('deleted_discounts'); // Add this for deleted discounts
         deleted_referral_discounts = database.collection('deleted_referral_discounts'); // Add this for deleted referral discounts
         deleted_payments = database.collection('deleted_payments'); // Add this for deleted payments
+         modules = database.collection('modules');
+        module_activity_logs = database.collection('module_activity_logs');
+        company_modules = database.collection('company_modules');
+        deleted_modules = database.collection('deleted_modules');
 
         // Function to check and create index if needed
         const ensureIndex = async (collection, indexSpec, options = {}) => {
@@ -455,7 +468,26 @@ async function initializeDatabase() {
             ensureIndex(deleted_features, { name: 1 }),
             ensureIndex(deleted_discounts, { code: 1 }),
             ensureIndex(deleted_referral_discounts, { code: 1 }),
-            ensureIndex(deleted_payments, { type: 1 })
+            ensureIndex(deleted_payments, { type: 1 }),
+            // Modules indexes
+            ensureIndex(modules, { name: 1 }, { unique: true }),
+            ensureIndex(modules, { category: 1 }),
+            ensureIndex(modules, { complianceLevel: 1 }),
+            ensureIndex(modules, { isActive: 1 }),
+            
+            // Module activity logs indexes
+            ensureIndex(module_activity_logs, { timestamp: -1 }),
+            ensureIndex(module_activity_logs, { type: 1 }),
+            ensureIndex(module_activity_logs, { moduleId: 1 }),
+            
+            // Company modules indexes
+            ensureIndex(company_modules, { moduleId: 1 }),
+            ensureIndex(company_modules, { companyId: 1 }),
+            ensureIndex(company_modules, { status: 1 }),
+            
+            // Deleted modules indexes
+            ensureIndex(deleted_modules, { originalId: 1 }),
+            ensureIndex(deleted_modules, { deletedAt: -1 })
         ];
         await Promise.all(indexPromises);
         
@@ -492,13 +524,107 @@ async function initializeDatabase() {
             referral_discounts, // Add this for referral discounts
             invoices, // Add this for invoices
             subscription_logs, // Add this for subscription logs
-            data_retention_policies // Add this for data retention policies
+            data_retention_policies, // Add this for data retention policies
+            modules,
+            module_activity_logs,
+            company_modules,
+            deleted_modules
         };
     } catch (err) {
         console.error("MongoDB initialization error:", err);
         throw err;
     }
 }
+
+// Helper function to initialize default modules
+async function initializeDefaultModules() {
+    try {
+        const existingModules = await modules.countDocuments();
+        if (existingModules === 0) {
+            console.log('Initializing default modules...');
+
+            const defaultModules = [
+                {
+                    name: 'Employee Management',
+                    category: 'hr',
+                    description: 'Comprehensive employee record and profile management',
+                    complianceLevel: 'high',
+                    permissions: ['view', 'edit', 'delete'],
+                    subscriptionTiers: ['basic', 'pro', 'enterprise'],
+                    isActive: true,
+                    createdAt: new Date()
+                },
+                {
+                    name: 'Payroll Processing',
+                    category: 'finance',
+                    description: 'Automated payroll calculation and management',
+                    complianceLevel: 'high',
+                    permissions: ['view', 'edit'],
+                    subscriptionTiers: ['pro', 'enterprise'],
+                    isActive: true,
+                    createdAt: new Date()
+                },
+                {
+                    name: 'Performance Management',
+                    category: 'hr',
+                    description: 'Goal setting, performance reviews, and tracking',
+                    complianceLevel: 'medium',
+                    permissions: ['view', 'edit'],
+                    subscriptionTiers: ['pro', 'enterprise'],
+                    isActive: true,
+                    createdAt: new Date()
+                },
+                {
+                    name: 'Recruitment',
+                    category: 'hr',
+                    description: 'Job posting, application tracking, and hiring management',
+                    complianceLevel: 'medium',
+                    permissions: ['view', 'edit'],
+                    subscriptionTiers: ['pro', 'enterprise'],
+                    isActive: true,
+                    createdAt: new Date()
+                },
+                {
+                    name: 'Attendance Tracking',
+                    category: 'hr',
+                    description: 'Employee attendance and time-off management',
+                    complianceLevel: 'low',
+                    permissions: ['view', 'edit'],
+                    subscriptionTiers: ['basic', 'pro', 'enterprise'],
+                    isActive: true,
+                    createdAt: new Date()
+                },
+                {
+                    name: 'Financial Reporting',
+                    category: 'finance',
+                    description: 'Comprehensive financial reporting and analytics',
+                    complianceLevel: 'high',
+                    permissions: ['view'],
+                    subscriptionTiers: ['enterprise'],
+                    isActive: true,
+                    createdAt: new Date()
+                },
+                {
+                    name: 'API Integrations',
+                    category: 'integrations',
+                    description: 'Third-party system and tool integrations',
+                    complianceLevel: 'medium',
+                    permissions: ['view', 'edit'],
+                    subscriptionTiers: ['pro', 'enterprise'],
+                    isActive: true,
+                    createdAt: new Date()
+                }
+            ];
+
+            await modules.insertMany(defaultModules);
+            console.log('Default modules initialized');
+        }
+    } catch (error) {
+        console.error('Error initializing default modules:', error);
+        throw error;
+    }
+}
+
 // Initialize default data
 async function initializeDefaultData() {
     try {
@@ -3520,6 +3646,500 @@ app.post('/api/companies/:companyId/invoice', verifyToken, verifyAdmin, async (r
         res.status(500).json({
             success: false,
             message: 'Error generating invoice'
+        });
+    }
+});
+
+// Module Management Routes
+
+// 1. Get All Modules
+app.get('/api/modules', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        // Get pagination parameters
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        // Get search and filter parameters
+        const { search, category, complianceLevel } = req.query;
+        const filter = {};
+
+        // Add search filter
+        if (search) {
+            filter.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        // Add category filter
+        if (category) {
+            filter.category = category;
+        }
+
+        // Add compliance level filter
+        if (complianceLevel) {
+            filter.complianceLevel = complianceLevel;
+        }
+
+        // Get total count for pagination
+        const totalModules = await database.collection('modules').countDocuments(filter);
+
+        // Fetch modules with pagination
+        const modules = await database.collection('modules')
+            .find(filter)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .toArray();
+
+        // Enhance modules with additional metadata
+        const enhancedModules = modules.map(module => ({
+            ...module,
+            usageCount: this.calculateModuleUsage(module._id)
+        }));
+
+        res.json({
+            success: true,
+            data: enhancedModules,
+            pagination: {
+                total: totalModules,
+                page,
+                totalPages: Math.ceil(totalModules / limit),
+                hasMore: page * limit < totalModules
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching modules:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching modules',
+            error: error.message
+        });
+    }
+});
+
+// Helper function to calculate module usage
+async function calculateModuleUsage(moduleId) {
+    try {
+        // Count how many companies are using this module
+        const usageCount = await database.collection('company_modules').countDocuments({
+            moduleId: new ObjectId(moduleId),
+            status: 'active'
+        });
+        return usageCount;
+    } catch (error) {
+        console.error('Error calculating module usage:', error);
+        return 0;
+    }
+}
+
+// 2. Create New Module
+app.post('/api/modules', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const {
+                name,
+                category,
+                description,
+                complianceLevel,
+                permissions,
+                subscriptionTiers,
+                isActive = true
+            } = req.body;
+
+            // Validate required fields
+            if (!name || !category || !description) {
+                throw new Error('Missing required module fields');
+            }
+
+            // Validate category
+            const validCategories = ['hr', 'finance', 'operations', 'integrations'];
+            if (!validCategories.includes(category)) {
+                throw new Error('Invalid module category');
+            }
+
+            // Validate compliance level
+            const validComplianceLevels = ['low', 'medium', 'high'];
+            if (!validComplianceLevels.includes(complianceLevel)) {
+                throw new Error('Invalid compliance level');
+            }
+
+            // Check if module with same name exists
+            const existingModule = await database.collection('modules').findOne({
+                name: { $regex: new RegExp(`^${name}$`, 'i') }
+            }, { session });
+
+            if (existingModule) {
+                throw new Error('Module with this name already exists');
+            }
+
+            // Prepare module object
+            const module = {
+                name,
+                category,
+                description,
+                complianceLevel,
+                permissions: permissions || [],
+                subscriptionTiers: subscriptionTiers || [],
+                isActive,
+                createdAt: new Date(),
+                createdBy: new ObjectId(req.user.userId),
+                updatedAt: new Date()
+            };
+
+            // Insert module
+            const result = await database.collection('modules').insertOne(module, { session });
+
+            // Create audit log
+            await createAuditLog(
+                'MODULE_CREATED',
+                req.user.userId,
+                result.insertedId,
+                {
+                    moduleName: name,
+                    category,
+                    complianceLevel
+                },
+                session
+            );
+
+            res.status(201).json({
+                success: true,
+                message: 'Module created successfully',
+                data: {
+                    _id: result.insertedId,
+                    ...module
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error creating module:', error);
+        res.status(error.message.includes('exists') ? 400 : 500).json({
+            success: false,
+            message: error.message || 'Error creating module'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// 3. Update Module
+app.put('/api/modules/:moduleId', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { moduleId } = req.params;
+            const {
+                name,
+                category,
+                description,
+                complianceLevel,
+                permissions,
+                subscriptionTiers
+            } = req.body;
+
+            // Validate moduleId
+            if (!ObjectId.isValid(moduleId)) {
+                throw new Error('Invalid module ID');
+            }
+
+            // Get existing module
+            const existingModule = await database.collection('modules').findOne({
+                _id: new ObjectId(moduleId)
+            }, { session });
+
+            if (!existingModule) {
+                throw new Error('Module not found');
+            }
+
+            // Validate category if provided
+            const validCategories = ['hr', 'finance', 'operations', 'integrations'];
+            if (category && !validCategories.includes(category)) {
+                throw new Error('Invalid module category');
+            }
+
+            // Validate compliance level if provided
+            const validComplianceLevels = ['low', 'medium', 'high'];
+            if (complianceLevel && !validComplianceLevels.includes(complianceLevel)) {
+                throw new Error('Invalid compliance level');
+            }
+
+            // Check if new name conflicts with other modules
+            if (name && name !== existingModule.name) {
+                const nameExists = await database.collection('modules').findOne({
+                    _id: { $ne: new ObjectId(moduleId) },
+                    name: { $regex: new RegExp(`^${name}$`, 'i') }
+                }, { session });
+
+                if (nameExists) {
+                    throw new Error('Module name already exists');
+                }
+            }
+
+            // Prepare update data
+            const updateData = {
+                ...(name && { name }),
+                ...(category && { category }),
+                ...(description && { description }),
+                ...(complianceLevel && { complianceLevel }),
+                ...(permissions && { permissions }),
+                ...(subscriptionTiers && { subscriptionTiers }),
+                updatedAt: new Date(),
+                updatedBy: new ObjectId(req.user.userId)
+            };
+
+            // Update module
+            const result = await database.collection('modules').updateOne(
+                { _id: new ObjectId(moduleId) },
+                { $set: updateData },
+                { session }
+            );
+
+            if (result.matchedCount === 0) {
+                throw new Error('Module not found');
+            }
+
+            // Get updated module
+            const updatedModule = await database.collection('modules').findOne(
+                { _id: new ObjectId(moduleId) },
+                { session }
+            );
+
+            // Create audit log
+            await createAuditLog(
+                'MODULE_UPDATED',
+                req.user.userId,
+                moduleId,
+                {
+                    changes: getChanges(existingModule, updatedModule)
+                },
+                session
+            );
+
+            res.json({
+                success: true,
+                message: 'Module updated successfully',
+                data: updatedModule
+            });
+        });
+    } catch (error) {
+        console.error('Error updating module:', error);
+        res.status(
+            error.message.includes('not found') ? 404 :
+            error.message.includes('exists') ? 400 :
+            500
+        ).json({
+            success: false,
+            message: error.message || 'Error updating module'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// 4. Delete Module
+app.delete('/api/modules/:moduleId', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { moduleId } = req.params;
+
+            // Validate moduleId
+            if (!ObjectId.isValid(moduleId)) {
+                throw new Error('Invalid module ID');
+            }
+
+            // Get module before deletion
+            const module = await database.collection('modules').findOne({
+                _id: new ObjectId(moduleId)
+            }, { session });
+
+            if (!module) {
+                throw new Error('Module not found');
+            }
+
+            // Check if module is in use by any companies
+            const moduleUsage = await database.collection('company_modules').countDocuments({
+                moduleId: new ObjectId(moduleId),
+                status: 'active'
+            }, { session });
+
+            if (moduleUsage > 0) {
+                throw new Error(`Cannot delete module. It is currently in use by ${moduleUsage} companies.`);
+            }
+
+            // Delete module
+            const result = await database.collection('modules').deleteOne({
+                _id: new ObjectId(moduleId)
+            }, { session });
+
+            if (result.deletedCount === 0) {
+                throw new Error('Module not found');
+            }
+
+            // Create audit log
+            await createAuditLog(
+                'MODULE_DELETED',
+                req.user.userId,
+                moduleId,
+                {
+                    moduleName: module.name,
+                    moduleDetails: module
+                },
+                session
+            );
+
+            // Archive module data
+            await database.collection('deleted_modules').insertOne({
+                ...module,
+                deletedAt: new Date(),
+                deletedBy: new ObjectId(req.user.userId)
+            }, { session });
+
+            res.json({
+                success: true,
+                message: 'Module deleted successfully',
+                data: {
+                    moduleId,
+                    moduleName: module.name
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error deleting module:', error);
+        res.status(
+            error.message.includes('not found') ? 404 :
+            error.message.includes('in use') ? 400 :
+            500
+        ).json({
+            success: false,
+            message: error.message || 'Error deleting module'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// 5. Toggle Module Status
+app.patch('/api/modules/:moduleId/status', verifyToken, verifyAdmin, async (req, res) => {
+    const session = client.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const { moduleId } = req.params;
+            const { isActive } = req.body;
+
+            // Validate moduleId
+            if (!ObjectId.isValid(moduleId)) {
+                throw new Error('Invalid module ID');
+            }
+
+            // Get existing module
+            const existingModule = await database.collection('modules').findOne({
+                _id: new ObjectId(moduleId)
+            }, { session });
+
+            if (!existingModule) {
+                throw new Error('Module not found');
+            }
+
+            // Update module status
+            await database.collection('modules').updateOne(
+                { _id: new ObjectId(moduleId) },
+                { 
+                    $set: { 
+                        isActive,
+                        updatedAt: new Date(),
+                        updatedBy: new ObjectId(req.user.userId)
+                    } 
+                },
+                { session }
+            );
+
+            // Create audit log
+            await createAuditLog(
+                'MODULE_STATUS_CHANGED',
+                req.user.userId,
+                moduleId,
+                {
+                    oldStatus: existingModule.isActive,
+                    newStatus: isActive
+                },
+                session
+            );
+
+            res.json({
+                success: true,
+                message: `Module ${isActive ? 'activated' : 'deactivated'} successfully`,
+                data: { isActive }
+            });
+        });
+    } catch (error) {
+        console.error('Error changing module status:', error);
+        res.status(
+            error.message.includes('not found') ? 404 : 500
+        ).json({
+            success: false,
+            message: error.message || 'Error changing module status'
+        });
+    } finally {
+        await session.endSession();
+    }
+});
+
+// 6. Fetch Module Activity Logs
+app.get('/api/modules/activity-logs', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { 
+            page = 1, 
+            limit = 50, 
+            startDate, 
+            endDate, 
+            type 
+        } = req.query;
+
+        const filter = {};
+
+        // Add date range filter
+        if (startDate && endDate) {
+            filter.timestamp = {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate)
+            };
+        }
+
+        // Add activity type filter
+        if (type) {
+            filter.type = type;
+        }
+
+        // Fetch activity logs
+        const logs = await database.collection('module_activity_logs')
+            .find(filter)
+            .sort({ timestamp: -1 })
+            .skip((page - 1) * limit)
+            .limit(parseInt(limit))
+            .toArray();
+
+        // Get total count
+        const totalLogs = await database.collection('module_activity_logs').countDocuments(filter);
+
+        res.json({
+            success: true,
+            data: logs,
+            pagination: {
+                total: totalLogs,
+                page: parseInt(page),
+                totalPages: Math.ceil(totalLogs / limit)
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching module activity logs:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching module activity logs',
+            error: error.message
         });
     }
 });
