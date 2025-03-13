@@ -9,1618 +9,295 @@
     </div>
 
     <div class="modules-filter-section">
-        <div class="filter-row">
-            <div class="filter-group">
-                <label>Category</label>
-                <select id="categoryFilter" class="form-control">
-                    <option value="">All Categories</option>
-                    <option value="hr">HR</option>
-                    <option value="finance">Finance</option>
-                    <option value="operations">Operations</option>
-                    <option value="integrations">Integrations</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>Compliance Level</label>
-                <select id="complianceFilter" class="form-control">
-                    <option value="">All Levels</option>
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>Status</label>
-                <select id="statusFilter" class="form-control">
-                    <option value="">All Statuses</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                </select>
-            </div>
-            <div class="filter-group search-group">
-                <input type="text" id="moduleSearchInput" placeholder="Search modules..." class="form-control">
-                <i class="fas fa-search search-icon"></i>
-            </div>
-        </div>
+        <!-- Filters will be dynamically added by JS -->
+        <div id="modulesFilterContainer"></div>
     </div>
 
-    <style>
-    .integration-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: var(--spacing-md);
-    }
-
-    .integration-icon.google-workspace {
-        background-color: #4285F4;
-        color: white;
-    }
-
-    .integration-icon.slack {
-        background-color: #4A154B;
-        color: white;
-    }
-
-    .integration-icon.microsoft-teams {
-        background-color: #5059A9;
-        color: white;
-    }
-
-    .integration-icon i {
-        font-size: 1.5rem;
-    }
-</style>
-
-    <style>
-        .modules-management-container {
-            background-color: var(--bg-primary);
-            border-radius: var(--border-radius-lg);
-            padding: var(--spacing-lg);
-            box-shadow: var(--shadow-md);
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--spacing-lg);
-            border-bottom: 1px solid var(--border-light);
-            padding-bottom: var(--spacing-md);
-        }
-
-        .page-header h1 {
-            color: var(--text-primary);
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-
-        .header-actions .btn {
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-            padding: var(--spacing-sm) var(--spacing-md);
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: var(--border-radius-md);
-            transition: background-color var(--transition-speed) ease;
-        }
-
-        .header-actions .btn:hover {
-            background-color: var(--primary-dark);
-        }
-
-        .modules-filter-section {
-            margin-bottom: var(--spacing-lg);
-        }
-
-        .filter-row {
-            display: flex;
-            gap: var(--spacing-md);
-            align-items: flex-end;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: var(--spacing-sm);
-        }
-
-        .filter-group label {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        .form-control {
-            padding: var(--spacing-sm);
-            border: 1px solid var(--border-light);
-            border-radius: var(--border-radius-md);
-            background-color: var(--bg-secondary);
-            color: var(--text-primary);
-            transition: border-color var(--transition-speed) ease;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-
-        .search-group {
-            position: relative;
-            flex-grow: 1;
-        }
-
-        .search-icon {
-            position: absolute;
-            right: var(--spacing-sm);
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-tertiary);
-        }
-
-        @media (max-width: 768px) {
-            .filter-row {
-                flex-direction: column;
-            }
-        }
-    </style>
-</div>
-
-<div class="modules-list-section">
-    <div class="modules-grid">
-        <!-- Module cards will be dynamically populated here -->
-        <div class="module-card category-hr">
-            <div class="module-card-header">
-                <h3>Employee Management</h3>
-                <div class="module-status active">Active</div>
-            </div>
-            <div class="module-card-body">
-                <div class="module-details">
-                    <div class="module-category">
-                        <i class="fas fa-users"></i>
-                        <span>HR</span>
-                    </div>
-                    <div class="module-compliance medium">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>Medium Compliance</span>
-                    </div>
-                </div>
-                <p class="module-description">
-                    Comprehensive employee record and profile management system.
-                </p>
-                <div class="module-features">
-                    <span class="feature-tag">Profile Management</span>
-                    <span class="feature-tag">Document Tracking</span>
-                    <span class="feature-tag">Performance Logs</span>
-                </div>
-            </div>
-            <div class="module-card-actions">
-                <button class="btn btn-edit">
-                    <i class="fas fa-edit"></i> Edit
-                </button>
-                <button class="btn btn-toggle">
-                    <i class="fas fa-power-off"></i> Disable
-                </button>
-            </div>
-        </div>
+    <div class="modules-grid" id="modulesGridContainer">
+        <!-- Modules will be dynamically loaded here -->
     </div>
 
-    <div class="pagination-section">
-        <div class="pagination-info">
-            Showing 1-10 of 45 Modules
+    <div class="module-activity-section">
+        <div class="section-header">
+            <h2>Module Activity Logs</h2>
+            <div id="activityLogsFilterContainer"></div>
         </div>
-        <div class="pagination-controls">
-            <button class="btn btn-pagination" disabled>
-                <i class="fas fa-chevron-left"></i>
-            </button>
-            <div class="page-numbers">
-                <span class="active">1</span>
-                <span>2</span>
-                <span>3</span>
-                <span>4</span>
-                <span>5</span>
-            </div>
-            <button class="btn btn-pagination">
-                <i class="fas fa-chevron-right"></i>
-            </button>
+        <div class="activity-logs-table" id="activityLogsContainer">
+            <!-- Activity logs will be dynamically loaded here -->
         </div>
     </div>
 </div>
+
+<div id="moduleFormModalContainer"></div>
 
 <style>
-    .modules-list-section {
-        background-color: var(--bg-secondary);
-        border-radius: var(--border-radius-lg);
-        padding: var(--spacing-lg);
-    }
+    :root {
+    /* Existing color variables */
+    --primary-color: #4F46E5;
+    --secondary-color: #3B82F6;
+    --success-color: #10B981;
+    --danger-color: #EF4444;
+    --warning-color: #F59E0B;
+    
+    /* Background Colors */
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F9FAFB;
+    --bg-tertiary: #F3F4F6;
+    
+    /* Text Colors */
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --text-tertiary: #9CA3AF;
+    
+    /* Border Colors */
+    --border-light: #E5E7EB;
+    --border-medium: #D1D5DB;
+    
+    /* Spacing */
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+}
 
-    .modules-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: var(--spacing-lg);
-    }
+/* Modules Management Container */
+.modules-management-container {
+    background-color: var(--bg-primary);
+    border-radius: 8px;
+    padding: var(--spacing-lg);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
 
-    .module-card {
-        background-color: var(--bg-primary);
-        border-radius: var(--border-radius-lg);
-        border: 1px solid var(--border-light);
-        box-shadow: var(--shadow-sm);
-        transition: all var(--transition-speed) ease;
-    }
+/* Page Header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: var(--spacing-md);
+}
 
-    .module-card:hover {
-        box-shadow: var(--shadow-md);
-        transform: translateY(-5px);
-    }
+.page-header h1 {
+    font-size: 1.5rem;
+    color: var(--text-primary);
+}
 
-    .module-card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: var(--spacing-md);
-        border-bottom: 1px solid var(--border-light);
-    }
+.header-actions .btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: 0.5rem 1rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+}
 
-    .module-card-header h3 {
-        font-size: 1.125rem;
-        color: var(--text-primary);
-        font-weight: 600;
-    }
+.header-actions .btn:hover {
+    background-color: #4338CA;
+}
 
-    .module-status {
-        padding: var(--spacing-xs) var(--spacing-sm);
-        border-radius: var(--border-radius-sm);
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
+/* Modules Grid */
+.modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+}
 
-    .module-status.active {
-        background-color: rgba(16, 185, 129, 0.1);
-        color: var(--success-color);
-    }
+.module-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+}
 
-    .module-status.inactive {
-        background-color: rgba(239, 68, 68, 0.1);
-        color: var(--danger-color);
-    }
+.module-card:hover {
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
 
-    .module-card-body {
-        padding: var(--spacing-md);
-    }
+.module-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    background-color: var(--bg-tertiary);
+}
 
-    .module-details {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: var(--spacing-md);
-    }
+.module-card-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
 
-    .module-category, 
-    .module-compliance {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-sm);
-        font-size: 0.875rem;
-        color: var(--text-secondary);
-    }
+.module-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
 
-    .module-category i {
-        color: var(--primary-color);
-    }
+.module-status.active {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+}
 
-    .module-compliance.low i { color: var(--warning-color); }
-    .module-compliance.medium i { color: var(--secondary-color); }
-    .module-compliance.high i { color: var(--success-color); }
+.module-status.inactive {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--danger-color);
+}
 
-    .module-description {
-        color: var(--text-secondary);
-        margin-bottom: var(--spacing-md);
-        font-size: 0.875rem;
-        line-height: 1.5;
-    }
+.module-card-body {
+    padding: var(--spacing-md);
+}
 
-    .module-features {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--spacing-sm);
-    }
+.module-card-body p {
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+}
 
-    .feature-tag {
-        background-color: var(--bg-tertiary);
-        color: var(--text-secondary);
-        padding: var(--spacing-xs) var(--spacing-sm);
-        border-radius: var(--border-radius-sm);
-        font-size: 0.75rem;
-    }
+.module-details {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    color: var(--text-tertiary);
+}
 
-    .module-card-actions {
-        display: flex;
-        justify-content: space-between;
-        padding: var(--spacing-md);
-        border-top: 1px solid var(--border-light);
-    }
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
 
-    .btn-edit, 
-    .btn-toggle {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-sm);
-        padding: var(--spacing-xs) var(--spacing-sm);
-        border-radius: var(--border-radius-md);
-        font-size: 0.875rem;
-        transition: all var(--transition-speed) ease;
-    }
+.modal.show {
+    display: flex;
+}
 
-    .btn-edit {
-        background-color: rgba(59, 130, 246, 0.1);
-        color: var(--secondary-color);
-        border: none;
-    }
+.modal-dialog {
+    background-color: white;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
 
-    .btn-toggle {
-        background-color: rgba(239, 68, 68, 0.1);
-        color: var(--danger-color);
-        border: none;
-    }
-
-    .btn-edit:hover {
-        background-color: rgba(59, 130, 246, 0.2);
-    }
-
-    .btn-toggle:hover {
-        background-color: rgba(239, 68, 68, 0.2);
-    }
-
-    .pagination-section {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: var(--spacing-lg);
-        padding-top: var(--spacing-md);
-        border-top: 1px solid var(--border-light);
-    }
-
-    .pagination-controls {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-md);
-    }
-
-    .btn-pagination {
-        background: none;
-        border: 1px solid var(--border-light);
-        color: var(--text-secondary);
-        padding: var(--spacing-sm);
-        border-radius: var(--border-radius-sm);
-    }
-
-    .btn-pagination:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .page-numbers {
-        display: flex;
-        gap: var(--spacing-sm);
-    }
-
-    .page-numbers span {
-        padding: var(--spacing-xs) var(--spacing-sm);
-        border-radius: var(--border-radius-sm);
-        cursor: pointer;
-        transition: all var(--transition-speed) ease;
-    }
-
-    .page-numbers span.active {
-        background-color: var(--primary-color);
-        color: white;
-    }
-
-    .page-numbers span:not(.active):hover {
-        background-color: var(--bg-tertiary);
-    }
-
-    @media (max-width: 768px) {
-        .modules-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .pagination-section {
-            flex-direction: column;
-            gap: var(--spacing-md);
-        }
-    }
-</style>
-
-<!-- Add/Edit Module Modal -->
-<div class="modal modal-module" id="moduleModal" style="display: none;">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="moduleModalTitle">Add New Module</h2>
-                <button type="button" class="modal-close" id="closeModuleModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="moduleForm">
-                    <div class="form-group">
-                        <label for="moduleName">Module Name</label>
-                        <input type="text" id="moduleName" name="name" required 
-                               placeholder="Enter module name" class="form-control">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="moduleCategory">Category</label>
-                        <select id="moduleCategory" name="category" required class="form-control">
-                            <option value="">Select Category</option>
-                            <option value="hr">HR</option>
-                            <option value="finance">Finance</option>
-                            <option value="operations">Operations</option>
-                            <option value="integrations">Integrations</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="moduleDescription">Description</label>
-                        <textarea id="moduleDescription" name="description" 
-                                  placeholder="Describe the module's purpose" 
-                                  class="form-control" rows="3" required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="complianceLevel">Compliance Level</label>
-                        <select id="complianceLevel" name="complianceLevel" required class="form-control">
-                            <option value="">Select Compliance Level</option>
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Subscription Tiers</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-container">
-                                <input type="checkbox" name="subscriptionTiers" value="basic">
-                                <span class="checkmark"></span>
-                                Basic
-                            </label>
-                            <label class="checkbox-container">
-                                <input type="checkbox" name="subscriptionTiers" value="pro">
-                                <span class="checkmark"></span>
-                                Pro
-                            </label>
-                            <label class="checkbox-container">
-                                <input type="checkbox" name="subscriptionTiers" value="enterprise">
-                                <span class="checkmark"></span>
-                                Enterprise
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Module Permissions</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-container">
-                                <input type="checkbox" name="permissions" value="view">
-                                <span class="checkmark"></span>
-                                View
-                            </label>
-                            <label class="checkbox-container">
-                                <input type="checkbox" name="permissions" value="edit">
-                                <span class="checkmark"></span>
-                                Edit
-                            </label>
-                            <label class="checkbox-container">
-                                <input type="checkbox" name="permissions" value="delete">
-                                <span class="checkmark"></span>
-                                Delete
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="form-group toggle-group">
-                        <label>Module Status</label>
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="moduleActiveToggle" name="isActive">
-                            <label for="moduleActiveToggle" class="toggle-label">
-                                <span class="toggle-inner"></span>
-                            </label>
-                            <span class="toggle-status">Active</span>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancelModuleModal">Cancel</button>
-                <button class="btn btn-primary" id="saveModuleBtn">Save Module</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-   .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0,0,0,0.4);
-    }
-
-  .modal.show {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-     .modal-dialog {
-        background-color: white;
-        padding: 20px;
-        border-radius: 5px;
-        width: 500px;
-        max-width: 90%;
-        position: relative;
-    }
-
-    .modal.show .modal-dialog {
-        transform: scale(1);
-    }
-
-    .modal-content {
-    padding: 20px;
+.modal-content {
+    padding: var(--spacing-lg);
 }
 
 .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #ddd;
-        padding-bottom: 10px;
-        margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.modal-body {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-secondary);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    background-color: var(--bg-secondary);
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-md);
+    border-top: 1px solid var(--border-light);
+    padding-top: var(--spacing-md);
+}
+
+.btn-secondary {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: 6px;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: 6px;
+}
+
+/* Activity Logs Section */
+.module-activity-section {
+    margin-top: var(--spacing-lg);
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+    padding: var(--spacing-lg);
+}
+
+.activity-logs-table {
+    display: grid;
+    gap: var(--spacing-sm);
+}
+
+.activity-log {
+    display: flex;
+    justify-content: space-between;
+    background-color: var(--bg-primary);
+    padding: var(--spacing-sm);
+    border-radius: 6px;
+    border: 1px solid var(--border-light);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .modules-grid {
+        grid-template-columns: 1fr;
     }
 
-
-
-    .modal-header h2 {
-        font-size: 1.25rem;
-        color: var(--text-primary);
-        font-weight: 600;
+    .modal-dialog {
+        margin: var(--spacing-md);
+        max-width: calc(100% - 2rem);
     }
-
-   .modal-close {
-        background: none;
-        border: none;
-        font-size: 1.5rem;
-        cursor: pointer;
-    }
-    .modal-close:hover {
-        color: var(--danger-color);
-    }
-
-    .modal-body {
-        padding: var(--spacing-lg);
-    }
-
-    .form-group {
-        margin-bottom: var(--spacing-md);
-    }
-
-    .form-group label {
-        display: block;
-        margin-bottom: var(--spacing-sm);
-        color: var(--text-secondary);
-        font-weight: 500;
-    }
-
-    .checkbox-group {
-        display: flex;
-        gap: var(--spacing-md);
-        flex-wrap: wrap;
-    }
-
-    .checkbox-container {
-        display: flex;
-        align-items: center;
-        position: relative;
-        padding-left: 30px;
-        cursor: pointer;
-        user-select: none;
-    }
-
-    .checkbox-container input {
-        position: absolute;
-        opacity: 0;
-        cursor: pointer;
-    }
-
-    .checkmark {
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 20px;
-        width: 20px;
-        background-color: var(--bg-secondary);
-        border: 1px solid var(--border-light);
-        border-radius: var(--border-radius-sm);
-    }
-
-    .checkbox-container:hover input ~ .checkmark {
-        background-color: var(--bg-tertiary);
-    }
-
-    .checkbox-container input:checked ~ .checkmark {
-        background-color: var(--primary-color);
-        border-color: var(--primary-color);
-    }
-
-    .toggle-group {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .toggle-switch {
-        position: relative;
-        display: inline-block;
-    }
-
-    .toggle-switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-
-    .toggle-label {
-        display: block;
-        width: 50px;
-        height: 24px;
-        background-color: var(--bg-secondary);
-        border-radius: 34px;
-        position: relative;
-        cursor: pointer;
-    }
-
-    .toggle-inner {
-        position: absolute;
-        height: 20px;
-        width: 20px;
-        left: 2px;
-        bottom: 2px;
-        background-color: white;
-        border-radius: 50%;
-        transition: transform var(--transition-speed) ease;
-    }
-
-    .toggle-switch input:checked + .toggle-label {
-        background-color: var(--success-color);
-    }
-
-    .toggle-switch input:checked + .toggle-label .toggle-inner {
-        transform: translateX(26px);
-    }
-
-    .toggle-status {
-        margin-left: var(--spacing-sm);
-        color: var(--text-secondary);
-    }
-
-    .modal-footer {
-        display: flex;
-        justify-content: flex-end;
-        gap: var(--spacing-md);
-        padding: var(--spacing-lg);
-        border-top: 1px solid var(--border-light);
-    }
-
-    .btn-secondary {
-        background-color: var(--bg-secondary);
-        color: var(--text-secondary);
-        border: none;
-        padding: var(--spacing-sm) var(--spacing-md);
-        border-radius: var(--border-radius-md);
-    }
-
-    .btn-primary {
-        background-color: var(--primary-color);
-        color: white;
-        border: none;
-        padding: var(--spacing-sm) var(--spacing-md);
-        border-radius: var(--border-radius-md);
-    }
-
-    @media (max-width: 768px) {
-        .modal-dialog {
-            margin: var(--spacing-md);
-            max-width: calc(100% - 2rem);
-        }
-    }
+}
 </style>
-
-<!-- Module Activity Logs Section -->
-<div class="module-activity-section">
-    <div class="section-header">
-        <h2>Module Activity Logs</h2>
-        <div class="activity-filters">
-            <select id="activityTypeFilter" class="form-control">
-                <option value="">All Activities</option>
-                <option value="create">Module Created</option>
-                <option value="update">Module Updated</option>
-                <option value="delete">Module Deleted</option>
-                <option value="status-change">Status Changed</option>
-            </select>
-            <div class="date-range-picker">
-                <input type="date" id="startDateFilter" class="form-control">
-                <input type="date" id="endDateFilter" class="form-control">
-            </div>
-        </div>
-    </div>
-
-    <div class="activity-logs-table">
-        <table>
-            <thead>
-                <tr>
-                    <th>Timestamp</th>
-                    <th>Module</th>
-                    <th>Activity Type</th>
-                    <th>User</th>
-                    <th>Details</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>2023-06-15 14:30:45</td>
-                    <td>Employee Management</td>
-                    <td><span class="activity-badge create">Module Created</span></td>
-                    <td>John Doe</td>
-                    <td>Initial module setup for HR department</td>
-                </tr>
-                <!-- More log entries will be dynamically populated -->
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- Compliance and Security Section -->
-<div class="compliance-security-section">
-    <div class="section-header">
-        <h2>Compliance & Security Overview</h2>
-    </div>
-    <div class="compliance-grid">
-        <div class="compliance-card">
-            <div class="compliance-icon">
-                <i class="fas fa-shield-alt"></i>
-            </div>
-            <div class="compliance-content">
-                <h3>Data Protection</h3>
-                <div class="compliance-status high">
-                    <span>High Compliance</span>
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <p>Meets GDPR, CCPA, and local data protection regulations</p>
-            </div>
-        </div>
-        <div class="compliance-card">
-            <div class="compliance-icon">
-                <i class="fas fa-lock"></i>
-            </div>
-            <div class="compliance-content">
-                <h3>Access Control</h3>
-                <div class="compliance-status medium">
-                    <span>Medium Risk</span>
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <p>Review and tighten role-based access permissions</p>
-            </div>
-        </div>
-        <div class="compliance-card">
-            <div class="compliance-icon">
-                <i class="fas fa-globe"></i>
-            </div>
-            <div class="compliance-content">
-                <h3>International Regulations</h3>
-                <div class="compliance-status low">
-                    <span>Needs Improvement</span>
-                    <i class="fas fa-times-circle"></i>
-                </div>
-                <p>Audit required for cross-border data handling</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-    .module-activity-section,
-    .compliance-security-section {
-        background-color: var(--bg-primary);
-        border-radius: var(--border-radius-lg);
-        padding: var(--spacing-lg);
-        margin-top: var(--spacing-lg);
-        box-shadow: var(--shadow-sm);
-    }
-
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: var(--spacing-lg);
-        border-bottom: 1px solid var(--border-light);
-        padding-bottom: var(--spacing-md);
-    }
-
-    .section-header h2 {
-        font-size: 1.25rem;
-        color: var(--text-primary);
-        font-weight: 600;
-    }
-
-    .activity-filters {
-        display: flex;
-        gap: var(--spacing-md);
-    }
-
-    .date-range-picker {
-        display: flex;
-        gap: var(--spacing-sm);
-    }
-
-    .activity-logs-table {
-        overflow-x: auto;
-    }
-
-    .activity-logs-table table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .activity-logs-table th,
-    .activity-logs-table td {
-        padding: var(--spacing-sm);
-        text-align: left;
-        border-bottom: 1px solid var(--border-light);
-    }
-
-    .activity-badge {
-        display: inline-block;
-        padding: var(--spacing-xs) var(--spacing-sm);
-        border-radius: var(--border-radius-sm);
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-
-    .activity-badge.create {
-        background-color: rgba(16, 185, 129, 0.1);
-        color: var(--success-color);
-    }
-
-    .activity-badge.update {
-        background-color: rgba(59, 130, 246, 0.1);
-        color: var(--secondary-color);
-    }
-
-    .activity-badge.delete {
-        background-color: rgba(239, 68, 68, 0.1);
-        color: var(--danger-color);
-    }
-
-    .compliance-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: var(--spacing-lg);
-    }
-
-    .compliance-card {
-        display: flex;
-        align-items: center;
-        background-color: var(--bg-secondary);
-        border-radius: var(--border-radius-lg);
-        padding: var(--spacing-lg);
-        border: 1px solid var(--border-light);
-    }
-
-    .compliance-icon {
-        font-size: 2.5rem;
-        margin-right: var(--spacing-lg);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-    }
-
-    .compliance-icon i {
-        color: var(--primary-color);
-    }
-
-    .compliance-content {
-        flex-grow: 1;
-    }
-
-    .compliance-content h3 {
-        margin-bottom: var(--spacing-sm);
-        color: var(--text-primary);
-        font-size: 1.125rem;
-    }
-
-    .compliance-status {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: var(--spacing-sm);
-    }
-
-    .compliance-status span {
-        font-weight: 500;
-    }
-
-    .compliance-status.high {
-        color: var(--success-color);
-    }
-
-    .compliance-status.medium {
-        color: var(--warning-color);
-    }
-
-    .compliance-status.low {
-        color: var(--danger-color);
-    }
-
-    .compliance-content p {
-        color: var(--text-secondary);
-        font-size: 0.875rem;
-    }
-
-    @media (max-width: 1024px) {
-        .compliance-grid {
-            grid-template-columns: 1fr 1fr;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .compliance-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .activity-filters {
-            flex-direction: column;
-        }
-    }
-</style>
-
-<!-- Module Subscription & Integration Section -->
-<div class="module-subscription-section">
-    <div class="section-header">
-        <h2>Module Subscriptions & Integrations</h2>
-        <div class="header-actions">
-            <button class="btn btn-primary" id="addIntegrationBtn">
-                <i class="fas fa-plug"></i> Add New Integration
-            </button>
-        </div>
-    </div>
-
-    <div class="subscription-plans-grid">
-        <div class="subscription-plan">
-            <div class="plan-header">
-                <h3>Basic Plan</h3>
-                <span class="plan-badge basic">Limited Access</span>
-            </div>
-            <div class="plan-modules">
-                <h4>Available Modules</h4>
-                <ul>
-                    <li>
-                        <i class="fas fa-check-circle"></i> 
-                        Employee Management
-                    </li>
-                    <li>
-                        <i class="fas fa-check-circle"></i> 
-                        Attendance Tracking
-                    </li>
-                    <li class="disabled">
-                        <i class="fas fa-times-circle"></i> 
-                        Payroll Processing
-                    </li>
-                </ul>
-            </div>
-            <div class="plan-integrations">
-    <h4>Integrations</h4>
-    <div class="integration-list">
-        <div class="integration-item">
-            <div class="integration-icon google-workspace">
-                <i class="fab fa-google"></i>
-            </div>
-            <span>Google Workspace</span>
-            <span class="integration-status active">Connected</span>
-        </div>
-        <div class="integration-item">
-            <div class="integration-icon slack">
-                <i class="fab fa-slack"></i>
-            </div>
-            <span>Slack</span>
-            <span class="integration-status active">Connected</span>
-        </div>
-        <div class="integration-item">
-            <div class="integration-icon microsoft-teams">
-                <i class="fab fa-microsoft"></i>
-            </div>
-            <span>Microsoft Teams</span>
-            <span class="integration-status active">Connected</span>
-        </div>
-    </div>
-</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="subscription-plan">
-            <div class="plan-header">
-                <h3>Pro Plan</h3>
-                <span class="plan-badge pro">Full Access</span>
-            </div>
-            <div class="plan-modules">
-                <h4>Available Modules</h4>
-                <ul>
-                    <li>
-                        <i class="fas fa-check-circle"></i> 
-                        Employee Management
-                    </li>
-                    <li>
-                        <i class="fas fa-check-circle"></i> 
-                        Attendance Tracking
-                    </li>
-                    <li>
-                        <i class="fas fa-check-circle"></i> 
-                        Payroll Processing
-                    </li>
-                    <li>
-                        <i class="fas fa-check-circle"></i> 
-                        Performance Management
-                    </li>
-                </ul>
-            </div>
-            <div class="plan-integrations">
-                <h4>Integrations</h4>
-                <div class="integration-list">
-                    <div class="integration-item">
-                        <img src="path/to/google-workspace-icon.png" alt="Google Workspace">
-                        <span>Google Workspace</span>
-                        <span class="integration-status active">Connected</span>
-                    </div>
-                    <div class="integration-item">
-                        <img src="path/to/slack-icon.png" alt="Slack">
-                        <span>Slack</span>
-                        <span class="integration-status active">Connected</span>
-                    </div>
-                    <div class="integration-item">
-                        <img src="path/to/microsoft-teams-icon.png" alt="Microsoft Teams">
-                        <span>Microsoft Teams</span>
-                        <span class="integration-status active">Connected</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Integration Modal -->
-<div class="modal modal-integration" id="integrationModal">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Add New Integration</h2>
-                <button class="modal-close" id="closeIntegrationModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="integration-options">
-    <div class="integration-option">
-        <div class="integration-icon google-workspace">
-            <i class="fab fa-google"></i>
-        </div>
-        <h3>Google Workspace</h3>
-        <p>Sync calendars, contacts, and collaborate seamlessly</p>
-        <button class="btn btn-connect">Connect</button>
-    </div>
-    <div class="integration-option">
-        <div class="integration-icon microsoft-365">
-            <i class="fab fa-microsoft"></i>
-        </div>
-        <h3>Microsoft 365</h3>
-        <p>Integrate with Office suite and Teams</p>
-        <button class="btn btn-connect">Connect</button>
-    </div>
-    <div class="integration-option">
-        <div class="integration-icon salesforce">
-            <i class="fab fa-salesforce"></i>
-        </div>
-        <h3>Salesforce</h3>
-        <p>Sync customer data and sales information</p>
-        <button class="btn btn-connect">Connect</button>
-    </div>
-</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-    .module-subscription-section {
-        background-color: var(--bg-primary);
-        border-radius: var(--border-radius-lg);
-        padding: var(--spacing-lg);
-        margin-top: var(--spacing-lg);
-        box-shadow: var(--shadow-sm);
-    }
-
-    .subscription-plans-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: var(--spacing-lg);
-    }
-
-    .subscription-plan {
-        background-color: var(--bg-secondary);
-        border-radius: var(--border-radius-lg);
-        border: 1px solid var(--border-light);
-        overflow: hidden;
-    }
-
-    .plan-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: var(--spacing-md);
-        background-color: var(--bg-tertiary);
-    }
-
-    .plan-badge {
-        padding: var(--spacing-xs) var(--spacing-sm);
-        border-radius: var(--border-radius-sm);
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-
-    .plan-badge.basic {
-        background-color: rgba(239, 68, 68, 0.1);
-        color: var(--danger-color);
-    }
-
-    .plan-badge.pro {
-        background-color: rgba(16, 185, 129, 0.1);
-        color: var(--success-color);
-    }
-
-    .plan-modules, 
-    .plan-integrations {
-        padding: var(--spacing-md);
-    }
-
-    .plan-modules h4,
-    .plan-integrations h4 {
-        margin-bottom: var(--spacing-md);
-        color: var(--text-secondary);
-        font-size: 1rem;
-    }
-
-    .plan-modules ul {
-        list-style: none;
-        padding: 0;
-    }
-
-    .plan-modules li {
-        display: flex;
-        align-items: center;
-        margin-bottom: var(--spacing-sm);
-    }
-
-    .plan-modules li i {
-        margin-right: var(--spacing-sm);
-    }
-
-    .plan-modules li.disabled {
-        color: var(--text-tertiary);
-        text-decoration: line-through;
-    }
-
-    .plan-modules li.disabled i {
-        color: var(--danger-color);
-    }
-
-    .integration-list {
-        display: flex;
-        flex-direction: column;
-        gap: var(--spacing-sm);
-    }
-
-    .integration-item {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-md);
-    }
-
-    .integration-item img {
-        width: 32px;
-        height: 32px;
-        border-radius: var(--border-radius-sm);
-    }
-
-    .integration-status {
-        margin-left: auto;
-        padding: var(--spacing-xs) var(--spacing-sm);
-        border-radius: var(--border-radius-sm);
-        font-size: 0.75rem;
-    }
-
-    .integration-status.active {
-        background-color: rgba(16, 185, 129, 0.1);
-        color: var(--success-color);
-    }
-
-    .integration-status.pending {
-        background-color: rgba(245, 158, 11, 0.1);
-        color: var(--warning-color);
-    }
-
-    .modal-integration .integration-options {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: var(--spacing-lg);
-    }
-
-    .integration-option {
-        text-align: center;
-        padding: var(--spacing-lg);
-        border: 1px solid var(--border-light);
-        border-radius: var(--border-radius-lg);
-        transition: all var(--transition-speed) ease;
-    }
-
-    .integration-option:hover {
-        box-shadow: var(--shadow-md);
-        transform: translateY(-5px);
-    }
-
-    .integration-option img {
-        width: 64px;
-        height: 64px;
-        margin-bottom: var(--spacing-md);
-    }
-
-    .integration-option h3 {
-        margin-bottom: var(--spacing-sm);
-        color: var(--text-primary);
-    }
-
-    .integration-option p {
-        color: var(--text-secondary);
-        margin-bottom: var(--spacing-md);
-    }
-
-    .btn-connect {
-        background-color: var(--primary-color);
-        color: white;
-        border: none;
-        padding: var(--spacing-sm) var(--spacing-md);
-        border-radius: var(--border-radius-md);
-    }
-
-    @media (max-width: 1024px) {
-        .subscription-plans-grid,
-        .modal-integration .integration-options {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-
-<!-- Module Performance & Analytics Section -->
-<div class="module-performance-section">
-    <div class="section-header">
-        <h2>Module Performance Analytics</h2>
-        <div class="performance-filters">
-            <select id="performanceTimeframe" class="form-control">
-                <option value="7d">Last 7 Days</option>
-                <option value="30d">Last 30 Days</option>
-                <option value="90d">Last 90 Days</option>
-                <option value="custom">Custom Range</option>
-            </select>
-            <div class="custom-date-range" style="display: none;">
-                <input type="date" id="performanceStartDate" class="form-control">
-                <input type="date" id="performanceEndDate" class="form-control">
-            </div>
-        </div>
-    </div>
-
-    <div class="performance-metrics-grid">
-        <div class="performance-metric">
-            <div class="metric-header">
-                <h3>Module Usage</h3>
-                <i class="fas fa-chart-bar"></i>
-            </div>
-            <div class="metric-chart">
-                <canvas id="moduleUsageChart"></canvas>
-            </div>
-        </div>
-
-        <div class="performance-metric">
-            <div class="metric-header">
-                <h3>Performance Breakdown</h3>
-                <i class="fas fa-tachometer-alt"></i>
-            </div>
-            <div class="metric-details">
-                <div class="performance-breakdown">
-                    <div class="breakdown-item">
-                        <span class="breakdown-label">Employee Management</span>
-                        <div class="breakdown-bar">
-                            <div class="bar" style="width: 85%; background-color: var(--primary-color);"></div>
-                        </div>
-                        <span class="breakdown-percentage">85%</span>
-                    </div>
-                    <div class="breakdown-item">
-                        <span class="breakdown-label">Payroll Processing</span>
-                        <div class="breakdown-bar">
-                            <div class="bar" style="width: 65%; background-color: var(--secondary-color);"></div>
-                        </div>
-                        <span class="breakdown-percentage">65%</span>
-                    </div>
-                    <div class="breakdown-item">
-                        <span class="breakdown-label">Attendance Tracking</span>
-                        <div class="breakdown-bar">
-                            <div class="bar" style="width: 75%; background-color: var(--success-color);"></div>
-                        </div>
-                        <span class="breakdown-percentage">75%</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="module-performance-insights">
-        <div class="insights-header">
-            <h3>Performance Insights</h3>
-        </div>
-        <div class="insights-grid">
-            <div class="insight-card top-performing">
-                <div class="insight-icon">
-                    <i class="fas fa-trophy"></i>
-                </div>
-                <div class="insight-content">
-                    <h4>Top Performing Module</h4>
-                    <p>Employee Management</p>
-                    <span class="insight-detail">85% Efficiency</span>
-                </div>
-            </div>
-            <div class="insight-card improvement-needed">
-                <div class="insight-icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="insight-content">
-                    <h4>Module Needing Improvement</h4>
-                    <p>Payroll Processing</p>
-                    <span class="insight-detail">65% Efficiency</span>
-                </div>
-            </div>
-            <div class="insight-card system-health">
-                <div class="insight-icon">
-                    <i class="fas fa-heartbeat"></i>
-                </div>
-                <div class="insight-content">
-                    <h4>System Health</h4>
-                    <p>Overall Performance</p>
-                    <span class="insight-detail">76% Stable</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-    .module-performance-section {
-        background-color: var(--bg-primary);
-        border-radius: var(--border-radius-lg);
-        padding: var(--spacing-lg);
-        margin-top: var(--spacing-lg);
-        box-shadow: var(--shadow-sm);
-    }
-
-    .performance-filters {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-md);
-    }
-
-    .performance-metrics-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: var(--spacing-lg);
-        margin-top: var(--spacing-lg);
-    }
-
-    .performance-metric {
-        background-color: var(--bg-secondary);
-        border-radius: var(--border-radius-lg);
-        border: 1px solid var(--border-light);
-        padding: var(--spacing-md);
-    }
-
-    .metric-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: var(--spacing-md);
-    }
-
-    .metric-header h3 {
-        color: var(--text-primary);
-        font-size: 1.125rem;
-    }
-
-    .metric-header i {
-        color: var(--text-secondary);
-        font-size: 1.5rem;
-    }
-
-    .performance-breakdown {
-        display: flex;
-        flex-direction: column;
-        gap: var(--spacing-md);
-    }
-
-    .breakdown-item {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-md);
-    }
-
-    .breakdown-label {
-        flex: 1;
-        color: var(--text-secondary);
-    }
-
-    .breakdown-bar {
-        flex: 3;
-        height: 10px;
-        background-color: var(--bg-tertiary);
-        border-radius: 5px;
-        overflow: hidden;
-    }
-
-    .breakdown-bar .bar {
-        height: 100%;
-        border-radius: 5px;
-    }
-
-    .breakdown-percentage {
-        width: 50px;
-        text-align: right;
-        color: var(--text-secondary);
-    }
-
-    .module-performance-insights {
-        margin-top: var(--spacing-lg);
-    }
-
-    .insights-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: var(--spacing-lg);
-    }
-
-    .insight-card {
-        display: flex;
-        align-items: center;
-        background-color: var(--bg-secondary);
-        border-radius: var(--border-radius-lg);
-        padding: var(--spacing-lg);
-        border: 1px solid var(--border-light);
-    }
-
-    .insight-icon {
-        font-size: 2.5rem;
-        margin-right: var(--spacing-lg);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        background-color: rgba(79, 70, 229, 0.1);
-        color: var(--primary-color);
-    }
-
-    .insight-content {
-        flex-grow: 1;
-    }
-
-    .insight-content h4 {
-        margin-bottom: var(--spacing-xs);
-        color: var(--text-secondary);
-        font-size: 0.875rem;
-    }
-
-    .insight-content p {
-        color: var(--text-primary);
-        font-weight: 600;
-        margin-bottom: var(--spacing-xs);
-    }
-
-    .insight-detail {
-        color: var(--text-secondary);
-        font-size: 0.875rem;
-    }
-
-    .top-performing .insight-icon {
-        background-color: rgba(16, 185, 129, 0.1);
-        color: var(--success-color);
-    }
-
-    .improvement-needed .insight-icon {
-        background-color: rgba(239, 68, 68, 0.1);
-        color: var(--danger-color);
-    }
-
-    .system-health .insight-icon {
-        background-color: rgba(59, 130, 246, 0.1);
-        color: var(--secondary-color);
-    }
-
-    @media (max-width: 1024px) {
-        .performance-metrics-grid,
-        .insights-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Module Usage Chart
-        const ctx = document.getElementById('moduleUsageChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Employee Mgmt', 'Payroll', 'Attendance', 'Performance', 'Recruitment'],
-                datasets: [{
-                    label: 'Module Usage',
-                    data: [85, 65, 75, 55, 45],
-                    backgroundColor: [
-                        'rgba(79, 70, 229, 0.7)',
-                        'rgba(59, 130, 246, 0.7)',
-                        'rgba(16, 185, 129, 0.7)',
-                        'rgba(245, 158, 11, 0.7)',
-                        'rgba(239, 68, 68, 0.7)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100
-                    }
-                }
-            }
-        });
-
-        // Performance Timeframe Selector
-        const performanceTimeframe = document.getElementById('performanceTimeframe');
-        const customDateRange = document.querySelector('.custom-date-range');
-
-        performanceTimeframe.addEventListener('change', function() {
-            customDateRange.style.display = this.value === 'custom' ? 'flex' : 'none';
-        });
-    });
-</script>
