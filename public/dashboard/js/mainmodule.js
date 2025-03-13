@@ -124,9 +124,12 @@
         initializeEventListeners() {
             // Add Module Button
             if (this.addModuleBtn) {
-                this.addModuleBtn.addEventListener('click', () => this.showAddModuleModal());
-            }
-
+        this.addModuleBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent any default button behavior
+            e.stopPropagation(); // Stop event from propagating
+            this.showAddModuleModal();
+        });
+    }
             // Filter Event Listeners
             if (this.categoryFilter) {
                 this.categoryFilter.addEventListener('change', () => {
@@ -670,6 +673,30 @@ async handleEditModule() {
     }
 
     return true;
+}
+
+        showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'block';
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+        closeModals(specificModalId = null) {
+    const modals = specificModalId 
+        ? [document.getElementById(specificModalId)]
+        : document.querySelectorAll('.modal');
+
+    modals.forEach(modal => {
+        if (modal) {
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+        }
+    });
+
+    document.body.style.overflow = '';
 }
 
 
