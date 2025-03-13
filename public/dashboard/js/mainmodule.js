@@ -636,11 +636,34 @@ window.ModulesManager = ModulesManager;
 
 // Content loaded event listener
 document.addEventListener('contentLoaded', (event) => {
-    console.log('Content Loaded Event:', event.detail);
-    
     if (event.detail.section === 'modules') {
-        console.log('Initializing Modules Manager');
-        window.modulesManagerInstance = new ModulesManager('https://18.215.160.136.nip.io/api');
+        console.log('Modules content loaded, reinitializing event listeners');
+        console.log('Modules section loaded');
+        console.log('Add New Module Button:', document.getElementById('addNewModuleBtn'));
+        console.log('Add Module Modal:', document.getElementById('addModuleModal'));
+        const addNewModuleBtn = document.getElementById('addNewModuleBtn');
+        const addModuleModal = document.getElementById('addModuleModal');
+        
+        if (addNewModuleBtn && addModuleModal) {
+            console.log('Adding click event to Add New Module button');
+            
+            // Remove any existing listeners first
+            addNewModuleBtn.removeEventListener('click', openModal);
+            addNewModuleBtn.addEventListener('click', openModal);
+        } else {
+            console.error('Button or Modal not found', {
+                addNewModuleBtn,
+                addModuleModal
+            });
+        }
+
+        function openModal(event) {
+            event.preventDefault();
+            console.log('Modal open triggered');
+            
+            addModuleModal.style.display = 'flex';
+            addModuleModal.classList.add('show');
+        }
     }
 });
 
