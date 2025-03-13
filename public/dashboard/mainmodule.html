@@ -1,59 +1,110 @@
 <!-- public/dashboard/mainmodule.html -->
-<div class="modules-management-container">
-    <div class="page-header">
-        <h1>Modules Management</h1>
-        <div class="header-actions">
-            <button class="btn btn-primary" id="addNewModuleBtn">
-                <i class="fas fa-plus"></i> Add New Module
-            </button>
+    <div class="module-activity-logs">
+        <div class="activity-logs-header">
+            <h3>Recent Module Activity</h3>
+            <div class="log-filters">
+                <select id="activityLogFilter">
+                    <option value="all">All Activities</option>
+                    <option value="created">Module Created</option>
+                    <option value="updated">Module Updated</option>
+                    <option value="deleted">Module Deleted</option>
+                    <option value="status-changed">Status Changed</option>
+                </select>
+            </div>
+        </div>
+        <div class="activity-logs-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Module</th>
+                        <th>Activity</th>
+                        <th>User</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="activityLogsBody">
+                    <!-- Activity logs will be dynamically populated -->
+                </tbody>
+            </table>
         </div>
     </div>
+</div>
 
-    <div class="modules-overview-grid">
-        <div class="module-category" data-category="hr">
-            <div class="category-header">
-                <h3>
-                    <i class="fas fa-users"></i> HR Modules
-                </h3>
-            </div>
-            <div class="modules-list" id="hrModulesList">
-                <!-- HR Modules will be dynamically populated -->
-            </div>
-        </div>
+<style>
+    /* Existing styles from previous implementation */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.4);
+        justify-content: center;
+        align-items: center;
+    }
 
-        <div class="module-category" data-category="finance">
-            <div class="category-header">
-                <h3>
-                    <i class="fas fa-chart-line"></i> Finance Modules
-                </h3>
-            </div>
-            <div class="modules-list" id="financeModulesList">
-                <!-- Finance Modules will be dynamically populated -->
-            </div>
-        </div>
+    .modal.show {
+        display: flex;
+    }
 
-        <div class="module-category" data-category="operations">
-            <div class="category-header">
-                <h3>
-                    <i class="fas fa-cogs"></i> Operations Modules
-                </h3>
-            </div>
-            <div class="modules-list" id="operationsModulesList">
-                <!-- Operations Modules will be dynamically populated -->
-            </div>
-        </div>
+    .modal-dialog {
+        background-color: var(--bg-primary);
+        border-radius: var(--border-radius-lg);
+        width: 100%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: var(--shadow-lg);
+        position: relative;
+    }
 
-        <div class="module-category" data-category="integrations">
-            <div class="category-header">
-                <h3>
-                    <i class="fas fa-plug"></i> Integrations
-                </h3>
-            </div>
-            <div class="modules-list" id="integrationsModulesList">
-                <!-- Integration Modules will be dynamically populated -->
-            </div>
-        </div>
-    </div>
+    .modal-content {
+        padding: var(--spacing-lg);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-light);
+        padding-bottom: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: var(--spacing-sm);
+        border: 1px solid var(--border-light);
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-lg);
+    }
+</style>
 
     <style>
         .modules-management-container {
@@ -288,205 +339,11 @@
             }
         }
     </style>
-      <div class="module-modals">
-        <!-- Add New Module Modal -->
-        <div class="modal" id="addModuleModal">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>Add New Module</h2>
-                        <button class="modal-close">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="addModuleForm">
-                            <div class="form-group">
-                                <label>Module Name</label>
-                                <input type="text" name="moduleName" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Category</label>
-                                <select name="moduleCategory" required>
-                                    <option value="">Select Category</option>
-                                    <option value="hr">HR</option>
-                                    <option value="finance">Finance</option>
-                                    <option value="operations">Operations</option>
-                                    <option value="integrations">Integrations</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Description</label>
-                                <textarea name="moduleDescription" required></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Compliance Level</label>
-                                <select name="complianceLevel" required>
-                                    <option value="high">High</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="low">Low</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Required Permissions</label>
-                                <div class="permission-checkboxes">
-                                    <label>
-                                        <input type="checkbox" name="permissions" value="view">
-                                        View
-                                    </label>
-                                    <label>
-                                        <input type="checkbox" name="permissions" value="edit">
-                                        Edit
-                                    </label>
-                                    <label>
-                                        <input type="checkbox" name="permissions" value="delete">
-                                        Delete
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>Subscription Tiers</label>
-                                <div class="tier-checkboxes">
-                                    <label>
-                                        <input type="checkbox" name="subscriptionTiers" value="free">
-                                        Free
-                                    </label>
-                                    <label>
-                                        <input type="checkbox" name="subscriptionTiers" value="basic">
-                                        Basic
-                                    </label>
-                                    <label>
-                                        <input type="checkbox" name="subscriptionTiers" value="pro">
-                                        Pro
-                                    </label>
-                                    <label>
-                                        <input type="checkbox" name="subscriptionTiers" value="enterprise">
-                                        Enterprise
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="form-actions">
-                                <button type="button" class="btn btn-secondary" id="cancelAddModule">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Add Module</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Edit Module Modal -->
-        <div class="modal" id="editModuleModal">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>Edit Module</h2>
-                        <button class="modal-close">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="editModuleForm">
-                            <input type="hidden" name="moduleId">
-                            <div class="form-group">
-                                <label>Module Name</label>
-                                <input type="text" name="moduleName" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Category</label>
-                                <select name="moduleCategory" required>
-                                    <option value="hr">HR</option>
-                                    <option value="finance">Finance</option>
-                                    <option value="operations">Operations</option>
-                                    <option value="integrations">Integrations</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Description</label>
-                                <textarea name="moduleDescription" required></textarea>
-                            </div>
-                            <!-- Similar structure to Add Module Modal -->
-                            <div class="form-actions">
-                                <button type="button" class="btn btn-secondary" id="cancelEditModule">Cancel</button>
-                                <button type="submit" class="btn btn-primary">Update Module</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="module-activity-logs">
-        <div class="activity-logs-header">
-            <h3>Recent Module Activity</h3>
-            <div class="log-filters">
-                <select id="activityLogFilter">
-                    <option value="all">All Activities</option>
-                    <option value="created">Module Created</option>
-                    <option value="updated">Module Updated</option>
-                    <option value="deleted">Module Deleted</option>
-                    <option value="status-changed">Status Changed</option>
-                </select>
-            </div>
-        </div>
-        <div class="activity-logs-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Timestamp</th>
-                        <th>Module</th>
-                        <th>Activity</th>
-                        <th>User</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="activityLogsBody">
-                    <!-- Activity logs will be dynamically populated -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+     
     <style>
-        /* Modal Styles */
-        .modal {
-    display: none; /* Default state */
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.4);
-}
+     
 
-.modal.show {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-        .modal-dialog {
-            background-color: var(--bg-primary);
-            border-radius: var(--border-radius-lg);
-            width: 100%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: var(--shadow-lg);
-            position: relative;
-        }
-
-        .modal-content {
-            padding: var(--spacing-lg);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-light);
-            padding-bottom: var(--spacing-md);
-            margin-bottom: var(--spacing-lg);
-        }
+        
 
         .modal-header h2 {
             margin: 0;
@@ -494,44 +351,14 @@
             color: var(--text-primary);
         }
 
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: var(--text-tertiary);
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
+        
 
         .modal-close:hover {
             color: var(--danger-color);
         }
 
         /* Form Styles */
-        .form-group {
-            margin-bottom: var(--spacing-md);
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: var(--spacing-sm);
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        .form-group input[type="text"],
-        .form-group input[type="email"],
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: var(--spacing-sm) var(--spacing-md);
-            border: 1px solid var(--border-light);
-            border-radius: var(--border-radius-md);
-            background-color: var(--bg-secondary);
-            color: var(--text-primary);
-            transition: border-color 0.3s ease;
-        }
-
+        
         .form-group input[type="text"]:focus,
         .form-group input[type="email"]:focus,
         .form-group textarea:focus,
@@ -560,14 +387,7 @@
             color: var(--text-secondary);
         }
 
-        .form-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: var(--spacing-md);
-            border-top: 1px solid var(--border-light);
-            padding-top: var(--spacing-md);
-        }
-
+       
         .btn {
             padding: var(--spacing-sm) var(--spacing-md);
             border-radius: var(--border-radius-md);
@@ -675,5 +495,5 @@
             color: var(--danger-color);
         }
     </style>
-</div>
+
       
