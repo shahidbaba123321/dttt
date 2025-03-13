@@ -1093,7 +1093,7 @@ class ContentLoader {
     }
 }
 
-    async initializeModules() {
+   async initializeModules() {
     try {
         // Check if script is already loaded
         const existingScript = document.querySelector('script[src*="mainmodule.js"]');
@@ -1106,8 +1106,20 @@ class ContentLoader {
         script.src = `${this.baseUrl}/dashboard/js/mainmodule.js`;
         
         await new Promise((resolve, reject) => {
-            script.onload = resolve;
-            script.onerror = reject;
+            script.onload = () => {
+                console.log('Modules script loaded successfully');
+                
+                // Trigger initialization if function exists
+                if (typeof window.initializeModulesManager === 'function') {
+                    window.initializeModulesManager();
+                }
+                
+                resolve();
+            };
+            script.onerror = (error) => {
+                console.error('Error loading modules script:', error);
+                reject(error);
+            };
             document.body.appendChild(script);
         });
 
