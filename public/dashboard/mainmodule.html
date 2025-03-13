@@ -30,7 +30,48 @@
         </div>
     </div>
 </div>
+<div id="moduleModalContainer">
+        <!-- Dynamically created modals will be inserted here -->
+    </div>
 
+    <script>
+        // Optional: Additional client-side validation or interaction scripts
+        document.addEventListener('DOMContentLoaded', function() {
+            const moduleCategories = document.querySelectorAll('.module-category');
+            
+            moduleCategories.forEach(category => {
+                const modulesList = category.querySelector('.modules-list');
+                
+                if (modulesList && modulesList.children.length === 0) {
+                    modulesList.innerHTML = `
+                        <div class="no-modules-placeholder">
+                            <p>No modules in this category yet</p>
+                        </div>
+                    `;
+                }
+            });
+        });
+    </script>
+
+    <style>
+        .no-modules-placeholder {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: var(--spacing-lg);
+            background-color: var(--bg-secondary);
+            border-radius: var(--border-radius-md);
+        }
+
+        .module-category {
+            transition: all 0.3s ease;
+        }
+
+        .module-category:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-5px);
+        }
+    </style>
+</div>
 <style>
     /* Existing styles from previous implementation */
     .modal {
