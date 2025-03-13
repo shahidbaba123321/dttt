@@ -1,11 +1,8 @@
 (function() {
-    // Ensure this runs after DOM is fully loaded
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM Fully Loaded');
-        initializeModulesManager();
-    });
-
+    // Function to initialize modules manager
     function initializeModulesManager() {
+        console.log('Initializing Modules Manager');
+        
         // Create modal dynamically
         createModuleModal();
         
@@ -77,69 +74,40 @@
     }
 
     function setupModalEventListeners() {
-        // Extensive logging
         console.log('Setting up modal event listeners');
 
-        // Find all potential buttons
-        const addNewModuleBtn = document.getElementById('addNewModuleBtn');
-        const closeModalBtn = document.getElementById('closeModalBtn');
-        const addModuleModal = document.getElementById('addModuleModal');
-        const addModuleForm = document.getElementById('addModuleForm');
+        // Use event delegation for dynamically loaded content
+        document.addEventListener('click', function(event) {
+            const addNewModuleBtn = event.target.closest('#addNewModuleBtn');
+            const closeModalBtn = event.target.closest('#closeModalBtn');
+            const modal = document.getElementById('addModuleModal');
 
-        // Log found elements
-        console.log('Elements found:', {
-            addNewModuleBtn,
-            closeModalBtn,
-            addModuleModal,
-            addModuleForm
-        });
-
-        // Add New Module Button
-        if (addNewModuleBtn) {
-            addNewModuleBtn.addEventListener('click', function(event) {
+            if (addNewModuleBtn) {
                 event.preventDefault();
-                event.stopPropagation();
-                
                 console.log('Add New Module Button Clicked');
                 
-                const modal = document.getElementById('addModuleModal');
                 if (modal) {
                     modal.style.display = 'flex';
                     console.log('Modal should be visible');
                 } else {
                     console.error('Modal not found');
                 }
-            });
-        } else {
-            console.error('Add New Module Button not found');
-            
-            // Alternative method: Add listener to body and check target
-            document.body.addEventListener('click', function(event) {
-                if (event.target && event.target.textContent.includes('Add New Module')) {
-                    const modal = document.getElementById('addModuleModal');
-                    if (modal) {
-                        modal.style.display = 'flex';
-                    }
-                }
-            });
-        }
+            }
 
-        // Close Modal Button
-        if (closeModalBtn) {
-            closeModalBtn.addEventListener('click', function() {
-                const modal = document.getElementById('addModuleModal');
+            if (closeModalBtn) {
                 if (modal) {
                     modal.style.display = 'none';
                 }
-            });
-        }
+            }
+        });
 
-        // Form Submission
-        if (addModuleForm) {
-            addModuleForm.addEventListener('submit', function(event) {
+        // Form submission
+        document.addEventListener('submit', function(event) {
+            const form = event.target.closest('#addModuleForm');
+            if (form) {
                 event.preventDefault();
                 
-                const formData = new FormData(event.target);
+                const formData = new FormData(form);
                 const moduleData = {
                     name: formData.get('moduleName'),
                     category: formData.get('moduleCategory'),
@@ -154,13 +122,18 @@
                 if (modal) {
                     modal.style.display = 'none';
                 }
-            });
-        }
+            }
+        });
     }
 
-    // Fallback initialization
-    window.addEventListener('load', function() {
-        console.log('Window load event');
-        initializeModulesManager();
+    // Custom event listener for content loaded
+    document.addEventListener('contentLoaded', function(event) {
+        if (event.detail.section === 'modules') {
+            console.log('Modules content loaded');
+            initializeModulesManager();
+        }
     });
+
+    // Expose initialization function globally
+    window.initializeModulesManager = initializeModulesManager;
 })();
