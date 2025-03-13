@@ -6,6 +6,7 @@
 
 class ModulesManager {
     constructor(apiBaseUrl) {
+        // Core configuration
         this.baseUrl = apiBaseUrl || 'https://18.215.160.136.nip.io/api';
         this.token = localStorage.getItem('token');
         
@@ -35,16 +36,31 @@ class ModulesManager {
     }
 
     setupEventListeners() {
+        console.log('Setting up event listeners');
+
         // Add New Module Button
         const addNewModuleBtn = document.getElementById('addNewModuleBtn');
         if (addNewModuleBtn) {
             addNewModuleBtn.addEventListener('click', this.showAddModuleModal);
+            console.log('Add New Module Button event listener added');
+        } else {
+            console.error('Add New Module Button not found');
         }
 
         // Add Module Form Submission
         const addModuleForm = document.getElementById('addModuleForm');
         if (addModuleForm) {
             addModuleForm.addEventListener('submit', this.addNewModule);
+            console.log('Add Module Form submission event listener added');
+        } else {
+            console.error('Add Module Form not found');
+        }
+
+        // Edit Module Form Submission
+        const editModuleForm = document.getElementById('editModuleForm');
+        if (editModuleForm) {
+            editModuleForm.addEventListener('submit', this.updateModule);
+            console.log('Edit Module Form submission event listener added');
         }
 
         // Modal Close Buttons
@@ -52,11 +68,12 @@ class ModulesManager {
         closeButtons.forEach(button => {
             button.addEventListener('click', this.closeModal);
         });
+        console.log(`Added close listeners to ${closeButtons.length} modal close buttons`);
 
-        // Cancel Button
-        const cancelButton = document.getElementById('cancelAddModule');
-        if (cancelButton) {
-            cancelButton.addEventListener('click', this.closeModal);
+        // Cancel Buttons
+        const cancelAddModuleBtn = document.getElementById('cancelAddModule');
+        if (cancelAddModuleBtn) {
+            cancelAddModuleBtn.addEventListener('click', this.closeModal);
         }
 
         // Activity Log Filter
@@ -67,11 +84,15 @@ class ModulesManager {
     }
 
     showAddModuleModal(event) {
+        console.log('Show Add Module Modal called');
+        
         if (event) {
             event.preventDefault();
         }
 
         const modal = document.getElementById('addModuleModal');
+        console.log('Modal element:', modal);
+        
         if (!modal) {
             this.showNotification('Modal not found', 'error');
             return;
@@ -83,7 +104,7 @@ class ModulesManager {
             form.reset();
         }
 
-        // Show modal
+        // Show modal with multiple methods for compatibility
         modal.style.display = 'flex';
         modal.classList.add('show');
 
@@ -92,9 +113,13 @@ class ModulesManager {
         if (firstInput) {
             firstInput.focus();
         }
+
+        console.log('Modal should now be visible');
     }
 
     closeModal(event) {
+        console.log('Close Modal called');
+        
         if (event) {
             event.preventDefault();
         }
@@ -106,8 +131,19 @@ class ModulesManager {
         });
     }
 
-    async fetchModules() {
+    showNotification(message, type = 'info') {
+        // Use dashboard's notification system if available
+        if (window.dashboardApp && window.dashboardApp.userInterface) {
+            window.dashboardApp.userInterface.showNotification(message, type);
+        } else {
+            // Fallback notification
+            alert(`${type.toUpperCase()}: ${message}`);
+        }
+    }
+
+        async fetchModules() {
         try {
+            console.log('Fetching modules');
             const response = await fetch(`${this.baseUrl}/modules`, {
                 method: 'GET',
                 headers: {
@@ -117,6 +153,7 @@ class ModulesManager {
             });
 
             const result = await response.json();
+            console.log('Modules fetch result:', result);
 
             if (result.success) {
                 this.renderModules(result.data);
@@ -124,12 +161,13 @@ class ModulesManager {
                 throw new Error(result.message || 'Failed to fetch modules');
             }
         } catch (error) {
-            this.showNotification(error.message, 'error');
             console.error('Modules fetch error:', error);
+            this.showNotification(error.message, 'error');
         }
     }
 
     renderModules(modules) {
+        console.log('Rendering modules:', modules);
         const categoryMappings = {
             'hr': 'hrModulesList',
             'finance': 'financeModulesList',
@@ -200,7 +238,9 @@ class ModulesManager {
 
         return card;
     }
-        async addNewModule(event) {
+
+    async addNewModule(event) {
+        console.log('Add New Module called');
         event.preventDefault();
 
         const form = event.target;
@@ -219,6 +259,8 @@ class ModulesManager {
             isActive: true
         };
 
+        console.log('Module Data:', moduleData);
+
         try {
             // Validate required fields
             if (!moduleData.name || !moduleData.category || !moduleData.description) {
@@ -236,6 +278,7 @@ class ModulesManager {
             });
 
             const result = await response.json();
+            console.log('Add Module Response:', result);
 
             if (result.success) {
                 this.showNotification('Module added successfully', 'success');
@@ -247,12 +290,14 @@ class ModulesManager {
                 throw new Error(result.message || 'Failed to add module');
             }
         } catch (error) {
-            this.showNotification(error.message, 'error');
             console.error('Add module error:', error);
+            this.showNotification(error.message, 'error');
         }
     }
 
-    showEditModuleModal(module) {
+        showEditModuleModal(module) {
+        console.log('Show Edit Module Modal called', module);
+        
         const modal = document.getElementById('editModuleModal');
         if (!modal) {
             this.showNotification('Edit Modal not found', 'error');
@@ -261,30 +306,62 @@ class ModulesManager {
 
         // Populate form fields
         const form = modal.querySelector('form');
-        form.querySelector('input[name="moduleId"]').value = module._id;
-        form.querySelector('input[name="moduleName"]').value = module.name;
-        form.querySelector('select[name="moduleCategory"]').value = module.category;
-        form.querySelector('textarea[name="moduleDescription"]').value = module.description;
-        form.querySelector('select[name="complianceLevel"]').value = module.complianceLevel;
+        
+        // Hidden ID field
+        const moduleIdField = form.querySelector('input[name="moduleId"]');
+        if (moduleIdField) {
+            moduleIdField.value = module._id;
+        }
 
-        // Set permissions
+        // Module Name
+        const nameField = form.querySelector('input[name="moduleName"]');
+        if (nameField) {
+            nameField.value = module.name;
+        }
+
+        // Category
+        const categoryField = form.querySelector('select[name="moduleCategory"]');
+        if (categoryField) {
+            categoryField.value = module.category;
+        }
+
+        // Description
+        const descriptionField = form.querySelector('textarea[name="moduleDescription"]');
+        if (descriptionField) {
+            descriptionField.value = module.description;
+        }
+
+        // Compliance Level
+        const complianceLevelField = form.querySelector('select[name="complianceLevel"]');
+        if (complianceLevelField) {
+            complianceLevelField.value = module.complianceLevel;
+        }
+
+        // Permissions
         const permissionCheckboxes = form.querySelectorAll('input[name="permissions"]');
         permissionCheckboxes.forEach(checkbox => {
-            checkbox.checked = module.permissions.includes(checkbox.value);
+            checkbox.checked = module.permissions ? 
+                module.permissions.includes(checkbox.value) : 
+                false;
         });
 
-        // Set subscription tiers
+        // Subscription Tiers
         const tierCheckboxes = form.querySelectorAll('input[name="subscriptionTiers"]');
         tierCheckboxes.forEach(checkbox => {
-            checkbox.checked = module.subscriptionTiers.includes(checkbox.value);
+            checkbox.checked = module.subscriptionTiers ? 
+                module.subscriptionTiers.includes(checkbox.value) : 
+                false;
         });
 
         // Show modal
         modal.style.display = 'flex';
         modal.classList.add('show');
+
+        console.log('Edit Module Modal displayed');
     }
 
     async updateModule(event) {
+        console.log('Update Module called');
         event.preventDefault();
 
         const form = event.target;
@@ -302,6 +379,8 @@ class ModulesManager {
                 .map(checkbox => checkbox.value)
         };
 
+        console.log('Update Module Data:', moduleData);
+
         try {
             const response = await fetch(`${this.baseUrl}/modules/${moduleId}`, {
                 method: 'PUT',
@@ -313,6 +392,7 @@ class ModulesManager {
             });
 
             const result = await response.json();
+            console.log('Update Module Response:', result);
 
             if (result.success) {
                 this.showNotification('Module updated successfully', 'success');
@@ -323,12 +403,14 @@ class ModulesManager {
                 throw new Error(result.message || 'Failed to update module');
             }
         } catch (error) {
-            this.showNotification(error.message, 'error');
             console.error('Update module error:', error);
+            this.showNotification(error.message, 'error');
         }
     }
 
     async deleteModule(moduleId) {
+        console.log('Delete Module called', moduleId);
+
         try {
             const confirmDelete = window.confirm('Are you sure you want to delete this module?');
             if (!confirmDelete) return;
@@ -342,6 +424,7 @@ class ModulesManager {
             });
 
             const result = await response.json();
+            console.log('Delete Module Response:', result);
 
             if (result.success) {
                 this.showNotification('Module deleted successfully', 'success');
@@ -351,12 +434,14 @@ class ModulesManager {
                 throw new Error(result.message || 'Failed to delete module');
             }
         } catch (error) {
-            this.showNotification(error.message, 'error');
             console.error('Delete module error:', error);
+            this.showNotification(error.message, 'error');
         }
     }
 
     async toggleModuleStatus(moduleId, isActive) {
+        console.log('Toggle Module Status called', moduleId, isActive);
+
         try {
             const response = await fetch(`${this.baseUrl}/modules/${moduleId}/status`, {
                 method: 'PATCH',
@@ -368,6 +453,7 @@ class ModulesManager {
             });
 
             const result = await response.json();
+            console.log('Toggle Module Status Response:', result);
 
             if (result.success) {
                 this.showNotification(
@@ -380,11 +466,13 @@ class ModulesManager {
                 throw new Error(result.message || 'Failed to update module status');
             }
         } catch (error) {
-            this.showNotification(error.message, 'error');
             console.error('Toggle module status error:', error);
+            this.showNotification(error.message, 'error');
         }
     }
+
         async fetchActivityLogs() {
+        console.log('Fetching Activity Logs');
         try {
             const response = await fetch(`${this.baseUrl}/modules/activity-logs`, {
                 method: 'GET',
@@ -395,6 +483,7 @@ class ModulesManager {
             });
 
             const result = await response.json();
+            console.log('Activity Logs Response:', result);
 
             if (result.success) {
                 this.renderActivityLogs(result.data);
@@ -402,17 +491,31 @@ class ModulesManager {
                 throw new Error(result.message || 'Failed to fetch activity logs');
             }
         } catch (error) {
-            this.showNotification(error.message, 'error');
             console.error('Activity logs fetch error:', error);
+            this.showNotification(error.message, 'error');
         }
     }
 
     renderActivityLogs(logs) {
+        console.log('Rendering Activity Logs:', logs);
         const logsBody = document.getElementById('activityLogsBody');
-        if (!logsBody) return;
+        if (!logsBody) {
+            console.error('Activity Logs Body not found');
+            return;
+        }
 
         // Clear existing logs
         logsBody.innerHTML = '';
+
+        // Handle empty logs
+        if (!logs || logs.length === 0) {
+            logsBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center">No activity logs found</td>
+                </tr>
+            `;
+            return;
+        }
 
         logs.forEach(log => {
             const row = document.createElement('tr');
@@ -437,6 +540,7 @@ class ModulesManager {
     }
 
     filterActivityLogs() {
+        console.log('Filtering Activity Logs');
         const filter = document.getElementById('activityLogFilter').value;
         const logRows = document.querySelectorAll('#activityLogsBody tr');
 
@@ -474,16 +578,6 @@ class ModulesManager {
             .replace(/\b\w/g, l => l.toUpperCase());
     }
 
-    showNotification(message, type = 'info') {
-        // Use dashboard's notification system if available
-        if (window.dashboardApp && window.dashboardApp.userInterface) {
-            window.dashboardApp.userInterface.showNotification(message, type);
-        } else {
-            // Fallback notification
-            alert(`${type.toUpperCase()}: ${message}`);
-        }
-    }
-
     // Compliance and Security Methods
     checkModuleComplianceRisks(module) {
         const complianceRisks = [];
@@ -494,13 +588,13 @@ class ModulesManager {
         }
 
         // Check permissions
-        if (!module.permissions.includes('view') && !module.permissions.includes('edit')) {
-            complianceRisks.push('Insufficient access controls');
+        if (!module.permissions || module.permissions.length === 0) {
+            complianceRisks.push('No permissions defined');
         }
 
         // Check subscription tiers
-        if (!module.subscriptionTiers.includes('enterprise')) {
-            complianceRisks.push('Limited advanced security features');
+        if (!module.subscriptionTiers || module.subscriptionTiers.length === 0) {
+            complianceRisks.push('No subscription tiers defined');
         }
 
         return complianceRisks;
@@ -531,4 +625,12 @@ document.addEventListener('contentLoaded', (event) => {
         window.modulesManagerInstance = new ModulesManager('https://18.215.160.136.nip.io/api');
     }
 });
-})(); // End of IIFE
+
+// Fallback initialization
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Content Loaded');
+    if (!window.modulesManagerInstance) {
+        window.modulesManagerInstance = new ModulesManager('https://18.215.160.136.nip.io/api');
+    }
+});
+})(); 
