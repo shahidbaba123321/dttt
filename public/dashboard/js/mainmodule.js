@@ -1,113 +1,93 @@
 (function() {
-    // Function to initialize modules manager
-    function initializeModulesManager() {
-        console.log('Initializing Modules Manager');
-        
-        // Create modal dynamically
-        createModuleModal();
-        
-        // Setup event listeners
-        setupModalEventListeners();
-    }
-
     function createModuleModal() {
-        // Remove any existing modal
+        // Remove existing modal
         const existingModal = document.getElementById('addModuleModal');
         if (existingModal) {
             existingModal.remove();
         }
 
         // Create modal HTML
-        const modalHTML = `
-            <div id="addModuleModal" style="
-                display: none; 
-                position: fixed; 
-                top: 0; 
-                left: 0; 
-                width: 100%; 
-                height: 100%; 
-                background: rgba(0,0,0,0.5); 
-                z-index: 1000; 
-                justify-content: center; 
-                align-items: center;
+        const modalDiv = document.createElement('div');
+        modalDiv.id = 'addModuleModal';
+        modalDiv.style.cssText = `
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        `;
+
+        modalDiv.innerHTML = `
+            <div style="
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                width: 500px;
             ">
-                <div style="
-                    background: white; 
-                    padding: 20px; 
-                    border-radius: 8px; 
-                    width: 500px;
-                ">
-                    <h2>Add New Module</h2>
-                    <form id="addModuleForm">
-                        <div>
-                            <label>Module Name</label>
-                            <input type="text" name="moduleName" required>
-                        </div>
-                        <div>
-                            <label>Category</label>
-                            <select name="moduleCategory" required>
-                                <option value="hr">HR</option>
-                                <option value="finance">Finance</option>
-                                <option value="operations">Operations</option>
-                                <option value="integrations">Integrations</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label>Description</label>
-                            <textarea name="moduleDescription" required></textarea>
-                        </div>
-                        <button type="submit">Add Module</button>
-                        <button type="button" id="closeModalBtn">Cancel</button>
-                    </form>
-                </div>
+                <h2>Add New Module</h2>
+                <form id="addModuleForm">
+                    <div>
+                        <label>Module Name</label>
+                        <input type="text" name="moduleName" required>
+                    </div>
+                    <div>
+                        <label>Category</label>
+                        <select name="moduleCategory" required>
+                            <option value="hr">HR</option>
+                            <option value="finance">Finance</option>
+                            <option value="operations">Operations</option>
+                            <option value="integrations">Integrations</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Description</label>
+                        <textarea name="moduleDescription" required></textarea>
+                    </div>
+                    <button type="submit">Add Module</button>
+                    <button type="button" id="closeModalBtn">Cancel</button>
+                </form>
             </div>
         `;
 
-        // Create a temporary div to parse HTML
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = modalHTML;
-        
         // Append to body
-        document.body.appendChild(tempDiv.firstChild);
+        document.body.appendChild(modalDiv);
 
-        console.log('Modal created and added to body');
+        return modalDiv;
     }
 
-    function setupModalEventListeners() {
-        console.log('Setting up modal event listeners');
-
-        // Use event delegation for dynamically loaded content
-        document.addEventListener('click', function(event) {
-            const addNewModuleBtn = event.target.closest('#addNewModuleBtn');
-            const closeModalBtn = event.target.closest('#closeModalBtn');
-            const modal = document.getElementById('addModuleModal');
-
-            if (addNewModuleBtn) {
+    function setupModalEventListeners(modal) {
+        // Add New Module Button Listener
+        const addNewModuleBtn = document.getElementById('addNewModuleBtn');
+        if (addNewModuleBtn) {
+            addNewModuleBtn.addEventListener('click', function(event) {
                 event.preventDefault();
                 console.log('Add New Module Button Clicked');
-                
-                if (modal) {
-                    modal.style.display = 'flex';
-                    console.log('Modal should be visible');
-                } else {
-                    console.error('Modal not found');
-                }
-            }
+                modal.style.display = 'flex';
+            });
+        } else {
+            console.error('Add New Module Button not found');
+        }
 
-            if (closeModalBtn) {
-                if (modal) {
-                    modal.style.display = 'none';
-                }
-            }
-        });
+        // Close Modal Button Listener
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+        }
 
-        // Form submission
-        document.addEventListener('submit', function(event) {
-            const form = event.target.closest('#addModuleForm');
-            if (form) {
+        // Form Submission
+        const addModuleForm = document.getElementById('addModuleForm');
+        if (addModuleForm) {
+            addModuleForm.addEventListener('submit', function(event) {
                 event.preventDefault();
                 
-                const formData = new FormData(form);
+                const formData = new FormData(event.target);
                 const moduleData = {
                     name: formData.get('moduleName'),
                     category: formData.get('moduleCategory'),
@@ -118,22 +98,30 @@
                 alert('Module would be added: ' + JSON.stringify(moduleData));
 
                 // Close modal
-                const modal = document.getElementById('addModuleModal');
-                if (modal) {
-                    modal.style.display = 'none';
-                }
-            }
-        });
+                modal.style.display = 'none';
+            });
+        }
     }
 
-    // Custom event listener for content loaded
+    // Initialize when content is loaded
     document.addEventListener('contentLoaded', function(event) {
         if (event.detail.section === 'modules') {
-            console.log('Modules content loaded');
-            initializeModulesManager();
+            console.log('Modules content loaded, setting up modal');
+            
+            // Create modal
+            const modal = createModuleModal();
+            
+            // Setup event listeners
+            setupModalEventListeners(modal);
         }
     });
 
-    // Expose initialization function globally
-    window.initializeModulesManager = initializeModulesManager;
+    // Fallback initialization
+    document.addEventListener('DOMContentLoaded', function() {
+        const modulesSection = document.querySelector('.modules-management-container');
+        if (modulesSection) {
+            const modal = createModuleModal();
+            setupModalEventListeners(modal);
+        }
+    });
 })();
