@@ -658,14 +658,21 @@
     window.ModulesManager = ModulesManager;
 
     // Content loaded event listener
-    document.addEventListener('contentLoaded', (event) => {
-        console.log('Content Loaded Event:', event.detail);
+   document.addEventListener('contentLoaded', (event) => {
+    console.log('Content Loaded Event:', event.detail);
+    
+    if (event.detail.section === 'modules') {
+        console.log('Modules section loaded');
         
-        if (event.detail.section === 'modules') {
-            console.log('Initializing Modules Manager');
+        // Ensure ModulesManager is initialized
+        if (!window.modulesManagerInstance) {
             window.modulesManagerInstance = new ModulesManager('https://18.215.160.136.nip.io/api');
         }
-    });
+
+        // Force modal creation
+        window.modulesManagerInstance.createModuleModal();
+    }
+});
 
     // Fallback initialization
     document.addEventListener('DOMContentLoaded', () => {
