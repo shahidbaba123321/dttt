@@ -1,5 +1,15 @@
 <!-- public/dashboard/mainmodule.html -->
-    <div class="module-activity-logs">
+    <div class="modules-management-container">
+    <div class="page-header">
+        <h1>Modules Management</h1>
+        <div class="header-actions">
+            <button class="btn btn-primary" id="addNewModuleBtn">
+                <i class="fas fa-plus"></i> Add New Module
+            </button>
+        </div>
+    </div>
+
+<div class="module-activity-logs">
         <div class="activity-logs-header">
             <h3>Recent Module Activity</h3>
             <div class="log-filters">
@@ -33,7 +43,7 @@
 <div id="moduleModalContainer">
         <!-- Dynamically created modals will be inserted here -->
     </div>
-
+</div>
     <script>
         // Optional: Additional client-side validation or interaction scripts
         document.addEventListener('DOMContentLoaded', function() {
