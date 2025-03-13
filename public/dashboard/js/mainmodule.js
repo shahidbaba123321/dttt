@@ -7,103 +7,95 @@
 
 class ModulesManager {
     constructor(apiBaseUrl) {
-        this.baseUrl = apiBaseUrl || 'https://18.215.160.136.nip.io/api';
-        this.token = localStorage.getItem('token');
-        
-        // Bind methods to ensure correct context
-        this.fetchModules = this.fetchModules.bind(this);
-        this.renderModules = this.renderModules.bind(this);
-        this.addNewModule = this.addNewModule.bind(this);
-        this.updateModule = this.updateModule.bind(this);
-        this.deleteModule = this.deleteModule.bind(this);
-        this.toggleModuleStatus = this.toggleModuleStatus.bind(this);
-        this.initializeEventListeners = this.initializeEventListeners.bind(this);
-        this.showAddModuleModal = this.showAddModuleModal.bind(this);
-        this.closeModal = this.closeModal.bind(this);
-        this.addNewModule = this.addNewModule.bind(this);
+    this.baseUrl = apiBaseUrl || 'https://18.215.160.136.nip.io/api';
+    this.token = localStorage.getItem('token');
+    
+    // Bind methods ONCE to ensure correct context
+    this.fetchModules = this.fetchModules.bind(this);
+    this.renderModules = this.renderModules.bind(this);
+    this.addNewModule = this.addNewModule.bind(this);
+    this.updateModule = this.updateModule.bind(this);
+    this.deleteModule = this.deleteModule.bind(this);
+    this.toggleModuleStatus = this.toggleModuleStatus.bind(this);
+    this.showAddModuleModal = this.showAddModuleModal.bind(this);
+    this.closeModal = this.closeModal.bind(this);
 
-        // Initialize the module management interface
+    // Use setTimeout to ensure DOM is fully loaded
+    setTimeout(() => {
         this.initializeEventListeners();
-        this.fetchModules();
-    }
+    }, 100);
+
+    this.fetchModules();
+}
+
 
     initializeEventListeners() {
-        // Add New Module Button
-       const addNewModuleBtn = document.getElementById('addNewModuleBtn');
-        if (addNewModuleBtn) {
-            addNewModuleBtn.removeEventListener('click', this.showAddModuleModal);
-            addNewModuleBtn.addEventListener('click', this.showAddModuleModal);
-        }
+    console.log('Initializing event listeners'); // Debug log
 
-        // Add Module Form Submission
-        const addModuleForm = document.getElementById('addModuleForm');
-        if (addModuleForm) {
-            addModuleForm.removeEventListener('submit', this.addNewModule);
-            addModuleForm.addEventListener('submit', this.addNewModule);
-        }
-
-        // Edit Module Form Submission
-        const editModuleForm = document.getElementById('editModuleForm');
-        if (editModuleForm) {
-            editModuleForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.updateModule(e.target);
-            });
-        }
-
-        // Modal Close Buttons
-        const modalCloseButtons = document.querySelectorAll('.modal-close');
-        modalCloseButtons.forEach(button => {
-            button.removeEventListener('click', this.closeModal);
-            button.addEventListener('click', this.closeModal);
-        });
-
-
-        // Cancel Buttons
-        const cancelAddModuleBtn = document.getElementById('cancelAddModule');
-        if (cancelAddModuleBtn) {
-            cancelAddModuleBtn.removeEventListener('click', this.closeModal);
-            cancelAddModuleBtn.addEventListener('click', this.closeModal);
-        }
-
-        // Activity Log Filter
-        const activityLogFilter = document.getElementById('activityLogFilter');
-        if (activityLogFilter) {
-            activityLogFilter.addEventListener('change', () => this.filterActivityLogs());
-        }
+    // Add New Module Button
+    const addNewModuleBtn = document.getElementById('addNewModuleBtn');
+    console.log('Add New Module Button:', addNewModuleBtn); // Debug log
+    
+    if (addNewModuleBtn) {
+        addNewModuleBtn.addEventListener('click', this.showAddModuleModal);
+        console.log('Event listener added to Add New Module Button');
     }
+
+    // Add Module Form Submission
+    const addModuleForm = document.getElementById('addModuleForm');
+    if (addModuleForm) {
+        addModuleForm.addEventListener('submit', this.addNewModule);
+    }
+
+    // Modal Close Buttons
+    const modalCloseButtons = document.querySelectorAll('.modal-close');
+    modalCloseButtons.forEach(button => {
+        button.addEventListener('click', this.closeModal);
+    });
+
+    // Cancel Buttons
+    const cancelAddModuleBtn = document.getElementById('cancelAddModule');
+    if (cancelAddModuleBtn) {
+        cancelAddModuleBtn.addEventListener('click', this.closeModal);
+    }
+}
 
     showAddModuleModal(event) {
-        // Prevent any default form submission
-        if (event) {
-            event.preventDefault();
-        }
-
-        // Ensure the modal exists
-        const modal = document.getElementById('addModuleModal');
-        if (!modal) {
-            console.error('Add Module Modal not found');
-            return;
-        }
-
-        // Reset the form
-        const form = modal.querySelector('form');
-        if (form) {
-            form.reset();
-        }
-
-        // Show the modal
-        modal.classList.add('show');
-
-        // Optional: Focus on the first input
-        const firstInput = modal.querySelector('input[name="moduleName"]');
-        if (firstInput) {
-            firstInput.focus();
-        }
-
-        // Add click outside to close functionality
-        this.addModalCloseOnOutsideClick(modal);
+    console.log('showAddModuleModal called'); // Debug log
+    
+    // Prevent any default form submission
+    if (event) {
+        event.preventDefault();
     }
+
+    // Ensure the modal exists
+    const modal = document.getElementById('addModuleModal');
+    console.log('Modal element:', modal); // Debug log
+
+    if (!modal) {
+        console.error('Add Module Modal not found');
+        return;
+    }
+
+    // Reset the form
+    const form = modal.querySelector('form');
+    if (form) {
+        form.reset();
+    }
+
+    // Show the modal
+    modal.style.display = 'flex'; // Use display instead of class
+    modal.classList.add('show');
+
+    console.log('Modal should now be visible'); // Debug log
+
+    // Optional: Focus on the first input
+    const firstInput = modal.querySelector('input[name="moduleName"]');
+    if (firstInput) {
+        firstInput.focus();
+    }
+}
+
 
     addModalCloseOnOutsideClick(modal) {
         const closeOnOutside = (event) => {
@@ -117,17 +109,20 @@ class ModulesManager {
     }
 
     closeModal(event) {
-        // Prevent any default form submission
-        if (event) {
-            event.preventDefault();
-        }
-
-        // Close all modals
-        const modals = document.querySelectorAll('.modal');
-        modals.forEach(modal => {
-            modal.classList.remove('show');
-        });
+    console.log('closeModal called'); // Debug log
+    
+    // Prevent any default form submission
+    if (event) {
+        event.preventDefault();
     }
+
+    // Close all modals
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.style.display = 'none';
+        modal.classList.remove('show');
+    });
+}
 
 async addNewModule(event) {
         // Prevent default form submission
