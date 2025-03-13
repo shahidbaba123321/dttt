@@ -34,7 +34,7 @@
         }
 
         // Separate method for binding to ensure all methods exist
-        bindAllMethods() {
+        bindMethods() {
             // Get all methods of the class prototype
             Object.getOwnPropertyNames(Object.getPrototypeOf(this))
                 .filter(prop => typeof this[prop] === 'function' && prop !== 'constructor')
