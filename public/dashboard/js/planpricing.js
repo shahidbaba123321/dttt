@@ -27,20 +27,41 @@
             };
 
             // Bind methods to ensure correct context
-            this.initializeEventListeners = this.initializeEventListeners.bind(this);
-            this.loadPlans = this.loadPlans.bind(this);
-            this.openPlanModal = this.openPlanModal.bind(this);
-            this.closePlanModal = this.closePlanModal.bind(this);
-            this.handlePlanSubmission = this.handlePlanSubmission.bind(this);
-            this.closeAllModals = this.closeAllModals.bind(this);
-            this.fetchPlanDetails = this.fetchPlanDetails.bind(this);
-            this.populatePlanForm = this.populatePlanForm.bind(this);
-            this.addPlanActionListeners = this.addPlanActionListeners.bind(this);
-            this.confirmDeletePlan = this.confirmDeletePlan.bind(this);
-            this.deletePlan = this.deletePlan.bind(this);
+            this.bindMethods();
 
             // Initialize the module
             this.init();
+        }
+
+        // Separate method for binding to ensure all methods exist
+        bindMethods() {
+            // List of method names to bind
+            const methodsToBind = [
+                'init',
+                'initializeEventListeners',
+                'loadPlans',
+                'openPlanModal',
+                'closePlanModal',
+                'handlePlanSubmission',
+                'closeAllModals',
+                'fetchPlanDetails',
+                'populatePlanForm',
+                'addPlanActionListeners',
+                'confirmDeletePlan',
+                'deletePlan',
+                'showErrorNotification',
+                'showSuccessNotification',
+                'loadAvailableFeatures'
+            ];
+
+            // Bind each method
+            methodsToBind.forEach(methodName => {
+                if (typeof this[methodName] === 'function') {
+                    this[methodName] = this[methodName].bind(this);
+                } else {
+                    console.warn(`Method ${methodName} not found during binding`);
+                }
+            });
         }
 
         init() {
