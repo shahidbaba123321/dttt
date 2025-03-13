@@ -34,50 +34,55 @@
         }
 
         // Separate method for binding to ensure all methods exist
-        bindMethods() {
-            // List of method names to bind
-            const methodsToBind = [
-                'init',
-                'initializeEventListeners',
-                'loadPlans',
-                'openPlanModal',
-                'closePlanModal',
-                'handlePlanSubmission',
-                'closeAllModals',
-                'fetchPlanDetails',
-                'populatePlanForm',
-                'addPlanActionListeners',
-                'confirmDeletePlan',
-                'deletePlan',
-                'showErrorNotification',
-                'showSuccessNotification',
-                'loadAvailableFeatures'
-            ];
-
-            // Bind each method
-            methodsToBind.forEach(methodName => {
-                if (typeof this[methodName] === 'function') {
-                    this[methodName] = this[methodName].bind(this);
-                } else {
-                    console.warn(`Method ${methodName} not found during binding`);
-                }
-            });
+        bindAllMethods() {
+            // Get all methods of the class prototype
+            Object.getOwnPropertyNames(Object.getPrototypeOf(this))
+                .filter(prop => typeof this[prop] === 'function' && prop !== 'constructor')
+                .forEach(method => {
+                    this[method] = this[method].bind(this);
+                });
         }
 
-        init() {
+
+         init() {
             try {
+                // Check if elements exist before adding event listeners
+                if (!this.elements.createPlanBtn) {
+                    console.error('Create Plan Button not found');
+                    return;
+                }
+
                 this.initializeEventListeners();
                 this.loadPlans();
                 this.loadAvailableFeatures();
-                this.initializePricingToggle();
-                this.initializeReportingModule();
-                this.initializeDiscountManagement();
-                this.initializeDataRetentionModule();
+                
+                // Only initialize these if their respective elements exist
+                if (document.getElementById('createDiscountBtn')) {
+                    this.initializeDiscountManagement();
+                }
+                
+                if (document.getElementById('generateReportBtn')) {
+                    this.initializeReportingModule();
+                }
+                
+                if (document.getElementById('createRetentionPolicyBtn')) {
+                    this.initializeDataRetentionModule();
+                }
             } catch (error) {
                 console.error('Pricing Manager Initialization Error:', error);
                 this.showErrorNotification('Failed to initialize Pricing Module');
             }
         }
+
+        closePlanModal() {
+            if (this.elements.modalOverlay) {
+                this.elements.modalOverlay.classList.remove('show');
+            }
+        }
+
+        
+
+
 
         initializeEventListeners() {
             // Create Plan Button
@@ -120,17 +125,151 @@
 
         showErrorNotification(message) {
             console.error(message);
-            // Implement your error notification logic
+            // Fallback error notification
             if (window.dashboardApp && window.dashboardApp.userInterface) {
                 window.dashboardApp.userInterface.showErrorNotification(message);
+            } else {
+                alert(message);
             }
         }
 
+        fetchPlanDetails(planId) {
+    try {
+        // Validate planId
+        if (!planId || typeof planId !== 'string') {
+            console.warn('Invalid plan ID provided');
+            return Promise.reject(new Error('Invalid plan ID'));
+        }
+
+        // Trim and validate planId format (MongoDB ObjectId is 24 hex characters)
+        const formattedPlanId = planId.trim();
+        const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+        
+        if (!objectIdRegex.test(formattedPlanId)) {
+            console.warn('Invalid plan ID format', formattedPlanId);
+            return Promise.reject(new Error('Invalid plan ID format'));
+        }
+
+        // Fetch plan details
+        return fetch(`${this.baseUrl}/plans/${formattedPlanId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch plan details');
+            }
+            return response.json();
+        })
+        .then(result => {
+            if (!result.data) {
+                throw new Error('No plan data received');
+            }
+
+            const plan = result.data;
+
+            // Populate form fields
+            this.populatePlanForm(plan);
+
+            return plan;
+        })
+        .catch(error => {
+            console.error('Fetch Plan Details Error:', error);
+            this.showErrorNotification(`Failed to retrieve plan details: ${error.message}`);
+            throw error;
+        });
+    } catch (error) {
+        console.error('Plan Details Fetch Error:', error);
+        this.showErrorNotification('An unexpected error occurred');
+        throw error;
+    }
+}
+
+populatePlanForm(plan) {
+    // Comprehensive form population with fallback values
+    const formElements = {
+        planId: document.getElementById('planId'),
+        planName: document.getElementById('planName'),
+        planDescription: document.getElementById('planDescription'),
+        monthlyPrice: document.getElementById('monthlyPrice'),
+        annualPrice: document.getElementById('annualPrice'),
+        trialPeriod: document.getElementById('trialPeriod'),
+        planActiveStatus: document.getElementById('planActiveStatus'),
+        planCurrency: document.getElementById('planCurrency')
+    };
+
+    // Validate form elements exist
+    const missingElements = Object.entries(formElements)
+        .filter(([key, element]) => !element)
+        .map(([key]) => key);
+
+    if (missingElements.length > 0) {
+        console.error(`Missing form elements: ${missingElements.join(', ')}`);
+        this.showErrorNotification('Some form elements are missing');
+        return;
+    }
+
+    // Populate form fields with robust error handling
+    try {
+        // Set plan ID
+        formElements.planId.value = plan._id || '';
+
+        // Set plan name
+        formElements.planName.value = plan.name || '';
+
+        // Set plan description
+        formElements.planDescription.value = plan.description || '';
+
+        // Set monthly price
+        formElements.monthlyPrice.value = 
+            plan.monthlyPrice !== undefined ? plan.monthlyPrice : 0;
+
+        // Set annual price
+        formElements.annualPrice.value = 
+            plan.annualPrice !== undefined ? plan.annualPrice : 0;
+
+        // Set trial period
+        formElements.trialPeriod.value = 
+            plan.trialPeriod !== undefined ? plan.trialPeriod : 0;
+
+        // Set active status
+        formElements.planActiveStatus.checked = 
+            plan.isActive !== undefined ? plan.isActive : false;
+
+        // Set currency
+        formElements.planCurrency.value = plan.currency || 'USD';
+
+        // Handle features
+        const featureCheckboxes = document.querySelectorAll('input[name="features"]');
+        featureCheckboxes.forEach(checkbox => {
+            // Ensure plan.features is a valid array
+            const isFeatureSelected = Array.isArray(plan.features) && 
+                plan.features.some(f => 
+                    f && (f._id === checkbox.value || f.name === checkbox.value)
+                );
+            
+            checkbox.checked = !!isFeatureSelected;
+        });
+    } catch (error) {
+        console.error('Error populating plan form:', error);
+        this.showErrorNotification('Failed to populate plan form');
+    }
+}
+
+        
+
+
+
         showSuccessNotification(message) {
             console.log(message);
-            // Implement your success notification logic
+            // Fallback success notification
             if (window.dashboardApp && window.dashboardApp.userInterface) {
                 window.dashboardApp.userInterface.showSuccessNotification(message);
+            } else {
+                alert(message);
             }
         }
 
