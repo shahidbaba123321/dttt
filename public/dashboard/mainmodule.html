@@ -437,12 +437,12 @@
 </style>
 
 <!-- Add/Edit Module Modal -->
-<div class="modal modal-module" id="moduleModal">
+<div class="modal modal-module" id="moduleModal" style="display: none;">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="moduleModalTitle">Add New Module</h2>
-                <button class="modal-close" id="closeModuleModal">
+                <button type="button" class="modal-close" id="closeModuleModal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -545,36 +545,32 @@
 </div>
 
 <style>
-    .modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-    .modal.show {
-        display: flex;
-        opacity: 1;
+   .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
     }
 
-    .modal-dialog {
-    background-color: white;
-    border-radius: 8px;
-    width: 100%;
-    max-width: 600px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    position: relative;
-}
+  .modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+     .modal-dialog {
+        background-color: white;
+        padding: 20px;
+        border-radius: 5px;
+        width: 500px;
+        max-width: 90%;
+        position: relative;
+    }
 
     .modal.show .modal-dialog {
         transform: scale(1);
@@ -585,13 +581,14 @@
 }
 
 .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #e0e0e0;
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-}
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+
 
 
     .modal-header h2 {
@@ -600,12 +597,12 @@
         font-weight: 600;
     }
 
-    .modal-close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-}
+   .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
     .modal-close:hover {
         color: var(--danger-color);
     }
