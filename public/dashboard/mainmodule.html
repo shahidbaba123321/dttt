@@ -45,6 +45,37 @@
     </div>
 
     <style>
+    .integration-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: var(--spacing-md);
+    }
+
+    .integration-icon.google-workspace {
+        background-color: #4285F4;
+        color: white;
+    }
+
+    .integration-icon.slack {
+        background-color: #4A154B;
+        color: white;
+    }
+
+    .integration-icon.microsoft-teams {
+        background-color: #5059A9;
+        color: white;
+    }
+
+    .integration-icon i {
+        font-size: 1.5rem;
+    }
+</style>
+
+    <style>
         .modules-management-container {
             background-color: var(--bg-primary);
             border-radius: var(--border-radius-lg);
@@ -1007,15 +1038,27 @@
                 <h4>Integrations</h4>
                 <div class="integration-list">
                     <div class="integration-item">
-                        <img src="path/to/google-workspace-icon.png" alt="Google Workspace">
-                        <span>Google Workspace</span>
-                        <span class="integration-status active">Connected</span>
-                    </div>
-                    <div class="integration-item">
-                        <img src="path/to/slack-icon.png" alt="Slack">
-                        <span>Slack</span>
-                        <span class="integration-status pending">Pending</span>
-                    </div>
+    <div class="integration-icon google-workspace">
+        <i class="fab fa-google"></i>
+    </div>
+    <span>Google Workspace</span>
+    <span class="integration-status active">Connected</span>
+</div>
+<div class="integration-item">
+    <div class="integration-icon slack">
+        <i class="fab fa-slack"></i>
+    </div>
+    <span>Slack</span>
+    <span class="integration-status active">Connected</span>
+</div>
+<div class="integration-item">
+    <div class="integration-icon microsoft-teams">
+        <i class="fab fa-microsoft"></i>
+    </div>
+    <span>Microsoft Teams</span>
+    <span class="integration-status active">Connected</span>
+</div>
+
                 </div>
             </div>
         </div>
@@ -1083,23 +1126,29 @@
             <div class="modal-body">
                 <div class="integration-options">
                     <div class="integration-option">
-                        <img src="path/to/google-workspace-icon.png" alt="Google Workspace">
-                        <h3>Google Workspace</h3>
-                        <p>Sync calendars, contacts, and collaborate seamlessly</p>
-                        <button class="btn btn-connect">Connect</button>
-                    </div>
-                    <div class="integration-option">
-                        <img src="path/to/microsoft-365-icon.png" alt="Microsoft 365">
-                        <h3>Microsoft 365</h3>
-                        <p>Integrate with Office suite and Teams</p>
-                        <button class="btn btn-connect">Connect</button>
-                    </div>
-                    <div class="integration-option">
-                        <img src="path/to/salesforce-icon.png" alt="Salesforce">
-                        <h3>Salesforce</h3>
-                        <p>Sync customer data and sales information</p>
-                        <button class="btn btn-connect">Connect</button>
-                    </div>
+    <div class="integration-icon google-workspace">
+        <i class="fab fa-google"></i>
+    </div>
+    <h3>Google Workspace</h3>
+    <p>Sync calendars, contacts, and collaborate seamlessly</p>
+    <button class="btn btn-connect">Connect</button>
+</div>
+<div class="integration-option">
+    <div class="integration-icon microsoft-teams">
+        <i class="fab fa-microsoft"></i>
+    </div>
+    <h3>Microsoft 365</h3>
+    <p>Integrate with Office suite and Teams</p>
+    <button class="btn btn-connect">Connect</button>
+</div>
+<div class="integration-option">
+    <div class="integration-icon salesforce">
+        <i class="fab fa-salesforce"></i>
+    </div>
+    <h3>Salesforce</h3>
+    <p>Sync customer data and sales information</p>
+    <button class="btn btn-connect">Connect</button>
+</div>
                 </div>
             </div>
         </div>
