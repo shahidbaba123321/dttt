@@ -124,14 +124,29 @@
         }
 
         showErrorNotification(message) {
-            console.error(message);
-            // Fallback error notification
-            if (window.dashboardApp && window.dashboardApp.userInterface) {
-                window.dashboardApp.userInterface.showErrorNotification(message);
-            } else {
-                alert(message);
-            }
+    console.error(message);
+    
+    // More robust notification handling
+    if (window.dashboardApp && window.dashboardApp.userInterface && 
+        typeof window.dashboardApp.userInterface.showErrorNotification === 'function') {
+        window.dashboardApp.userInterface.showErrorNotification(message);
+    } else {
+        // Fallback notification methods
+        const errorContainer = document.getElementById('error-notification');
+        if (errorContainer) {
+            errorContainer.textContent = message;
+            errorContainer.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                errorContainer.style.display = 'none';
+            }, 5000);
+        } else {
+            // Last resort - browser alert
+            alert(message);
         }
+    }
+}
 
         fetchPlanDetails(planId) {
     try {
@@ -1851,27 +1866,56 @@ populatePlanForm(plan) {
         }
 
         async editFeature(featureId) {
-            try {
-                const response = await fetch(`${this.baseUrl}/features/${featureId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.message || 'Failed to fetch feature details');
-                }
-
-                this.populateFeatureModal(result.data);
-            } catch (error) {
-                console.error('Edit Feature Error:', error);
-                this.showErrorNotification('Failed to retrieve feature details');
+    try {
+        const response = await fetch(`${this.baseUrl}/features/${featureId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
             }
+        });
+
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            // Log the full response text for debugging
+            const responseText = await response.text();
+            console.error('Non-JSON response:', responseText);
+            
+            throw new Error('Received non-JSON response from server');
         }
+
+        // Parse JSON response
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to fetch feature details');
+        }
+
+        // Validate result structure
+        if (!result.data) {
+            throw new Error('No feature data received');
+        }
+
+        this.populateFeatureModal(result.data);
+    } catch (error) {
+        console.error('Edit Feature Error:', {
+            message: error.message,
+            stack: error.stack
+        });
+
+        // More detailed error handling
+        let errorMessage = 'Failed to retrieve feature details';
+        
+        if (error.message.includes('Failed to fetch')) {
+            errorMessage = 'Network error. Please check your connection.';
+        } else if (error.message.includes('Received non-JSON response')) {
+            errorMessage = 'Server returned an invalid response. Please contact support.';
+        }
+
+        this.showErrorNotification(errorMessage);
+    }
+}
 
         populateFeatureModal(feature) {
             const featureModal = document.getElementById('featureModal');
