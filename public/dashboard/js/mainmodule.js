@@ -53,6 +53,13 @@
             this.statusFilter.addEventListener('change', () => this.filterModules());
             this.moduleSearchInput.addEventListener('input', () => this.filterModules());
 
+             // Add click outside modal to close
+    this.moduleModal.addEventListener('click', (e) => {
+        if (e.target === this.moduleModal) {
+            this.closeModuleModal();
+        }
+    });
+
             // Toggle Module Status
             document.querySelectorAll('.btn-toggle').forEach(btn => {
                 btn.addEventListener('click', (e) => this.toggleModuleStatus(e));
@@ -132,39 +139,51 @@
         }
 
         openModuleModal(module = null) {
-            // Reset form
-            this.moduleForm.reset();
+    // Reset form
+    this.moduleForm.reset();
 
-            // Set modal title
-            const modalTitle = document.getElementById('moduleModalTitle');
-            modalTitle.textContent = module ? 'Edit Module' : 'Add New Module';
+    // Uncheck all checkboxes
+    this.moduleForm.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
 
-            // Populate form if editing
-            if (module) {
-                document.getElementById('moduleName').value = module.name;
-                document.getElementById('moduleCategory').value = module.category;
-                document.getElementById('moduleDescription').value = module.description;
-                document.getElementById('complianceLevel').value = module.complianceLevel;
-                document.getElementById('moduleActiveToggle').checked = module.isActive;
+    // Set modal title
+    const modalTitle = document.getElementById('moduleModalTitle');
+    modalTitle.textContent = module ? 'Edit Module' : 'Add New Module';
 
-                // Set permissions and subscription tiers
-                module.permissions?.forEach(perm => {
-                    const checkbox = document.querySelector(`input[name="permissions"][value="${perm}"]`);
-                    if (checkbox) checkbox.checked = true;
-                });
+    // Populate form if editing
+    if (module) {
+        document.getElementById('moduleName').value = module.name;
+        document.getElementById('moduleCategory').value = module.category;
+        document.getElementById('moduleDescription').value = module.description;
+        document.getElementById('complianceLevel').value = module.complianceLevel;
+        document.getElementById('moduleActiveToggle').checked = module.isActive;
 
-                module.subscriptionTiers?.forEach(tier => {
-                    const checkbox = document.querySelector(`input[name="subscriptionTiers"][value="${tier}"]`);
-                    if (checkbox) checkbox.checked = true;
-                });
-            }
+        // Set permissions and subscription tiers
+        module.permissions?.forEach(perm => {
+            const checkbox = document.querySelector(`input[name="permissions"][value="${perm}"]`);
+            if (checkbox) checkbox.checked = true;
+        });
 
-            this.moduleModal.classList.add('show');
-        }
+        module.subscriptionTiers?.forEach(tier => {
+            const checkbox = document.querySelector(`input[name="subscriptionTiers"][value="${tier}"]`);
+            if (checkbox) checkbox.checked = true;
+        });
+    }
 
-        closeModuleModal() {
-            this.moduleModal.classList.remove('show');
-        }
+    // Show the modal
+    this.moduleModal.style.display = 'flex';
+    setTimeout(() => {
+        this.moduleModal.classList.add('show');
+    }, 10);
+}
+
+closeModuleModal() {
+    this.moduleModal.classList.remove('show');
+    setTimeout(() => {
+        this.moduleModal.style.display = 'none';
+    }, 300);
+}
 
         async saveModule() {
             const moduleData = this.collectModuleFormData();
