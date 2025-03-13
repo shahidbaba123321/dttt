@@ -177,6 +177,41 @@
             background-color: var(--text-tertiary);
             cursor: not-allowed;
         }
+        .features-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.feature-category {
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.feature-category h4 {
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #333;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.feature-checkbox {
+    display: flex;
+    align-items: center;
+}
+
+.feature-checkbox label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
     </style>
 </head>
 <body>
