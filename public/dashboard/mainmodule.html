@@ -1,5 +1,4 @@
-<!-- public/dashboard/mainmodule.html -->
-    <div class="modules-management-container">
+<div class="modules-management-container">
     <div class="page-header">
         <h1>Modules Management</h1>
         <div class="header-actions">
@@ -9,542 +8,227 @@
         </div>
     </div>
 
-<div class="module-activity-logs">
-        <div class="activity-logs-header">
-            <h3>Recent Module Activity</h3>
-            <div class="log-filters">
-                <select id="activityLogFilter">
-                    <option value="all">All Activities</option>
-                    <option value="created">Module Created</option>
-                    <option value="updated">Module Updated</option>
-                    <option value="deleted">Module Deleted</option>
-                    <option value="status-changed">Status Changed</option>
-                </select>
+    <div class="modules-overview-grid">
+        <div class="module-category" data-category="hr">
+            <div class="category-header">
+                <h3>
+                    <i class="fas fa-users"></i> HR Modules
+                </h3>
+            </div>
+            <div class="modules-list" id="hrModulesList">
+                <!-- HR Modules will be dynamically populated -->
             </div>
         </div>
-        <div class="activity-logs-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Timestamp</th>
-                        <th>Module</th>
-                        <th>Activity</th>
-                        <th>User</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="activityLogsBody">
-                    <!-- Activity logs will be dynamically populated -->
-                </tbody>
-            </table>
+
+        <div class="module-category" data-category="finance">
+            <div class="category-header">
+                <h3>
+                    <i class="fas fa-chart-line"></i> Finance Modules
+                </h3>
+            </div>
+            <div class="modules-list" id="financeModulesList">
+                <!-- Finance Modules will be dynamically populated -->
+            </div>
+        </div>
+
+        <div class="module-category" data-category="operations">
+            <div class="category-header">
+                <h3>
+                    <i class="fas fa-cogs"></i> Operations Modules
+                </h3>
+            </div>
+            <div class="modules-list" id="operationsModulesList">
+                <!-- Operations Modules will be dynamically populated -->
+            </div>
+        </div>
+
+        <div class="module-category" data-category="integrations">
+            <div class="category-header">
+                <h3>
+                    <i class="fas fa-plug"></i> Integrations
+                </h3>
+            </div>
+            <div class="modules-list" id="integrationsModulesList">
+                <!-- Integration Modules will be dynamically populated -->
+            </div>
         </div>
     </div>
 </div>
-<div id="moduleModalContainer">
-        <!-- Dynamically created modals will be inserted here -->
-    </div>
-</div>
-    <script>
-        // Optional: Additional client-side validation or interaction scripts
-        document.addEventListener('DOMContentLoaded', function() {
-            const moduleCategories = document.querySelectorAll('.module-category');
-            
-            moduleCategories.forEach(category => {
-                const modulesList = category.querySelector('.modules-list');
-                
-                if (modulesList && modulesList.children.length === 0) {
-                    modulesList.innerHTML = `
-                        <div class="no-modules-placeholder">
-                            <p>No modules in this category yet</p>
-                        </div>
-                    `;
-                }
-            });
-        });
-    </script>
 
-    <style>
-        .no-modules-placeholder {
-            text-align: center;
-            color: var(--text-secondary);
-            padding: var(--spacing-lg);
-            background-color: var(--bg-secondary);
-            border-radius: var(--border-radius-md);
-        }
-
-        .module-category {
-            transition: all 0.3s ease;
-        }
-
-        .module-category:hover {
-            box-shadow: var(--shadow-md);
-            transform: translateY(-5px);
-        }
-    </style>
-</div>
 <style>
-    /* Existing styles from previous implementation */
+    /* Modules Management Container */
+    .modules-management-container {
+        background-color: #f9fafb;
+        padding: 20px;
+        border-radius: 8px;
+    }
+
+    /* Page Header */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 15px;
+    }
+
+    .page-header h1 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: #111827;
+    }
+
+    /* Add New Module Button */
+    #addNewModuleBtn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background-color: #4F46E5;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    #addNewModuleBtn:hover {
+        background-color: #4338CA;
+    }
+
+    #addNewModuleBtn i {
+        margin-right: 5px;
+    }
+
+    /* Modules Overview Grid */
+    .modules-overview-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    /* Module Category */
+    .module-category {
+        background-color: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .category-header {
+        background-color: #f3f4f6;
+        padding: 12px 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .category-header h3 {
+        margin: 0;
+        font-size: 1rem;
+        color: #4b5563;
+    }
+
+    .category-header i {
+        color: #4F46E5;
+    }
+
+    /* Modules List */
+    .modules-list {
+        padding: 15px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+    }
+
+    /* Modal Styles */
     .modal {
         display: none;
         position: fixed;
-        z-index: 1000;
-        left: 0;
         top: 0;
+        left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0,0,0,0.4);
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
         justify-content: center;
         align-items: center;
     }
 
-    .modal.show {
-        display: flex;
-    }
-
-    .modal-dialog {
-        background-color: var(--bg-primary);
-        border-radius: var(--border-radius-lg);
-        width: 100%;
-        max-width: 600px;
-        max-height: 90vh;
-        overflow-y: auto;
-        box-shadow: var(--shadow-lg);
-        position: relative;
-    }
-
     .modal-content {
-        padding: var(--spacing-lg);
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        width: 500px;
+        max-width: 90%;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
     .modal-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid var(--border-light);
-        padding-bottom: var(--spacing-md);
-        margin-bottom: var(--spacing-lg);
+        margin-bottom: 20px;
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 15px;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        color: #111827;
     }
 
     .modal-close {
         background: none;
         border: none;
         font-size: 1.5rem;
+        color: #6b7280;
         cursor: pointer;
     }
 
-    .form-group {
-        margin-bottom: var(--spacing-md);
+    .modal-body form > div {
+        margin-bottom: 15px;
     }
 
-    .form-group label {
+    .modal-body label {
         display: block;
-        margin-bottom: var(--spacing-sm);
+        margin-bottom: 5px;
+        color: #4b5563;
     }
 
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
+    .modal-body input,
+    .modal-body select,
+    .modal-body textarea {
         width: 100%;
-        padding: var(--spacing-sm);
-        border: 1px solid var(--border-light);
+        padding: 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
     }
 
-    .form-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: var(--spacing-md);
-        margin-top: var(--spacing-lg);
+    .modal-body button {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 10px;
+    }
+
+    .modal-body button[type="submit"] {
+        background-color: #4F46E5;
+        color: white;
+    }
+
+    .modal-body button[type="button"] {
+        background-color: #f3f4f6;
+        color: #4b5563;
+    }
+
+    @media (max-width: 768px) {
+        .modules-overview-grid {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
-
-    <style>
-        .modules-management-container {
-            background-color: var(--bg-primary);
-            border-radius: var(--border-radius-lg);
-            padding: var(--spacing-lg);
-            box-shadow: var(--shadow-md);
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--spacing-lg);
-            border-bottom: 1px solid var(--border-light);
-            padding-bottom: var(--spacing-md);
-        }
-
-        .page-header h1 {
-            color: var(--text-primary);
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-
-        .header-actions .btn {
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-            padding: var(--spacing-sm) var(--spacing-md);
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: var(--border-radius-md);
-            transition: background-color 0.3s ease;
-        }
-
-        .header-actions .btn:hover {
-            background-color: var(--primary-dark);
-        }
-
-        .modules-overview-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: var(--spacing-lg);
-        }
-
-        .module-category {
-            background-color: var(--bg-secondary);
-            border-radius: var(--border-radius-lg);
-            border: 1px solid var(--border-light);
-            overflow: hidden;
-        }
-
-        .category-header {
-            background-color: var(--bg-tertiary);
-            padding: var(--spacing-md);
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-md);
-            border-bottom: 1px solid var(--border-light);
-        }
-
-        .category-header h3 {
-            color: var(--text-secondary);
-            font-size: 1.1rem;
-            font-weight: 500;
-            margin: 0;
-        }
-
-        .category-header i {
-            color: var(--primary-color);
-        }
-
-        .modules-list {
-            padding: var(--spacing-md);
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: var(--spacing-md);
-        }
-
-              .module-card {
-            background-color: var(--bg-primary);
-            border: 1px solid var(--border-light);
-            border-radius: var(--border-radius-md);
-            padding: var(--spacing-md);
-            display: flex;
-            flex-direction: column;
-            gap: var(--spacing-sm);
-            transition: all 0.3s ease;
-            position: relative;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .module-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-md);
-            border-color: var(--primary-light);
-        }
-
-        .module-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .module-icon {
-            width: 40px;
-            height: 40px;
-            background-color: var(--primary-light);
-            color: white;
-            border-radius: var(--border-radius-sm);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.2rem;
-        }
-
-        .module-status-toggle {
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-        }
-
-        .module-status-toggle .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 40px;
-            height: 20px;
-            background-color: var(--border-light);
-            border-radius: 20px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .module-status-toggle .toggle-switch::before {
-            content: '';
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background-color: white;
-            top: 2px;
-            left: 2px;
-            transition: transform 0.3s ease;
-        }
-
-        .module-status-toggle input[type="checkbox"] {
-            display: none;
-        }
-
-        .module-status-toggle input[type="checkbox"]:checked + .toggle-switch {
-            background-color: var(--success-color);
-        }
-
-        .module-status-toggle input[type="checkbox"]:checked + .toggle-switch::before {
-            transform: translateX(20px);
-        }
-
-        .module-card-content {
-            flex-grow: 1;
-        }
-
-        .module-title {
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: var(--spacing-sm);
-        }
-
-        .module-description {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            line-height: 1.4;
-            margin-bottom: var(--spacing-sm);
-        }
-
-        .module-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: var(--text-tertiary);
-            font-size: 0.75rem;
-        }
-
-        .module-actions {
-            display: flex;
-            gap: var(--spacing-sm);
-            margin-top: var(--spacing-sm);
-        }
-
-        .module-action-btn {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: color 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-xs);
-        }
-
-        .module-action-btn:hover {
-            color: var(--primary-color);
-        }
-
-        .module-compliance-badge {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: var(--border-radius-sm);
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .compliance-high {
-            background-color: var(--success-color);
-            color: white;
-        }
-
-        .compliance-medium {
-            background-color: var(--warning-color);
-            color: white;
-        }
-
-        .compliance-low {
-            background-color: var(--danger-color);
-            color: white;
-        }
-
-        @media (max-width: 1024px) {
-            .modules-overview-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-     
-    <style>
-     
-
-        
-
-        .modal-header h2 {
-            margin: 0;
-            font-size: 1.25rem;
-            color: var(--text-primary);
-        }
-
-        
-
-        .modal-close:hover {
-            color: var(--danger-color);
-        }
-
-        /* Form Styles */
-        
-        .form-group input[type="text"]:focus,
-        .form-group input[type="email"]:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        .permission-checkboxes,
-        .tier-checkboxes {
-            display: flex;
-            gap: var(--spacing-md);
-        }
-
-        .permission-checkboxes label,
-        .tier-checkboxes label {
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-            color: var(--text-secondary);
-        }
-
-       
-        .btn {
-            padding: var(--spacing-sm) var(--spacing-md);
-            border-radius: var(--border-radius-md);
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
-        }
-
-        .btn-secondary {
-            background-color: var(--bg-tertiary);
-            color: var(--text-secondary);
-        }
-
-        .btn-secondary:hover {
-            background-color: var(--border-light);
-        }
-
-        /* Activity Logs Styles */
-        .module-activity-logs {
-            background-color: var(--bg-primary);
-            border-radius: var(--border-radius-lg);
-            padding: var(--spacing-lg);
-            margin-top: var(--spacing-lg);
-            box-shadow: var(--shadow-sm);
-        }
-
-        .activity-logs-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--spacing-md);
-            border-bottom: 1px solid var(--border-light);
-            padding-bottom: var(--spacing-sm);
-        }
-
-        .activity-logs-header h3 {
-            margin: 0;
-            color: var(--text-primary);
-            font-size: 1.1rem;
-        }
-
-        .log-filters select {
-            padding: var(--spacing-xs) var(--spacing-sm);
-            border: 1px solid var(--border-light);
-            border-radius: var(--border-radius-sm);
-            background-color: var(--bg-secondary);
-        }
-
-        .activity-logs-table {
-            width: 100%;
-            overflow-x: auto;
-        }
-
-        .activity-logs-table table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .activity-logs-table th,
-        .activity-logs-table td {
-            padding: var(--spacing-sm);
-            text-align: left;
-            border-bottom: 1px solid var(--border-light);
-        }
-
-        .activity-logs-table th {
-            background-color: var(--bg-secondary);
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        .activity-logs-table tr:hover {
-            background-color: var(--bg-tertiary);
-        }
-
-        .activity-status {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: var(--border-radius-sm);
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-
-        .status-success {
-            background-color: rgba(16, 185, 129, 0.1);
-            color: var(--success-color);
-        }
-
-        .status-warning {
-            background-color: rgba(245, 158, 11, 0.1);
-            color: var(--warning-color);
-        }
-
-        .status-danger {
-            background-color: rgba(239, 68, 68, 0.1);
-            color: var(--danger-color);
-        }
-    </style>
-
-      
