@@ -32,39 +32,55 @@
             this.statusFilter = document.getElementById('statusFilter');
             this.moduleSearchInput = document.getElementById('moduleSearchInput');
 
+            this.openModuleModal = this.openModuleModal.bind(this);
+        this.closeModuleModal = this.closeModuleModal.bind(this);
+        this.saveModule = this.saveModule.bind(this);
+
             // Initialize event listeners
             this.initializeEventListeners();
         }
 
         initializeEventListeners() {
-            // Module Modal Events
-            this.addNewModuleBtn.addEventListener('click', () => this.openModuleModal());
-            this.saveModuleBtn.addEventListener('click', () => this.saveModule());
-            this.closeModuleModal.addEventListener('click', () => this.closeModuleModal());
-            this.cancelModuleModal.addEventListener('click', () => this.closeModuleModal());
-
-            // Integration Modal Events
-            this.addIntegrationBtn.addEventListener('click', () => this.openIntegrationModal());
-            this.closeIntegrationModal.addEventListener('click', () => this.closeIntegrationModal());
-
-            // Filter Events
-            this.categoryFilter.addEventListener('change', () => this.filterModules());
-            this.complianceFilter.addEventListener('change', () => this.filterModules());
-            this.statusFilter.addEventListener('change', () => this.filterModules());
-            this.moduleSearchInput.addEventListener('input', () => this.filterModules());
-
-             // Add click outside modal to close
-    this.moduleModal.addEventListener('click', (e) => {
-        if (e.target === this.moduleModal) {
-            this.closeModuleModal();
+        // Ensure elements exist before adding listeners
+        if (this.addNewModuleBtn) {
+            this.addNewModuleBtn.addEventListener('click', this.openModuleModal);
+        } else {
+            console.error('Add New Module button not found');
         }
-    });
 
-            // Toggle Module Status
-            document.querySelectorAll('.btn-toggle').forEach(btn => {
-                btn.addEventListener('click', (e) => this.toggleModuleStatus(e));
-            });
+        if (this.saveModuleBtn) {
+            this.saveModuleBtn.addEventListener('click', this.saveModule);
+        } else {
+            console.error('Save Module button not found');
         }
+
+        if (this.closeModuleModalBtn) {
+            this.closeModuleModalBtn.addEventListener('click', this.closeModuleModal);
+        }
+
+        if (this.cancelModuleModalBtn) {
+            this.cancelModuleModalBtn.addEventListener('click', this.closeModuleModal);
+        }
+
+        // Close modal when clicking outside
+        this.moduleModal?.addEventListener('click', (e) => {
+            if (e.target === this.moduleModal) {
+                this.closeModuleModal();
+            }
+        });
+    }
+
+        closeModuleModal() {
+        console.log('Closing module modal');
+        if (!this.moduleModal) return;
+
+        this.moduleModal.classList.remove('show');
+        setTimeout(() => {
+            this.moduleModal.style.display = 'none';
+        }, 300);
+    }
+
+
 
         async fetchModules() {
             try {
@@ -138,46 +154,22 @@
             return card;
         }
 
-        openModuleModal(module = null) {
-    // Reset form
-    this.moduleForm.reset();
+        openModuleModal(event) {
+        console.log('Opening module modal');
+        if (!this.moduleModal) {
+            console.error('Module modal element not found');
+            return;
+        }
 
-    // Uncheck all checkboxes
-    this.moduleForm.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-        checkbox.checked = false;
-    });
+        // Reset form
+        this.moduleForm.reset();
 
-    // Set modal title
-    const modalTitle = document.getElementById('moduleModalTitle');
-    modalTitle.textContent = module ? 'Edit Module' : 'Add New Module';
-
-    // Populate form if editing
-    if (module) {
-        document.getElementById('moduleName').value = module.name;
-        document.getElementById('moduleCategory').value = module.category;
-        document.getElementById('moduleDescription').value = module.description;
-        document.getElementById('complianceLevel').value = module.complianceLevel;
-        document.getElementById('moduleActiveToggle').checked = module.isActive;
-
-        // Set permissions and subscription tiers
-        module.permissions?.forEach(perm => {
-            const checkbox = document.querySelector(`input[name="permissions"][value="${perm}"]`);
-            if (checkbox) checkbox.checked = true;
-        });
-
-        module.subscriptionTiers?.forEach(tier => {
-            const checkbox = document.querySelector(`input[name="subscriptionTiers"][value="${tier}"]`);
-            if (checkbox) checkbox.checked = true;
-        });
+        // Show modal
+        this.moduleModal.style.display = 'flex';
+        setTimeout(() => {
+            this.moduleModal.classList.add('show');
+        }, 10);
     }
-
-    // Show the modal
-    this.moduleModal.style.display = 'flex';
-    setTimeout(() => {
-        this.moduleModal.classList.add('show');
-    }, 10);
-}
-
 closeModuleModal() {
     this.moduleModal.classList.remove('show');
     setTimeout(() => {
@@ -186,31 +178,33 @@ closeModuleModal() {
 }
 
         async saveModule() {
-            const moduleData = this.collectModuleFormData();
-            
-            try {
-                const response = await fetch(`${this.baseUrl}/modules`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(moduleData)
-                });
+        console.log('Saving module');
+        const moduleData = this.collectModuleFormData();
+        
+        try {
+            const response = await fetch(`${this.baseUrl}/modules`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(moduleData)
+            });
 
-                if (!response.ok) {
-                    throw new Error('Failed to save module');
-                }
-
-                const result = await response.json();
-                this.showNotification('Module saved successfully', 'success');
-                this.closeModuleModal();
-                this.fetchModules(); // Refresh module list
-            } catch (error) {
-                this.showNotification('Error saving module', 'error');
-                console.error('Module save error:', error);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to save module');
             }
+
+            const result = await response.json();
+            this.showNotification('Module saved successfully', 'success');
+            this.closeModuleModal();
+            this.fetchModules(); // Refresh module list
+        } catch (error) {
+            console.error('Module save error:', error);
+            this.showNotification(`Error: ${error.message}`, 'error');
         }
+    }
 
         collectModuleFormData() {
             return {
@@ -285,9 +279,20 @@ closeModuleModal() {
 
         // Utility Methods
         showNotification(message, type = 'info') {
-            // Implement notification logic similar to other parts of the application
-            console.log(`${type.toUpperCase()}: ${message}`);
-        }
+        // Implement a simple console log for now
+        console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        // Optional: Create a more robust notification system
+        const notificationContainer = document.createElement('div');
+        notificationContainer.className = `notification ${type}`;
+        notificationContainer.textContent = message;
+        document.body.appendChild(notificationContainer);
+
+        setTimeout(() => {
+            notificationContainer.remove();
+        }, 3000);
+    }
+}
 
         getCategoryIcon(category) {
             const icons = {
@@ -313,10 +318,13 @@ closeModuleModal() {
     window.ModulesManager = ModulesManager;
 
     // Optional: Auto-initialize if needed
-    document.addEventListener('DOMContentLoaded', () => {
-        if (window.dashboardApp && window.dashboardApp.apiBaseUrl) {
-            window.modulesManager = new ModulesManager(window.dashboardApp.apiBaseUrl);
-            window.modulesManager.init();
-        }
+    // Auto-initialize
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Initializing Modules Manager');
+    if (window.dashboardApp && window.dashboardApp.apiBaseUrl) {
+        window.modulesManager = new ModulesManager(window.dashboardApp.apiBaseUrl);
+    } else {
+        console.error('Dashboard app or API base URL not found');
+    }
     });
 })();
