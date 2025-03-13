@@ -22,6 +22,7 @@
                 closePlanModal: document.getElementById('closePlanModal'),
                 cancelPlanModal: document.getElementById('cancelPlanModal'),
                 planForm: document.getElementById('planForm'),
+                confirmDeleteModal: document.getElementById('confirmDeleteModal'),
                 featuresContainer: document.getElementById('featuresContainer')
             };
 
@@ -31,6 +32,8 @@
             this.openPlanModal = this.openPlanModal.bind(this);
             this.closePlanModal = this.closePlanModal.bind(this);
             this.handlePlanSubmission = this.handlePlanSubmission.bind(this);
+                this.closeAllModals = this.closeAllModals.bind(this);
+
 
             // Initialize the module
             this.init();
@@ -57,6 +60,19 @@
 
             // Form Submission
             this.elements.planForm.addEventListener('submit', this.handlePlanSubmission);
+
+            // Add close modal listeners
+    const modalCloseButtons = document.querySelectorAll('.modal-close');
+    modalCloseButtons.forEach(button => {
+        button.addEventListener('click', this.closeAllModals);
+    });
+
+    // Add overlay click listener to close modals
+    this.elements.modalOverlay.addEventListener('click', (e) => {
+        if (e.target === this.elements.modalOverlay) {
+            this.closeAllModals();
+        }
+    });
         }
 
         async loadPlans() {
@@ -126,33 +142,58 @@
 }
 
       addPlanActionListeners() {
+    // Remove existing listeners to prevent multiple bindings
     const editButtons = this.elements.plansContainer.querySelectorAll('.edit-plan');
     const deleteButtons = this.elements.plansContainer.querySelectorAll('.delete-plan');
 
+    // Clear previous listeners
     editButtons.forEach(button => {
+        const newButton = button.cloneNode(true);
+        button.parentNode.replaceChild(newButton, button);
+    });
+
+    deleteButtons.forEach(button => {
+        const newButton = button.cloneNode(true);
+        button.parentNode.replaceChild(newButton, button);
+    });
+
+    // Re-query the buttons after cloning
+    const newEditButtons = this.elements.plansContainer.querySelectorAll('.edit-plan');
+    const newDeleteButtons = this.elements.plansContainer.querySelectorAll('.delete-plan');
+
+    // Add new edit listeners
+    newEditButtons.forEach(button => {
         button.addEventListener('click', (e) => {
             e.stopPropagation();
-            const planId = e.target.getAttribute('data-id');
+            const planId = button.getAttribute('data-id');
             this.openPlanModal(planId);
         });
     });
 
-    deleteButtons.forEach(button => {
+    // Add new delete listeners
+    newDeleteButtons.forEach(button => {
         button.addEventListener('click', (e) => {
             e.stopPropagation();
-            const planId = e.target.getAttribute('data-id');
+            const planId = button.getAttribute('data-id');
             this.confirmDeletePlan(planId);
         });
     });
 }
 
-        openPlanModal(planId = null) {
-    // Ensure planId is a valid string
-    const validPlanId = planId && typeof planId === 'string' 
-        ? planId.toString().trim() 
-        : null;
+        closeAllModals() {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => modal.classList.remove('show'));
+    
+    const modalOverlays = document.querySelectorAll('.modal-overlay');
+    modalOverlays.forEach(overlay => overlay.classList.remove('show'));
+}
 
-    // Reset form completely
+
+        openPlanModal(planId = null) {
+    // Close all modals first
+    this.closeAllModals();
+
+    // Reset form
     this.elements.planForm.reset();
     
     // Clear any pre-existing plan ID
@@ -161,24 +202,17 @@
         planIdInput.value = '';
     }
 
-    // Close any open modals
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        if (modal.id !== 'planModal') {
-            modal.classList.remove('show');
-        }
-    });
-
     // Set modal title
     const modalTitle = document.getElementById('planModalTitle');
-    modalTitle.textContent = validPlanId ? 'Edit Plan' : 'Create New Plan';
+    modalTitle.textContent = planId ? 'Edit Plan' : 'Create New Plan';
 
-    // If editing and valid ID, fetch plan details
-    if (validPlanId) {
-        this.fetchPlanDetails(validPlanId);
+    // If editing, fetch and populate plan details
+    if (planId) {
+        this.fetchPlanDetails(planId);
     }
 
-    // Show modal
+    // Show plan modal
+    this.elements.planModal.classList.add('show');
     this.elements.modalOverlay.classList.add('show');
 }
 
@@ -331,23 +365,9 @@
         }
 
        confirmDeletePlan(planId) {
-    // Explicitly close other modals
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        if (modal.id !== 'confirmDeleteModal') {
-            modal.classList.remove('show');
-        }
-    });
+    // Close all modals first
+    this.closeAllModals();
 
-    const modalOverlays = document.querySelectorAll('.modal-overlay');
-    modalOverlays.forEach(overlay => {
-        if (overlay.id !== 'modalOverlay') {
-            overlay.classList.remove('show');
-        }
-    });
-
-    // Show only delete confirmation modal
-    const confirmModal = document.getElementById('confirmDeleteModal');
     const deletePlanName = document.getElementById('deletePlanName');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
     const cancelDeleteBtn = document.getElementById('cancelDelete');
@@ -359,7 +379,8 @@
             deletePlanName.textContent = plan.name;
 
             // Show only the delete confirmation modal
-            confirmModal.classList.add('show');
+            this.elements.confirmDeleteModal.classList.add('show');
+            this.elements.modalOverlay.classList.add('show');
 
             // Remove previous event listeners to prevent multiple bindings
             confirmDeleteBtn.onclick = null;
@@ -368,11 +389,12 @@
 
             // Add new event listeners
             confirmDeleteBtn.onclick = () => this.deletePlan(planId);
-            cancelDeleteBtn.onclick = () => confirmModal.classList.remove('show');
-            closeConfirmDelete.onclick = () => confirmModal.classList.remove('show');
+            cancelDeleteBtn.onclick = () => this.closeAllModals();
+            closeConfirmDelete.onclick = () => this.closeAllModals();
         }
     });
 }
+
         
                 // Placeholder for error notification method
         showErrorNotification(message) {
