@@ -1048,7 +1048,7 @@ class ContentLoader {
             'general-settings': 'settings.html',
             'pricing': 'planpricing.html',
             'security': 'security.html',
-            'modules': 'modules.html',
+            'modules': 'mainmodule.html',
             'module-settings': 'module-settings.html',
             'org-chart': 'org-chart.html',
             'analytics': 'analytics.html',
@@ -1093,6 +1093,36 @@ class ContentLoader {
     }
 }
 
+    async initializeModules() {
+    try {
+        // Check if script is already loaded
+        const existingScript = document.querySelector('script[src*="mainmodule.js"]');
+        if (existingScript) {
+            existingScript.remove();
+        }
+
+        // Create and append the script with updated path
+        const script = document.createElement('script');
+        script.src = `${this.baseUrl}/dashboard/js/mainmodule.js`;
+        
+        await new Promise((resolve, reject) => {
+            script.onload = resolve;
+            script.onerror = reject;
+            document.body.appendChild(script);
+        });
+
+        // Initialize new instance
+        if (typeof window.ModulesManager !== 'undefined') {
+            const instance = new window.ModulesManager(this.apiBaseUrl);
+            this.moduleInstances.set('modules', instance);
+        } else {
+            throw new Error('ModulesManager not loaded properly');
+        }
+    } catch (error) {
+        console.error('Error initializing modules module:', error);
+        throw error;
+    }
+}
 
     async initializeRolesPermissions() {
         try {
