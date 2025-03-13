@@ -31,59 +31,58 @@
         }
 
         createModuleModal() {
-            const modalContainer = document.getElementById('moduleModalContainer');
-            if (!modalContainer) return;
+    const existingModal = document.getElementById('addModuleModal');
+    if (existingModal) {
+        console.log('Modal already exists');
+        return;
+    }
 
-            const modalHTML = `
-                <div class="modal" id="addModuleModal">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h2>Add New Module</h2>
-                                <button class="modal-close" id="closeModuleModal">&times;</button>
+    const modalContainer = document.getElementById('moduleModalContainer') || 
+                            document.body.appendChild(document.createElement('div'));
+    modalContainer.id = 'moduleModalContainer';
+
+    const modalHTML = `
+        <div class="modal" id="addModuleModal" style="display:none;">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Add New Module</h2>
+                        <button class="modal-close" id="closeModuleModal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addModuleForm">
+                            <div class="form-group">
+                                <label>Module Name</label>
+                                <input type="text" name="moduleName" required>
                             </div>
-                            <div class="modal-body">
-                                <form id="addModuleForm">
-                                    <div class="form-group">
-                                        <label>Module Name</label>
-                                        <input type="text" name="moduleName" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Category</label>
-                                        <select name="moduleCategory" required>
-                                            <option value="">Select Category</option>
-                                            <option value="hr">HR</option>
-                                            <option value="finance">Finance</option>
-                                            <option value="operations">Operations</option>
-                                            <option value="integrations">Integrations</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Description</label>
-                                        <textarea name="moduleDescription" required></textarea>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Compliance Level</label>
-                                        <select name="complianceLevel" required>
-                                            <option value="high">High</option>
-                                            <option value="medium">Medium</option>
-                                            <option value="low">Low</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-actions">
-                                        <button type="button" id="cancelAddModule" class="btn btn-secondary">Cancel</button>
-                                        <button type="submit" class="btn btn-primary">Add Module</button>
-                                    </div>
-                                </form>
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select name="moduleCategory" required>
+                                    <option value="">Select Category</option>
+                                    <option value="hr">HR</option>
+                                    <option value="finance">Finance</option>
+                                    <option value="operations">Operations</option>
+                                    <option value="integrations">Integrations</option>
+                                </select>
                             </div>
-                        </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea name="moduleDescription" required></textarea>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" id="cancelAddModule">Cancel</button>
+                                <button type="submit">Add Module</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
-            `;
+            </div>
+        </div>
+    `;
 
-            modalContainer.innerHTML = modalHTML;
-        }
-
+    modalContainer.innerHTML = modalHTML;
+    console.log('Modal created and added to container');
+}
         initializeWithDelay() {
             setTimeout(() => {
                 this.setupEventListeners();
@@ -93,35 +92,80 @@
         }
 
         setupEventListeners() {
-            console.log('Setting up event listeners');
+    console.log('Setting up event listeners');
 
-            // Add New Module Button
-            const addNewModuleBtn = document.getElementById('addNewModuleBtn');
-            const addModuleModal = document.getElementById('addModuleModal');
-            const closeModalBtn = document.getElementById('closeModuleModal');
-            const cancelAddModuleBtn = document.getElementById('cancelAddModule');
-            const addModuleForm = document.getElementById('addModuleForm');
+    // Log all elements
+    console.log('Add New Module Button:', document.getElementById('addNewModuleBtn'));
+    console.log('Add Module Modal:', document.getElementById('addModuleModal'));
+    console.log('Close Modal Button:', document.getElementById('closeModuleModal'));
+    console.log('Cancel Add Module Button:', document.getElementById('cancelAddModule'));
+    console.log('Add Module Form:', document.getElementById('addModuleForm'));
 
-            if (addNewModuleBtn) {
-                addNewModuleBtn.addEventListener('click', (event) => {
-                    event.preventDefault();
-                    console.log('Add New Module Button Clicked');
-                    this.showAddModuleModal();
-                });
-            }
+    // Add New Module Button
+    const addNewModuleBtn = document.getElementById('addNewModuleBtn');
+    const addModuleModal = document.getElementById('addModuleModal');
+    const closeModalBtn = document.getElementById('closeModuleModal');
+    const cancelAddModuleBtn = document.getElementById('cancelAddModule');
+    const addModuleForm = document.getElementById('addModuleForm');
 
-            if (closeModalBtn) {
-                closeModalBtn.addEventListener('click', this.closeModal);
-            }
-
-            if (cancelAddModuleBtn) {
-                cancelAddModuleBtn.addEventListener('click', this.closeModal);
-            }
-
-            if (addModuleForm) {
-                addModuleForm.addEventListener('submit', this.addNewModule);
-            }
+    // Detailed logging for each element
+    if (!addNewModuleBtn) {
+        console.error('Add New Module Button not found');
+        // Try alternative selector
+        const altButton = document.querySelector('.btn-primary[data-action="add-module"]');
+        if (altButton) {
+            console.log('Alternative button found:', altButton);
         }
+    }
+
+    if (!addModuleModal) {
+        console.error('Add Module Modal not found');
+        // Force create modal if not exists
+        this.createModuleModal();
+    }
+
+    // Ensure button has click event
+    if (addNewModuleBtn) {
+        // Remove existing listeners to prevent multiple bindings
+        addNewModuleBtn.removeEventListener('click', this.showAddModuleModal);
+        
+        addNewModuleBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            console.log('Add New Module Button Clicked');
+            console.log('Modal before show:', document.getElementById('addModuleModal'));
+            
+            // Force modal creation if not exists
+            if (!document.getElementById('addModuleModal')) {
+                this.createModuleModal();
+            }
+            
+            this.showAddModuleModal();
+        });
+
+        // Additional visibility debugging
+        console.log('Button styles:', {
+            display: addNewModuleBtn.style.display,
+            visibility: addNewModuleBtn.style.visibility,
+            computedDisplay: window.getComputedStyle(addNewModuleBtn).display
+        });
+    }
+
+    // Rest of the event listeners remain the same
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', this.closeModal);
+    }
+
+    if (cancelAddModuleBtn) {
+        cancelAddModuleBtn.addEventListener('click', this.closeModal);
+    }
+
+    if (addModuleForm) {
+        addModuleForm.addEventListener('submit', this.addNewModule);
+    }
+}
+
 
             showAddModuleModal() {
             const modal = document.getElementById('addModuleModal');
