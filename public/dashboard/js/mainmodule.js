@@ -621,8 +621,13 @@ window.ModulesManager = ModulesManager;
 
 // Ensure the module is initialized when content is loaded
 document.addEventListener('contentLoaded', (event) => {
+    console.log('Content loaded event:', event.detail); // Add debug logging
+    
     if (event.detail.section === 'modules') {
-        window.modulesManagerInstance = new ModulesManager();
+        // Ensure API base URL is correctly passed
+        const apiBaseUrl = 'https://18.215.160.136.nip.io/api';
+        window.modulesManagerInstance = new ModulesManager(apiBaseUrl);
+        console.log('Modules Manager initialized'); // Confirm initialization
     }
 });
 })(); 
