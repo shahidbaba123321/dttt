@@ -748,6 +748,20 @@ async handleEditModule() {
 
     // Initialize on DOM load
     document.addEventListener('DOMContentLoaded', () => {
-        window.modulesManager = new ModulesManager();
-    });
+    window.modulesManager = new ModulesManager();
+
+    // Ensure modals are properly initialized
+    const moduleModal = document.getElementById('moduleModal');
+    const moduleDetailsModal = document.getElementById('moduleDetailsModal');
+    
+    if (moduleModal) {
+        moduleModal.classList.add('modal');
+        moduleModal.style.display = 'none';
+    }
+    
+    if (moduleDetailsModal) {
+        moduleDetailsModal.classList.add('modal');
+        moduleDetailsModal.style.display = 'none';
+    }
+});
 })();
