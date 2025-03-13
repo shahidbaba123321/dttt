@@ -259,15 +259,17 @@ populatePlanForm(plan) {
 
         // Handle features
         const featureCheckboxes = document.querySelectorAll('input[name="features"]');
-        featureCheckboxes.forEach(checkbox => {
-            // Ensure plan.features is a valid array
-            const isFeatureSelected = Array.isArray(plan.features) && 
-                plan.features.some(f => 
-                    f && (f._id === checkbox.value || f.name === checkbox.value)
-                );
-            
-            checkbox.checked = !!isFeatureSelected;
-        });
+    featureCheckboxes.forEach(checkbox => {
+        // Check if the feature is in the plan's features
+        const isFeatureSelected = Array.isArray(plan.features) && 
+            plan.features.some(f => 
+                f._id === checkbox.value || 
+                f.name === checkbox.value ||
+                f.name === checkbox.textContent.trim()
+            );
+        
+        checkbox.checked = !!isFeatureSelected;
+    });
     } catch (error) {
         console.error('Error populating plan form:', error);
         this.showErrorNotification('Failed to populate plan form');
@@ -390,50 +392,90 @@ populatePlanForm(plan) {
         }
 
         loadAvailableFeatures() {
-            try {
-                fetch(`${this.baseUrl}/features`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Failed to load features');
-                    }
-                    return response.json();
-                })
-                .then(result => {
-                    if (!result.data) {
-                        throw new Error('No feature data received');
-                    }
-                    this.renderFeatures(result.data);
-                })
-                .catch(error => {
-                    console.error('Load Features Error:', error);
-                    this.showErrorNotification('Failed to load available features');
-                });
-            } catch (error) {
-                console.error('Load Features Fetch Error:', error);
-                this.showErrorNotification('An unexpected error occurred while loading features');
+    try {
+        fetch(`${this.baseUrl}/features`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
             }
-        }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load features');
+            }
+            return response.json();
+        })
+        .then(result => {
+            if (!result.data) {
+                throw new Error('No feature data received');
+            }
+            this.renderFeatures(result.data);
+        })
+        .catch(error => {
+            console.error('Load Features Error:', error);
+            this.showErrorNotification('Failed to load available features');
+        });
+    } catch (error) {
+        console.error('Load Features Fetch Error:', error);
+        this.showErrorNotification('An unexpected error occurred while loading features');
+    }
+}
+
 
         renderFeatures(features) {
-            this.elements.featuresContainer.innerHTML = '';
+    // Clear existing features
+    this.elements.featuresContainer.innerHTML = '';
 
-            features.forEach(feature => {
-                const featureCheckbox = document.createElement('div');
-                featureCheckbox.innerHTML = `
-                    <label>
-                        <input type="checkbox" name="features" value="${feature._id}">
-                        ${feature.name}
-                    </label>
-                `;
-                this.elements.featuresContainer.appendChild(featureCheckbox);
-            });
+    // Create feature groups
+    const featureGroups = {};
+
+    // Group features by category
+    features.forEach(feature => {
+        if (!featureGroups[feature.category]) {
+            featureGroups[feature.category] = [];
         }
+        featureGroups[feature.category].push(feature);
+    });
+
+    // Render features with category grouping
+    Object.entries(featureGroups).forEach(([category, categoryFeatures]) => {
+        // Create category container
+        const categoryContainer = document.createElement('div');
+        categoryContainer.className = 'feature-category';
+        
+        // Category header
+        const categoryHeader = document.createElement('h4');
+        categoryHeader.textContent = category;
+        categoryContainer.appendChild(categoryHeader);
+
+        // Features grid for this category
+        const featuresGrid = document.createElement('div');
+        featuresGrid.className = 'features-grid';
+
+        // Render features in this category
+        categoryFeatures.forEach(feature => {
+            const featureCheckbox = document.createElement('div');
+            featureCheckbox.className = 'feature-checkbox';
+            featureCheckbox.innerHTML = `
+                <label>
+                    <input 
+                        type="checkbox" 
+                        name="features" 
+                        value="${feature._id}"
+                    >
+                    ${feature.name}
+                </label>
+            `;
+            featuresGrid.appendChild(featureCheckbox);
+        });
+
+        // Add category container to main container
+        categoryContainer.appendChild(featuresGrid);
+        this.elements.featuresContainer.appendChild(categoryContainer);
+    });
+}
+
 
         handlePlanSubmission(e) {
     e.preventDefault();
