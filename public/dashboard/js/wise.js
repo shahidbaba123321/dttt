@@ -258,38 +258,42 @@
             `;
         }
                 // Handle Add New Module Method
-     handleAddNewModule() {
+    handleAddNewModule() {
     // Ensure modal exists
     if (!this.moduleModal) {
-        this.createModuleModal();
+        this.createModuleModal()
+            .then(() => {
+                // Reset form
+                this.moduleForm.reset();
+                this.populateFeatureCheckboxes();
+                
+                // Show modal
+                this.moduleModal.classList.add('show');
+                
+                // Setup form submission
+                this.moduleForm.onsubmit = this.handleModuleFormSubmit;
+            })
+            .catch(error => {
+                console.error('Failed to create module modal:', error);
+                window.dashboardApp.userInterface.showErrorNotification(
+                    'Unable to open module form. Please try again.'
+                );
+            });
+    } else {
+        // Reset form
+        this.moduleForm.reset();
+        this.populateFeatureCheckboxes();
+        
+        // Show modal
+        this.moduleModal.classList.add('show');
+        
+        // Setup form submission
+        this.moduleForm.onsubmit = this.handleModuleFormSubmit;
     }
-
-    // Use a slight delay to ensure modal is in DOM
-    setTimeout(() => {
-        try {
-            // Verify modal exists before proceeding
-            if (!this.moduleModal) {
-                console.error('Failed to create module modal');
-                return;
-            }
-
-            // Reset form
-            this.moduleForm.reset();
-            this.populateFeatureCheckboxes();
-            
-            // Show modal
-            this.moduleModal.classList.add('show');
-            
-            // Setup form submission
-            this.moduleForm.onsubmit = this.handleModuleFormSubmit;
-        } catch (error) {
-            console.error('Error in handleAddNewModule:', error);
-        }
-    }, 0);
 }
 
         // Create Module Modal Method
-       createModuleModal() {
+      createModuleModal() {
     try {
         // Check if modal already exists
         if (document.getElementById('moduleModal')) {
@@ -410,58 +414,75 @@
             return;
         }
 
-        // Append to body with a slight delay to ensure DOM is ready
-        setTimeout(() => {
-            document.body.appendChild(firstChild);
+        // Create a wrapper to manage modal state
+        const modalWrapper = document.createElement('div');
+        modalWrapper.className = 'module-modal-wrapper';
+        modalWrapper.appendChild(firstChild);
 
-            // Cache modal reference
-            this.moduleModal = document.getElementById('moduleModal');
-            this.moduleForm = document.getElementById('moduleForm');
+        // Append to body
+        document.body.appendChild(modalWrapper);
 
-            // Verify modal and form exist
-            if (!this.moduleModal) {
-                console.error('Failed to create module modal: Modal not found');
-                return;
-            }
+        // Use a promise-based approach to ensure DOM is ready
+        return new Promise((resolve, reject) => {
+            // Use requestAnimationFrame for better performance
+            requestAnimationFrame(() => {
+                try {
+                    // Cache modal reference
+                    this.moduleModal = document.getElementById('moduleModal');
+                    this.moduleForm = document.getElementById('moduleForm');
 
-            if (!this.moduleForm) {
-                console.error('Failed to create module modal: Form not found');
-                return;
-            }
-
-            // Setup close button
-            const closeButton = this.moduleModal.querySelector('.modal-close');
-            if (closeButton) {
-                closeButton.addEventListener('click', () => {
-                    try {
-                        this.closeModuleModal();
-                    } catch (closeError) {
-                        console.error('Error closing modal:', closeError);
+                    // Verify modal and form exist
+                    if (!this.moduleModal) {
+                        console.error('Failed to create module modal: Modal not found');
+                        reject(new Error('Modal not created'));
+                        return;
                     }
-                });
-            } else {
-                console.error('Close button not found in module modal');
-            }
 
-            // Setup cancel button
-            const cancelButton = document.getElementById('cancelModuleBtn');
-            if (cancelButton) {
-                cancelButton.addEventListener('click', () => {
-                    try {
-                        this.closeModuleModal();
-                    } catch (cancelError) {
-                        console.error('Error canceling modal:', cancelError);
+                    if (!this.moduleForm) {
+                        console.error('Failed to create module modal: Form not found');
+                        reject(new Error('Form not created'));
+                        return;
                     }
-                });
-            } else {
-                console.error('Cancel button not found in module modal');
-            }
 
-            console.log('Module modal created successfully');
-        }, 0);
+                    // Setup close button
+                    const closeButton = this.moduleModal.querySelector('.modal-close');
+                    if (closeButton) {
+                        closeButton.addEventListener('click', () => {
+                            try {
+                                this.closeModuleModal();
+                            } catch (closeError) {
+                                console.error('Error closing modal:', closeError);
+                            }
+                        });
+                    } else {
+                        console.error('Close button not found in module modal');
+                    }
 
+                    // Setup cancel button
+                    const cancelButton = document.getElementById('cancelModuleBtn');
+                    if (cancelButton) {
+                        cancelButton.addEventListener('click', () => {
+                            try {
+                                this.closeModuleModal();
+                            } catch (cancelError) {
+                                console.error('Error canceling modal:', cancelError);
+                            }
+                        });
+                    } else {
+                        console.error('Cancel button not found in module modal');
+                    }
+
+                    console.log('Module modal created successfully');
+                    resolve(this.moduleModal);
+                } catch (error) {
+                    console.error('Error setting up module modal:', error);
+                    reject(error);
+                }
+            });
+        });
     } catch (error) {
         console.error('Comprehensive error creating module modal:', error);
+        return Promise.reject(error);
     }
 }
 
@@ -649,39 +670,89 @@
 
         // Handle Edit Module Method
         handleEditModule(module) {
+    try {
+        // Ensure modal and form exist
+        if (!this.moduleModal || !this.moduleForm) {
+            console.log('Creating module modal');
+            this.createModuleModal();
+        }
+
+        // Add a small delay to ensure modal is created
+        setTimeout(() => {
+            // Double-check modal and form exist
+            if (!this.moduleModal || !this.moduleForm) {
+                console.error('Failed to create module modal');
+                return;
+            }
+
             // Set current editing module
             this.currentEditingModule = module;
 
-            // Populate form with existing module data
-            this.moduleForm.moduleName.value = module.name;
-            this.moduleForm.moduleCategory.value = module.category;
-            this.moduleForm.moduleDescription.value = module.description || '';
-            this.moduleForm.moduleStatus.value = module.isActive ? 'active' : 'inactive';
-            this.moduleForm.complianceLevel.value = module.complianceLevel;
-            this.moduleForm.pricingPlan.value = module.pricingPlan || '';
-            this.moduleForm.auditLoggingToggle.checked = module.auditLogging || false;
+            // Safely access form elements with fallback
+            const form = this.moduleForm;
+
+            // Populate form fields with null checks
+            if (form.moduleName) form.moduleName.value = module.name || '';
+            if (form.moduleCategory) form.moduleCategory.value = module.category || '';
+            if (form.moduleDescription) form.moduleDescription.value = module.description || '';
+            
+            // Status
+            if (form.moduleStatus) {
+                form.moduleStatus.value = module.isActive ? 'active' : 'inactive';
+            }
+
+            // Compliance Level
+            if (form.complianceLevel) {
+                form.complianceLevel.value = module.complianceLevel || 'low';
+            }
+
+            // Pricing Plan
+            if (form.pricingPlan) {
+                form.pricingPlan.value = module.pricingPlan || '';
+            }
+
+            // Audit Logging
+            if (form.auditLoggingToggle) {
+                form.auditLoggingToggle.checked = module.auditLogging || false;
+            }
 
             // Reset and repopulate features
             this.populateFeatureCheckboxes();
 
-            // Check previously selected features and access levels
-            if (module.features) {
+            // Check previously selected features
+            if (module.features && module.features.length > 0) {
                 module.features.forEach(feature => {
-                    const checkbox = this.moduleForm.querySelector(`input[name="features"][value="${feature}"]`);
+                    const checkbox = form.querySelector(`input[name="features"][value="${feature}"]`);
                     if (checkbox) checkbox.checked = true;
                 });
             }
 
-            if (module.accessLevels) {
+            // Check previously selected access levels
+            if (module.accessLevels && module.accessLevels.length > 0) {
                 module.accessLevels.forEach(level => {
-                    const checkbox = this.moduleForm.querySelector(`input[name="accessLevels"][value="${level}"]`);
+                    const checkbox = form.querySelector(`input[name="accessLevels"][value="${level}"]`);
                     if (checkbox) checkbox.checked = true;
                 });
             }
 
             // Show modal
-            this.handleAddNewModule();
-        }
+            if (this.moduleModal) {
+                this.moduleModal.classList.add('show');
+            }
+
+            // Update form submission to edit mode
+            this.moduleForm.onsubmit = this.handleModuleFormSubmit;
+
+        }, 100);  // Small delay to ensure DOM is ready
+
+    } catch (error) {
+        console.error('Error in handleEditModule:', error);
+        window.dashboardApp.userInterface.showErrorNotification(
+            'Failed to load module for editing. Please try again.'
+        );
+    }
+}
+
 
         // Handle Delete Module Method
         async handleDeleteModule(moduleId) {
