@@ -1,179 +1,346 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Wise Management</title>
-    <style>
-        /* Wise-specific styles */
-        .wise-management {
-            padding: var(--spacing-lg);
-            background-color: var(--bg-secondary);
-        }
-
-        .wise-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--spacing-lg);
-        }
-
-        .wise-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: var(--spacing-lg);
-        }
-
-        .wise-card {
-            background-color: var(--bg-primary);
-            border-radius: var(--border-radius-lg);
-            border: 1px solid var(--border-light);
-            padding: var(--spacing-md);
-            transition: all var(--transition-speed) ease;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .wise-card:hover {
-            box-shadow: var(--shadow-md);
-            transform: translateY(-5px);
-        }
-
-        .wise-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--spacing-md);
-        }
-
-        .wise-status {
-            display: inline-block;
-            padding: var(--spacing-xs) var(--spacing-sm);
-            border-radius: var(--border-radius-sm);
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .wise-status.active {
-            background-color: rgba(16, 185, 129, 0.1);
-            color: var(--success-color);
-        }
-
-        .wise-status.inactive {
-            background-color: rgba(239, 68, 68, 0.1);
-            color: var(--danger-color);
-        }
-
-        .wise-actions {
-            display: flex;
-            gap: var(--spacing-sm);
-        }
-
-        .wise-category {
-            color: var(--text-tertiary);
-            font-size: 0.9rem;
-            margin-bottom: var(--spacing-sm);
-        }
-
-        .wise-description {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-bottom: var(--spacing-md);
-        }
-
-        .wise-compliance {
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-            font-size: 0.8rem;
-        }
-
-        .compliance-badge {
-            padding: var(--spacing-xs) var(--spacing-sm);
-            border-radius: var(--border-radius-sm);
-            font-weight: 600;
-        }
-
-        .compliance-badge.low {
-            background-color: rgba(245, 158, 11, 0.1);
-            color: var(--warning-color);
-        }
-
-        .compliance-badge.medium {
-            background-color: rgba(59, 130, 246, 0.1);
-            color: var(--info-color);
-        }
-
-        .compliance-badge.high {
-            background-color: rgba(16, 185, 129, 0.1);
-            color: var(--success-color);
-        }
-
-        .filters-section {
-            display: flex;
-            gap: var(--spacing-md);
-            margin-bottom: var(--spacing-lg);
-        }
-
-        .filter-group {
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-sm);
-        }
-
-        .filter-group select {
-            padding: var(--spacing-sm) var(--spacing-md);
-            border: 1px solid var(--border-medium);
-            border-radius: var(--border-radius-md);
-        }
-    </style>
-</head>
-<body>
-    <div class="wise-management">
-        <div class="wise-header">
-            <h2>Wise Management</h2>
-            <button id="addWiseBtn" class="btn-primary">
-                <i class="fas fa-plus"></i> Add New Wise
-            </button>
-        </div>
-
-        <div class="filters-section">
-            <div class="filter-group">
-                <label>Category:</label>
-                <select id="wiseCategoryFilter">
-                    <option value="">All Categories</option>
-                    <option value="hr">HR</option>
-                    <option value="finance">Finance</option>
-                    <option value="operations">Operations</option>
-                    <option value="integrations">Integrations</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>Compliance Level:</label>
-                <select id="wiseComplianceFilter">
-                    <option value="">All Levels</option>
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>Status:</label>
-                <select id="wiseStatusFilter">
-                    <option value="">All Statuses</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                </select>
-            </div>
-        </div>
-
-        <div id="wiseGrid" class="wise-grid">
-            <!-- Wise items will be dynamically populated here -->
-        </div>
+<div class="modules-management-container">
+    <!-- Header Section -->
+    <div class="section-header">
+        <h2>Modules Management</h2>
+        <button id="createModuleBtn" class="primary-button">
+            <i class="fas fa-plus"></i> Add New Module
+        </button>
     </div>
 
-    <!-- Modals will be dynamically created by JavaScript -->
-    <div id="wiseModal" class="modal"></div>
-    <div id="wiseDetailsModal" class="modal"></div>
+    <!-- Category Tabs -->
+    <div class="module-category-tabs">
+        <button class="category-tab active" data-category="all">All Modules</button>
+        <button class="category-tab" data-category="hr">HR</button>
+        <button class="category-tab" data-category="finance">Finance</button>
+        <button class="category-tab" data-category="operations">Operations</button>
+        <button class="category-tab" data-category="integrations">Integrations</button>
+    </div>
 
-   
-</body>
-</html>
+    <!-- Search and Filter Section -->
+    <div class="search-filter-section">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="moduleSearch" placeholder="Search modules...">
+        </div>
+        <div class="filters">
+            <select id="complianceFilter" class="filter-select">
+                <option value="">All Compliance Levels</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+            </select>
+            <select id="statusFilter" class="filter-select">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        </div>
+    </div>
+        <!-- Modules Table -->
+    <div class="modules-table-container">
+        <table class="modules-table">
+            <thead>
+                <tr>
+                    <th>Module Name</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Compliance Level</th>
+                    <th>Status</th>
+                    <th>Subscription Tiers</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="modulesTableBody">
+                <!-- Modules will be dynamically loaded here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-container">
+        <div class="pagination-info">
+            Showing <span id="startRange">0</span> to <span id="endRange">0</span> of <span id="totalModules">0</span> modules
+        </div>
+        <div class="pagination-controls" id="paginationControls">
+            <!-- Pagination buttons will be dynamically added here -->
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Module Modal -->
+<div class="modal" id="moduleModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">Add New Module</h3>
+            <button class="close-button" id="closeModuleModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="moduleForm">
+                <div class="form-group">
+                    <label for="moduleName">Module Name</label>
+                    <input type="text" id="moduleName" required>
+                </div>
+                <div class="form-group">
+                    <label for="moduleCategory">Category</label>
+                    <select id="moduleCategory" required>
+                        <option value="">Select Category</option>
+                        <option value="hr">HR</option>
+                        <option value="finance">Finance</option>
+                        <option value="operations">Operations</option>
+                        <option value="integrations">Integrations</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="moduleDescription">Description</label>
+                    <textarea id="moduleDescription" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="complianceLevel">Compliance Level</label>
+                    <select id="complianceLevel" required>
+                        <option value="">Select Compliance Level</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Subscription Tiers</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="subscriptionTiers" value="basic">
+                            Basic
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="subscriptionTiers" value="pro">
+                            Pro
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="subscriptionTiers" value="enterprise">
+                            Enterprise
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="moduleStatus">
+                        Active Module
+                    </label>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="secondary-button" id="cancelModuleModal">Cancel</button>
+            <button class="primary-button" id="saveModule">Save Module</button>
+        </div>
+    </div>
+</div>
+<!-- Delete Confirmation Modal -->
+<div class="modal" id="deleteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Delete Module</h3>
+            <button class="close-button" id="closeDeleteModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to delete this module? This action cannot be undone.</p>
+            <div class="warning-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>The module will be moved to the deleted modules archive.</span>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="secondary-button" id="cancelDelete">Cancel</button>
+            <button class="danger-button" id="confirmDelete">Delete Module</button>
+        </div>
+    </div>
+</div>
+
+<!-- Module Activity Logs Modal -->
+<div class="modal" id="activityLogsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Module Activity Logs</h3>
+            <button class="close-button" id="closeActivityLogsModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="activity-logs-filters">
+                <select id="logTypeFilter" class="filter-select">
+                    <option value="">All Log Types</option>
+                    <option value="created">Created</option>
+                    <option value="updated">Updated</option>
+                    <option value="deleted">Deleted</option>
+                    <option value="status_changed">Status Changed</option>
+                </select>
+                <div class="date-range-picker">
+                    <input type="date" id="startDateFilter">
+                    <span>to</span>
+                    <input type="date" id="endDateFilter">
+                </div>
+            </div>
+            <table class="activity-logs-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Module</th>
+                        <th>Action</th>
+                        <th>User</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody id="activityLogsTableBody">
+                    <!-- Activity logs will be dynamically loaded here -->
+                </tbody>
+            </table>
+        </div>
+        <div class="modal-footer">
+            <div class="pagination-controls" id="activityLogsPagination">
+                <!-- Pagination for activity logs -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Module Category Tabs */
+    .module-category-tabs {
+        display: flex;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-lg);
+        background-color: var(--bg-primary);
+        padding: var(--spacing-sm);
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .category-tab {
+        flex: 1;
+        padding: var(--spacing-sm) var(--spacing-md);
+        border: none;
+        background-color: transparent;
+        color: var(--text-secondary);
+        font-weight: 500;
+        border-radius: var(--border-radius-md);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .category-tab.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .category-tab:hover {
+        background-color: var(--bg-tertiary);
+        color: var(--primary-color);
+    }
+
+    /* Modules Table Specific Styles */
+    .modules-table .module-name {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .module-category-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--border-radius-sm);
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+
+    .module-category-badge.hr {
+        background-color: #E6F2FF;
+        color: #1E429F;
+    }
+
+    .module-category-badge.finance {
+        background-color: #DEF7EC;
+        color: #03543F;
+    }
+
+    .module-category-badge.operations {
+        background-color: #FEF3C7;
+        color: #92400E;
+    }
+
+    .module-category-badge.integrations {
+        background-color: #F3F4F6;
+        color: #374151;
+    }
+
+    .compliance-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--border-radius-sm);
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .compliance-badge.low {
+        background-color: #FDE8E8;
+        color: #9B1C1C;
+    }
+
+    .compliance-badge.medium {
+        background-color: #FEF3C7;
+        color: #92400E;
+    }
+
+    .compliance-badge.high {
+        background-color: #DEF7EC;
+        color: #03543F;
+    }
+
+    /* Subscription Tiers Styles */
+    .subscription-tiers {
+        display: flex;
+        gap: var(--spacing-sm);
+    }
+
+    .subscription-tier {
+        padding: 0.25rem 0.5rem;
+        background-color: var(--bg-secondary);
+        border-radius: var(--border-radius-sm);
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    /* Activity Logs Styles */
+    .activity-logs-filters {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .date-range-picker {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .date-range-picker input {
+        padding: var(--spacing-sm);
+        border: 1px solid var(--border-light);
+        border-radius: var(--border-radius-md);
+    }
+
+    .activity-logs-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .activity-logs-table th,
+    .activity-logs-table td {
+        border: 1px solid var(--border-light);
+        padding: var(--spacing-sm);
+    }
+</style>
