@@ -29,6 +29,9 @@
             this.bindMethodContext();
 
             this.showAddModuleModal = this.showAddModuleModal.bind(this);
+    this.exportModules = this.exportModules.bind(this);
+    this.setupAdvancedSearch = this.setupAdvancedSearch.bind(this);
+    this.sanitizeCategory = this.sanitizeCategory.bind(this);
 
             // Bind events
             this.bindEvents();
@@ -97,13 +100,18 @@
         bindEvents() {
             // Module Management Events
             if (this.addNewModuleBtn) {
-                this.addNewModuleBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    this.showAddModuleModal();
-                });
-            }
-
+        // Remove any existing event listeners first
+        this.addNewModuleBtn.removeEventListener('click', this.showAddModuleModal);
+        
+        // Add new event listener with explicit binding
+        this.addNewModuleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.showAddModuleModal();
+        });
+    } else {
+        console.error('Add New Module button not found');
+    }
             if (this.categoryFilter) {
                 this.categoryFilter.addEventListener('change', this.loadModules);
             }
@@ -358,25 +366,37 @@
 }
 
         setupAdditionalFeatures() {
-            // Add export functionality
-            const exportButton = document.createElement('button');
-            exportButton.className = 'btn btn-secondary export-modules';
-            exportButton.innerHTML = '<i class="fas fa-file-export"></i> Export Modules';
-            exportButton.addEventListener('click', this.exportModules);
+    // Remove existing buttons first
+    const headerActions = document.querySelector('.header-actions');
+    if (headerActions) {
+        // Remove existing advanced search and export buttons
+        const existingAdvancedSearchBtn = headerActions.querySelector('.advanced-search');
+        const existingExportBtn = headerActions.querySelector('.export-modules');
 
-            // Add advanced search functionality
-            const advancedSearchButton = document.createElement('button');
-            advancedSearchButton.className = 'btn btn-secondary advanced-search';
-            advancedSearchButton.innerHTML = '<i class="fas fa-search-plus"></i> Advanced Search';
-            advancedSearchButton.addEventListener('click', this.setupAdvancedSearch);
-
-            // Add buttons to the header actions
-            const headerActions = document.querySelector('.header-actions');
-            if (headerActions) {
-                headerActions.appendChild(advancedSearchButton);
-                headerActions.appendChild(exportButton);
-            }
+        if (existingAdvancedSearchBtn) {
+            existingAdvancedSearchBtn.remove();
         }
+        if (existingExportBtn) {
+            existingExportBtn.remove();
+        }
+
+        // Add export functionality
+        const exportButton = document.createElement('button');
+        exportButton.className = 'btn btn-secondary export-modules';
+        exportButton.innerHTML = '<i class="fas fa-file-export"></i> Export Modules';
+        exportButton.addEventListener('click', this.exportModules);
+
+        // Add advanced search functionality
+        const advancedSearchButton = document.createElement('button');
+        advancedSearchButton.className = 'btn btn-secondary advanced-search';
+        advancedSearchButton.innerHTML = '<i class="fas fa-search-plus"></i> Advanced Search';
+        advancedSearchButton.addEventListener('click', this.setupAdvancedSearch);
+
+        // Append buttons
+        headerActions.appendChild(advancedSearchButton);
+        headerActions.appendChild(exportButton);
+    }
+}
 
         // Utility methods
         sanitizeInput(input) {
@@ -732,34 +752,34 @@
         }
 
         collectModuleFormData(form) {
-            // Collect basic module information
-            const moduleData = {
-                name: form.querySelector('#moduleName').value.trim(),
-                category: this.sanitizeCategory(form.querySelector('#moduleCategory').value),
-                description: form.querySelector('#moduleDescription').value.trim() || '',
-                status: form.querySelector('#moduleStatus').value,
-                complianceLevel: form.querySelector('#complianceLevel').value,
-                pricingPlan: form.querySelector('#pricingPlan').value || null,
-                auditLogging: form.querySelector('#auditLogging').checked
-            };
+    // Collect basic module information
+    const moduleData = {
+        name: form.querySelector('#moduleName').value.trim(),
+        category: this.sanitizeCategory(form.querySelector('#moduleCategory').value),
+        description: form.querySelector('#moduleDescription').value.trim() || '',
+        status: form.querySelector('#moduleStatus').value,
+        complianceLevel: form.querySelector('#complianceLevel').value,
+        pricingPlan: form.querySelector('#pricingPlan').value || null,
+        auditLogging: form.querySelector('#auditLogging').checked
+    };
 
-            // Collect access levels
-            const accessLevels = Array.from(
-                form.querySelectorAll('input[name="accessLevel"]:checked')
-            ).map(checkbox => checkbox.value);
-            moduleData.accessLevels = accessLevels;
+    // Collect access levels
+    const accessLevels = Array.from(
+        form.querySelectorAll('input[name="accessLevel"]:checked')
+    ).map(checkbox => checkbox.value);
+    moduleData.accessLevels = accessLevels;
 
-            // Collect features
-            const features = Array.from(
-                form.querySelectorAll('input[name="features"]:checked')
-            ).map(checkbox => ({
-                value: checkbox.value,
-                category: this.getCategoryForFeature(checkbox.value)
-            }));
-            moduleData.features = features;
+    // Collect features
+    const features = Array.from(
+        form.querySelectorAll('input[name="features"]:checked')
+    ).map(checkbox => ({
+        value: checkbox.value,
+        category: this.getCategoryForFeature(checkbox.value)
+    }));
+    moduleData.features = features;
 
-            return moduleData;
-        }
+    return moduleData;
+}
 
         markFieldAsInvalid(field, errorMessage) {
             const errorElement = field.nextElementSibling;
@@ -771,22 +791,25 @@
         }
 
         sanitizeCategory(category) {
-            // Mapping to ensure consistent category values
-            const categoryMap = {
-                'hr_solutions': 'hr_solutions',
-                'financial_solutions': 'financial_solutions',
-                'operational_solutions': 'operational_solutions',
-                'integrations': 'integrations'
-            };
+    // Mapping to ensure consistent category values
+    const categoryMap = {
+        'hr_solutions': 'hr_solutions',
+        'financial_solutions': 'financial_solutions',
+        'operational_solutions': 'operational_solutions',
+        'integrations': 'integrations'
+    };
 
-            // Validate and return the category
-            if (categoryMap[category]) {
-                return categoryMap[category];
-            }
+    // Convert to lowercase and trim
+    const sanitizedCategory = category.toLowerCase().trim();
 
-            // Throw an error if category is invalid
-            throw new Error('Invalid module category');
-        }
+    // Validate and return the category
+    if (categoryMap[sanitizedCategory]) {
+        return categoryMap[sanitizedCategory];
+    }
+
+    // Throw an error if category is invalid
+    throw new Error('Invalid module category');
+}
 
         getCategoryForFeature(featureValue) {
             const featureCategories = {
