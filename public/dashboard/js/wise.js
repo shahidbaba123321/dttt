@@ -94,37 +94,45 @@
         }
 
         bindEvents() {
-            // Module Management Events
-            if (this.addNewModuleBtn) {
-                this.addNewModuleBtn.addEventListener('click', this.showAddModuleModal);
-            }
-            if (this.categoryFilter) {
-                this.categoryFilter.addEventListener('change', this.loadModules);
-            }
-            if (this.complianceFilter) {
-                this.complianceFilter.addEventListener('change', this.loadModules);
-            }
-            if (this.searchModulesBtn) {
-                this.searchModulesBtn.addEventListener('click', this.loadModules);
-            }
-            if (this.prevModulesPageBtn) {
-                this.prevModulesPageBtn.addEventListener('click', () => this.changePage(-1));
-            }
-            if (this.nextModulesPageBtn) {
-                this.nextModulesPageBtn.addEventListener('click', () => this.changePage(1));
-            }
+    // Ensure method is bound correctly
+    this.showAddModuleModal = this.showAddModuleModal.bind(this);
+    this.setupAdvancedSearch = this.setupAdvancedSearch.bind(this);
+    this.exportModules = this.exportModules.bind(this);
 
-            // Audit Logs Events
-            if (this.applyAuditFiltersBtn) {
-                this.applyAuditFiltersBtn.addEventListener('click', this.loadAuditLogs);
-            }
-            if (this.prevAuditLogsPageBtn) {
-                this.prevAuditLogsPageBtn.addEventListener('click', () => this.changeAuditLogPage(-1));
-            }
-            if (this.nextAuditLogsPageBtn) {
-                this.nextAuditLogsPageBtn.addEventListener('click', () => this.changeAuditLogPage(1));
-            }
-        }
+    // Module Management Events
+    if (this.addNewModuleBtn) {
+        // Remove any existing event listeners first
+        this.addNewModuleBtn.removeEventListener('click', this.showAddModuleModal);
+        this.addNewModuleBtn.addEventListener('click', this.showAddModuleModal);
+    }
+
+    if (this.categoryFilter) {
+        this.categoryFilter.addEventListener('change', this.loadModules);
+    }
+    if (this.complianceFilter) {
+        this.complianceFilter.addEventListener('change', this.loadModules);
+    }
+    if (this.searchModulesBtn) {
+        this.searchModulesBtn.addEventListener('click', this.loadModules);
+    }
+    if (this.prevModulesPageBtn) {
+        this.prevModulesPageBtn.addEventListener('click', () => this.changePage(-1));
+    }
+    if (this.nextModulesPageBtn) {
+        this.nextModulesPageBtn.addEventListener('click', () => this.changePage(1));
+    }
+
+    // Audit Logs Events
+    if (this.applyAuditFiltersBtn) {
+        this.applyAuditFiltersBtn.addEventListener('click', this.loadAuditLogs);
+    }
+    if (this.prevAuditLogsPageBtn) {
+        this.prevAuditLogsPageBtn.addEventListener('click', () => this.changeAuditLogPage(-1));
+    }
+    if (this.nextAuditLogsPageBtn) {
+        this.nextAuditLogsPageBtn.addEventListener('click', () => this.changeAuditLogPage(1));
+    }
+}
 
         initialize() {
             // Initial load of modules
@@ -135,25 +143,37 @@
         }
 
         setupAdditionalFeatures() {
-            // Add export functionality
-            const exportButton = document.createElement('button');
-            exportButton.className = 'btn btn-secondary export-modules';
-            exportButton.innerHTML = '<i class="fas fa-file-export"></i> Export Modules';
-            exportButton.addEventListener('click', this.exportModules);
+    // Remove existing buttons if they exist
+    const existingExportButton = document.querySelector('.export-modules');
+    const existingAdvancedSearchButton = document.querySelector('.advanced-search');
+    
+    if (existingExportButton) {
+        existingExportButton.remove();
+    }
+    if (existingAdvancedSearchButton) {
+        existingAdvancedSearchButton.remove();
+    }
 
-            // Add advanced search functionality
-            const advancedSearchButton = document.createElement('button');
-            advancedSearchButton.className = 'btn btn-secondary advanced-search';
-            advancedSearchButton.innerHTML = '<i class="fas fa-search-plus"></i> Advanced Search';
-            advancedSearchButton.addEventListener('click', this.setupAdvancedSearch);
+    // Add export functionality
+    const exportButton = document.createElement('button');
+    exportButton.className = 'btn btn-secondary export-modules';
+    exportButton.innerHTML = '<i class="fas fa-file-export"></i> Export Modules';
+    exportButton.addEventListener('click', this.exportModules);
 
-            // Add buttons to the header actions
-            const headerActions = document.querySelector('.header-actions');
-            if (headerActions) {
-                headerActions.appendChild(advancedSearchButton);
-                headerActions.appendChild(exportButton);
-            }
-        }
+    // Add advanced search functionality
+    const advancedSearchButton = document.createElement('button');
+    advancedSearchButton.className = 'btn btn-secondary advanced-search';
+    advancedSearchButton.innerHTML = '<i class="fas fa-search-plus"></i> Advanced Search';
+    advancedSearchButton.addEventListener('click', this.setupAdvancedSearch);
+
+    // Add buttons to the header actions
+    const headerActions = document.querySelector('.header-actions');
+    if (headerActions) {
+        headerActions.appendChild(advancedSearchButton);
+        headerActions.appendChild(exportButton);
+    }
+}
+
 
         async fetchWithAuth(url, options = {}) {
             const defaultHeaders = {
@@ -370,10 +390,15 @@
         }
 
           showAddModuleModal(existingModule = null) {
+
+              const existingModal = document.getElementById('moduleFormModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
             // Create modal container
             const modalContainer = document.createElement('div');
             modalContainer.id = 'moduleFormModal';
-            modalContainer.className = 'modal-overlay';
+            modalContainer.className = 'modal-overlay show';
             
             // Determine modal title and action
             const isEditMode = !!existingModule;
@@ -551,6 +576,7 @@
             });
 
             // Return the modal container for any additional manipulation if needed
+              modalContainer.style.display = 'flex';
             return modalContainer;
         }
 
