@@ -420,13 +420,12 @@ class WiseManager {
     }
 
     showCreateModuleModal() {
-        this.currentModuleId = null;
-        this.moduleForm.reset();
-        document.getElementById('modalTitle').textContent = 'Add New Module';
-        this.moduleModal.classList.add('show');
-        document.getElementById('moduleName').focus();
-    }
-
+    this.currentModuleId = null;
+    this.moduleForm.reset();
+    document.getElementById('modalTitle').textContent = 'Add New Module';
+    this.moduleModal.style.display = 'flex';
+    document.getElementById('moduleName').focus();
+}
     async showEditModuleModal(moduleId) {
         try {
             this.showLoading();
@@ -838,13 +837,13 @@ class WiseManager {
     }
 
     closeModal(modal) {
-        if (!modal) return;
-        modal.classList.remove('show');
-        if (modal === this.moduleModal) {
-            this.moduleForm.reset();
-            this.currentModuleId = null;
-        }
+    if (!modal) return;
+    modal.style.display = 'none';
+    if (modal === this.moduleModal) {
+        this.moduleForm.reset();
+        this.currentModuleId = null;
     }
+}
 
     showLoading() {
         const loader = document.createElement('div');
