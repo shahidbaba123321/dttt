@@ -15,12 +15,13 @@
             this.currentPage = 1;
             this.pageSize = 10;
             this.totalModules = 0;
+            this.currentEditingModule = null;
 
             // DOM Element References
             this.modulesGridContainer = document.getElementById('modulesGridContainer');
             this.addNewModuleBtn = document.getElementById('addNewModuleBtn');
-            this.moduleModal = document.getElementById('moduleModal');
-            this.moduleForm = document.getElementById('moduleForm');
+            this.moduleModal = null;
+            this.moduleForm = null;
             this.categoryFilter = document.getElementById('categoryFilter');
             this.complianceFilter = document.getElementById('complianceFilter');
             this.moduleSearchInput = document.getElementById('moduleSearchInput');
@@ -39,26 +40,38 @@
             this.modulesShowingCount = document.getElementById('modulesShowingCount');
             this.pageNumberContainer = document.getElementById('pageNumberContainer');
 
-            // Bind methods
+            // Bind all methods to maintain correct context
+            this.init = this.init.bind(this);
             this.initializeEventListeners = this.initializeEventListeners.bind(this);
+            this.handleError = this.handleError.bind(this);
             this.fetchModules = this.fetchModules.bind(this);
             this.renderModules = this.renderModules.bind(this);
+            this.createModuleCard = this.createModuleCard.bind(this);
+            this.updatePagination = this.updatePagination.bind(this);
+            this.generatePageNumbers = this.generatePageNumbers.bind(this);
+            this.renderNoModulesState = this.renderNoModulesState.bind(this);
             this.handleAddNewModule = this.handleAddNewModule.bind(this);
+            this.createModuleModal = this.createModuleModal.bind(this);
+            this.populateFeatureCheckboxes = this.populateFeatureCheckboxes.bind(this);
+            this.closeModuleModal = this.closeModuleModal.bind(this);
             this.handleModuleFormSubmit = this.handleModuleFormSubmit.bind(this);
             this.fetchAuditLogs = this.fetchAuditLogs.bind(this);
-
-            
+            this.renderAuditLogs = this.renderAuditLogs.bind(this);
+            this.handleEditModule = this.handleEditModule.bind(this);
+            this.handleDeleteModule = this.handleDeleteModule.bind(this);
 
             // Initialize
             this.init();
         }
 
+        // Initialization method
         init() {
             this.initializeEventListeners();
             this.fetchModules();
             this.fetchAuditLogs();
         }
 
+        // Event Listeners Initialization
         initializeEventListeners() {
             // Add New Module Button
             this.addNewModuleBtn.addEventListener('click', this.handleAddNewModule);
@@ -88,17 +101,15 @@
             this.applyAuditFiltersBtn.addEventListener('click', this.fetchAuditLogs);
         }
 
-        
-
-        // Utility method for error handling
+        // Error Handling Utility
         handleError(error, context = 'Operation') {
             console.error(`${context} failed:`, error);
             window.dashboardApp.userInterface.showErrorNotification(
                 `${context} failed. Please try again.`
             );
         }
-    }
-            async fetchModules() {
+                // Fetch Modules Method
+        async fetchModules() {
             try {
                 // Prepare query parameters
                 const category = this.categoryFilter.value;
@@ -139,6 +150,7 @@
             }
         }
 
+        // Render Modules Method
         renderModules(modules) {
             // Clear existing modules
             this.modulesGridContainer.innerHTML = '';
@@ -156,6 +168,7 @@
             });
         }
 
+        // Create Module Card Method
         createModuleCard(module) {
             const card = document.createElement('div');
             card.className = 'module-card';
@@ -198,6 +211,7 @@
             return card;
         }
 
+        // Update Pagination Method
         updatePagination(pagination) {
             // Update showing count
             this.modulesShowingCount.textContent = `Showing ${pagination.page} of ${pagination.totalPages} pages`;
@@ -210,6 +224,7 @@
             this.generatePageNumbers(pagination);
         }
 
+        // Generate Page Numbers Method
         generatePageNumbers(pagination) {
             // Clear existing page numbers
             this.pageNumberContainer.innerHTML = '';
@@ -233,6 +248,7 @@
             }
         }
 
+        // Render No Modules State Method
         renderNoModulesState() {
             this.modulesGridContainer.innerHTML = `
                 <div class="no-modules">
@@ -241,7 +257,8 @@
                 </div>
             `;
         }
-            handleAddNewModule() {
+                // Handle Add New Module Method
+        handleAddNewModule() {
             // Create modal dynamically if not exists
             if (!this.moduleModal) {
                 this.createModuleModal();
@@ -258,6 +275,7 @@
             this.moduleForm.onsubmit = this.handleModuleFormSubmit;
         }
 
+        // Create Module Modal Method
         createModuleModal() {
             const modalHTML = `
                 <div class="modal" id="moduleModal">
@@ -369,12 +387,14 @@
 
             // Cache modal reference
             this.moduleModal = document.getElementById('moduleModal');
+            this.moduleForm = document.getElementById('moduleForm');
 
             // Setup close and cancel buttons
-            this.moduleModal.querySelector('.modal-close').addEventListener('click', this.closeModuleModal.bind(this));
-            document.getElementById('cancelModuleBtn').addEventListener('click', this.closeModuleModal.bind(this));
+            this.moduleModal.querySelector('.modal-close').addEventListener('click', this.closeModuleModal);
+            document.getElementById('cancelModuleBtn').addEventListener('click', this.closeModuleModal);
         }
 
+        // Populate Feature Checkboxes Method
         populateFeatureCheckboxes() {
             const featuresContainer = document.getElementById('featuresContainer');
             featuresContainer.innerHTML = ''; // Clear existing
@@ -397,8 +417,22 @@
                     'GlobalInvoice', 
                     'Invoice & Billing', 
                     'Asset Management'
+                ],
+                'Operational Solutions': [
+                    'Project & Task Management',
+                    'ShiftMaster',
+                    'StockFlow',
+                    'Vendor & Supplier Management',
+                    'Workflow Automation',
+                    'Facility Management'
+                ],
+                'Integrations': [
+                    'ServiceNow & ITSM',
+                    'Payroll & Finance Integrations',
+                    'Employee Benefits',
+                    'Talent Management',
+                    'Pricing Plan Association'
                 ]
-                // Add other categories as needed
             };
 
             Object.entries(featureCategories).forEach(([category, features]) => {
@@ -418,32 +452,45 @@
             });
         }
 
+        // Close Module Modal Method
         closeModuleModal() {
             if (this.moduleModal) {
                 this.moduleModal.classList.remove('show');
             }
         }
-
-         async handleModuleFormSubmit(event) {
+                // Module Form Submission Method
+        async handleModuleFormSubmit(event) {
             event.preventDefault();
             
-            // Validate form
-            if (!this.validateModuleForm()) {
+            // Collect form data
+            const formData = {
+                name: this.moduleForm.moduleName.value.trim(),
+                category: this.moduleForm.moduleCategory.value,
+                description: this.moduleForm.moduleDescription.value.trim(),
+                isActive: this.moduleForm.moduleStatus.value === 'active',
+                complianceLevel: this.moduleForm.complianceLevel.value,
+                accessLevels: Array.from(
+                    this.moduleForm.querySelectorAll('input[name="accessLevels"]:checked')
+                ).map(el => el.value),
+                features: Array.from(
+                    this.moduleForm.querySelectorAll('input[name="features"]:checked')
+                ).map(el => el.value),
+                pricingPlan: this.moduleForm.pricingPlan.value,
+                auditLogging: this.moduleForm.auditLoggingToggle.checked
+            };
+
+            // Validate form data
+            if (!this.validateModuleForm(formData)) {
                 return;
             }
 
-            // Collect form data
-            const formData = this.collectModuleFormData();
-
             try {
-                // Determine if this is an edit or create operation
                 const url = this.currentEditingModule 
                     ? `${this.apiBaseUrl}/modules/${this.currentEditingModule._id}` 
                     : `${this.apiBaseUrl}/modules`;
                 
                 const method = this.currentEditingModule ? 'PUT' : 'POST';
 
-                // Send request
                 const response = await fetch(url, {
                     method: method,
                     headers: {
@@ -453,13 +500,10 @@
                     body: JSON.stringify(formData)
                 });
 
-                // Handle response
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(errorData.message || 'Failed to save module');
                 }
-
-                const result = await response.json();
 
                 // Show success notification
                 window.dashboardApp.userInterface.showSuccessNotification(
@@ -477,105 +521,42 @@
             }
         }
 
-        validateModuleForm() {
-            const form = document.getElementById('moduleForm');
-            const moduleName = form.moduleName.value.trim();
-            const moduleCategory = form.moduleCategory.value;
-            
-            // Basic validation
-            if (!moduleName) {
+        // Validate Module Form Method
+        validateModuleForm(formData) {
+            // Name validation
+            if (!formData.name) {
                 this.showFormError('Module Name is required');
                 return false;
             }
 
-            if (!moduleCategory) {
+            // Category validation
+            if (!formData.category) {
                 this.showFormError('Module Category is required');
                 return false;
             }
 
-            // Additional custom validations can be added here
+            // Access levels validation
+            if (formData.accessLevels.length === 0) {
+                this.showFormError('Select at least one access level');
+                return false;
+            }
+
+            // Features validation
+            if (formData.features.length === 0) {
+                this.showFormError('Select at least one feature');
+                return false;
+            }
+
+            // Pricing plan validation
+            if (!formData.pricingPlan) {
+                this.showFormError('Select a pricing plan');
+                return false;
+            }
+
             return true;
         }
 
-        collectModuleFormData() {
-            const form = document.getElementById('moduleForm');
-            
-            // Collect basic module data
-            const moduleData = {
-                name: form.moduleName.value.trim(),
-                category: form.moduleCategory.value,
-                description: form.moduleDescription.value.trim(),
-                isActive: form.moduleStatus.value === 'active',
-                complianceLevel: form.complianceLevel.value,
-                
-                // Collect access levels
-                accessLevels: Array.from(
-                    form.querySelectorAll('input[name="accessLevels"]:checked')
-                ).map(el => el.value),
-
-                // Collect features
-                features: Array.from(
-                    form.querySelectorAll('input[name="features"]:checked')
-                ).map(el => el.value),
-
-                // Additional details
-                pricingPlan: form.pricingPlan.value,
-                auditLogging: form.auditLoggingToggle.checked
-            };
-
-            return moduleData;
-        }
-
-        handleEditModule(module) {
-            // Set current editing module
-            this.currentEditingModule = module;
-
-            // Create modal if not exists
-            if (!this.moduleModal) {
-                this.createModuleModal();
-            }
-
-            // Populate form with existing module data
-            this.populateEditModuleForm(module);
-
-            // Show modal
-            this.moduleModal.classList.add('show');
-
-            // Update form submission handler
-            this.moduleForm.onsubmit = this.handleModuleFormSubmit.bind(this);
-        }
-
-        populateEditModuleForm(module) {
-            const form = document.getElementById('moduleForm');
-
-            // Populate basic fields
-            form.moduleName.value = module.name;
-            form.moduleCategory.value = module.category;
-            form.moduleDescription.value = module.description || '';
-            form.moduleStatus.value = module.isActive ? 'active' : 'inactive';
-            form.complianceLevel.value = module.complianceLevel;
-            form.pricingPlan.value = module.pricingPlan || '';
-            form.auditLoggingToggle.checked = module.auditLogging || false;
-
-            // Reset and repopulate features
-            this.populateFeatureCheckboxes();
-
-            // Check previously selected features and access levels
-            if (module.features) {
-                module.features.forEach(feature => {
-                    const checkbox = form.querySelector(`input[name="features"][value="${feature}"]`);
-                    if (checkbox) checkbox.checked = true;
-                });
-            }
-
-            if (module.accessLevels) {
-                module.accessLevels.forEach(level => {
-                    const checkbox = form.querySelector(`input[name="accessLevels"][value="${level}"]`);
-                    if (checkbox) checkbox.checked = true;
-                });
-            }
-        }
-
+        // Show Form Error Method
         showFormError(message) {
             // Create or get error container
             let errorContainer = this.moduleModal.querySelector('.form-error');
@@ -595,6 +576,43 @@
             }, 3000);
         }
 
+        // Handle Edit Module Method
+        handleEditModule(module) {
+            // Set current editing module
+            this.currentEditingModule = module;
+
+            // Populate form with existing module data
+            this.moduleForm.moduleName.value = module.name;
+            this.moduleForm.moduleCategory.value = module.category;
+            this.moduleForm.moduleDescription.value = module.description || '';
+            this.moduleForm.moduleStatus.value = module.isActive ? 'active' : 'inactive';
+            this.moduleForm.complianceLevel.value = module.complianceLevel;
+            this.moduleForm.pricingPlan.value = module.pricingPlan || '';
+            this.moduleForm.auditLoggingToggle.checked = module.auditLogging || false;
+
+            // Reset and repopulate features
+            this.populateFeatureCheckboxes();
+
+            // Check previously selected features and access levels
+            if (module.features) {
+                module.features.forEach(feature => {
+                    const checkbox = this.moduleForm.querySelector(`input[name="features"][value="${feature}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
+
+            if (module.accessLevels) {
+                module.accessLevels.forEach(level => {
+                    const checkbox = this.moduleForm.querySelector(`input[name="accessLevels"][value="${level}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
+
+            // Show modal
+            this.handleAddNewModule();
+        }
+
+        // Handle Delete Module Method
         async handleDeleteModule(moduleId) {
             // Confirm deletion
             const confirmDelete = window.confirm('Are you sure you want to delete this module?');
@@ -624,8 +642,8 @@
                 this.handleError(error, 'Deleting Module');
             }
         }
-
-         async fetchAuditLogs() {
+                // Fetch Audit Logs Method
+        async fetchAuditLogs() {
             try {
                 // Prepare query parameters
                 const startDate = this.auditStartDate.value;
@@ -663,6 +681,7 @@
             }
         }
 
+        // Render Audit Logs Method
         renderAuditLogs(logs) {
             // Clear existing logs
             this.auditLogsTableBody.innerHTML = '';
@@ -680,6 +699,7 @@
             });
         }
 
+        // Create Audit Log Row Method
         createAuditLogRow(log) {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -696,6 +716,7 @@
             return row;
         }
 
+        // Get Activity Badge Class Method
         getActivityBadgeClass(type) {
             const badgeClasses = {
                 'MODULE_CREATED': 'badge-success',
@@ -706,10 +727,12 @@
             return badgeClasses[type] || 'badge-secondary';
         }
 
+        // Format Activity Type Method
         formatActivityType(type) {
             return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
         }
 
+        // Format Log Details Method
         formatLogDetails(details) {
             if (!details) return 'No additional details';
             
@@ -719,6 +742,7 @@
                 .join(', ');
         }
 
+        // Update Audit Logs Pagination Method
         updateAuditLogsPagination(pagination) {
             // Update showing count
             const auditLogsShowingCount = document.getElementById('auditLogsShowingCount');
@@ -735,6 +759,7 @@
             this.generateAuditLogsPageNumbers(pagination);
         }
 
+        // Generate Audit Logs Page Numbers Method
         generateAuditLogsPageNumbers(pagination) {
             const pageNumberContainer = document.getElementById('auditLogsPageNumberContainer');
             pageNumberContainer.innerHTML = '';
@@ -750,12 +775,14 @@
 
                 pageBtn.addEventListener('click', () => {
                     // Implement pagination logic if needed
+                    // For now, this is a placeholder
                 });
 
                 pageNumberContainer.appendChild(pageBtn);
             }
         }
 
+        // Render No Audit Logs State Method
         renderNoAuditLogsState() {
             this.auditLogsTableBody.innerHTML = `
                 <tr>
@@ -769,6 +796,7 @@
             `;
         }
 
+        // Cleanup Method
         cleanup() {
             // Remove event listeners
             if (this.addNewModuleBtn) {
