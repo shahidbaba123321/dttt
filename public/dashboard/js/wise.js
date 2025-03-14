@@ -22,14 +22,50 @@
             this.auditLogsPerPage = 10;
             this.totalAuditLogs = 0;
 
+            // Bind methods to ensure correct context
+            this.bindMethods();
+
             // DOM Element References
             this.initializeDOMReferences();
 
-            // Bind methods to ensure correct context
-            this.bindMethodContext();
-
             // Bind events
             this.bindEvents();
+
+            // Initialize the module
+            this.initialize();
+        }
+
+        // Method to bind all class methods
+        bindMethods() {
+            const methodsToBind = [
+                'loadModules',
+                'renderModules',
+                'updatePagination',
+                'changePage',
+                'showAddModuleModal',
+                'createModule',
+                'updateModule',
+                'validateModuleForm',
+                'collectModuleFormData',
+                'markFieldAsInvalid',
+                'loadAuditLogs',
+                'renderAuditLogs',
+                'updateAuditLogPagination',
+                'changeAuditLogPage',
+                'deleteModule',
+                'editModule',
+                'exportModules',
+                'downloadExportedFile',
+                'setupAdvancedSearch',
+                'fetchWithAuth',
+                'showNotification'
+            ];
+
+            methodsToBind.forEach(methodName => {
+                if (typeof this[methodName] === 'function') {
+                    this[methodName] = this[methodName].bind(this);
+                }
+            });
         }
 
         initializeDOMReferences() {
@@ -57,34 +93,66 @@
             this.auditLogsShowingCount = document.getElementById('auditLogsShowingCount');
         }
 
-        bindMethodContext() {
-            // Bind methods to ensure correct context
-            this.loadModules = this.loadModules.bind(this);
-            this.renderModules = this.renderModules.bind(this);
-            this.updatePagination = this.updatePagination.bind(this);
-            this.changePage = this.changePage.bind(this);
-            this.showAddModuleModal = this.showAddModuleModal.bind(this);
-            this.createModule = this.createModule.bind(this);
-            this.validateModuleForm = this.validateModuleForm.bind(this);
-            this.collectModuleFormData = this.collectModuleFormData.bind(this);
-            this.loadAuditLogs = this.loadAuditLogs.bind(this);
-            this.renderAuditLogs = this.renderAuditLogs.bind(this);
-            this.updateAuditLogPagination = this.updateAuditLogPagination.bind(this);
-        }
-
         bindEvents() {
             // Module Management Events
-            this.addNewModuleBtn.addEventListener('click', this.showAddModuleModal);
-            this.categoryFilter.addEventListener('change', this.loadModules);
-            this.complianceFilter.addEventListener('change', this.loadModules);
-            this.searchModulesBtn.addEventListener('click', this.loadModules);
-            this.prevModulesPageBtn.addEventListener('click', () => this.changePage(-1));
-            this.nextModulesPageBtn.addEventListener('click', () => this.changePage(1));
+            if (this.addNewModuleBtn) {
+                this.addNewModuleBtn.addEventListener('click', this.showAddModuleModal);
+            }
+            if (this.categoryFilter) {
+                this.categoryFilter.addEventListener('change', this.loadModules);
+            }
+            if (this.complianceFilter) {
+                this.complianceFilter.addEventListener('change', this.loadModules);
+            }
+            if (this.searchModulesBtn) {
+                this.searchModulesBtn.addEventListener('click', this.loadModules);
+            }
+            if (this.prevModulesPageBtn) {
+                this.prevModulesPageBtn.addEventListener('click', () => this.changePage(-1));
+            }
+            if (this.nextModulesPageBtn) {
+                this.nextModulesPageBtn.addEventListener('click', () => this.changePage(1));
+            }
 
             // Audit Logs Events
-            this.applyAuditFiltersBtn.addEventListener('click', this.loadAuditLogs);
-            this.prevAuditLogsPageBtn.addEventListener('click', () => this.changeAuditLogPage(-1));
-            this.nextAuditLogsPageBtn.addEventListener('click', () => this.changeAuditLogPage(1));
+            if (this.applyAuditFiltersBtn) {
+                this.applyAuditFiltersBtn.addEventListener('click', this.loadAuditLogs);
+            }
+            if (this.prevAuditLogsPageBtn) {
+                this.prevAuditLogsPageBtn.addEventListener('click', () => this.changeAuditLogPage(-1));
+            }
+            if (this.nextAuditLogsPageBtn) {
+                this.nextAuditLogsPageBtn.addEventListener('click', () => this.changeAuditLogPage(1));
+            }
+        }
+
+        initialize() {
+            // Initial load of modules
+            this.loadModules();
+
+            // Setup additional features
+            this.setupAdditionalFeatures();
+        }
+
+        setupAdditionalFeatures() {
+            // Add export functionality
+            const exportButton = document.createElement('button');
+            exportButton.className = 'btn btn-secondary export-modules';
+            exportButton.innerHTML = '<i class="fas fa-file-export"></i> Export Modules';
+            exportButton.addEventListener('click', this.exportModules);
+
+            // Add advanced search functionality
+            const advancedSearchButton = document.createElement('button');
+            advancedSearchButton.className = 'btn btn-secondary advanced-search';
+            advancedSearchButton.innerHTML = '<i class="fas fa-search-plus"></i> Advanced Search';
+            advancedSearchButton.addEventListener('click', this.setupAdvancedSearch);
+
+            // Add buttons to the header actions
+            const headerActions = document.querySelector('.header-actions');
+            if (headerActions) {
+                headerActions.appendChild(advancedSearchButton);
+                headerActions.appendChild(exportButton);
+            }
         }
 
         async fetchWithAuth(url, options = {}) {
@@ -126,12 +194,12 @@
             }
         }
 
-            async loadModules() {
+           async loadModules() {
             try {
                 // Prepare query parameters
-                const category = this.categoryFilter.value;
-                const complianceLevel = this.complianceFilter.value;
-                const search = this.moduleSearchInput.value.trim();
+                const category = this.categoryFilter ? this.categoryFilter.value : '';
+                const complianceLevel = this.complianceFilter ? this.complianceFilter.value : '';
+                const search = this.moduleSearchInput ? this.moduleSearchInput.value.trim() : '';
 
                 // Construct query string
                 const queryParams = new URLSearchParams({
@@ -156,16 +224,21 @@
 
             } catch (error) {
                 console.error('Error loading modules:', error);
-                this.modulesGridContainer.innerHTML = `
-                    <div class="error-message">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <p>Failed to load modules. ${error.message}</p>
-                    </div>
-                `;
+                if (this.modulesGridContainer) {
+                    this.modulesGridContainer.innerHTML = `
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>Failed to load modules. ${error.message}</p>
+                        </div>
+                    `;
+                }
             }
         }
 
         renderModules(modules) {
+            // Ensure we have a container
+            if (!this.modulesGridContainer) return;
+
             // Clear existing modules
             this.modulesGridContainer.innerHTML = '';
 
@@ -225,6 +298,10 @@
         }
 
         updatePagination(pagination) {
+            // Ensure we have the necessary elements
+            if (!this.modulesShowingCount || !this.prevModulesPageBtn || 
+                !this.nextModulesPageBtn || !this.pageNumberContainer) return;
+
             // Update showing count
             this.modulesShowingCount.textContent = `Showing ${pagination.page} of ${pagination.totalPages} pages`;
 
@@ -254,6 +331,7 @@
 
         sanitizeInput(input) {
             // Basic input sanitization
+            if (!input) return '';
             const div = document.createElement('div');
             div.textContent = input;
             return div.innerHTML;
@@ -277,6 +355,7 @@
                 this.loadModules();
             } catch (error) {
                 console.error('Error deleting module:', error);
+                this.showNotification('Failed to delete module', 'error');
             }
         }
 
@@ -531,6 +610,8 @@
             if (!moduleName.value.trim()) {
                 this.markFieldAsInvalid(moduleName, 'Module name is required');
                 isValid = false;
+            } else {
+                this.clearFieldError(moduleName);
             }
 
             // Validate Category
@@ -538,6 +619,8 @@
             if (!moduleCategory.value) {
                 this.markFieldAsInvalid(moduleCategory, 'Please select a category');
                 isValid = false;
+            } else {
+                this.clearFieldError(moduleCategory);
             }
 
             // Validate Description
@@ -545,6 +628,8 @@
             if (!moduleDescription.value.trim()) {
                 this.markFieldAsInvalid(moduleDescription, 'Description is required');
                 isValid = false;
+            } else {
+                this.clearFieldError(moduleDescription);
             }
 
             // Validate Compliance Level
@@ -552,6 +637,8 @@
             if (!complianceLevel.value) {
                 this.markFieldAsInvalid(complianceLevel, 'Please select a compliance level');
                 isValid = false;
+            } else {
+                this.clearFieldError(complianceLevel);
             }
 
             // Validate Permissions (at least one must be selected)
@@ -573,8 +660,18 @@
             const errorElement = field.nextElementSibling;
             if (errorElement && errorElement.classList.contains('error-message')) {
                 errorElement.textContent = errorMessage;
+                errorElement.style.visibility = 'visible';
             }
             field.classList.add('invalid');
+        }
+
+        clearFieldError(field) {
+            const errorElement = field.nextElementSibling;
+            if (errorElement && errorElement.classList.contains('error-message')) {
+                errorElement.textContent = '';
+                errorElement.style.visibility = 'hidden';
+            }
+            field.classList.remove('invalid');
         }
 
         collectModuleFormData(form) {
@@ -635,42 +732,305 @@
             }
         }
 
-        // Initialization method
-        initialize() {
-            // Initial load of modules
-            this.loadModules();
+        setupAdvancedSearch() {
+            // Create advanced search modal
+            const modalContainer = document.createElement('div');
+            modalContainer.className = 'advanced-search-modal';
+            modalContainer.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Advanced Module Search</h3>
+                        <button class="close-btn">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="search-form">
+                            <div class="form-group">
+                                <label>Name Contains</label>
+                                <input type="text" id="advancedNameSearch" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="advancedCategorySearch" class="form-control">
+                                    <option value="">All Categories</option>
+                                    <option value="hr">HR</option>
+                                    <option value="finance">Finance</option>
+                                    <option value="operations">Operations</option>
+                                    <option value="integrations">Integrations</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Compliance Level</label>
+                                <select id="advancedComplianceSearch" class="form-control">
+                                    <option value="">All Levels</option>
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select id="advancedStatusSearch" class="form-control">
+                                    <option value="">All Statuses</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="applyAdvancedSearch" class="btn btn-primary">Apply Search</button>
+                        <button id="resetAdvancedSearch" class="btn btn-secondary">Reset</button>
+                    </div>
+                </div>
+            `;
 
-            // Setup any additional event listeners or initializations
-            this.setupAdditionalFeatures();
+            // Append to body
+            document.body.appendChild(modalContainer);
+
+            // Get elements
+            const closeBtn = modalContainer.querySelector('.close-btn');
+            const applySearchBtn = modalContainer.querySelector('#applyAdvancedSearch');
+            const resetSearchBtn = modalContainer.querySelector('#resetAdvancedSearch');
+
+            // Close modal function
+            const closeModal = () => {
+                document.body.removeChild(modalContainer);
+            };
+
+            // Close event listener
+            closeBtn.addEventListener('click', closeModal);
+
+            // Apply search
+            applySearchBtn.addEventListener('click', () => {
+                // Collect advanced search parameters
+                const nameSearch = document.getElementById('advancedNameSearch').value.trim();
+                const categorySearch = document.getElementById('advancedCategorySearch').value;
+                const complianceSearch = document.getElementById('advancedComplianceSearch').value;
+                const statusSearch = document.getElementById('advancedStatusSearch').value;
+
+                // Update filter inputs
+                if (this.moduleSearchInput) this.moduleSearchInput.value = nameSearch;
+                if (this.categoryFilter) this.categoryFilter.value = categorySearch;
+                if (this.complianceFilter) this.complianceFilter.value = complianceSearch;
+
+                // Additional status filtering can be implemented if needed
+
+                // Trigger module search
+                this.loadModules();
+
+                // Close modal
+                closeModal();
+            });
+
+            // Reset search
+            resetSearchBtn.addEventListener('click', () => {
+                // Reset all search inputs
+                document.getElementById('advancedNameSearch').value = '';
+                document.getElementById('advancedCategorySearch').value = '';
+                document.getElementById('advancedComplianceSearch').value = '';
+                document.getElementById('advancedStatusSearch').value = '';
+            });
         }
 
-        setupAdditionalFeatures() {
-            // Add export functionality
-            const exportButton = document.createElement('button');
-            exportButton.className = 'btn btn-secondary export-modules';
-            exportButton.innerHTML = '<i class="fas fa-file-export"></i> Export Modules';
-            exportButton.addEventListener('click', () => this.exportModules());
+            async loadAuditLogs() {
+            try {
+                // Prepare query parameters
+                const startDate = this.auditStartDate ? this.auditStartDate.value : '';
+                const endDate = this.auditEndDate ? this.auditEndDate.value : '';
+                const activityType = this.activityTypeFilter ? this.activityTypeFilter.value : '';
 
-            // Add advanced search functionality
-            const advancedSearchButton = document.createElement('button');
-            advancedSearchButton.className = 'btn btn-secondary advanced-search';
-            advancedSearchButton.innerHTML = '<i class="fas fa-search-plus"></i> Advanced Search';
-            advancedSearchButton.addEventListener('click', () => this.setupAdvancedSearch());
+                // Construct query string
+                const queryParams = new URLSearchParams({
+                    page: this.currentAuditLogPage,
+                    limit: this.auditLogsPerPage,
+                    ...(startDate && { startDate }),
+                    ...(endDate && { endDate }),
+                    ...(activityType && { type: activityType })
+                });
 
-            // Add buttons to the header actions
-            const headerActions = document.querySelector('.header-actions');
-            if (headerActions) {
-                headerActions.appendChild(advancedSearchButton);
-                headerActions.appendChild(exportButton);
+                // Fetch audit logs
+                const response = await this.fetchWithAuth(
+                    `${this.apiBaseUrl}/modules/activity-logs?${queryParams}`
+                );
+
+                // Update total audit logs and pagination
+                this.totalAuditLogs = response.pagination.total;
+                this.updateAuditLogPagination(response.pagination);
+
+                // Render audit logs
+                this.renderAuditLogs(response.data);
+
+            } catch (error) {
+                console.error('Error loading audit logs:', error);
+                if (this.auditLogsTableBody) {
+                    this.auditLogsTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="error-message">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Failed to load audit logs. ${error.message}
+                            </td>
+                        </tr>
+                    `;
+                }
             }
+        }
+
+        renderAuditLogs(logs) {
+            // Ensure we have a table body
+            if (!this.auditLogsTableBody) return;
+
+            // Clear existing logs
+            this.auditLogsTableBody.innerHTML = '';
+
+            // Check if no logs
+            if (!logs || logs.length === 0) {
+                this.auditLogsTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="no-logs">
+                            <i class="fas fa-history"></i>
+                            No audit logs found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Render each log
+            logs.forEach(log => {
+                const logRow = document.createElement('tr');
+                logRow.innerHTML = `
+                    <td>${this.formatTimestamp(log.timestamp)}</td>
+                    <td>${this.formatActivityType(log.type)}</td>
+                    <td>${this.sanitizeInput(log.moduleName || 'N/A')}</td>
+                    <td>${this.sanitizeInput(log.userName || 'System')}</td>
+                    <td>
+                        <button class="btn-view-details" data-log-id="${log._id}">
+                            View Details
+                        </button>
+                    </td>
+                `;
+
+                // Add event listener for log details
+                const viewDetailsBtn = logRow.querySelector('.btn-view-details');
+                viewDetailsBtn.addEventListener('click', () => this.showLogDetails(log));
+
+                this.auditLogsTableBody.appendChild(logRow);
+            });
+        }
+
+        updateAuditLogPagination(pagination) {
+            // Ensure we have the necessary elements
+            if (!this.auditLogsShowingCount || !this.prevAuditLogsPageBtn || 
+                !this.nextAuditLogsPageBtn || !this.auditLogsPageNumberContainer) return;
+
+            // Update showing count
+            this.auditLogsShowingCount.textContent = `Showing ${pagination.page} of ${pagination.totalPages} pages`;
+
+            // Update page buttons
+            this.prevAuditLogsPageBtn.disabled = pagination.page === 1;
+            this.nextAuditLogsPageBtn.disabled = pagination.page === pagination.totalPages;
+
+            // Generate page numbers
+            this.auditLogsPageNumberContainer.innerHTML = '';
+            for (let i = 1; i <= pagination.totalPages; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.textContent = i;
+                pageBtn.className = `page-number ${i === pagination.page ? 'active' : ''}`;
+                pageBtn.addEventListener('click', () => {
+                    this.currentAuditLogPage = i;
+                    this.loadAuditLogs();
+                });
+                this.auditLogsPageNumberContainer.appendChild(pageBtn);
+            }
+        }
+
+        changeAuditLogPage(direction) {
+            // Change page based on direction
+            this.currentAuditLogPage += direction;
+            this.loadAuditLogs();
+        }
+
+        formatTimestamp(timestamp) {
+            try {
+                return new Date(timestamp).toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+            } catch (error) {
+                return 'Invalid Date';
+            }
+        }
+
+        formatActivityType(type) {
+            const activityTypes = {
+                MODULE_CREATED: 'Module Created',
+                MODULE_UPDATED: 'Module Updated',
+                MODULE_DELETED: 'Module Deleted',
+                MODULE_STATUS_CHANGED: 'Status Changed'
+            };
+
+            return activityTypes[type] || type;
+        }
+
+        showLogDetails(log) {
+            // Create modal for log details
+            const modalContainer = document.createElement('div');
+            modalContainer.className = 'log-details-modal';
+            modalContainer.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Log Details</h3>
+                        <button class="close-btn">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <table class="log-details-table">
+                            <tr>
+                                <th>Timestamp</th>
+                                <td>${this.formatTimestamp(log.timestamp)}</td>
+                            </tr>
+                            <tr>
+                                <th>Activity Type</th>
+                                <td>${this.formatActivityType(log.type)}</td>
+                            </tr>
+                            <tr>
+                                <th>Module Name</th>
+                                <td>${this.sanitizeInput(log.moduleName || 'N/A')}</td>
+                            </tr>
+                            <tr>
+                                <th>User</th>
+                                <td>${this.sanitizeInput(log.userName || 'System')}</td>
+                            </tr>
+                            <tr>
+                                <th>Details</th>
+                                <td>
+                                    <pre>${JSON.stringify(log.details, null, 2)}</pre>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            // Add close functionality
+            const closeBtn = modalContainer.querySelector('.close-btn');
+            closeBtn.addEventListener('click', () => {
+                document.body.removeChild(modalContainer);
+            });
+
+            // Append to body
+            document.body.appendChild(modalContainer);
         }
 
         async exportModules() {
             try {
                 // Prepare export parameters
-                const category = this.categoryFilter.value;
-                const complianceLevel = this.complianceFilter.value;
-                const search = this.moduleSearchInput.value.trim();
+                const category = this.categoryFilter ? this.categoryFilter.value : '';
+                const complianceLevel = this.complianceFilter ? this.complianceFilter.value : '';
+                const search = this.moduleSearchInput ? this.moduleSearchInput.value.trim() : '';
 
                 // Construct query string
                 const queryParams = new URLSearchParams({
