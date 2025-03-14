@@ -7,7 +7,6 @@
         return;
     }
 
-    // WiseManager Class Definition
     class WiseManager {
         constructor(apiBaseUrl) {
             // Configuration
@@ -21,6 +20,9 @@
             this.currentCategory = 'all';
             this.currentComplianceLevel = '';
             this.searchQuery = '';
+
+            // State Management
+            this.currentEditModuleId = null;
 
             // Bind methods to ensure correct context
             this.fetchModules = this.fetchModules.bind(this);
@@ -108,309 +110,187 @@
             this.fetchModules();
         }
 
-     async fetchModules() {
-    // Start loading state
-    this.showLoadingState();
+        async fetchModules() {
+            // Show loading state
+            this.showLoadingState();
 
-    try {
-        // Construct detailed query parameters
-        const params = new URLSearchParams({
-            page: this.currentPage.toString(),
-            limit: this.pageSize.toString(),
-            // Conditionally add parameters
-            ...(this.currentCategory !== 'all' && { category: this.currentCategory }),
-            ...(this.currentComplianceLevel && { complianceLevel: this.currentComplianceLevel }),
-            ...(this.searchQuery && { search: this.searchQuery })
-        });
+            try {
+                // Construct query parameters
+                const params = new URLSearchParams({
+                    page: this.currentPage.toString(),
+                    limit: this.pageSize.toString(),
+                    ...(this.currentCategory !== 'all' && { category: this.currentCategory }),
+                    ...(this.currentComplianceLevel && { complianceLevel: this.currentComplianceLevel }),
+                    ...(this.searchQuery && { search: this.searchQuery })
+                });
 
-        // Detailed logging of request
-        console.group('Module Fetch Request');
-        console.log('Endpoint:', `${this.apiBaseUrl}/modules`);
-        console.log('Query Parameters:', Object.fromEntries(params));
-        console.log('Current Page:', this.currentPage);
-        console.log('Search Query:', this.searchQuery);
-        console.log('Category:', this.currentCategory);
-        console.log('Compliance Level:', this.currentComplianceLevel);
-        console.groupEnd();
+                // Fetch modules
+                const response = await fetch(`${this.apiBaseUrl}/modules?${params}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
 
-        // Fetch modules with comprehensive error handling
-        const response = await fetch(`${this.apiBaseUrl}/modules?${params}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json',
-               
-            },
-            // Add timeout and other fetch options
-            signal: AbortSignal.timeout(10000) // 10 seconds timeout
-        });
+                // Parse response
+                const result = await response.json();
 
-        // Parse response with error checking
-        const result = await response.json();
+                // Validate response
+                if (!result.success) {
+                    throw new Error(result.message || 'Failed to fetch modules');
+                }
 
-        // Comprehensive response validation
-        if (!response.ok) {
-            // Throw an error with detailed message
-            throw new Error(
-                result.message || 
-                `HTTP error! status: ${response.status}` || 
-                'Failed to fetch modules'
-            );
+                // Update total modules
+                this.totalModules = result.pagination.total;
+
+                // Render modules and pagination
+                this.renderModules(result.data);
+                this.renderPagination(result.pagination);
+
+            } catch (error) {
+                // Handle fetch error
+                this.handleFetchError(error);
+            } finally {
+                // Hide loading state
+                this.hideLoadingState();
+            }
         }
-
-        // Validate response structure
-        if (!result.success || !result.data) {
-            throw new Error('Invalid response structure');
-        }
-
-        // Log successful response
-        console.group('Module Fetch Response');
-        console.log('Total Modules:', result.pagination.total);
-        console.log('Modules Received:', result.data.length);
-        console.log('Pagination Details:', result.pagination);
-        console.groupEnd();
-
-        // Update module-related state
-        this.totalModules = result.pagination.total;
-
-        // Render modules and pagination
-        this.renderModules(result.data);
-        this.renderPagination(result.pagination);
-
-        // Optional: Trigger custom event for module load
-        this.triggerModuleLoadEvent(result.data);
-
-    } catch (error) {
-        // Comprehensive error handling
-        console.group('Module Fetch Error');
-        console.error('Error Details:', {
-            message: error.message,
-            name: error.name,
-            stack: error.stack
-        });
-        console.groupEnd();
-
-        // Differentiated error handling
-        if (error.name === 'AbortError') {
-            this.handleTimeoutError();
-        } else if (error.name === 'TypeError') {
-            this.handleNetworkError(error);
-        } else {
-            this.handleGenericError(error);
-        }
-    } finally {
-        // Always hide loading state
-        this.hideLoadingState();
-    }
-}
-
-        // Supporting error handling methods
-handleTimeoutError() {
-    console.warn('Module fetch timed out');
-    this.showErrorNotification(
-        'Request timed out. Please check your internet connection and try again.'
-    );
-}
-
-handleNetworkError(error) {
-    console.warn('Network error during module fetch', error);
-    this.showErrorNotification(
-        'Network error. Please check your internet connection.'
-    );
-}
-
-handleGenericError(error) {
-    console.error('Generic module fetch error', error);
-    this.showErrorNotification(
-        `Failed to load modules: ${error.message}. Please try again later.`
-    );
-}
-
-       // Optional: Event trigger method
-triggerModuleLoadEvent(modules) {
-    const event = new CustomEvent('modulesLoaded', {
-        detail: {
-            modules: modules,
-            timestamp: new Date()
-        }
-    });
-    document.dispatchEvent(event);
-} 
-
-        // Loading state methods
-showLoadingState() {
-    // Create or show loading indicator
-    const loadingIndicator = document.createElement('div');
-    loadingIndicator.id = 'modules-loading-indicator';
-    loadingIndicator.className = 'loading-spinner';
-    loadingIndicator.innerHTML = `
-        <div class="spinner">
-            <i class="fas fa-spinner fa-spin"></i>
-            <p>Loading modules...</p>
-        </div>
-    `;
-    
-    // Append to table container
-    this.modulesTableContainer.innerHTML = '';
-    this.modulesTableContainer.appendChild(loadingIndicator);
-}
-
-hideLoadingState() {
-    // Remove loading indicator
-    const loadingIndicator = document.getElementById('modules-loading-indicator');
-    if (loadingIndicator) {
-        loadingIndicator.remove();
-    }
-}
-
-// Notification method (assuming it exists in the dashboard interface)
-showErrorNotification(message) {
-    if (window.dashboardApp && window.dashboardApp.userInterface) {
-        window.dashboardApp.userInterface.showErrorNotification(message);
-    } else {
-        console.error(message);
-        alert(message);
-    }
-}
-
-
-        
 
         renderModules(modules) {
-    // Clear existing table
-    this.modulesTableContainer.innerHTML = '';
+            // Clear existing table
+            this.modulesTableContainer.innerHTML = '';
 
-    // Create table if it doesn't exist
-    const table = document.createElement('table');
-    table.className = 'modules-table';
+            // Create table
+            const table = document.createElement('table');
+            table.className = 'modules-table';
 
-    // Create table header
-    const thead = document.createElement('thead');
-    thead.innerHTML = `
-        <tr>
-            <th>Module Name</th>
-            <th>Category</th>
-            <th>Compliance Level</th>
-            <th>Usage Count</th>
-            <th>Status</th>
-            <th>Actions</th>
-        </tr>
-    `;
-    table.appendChild(thead);
+            // Create table header
+            const thead = document.createElement('thead');
+            thead.innerHTML = `
+                <tr>
+                    <th>Module Name</th>
+                    <th>Category</th>
+                    <th>Compliance Level</th>
+                    <th>Usage Count</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            `;
+            table.appendChild(thead);
 
-    // Create table body
-    const tbody = document.createElement('tbody');
+            // Create table body
+            const tbody = document.createElement('tbody');
+            modules.forEach(module => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${module.name}</td>
+                    <td>${this.capitalizeFirstLetter(module.category)}</td>
+                    <td>${this.capitalizeFirstLetter(module.complianceLevel)}</td>
+                    <td>${module.usageCount || 0}</td>
+                    <td>
+                        <span class="module-status ${module.isActive ? 'active' : 'inactive'}">
+                            ${module.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                    <td class="action-buttons">
+                        <button class="action-btn edit" data-id="${module._id}">Edit</button>
+                        <button class="action-btn toggle" data-id="${module._id}">
+                            ${module.isActive ? 'Deactivate' : 'Activate'}
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
 
-    // Render modules
-    modules.forEach(module => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${module.name}</td>
-            <td>${this.capitalizeFirstLetter(module.category)}</td>
-            <td>${this.capitalizeFirstLetter(module.complianceLevel)}</td>
-            <td>${module.usageCount || 0}</td>
-            <td>
-                <span class="module-status ${module.isActive ? 'active' : 'inactive'}">
-                    ${module.isActive ? 'Active' : 'Inactive'}
-                </span>
-            </td>
-            <td class="action-buttons">
-                <button 
-                    class="action-btn edit" 
-                    data-id="${module._id}"
-                    onclick="window.companiesManager.editModule('${module._id}')"
-                >
-                    Edit
-                </button>
-                <button 
-                    class="action-btn toggle" 
-                    data-id="${module._id}"
-                    onclick="window.companiesManager.toggleModuleStatus('${module._id}')"
-                >
-                    ${module.isActive ? 'Deactivate' : 'Activate'}
-                </button>
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
+            table.appendChild(tbody);
+            this.modulesTableContainer.appendChild(table);
 
-    table.appendChild(tbody);
-    this.modulesTableContainer.appendChild(table);
-}
-        
-        renderPagination(paginationData) {
-    // Clear existing pagination
-    this.paginationContainer.innerHTML = '';
-
-    // Create pagination info
-    const paginationInfo = document.createElement('div');
-    paginationInfo.className = 'pagination-info';
-    paginationInfo.textContent = `
-        Page ${paginationData.page} of ${paginationData.totalPages} 
-        (Total ${paginationData.total} modules)
-    `;
-
-    // Create pagination controls
-    const paginationControls = document.createElement('div');
-    paginationControls.className = 'pagination-controls';
-
-    // Previous button
-    const prevButton = document.createElement('button');
-    prevButton.className = 'pagination-btn';
-    prevButton.textContent = 'Previous';
-    prevButton.disabled = paginationData.page === 1;
-    prevButton.addEventListener('click', () => {
-        if (this.currentPage > 1) {
-            this.currentPage--;
-            this.fetchModules();
+            // Attach action listeners
+            this.attachActionListeners();
         }
-    });
 
-    // Next button
-    const nextButton = document.createElement('button');
-    nextButton.className = 'pagination-btn';
-    nextButton.textContent = 'Next';
-    nextButton.disabled = !paginationData.hasMore;
-    nextButton.addEventListener('click', () => {
-        if (paginationData.hasMore) {
-            this.currentPage++;
-            this.fetchModules();
+        attachActionListeners() {
+            // Edit buttons
+            const editButtons = this.modulesTableContainer.querySelectorAll('.action-btn.edit');
+            editButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const moduleId = e.target.getAttribute('data-id');
+                    this.editModule(moduleId);
+                });
+            });
+
+            // Toggle buttons
+            const toggleButtons = this.modulesTableContainer.querySelectorAll('.action-btn.toggle');
+            toggleButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const moduleId = e.target.getAttribute('data-id');
+                    this.toggleModuleStatus(moduleId);
+                });
+            });
         }
-    });
 
-    // Append buttons to controls
-    paginationControls.appendChild(prevButton);
-    paginationControls.appendChild(nextButton);
-
-    // Append to pagination container
-    this.paginationContainer.appendChild(paginationInfo);
-    this.paginationContainer.appendChild(paginationControls);
-}
-        // Utility method to capitalize first letter
+        // Utility methods
         capitalizeFirstLetter(string) {
             if (!string) return '';
             return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
         }
 
-            openAddModuleModal() {
-            // Create modal dynamically if not exists
-            let modalOverlay = document.getElementById('moduleModalOverlay');
-            if (!modalOverlay) {
-                modalOverlay = this.createModuleModal();
+        showLoadingState() {
+            this.modulesTableContainer.innerHTML = `
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading modules...</p>
+                </div>
+            `;
+        }
+
+        hideLoadingState() {
+            // Remove loading state if needed
+        }
+
+        handleFetchError(error) {
+            console.error('Module Fetch Error:', error);
+            // Implement error notification
+            alert(`Failed to load modules: ${error.message}`);
+        }
+
+        renderPagination(paginationData) {
+            // Implement pagination rendering
+            this.paginationContainer.innerHTML = `
+                <div class="pagination-info">
+                    Page ${paginationData.page} of ${paginationData.totalPages}
+                </div>
+                <div class="pagination-controls">
+                    <button ${paginationData.page === 1 ? 'disabled' : ''}>Previous</button>
+                    <button ${paginationData.page === paginationData.totalPages ? 'disabled' : ''}>Next</button>
+                </div>
+            `;
+        }
+    }
+
+         openAddModuleModal() {
+            // Create modal if not exists
+            if (!this.moduleModal) {
+                this.createModuleModal();
             }
 
             // Reset form
             this.resetModuleForm();
 
+            // Set modal title
+            document.getElementById('moduleModalTitle').textContent = 'Add New Module';
+
             // Show modal
-            modalOverlay.classList.add('show');
+            this.moduleModal.classList.add('show');
         }
 
         createModuleModal() {
-            const modalOverlay = document.createElement('div');
-            modalOverlay.id = 'moduleModalOverlay';
-            modalOverlay.className = 'modal-overlay';
-            modalOverlay.innerHTML = `
+            // Create modal dynamically
+            this.moduleModal = document.createElement('div');
+            this.moduleModal.id = 'moduleModalOverlay';
+            this.moduleModal.className = 'modal-overlay';
+            this.moduleModal.innerHTML = `
                 <div class="modal-content">
                     <div class="modal-header">
                         <h2 id="moduleModalTitle">Add New Module</h2>
@@ -456,14 +336,12 @@ showErrorNotification(message) {
                             <label for="modulePermissions">Permissions</label>
                             <textarea id="modulePermissions" name="modulePermissions" class="form-control" 
                                 placeholder="Enter module permissions (comma-separated)"></textarea>
-                            <div id="modulePermissionsError" class="form-error"></div>
                         </div>
 
                         <div class="form-group">
                             <label for="moduleSubscriptionTiers">Subscription Tiers</label>
                             <textarea id="moduleSubscriptionTiers" name="moduleSubscriptionTiers" class="form-control" 
                                 placeholder="Enter subscription tiers (comma-separated)"></textarea>
-                            <div id="moduleSubscriptionTiersError" class="form-error"></div>
                         </div>
 
                         <div class="form-group">
@@ -481,37 +359,41 @@ showErrorNotification(message) {
                 </div>
             `;
 
-            // Add event listeners
-            document.body.appendChild(modalOverlay);
+            // Append to body
+            document.body.appendChild(this.moduleModal);
 
+            // Setup modal event listeners
+            this.setupModalEventListeners();
+
+            return this.moduleModal;
+        }
+
+        setupModalEventListeners() {
             // Close modal button
-            const closeModalBtn = modalOverlay.querySelector('#closeModuleModal');
+            const closeModalBtn = this.moduleModal.querySelector('#closeModuleModal');
             closeModalBtn.addEventListener('click', () => this.closeModuleModal());
 
             // Cancel button
-            const cancelBtn = modalOverlay.querySelector('#cancelModuleBtn');
+            const cancelBtn = this.moduleModal.querySelector('#cancelModuleBtn');
             cancelBtn.addEventListener('click', () => this.closeModuleModal());
 
             // Form submission
-            const moduleForm = modalOverlay.querySelector('#moduleForm');
+            const moduleForm = this.moduleModal.querySelector('#moduleForm');
             moduleForm.addEventListener('submit', (e) => this.handleModuleSubmit(e));
+        }
 
-            return modalOverlay;
+        closeModuleModal() {
+            if (this.moduleModal) {
+                this.moduleModal.classList.remove('show');
+            }
         }
 
         resetModuleForm() {
             const form = document.getElementById('moduleForm');
             if (form) {
                 form.reset();
-                // Clear any previous error messages
+                // Clear any error messages
                 form.querySelectorAll('.form-error').forEach(el => el.textContent = '');
-            }
-        }
-
-        closeModuleModal() {
-            const modalOverlay = document.getElementById('moduleModalOverlay');
-            if (modalOverlay) {
-                modalOverlay.classList.remove('show');
             }
         }
 
@@ -599,7 +481,7 @@ showErrorNotification(message) {
             };
         }
 
-            async editModule(moduleId) {
+        async editModule(moduleId) {
             try {
                 // Fetch module details
                 const response = await fetch(`${this.apiBaseUrl}/modules/${moduleId}`, {
@@ -619,12 +501,11 @@ showErrorNotification(message) {
                 // Store current edit module ID
                 this.currentEditModuleId = moduleId;
 
-                // Open modal and populate form
+                // Open modal
                 this.openAddModuleModal();
 
                 // Update modal title
-                const modalTitle = document.getElementById('moduleModalTitle');
-                modalTitle.textContent = 'Edit Module';
+                document.getElementById('moduleModalTitle').textContent = 'Edit Module';
 
                 // Populate form fields
                 const module = result.data;
@@ -632,8 +513,10 @@ showErrorNotification(message) {
                 document.getElementById('moduleCategory').value = module.category;
                 document.getElementById('moduleDescription').value = module.description;
                 document.getElementById('moduleComplianceLevel').value = module.complianceLevel;
-                document.getElementById('modulePermissions').value = module.permissions ? module.permissions.join(', ') : '';
-                document.getElementById('moduleSubscriptionTiers').value = module.subscriptionTiers ? module.subscriptionTiers.join(', ') : '';
+                document.getElementById('modulePermissions').value = 
+                    module.permissions ? module.permissions.join(', ') : '';
+                document.getElementById('moduleSubscriptionTiers').value = 
+                    module.subscriptionTiers ? module.subscriptionTiers.join(', ') : '';
                 document.getElementById('moduleActiveStatus').checked = module.isActive;
 
             } catch (error) {
@@ -642,18 +525,19 @@ showErrorNotification(message) {
             }
         }
 
-        async toggleModuleStatus(moduleId) {
+         async toggleModuleStatus(moduleId) {
             try {
-                // Fetch current module status
+                // Determine current status
+                const currentStatus = this.getCurrentModuleStatus(moduleId);
+
+                // Send status toggle request
                 const response = await fetch(`${this.apiBaseUrl}/modules/${moduleId}/status`, {
                     method: 'PATCH',
                     headers: {
                         'Authorization': `Bearer ${this.token}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        isActive: !this.getCurrentModuleStatus(moduleId)
-                    })
+                    body: JSON.stringify({ isActive: !currentStatus })
                 });
 
                 const result = await response.json();
@@ -677,53 +561,288 @@ showErrorNotification(message) {
         }
 
         getCurrentModuleStatus(moduleId) {
-            const moduleRow = document.querySelector(`[data-id="${moduleId}"]`).closest('tr');
+            const moduleRow = this.modulesTableContainer.querySelector(`[data-id="${moduleId}"]`).closest('tr');
             const statusCell = moduleRow.querySelector('.module-status');
             return statusCell.classList.contains('active');
         }
 
+        renderPagination(paginationData) {
+            // Clear existing pagination
+            this.paginationContainer.innerHTML = '';
+
+            // Create pagination info
+            const paginationInfo = document.createElement('div');
+            paginationInfo.className = 'pagination-info';
+            paginationInfo.textContent = `
+                Page ${paginationData.page} of ${paginationData.totalPages} 
+                (Total ${paginationData.total} modules)
+            `;
+
+            // Create pagination controls
+            const paginationControls = document.createElement('div');
+            paginationControls.className = 'pagination-controls';
+
+            // Previous button
+            const prevButton = document.createElement('button');
+            prevButton.className = 'pagination-btn';
+            prevButton.textContent = 'Previous';
+            prevButton.disabled = paginationData.page === 1;
+            prevButton.addEventListener('click', () => {
+                if (this.currentPage > 1) {
+                    this.currentPage--;
+                    this.fetchModules();
+                }
+            });
+
+            // Next button
+            const nextButton = document.createElement('button');
+            nextButton.className = 'pagination-btn';
+            nextButton.textContent = 'Next';
+            nextButton.disabled = paginationData.page === paginationData.totalPages;
+            nextButton.addEventListener('click', () => {
+                if (this.currentPage < paginationData.totalPages) {
+                    this.currentPage++;
+                    this.fetchModules();
+                }
+            });
+
+            // Append buttons to controls
+            paginationControls.appendChild(prevButton);
+            paginationControls.appendChild(nextButton);
+
+            // Append to pagination container
+            this.paginationContainer.appendChild(paginationInfo);
+            this.paginationContainer.appendChild(paginationControls);
+        }
+
         showSuccessNotification(message) {
+            // Check if dashboard notification system exists
             if (window.dashboardApp && window.dashboardApp.userInterface) {
                 window.dashboardApp.userInterface.showSuccessNotification(message);
             } else {
+                // Fallback to basic alert
                 alert(message);
             }
         }
 
         showErrorNotification(message) {
+            // Check if dashboard notification system exists
             if (window.dashboardApp && window.dashboardApp.userInterface) {
                 window.dashboardApp.userInterface.showErrorNotification(message);
             } else {
+                // Fallback to basic alert
+                console.error(message);
                 alert(message);
             }
         }
 
-        // Cleanup method for when the module is no longer needed
+        // Cleanup method to remove event listeners and reset state
         cleanup() {
-            // Remove event listeners
+            // Remove category tab listeners
             this.categoryTabs.forEach(tab => {
                 tab.removeEventListener('click', this.handleCategoryChange);
             });
 
+            // Remove search input listener
             this.searchInput.removeEventListener('input', this.handleSearchInput);
+
+            // Remove compliance filter listener
             this.complianceFilter.removeEventListener('change', this.handleComplianceFilter);
 
-            // Remove modal if it exists
-            const modalOverlay = document.getElementById('moduleModalOverlay');
-            if (modalOverlay) {
-                modalOverlay.remove();
+            // Remove modal event listeners if modal exists
+            if (this.moduleModal) {
+                const closeModalBtn = this.moduleModal.querySelector('#closeModuleModal');
+                const cancelBtn = this.moduleModal.querySelector('#cancelModuleBtn');
+                const moduleForm = this.moduleModal.querySelector('#moduleForm');
+
+                closeModalBtn.removeEventListener('click', this.closeModuleModal);
+                cancelBtn.removeEventListener('click', this.closeModuleModal);
+                moduleForm.removeEventListener('submit', this.handleModuleSubmit);
+
+                // Remove modal from DOM
+                this.moduleModal.remove();
             }
 
-            // Clear any references
-            this.categoryTabs = null;
-            this.searchInput = null;
-            this.complianceFilter = null;
-            this.modulesTableContainer = null;
-            this.paginationContainer = null;
-            this.addNewModuleBtn = null;
+            // Reset state
+            this.currentPage = 1;
+            this.currentEditModuleId = null;
+            this.searchQuery = '';
+            this.currentCategory = 'all';
+            this.currentComplianceLevel = '';
         }
     }
+         // Advanced filtering and search methods
+        setupAdvancedFiltering() {
+            // Additional filtering logic can be added here
+            const advancedFilterBtn = document.getElementById('advancedFilterBtn');
+            if (advancedFilterBtn) {
+                advancedFilterBtn.addEventListener('click', this.showAdvancedFilterModal.bind(this));
+            }
+        }
 
-    // Expose the WiseManager to the global scope
+        showAdvancedFilterModal() {
+            // Create advanced filter modal
+            const modalOverlay = document.createElement('div');
+            modalOverlay.className = 'modal-overlay advanced-filter-modal';
+            modalOverlay.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Advanced Module Filters</h2>
+                        <button class="modal-close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="filter-group">
+                            <label>Date Range</label>
+                            <div class="date-range-picker">
+                                <input type="date" id="startDate" name="startDate">
+                                <input type="date" id="endDate" name="endDate">
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <label>Additional Filters</label>
+                            <select id="additionalFilters" multiple>
+                                <option value="recently_added">Recently Added</option>
+                                <option value="high_usage">High Usage</option>
+                                <option value="low_usage">Low Usage</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="applyAdvancedFilters" class="btn btn-primary">Apply Filters</button>
+                        <button id="clearAdvancedFilters" class="btn btn-secondary">Clear Filters</button>
+                    </div>
+                </div>
+            `;
+
+            // Append to body
+            document.body.appendChild(modalOverlay);
+
+            // Setup event listeners
+            this.setupAdvancedFilterModalListeners(modalOverlay);
+        }
+
+        setupAdvancedFilterModalListeners(modalOverlay) {
+            const closeBtn = modalOverlay.querySelector('.modal-close');
+            const applyFiltersBtn = modalOverlay.querySelector('#applyAdvancedFilters');
+            const clearFiltersBtn = modalOverlay.querySelector('#clearAdvancedFilters');
+
+            closeBtn.addEventListener('click', () => modalOverlay.remove());
+            
+            applyFiltersBtn.addEventListener('click', () => {
+                this.applyAdvancedFilters(modalOverlay);
+            });
+
+            clearFiltersBtn.addEventListener('click', () => {
+                this.clearAdvancedFilters(modalOverlay);
+            });
+        }
+
+        applyAdvancedFilters(modalOverlay) {
+            const startDate = modalOverlay.querySelector('#startDate').value;
+            const endDate = modalOverlay.querySelector('#endDate').value;
+            const additionalFilters = Array.from(
+                modalOverlay.querySelectorAll('#additionalFilters option:checked')
+            ).map(option => option.value);
+
+            // Update filtering parameters
+            this.advancedFilterParams = {
+                startDate,
+                endDate,
+                additionalFilters
+            };
+
+            // Fetch modules with new filters
+            this.fetchModules();
+
+            // Close modal
+            modalOverlay.remove();
+        }
+
+        clearAdvancedFilters(modalOverlay) {
+            // Reset form
+            modalOverlay.querySelector('#startDate').value = '';
+            modalOverlay.querySelector('#endDate').value = '';
+            modalOverlay.querySelectorAll('#additionalFilters option:checked')
+                .forEach(option => option.selected = false);
+
+            // Clear advanced filter params
+            this.advancedFilterParams = null;
+
+            // Fetch modules with default filters
+            this.fetchModules();
+
+            // Close modal
+            modalOverlay.remove();
+        }
+
+        // Export functionality
+        exportModules() {
+            try {
+                // Prepare export parameters
+                const exportParams = new URLSearchParams({
+                    category: this.currentCategory,
+                    complianceLevel: this.currentComplianceLevel,
+                    search: this.searchQuery
+                });
+
+                // Fetch export data
+                fetch(`${this.apiBaseUrl}/modules/export?${exportParams}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`
+                    }
+                })
+                .then(response => response.blob())
+                .then(blob => {
+                    // Create download link
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `modules_export_${new Date().toISOString()}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                })
+                .catch(error => {
+                    this.showErrorNotification('Export failed: ' + error.message);
+                });
+            } catch (error) {
+                this.showErrorNotification('Export error: ' + error.message);
+            }
+        }
+
+        // Comprehensive error tracking
+        trackError(error, context = {}) {
+            const errorLog = {
+                message: error.message,
+                stack: error.stack,
+                timestamp: new Date().toISOString(),
+                context: context
+            };
+
+            // Send to error tracking service or log
+            console.error('Module Management Error:', errorLog);
+
+            // Optional: Send to server-side error logging
+            this.sendErrorToServer(errorLog);
+        }
+
+        sendErrorToServer(errorLog) {
+            try {
+                fetch(`${this.apiBaseUrl}/error-logs`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(errorLog)
+                });
+            } catch (error) {
+                console.error('Failed to send error log:', error);
+            }
+        }
+    }
+    // Expose to global scope
     window.WiseManager = WiseManager;
 })();
