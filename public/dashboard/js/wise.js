@@ -534,67 +534,64 @@
 }
                 // Module Form Submission Method
         async handleModuleFormSubmit(event) {
-            event.preventDefault();
-            
-            // Collect form data
-            const formData = {
-                name: this.moduleForm.moduleName.value.trim(),
-                category: this.moduleForm.moduleCategory.value,
-                description: this.moduleForm.moduleDescription.value.trim(),
-                isActive: this.moduleForm.moduleStatus.value === 'active',
-                complianceLevel: this.moduleForm.complianceLevel.value,
-                accessLevels: Array.from(
-                    this.moduleForm.querySelectorAll('input[name="accessLevels"]:checked')
-                ).map(el => el.value),
-                features: Array.from(
-                    this.moduleForm.querySelectorAll('input[name="features"]:checked')
-                ).map(el => el.value),
-                pricingPlan: this.moduleForm.pricingPlan.value,
-                auditLogging: this.moduleForm.auditLoggingToggle.checked
-            };
+    event.preventDefault();
+    
+    // Collect form data
+    const formData = {
+        name: this.moduleForm.moduleName.value.trim(),
+        category: this.moduleForm.moduleCategory.value,
+        description: this.moduleForm.moduleDescription.value.trim(),
+        isActive: this.moduleForm.moduleStatus.value === 'active',
+        complianceLevel: this.moduleForm.complianceLevel.value,
+        accessLevels: Array.from(
+            this.moduleForm.querySelectorAll('input[name="accessLevels"]:checked')
+        ).map(el => el.value),
+        features: Array.from(
+            this.moduleForm.querySelectorAll('input[name="features"]:checked')
+        ).map(el => el.value),
+        pricingPlan: this.moduleForm.pricingPlan.value,
+        auditLogging: this.moduleForm.auditLoggingToggle.checked
+    };
 
-            // Validate form data
-            if (!this.validateModuleForm(formData)) {
-                return;
-            }
+    try {
+        const url = this.currentEditingModule 
+            ? `${this.apiBaseUrl}/modules/${this.currentEditingModule._id}` 
+            : `${this.apiBaseUrl}/modules`;
+        
+        const method = this.currentEditingModule ? 'PUT' : 'POST';
 
-            try {
-                const url = this.currentEditingModule 
-                    ? `${this.apiBaseUrl}/modules/${this.currentEditingModule._id}` 
-                    : `${this.apiBaseUrl}/modules`;
-                
-                const method = this.currentEditingModule ? 'PUT' : 'POST';
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
 
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Failed to save module');
-                }
-
-                // Show success notification
-                window.dashboardApp.userInterface.showSuccessNotification(
-                    this.currentEditingModule 
-                        ? 'Module updated successfully' 
-                        : 'New module created successfully'
-                );
-
-                // Close modal and refresh modules
-                this.closeModuleModal();
-                this.currentEditingModule = null;
-                this.fetchModules();
-            } catch (error) {
-                this.handleError(error, 'Saving Module');
-            }
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to save module');
         }
 
+        // Show success notification
+        window.dashboardApp.userInterface.showSuccessNotification(
+            this.currentEditingModule 
+                ? 'Module updated successfully' 
+                : 'New module created successfully'
+        );
+
+        // Refresh audit logs immediately after module creation/update
+        this.fetchAuditLogs();
+
+        // Close modal and refresh modules
+        this.closeModuleModal();
+        this.currentEditingModule = null;
+        this.fetchModules();
+    } catch (error) {
+        this.handleError(error, 'Saving Module');
+    }
+}
         // Validate Module Form Method
         validateModuleForm(formData) {
             // Name validation
@@ -718,103 +715,155 @@
         }
                 // Fetch Audit Logs Method
         async fetchAuditLogs() {
-            try {
-                // Prepare query parameters
-                const startDate = this.auditStartDate.value;
-                const endDate = this.auditEndDate.value;
-                const activityType = this.activityTypeFilter.value;
+    try {
+        // Prepare query parameters
+        const startDate = this.auditStartDate ? this.auditStartDate.value : null;
+        const endDate = this.auditEndDate ? this.auditEndDate.value : null;
+        const activityType = this.activityTypeFilter ? this.activityTypeFilter.value : null;
 
-                // Construct API endpoint
-                const url = new URL(`${this.apiBaseUrl}/modules/activity-logs`);
-                
-                if (startDate) url.searchParams.append('startDate', startDate);
-                if (endDate) url.searchParams.append('endDate', endDate);
-                if (activityType) url.searchParams.append('type', activityType);
+        // Construct API endpoint
+        const url = new URL(`${this.apiBaseUrl}/modules/activity-logs`);
+        
+        // Add query parameters
+        if (startDate) url.searchParams.append('startDate', startDate);
+        if (endDate) url.searchParams.append('endDate', endDate);
+        if (activityType) url.searchParams.append('type', activityType);
 
-                // Fetch audit logs
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch audit logs');
-                }
-
-                const data = await response.json();
-
-                // Render audit logs
-                this.renderAuditLogs(data.data);
-                this.updateAuditLogsPagination(data.pagination);
-            } catch (error) {
-                this.handleError(error, 'Fetching Audit Logs');
-                this.renderNoAuditLogsState();
+        // Fetch audit logs
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
             }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to fetch audit logs: ${errorText}`);
         }
+
+        const data = await response.json();
+
+        // Render audit logs
+        this.renderAuditLogs(data.data || []);
+        
+        // Update pagination if available
+        if (data.pagination) {
+            this.updateAuditLogsPagination(data.pagination);
+        }
+    } catch (error) {
+        console.error('Error fetching audit logs:', error);
+        this.renderNoAuditLogsState();
+        
+        // Show user-friendly error notification
+        window.dashboardApp.userInterface.showErrorNotification(
+            'Unable to retrieve audit logs. Please try again later.'
+        );
+    }
+}
 
         // Render Audit Logs Method
         renderAuditLogs(logs) {
-            // Clear existing logs
-            this.auditLogsTableBody.innerHTML = '';
+    // Clear existing logs
+    if (!this.auditLogsTableBody) {
+        console.error('Audit logs table body not found');
+        return;
+    }
 
-            // Handle empty state
-            if (!logs || logs.length === 0) {
-                this.renderNoAuditLogsState();
-                return;
-            }
+    this.auditLogsTableBody.innerHTML = '';
 
-            // Render logs
-            logs.forEach(log => {
-                const logRow = this.createAuditLogRow(log);
-                this.auditLogsTableBody.appendChild(logRow);
-            });
-        }
+    // Handle empty state
+    if (!logs || logs.length === 0) {
+        this.renderNoAuditLogsState();
+        return;
+    }
+
+    // Render logs
+    logs.forEach(log => {
+        const row = this.createAuditLogRow(log);
+        this.auditLogsTableBody.appendChild(row);
+    });
+}
+
 
         // Create Audit Log Row Method
         createAuditLogRow(log) {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${new Date(log.timestamp).toLocaleString()}</td>
-                <td>
-                    <span class="badge ${this.getActivityBadgeClass(log.type)}">
-                        ${this.formatActivityType(log.type)}
-                    </span>
-                </td>
-                <td>${log.moduleName || 'N/A'}</td>
-                <td>${log.user || 'System'}</td>
-                <td>${this.formatLogDetails(log.details)}</td>
-            `;
-            return row;
-        }
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>${this.formatTimestamp(log.timestamp)}</td>
+        <td>
+            <span class="badge ${this.getActivityBadgeClass(log.type)}">
+                ${this.formatActivityType(log.type)}
+            </span>
+        </td>
+        <td>${log.moduleName || 'N/A'}</td>
+        <td>${log.user || 'System'}</td>
+        <td>${this.formatLogDetails(log.details)}</td>
+    `;
+    return row;
+}
+        // Utility Methods for Audit Logging
+formatTimestamp(timestamp) {
+    try {
+        return new Date(timestamp).toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    } catch (error) {
+        console.error('Error formatting timestamp:', error);
+        return timestamp;
+    }
+}
+       
 
         // Get Activity Badge Class Method
         getActivityBadgeClass(type) {
-            const badgeClasses = {
-                'MODULE_CREATED': 'badge-success',
-                'MODULE_UPDATED': 'badge-primary',
-                'MODULE_DELETED': 'badge-danger',
-                'MODULE_STATUS_CHANGED': 'badge-warning'
-            };
-            return badgeClasses[type] || 'badge-secondary';
-        }
+    const badgeClasses = {
+        'MODULE_CREATED': 'badge-success',
+        'MODULE_UPDATED': 'badge-primary',
+        'MODULE_DELETED': 'badge-danger',
+        'MODULE_STATUS_CHANGED': 'badge-warning',
+        'MODULE_FEATURE_ADDED': 'badge-info',
+        'MODULE_PERMISSION_MODIFIED': 'badge-secondary'
+    };
+    return badgeClasses[type] || 'badge-secondary';
+}
 
-        // Format Activity Type Method
-        formatActivityType(type) {
-            return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-        }
+formatActivityType(type) {
+    return type
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, l => l.toUpperCase());
+}
 
         // Format Log Details Method
         formatLogDetails(details) {
-            if (!details) return 'No additional details';
-            
-            // Convert object to readable string
-            return Object.entries(details)
-                .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
-                .join(', ');
-        }
+    if (!details) return 'No additional details';
+    
+    try {
+        // If details is a string, return it directly
+        if (typeof details === 'string') return details;
+        
+        // If details is an object, format it nicely
+        return Object.entries(details)
+            .map(([key, value]) => {
+                // Handle different types of values
+                const formattedValue = typeof value === 'object' 
+                    ? JSON.stringify(value) 
+                    : value;
+                return `${key}: ${formattedValue}`;
+            })
+            .join(', ');
+    } catch (error) {
+        console.error('Error formatting log details:', error);
+        return 'Unable to format details';
+    }
+}
+
 
         // Update Audit Logs Pagination Method
         updateAuditLogsPagination(pagination) {
@@ -858,17 +907,22 @@
 
         // Render No Audit Logs State Method
         renderNoAuditLogsState() {
-            this.auditLogsTableBody.innerHTML = `
-                <tr>
-                    <td colspan="5" class="text-center">
-                        <div class="no-audit-logs">
-                            <i class="fas fa-history"></i>
-                            <p>No audit logs found</p>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }
+    if (!this.auditLogsTableBody) {
+        console.error('Audit logs table body not found');
+        return;
+    }
+
+    this.auditLogsTableBody.innerHTML = `
+        <tr>
+            <td colspan="5" class="text-center">
+                <div class="no-audit-logs">
+                    <i class="fas fa-history"></i>
+                    <p>No audit logs found. Recent module activities will appear here.</p>
+                </div>
+            </td>
+        </tr>
+    `;
+}
 
         // Cleanup Method
         cleanup() {
