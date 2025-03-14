@@ -108,60 +108,174 @@
             this.fetchModules();
         }
 
-            async fetchModules() {
+     async fetchModules() {
+    // Start loading state
+    this.showLoadingState();
+
     try {
-        // Construct query parameters
+        // Construct detailed query parameters
         const params = new URLSearchParams({
             page: this.currentPage.toString(),
             limit: this.pageSize.toString(),
-            // Only add parameters if they have a value
+            // Conditionally add parameters
             ...(this.currentCategory !== 'all' && { category: this.currentCategory }),
             ...(this.currentComplianceLevel && { complianceLevel: this.currentComplianceLevel }),
             ...(this.searchQuery && { search: this.searchQuery })
         });
 
-        // Log the constructed URL for debugging
-        console.log('Fetch URL:', `${this.apiBaseUrl}/modules?${params}`);
+        // Detailed logging of request
+        console.group('Module Fetch Request');
+        console.log('Endpoint:', `${this.apiBaseUrl}/modules`);
+        console.log('Query Parameters:', Object.fromEntries(params));
+        console.log('Current Page:', this.currentPage);
+        console.log('Search Query:', this.searchQuery);
+        console.log('Category:', this.currentCategory);
+        console.log('Compliance Level:', this.currentComplianceLevel);
+        console.groupEnd();
 
+        // Fetch modules with comprehensive error handling
         const response = await fetch(`${this.apiBaseUrl}/modules?${params}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            }
+                'Content-Type': 'application/json',
+                // Add additional headers if needed
+                'X-Request-Source': 'WiseModulesManager'
+            },
+            // Add timeout and other fetch options
+            signal: AbortSignal.timeout(10000) // 10 seconds timeout
         });
 
-        // Parse response
+        // Parse response with error checking
         const result = await response.json();
 
-        // Log full response for debugging
-        console.log('Full API Response:', result);
-
+        // Comprehensive response validation
         if (!response.ok) {
-            throw new Error(result.message || 'Failed to fetch modules');
+            // Throw an error with detailed message
+            throw new Error(
+                result.message || 
+                `HTTP error! status: ${response.status}` || 
+                'Failed to fetch modules'
+            );
         }
 
-        // Update total modules and render
+        // Validate response structure
+        if (!result.success || !result.data) {
+            throw new Error('Invalid response structure');
+        }
+
+        // Log successful response
+        console.group('Module Fetch Response');
+        console.log('Total Modules:', result.pagination.total);
+        console.log('Modules Received:', result.data.length);
+        console.log('Pagination Details:', result.pagination);
+        console.groupEnd();
+
+        // Update module-related state
         this.totalModules = result.pagination.total;
+
+        // Render modules and pagination
         this.renderModules(result.data);
         this.renderPagination(result.pagination);
 
+        // Optional: Trigger custom event for module load
+        this.triggerModuleLoadEvent(result.data);
+
     } catch (error) {
-        console.error('Detailed Error Fetching Modules:', {
+        // Comprehensive error handling
+        console.group('Module Fetch Error');
+        console.error('Error Details:', {
             message: error.message,
+            name: error.name,
             stack: error.stack
         });
-        
-        // Enhanced error handling
-        if (window.dashboardApp && window.dashboardApp.userInterface) {
-            window.dashboardApp.userInterface.showErrorNotification(
-                `Failed to load modules: ${error.message}`
-            );
+        console.groupEnd();
+
+        // Differentiated error handling
+        if (error.name === 'AbortError') {
+            this.handleTimeoutError();
+        } else if (error.name === 'TypeError') {
+            this.handleNetworkError(error);
         } else {
-            alert(`Failed to load modules: ${error.message}`);
+            this.handleGenericError(error);
         }
+    } finally {
+        // Always hide loading state
+        this.hideLoadingState();
     }
 }
+
+        // Supporting error handling methods
+handleTimeoutError() {
+    console.warn('Module fetch timed out');
+    this.showErrorNotification(
+        'Request timed out. Please check your internet connection and try again.'
+    );
+}
+
+handleNetworkError(error) {
+    console.warn('Network error during module fetch', error);
+    this.showErrorNotification(
+        'Network error. Please check your internet connection.'
+    );
+}
+
+handleGenericError(error) {
+    console.error('Generic module fetch error', error);
+    this.showErrorNotification(
+        `Failed to load modules: ${error.message}. Please try again later.`
+    );
+}
+
+       // Optional: Event trigger method
+triggerModuleLoadEvent(modules) {
+    const event = new CustomEvent('modulesLoaded', {
+        detail: {
+            modules: modules,
+            timestamp: new Date()
+        }
+    });
+    document.dispatchEvent(event);
+} 
+
+        // Loading state methods
+showLoadingState() {
+    // Create or show loading indicator
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.id = 'modules-loading-indicator';
+    loadingIndicator.className = 'loading-spinner';
+    loadingIndicator.innerHTML = `
+        <div class="spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Loading modules...</p>
+        </div>
+    `;
+    
+    // Append to table container
+    this.modulesTableContainer.innerHTML = '';
+    this.modulesTableContainer.appendChild(loadingIndicator);
+}
+
+hideLoadingState() {
+    // Remove loading indicator
+    const loadingIndicator = document.getElementById('modules-loading-indicator');
+    if (loadingIndicator) {
+        loadingIndicator.remove();
+    }
+}
+
+// Notification method (assuming it exists in the dashboard interface)
+showErrorNotification(message) {
+    if (window.dashboardApp && window.dashboardApp.userInterface) {
+        window.dashboardApp.userInterface.showErrorNotification(message);
+    } else {
+        console.error(message);
+        alert(message);
+    }
+}
+
+
+        
 
         renderModules(modules) {
     // Clear existing table
