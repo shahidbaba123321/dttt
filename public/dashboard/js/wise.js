@@ -1,790 +1,949 @@
 (function() {
-    'use strict';
-
     // Check if WiseManager already exists
     if (window.WiseManager) {
-        console.log('WiseManager already exists');
-        return;
+        return; // Exit if already defined
     }
 
-    class WiseManager {
-        constructor(apiBaseUrl = 'https://18.215.160.136.nip.io/api') {
-            this.baseUrl = apiBaseUrl;
-            this.token = localStorage.getItem('token');
-            this.currentPage = 1;
-            this.pageSize = 10;
-            this.totalModules = 0;
-            this.modules = [];
-            this.currentModuleId = null;
-            this.currentModule = null;
-            
-            // Predefined categories and compliance levels
-            this.categories = [
-                'HR', 
-                'Finance', 
-                'Operations', 
-                'Integrations'
-            ];
+class WiseManager {
+    constructor(apiBaseUrl) {
+        this.baseUrl = apiBaseUrl;
+        this.token = localStorage.getItem('token');
+        this.currentPage = 1;
+        this.pageSize = 10;
+        this.totalModules = 0;
+        this.modules = [];
+        this.currentModuleId = null;
+        this.filters = {
+            search: '',
+            category: 'all',
+            complianceLevel: '',
+            status: ''
+        };
 
-            this.complianceLevels = [
-                'low', 
-                'medium', 
-                'high'
-            ];
+        // Make instance available globally
+        window.wiseManager = this;
+        
+        this.initializeElements();
+        this.initializeStyles();
+        this.initializeEventListeners();
+        this.loadInitialData();
+    }
 
-            this.filters = {
-                category: '',
-                complianceLevel: '',
-                status: ''
-            };
-
-            // Bind methods to ensure correct context
-            this.showAddWiseModal = this.showAddWiseModal.bind(this);
-            this.handleAddWise = this.handleAddWise.bind(this);
-            this.validateWiseData = this.validateWiseData.bind(this);
-
-            // Initialize the module
-            this.init();
-        }
-
-        async init() {
-            try {
-                await this.validateApiEndpoint();
-                await this.initializeElements();
-                await this.loadModules();
-                this.initializeEventListeners();
-            } catch (error) {
-                console.error('Initialization error:', error);
-                this.showError('Failed to initialize wise module');
+    initializeStyles() {
+        const styles = `
+            .module-toggle {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
             }
-        }
 
-        async validateApiEndpoint() {
-            try {
-                const response = await fetch(`${this.baseUrl}/modules`, {
-                    method: 'GET',
-                    headers: this.getHeaders()
-                });
-
-                if (response.status === 401) {
-                    localStorage.removeItem('token');
-                    window.location.href = '/login.html';
-                    return false;
-                }
-
-                if (!response.ok) {
-                    throw new Error(`API validation failed: ${response.status}`);
-                }
-
-                return true;
-            } catch (error) {
-                console.error('API endpoint validation error:', error);
-                this.showError('Failed to validate API endpoint');
-                return false;
+            .switch {
+                position: relative;
+                display: inline-block;
+                width: 48px;
+                height: 24px;
             }
-        }
 
-        getHeaders() {
-            return {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            };
-        }
-
-        async handleApiRequest(endpoint, options = {}) {
-            try {
-                const url = `${this.baseUrl}${endpoint}`;
-                const response = await fetch(url, {
-                    ...options,
-                    headers: {
-                        ...this.getHeaders(),
-                        ...options.headers
-                    }
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.message || 'Request failed');
-                }
-
-                return data;
-            } catch (error) {
-                console.error('API request error:', error);
-                throw error;
+            .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
             }
-        }
 
-        async initializeElements() {
-            this.modulesGrid = document.getElementById('wiseGrid');
-            this.addWiseBtn = document.getElementById('addWiseBtn');
-            
-            // Filter elements
-            this.categoryFilter = document.getElementById('wiseCategoryFilter');
-            this.complianceFilter = document.getElementById('wiseComplianceFilter');
-            this.statusFilter = document.getElementById('wiseStatusFilter');
-        }
+            .slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #cbd5e1;
+                transition: .4s;
+            }
 
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 18px;
+                width: 18px;
+                left: 3px;
+                bottom: 3px;
+                background-color: white;
+                transition: .4s;
+            }
+
+            input:checked + .slider {
+                background-color: var(--success-color);
+            }
+
+            input:focus + .slider {
+                box-shadow: 0 0 1px var(--success-color);
+            }
+
+            input:checked + .slider:before {
+                transform: translateX(24px);
+            }
+
+            .slider.round {
+                border-radius: 24px;
+            }
+
+            .slider.round:before {
+                border-radius: 50%;
+            }
+
+            .module-status {
+                font-size: 0.875rem;
+                font-weight: 500;
+            }
+
+            .module-active {
+                color: var(--success-color);
+            }
+
+            .module-inactive {
+                color: var(--text-tertiary);
+            }
+        `;
+
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = styles;
+        document.head.appendChild(styleSheet);
+    }
+
+    initializeElements() {
+        // Main containers
+        this.modulesTableBody = document.getElementById('modulesTableBody');
+        this.paginationControls = document.getElementById('paginationControls');
+        
+        // Search and filters
+        this.searchInput = document.getElementById('moduleSearch');
+        this.categoryTabs = document.querySelectorAll('.category-tab');
+        this.complianceFilter = document.getElementById('complianceFilter');
+        this.statusFilter = document.getElementById('statusFilter');
+        
+        // Modals
+        this.moduleModal = document.getElementById('moduleModal');
+        this.deleteModal = document.getElementById('deleteModal');
+        this.activityLogsModal = document.getElementById('activityLogsModal');
+        
+        // Forms
+        this.moduleForm = document.getElementById('moduleForm');
+        
+        // Buttons
+        this.createModuleBtn = document.getElementById('createModuleBtn');
+        this.saveModuleBtn = document.getElementById('saveModule');
+        this.confirmDeleteBtn = document.getElementById('confirmDelete');
+        
+        // Modal close buttons
+        this.closeModuleModal = document.getElementById('closeModuleModal');
+        this.cancelModuleModal = document.getElementById('cancelModuleModal');
+        this.closeDeleteModal = document.getElementById('closeDeleteModal');
+        this.cancelDelete = document.getElementById('cancelDelete');
+
+        // Stats elements
+        this.startRange = document.getElementById('startRange');
+        this.endRange = document.getElementById('endRange');
+        this.totalModulesElement = document.getElementById('totalModules');
+
+        // Error handling for missing elements
+        Object.entries(this).forEach(([key, value]) => {
+            if (key !== 'token' && key !== 'currentPage' && key !== 'pageSize' && 
+                key !== 'totalModules' && key !== 'modules' && 
+                key !== 'currentModuleId' && key !== 'filters' && key !== 'baseUrl' && !value) {
+                console.error(`Element not found: ${key}`);
+            }
+        });
+    }
         initializeEventListeners() {
-            // Add Wise Button
-            if (this.addWiseBtn) {
-                this.addWiseBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    this.showAddWiseModal();
-                });
-            }
+        // Module management
+        this.createModuleBtn?.addEventListener('click', () => this.showCreateModuleModal());
+        this.saveModuleBtn?.addEventListener('click', () => this.saveModule());
+        this.confirmDeleteBtn?.addEventListener('click', () => this.deleteModule());
 
-            // Filter Event Listeners
-            if (this.categoryFilter) {
-                this.categoryFilter.addEventListener('change', () => {
-                    this.filters.category = this.categoryFilter.value;
-                    this.loadModules();
-                });
-            }
+        // Modal close events
+        this.closeModuleModal?.addEventListener('click', () => this.closeModal(this.moduleModal));
+        this.cancelModuleModal?.addEventListener('click', () => this.closeModal(this.moduleModal));
+        this.closeDeleteModal?.addEventListener('click', () => this.closeModal(this.deleteModal));
+        this.cancelDelete?.addEventListener('click', () => this.closeModal(this.deleteModal));
 
-            if (this.complianceFilter) {
-                this.complianceFilter.addEventListener('change', () => {
-                    this.filters.complianceLevel = this.complianceFilter.value;
-                    this.loadModules();
-                });
-            }
-
-            if (this.statusFilter) {
-                this.statusFilter.addEventListener('change', () => {
-                    this.filters.status = this.statusFilter.value;
-                    this.loadModules();
-                });
-            }
-        }
-
-        async loadModules() {
-            try {
-                this.showLoading();
-
-                const queryParams = new URLSearchParams({
-                    page: this.currentPage,
-                    limit: this.pageSize,
-                    ...this.filters
-                });
-
-                const result = await this.handleApiRequest(`/modules?${queryParams}`);
+        // Category tabs
+        this.categoryTabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                // Remove active class from all tabs
+                this.categoryTabs.forEach(t => t.classList.remove('active'));
                 
-                if (result) {
-                    this.totalModules = result.total;
-                    this.modules = result.data;
-                    this.renderModules(this.modules);
-                }
-            } catch (error) {
-                console.error('Error loading modules:', error);
-                this.showError('Failed to load modules');
-            } finally {
-                this.hideLoading();
+                // Add active class to clicked tab
+                e.target.classList.add('active');
+                
+                // Set category filter
+                this.filters.category = e.target.dataset.category;
+                this.currentPage = 1;
+                this.loadModules();
+            });
+        });
+
+        // Search and filters
+        this.searchInput?.addEventListener('input', debounce((e) => {
+            this.filters.search = e.target.value;
+            this.currentPage = 1;
+            this.loadModules();
+        }, 300));
+
+        this.complianceFilter?.addEventListener('change', () => {
+            this.filters.complianceLevel = this.complianceFilter.value;
+            this.currentPage = 1;
+            this.loadModules();
+        });
+
+        this.statusFilter?.addEventListener('change', () => {
+            this.filters.status = this.statusFilter.value;
+            this.currentPage = 1;
+            this.loadModules();
+        });
+
+        // Form validation
+        this.moduleForm?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveModule();
+        });
+
+        // Click outside modal to close
+        window.addEventListener('click', (e) => {
+            if (e.target === this.moduleModal) this.closeModal(this.moduleModal);
+            if (e.target === this.deleteModal) this.closeModal(this.deleteModal);
+        });
+
+        // Prevent modal close when clicking inside
+        this.moduleModal?.querySelector('.modal-content')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        this.deleteModal?.querySelector('.modal-content')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Form input validation
+        const moduleNameInput = document.getElementById('moduleName');
+        moduleNameInput?.addEventListener('input', (e) => {
+            const name = e.target.value.trim();
+            if (name.length < 2) {
+                e.target.setCustomValidity('Module name must be at least 2 characters long');
+            } else {
+                e.target.setCustomValidity('');
             }
+            e.target.reportValidity();
+        });
+    }
+
+    async loadInitialData() {
+        try {
+            this.showLoading();
+            await Promise.all([
+                this.loadModules(),
+                this.setupActivityLogsModal()
+            ]);
+            this.hideLoading();
+        } catch (error) {
+            console.error('Error loading initial data:', error);
+            this.showError('Failed to load initial data');
+            this.hideLoading();
+        }
+    }
+
+    async loadModules() {
+        try {
+            const queryParams = new URLSearchParams({
+                page: this.currentPage,
+                limit: this.pageSize,
+                ...this.filters
+            });
+
+            // Remove undefined or empty values from query params
+            Array.from(queryParams.entries()).forEach(([key, value]) => {
+                if (value === 'undefined' || value === '') {
+                    queryParams.delete(key);
+                }
+            });
+
+            const response = await fetch(`${this.baseUrl}/modules?${queryParams}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch modules');
+            }
+
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to load modules');
+            }
+
+            this.modules = result.data || [];
+            this.totalModules = result.pagination.total || 0;
+
+            this.renderModules();
+            this.updatePagination();
+            this.updateDisplayRange();
+
+        } catch (error) {
+            console.error('Error loading modules:', error);
+            this.showError('Failed to load modules');
+        }
+    }
+
+    renderModules() {
+        if (!this.modulesTableBody) return;
+
+        if (!this.modules || this.modules.length === 0) {
+            this.modulesTableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="no-data">
+                        <div class="no-data-message">
+                            <i class="fas fa-cubes"></i>
+                            <p>No modules found</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
         }
 
-        renderModules(modules) {
-            if (!modules.length) {
-                this.modulesGrid.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-cubes"></i>
-                        <h3>No Wise Items Found</h3>
-                        <p>There are no wise items matching your criteria.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            this.modulesGrid.innerHTML = modules.map(module => `
-                <div class="wise-card" data-module-id="${module._id}">
-                    <div class="wise-card-header">
-                        <h3>${this.escapeHtml(module.name)}</h3>
-                        <span class="wise-status ${module.isActive ? 'active' : 'inactive'}">
+        this.modulesTableBody.innerHTML = this.modules.map(module => `
+            <tr>
+                <td>
+                    <span class="module-name">${this.escapeHtml(module.name)}</span>
+                </td>
+                <td>
+                    <span class="module-category-badge ${module.category}">
+                        ${this.escapeHtml(this.capitalizeFirstLetter(module.category))}
+                    </span>
+                </td>
+                <td>${this.escapeHtml(module.description)}</td>
+                <td>
+                    <span class="compliance-badge ${module.complianceLevel}">
+                        ${this.capitalizeFirstLetter(module.complianceLevel)}
+                    </span>
+                </td>
+                <td>
+                    <div class="module-toggle">
+                        <label class="switch">
+                            <input type="checkbox" 
+                                   ${module.isActive ? 'checked' : ''} 
+                                   data-action="toggle-status"
+                                   data-module-id="${module._id}">
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="module-status ${module.isActive ? 'module-active' : 'module-inactive'}">
                             ${module.isActive ? 'Active' : 'Inactive'}
                         </span>
                     </div>
-                    <div class="wise-category">
-                        ${this.escapeHtml(module.category.toUpperCase())}
+                </td>
+                <td>
+                    <div class="subscription-tiers">
+                        ${module.subscriptionTiers.map(tier => `
+                            <span class="subscription-tier">${this.capitalizeFirstLetter(tier)}</span>
+                        `).join('')}
                     </div>
-                    <div class="wise-description">
-                        ${this.escapeHtml(module.description)}
-                    </div>
-                    <div class="wise-compliance">
-                        <span>Compliance:</span>
-                        <span class="compliance-badge ${module.complianceLevel}">
-                            ${module.complianceLevel.toUpperCase()}
-                        </span>
-                    </div>
-                    <div class="wise-actions">
-                        <button class="btn-icon view" data-action="view" data-module-id="${module._id}">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn-icon edit" data-action="edit" data-module-id="${module._id}">
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="action-button edit" 
+                                data-action="edit"
+                                data-module-id="${module._id}"
+                                title="Edit Module">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn-icon toggle" data-action="toggle-status" data-module-id="${module._id}">
-                            <i class="fas fa-power-off"></i>
+                        <button class="action-button" 
+                                data-action="activity-logs"
+                                data-module-id="${module._id}"
+                                title="View Activity Logs">
+                            <i class="fas fa-history"></i>
+                        </button>
+                        <button class="action-button delete" 
+                                data-action="delete"
+                                data-module-id="${module._id}"
+                                title="Delete Module">
+                            <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
-                </div>
-            `).join('');
+                </td>
+            </tr>
+        `).join('');
 
-            // Add event listeners for module actions
-            this.modulesGrid.addEventListener('click', (e) => {
-                const button = e.target.closest('button[data-action]');
-                if (!button) return;
+        this.initializeTableActions();
+    }
 
+        initializeTableActions() {
+        if (!this.modulesTableBody) return;
+
+        // Remove any existing event listeners
+        const oldElements = this.modulesTableBody.querySelectorAll('.action-button, .switch input');
+        oldElements.forEach(element => {
+            element.replaceWith(element.cloneNode(true));
+        });
+
+        // Add new event listeners
+        const buttons = this.modulesTableBody.querySelectorAll('.action-button');
+        buttons.forEach(button => {
+            button.addEventListener('click', (e) => {
                 const action = button.dataset.action;
                 const moduleId = button.dataset.moduleId;
 
                 switch (action) {
-                    case 'view':
-                        this.viewModuleDetails(moduleId);
-                        break;
                     case 'edit':
-                        this.editModule(moduleId);
+                        this.showEditModuleModal(moduleId);
                         break;
-                    case 'toggle-status':
-                        this.toggleModuleStatus(moduleId);
+                    case 'activity-logs':
+                        this.showActivityLogsModal(moduleId);
+                        break;
+                    case 'delete':
+                        this.showDeleteModal(moduleId);
                         break;
                 }
             });
-        }
-
-        // Add these methods to the WiseManager class
-
-showLoading() {
-    this.modulesGrid.innerHTML = `
-        <div class="content-loader">
-            <div class="loader-spinner">
-                <i class="fas fa-spinner fa-spin"></i>
-            </div>
-            <p>Loading wise items...</p>
-        </div>
-    `;
-}
-
-hideLoading() {
-    const loader = this.modulesGrid.querySelector('.content-loader');
-    if (loader) {
-        loader.remove();
-    }
-}
-
-showAddWiseModal() {
-    try {
-        const modalContent = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Add New Wise Item</h2>
-                    <button class="close-btn"><i class="fas fa-times"></i></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addWiseForm">
-                        <div class="form-group">
-                            <label for="wiseName">Wise Item Name*</label>
-                            <input type="text" id="wiseName" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="wiseCategory">Category*</label>
-                            <select id="wiseCategory" required>
-                                <option value="">Select Category</option>
-                                ${this.categories.map(category => 
-                                    `<option value="${category.toLowerCase()}">${category}</option>`
-                                ).join('')}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="wiseDescription">Description*</label>
-                            <textarea id="wiseDescription" required></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="complianceLevel">Compliance Level*</label>
-                            <select id="complianceLevel" required>
-                                <option value="">Select Compliance Level</option>
-                                ${this.complianceLevels.map(level => 
-                                    `<option value="${level}">${level.charAt(0).toUpperCase() + level.slice(1)}</option>`
-                                ).join('')}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Subscription Tiers*</label>
-                            <div class="checkbox-group">
-                                <label>
-                                    <input type="checkbox" name="subscriptionTiers" value="basic"> Basic
-                                </label>
-                                <label>
-                                    <input type="checkbox" name="subscriptionTiers" value="pro"> Pro
-                                </label>
-                                <label>
-                                    <input type="checkbox" name="subscriptionTiers" value="enterprise"> Enterprise
-                                </label>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="wiseStatus">Initial Status*</label>
-                            <select id="wiseStatus" required>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn-secondary" id="cancelAddWise">Cancel</button>
-                    <button class="btn-primary" id="confirmAddWise">Add Wise Item</button>
-                </div>
-            </div>
-        `;
-
-        const modal = document.getElementById('wiseModal');
-        modal.innerHTML = modalContent;
-        this.showModal('wiseModal');
-
-        // Add event listeners
-        modal.querySelector('.close-btn').addEventListener('click', () => this.closeModals());
-        modal.querySelector('#cancelAddWise').addEventListener('click', () => this.closeModals());
-        modal.querySelector('#confirmAddWise').addEventListener('click', () => this.handleAddWise());
-    } catch (error) {
-        console.error('Error showing add wise modal:', error);
-        this.showError('Failed to open add wise item form');
-    }
-}
-
-async handleAddWise() {
-    try {
-        // Collect form data
-        const wiseData = {
-            name: document.getElementById('wiseName').value.trim(),
-            category: document.getElementById('wiseCategory').value,
-            description: document.getElementById('wiseDescription').value.trim(),
-            complianceLevel: document.getElementById('complianceLevel').value,
-            subscriptionTiers: Array.from(
-                document.querySelectorAll('input[name="subscriptionTiers"]:checked')
-            ).map(checkbox => checkbox.value),
-            isActive: document.getElementById('wiseStatus').value === 'active'
-        };
-
-        // Validate data
-        if (!this.validateWiseData(wiseData)) {
-            return;
-        }
-
-        // Disable save button during submission
-        const saveButton = document.getElementById('confirmAddWise');
-        saveButton.disabled = true;
-        saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-
-        // Send API request
-        const result = await this.handleApiRequest('/modules', {
-            method: 'POST',
-            body: JSON.stringify(wiseData)
         });
 
-        if (result) {
-            this.showSuccess('Wise item added successfully');
-            this.closeModals();
-            await this.loadModules();
-        }
-    } catch (error) {
-        console.error('Error adding wise item:', error);
-        this.showError(error.message || 'Failed to add wise item');
-    } finally {
-        const saveButton = document.getElementById('confirmAddWise');
-        if (saveButton) {
-            saveButton.disabled = false;
-            saveButton.innerHTML = 'Add Wise Item';
-        }
-    }
-}
-
-validateWiseData(data) {
-    // Name validation
-    if (!data.name || data.name.length < 2 || data.name.length > 100) {
-        this.showError('Wise item name must be between 2 and 100 characters');
-        return false;
-    }
-
-    // Category validation
-    if (!this.categories.map(c => c.toLowerCase()).includes(data.category.toLowerCase())) {
-        this.showError('Invalid wise item category');
-        return false;
-    }
-
-    // Description validation
-    if (!data.description || data.description.length < 10) {
-        this.showError('Description must be at least 10 characters long');
-        return false;
-    }
-
-    // Compliance level validation
-    if (!this.complianceLevels.includes(data.complianceLevel)) {
-        this.showError('Invalid compliance level');
-        return false;
-    }
-
-    // Subscription tiers validation
-    if (!data.subscriptionTiers || data.subscriptionTiers.length === 0) {
-        this.showError('Select at least one subscription tier');
-        return false;
-    }
-
-    return true;
-}
-
-async viewModuleDetails(moduleId) {
-    try {
-        // Fetch detailed module information
-        const result = await this.handleApiRequest(`/modules/${moduleId}`);
-        
-        if (!result || !result.data) {
-            throw new Error('Wise item details not found');
-        }
-
-        const module = result.data;
-
-        const modalContent = `
-            <div class="modal-content large">
-                <div class="modal-header">
-                    <h2>Wise Item Details: ${this.escapeHtml(module.name)}</h2>
-                    <button class="close-btn"><i class="fas fa-times"></i></button>
-                </div>
-                <div class="modal-body">
-                    <div class="wise-details-grid">
-                        <div class="details-section">
-                            <h3>Basic Information</h3>
-                            <div class="info-grid">
-                                <div class="info-item">
-                                    <label>Name</label>
-                                    <span>${this.escapeHtml(module.name)}</span>
-                                </div>
-                                <div class="info-item">
-                                    <label>Category</label>
-                                    <span class="category-badge ${module.category}">
-                                        ${module.category.toUpperCase()}
-                                    </span>
-                                </div>
-                                <div class="info-item">
-                                    <label>Compliance Level</label>
-                                    <span class="compliance-badge ${module.complianceLevel}">
-                                        ${module.complianceLevel.toUpperCase()}
-                                    </span>
-                                </div>
-                                <div class="info-item">
-                                    <label>Status</label>
-                                    <span class="status-badge ${module.isActive ? 'active' : 'inactive'}">
-                                        ${module.isActive ? 'Active' : 'Inactive'}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="details-section">
-                            <h3>Description</h3>
-                            <p>${this.escapeHtml(module.description)}</p>
-                        </div>
-
-                        <div class="details-section">
-                            <h3>Subscription Tiers</h3>
-                            <div class="subscription-tiers">
-                                ${module.subscriptionTiers.map(tier => `
-                                    <span class="tier-badge ${tier}">
-                                        ${tier.toUpperCase()}
-                                    </span>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn-secondary" id="closeWiseDetails">Close</button>
-                </div>
-            </div>
-        `;
-
-        const modal = document.getElementById('wiseDetailsModal');
-        modal.innerHTML = modalContent;
-        this.showModal('wiseDetailsModal');
-
-        // Add close event listeners
-        modal.querySelector('.close-btn').addEventListener('click', () => this.closeModals());
-        modal.querySelector('#closeWiseDetails').addEventListener('click', () => this.closeModals());
-    } catch (error) {
-        console.error('Error viewing wise item details:', error);
-        this.showError('Failed to load wise item details');
-    }
-}
-
-async editModule(moduleId) {
-    try {
-        // Fetch current module data
-        const result = await this.handleApiRequest(`/modules/${moduleId}`);
-        
-        if (!result || !result.data) {
-            throw new Error('Wise item not found');
-        }
-
-        const module = result.data;
-
-        const modalContent = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Edit Wise Item: ${this.escapeHtml(module.name)}</h2>
-                    <button class="close-btn"><i class="fas fa-times"></i></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editWiseForm">
-                        <input type="hidden" id="wiseId" value="${module._id}">
-                        <div class="form-group">
-                            <label for="wiseName">Wise Item Name*</label>
-                            <input type="text" id="wiseName" value="${this.escapeHtml(module.name)}" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="wiseCategory">Category*</label>
-                            <select id="wiseCategory" required>
-                                ${this.categories.map(category => `
-                                    <option value="${category.toLowerCase()}" 
-                                        ${module.category.toLowerCase() === category.toLowerCase() ? 'selected' : ''}>
-                                        ${category}
-                                    </option>
-                                `).join('')}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="wiseDescription">Description*</label>
-                            <textarea id="wiseDescription" required>${this.escapeHtml(module.description)}</textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="complianceLevel">Compliance Level*</label>
-                            <select id="complianceLevel" required>
-                                ${this.complianceLevels.map(level => `
-                                    <option value="${level}" 
-                                        ${module.complianceLevel === level ? 'selected' : ''}>
-                                        ${level.charAt(0).toUpperCase() + level.slice(1)}
-                                    </option>
-                                `).join('')}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Subscription Tiers*</label>
-                            <div class="checkbox-group">
-                                <label>
-                                    <input type="checkbox" name="subscriptionTiers" value="basic"
-                                        ${module.subscriptionTiers.includes('basic') ? 'checked' : ''}> Basic
-                                </label>
-                                <label>
-                                    <input type="checkbox" name="subscriptionTiers" value="pro"
-                                        ${module.subscriptionTiers.includes('pro') ? 'checked' : ''}> Pro
-                                </label>
-                                <label>
-                                    <input type="checkbox" name="subscriptionTiers" value="enterprise"
-                                        ${module.subscriptionTiers.includes('enterprise') ? 'checked' : ''}> Enterprise
-                                </label>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="wiseStatus">Status*</label>
-                            <select id="wiseStatus" required>
-                                <option value="active" ${module.isActive ? 'selected' : ''}>Active</option>
-                                <option value="inactive" ${!module.isActive ? 'selected' : ''}>Inactive</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn-secondary" id="cancelEditWise">Cancel</button>
-                    <button class="btn-primary" id="confirmEditWise">Update Wise Item</button>
-                </div>
-            </div>
-        `;
-
-        const modal = document.getElementById('wiseModal');
-        modal.innerHTML = modalContent;
-        this.showModal('wiseModal');
-
-        // Add event listeners
-        modal.querySelector('.close-btn').addEventListener('click', () => this.closeModals());
-        modal.querySelector('#cancelEditWise').addEventListener('click', () => this.closeModals());
-        modal.querySelector('#confirmEditWise').addEventListener('click', () => this.handleEditWise());
-    } catch (error) {
-        console.error('Error editing wise item:', error);
-        this.showError('Failed to open wise item edit form');
-    }
-}
-
-async handleEditWise() {
-    try {
-        // Collect form data
-        const wiseData = {
-            name: document.getElementById('wiseName').value.trim(),
-            category: document.getElementById('wiseCategory').value,
-            description: document.getElementById('wiseDescription').value.trim(),
-            complianceLevel: document.getElementById('complianceLevel').value,
-            subscriptionTiers: Array.from(
-                document.querySelectorAll('input[name="subscriptionTiers"]:checked')
-            ).map(checkbox => checkbox.value),
-            isActive: document.getElementById('wiseStatus').value === 'active'
-        };
-
-        const wiseId = document.getElementById('wiseId').value;
-
-        // Validate data
-        if (!this.validateWiseData(wiseData)) {
-            return;
-        }
-
-        // Disable update button during submission
-        const updateButton = document.getElementById('confirmEditWise');
-        updateButton.disabled = true;
-        updateButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
-
-        // Send API request
-        const result = await this.handleApiRequest(`/modules/${wiseId}`, {
-            method: 'PUT',
-            body: JSON.stringify(wiseData)
+        // Add module status toggle listeners
+        const statusToggles = this.modulesTableBody.querySelectorAll('input[data-action="toggle-status"]');
+        statusToggles.forEach(toggle => {
+            toggle.addEventListener('change', (e) => {
+                const moduleId = toggle.dataset.moduleId;
+                this.toggleModuleStatus(moduleId);
+            });
         });
+    }
 
-        if (result) {
-            this.showSuccess('Wise item updated successfully');
-            this.closeModals();
-            await this.loadModules();
-        }
-    } catch (error) {
-        console.error('Error updating wise item:', error);
-        this.showError(error.message || 'Failed to update wise item');
-    } finally {
-        const updateButton = document.getElementById('confirmEditWise');
-        if (updateButton) {
-            updateButton.disabled = false;
-            updateButton.innerHTML = 'Update Wise Item';
+    showCreateModuleModal() {
+        this.currentModuleId = null;
+        this.moduleForm.reset();
+        document.getElementById('modalTitle').textContent = 'Add New Module';
+        this.moduleModal.classList.add('show');
+        document.getElementById('moduleName').focus();
+    }
+
+    async showEditModuleModal(moduleId) {
+        try {
+            this.showLoading();
+            const response = await fetch(`${this.baseUrl}/modules/${moduleId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch module details');
+
+            const result = await response.json();
+            if (!result.success) throw new Error(result.message || 'Failed to fetch module details');
+
+            const module = result.data;
+            this.currentModuleId = moduleId;
+
+            document.getElementById('modalTitle').textContent = 'Edit Module';
+            document.getElementById('moduleName').value = module.name || '';
+            document.getElementById('moduleCategory').value = module.category || '';
+            document.getElementById('moduleDescription').value = module.description || '';
+            document.getElementById('complianceLevel').value = module.complianceLevel || '';
+            document.getElementById('moduleStatus').checked = module.isActive || false;
+
+            // Set subscription tiers
+            const tierCheckboxes = document.querySelectorAll('input[name="subscriptionTiers"]');
+            tierCheckboxes.forEach(checkbox => {
+                checkbox.checked = module.subscriptionTiers.includes(checkbox.value);
+            });
+
+            this.moduleModal.classList.add('show');
+            document.getElementById('moduleName').focus();
+
+        } catch (error) {
+            console.error('Error loading module details:', error);
+            this.showError('Failed to load module details');
+        } finally {
+            this.hideLoading();
         }
     }
-}
 
-async toggleModuleStatus(moduleId) {
-    try {
-        // Confirm status toggle
-        const confirmed = await this.showConfirmDialog(
-            'Are you sure you want to toggle this wise item\'s status?'
-        );
-
-        if (!confirmed) return;
-
-        // Perform status toggle
-        const result = await this.handleApiRequest(`/modules/${moduleId}/status`, {
-            method: 'PATCH'
-        });
-
-        if (result && result.success) {
-            this.showSuccess('Wise item status updated successfully');
-            
-            // Reload modules to reflect the change
-            await this.loadModules();
-        }
-    } catch (error) {
-        console.error('Error toggling wise item status:', error);
-        this.showError('Failed to update wise item status');
-    }
-}
-
-showModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'block';
-        modal.classList.add('show');
-        document.body.style.overflow = 'hidden';
-    }
-}
-
-closeModals(specificModalId = null) {
-    const modals = specificModalId 
-        ? [document.getElementById(specificModalId)]
-        : document.querySelectorAll('.modal');
-
-    modals.forEach(modal => {
-        if (modal) {
-            modal.style.display = 'none';
-            modal.classList.remove('show');
-        }
-    });
-
-    document.body.style.overflow = '';
-}
-        // Cleanup method
-        cleanup() {
-            // Remove event listeners and reset state
-            if (this.modulesGrid) {
-                const oldGrid = this.modulesGrid;
-                const newGrid = oldGrid.cloneNode(true);
-                oldGrid.parentNode.replaceChild(newGrid, oldGrid);
-            }
-
-            // Reset internal state
-            this.modules = [];
-            this.currentModuleId = null;
-            this.currentModule = null;
-            this.filters = {
-                category: '',
-                complianceLevel: '',
-                status: ''
+    async saveModule() {
+        try {
+            // Collect form data
+            const moduleData = {
+                name: document.getElementById('moduleName').value.trim(),
+                category: document.getElementById('moduleCategory').value,
+                description: document.getElementById('moduleDescription').value.trim(),
+                complianceLevel: document.getElementById('complianceLevel').value,
+                isActive: document.getElementById('moduleStatus').checked,
+                subscriptionTiers: Array.from(
+                    document.querySelectorAll('input[name="subscriptionTiers"]:checked')
+                ).map(checkbox => checkbox.value)
             };
-        }
 
-        // Utility methods
-        escapeHtml(unsafe) {
-            if (!unsafe) return '';
-            return unsafe
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-
-        showError(message) {
-            if (window.dashboardApp?.userInterface) {
-                window.dashboardApp.userInterface.showErrorNotification(message);
-            } else {
-                console.error(message);
-                alert(message);
+            // Validate module data
+            const validationErrors = this.validateModuleData(moduleData);
+            if (validationErrors.length > 0) {
+                this.showError(validationErrors[0]);
+                return;
             }
-        }
 
-        showSuccess(message) {
-            if (window.dashboardApp?.userInterface) {
-                window.dashboardApp.userInterface.showSuccessNotification(message);
-            } else {
-                console.log(message);
-                alert(message);
+            this.showLoading();
+
+            const url = this.currentModuleId
+                ? `${this.baseUrl}/modules/${this.currentModuleId}`
+                : `${this.baseUrl}/modules`;
+
+            const method = this.currentModuleId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(moduleData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to save module');
             }
+
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to save module');
+            }
+
+            this.closeModal(this.moduleModal);
+            await this.loadModules();
+
+            this.showSuccess(
+                this.currentModuleId 
+                    ? 'Module updated successfully' 
+                    : 'Module created successfully'
+            );
+
+        } catch (error) {
+            console.error('Error saving module:', error);
+            this.showError(error.message || 'Failed to save module');
+        } finally {
+            this.hideLoading();
         }
     }
 
-    // Expose WiseManager globally
-    if (typeof window !== 'undefined') {
-        window.WiseManager = WiseManager;
+    validateModuleData(moduleData) {
+        const errors = [];
+
+        if (!moduleData.name || moduleData.name.length < 2) {
+            errors.push('Module name must be at least 2 characters long');
+        }
+
+        if (!moduleData.category) {
+            errors.push('Category is required');
+        }
+
+        if (!moduleData.description) {
+            errors.push('Description is required');
+        }
+
+        if (!moduleData.complianceLevel) {
+            errors.push('Compliance level is required');
+        }
+
+        if (moduleData.subscriptionTiers.length === 0) {
+            errors.push('At least one subscription tier must be selected');
+        }
+
+        return errors;
     }
 
-    // Global initialization
-    document.addEventListener('DOMContentLoaded', () => {
-        // Check if wiseManager is already created by ContentLoader
-        if (!window.wiseManager) {
-            window.wiseManager = new WiseManager();
+        async deleteModule() {
+        try {
+            this.showLoading();
+
+            const response = await fetch(`${this.baseUrl}/modules/${this.currentModuleId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to delete module');
+            }
+
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to delete module');
+            }
+
+            this.closeModal(this.deleteModal);
+            await this.loadModules();
+            this.showSuccess('Module deleted successfully');
+
+        } catch (error) {
+            console.error('Error deleting module:', error);
+            this.showError(error.message || 'Failed to delete module');
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    async toggleModuleStatus(moduleId) {
+        try {
+            const module = this.modules.find(m => m._id === moduleId);
+            if (!module) throw new Error('Module not found');
+
+            const newStatus = !module.isActive;
+
+            this.showLoading();
+
+            const response = await fetch(`${this.baseUrl}/modules/${moduleId}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ isActive: newStatus })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to update module status');
+            }
+
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to update module status');
+            }
+
+            await this.loadModules();
+            this.showSuccess(`Module ${newStatus ? 'activated' : 'deactivated'} successfully`);
+
+        } catch (error) {
+            console.error('Error toggling module status:', error);
+            this.showError(error.message || 'Failed to update module status');
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    async setupActivityLogsModal() {
+        // Activity logs modal initialization
+        const activityLogsTableBody = document.getElementById('activityLogsTableBody');
+        const logTypeFilter = document.getElementById('logTypeFilter');
+        const startDateFilter = document.getElementById('startDateFilter');
+        const endDateFilter = document.getElementById('endDateFilter');
+        const activityLogsPagination = document.getElementById('activityLogsPagination');
+
+        // Add event listeners for filtering activity logs
+        logTypeFilter?.addEventListener('change', () => this.loadActivityLogs());
+        startDateFilter?.addEventListener('change', () => this.loadActivityLogs());
+        endDateFilter?.addEventListener('change', () => this.loadActivityLogs());
+    }
+
+    async showActivityLogsModal(moduleId) {
+        try {
+            this.showLoading();
+            
+            // Reset filters
+            const logTypeFilter = document.getElementById('logTypeFilter');
+            const startDateFilter = document.getElementById('startDateFilter');
+            const endDateFilter = document.getElementById('endDateFilter');
+            
+            if (logTypeFilter) logTypeFilter.value = '';
+            if (startDateFilter) startDateFilter.value = '';
+            if (endDateFilter) endDateFilter.value = '';
+
+            // Load initial activity logs
+            await this.loadActivityLogs(moduleId);
+            
+            // Show modal
+            this.activityLogsModal.classList.add('show');
+
+        } catch (error) {
+            console.error('Error showing activity logs:', error);
+            this.showError('Failed to load activity logs');
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    async loadActivityLogs(moduleId, page = 1) {
+        try {
+            const logTypeFilter = document.getElementById('logTypeFilter');
+            const startDateFilter = document.getElementById('startDateFilter');
+            const endDateFilter = document.getElementById('endDateFilter');
+            const activityLogsTableBody = document.getElementById('activityLogsTableBody');
+
+            const queryParams = new URLSearchParams({
+                moduleId: moduleId,
+                page: page,
+                limit: 10,
+                type: logTypeFilter?.value || '',
+                startDate: startDateFilter?.value || '',
+                endDate: endDateFilter?.value || ''
+            });
+
+            const response = await fetch(`${this.baseUrl}/modules/activity-logs?${queryParams}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch activity logs');
+            }
+
+            const result = await response.json();
+            
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to load activity logs');
+            }
+
+            // Render activity logs
+            activityLogsTableBody.innerHTML = result.data.map(log => `
+                <tr>
+                    <td>${new Date(log.timestamp).toLocaleString()}</td>
+                    <td>${this.escapeHtml(log.moduleName)}</td>
+                    <td>${this.escapeHtml(log.type)}</td>
+                    <td>${this.escapeHtml(log.user)}</td>
+                    <td>${this.escapeHtml(JSON.stringify(log.details))}</td>
+                </tr>
+            `).join('');
+
+            // Update pagination
+            this.updateActivityLogsPagination(result.pagination);
+
+        } catch (error) {
+            console.error('Error loading activity logs:', error);
+            this.showError('Failed to load activity logs');
+        }
+    }
+
+    updateActivityLogsPagination(pagination) {
+        const activityLogsPagination = document.getElementById('activityLogsPagination');
+        
+        if (!activityLogsPagination) return;
+
+        let paginationHTML = '';
+
+        // Previous button
+        paginationHTML += `
+            <button class="pagination-button" 
+                    ${pagination.page === 1 ? 'disabled' : ''}
+                    onclick="window.wiseManager.loadActivityLogs(null, ${pagination.page - 1})">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+        `;
+
+        // Page numbers
+        for (let i = 1; i <= pagination.totalPages; i++) {
+            paginationHTML += `
+                <button class="pagination-button ${i === pagination.page ? 'active' : ''}"
+                        onclick="window.wiseManager.loadActivityLogs(null, ${i})">
+                    ${i}
+                </button>
+            `;
         }
 
-        // Ensure modals are properly initialized
-        const wiseModal = document.getElementById('wiseModal');
-        const wiseDetailsModal = document.getElementById('wiseDetailsModal');
-        
-        if (wiseModal) {
-            wiseModal.classList.add('modal');
-            wiseModal.style.display = 'none';
+        // Next button
+        paginationHTML += `
+            <button class="pagination-button" 
+                    ${pagination.page === pagination.totalPages ? 'disabled' : ''}
+                    onclick="window.wiseManager.loadActivityLogs(null, ${pagination.page + 1})">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        `;
+
+        activityLogsPagination.innerHTML = paginationHTML;
+    }
+
+        updatePagination() {
+        if (!this.paginationControls) return;
+
+        const totalPages = Math.ceil(this.totalModules / this.pageSize);
+        let paginationHTML = '';
+
+        // Previous button
+        paginationHTML += `
+            <button class="pagination-button" 
+                    ${this.currentPage === 1 ? 'disabled' : ''}
+                    onclick="window.wiseManager.changePage(${this.currentPage - 1})">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+        `;
+
+        // Page numbers
+        for (let i = 1; i <= totalPages; i++) {
+            if (
+                i === 1 || 
+                i === totalPages || 
+                (i >= this.currentPage - 1 && i <= this.currentPage + 1)
+            ) {
+                paginationHTML += `
+                    <button class="pagination-button ${i === this.currentPage ? 'active' : ''}"
+                            onclick="window.wiseManager.changePage(${i})">
+                        ${i}
+                    </button>
+                `;
+            } else if (
+                i === this.currentPage - 2 || 
+                i === this.currentPage + 2
+            ) {
+                paginationHTML += `<span class="pagination-ellipsis">...</span>`;
+            }
         }
+
+        // Next button
+        paginationHTML += `
+            <button class="pagination-button" 
+                    ${this.currentPage === totalPages ? 'disabled' : ''}
+                    onclick="window.wiseManager.changePage(${this.currentPage + 1})">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        `;
+
+        this.paginationControls.innerHTML = paginationHTML;
+    }
+
+    updateDisplayRange() {
+        if (!this.startRange || !this.endRange || !this.totalModulesElement) return;
+
+        const start = (this.currentPage - 1) * this.pageSize + 1;
+        const end = Math.min(start + this.pageSize - 1, this.totalModules);
+
+        this.startRange.textContent = this.totalModules === 0 ? 0 : start;
+        this.endRange.textContent = end;
+        this.totalModulesElement.textContent = this.totalModules;
+    }
+
+    changePage(page) {
+        const totalPages = Math.ceil(this.totalModules / this.pageSize);
+        if (page < 1 || page > totalPages) return;
         
-        if (wiseDetailsModal) {
-            wiseDetailsModal.classList.add('modal');
-            wiseDetailsModal.style.display = 'none';
+        this.currentPage = page;
+        this.loadModules();
+    }
+
+    closeModal(modal) {
+        if (!modal) return;
+        modal.classList.remove('show');
+        if (modal === this.moduleModal) {
+            this.moduleForm.reset();
+            this.currentModuleId = null;
         }
-    });
+    }
+
+    showLoading() {
+        const loader = document.createElement('div');
+        loader.className = 'loading-overlay';
+        loader.innerHTML = `
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Loading...</span>
+            </div>
+        `;
+        document.body.appendChild(loader);
+    }
+
+    hideLoading() {
+        const loader = document.querySelector('.loading-overlay');
+        if (loader) {
+            loader.remove();
+        }
+    }
+
+    showError(message) {
+        const notification = document.createElement('div');
+        notification.className = 'notification error';
+        notification.innerHTML = `
+            <div class="notification-content">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>${this.escapeHtml(message)}</span>
+            </div>
+        `;
+        this.showNotification(notification);
+    }
+
+    showSuccess(message) {
+        const notification = document.createElement('div');
+        notification.className = 'notification success';
+        notification.innerHTML = `
+            <div class="notification-content">
+                <i class="fas fa-check-circle"></i>
+                <span>${this.escapeHtml(message)}</span>
+            </div>
+        `;
+        this.showNotification(notification);
+    }
+
+    showNotification(notification) {
+        // Remove existing notifications
+        document.querySelectorAll('.notification').forEach(n => n.remove());
+
+        // Add new notification
+        document.body.appendChild(notification);
+
+        // Remove after delay
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease-in';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    escapeHtml(unsafe) {
+        if (!unsafe) return '';
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    capitalizeFirstLetter(string) {
+        if (!string) return '';
+        return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+    }
+
+    cleanup() {
+        // Remove event listeners
+        // Reset state
+        // Clear references
+        this.modules = [];
+        this.currentModuleId = null;
+        this.currentPage = 1;
+
+        // Remove any lingering modals or notifications
+        document.querySelectorAll('.notification, .loading-overlay').forEach(el => el.remove());
+    }
+}
+
+// Helper function for debouncing
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Register the class globally
+window.WiseManager = WiseManager;
 })();
