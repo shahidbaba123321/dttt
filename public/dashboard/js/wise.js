@@ -369,7 +369,7 @@
             }
         }
 
-            showAddModuleModal(existingModule = null) {
+          showAddModuleModal(existingModule = null) {
             // Create modal container
             const modalContainer = document.createElement('div');
             modalContainer.id = 'moduleFormModal';
@@ -384,7 +384,7 @@
                 <div class="modal-container">
                     <div class="modal-header">
                         <h2>${modalTitle}</h2>
-                        <button class="modal-close-btn">&times;</button>
+                        <button type="button" class="modal-close-btn">&times;</button>
                     </div>
                     <form id="moduleForm" class="module-form">
                         <div class="form-row">
@@ -473,6 +473,7 @@
                                 <div class="permissions-grid" id="permissionsContainer">
                                     ${this.generatePermissionsCheckboxes(existingModule)}
                                 </div>
+                                <small class="error-message" id="permissionsError"></small>
                             </div>
                         </div>
 
@@ -521,12 +522,13 @@
                         const formData = this.collectModuleFormData(form);
                         
                         // Send data to server
+                        let response;
                         if (isEditMode) {
                             // Update existing module
-                            await this.updateModule(existingModule._id, formData);
+                            response = await this.updateModule(existingModule._id, formData);
                         } else {
                             // Create new module
-                            await this.createModule(formData);
+                            response = await this.createModule(formData);
                         }
                         
                         // Show success notification
@@ -541,11 +543,15 @@
                         // Reload modules
                         this.loadModules();
                     } catch (error) {
-                        // Error handling is done in fetchWithAuth method
-                        this.showNotification(error.message, 'error');
+                        // Error handling
+                        console.error('Module submission error:', error);
+                        this.showNotification(error.message || 'Failed to submit module', 'error');
                     }
                 }
             });
+
+            // Return the modal container for any additional manipulation if needed
+            return modalContainer;
         }
 
         generatePermissionsCheckboxes(existingModule = null) {
@@ -597,7 +603,7 @@
                 .join('');
         }
 
-            validateModuleForm(form) {
+       validateModuleForm(form) {
             // Reset previous error states
             const errorFields = form.querySelectorAll('.error-message');
             errorFields.forEach(field => field.textContent = '');
@@ -610,8 +616,6 @@
             if (!moduleName.value.trim()) {
                 this.markFieldAsInvalid(moduleName, 'Module name is required');
                 isValid = false;
-            } else {
-                this.clearFieldError(moduleName);
             }
 
             // Validate Category
@@ -619,8 +623,6 @@
             if (!moduleCategory.value) {
                 this.markFieldAsInvalid(moduleCategory, 'Please select a category');
                 isValid = false;
-            } else {
-                this.clearFieldError(moduleCategory);
             }
 
             // Validate Description
@@ -628,8 +630,6 @@
             if (!moduleDescription.value.trim()) {
                 this.markFieldAsInvalid(moduleDescription, 'Description is required');
                 isValid = false;
-            } else {
-                this.clearFieldError(moduleDescription);
             }
 
             // Validate Compliance Level
@@ -637,8 +637,6 @@
             if (!complianceLevel.value) {
                 this.markFieldAsInvalid(complianceLevel, 'Please select a compliance level');
                 isValid = false;
-            } else {
-                this.clearFieldError(complianceLevel);
             }
 
             // Validate Permissions (at least one must be selected)
@@ -646,10 +644,11 @@
             const selectedPermissions = permissionsContainer.querySelectorAll('input[name="permissions"]:checked');
             
             if (selectedPermissions.length === 0) {
-                const permissionsError = document.createElement('div');
-                permissionsError.className = 'error-message';
-                permissionsError.textContent = 'Select at least one permission';
-                permissionsContainer.appendChild(permissionsError);
+                const permissionsError = form.querySelector('#permissionsError');
+                if (permissionsError) {
+                    permissionsError.textContent = 'Select at least one permission';
+                    permissionsError.style.visibility = 'visible';
+                }
                 isValid = false;
             }
 
