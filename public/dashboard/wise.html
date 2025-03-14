@@ -1600,4 +1600,190 @@ button {
         gap: var(--spacing-md);
     }
 }
+
+/* Modules Management Container */
+.modules-management-container {
+    background-color: var(--neutral-100);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-medium);
+    padding: var(--spacing-lg);
+}
+
+/* Modules Filter Section */
+.modules-filter-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background-color: var(--neutral-200);
+    border-radius: var(--border-radius-md);
+}
+
+.filter-row {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.filter-group label {
+    font-weight: 600;
+    color: var(--neutral-500);
+    font-size: var(--font-size-xs);
+}
+
+.filter-group select,
+.filter-group input {
+    padding: var(--spacing-sm);
+    border: 1px solid var(--neutral-300);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-sm);
+}
+
+/* Modules Grid */
+.modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+/* Error Message Styling */
+.error-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg);
+    background-color: var(--neutral-200);
+    border-radius: var(--border-radius-md);
+    text-align: center;
+}
+
+.error-message i {
+    font-size: 3rem;
+    color: var(--danger-color);
+    margin-bottom: var(--spacing-md);
+}
+
+.error-message p {
+    color: var(--neutral-500);
+    max-width: 400px;
+}
+
+/* Features Container */
+#featuresContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    background-color: var(--neutral-100);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-subtle);
+}
+
+.feature-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--spacing-lg);
+    background-color: var(--neutral-200);
+    border-radius: var(--border-radius-md);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-item:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-medium);
+}
+
+.feature-icon {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-md);
+}
+
+.feature-name {
+    font-weight: 600;
+    color: var(--neutral-500);
+    margin-bottom: var(--spacing-sm);
+}
+
+.feature-description {
+    font-size: var(--font-size-sm);
+    color: var(--neutral-400);
+}
+
+.no-features-message {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--spacing-lg);
+    background-color: var(--neutral-200);
+    border-radius: var(--border-radius-md);
+    text-align: center;
+}
+
+.no-features-message p {
+    color: var(--neutral-500);
+}
+
+/* Pagination Styling */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background-color: var(--neutral-200);
+    border-radius: var(--border-radius-md);
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.btn-pagination {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--neutral-100);
+    border: 1px solid var(--neutral-300);
+    border-radius: var(--border-radius-sm);
+    color: var(--neutral-500);
+    transition: all 0.3s ease;
+}
+
+.btn-pagination:hover {
+    background-color: var(--primary-color);
+    color: var(--neutral-100);
+}
+
+.btn-pagination:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .modules-filter-section,
+    .pagination-container {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+
+    .modules-grid,
+    #featuresContainer {
+        grid-template-columns: 1fr;
+    }
+}
+    
 </style>
