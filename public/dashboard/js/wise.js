@@ -258,43 +258,49 @@
             `;
         }
                 // Handle Add New Module Method
-        handleAddNewModule() {
-    try {
-        // Create modal dynamically if not exists
-        if (!this.moduleModal) {
-            this.createModuleModal();
-        }
-
-        // Verify modal exists before proceeding
-        if (!this.moduleModal) {
-            console.error('Failed to create module modal');
-            return;
-        }
-
-        // Reset form
-        this.moduleForm.reset();
-        this.populateFeatureCheckboxes();
-        
-        // Show modal
-        this.moduleModal.classList.add('show');
-        
-        // Setup form submission
-        this.moduleForm.onsubmit = this.handleModuleFormSubmit;
-    } catch (error) {
-        console.error('Error in handleAddNewModule:', error);
+     handleAddNewModule() {
+    // Ensure modal exists
+    if (!this.moduleModal) {
+        this.createModuleModal();
     }
+
+    // Use a slight delay to ensure modal is in DOM
+    setTimeout(() => {
+        try {
+            // Verify modal exists before proceeding
+            if (!this.moduleModal) {
+                console.error('Failed to create module modal');
+                return;
+            }
+
+            // Reset form
+            this.moduleForm.reset();
+            this.populateFeatureCheckboxes();
+            
+            // Show modal
+            this.moduleModal.classList.add('show');
+            
+            // Setup form submission
+            this.moduleForm.onsubmit = this.handleModuleFormSubmit;
+        } catch (error) {
+            console.error('Error in handleAddNewModule:', error);
+        }
+    }, 0);
 }
 
         // Create Module Modal Method
-        createModuleModal() {
+       createModuleModal() {
     try {
         // Check if modal already exists
         if (document.getElementById('moduleModal')) {
-            console.warn('Module modal already exists');
+            this.moduleModal = document.getElementById('moduleModal');
+            this.moduleForm = document.getElementById('moduleForm');
             return;
         }
 
-        const modalHTML = `
+        // Create a container div to hold the modal
+        const modalContainer = document.createElement('div');
+        modalContainer.innerHTML = `
             <div class="modal" id="moduleModal">
                 <div class="modal-dialog">
                     <div class="modal-header">
@@ -397,61 +403,68 @@
             </div>
         `;
 
-        // Create modal element
-        const modalContainer = document.createElement('div');
-        modalContainer.innerHTML = modalHTML;
-        
-        // Append to body
-        document.body.appendChild(modalContainer.firstChild);
-
-        // Cache modal reference
-        this.moduleModal = document.getElementById('moduleModal');
-        this.moduleForm = document.getElementById('moduleForm');
-
-        // Verify modal and form exist
-        if (!this.moduleModal) {
-            console.error('Failed to create module modal: Modal not found');
+        // Ensure the modal is added to the DOM
+        const firstChild = modalContainer.firstElementChild;
+        if (!firstChild) {
+            console.error('Failed to create modal container');
             return;
         }
 
-        if (!this.moduleForm) {
-            console.error('Failed to create module modal: Form not found');
-            return;
-        }
+        // Append to body with a slight delay to ensure DOM is ready
+        setTimeout(() => {
+            document.body.appendChild(firstChild);
 
-        // Setup close button
-        const closeButton = this.moduleModal.querySelector('.modal-close');
-        if (closeButton) {
-            closeButton.addEventListener('click', () => {
-                try {
-                    this.closeModuleModal();
-                } catch (closeError) {
-                    console.error('Error closing modal:', closeError);
-                }
-            });
-        } else {
-            console.error('Close button not found in module modal');
-        }
+            // Cache modal reference
+            this.moduleModal = document.getElementById('moduleModal');
+            this.moduleForm = document.getElementById('moduleForm');
 
-        // Setup cancel button
-        const cancelButton = document.getElementById('cancelModuleBtn');
-        if (cancelButton) {
-            cancelButton.addEventListener('click', () => {
-                try {
-                    this.closeModuleModal();
-                } catch (cancelError) {
-                    console.error('Error canceling modal:', cancelError);
-                }
-            });
-        } else {
-            console.error('Cancel button not found in module modal');
-        }
+            // Verify modal and form exist
+            if (!this.moduleModal) {
+                console.error('Failed to create module modal: Modal not found');
+                return;
+            }
 
-        console.log('Module modal created successfully');
+            if (!this.moduleForm) {
+                console.error('Failed to create module modal: Form not found');
+                return;
+            }
+
+            // Setup close button
+            const closeButton = this.moduleModal.querySelector('.modal-close');
+            if (closeButton) {
+                closeButton.addEventListener('click', () => {
+                    try {
+                        this.closeModuleModal();
+                    } catch (closeError) {
+                        console.error('Error closing modal:', closeError);
+                    }
+                });
+            } else {
+                console.error('Close button not found in module modal');
+            }
+
+            // Setup cancel button
+            const cancelButton = document.getElementById('cancelModuleBtn');
+            if (cancelButton) {
+                cancelButton.addEventListener('click', () => {
+                    try {
+                        this.closeModuleModal();
+                    } catch (cancelError) {
+                        console.error('Error canceling modal:', cancelError);
+                    }
+                });
+            } else {
+                console.error('Cancel button not found in module modal');
+            }
+
+            console.log('Module modal created successfully');
+        }, 0);
+
     } catch (error) {
         console.error('Comprehensive error creating module modal:', error);
     }
 }
+
 
         // Populate Feature Checkboxes Method
         populateFeatureCheckboxes() {
