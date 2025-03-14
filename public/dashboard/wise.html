@@ -1,41 +1,463 @@
-<div class="wise-modules-container">
+<style>
+    .modules-management-container {
+        background-color: var(--bg-primary);
+        border-radius: var(--border-radius-lg);
+        padding: var(--spacing-lg);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-lg);
+        border-bottom: 1px solid var(--border-light);
+        padding-bottom: var(--spacing-md);
+    }
+
+    .page-header h1 {
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .header-actions .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--border-radius-md);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        transition: background-color 0.3s ease;
+    }
+
+    .header-actions .btn-primary:hover {
+        background-color: var(--primary-dark);
+    }
+
+    .modules-filter-section {
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .filter-row {
+        display: flex;
+        gap: var(--spacing-md);
+        align-items: flex-end;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .filter-group label {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .form-control {
+        padding: var(--spacing-sm) var(--spacing-md);
+        border: 1px solid var(--border-light);
+        border-radius: var(--border-radius-md);
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        transition: border-color 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+    }
+
+    .search-group {
+        display: flex;
+        align-items: flex-end;
+        gap: var(--spacing-sm);
+    }
+
+    .search-group input {
+        flex-grow: 1;
+    }
+
+    .search-group .btn-secondary {
+        background-color: var(--bg-tertiary);
+        color: var(--text-secondary);
+        border: none;
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--border-radius-md);
+        display: flex;
+        align-items: center;
+        transition: background-color 0.3s ease;
+    }
+
+    .search-group .btn-secondary:hover {
+        background-color: var(--border-light);
+    }
+     .modules-list-section {
+        background-color: var(--bg-secondary);
+        border-radius: var(--border-radius-lg);
+        padding: var(--spacing-lg);
+        margin-top: var(--spacing-lg);
+    }
+
+    .modules-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: var(--spacing-lg);
+    }
+
+    .module-card {
+        background-color: var(--bg-primary);
+        border-radius: var(--border-radius-lg);
+        border: 1px solid var(--border-light);
+        padding: var(--spacing-lg);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .module-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-5px);
+    }
+
+    .module-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .module-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 1.1rem;
+    }
+
+    .module-status {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .status-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .status-active {
+        background-color: var(--success-color);
+    }
+
+    .status-inactive {
+        background-color: var(--danger-color);
+    }
+
+    .module-category {
+        background-color: var(--bg-tertiary);
+        color: var(--text-secondary);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--border-radius-sm);
+        font-size: 0.75rem;
+        display: inline-block;
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .module-description {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        line-height: 1.5;
+        flex-grow: 1;
+    }
+
+    .module-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-top: var(--spacing-md);
+    }
+
+    .module-action-btn {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        transition: color 0.3s ease;
+    }
+
+    .module-action-btn:hover {
+        color: var(--primary-color);
+    }
+
+    .module-action-btn i {
+        font-size: 1rem;
+    }
+
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: var(--spacing-lg);
+        padding-top: var(--spacing-md);
+        border-top: 1px solid var(--border-light);
+    }
+
+    .pagination-info {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-md);
+    }
+
+    .btn-pagination {
+        background-color: var(--bg-tertiary);
+        color: var(--text-secondary);
+        border: none;
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--border-radius-md);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-pagination:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .btn-pagination:not(:disabled):hover {
+        background-color: var(--border-light);
+    }
+
+    .page-number-container {
+        display: flex;
+        gap: var(--spacing-sm);
+    }
+
+    .page-number {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--border-radius-sm);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .page-number:hover {
+        background-color: var(--bg-tertiary);
+    }
+
+    .page-number.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+</style>
+<style>
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.show {
+        display: flex;
+        opacity: 1;
+    }
+
+    .modal-container {
+        background-color: var(--bg-primary);
+        border-radius: var(--border-radius-lg);
+        width: 100%;
+        max-width: 800px;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: var(--spacing-lg);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-lg);
+        border-bottom: 1px solid var(--border-light);
+        padding-bottom: var(--spacing-md);
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        color: var(--text-primary);
+        font-size: 1.25rem;
+    }
+
+    .modal-close-btn {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 1.25rem;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+
+    .modal-close-btn:hover {
+        color: var(--danger-color);
+    }
+
+    .module-form {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-lg);
+    }
+
+    .form-row {
+        display: flex;
+        gap: var(--spacing-lg);
+    }
+
+    .form-group {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .form-group.full-width {
+        width: 100%;
+    }
+
+    .form-error {
+        color: var(--danger-color);
+        font-size: 0.75rem;
+        margin-top: var(--spacing-xs);
+        visibility: hidden;
+    }
+
+    .toggle-switch {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .toggle-switch input[type="checkbox"] {
+        display: none;
+    }
+
+    .toggle-slider {
+        width: 50px;
+        height: 24px;
+        background-color: var(--border-light);
+        border-radius: 12px;
+        position: relative;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .toggle-slider::before {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: white;
+        top: 2px;
+        left: 2px;
+        transition: transform 0.3s ease;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+        background-color: var(--success-color);
+    }
+
+    .toggle-switch input:checked + .toggle-slider::before {
+        transform: translateX(26px);
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-lg);
+        border-top: 1px solid var(--border-light);
+        padding-top: var(--spacing-lg);
+    }
+
+    .permissions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: var(--spacing-sm);
+    }
+
+    .permission-checkbox {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .subscription-tiers {
+        display: flex;
+        gap: var(--spacing-sm);
+        flex-wrap: wrap;
+    }
+
+    .subscription-tier {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        background-color: var(--bg-secondary);
+        padding: var(--spacing-sm);
+        border-radius: var(--border-radius-md);
+    }
+</style>
+<div class="modules-management-container">
     <div class="page-header">
         <h1>Modules Management</h1>
-        <div class="page-header-actions">
+        <div class="header-actions">
             <button id="addNewModuleBtn" class="btn btn-primary">
-                Add New Module
-            </button>
-        </div>
-    </div>
-
-    <div class="modules-category-navigation">
-        <div class="category-tabs">
-            <button class="category-tab active" data-category="all">
-                All Modules
-            </button>
-            <button class="category-tab" data-category="hr">
-                HR Modules
-            </button>
-            <button class="category-tab" data-category="finance">
-                Finance Modules
-            </button>
-            <button class="category-tab" data-category="operations">
-                Operations Modules
-            </button>
-            <button class="category-tab" data-category="integrations">
-                Integration Modules
+                <i class="fas fa-plus"></i> Add New Module
             </button>
         </div>
     </div>
 
     <div class="modules-filter-section">
         <div class="filter-row">
-            <div class="filter-group search-group">
-                <label for="moduleSearchInput">Search</label>
-                <input type="text" id="moduleSearchInput" placeholder="Search modules" class="form-control">
-            </div>
             <div class="filter-group">
-                <label for="complianceFilter">Compliance Level</label>
+                <label>Category</label>
+                <select id="categoryFilter" class="form-control">
+                    <option value="">All Categories</option>
+                    <option value="hr">HR</option>
+                    <option value="finance">Finance</option>
+                    <option value="operations">Operations</option>
+                    <option value="integrations">Integrations</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Compliance Level</label>
                 <select id="complianceFilter" class="form-control">
                     <option value="">All Levels</option>
                     <option value="low">Low</option>
@@ -43,401 +465,177 @@
                     <option value="high">High</option>
                 </select>
             </div>
+
+            <div class="filter-group search-group">
+                <input type="text" id="moduleSearchInput" placeholder="Search modules..." class="form-control">
+                <button id="searchModulesBtn" class="btn btn-secondary">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
         </div>
     </div>
 
     <div class="modules-list-section">
-        <div id="modulesTableContainer"></div>
-        <div id="modulesPagination" class="pagination-container"></div>
+        <div class="modules-grid" id="modulesGridContainer">
+            <!-- Modules will be dynamically populated here -->
+        </div>
+
+        <div class="pagination-container" id="modulesPaginationContainer">
+            <div class="pagination-info">
+                <span id="modulesShowingCount">Showing 0-0 of 0 modules</span>
+            </div>
+            <div class="pagination-controls">
+                <button id="prevModulesPageBtn" class="btn btn-pagination" disabled>
+                    <i class="fas fa-chevron-left"></i> Previous
+                </button>
+                <div class="page-number-container" id="pageNumberContainer">
+                    <!-- Page numbers will be dynamically generated -->
+                </div>
+                <button id="nextModulesPageBtn" class="btn btn-pagination" disabled>
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
     </div>
 </div>
+<!-- Add this after the modules-list-section -->
+<div class="module-audit-section">
+    <div class="section-header">
+        <h2>Module Activity Logs</h2>
+        <div class="audit-filters">
+            <div class="filter-group">
+                <label>Date Range</label>
+                <div class="date-range-picker">
+                    <input type="date" id="auditStartDate" class="form-control">
+                    <span>to</span>
+                    <input type="date" id="auditEndDate" class="form-control">
+                </div>
+            </div>
+            <div class="filter-group">
+                <label>Activity Type</label>
+                <select id="activityTypeFilter" class="form-control">
+                    <option value="">All Activities</option>
+                    <option value="MODULE_CREATED">Module Created</option>
+                    <option value="MODULE_UPDATED">Module Updated</option>
+                    <option value="MODULE_DELETED">Module Deleted</option>
+                    <option value="MODULE_STATUS_CHANGED">Status Changed</option>
+                </select>
+            </div>
+            <button id="applyAuditFiltersBtn" class="btn btn-secondary">
+                <i class="fas fa-filter"></i> Apply Filters
+            </button>
+        </div>
+    </div>
+
+    <div class="audit-logs-table">
+        <table id="auditLogsTable">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Activity Type</th>
+                    <th>Module Name</th>
+                    <th>User</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody id="auditLogsTableBody">
+                <!-- Audit logs will be dynamically populated here -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="audit-pagination">
+        <div class="pagination-info">
+            <span id="auditLogsShowingCount">Showing 0-0 of 0 logs</span>
+        </div>
+        <div class="pagination-controls">
+            <button id="prevAuditLogsPageBtn" class="btn btn-pagination" disabled>
+                <i class="fas fa-chevron-left"></i> Previous
+            </button>
+            <div class="page-number-container" id="auditLogsPageNumberContainer">
+                <!-- Page numbers will be dynamically generated -->
+            </div>
+            <button id="nextAuditLogsPageBtn" class="btn btn-pagination" disabled>
+                Next <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
 <style>
-    :root {
-    /* Reusing existing dashboard color variables */
-    --modules-primary-color: #4F46E5;
-    --modules-secondary-color: #6366F1;
-    --modules-background: #F9FAFB;
-    --modules-text-primary: #111827;
-    --modules-text-secondary: #6B7280;
-    --modules-border-color: #E5E7EB;
-}
-
-/* Base Styles and Layout */
-.wise-modules-container {
-    background-color: var(--modules-background);
-    padding: var(--spacing-lg);
-    border-radius: var(--border-radius-lg);
-}
-
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-xl);
-    border-bottom: 1px solid var(--modules-border-color);
-    padding-bottom: var(--spacing-md);
-}
-
-.page-header h1 {
-    font-size: 1.5rem;
-    color: var(--modules-text-primary);
-    font-weight: 600;
-}
-
-.page-header-actions .btn {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    background-color: var(--modules-primary-color);
-    color: white;
-    border: none;
-    padding: var(--spacing-sm) var(--spacing-md);
-    border-radius: var(--border-radius-md);
-    transition: background-color 0.3s ease;
-}
-
-.page-header-actions .btn:hover {
-    background-color: var(--modules-secondary-color);
-}
-
-/* Category Navigation */
-.modules-category-navigation {
-    margin-bottom: var(--spacing-lg);
-    border-bottom: 1px solid var(--modules-border-color);
-}
-
-.category-tabs {
-    display: flex;
-    gap: var(--spacing-md);
-    overflow-x: auto;
-    padding-bottom: var(--spacing-sm);
-}
-
-.category-tab {
-    background: none;
-    border: none;
-    padding: var(--spacing-sm) var(--spacing-md);
-    color: var(--modules-text-secondary);
-    font-weight: 500;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.3s ease;
-    border-bottom: 2px solid transparent;
-}
-
-.category-tab.active {
-    color: var(--modules-primary-color);
-    border-bottom-color: var(--modules-primary-color);
-}
-
-.category-tab:hover {
-    color: var(--modules-primary-color);
-}
-
-/* Filter Section */
-.modules-filter-section {
-    margin-bottom: var(--spacing-lg);
-}
-
-.filter-row {
-    display: flex;
-    gap: var(--spacing-md);
-    align-items: center;
-}
-
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-}
-
-.filter-group label {
-    font-size: 0.875rem;
-    color: var(--modules-text-secondary);
-}
-
-.search-group {
-    flex-grow: 1;
-}
-
-.form-control {
-    width: 100%;
-    padding: var(--spacing-sm) var(--spacing-md);
-    border: 1px solid var(--modules-border-color);
-    border-radius: var(--border-radius-md);
-    font-size: 0.875rem;
-}
-
-/* Modules List Section */
-.modules-list-section {
-    background-color: white;
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-sm);
-    overflow: hidden;
-}
-
-#modulesTableContainer {
-    width: 100%;
-    overflow-x: auto;
-}
-
-.modules-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.modules-table thead {
-    background-color: var(--modules-background);
-    border-bottom: 1px solid var(--modules-border-color);
-}
-
-.modules-table th {
-    padding: var(--spacing-md);
-    text-align: left;
-    color: var(--modules-text-secondary);
-    font-weight: 600;
-    font-size: 0.875rem;
-    text-transform: uppercase;
-}
-
-.modules-table td {
-    padding: var(--spacing-md);
-    border-bottom: 1px solid var(--modules-border-color);
-    color: var(--modules-text-primary);
-    font-size: 0.875rem;
-}
-
-.modules-table .module-status {
-    display: inline-block;
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: var(--border-radius-sm);
-    font-size: 0.75rem;
-    font-weight: 500;
-}
-
-.modules-table .module-status.active {
-    background-color: rgba(16, 185, 129, 0.1);
-    color: #10B981;
-}
-
-.modules-table .module-status.inactive {
-    background-color: rgba(239, 68, 68, 0.1);
-    color: #EF4444;
-}
-
-.modules-table .action-buttons {
-    display: flex;
-    gap: var(--spacing-sm);
-}
-
-.action-btn {
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: var(--border-radius-sm);
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.action-btn.edit {
-    background-color: var(--modules-secondary-color);
-    color: white;
-    border: none;
-}
-
-.action-btn.toggle {
-    background-color: transparent;
-    border: 1px solid var(--modules-text-secondary);
-    color: var(--modules-text-secondary);
-}
-
-.action-btn:hover {
-    opacity: 0.8;
-}
-
-/* Pagination */
-.pagination-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-md);
-    background-color: var(--modules-background);
-}
-
-.pagination-info {
-    font-size: 0.875rem;
-    color: var(--modules-text-secondary);
-}
-
-.pagination-controls {
-    display: flex;
-    gap: var(--spacing-sm);
-}
-
-.pagination-btn {
-    background: none;
-    border: 1px solid var(--modules-border-color);
-    padding: var(--spacing-xs) var(--spacing-sm);
-    border-radius: var(--border-radius-sm);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-}
-
-.pagination-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.pagination-btn.active {
-    background-color: var(--modules-primary-color);
-    color: white;
-    border-color: var(--modules-primary-color);
-}
-</style>
-<style>
-    /* Modal Styles for Modules */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.modal-overlay.show {
-    display: flex;
-    opacity: 1;
-}
-
-.modal-content {
-    background-color: white;
-    border-radius: var(--border-radius-lg);
-    width: 100%;
-    max-width: 600px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: var(--shadow-lg);
-    position: relative;
-    padding: var(--spacing-xl);
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-lg);
-    border-bottom: 1px solid var(--modules-border-color);
-    padding-bottom: var(--spacing-md);
-}
-
-.modal-header h2 {
-    margin: 0;
-    font-size: 1.25rem;
-    color: var(--modules-text-primary);
-}
-
-.modal-close {
-    background: none;
-    border: none;
-    color: var(--modules-text-secondary);
-    font-size: 1.5rem;
-    cursor: pointer;
-    transition: color 0.3s ease;
-}
-
-.modal-close:hover {
-    color: var(--modules-primary-color);
-}
-
-.module-form {
-    display: grid;
-    gap: var(--spacing-md);
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-}
-
-.form-group label {
-    font-size: 0.875rem;
-    color: var(--modules-text-secondary);
-    font-weight: 500;
-}
-
-.form-control {
-    width: 100%;
-    padding: var(--spacing-sm) var(--spacing-md);
-    border: 1px solid var(--modules-border-color);
-    border-radius: var(--border-radius-md);
-    font-size: 0.875rem;
-}
-
-.form-control:focus {
-    outline: none;
-    border-color: var(--modules-primary-color);
-    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
-}
-
-.form-group textarea.form-control {
-    resize: vertical;
-    min-height: 100px;
-}
-
-.modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--spacing-md);
-    margin-top: var(--spacing-lg);
-    padding-top: var(--spacing-md);
-    border-top: 1px solid var(--modules-border-color);
-}
-
-.modal-btn {
-    padding: var(--spacing-sm) var(--spacing-md);
-    border-radius: var(--border-radius-md);
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.modal-btn-primary {
-    background-color: var(--modules-primary-color);
-    color: white;
-    border: none;
-}
-
-.modal-btn-secondary {
-    background-color: transparent;
-    color: var(--modules-text-secondary);
-    border: 1px solid var(--modules-border-color);
-}
-
-.modal-btn:hover {
-    opacity: 0.9;
-}
-
-.form-error {
-    color: #EF4444;
-    font-size: 0.75rem;
-    margin-top: var(--spacing-xs);
-}
-
-@media (max-width: 600px) {
-    .modal-content {
-        width: 95%;
-        margin: 0 auto;
+    .module-audit-section {
+        background-color: var(--bg-secondary);
+        border-radius: var(--border-radius-lg);
         padding: var(--spacing-lg);
+        margin-top: var(--spacing-lg);
     }
-}
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--spacing-lg);
+        border-bottom: 1px solid var(--border-light);
+        padding-bottom: var(--spacing-md);
+    }
+
+    .section-header h2 {
+        margin: 0;
+        color: var(--text-primary);
+        font-size: 1.25rem;
+    }
+
+    .audit-filters {
+        display: flex;
+        align-items: flex-end;
+        gap: var(--spacing-md);
+    }
+
+    .date-range-picker {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .date-range-picker span {
+        color: var(--text-secondary);
+    }
+
+    .audit-logs-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .audit-logs-table thead {
+        background-color: var(--bg-tertiary);
+    }
+
+    .audit-logs-table th,
+    .audit-logs-table td {
+        padding: var(--spacing-sm) var(--spacing-md);
+        border: 1px solid var(--border-light);
+        text-align: left;
+    }
+
+    .audit-logs-table th {
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+
+    .audit-logs-table tbody tr:nth-child(even) {
+        background-color: var(--bg-secondary);
+    }
+
+    .audit-logs-table tbody tr:hover {
+        background-color: var(--border-light);
+    }
+
+    .audit-pagination {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Reuse existing pagination styles from previous section */
 </style>
