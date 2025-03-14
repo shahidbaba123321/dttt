@@ -103,7 +103,11 @@
     if (this.addNewModuleBtn) {
         // Remove any existing event listeners first
         this.addNewModuleBtn.removeEventListener('click', this.showAddModuleModal);
-        this.addNewModuleBtn.addEventListener('click', this.showAddModuleModal);
+        this.addNewModuleBtn.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent any default button behavior
+            e.stopPropagation(); // Stop event propagation
+            this.showAddModuleModal();
+        });
     }
 
     if (this.categoryFilter) {
@@ -500,13 +504,14 @@
         }
 
           showAddModuleModal(existingModule = null) {
-
-              const existingModal = document.getElementById('moduleFormModal');
+    // Remove any existing modal first
+    const existingModal = document.getElementById('moduleFormModal');
     if (existingModal) {
         existingModal.remove();
     }
-            // Create modal container
-            const modalContainer = document.createElement('div');
+
+    // Create modal container
+    const modalContainer = document.createElement('div');
     modalContainer.id = 'moduleFormModal';
     modalContainer.className = 'modal-overlay';
     
@@ -713,10 +718,27 @@
         }
     });
 
-     // Return the modal container for any additional manipulation if needed
+    // Trigger modal display
+    setTimeout(() => {
+        modalContainer.classList.add('show');
+    }, 50);
+
+    // Return the modal container for any additional manipulation if needed
               modalContainer.style.display = 'flex';
             return modalContainer;
         }
+     
+
+        // Additional method to handle modal closing
+closeModuleModal() {
+    const modal = document.getElementById('moduleFormModal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            document.body.removeChild(modal);
+        }, 300); // Match the transition time
+    }
+}
 
            // Method to render feature checkboxes
 renderFeatureCheckboxes() {
