@@ -1018,6 +1018,8 @@ class ContentLoader {
                 await this.initializeUsers();
             }else if (section === 'pricing') { 
                 await this.initializePricing();
+            }else if (section === 'modules') { 
+                await this.initializeModules();
             }
 
             this.currentPage = section;
