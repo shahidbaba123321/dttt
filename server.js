@@ -3655,134 +3655,113 @@ app.post('/api/companies/:companyId/invoice', verifyToken, verifyAdmin, async (r
 // 1. Get All Modules
 app.get('/api/modules', verifyToken, verifyAdmin, async (req, res) => {
     try {
-        // Validate and parse pagination parameters
-        const page = Math.max(1, parseInt(req.query.page) || 1);
-        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 10));
+        // Set CORS headers explicitly
+        res.set({
+            'Access-Control-Allow-Origin': req.get('Origin') || '*',
+            'Access-Control-Allow-Methods': 'GET,OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, Origin, Accept, X-Requested-With, X-User-Role'
+        });
+
+        // Get pagination parameters
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
 
-        // Prepare logging context
-        const requestContext = {
-            userId: req.user.userId,
-            userRole: req.user.role,
-            requestTimestamp: new Date()
-        };
-
-        // Get search and filter parameters with sanitization
+        // Get search and filter parameters
         const { search, category, complianceLevel } = req.query;
         const filter = {};
 
-        // Add search filter with multiple field support
-        if (search && typeof search === 'string') {
+        // Add search filter
+        if (search) {
             filter.$or = [
                 { name: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } },
-                { category: { $regex: search, $options: 'i' } }
+                { description: { $regex: search, $options: 'i' } }
             ];
         }
 
-        // Add category filter with validation
-        const validCategories = ['hr', 'finance', 'operations', 'integrations'];
-        if (category && validCategories.includes(category.toLowerCase())) {
-            filter.category = category.toLowerCase();
+        // Add category filter
+        if (category) {
+            filter.category = category;
         }
 
-        // Add compliance level filter with validation
-        const validComplianceLevels = ['low', 'medium', 'high'];
-        if (complianceLevel && validComplianceLevels.includes(complianceLevel.toLowerCase())) {
-            filter.complianceLevel = complianceLevel.toLowerCase();
+        // Add compliance level filter
+        if (complianceLevel) {
+            filter.complianceLevel = complianceLevel;
         }
 
-        // Logging the constructed filter for debugging
+        // Logging for debugging
         console.log('Module Query Filter:', {
+            page,
+            limit,
             filter,
-            pagination: { page, limit, skip },
-            context: requestContext
+            requestOrigin: req.get('Origin')
         });
 
-        // Perform database operations with error handling
-        const [totalModules, modules] = await Promise.all([
-            database.collection('modules').countDocuments(filter),
-            database.collection('modules')
-                .find(filter)
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit)
-                .toArray()
-        ]);
+        // Get total count for pagination
+        const totalModules = await database.collection('modules').countDocuments(filter);
 
-        // Enhanced modules with usage count
+        // Fetch modules with pagination
+        const modules = await database.collection('modules')
+            .find(filter)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .toArray();
+
+        // Enhance modules with additional metadata
         const enhancedModules = await Promise.all(modules.map(async (module) => {
             try {
                 const usageCount = await calculateModuleUsage(module._id);
                 return {
                     ...module,
-                    usageCount,
-                    // Additional metadata can be added here
-                    lastUpdated: module.updatedAt || module.createdAt
+                    usageCount
                 };
             } catch (usageError) {
                 console.error(`Usage calculation error for module ${module._id}:`, usageError);
                 return {
                     ...module,
-                    usageCount: 0,
-                    usageCalculationError: true
+                    usageCount: 0
                 };
             }
         }));
 
-        // Prepare pagination metadata
-        const totalPages = Math.ceil(totalModules / limit);
-        const hasMore = page < totalPages;
-
-        // Audit logging
-        await createAuditLog('MODULE_LIST_VIEWED', req.user.userId, null, {
-            pageViewed: page,
-            totalModules,
-            filterApplied: JSON.stringify(filter)
-        });
-
-        // Send successful response
+        // Send response with pagination details
         res.json({
             success: true,
             data: enhancedModules,
             pagination: {
                 total: totalModules,
                 page,
-                limit,
-                totalPages,
-                hasMore
-            },
-            metadata: {
-                requestTimestamp: requestContext.requestTimestamp,
-                processedAt: new Date()
+                totalPages: Math.ceil(totalModules / limit),
+                hasMore: page * limit < totalModules
             }
         });
 
     } catch (error) {
         // Comprehensive error handling
-        console.error('Detailed Module Fetch Error:', {
+        console.error('Error fetching modules:', {
             message: error.message,
             stack: error.stack,
             requestQuery: req.query
         });
 
-        // Create error log
-        await createErrorLog('MODULE_FETCH_ERROR', {
-            userId: req.user?.userId,
-            errorMessage: error.message,
-            requestDetails: req.query
-        });
-
         // Send error response
         res.status(500).json({
             success: false,
-            message: 'Failed to retrieve modules',
-            error: {
-                message: error.message,
-                code: 'INTERNAL_SERVER_ERROR'
-            }
+            message: 'Error fetching modules',
+            error: error.message
         });
     }
+});
+
+// Add an OPTIONS handler for preflight requests
+app.options('/api/modules', (req, res) => {
+    res.set({
+        'Access-Control-Allow-Origin': req.get('Origin') || '*',
+        'Access-Control-Allow-Methods': 'GET,OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, Origin, Accept, X-Requested-With, X-User-Role'
+    });
+    res.status(204).send();
 });
 
 // Helper function for error logging
