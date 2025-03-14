@@ -1,528 +1,297 @@
-<div class="modules-management-container">
-    <!-- Header Section -->
-    <div class="section-header">
-        <h2>Modules Management</h2>
-        <button id="createModuleBtn" class="primary-button">
-            <i class="fas fa-plus"></i> Add New Module
-        </button>
-    </div>
-
-    <!-- Category Tabs -->
-    <div class="module-category-tabs">
-        <button class="category-tab active" data-category="all">All Modules</button>
-        <button class="category-tab" data-category="hr">HR</button>
-        <button class="category-tab" data-category="finance">Finance</button>
-        <button class="category-tab" data-category="operations">Operations</button>
-        <button class="category-tab" data-category="integrations">Integrations</button>
-    </div>
-
-    <!-- Search and Filter Section -->
-    <div class="search-filter-section">
-        <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" id="moduleSearch" placeholder="Search modules...">
-        </div>
-        <div class="filters">
-            <select id="complianceFilter" class="filter-select">
-                <option value="">All Compliance Levels</option>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-            </select>
-            <select id="statusFilter" class="filter-select">
-                <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-            </select>
-        </div>
-    </div>
-        <!-- Modules Table -->
-    <div class="modules-table-container">
-        <table class="modules-table">
-            <thead>
-                <tr>
-                    <th>Module Name</th>
-                    <th>Category</th>
-                    <th>Description</th>
-                    <th>Compliance Level</th>
-                    <th>Status</th>
-                    <th>Subscription Tiers</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="modulesTableBody">
-                <!-- Modules will be dynamically loaded here -->
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Pagination -->
-    <div class="pagination-container">
-        <div class="pagination-info">
-            Showing <span id="startRange">0</span> to <span id="endRange">0</span> of <span id="totalModules">0</span> modules
-        </div>
-        <div class="pagination-controls" id="paginationControls">
-            <!-- Pagination buttons will be dynamically added here -->
-        </div>
-    </div>
-</div>
-
-<!-- Create/Edit Module Modal -->
-<div class="modal" id="moduleModal" style="display:none;">
-
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="modalTitle">Add New Module</h3>
-            <button class="close-button" id="closeModuleModal">
-                <i class="fas fa-times"></i>
+<div class="wise-modules-container">
+    <div class="page-header">
+        <h1>Modules Management</h1>
+        <div class="page-header-actions">
+            <button id="addNewModuleBtn" class="btn btn-primary">
+                Add New Module
             </button>
         </div>
-        <div class="modal-body">
-            <form id="moduleForm">
-                <div class="form-group">
-                    <label for="moduleName">Module Name</label>
-                    <input type="text" id="moduleName" required>
-                </div>
-                <div class="form-group">
-                    <label for="moduleCategory">Category</label>
-                    <select id="moduleCategory" required>
-                        <option value="">Select Category</option>
-                        <option value="hr">HR</option>
-                        <option value="finance">Finance</option>
-                        <option value="operations">Operations</option>
-                        <option value="integrations">Integrations</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="moduleDescription">Description</label>
-                    <textarea id="moduleDescription" rows="3" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="complianceLevel">Compliance Level</label>
-                    <select id="complianceLevel" required>
-                        <option value="">Select Compliance Level</option>
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Subscription Tiers</label>
-                    <div class="checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="subscriptionTiers" value="basic">
-                            Basic
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="subscriptionTiers" value="pro">
-                            Pro
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" name="subscriptionTiers" value="enterprise">
-                            Enterprise
-                        </label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="moduleStatus">
-                        Active Module
-                    </label>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="secondary-button" id="cancelModuleModal">Cancel</button>
-            <button class="primary-button" id="saveModule">Save Module</button>
-        </div>
     </div>
-</div>
-<!-- Delete Confirmation Modal -->
-<div class="modal" id="deleteModal" style="display:none;">
 
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Delete Module</h3>
-            <button class="close-button" id="closeDeleteModal">
-                <i class="fas fa-times"></i>
+    <div class="modules-category-navigation">
+        <div class="category-tabs">
+            <button class="category-tab active" data-category="all">
+                All Modules
+            </button>
+            <button class="category-tab" data-category="hr">
+                HR Modules
+            </button>
+            <button class="category-tab" data-category="finance">
+                Finance Modules
+            </button>
+            <button class="category-tab" data-category="operations">
+                Operations Modules
+            </button>
+            <button class="category-tab" data-category="integrations">
+                Integration Modules
             </button>
         </div>
-        <div class="modal-body">
-            <p>Are you sure you want to delete this module? This action cannot be undone.</p>
-            <div class="warning-message">
-                <i class="fas fa-exclamation-triangle"></i>
-                <span>The module will be moved to the deleted modules archive.</span>
+    </div>
+
+    <div class="modules-filter-section">
+        <div class="filter-row">
+            <div class="filter-group search-group">
+                <label for="moduleSearchInput">Search</label>
+                <input type="text" id="moduleSearchInput" placeholder="Search modules" class="form-control">
             </div>
-        </div>
-        <div class="modal-footer">
-            <button class="secondary-button" id="cancelDelete">Cancel</button>
-            <button class="danger-button" id="confirmDelete">Delete Module</button>
-        </div>
-    </div>
-</div>
-
-<!-- Module Activity Logs Modal -->
-<div class="modal" id="activityLogsModal" style="display:none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Module Activity Logs</h3>
-            <button class="close-button" id="closeActivityLogsModal">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="activity-logs-filters">
-                <select id="logTypeFilter" class="filter-select">
-                    <option value="">All Log Types</option>
-                    <option value="created">Created</option>
-                    <option value="updated">Updated</option>
-                    <option value="deleted">Deleted</option>
-                    <option value="status_changed">Status Changed</option>
+            <div class="filter-group">
+                <label for="complianceFilter">Compliance Level</label>
+                <select id="complianceFilter" class="form-control">
+                    <option value="">All Levels</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
                 </select>
-                <div class="date-range-picker">
-                    <input type="date" id="startDateFilter">
-                    <span>to</span>
-                    <input type="date" id="endDateFilter">
-                </div>
-            </div>
-            <table class="activity-logs-table">
-                <thead>
-                    <tr>
-                        <th>Timestamp</th>
-                        <th>Module</th>
-                        <th>Action</th>
-                        <th>User</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody id="activityLogsTableBody">
-                    <!-- Activity logs will be dynamically loaded here -->
-                </tbody>
-            </table>
-        </div>
-        <div class="modal-footer">
-            <div class="pagination-controls" id="activityLogsPagination">
-                <!-- Pagination for activity logs -->
             </div>
         </div>
     </div>
+
+    <div class="modules-list-section">
+        <div id="modulesTableContainer"></div>
+        <div id="modulesPagination" class="pagination-container"></div>
+    </div>
 </div>
-
-<style>
-    /* Module Category Tabs */
-    .module-category-tabs {
-        display: flex;
-        gap: var(--spacing-sm);
-        margin-bottom: var(--spacing-lg);
-        background-color: var(--bg-primary);
-        padding: var(--spacing-sm);
-        border-radius: var(--border-radius-lg);
-        box-shadow: var(--shadow-sm);
-    }
-
-    .category-tab {
-        flex: 1;
-        padding: var(--spacing-sm) var(--spacing-md);
-        border: none;
-        background-color: transparent;
-        color: var(--text-secondary);
-        font-weight: 500;
-        border-radius: var(--border-radius-md);
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .category-tab.active {
-        background-color: var(--primary-color);
-        color: white;
-    }
-
-    .category-tab:hover {
-        background-color: var(--bg-tertiary);
-        color: var(--primary-color);
-    }
-
-    /* Modules Table Specific Styles */
-    .modules-table .module-name {
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-
-    .module-category-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.25rem 0.5rem;
-        border-radius: var(--border-radius-sm);
-        font-size: 0.75rem;
-        font-weight: 500;
-        text-transform: uppercase;
-    }
-
-    .module-category-badge.hr {
-        background-color: #E6F2FF;
-        color: #1E429F;
-    }
-
-    .module-category-badge.finance {
-        background-color: #DEF7EC;
-        color: #03543F;
-    }
-
-    .module-category-badge.operations {
-        background-color: #FEF3C7;
-        color: #92400E;
-    }
-
-    .module-category-badge.integrations {
-        background-color: #F3F4F6;
-        color: #374151;
-    }
-
-    .compliance-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.25rem 0.5rem;
-        border-radius: var(--border-radius-sm);
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-
-    .compliance-badge.low {
-        background-color: #FDE8E8;
-        color: #9B1C1C;
-    }
-
-    .compliance-badge.medium {
-        background-color: #FEF3C7;
-        color: #92400E;
-    }
-
-    .compliance-badge.high {
-        background-color: #DEF7EC;
-        color: #03543F;
-    }
-
-    /* Subscription Tiers Styles */
-    .subscription-tiers {
-        display: flex;
-        gap: var(--spacing-sm);
-    }
-
-    .subscription-tier {
-        padding: 0.25rem 0.5rem;
-        background-color: var(--bg-secondary);
-        border-radius: var(--border-radius-sm);
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-    }
-
-    /* Activity Logs Styles */
-    .activity-logs-filters {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: var(--spacing-md);
-    }
-
-    .date-range-picker {
-        display: flex;
-        align-items: center;
-        gap: var(--spacing-sm);
-    }
-
-    .date-range-picker input {
-        padding: var(--spacing-sm);
-        border: 1px solid var(--border-light);
-        border-radius: var(--border-radius-md);
-    }
-
-    .activity-logs-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .activity-logs-table th,
-    .activity-logs-table td {
-        border: 1px solid var(--border-light);
-        padding: var(--spacing-sm);
-    }
-</style>
 <style>
     :root {
-    /* Primary Color Palette */
-    --primary-color: #2563EB;       /* Vibrant Blue */
-    --primary-dark: #1E40AF;        /* Darker Blue */
-    --primary-light: #3B82F6;       /* Lighter Blue */
-
-    /* Neutral Colors */
-    --neutral-50: #F9FAFB;          /* Lightest Gray */
-    --neutral-100: #F3F4F6;         /* Light Gray */
-    --neutral-200: #E5E7EB;         /* Medium Light Gray */
-    --neutral-300: #D1D5DB;         /* Medium Gray */
-    --neutral-400: #9CA3AF;         /* Gray */
-    --neutral-500: #6B7280;         /* Dark Gray */
-    --neutral-600: #4B5563;         /* Darker Gray */
-    --neutral-700: #374151;         /* Very Dark Gray */
-    --neutral-800: #1F2937;         /* Almost Black Gray */
-    --neutral-900: #111827;         /* Deep Gray */
-
-    /* Status Colors */
-    --success-color: #10B981;       /* Green */
-    --warning-color: #F59E0B;       /* Yellow/Orange */
-    --danger-color: #EF4444;        /* Red */
-    --info-color: #3B82F6;          /* Blue */
-
-    /* Typography */
-    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-
-    /* Border Radius */
-    --border-radius-sm: 0.25rem;
-    --border-radius-md: 0.5rem;
-    --border-radius-lg: 0.75rem;
-
-    /* Transitions */
-    --transition-speed: 0.2s;
+    /* Reusing existing dashboard color variables */
+    --modules-primary-color: #4F46E5;
+    --modules-secondary-color: #6366F1;
+    --modules-background: #F9FAFB;
+    --modules-text-primary: #111827;
+    --modules-text-secondary: #6B7280;
+    --modules-border-color: #E5E7EB;
 }
 
-    *, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-body {
-    font-family: var(--font-family);
-    line-height: 1.6;
-    color: var(--neutral-800);
-    background-color: var(--neutral-50);
-}
-    .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.625rem 1.25rem;
-    border-radius: var(--border-radius-md);
-    font-weight: 500;
-    transition: all var(--transition-speed) ease;
-    cursor: pointer;
-    border: none;
-    outline: none;
-}
-
-.btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-    box-shadow: var(--shadow-sm);
-}
-
-.btn-primary:hover {
-    background-color: var(--primary-dark);
-    box-shadow: var(--shadow-md);
-}
-
-.btn-secondary {
-    background-color: var(--neutral-100);
-    color: var(--neutral-700);
-    border: 1px solid var(--neutral-200);
-}
-
-.btn-secondary:hover {
-    background-color: var(--neutral-200);
-}
-
-    .data-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    background-color: white;
-    box-shadow: var(--shadow-sm);
+/* Base Styles and Layout */
+.wise-modules-container {
+    background-color: var(--modules-background);
+    padding: var(--spacing-lg);
     border-radius: var(--border-radius-lg);
-    overflow: hidden;
 }
 
-.data-table thead {
-    background-color: var(--neutral-100);
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+    border-bottom: 1px solid var(--modules-border-color);
+    padding-bottom: var(--spacing-md);
 }
 
-.data-table th, .data-table td {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    border-bottom: 1px solid var(--neutral-200);
+.page-header h1 {
+    font-size: 1.5rem;
+    color: var(--modules-text-primary);
+    font-weight: 600;
 }
 
-.data-table tbody tr:hover {
-    background-color: var(--neutral-50);
-}
-
-    .modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+.page-header-actions .btn {
     display: flex;
     align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    opacity: 0;
-    visibility: hidden;
-    transition: all var(--transition-speed) ease;
+    gap: var(--spacing-sm);
+    background-color: var(--modules-primary-color);
+    color: white;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    transition: background-color 0.3s ease;
 }
 
-.modal.show {
-    opacity: 1;
-    visibility: visible;
+.page-header-actions .btn:hover {
+    background-color: var(--modules-secondary-color);
 }
 
-.modal-content {
-    background: white;
-    border-radius: var(--border-radius-lg);
-    width: 100%;
-    max-width: 600px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: var(--shadow-lg);
-    position: relative;
+/* Category Navigation */
+.modules-category-navigation {
+    margin-bottom: var(--spacing-lg);
+    border-bottom: 1px solid var(--modules-border-color);
 }
 
-    .form-group {
-    margin-bottom: 1rem;
+.category-tabs {
+    display: flex;
+    gap: var(--spacing-md);
+    overflow-x: auto;
+    padding-bottom: var(--spacing-sm);
 }
 
-.form-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: var(--neutral-700);
+.category-tab {
+    background: none;
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--modules-text-secondary);
     font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+    border-bottom: 2px solid transparent;
+}
+
+.category-tab.active {
+    color: var(--modules-primary-color);
+    border-bottom-color: var(--modules-primary-color);
+}
+
+.category-tab:hover {
+    color: var(--modules-primary-color);
+}
+
+/* Filter Section */
+.modules-filter-section {
+    margin-bottom: var(--spacing-lg);
+}
+
+.filter-row {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.filter-group label {
+    font-size: 0.875rem;
+    color: var(--modules-text-secondary);
+}
+
+.search-group {
+    flex-grow: 1;
 }
 
 .form-control {
     width: 100%;
-    padding: 0.625rem 1rem;
-    border: 1px solid var(--neutral-300);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--modules-border-color);
     border-radius: var(--border-radius-md);
-    transition: all var(--transition-speed) ease;
+    font-size: 0.875rem;
 }
 
-.form-control:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+/* Modules List Section */
+.modules-list-section {
+    background-color: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
 }
 
-    @media (max-width: 768px) {
-    .data-table {
-        font-size: 0.875rem;
-    }
+#modulesTableContainer {
+    width: 100%;
+    overflow-x: auto;
+}
 
-    .modal-content {
-        width: 95%;
-        margin: 0 auto;
-    }
+.modules-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.modules-table thead {
+    background-color: var(--modules-background);
+    border-bottom: 1px solid var(--modules-border-color);
+}
+
+.modules-table th {
+    padding: var(--spacing-md);
+    text-align: left;
+    color: var(--modules-text-secondary);
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+}
+
+.modules-table td {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--modules-border-color);
+    color: var(--modules-text-primary);
+    font-size: 0.875rem;
+}
+
+.modules-table .module-status {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.modules-table .module-status.active {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+}
+
+.modules-table .module-status.inactive {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+.modules-table .action-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.action-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.action-btn.edit {
+    background-color: var(--modules-secondary-color);
+    color: white;
+    border: none;
+}
+
+.action-btn.toggle {
+    background-color: transparent;
+    border: 1px solid var(--modules-text-secondary);
+    color: var(--modules-text-secondary);
+}
+
+.action-btn:hover {
+    opacity: 0.8;
+}
+
+/* Pagination */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    background-color: var(--modules-background);
+}
+
+.pagination-info {
+    font-size: 0.875rem;
+    color: var(--modules-text-secondary);
+}
+
+.pagination-controls {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.pagination-btn {
+    background: none;
+    border: 1px solid var(--modules-border-color);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-btn.active {
+    background-color: var(--modules-primary-color);
+    color: white;
+    border-color: var(--modules-primary-color);
 }
 </style>
