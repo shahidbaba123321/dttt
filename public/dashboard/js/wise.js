@@ -18,7 +18,22 @@
             this.modulesPerPage = 10;
             this.totalModules = 0;
 
+            this.currentAuditLogPage = 1;
+            this.auditLogsPerPage = 10;
+            this.totalAuditLogs = 0;
+
             // DOM Element References
+            this.initializeDOMReferences();
+
+            // Bind methods to ensure correct context
+            this.bindMethodContext();
+
+            // Bind events
+            this.bindEvents();
+        }
+
+        initializeDOMReferences() {
+            // Module Management References
             this.modulesGridContainer = document.getElementById('modulesGridContainer');
             this.addNewModuleBtn = document.getElementById('addNewModuleBtn');
             this.categoryFilter = document.getElementById('categoryFilter');
@@ -30,18 +45,46 @@
             this.pageNumberContainer = document.getElementById('pageNumberContainer');
             this.modulesShowingCount = document.getElementById('modulesShowingCount');
 
-            // Bind events
-            this.bindEvents();
+            // Audit Logs References
+            this.auditLogsTableBody = document.getElementById('auditLogsTableBody');
+            this.auditStartDate = document.getElementById('auditStartDate');
+            this.auditEndDate = document.getElementById('auditEndDate');
+            this.activityTypeFilter = document.getElementById('activityTypeFilter');
+            this.applyAuditFiltersBtn = document.getElementById('applyAuditFiltersBtn');
+            this.prevAuditLogsPageBtn = document.getElementById('prevAuditLogsPageBtn');
+            this.nextAuditLogsPageBtn = document.getElementById('nextAuditLogsPageBtn');
+            this.auditLogsPageNumberContainer = document.getElementById('auditLogsPageNumberContainer');
+            this.auditLogsShowingCount = document.getElementById('auditLogsShowingCount');
+        }
+
+        bindMethodContext() {
+            // Bind methods to ensure correct context
+            this.loadModules = this.loadModules.bind(this);
+            this.renderModules = this.renderModules.bind(this);
+            this.updatePagination = this.updatePagination.bind(this);
+            this.changePage = this.changePage.bind(this);
+            this.showAddModuleModal = this.showAddModuleModal.bind(this);
+            this.createModule = this.createModule.bind(this);
+            this.validateModuleForm = this.validateModuleForm.bind(this);
+            this.collectModuleFormData = this.collectModuleFormData.bind(this);
+            this.loadAuditLogs = this.loadAuditLogs.bind(this);
+            this.renderAuditLogs = this.renderAuditLogs.bind(this);
+            this.updateAuditLogPagination = this.updateAuditLogPagination.bind(this);
         }
 
         bindEvents() {
             // Module Management Events
-            this.addNewModuleBtn.addEventListener('click', () => this.showAddModuleModal());
-            this.categoryFilter.addEventListener('change', () => this.loadModules());
-            this.complianceFilter.addEventListener('change', () => this.loadModules());
-            this.searchModulesBtn.addEventListener('click', () => this.loadModules());
+            this.addNewModuleBtn.addEventListener('click', this.showAddModuleModal);
+            this.categoryFilter.addEventListener('change', this.loadModules);
+            this.complianceFilter.addEventListener('change', this.loadModules);
+            this.searchModulesBtn.addEventListener('click', this.loadModules);
             this.prevModulesPageBtn.addEventListener('click', () => this.changePage(-1));
             this.nextModulesPageBtn.addEventListener('click', () => this.changePage(1));
+
+            // Audit Logs Events
+            this.applyAuditFiltersBtn.addEventListener('click', this.loadAuditLogs);
+            this.prevAuditLogsPageBtn.addEventListener('click', () => this.changeAuditLogPage(-1));
+            this.nextAuditLogsPageBtn.addEventListener('click', () => this.changeAuditLogPage(1));
         }
 
         async fetchWithAuth(url, options = {}) {
@@ -83,21 +126,7 @@
             }
         }
 
-        // Placeholder methods to be implemented
-        showAddModuleModal() {
-            console.log('Show Add Module Modal');
-        }
-
-        loadModules() {
-            console.log('Load Modules');
-        }
-
-        changePage() {
-            console.log('Change Page');
-        }
-    }
-
-         async loadModules() {
+            async loadModules() {
             try {
                 // Prepare query parameters
                 const category = this.categoryFilter.value;
@@ -157,21 +186,21 @@
                 moduleCard.className = 'module-card';
                 moduleCard.innerHTML = `
                     <div class="module-card-header">
-                        <h3 class="module-title">${module.name}</h3>
+                        <h3 class="module-title">${this.sanitizeInput(module.name)}</h3>
                         <div class="module-status">
                             <span class="status-indicator ${module.isActive ? 'status-active' : 'status-inactive'}"></span>
                             ${module.isActive ? 'Active' : 'Inactive'}
                         </div>
                     </div>
                     <div class="module-category">
-                        ${module.category.toUpperCase()}
+                        ${this.sanitizeInput(module.category.toUpperCase())}
                     </div>
                     <div class="module-description">
-                        ${module.description}
+                        ${this.sanitizeInput(module.description)}
                     </div>
                     <div class="module-details">
                         <div class="module-compliance">
-                            Compliance: ${module.complianceLevel.toUpperCase()}
+                            Compliance: ${this.sanitizeInput(module.complianceLevel.toUpperCase())}
                         </div>
                     </div>
                     <div class="module-actions">
@@ -183,6 +212,13 @@
                         </button>
                     </div>
                 `;
+
+                // Add event listeners for edit and delete
+                const editBtn = moduleCard.querySelector('.edit-module');
+                const deleteBtn = moduleCard.querySelector('.delete-module');
+
+                editBtn.addEventListener('click', () => this.editModule(module));
+                deleteBtn.addEventListener('click', () => this.deleteModule(module._id));
 
                 this.modulesGridContainer.appendChild(moduleCard);
             });
@@ -216,102 +252,156 @@
             this.loadModules();
         }
 
-         showAddModuleModal() {
+        sanitizeInput(input) {
+            // Basic input sanitization
+            const div = document.createElement('div');
+            div.textContent = input;
+            return div.innerHTML;
+        }
+
+        async deleteModule(moduleId) {
+            try {
+                // Confirm deletion
+                const confirmDelete = confirm('Are you sure you want to delete this module?');
+                if (!confirmDelete) return;
+
+                // Send delete request
+                await this.fetchWithAuth(`${this.apiBaseUrl}/modules/${moduleId}`, {
+                    method: 'DELETE'
+                });
+
+                // Show success notification
+                this.showNotification('Module deleted successfully', 'success');
+
+                // Reload modules
+                this.loadModules();
+            } catch (error) {
+                console.error('Error deleting module:', error);
+            }
+        }
+
+        async editModule(module) {
+            try {
+                // Open modal with module details
+                this.showAddModuleModal(module);
+            } catch (error) {
+                console.error('Error preparing module edit:', error);
+                this.showNotification('Failed to prepare module for editing', 'error');
+            }
+        }
+
+            showAddModuleModal(existingModule = null) {
             // Create modal container
             const modalContainer = document.createElement('div');
             modalContainer.id = 'moduleFormModal';
             modalContainer.className = 'modal-overlay';
             
-            // Modal HTML
+            // Determine modal title and action
+            const isEditMode = !!existingModule;
+            const modalTitle = isEditMode ? 'Edit Module' : 'Add New Module';
+
+            // Create modal HTML
             modalContainer.innerHTML = `
                 <div class="modal-container">
                     <div class="modal-header">
-                        <h2>Add New Module</h2>
+                        <h2>${modalTitle}</h2>
                         <button class="modal-close-btn">&times;</button>
                     </div>
                     <form id="moduleForm" class="module-form">
-                        <div class="form-group">
-                            <label for="moduleName">Module Name</label>
-                            <input 
-                                type="text" 
-                                id="moduleName" 
-                                name="name" 
-                                class="form-control" 
-                                required 
-                                placeholder="Enter module name"
-                            >
-                            <small class="error-message" id="moduleNameError"></small>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="moduleCategory">Category</label>
-                            <select 
-                                id="moduleCategory" 
-                                name="category" 
-                                class="form-control" 
-                                required
-                            >
-                                <option value="">Select Category</option>
-                                <option value="hr">HR</option>
-                                <option value="finance">Finance</option>
-                                <option value="operations">Operations</option>
-                                <option value="integrations">Integrations</option>
-                            </select>
-                            <small class="error-message" id="moduleCategoryError"></small>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="moduleDescription">Description</label>
-                            <textarea 
-                                id="moduleDescription" 
-                                name="description" 
-                                class="form-control" 
-                                required 
-                                placeholder="Describe the module's purpose"
-                            ></textarea>
-                            <small class="error-message" id="moduleDescriptionError"></small>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="complianceLevel">Compliance Level</label>
-                            <select 
-                                id="complianceLevel" 
-                                name="complianceLevel" 
-                                class="form-control" 
-                                required
-                            >
-                                <option value="">Select Compliance Level</option>
-                                <option value="low">Low</option>
-                                <option value="medium">Medium</option>
-                                <option value="high">High</option>
-                            </select>
-                            <small class="error-message" id="complianceLevelError"></small>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Module Status</label>
-                            <div class="toggle-switch">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="moduleName">Module Name</label>
                                 <input 
-                                    type="checkbox" 
-                                    id="moduleActiveStatus" 
-                                    name="isActive" 
-                                    checked
+                                    type="text" 
+                                    id="moduleName" 
+                                    name="name" 
+                                    class="form-control" 
+                                    required 
+                                    placeholder="Enter module name"
+                                    value="${existingModule ? this.sanitizeInput(existingModule.name) : ''}"
                                 >
-                                <label for="moduleActiveStatus" class="toggle-slider"></label>
-                                <span>Active</span>
+                                <small class="error-message" id="moduleNameError"></small>
+                            </div>
+                            <div class="form-group">
+                                <label for="moduleCategory">Category</label>
+                                <select 
+                                    id="moduleCategory" 
+                                    name="category" 
+                                    class="form-control" 
+                                    required
+                                >
+                                    <option value="">Select Category</option>
+                                    <option value="hr" ${existingModule && existingModule.category === 'hr' ? 'selected' : ''}>HR</option>
+                                    <option value="finance" ${existingModule && existingModule.category === 'finance' ? 'selected' : ''}>Finance</option>
+                                    <option value="operations" ${existingModule && existingModule.category === 'operations' ? 'selected' : ''}>Operations</option>
+                                    <option value="integrations" ${existingModule && existingModule.category === 'integrations' ? 'selected' : ''}>Integrations</option>
+                                </select>
+                                <small class="error-message" id="moduleCategoryError"></small>
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label>Permissions</label>
-                            <div id="permissionsContainer" class="permissions-grid">
-                                ${this.generatePermissionsCheckboxes()}
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label for="moduleDescription">Description</label>
+                                <textarea 
+                                    id="moduleDescription" 
+                                    name="description" 
+                                    class="form-control" 
+                                    rows="3" 
+                                    required 
+                                    placeholder="Describe the module's purpose and functionality"
+                                >${existingModule ? this.sanitizeInput(existingModule.description) : ''}</textarea>
+                                <small class="error-message" id="moduleDescriptionError"></small>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="complianceLevel">Compliance Level</label>
+                                <select 
+                                    id="complianceLevel" 
+                                    name="complianceLevel" 
+                                    class="form-control" 
+                                    required
+                                >
+                                    <option value="">Select Compliance Level</option>
+                                    <option value="low" ${existingModule && existingModule.complianceLevel === 'low' ? 'selected' : ''}>Low</option>
+                                    <option value="medium" ${existingModule && existingModule.complianceLevel === 'medium' ? 'selected' : ''}>Medium</option>
+                                    <option value="high" ${existingModule && existingModule.complianceLevel === 'high' ? 'selected' : ''}>High</option>
+                                </select>
+                                <small class="error-message" id="complianceLevelError"></small>
+                            </div>
+                            <div class="form-group">
+                                <label>Module Status</label>
+                                <div class="toggle-switch">
+                                    <input 
+                                        type="checkbox" 
+                                        id="moduleActiveStatus" 
+                                        name="isActive" 
+                                        ${existingModule ? (existingModule.isActive ? 'checked' : '') : 'checked'}
+                                    >
+                                    <label for="moduleActiveStatus" class="toggle-slider"></label>
+                                    <span id="moduleStatusText">
+                                        ${existingModule ? (existingModule.isActive ? 'Active' : 'Inactive') : 'Active'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group full-width">
+                                <label>Permissions</label>
+                                <div class="permissions-grid" id="permissionsContainer">
+                                    ${this.generatePermissionsCheckboxes(existingModule)}
+                                </div>
                             </div>
                         </div>
 
                         <div class="modal-actions">
                             <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
-                            <button type="submit" class="btn btn-primary save-btn">Save Module</button>
+                            <button type="submit" class="btn btn-primary save-btn">
+                                ${isEditMode ? 'Update Module' : 'Save Module'}
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -324,6 +414,13 @@
             const form = modalContainer.querySelector('#moduleForm');
             const closeBtn = modalContainer.querySelector('.modal-close-btn');
             const cancelBtn = modalContainer.querySelector('.cancel-btn');
+            const moduleActiveStatus = modalContainer.querySelector('#moduleActiveStatus');
+            const moduleStatusText = modalContainer.querySelector('#moduleStatusText');
+
+            // Toggle status text
+            moduleActiveStatus.addEventListener('change', (e) => {
+                moduleStatusText.textContent = e.target.checked ? 'Active' : 'Inactive';
+            });
 
             // Close modal function
             const closeModal = () => {
@@ -345,10 +442,19 @@
                         const formData = this.collectModuleFormData(form);
                         
                         // Send data to server
-                        const response = await this.createModule(formData);
+                        if (isEditMode) {
+                            // Update existing module
+                            await this.updateModule(existingModule._id, formData);
+                        } else {
+                            // Create new module
+                            await this.createModule(formData);
+                        }
                         
                         // Show success notification
-                        this.showNotification('Module created successfully', 'success');
+                        this.showNotification(
+                            isEditMode ? 'Module updated successfully' : 'Module created successfully', 
+                            'success'
+                        );
                         
                         // Close modal
                         closeModal();
@@ -363,7 +469,7 @@
             });
         }
 
-        generatePermissionsCheckboxes() {
+        generatePermissionsCheckboxes(existingModule = null) {
             const permissionGroups = {
                 hr: [
                     { id: 'view_employees', name: 'View Employees' },
@@ -386,6 +492,10 @@
                 ]
             };
 
+            const selectedPermissions = existingModule && existingModule.permissions 
+                ? existingModule.permissions.map(p => p.id || p) 
+                : [];
+
             return Object.entries(permissionGroups)
                 .map(([category, permissions]) => 
                     `<div class="permission-group">
@@ -398,6 +508,7 @@
                                     name="permissions" 
                                     value="${perm.id}"
                                     data-category="${category}"
+                                    ${selectedPermissions.includes(perm.id) ? 'checked' : ''}
                                 >
                                 <label for="${perm.id}">${perm.name}</label>
                             </div>
@@ -407,7 +518,7 @@
                 .join('');
         }
 
-         validateModuleForm(form) {
+            validateModuleForm(form) {
             // Reset previous error states
             const errorFields = form.querySelectorAll('.error-message');
             errorFields.forEach(field => field.textContent = '');
@@ -507,249 +618,53 @@
             }
         }
 
-        // Additional utility methods
-        sanitizeInput(input) {
-            // Basic input sanitization
-            const div = document.createElement('div');
-            div.textContent = input;
-            return div.innerHTML;
-        }
-
-        // Method to handle module editing (placeholder)
-        async editModule(moduleId) {
+        async updateModule(moduleId, moduleData) {
             try {
-                // Fetch module details
-                const response = await this.fetchWithAuth(`${this.apiBaseUrl}/modules/${moduleId}`);
-                
-                // Populate edit modal with existing module data
-                this.showEditModuleModal(response.data);
-            } catch (error) {
-                console.error('Error fetching module details:', error);
-                this.showNotification('Failed to load module details', 'error');
-            }
-        }
-
-        // Placeholder for edit module modal
-        showEditModuleModal(moduleData) {
-            // Similar to showAddModuleModal, but pre-populated with existing data
-            console.log('Edit Module Modal', moduleData);
-        }
-
-         // Audit Logs Methods
-        async loadAuditLogs() {
-            try {
-                // Prepare query parameters
-                const startDate = this.auditStartDate.value;
-                const endDate = this.auditEndDate.value;
-                const activityType = this.activityTypeFilter.value;
-
-                // Construct query string
-                const queryParams = new URLSearchParams({
-                    page: this.currentAuditLogPage,
-                    limit: this.auditLogsPerPage,
-                    ...(startDate && { startDate }),
-                    ...(endDate && { endDate }),
-                    ...(activityType && { type: activityType })
+                // Send module update request
+                const response = await this.fetchWithAuth(`${this.apiBaseUrl}/modules/${moduleId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(moduleData)
                 });
 
-                // Fetch audit logs
-                const response = await this.fetchWithAuth(
-                    `${this.apiBaseUrl}/modules/activity-logs?${queryParams}`
-                );
-
-                // Update total audit logs and pagination
-                this.totalAuditLogs = response.pagination.total;
-                this.updateAuditLogPagination(response.pagination);
-
-                // Render audit logs
-                this.renderAuditLogs(response.data);
-
+                // Return the updated module
+                return response.data;
             } catch (error) {
-                console.error('Error loading audit logs:', error);
-                this.auditLogsTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="error-message">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            Failed to load audit logs. ${error.message}
-                        </td>
-                    </tr>
-                `;
+                // Error handling
+                console.error('Module update error:', error);
+                throw error;
             }
         }
 
-        renderAuditLogs(logs) {
-            // Clear existing logs
-            this.auditLogsTableBody.innerHTML = '';
-
-            // Check if no logs
-            if (!logs || logs.length === 0) {
-                this.auditLogsTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="no-logs">
-                            <i class="fas fa-history"></i>
-                            No audit logs found
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            // Render each log
-            logs.forEach(log => {
-                const logRow = document.createElement('tr');
-                logRow.innerHTML = `
-                    <td>${this.formatTimestamp(log.timestamp)}</td>
-                    <td>${this.formatActivityType(log.type)}</td>
-                    <td>${log.moduleName || 'N/A'}</td>
-                    <td>${log.userName || 'System'}</td>
-                    <td>
-                        <button class="btn-view-details" data-log-id="${log._id}">
-                            View Details
-                        </button>
-                    </td>
-                `;
-
-                // Add event listener for log details
-                const viewDetailsBtn = logRow.querySelector('.btn-view-details');
-                viewDetailsBtn.addEventListener('click', () => this.showLogDetails(log));
-
-                this.auditLogsTableBody.appendChild(logRow);
-            });
-        }
-
-        updateAuditLogPagination(pagination) {
-            // Update showing count
-            this.auditLogsShowingCount.textContent = `Showing ${pagination.page} of ${pagination.totalPages} pages`;
-
-            // Update page buttons
-            this.prevAuditLogsPageBtn.disabled = pagination.page === 1;
-            this.nextAuditLogsPageBtn.disabled = pagination.page === pagination.totalPages;
-
-            // Generate page numbers
-            this.auditLogsPageNumberContainer.innerHTML = '';
-            for (let i = 1; i <= pagination.totalPages; i++) {
-                const pageBtn = document.createElement('button');
-                pageBtn.textContent = i;
-                pageBtn.className = `page-number ${i === pagination.page ? 'active' : ''}`;
-                pageBtn.addEventListener('click', () => {
-                    this.currentAuditLogPage = i;
-                    this.loadAuditLogs();
-                });
-                this.auditLogsPageNumberContainer.appendChild(pageBtn);
-            }
-        }
-
-        formatTimestamp(timestamp) {
-            try {
-                return new Date(timestamp).toLocaleString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
-            } catch (error) {
-                return 'Invalid Date';
-            }
-        }
-
-        formatActivityType(type) {
-            const activityTypes = {
-                MODULE_CREATED: 'Module Created',
-                MODULE_UPDATED: 'Module Updated',
-                MODULE_DELETED: 'Module Deleted',
-                MODULE_STATUS_CHANGED: 'Status Changed'
-            };
-
-            return activityTypes[type] || type;
-        }
-
-        showLogDetails(log) {
-            // Create modal for log details
-            const modalContainer = document.createElement('div');
-            modalContainer.className = 'log-details-modal';
-            modalContainer.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Log Details</h3>
-                        <button class="close-btn">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <table class="log-details-table">
-                            <tr>
-                                <th>Timestamp</th>
-                                <td>${this.formatTimestamp(log.timestamp)}</td>
-                            </tr>
-                            <tr>
-                                <th>Activity Type</th>
-                                <td>${this.formatActivityType(log.type)}</td>
-                            </tr>
-                            <tr>
-                                <th>Module Name</th>
-                                <td>${log.moduleName || 'N/A'}</td>
-                            </tr>
-                            <tr>
-                                <th>User</th>
-                                <td>${log.userName || 'System'}</td>
-                            </tr>
-                            <tr>
-                                <th>Details</th>
-                                <td>
-                                    <pre>${JSON.stringify(log.details, null, 2)}</pre>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            `;
-
-            // Add close functionality
-            const closeBtn = modalContainer.querySelector('.close-btn');
-            closeBtn.addEventListener('click', () => {
-                document.body.removeChild(modalContainer);
-            });
-
-            // Append to body
-            document.body.appendChild(modalContainer);
-        }
-
-        // Audit logs pagination
-        changeAuditLogPage(direction) {
-            this.currentAuditLogPage += direction;
-            this.loadAuditLogs();
-        }
-
-         // Initialization method
+        // Initialization method
         initialize() {
-            // Bind additional event listeners
-            this.applyAuditFiltersBtn.addEventListener('click', () => this.loadAuditLogs());
-            this.prevAuditLogsPageBtn.addEventListener('click', () => this.changeAuditLogPage(-1));
-            this.nextAuditLogsPageBtn.addEventListener('click', () => this.changeAuditLogPage(1));
-
-            // Initial load of modules and audit logs
+            // Initial load of modules
             this.loadModules();
-            this.loadAuditLogs();
+
+            // Setup any additional event listeners or initializations
+            this.setupAdditionalFeatures();
         }
 
-        // Cleanup method to remove event listeners and free up resources
-        cleanup() {
-            // Remove event listeners
-            this.addNewModuleBtn.removeEventListener('click', this.showAddModuleModal);
-            this.categoryFilter.removeEventListener('change', this.loadModules);
-            this.complianceFilter.removeEventListener('change', this.loadModules);
-            this.searchModulesBtn.removeEventListener('click', this.loadModules);
-            this.prevModulesPageBtn.removeEventListener('click', this.changePage);
-            this.nextModulesPageBtn.removeEventListener('click', this.changePage);
-            this.applyAuditFiltersBtn.removeEventListener('click', this.loadAuditLogs);
-            this.prevAuditLogsPageBtn.removeEventListener('click', this.changeAuditLogPage);
-            this.nextAuditLogsPageBtn.removeEventListener('click', this.changeAuditLogPage);
+        setupAdditionalFeatures() {
+            // Add export functionality
+            const exportButton = document.createElement('button');
+            exportButton.className = 'btn btn-secondary export-modules';
+            exportButton.innerHTML = '<i class="fas fa-file-export"></i> Export Modules';
+            exportButton.addEventListener('click', () => this.exportModules());
 
-            // Clear any ongoing requests or timers
-            // Add any specific cleanup logic here
+            // Add advanced search functionality
+            const advancedSearchButton = document.createElement('button');
+            advancedSearchButton.className = 'btn btn-secondary advanced-search';
+            advancedSearchButton.innerHTML = '<i class="fas fa-search-plus"></i> Advanced Search';
+            advancedSearchButton.addEventListener('click', () => this.setupAdvancedSearch());
+
+            // Add buttons to the header actions
+            const headerActions = document.querySelector('.header-actions');
+            if (headerActions) {
+                headerActions.appendChild(advancedSearchButton);
+                headerActions.appendChild(exportButton);
+            }
         }
 
-        // Export functionality for modules
         async exportModules() {
             try {
                 // Prepare export parameters
@@ -795,99 +710,6 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-        }
-
-        // Advanced search and filter method
-        setupAdvancedSearch() {
-            // Create advanced search modal
-            const modalContainer = document.createElement('div');
-            modalContainer.className = 'advanced-search-modal';
-            modalContainer.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Advanced Module Search</h3>
-                        <button class="close-btn">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="search-form">
-                            <div class="form-group">
-                                <label>Name Contains</label>
-                                <input type="text" id="advancedNameSearch" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label>Category</label>
-                                <select id="advancedCategorySearch" class="form-control">
-                                    <option value="">All Categories</option>
-                                    <option value="hr">HR</option>
-                                    <option value="finance">Finance</option>
-                                    <option value="operations">Operations</option>
-                                    <option value="integrations">Integrations</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Compliance Level</label>
-                                <select id="advancedComplianceSearch" class="form-control">
-                                    <option value="">All Levels</option>
-                                    <option value="low">Low</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="high">High</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Status</label>
-                                <select id="advancedStatusSearch" class="form-control">
-                                    <option value="">All Statuses</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button id="applyAdvancedSearch" class="btn btn-primary">Apply Search</button>
-                        <button id="resetAdvancedSearch" class="btn btn-secondary">Reset</button>
-                    </div>
-                </div>
-            `;
-
-            // Add event listeners
-            const closeBtn = modalContainer.querySelector('.close-btn');
-            const applySearchBtn = modalContainer.querySelector('#applyAdvancedSearch');
-            const resetSearchBtn = modalContainer.querySelector('#resetAdvancedSearch');
-
-            closeBtn.addEventListener('click', () => {
-                document.body.removeChild(modalContainer);
-            });
-
-            applySearchBtn.addEventListener('click', () => {
-                // Collect advanced search parameters
-                const nameSearch = document.getElementById('advancedNameSearch').value.trim();
-                const categorySearch = document.getElementById('advancedCategorySearch').value;
-                const complianceSearch = document.getElementById('advancedComplianceSearch').value;
-                const statusSearch = document.getElementById('advancedStatusSearch').value;
-
-                // Update filter inputs
-                this.moduleSearchInput.value = nameSearch;
-                this.categoryFilter.value = categorySearch;
-                this.complianceFilter.value = complianceSearch;
-
-                // Trigger module search
-                this.loadModules();
-
-                // Close modal
-                document.body.removeChild(modalContainer);
-            });
-
-            resetSearchBtn.addEventListener('click', () => {
-                // Reset all search inputs
-                document.getElementById('advancedNameSearch').value = '';
-                document.getElementById('advancedCategorySearch').value = '';
-                document.getElementById('advancedComplianceSearch').value = '';
-                document.getElementById('advancedStatusSearch').value = '';
-            });
-
-            // Append to body
-            document.body.appendChild(modalContainer);
         }
     }
 
