@@ -139,8 +139,7 @@
             headers: {
                 'Authorization': `Bearer ${this.token}`,
                 'Content-Type': 'application/json',
-                // Add additional headers if needed
-                'X-Request-Source': 'WiseModulesManager'
+               
             },
             // Add timeout and other fetch options
             signal: AbortSignal.timeout(10000) // 10 seconds timeout
