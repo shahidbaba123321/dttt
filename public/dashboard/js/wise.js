@@ -206,13 +206,37 @@
         }
 
         showNotification(message, type = 'info') {
-            // Reuse the notification method from the main dashboard
-            if (window.dashboardApp && window.dashboardApp.userInterface) {
-                window.dashboardApp.userInterface.showNotification(message, type);
-            } else {
-                console.log(`${type.toUpperCase()}: ${message}`);
-            }
-        }
+    // Check if dashboard notification exists
+    if (window.dashboardApp && window.dashboardApp.userInterface) {
+        window.dashboardApp.userInterface.showNotification(message, type);
+    } else {
+        // Fallback notification
+        const notificationContainer = document.createElement('div');
+        notificationContainer.className = `notification ${type}`;
+        notificationContainer.textContent = message;
+        
+        // Style the notification
+        notificationContainer.style.position = 'fixed';
+        notificationContainer.style.top = '20px';
+        notificationContainer.style.right = '20px';
+        notificationContainer.style.padding = '10px';
+        notificationContainer.style.backgroundColor = 
+            type === 'error' ? '#f8d7da' : 
+            type === 'success' ? '#d4edda' : 
+            '#e2e3e5';
+        notificationContainer.style.border = '1px solid';
+        notificationContainer.style.borderRadius = '5px';
+        notificationContainer.style.zIndex = '1000';
+
+        // Add to body
+        document.body.appendChild(notificationContainer);
+
+        // Remove after 3 seconds
+        setTimeout(() => {
+            document.body.removeChild(notificationContainer);
+        }, 3000);
+    }
+}
 
            async loadModules() {
             try {
@@ -254,6 +278,92 @@
                 }
             }
         }
+
+        renderFeatures(features) {
+    // Find the features container
+    const featuresContainer = document.getElementById('featuresContainer');
+    
+    // Check if container exists
+    if (!featuresContainer) {
+        console.error('Features container not found');
+        
+        // Optional: Create the container if it doesn't exist
+        const newContainer = document.createElement('div');
+        newContainer.id = 'featuresContainer';
+        
+        // Try to find a suitable parent to append the container
+        const parentElement = document.querySelector('.pricing-features-section') || 
+                               document.querySelector('.plan-details') || 
+                               document.body;
+        
+        parentElement.appendChild(newContainer);
+        
+        // If still unable to find/create container, log and return
+        if (!newContainer) {
+            this.showNotification('Unable to render features', 'error');
+            return;
+        }
+    }
+
+    // Clear existing features
+    featuresContainer.innerHTML = '';
+
+    // Check if features exist
+    if (!features || features.length === 0) {
+        featuresContainer.innerHTML = `
+            <div class="no-features-message">
+                <p>No features available</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Render features
+    features.forEach(feature => {
+        const featureElement = document.createElement('div');
+        featureElement.className = 'feature-item';
+        featureElement.innerHTML = `
+            <span class="feature-icon">
+                <i class="${feature.icon || 'fas fa-check'}"></i>
+            </span>
+            <span class="feature-name">${this.sanitizeInput(feature.name)}</span>
+            <span class="feature-description">${this.sanitizeInput(feature.description)}</span>
+        `;
+        featuresContainer.appendChild(featureElement);
+    });
+}
+
+        sanitizeInput(input) {
+    if (!input) return '';
+    const div = document.createElement('div');
+    div.textContent = input;
+    return div.innerHTML;
+}
+
+        async loadAvailableFeatures() {
+    try {
+        // Existing feature loading logic
+        const response = await this.fetchWithAuth(`${this.apiBaseUrl}/features`);
+        
+        // Check if response contains features
+        if (!response.data || !Array.isArray(response.data)) {
+            throw new Error('Invalid features response');
+        }
+
+        // Render features
+        this.renderFeatures(response.data);
+    } catch (error) {
+        console.error('Failed to load features:', error);
+        
+        // Show user-friendly error message
+        this.showNotification('Unable to load features. Please try again later.', 'error');
+        
+        // Optional: Render fallback features or empty state
+        this.renderFeatures([]);
+    }
+}
+
+
 
         renderModules(modules) {
             // Ensure we have a container
