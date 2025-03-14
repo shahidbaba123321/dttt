@@ -507,188 +507,271 @@
     }
             // Create modal container
             const modalContainer = document.createElement('div');
-            modalContainer.id = 'moduleFormModal';
-            modalContainer.className = 'modal-overlay show';
-            
-            // Determine modal title and action
-            const isEditMode = !!existingModule;
-            const modalTitle = isEditMode ? 'Edit Module' : 'Add New Module';
+    modalContainer.id = 'moduleFormModal';
+    modalContainer.className = 'modal-overlay';
+    
+    // Determine modal title and action
+    const isEditMode = !!existingModule;
+    const modalTitle = isEditMode ? 'Edit Module' : 'Create New Module';
 
-            // Create modal HTML
-            modalContainer.innerHTML = `
-                <div class="modal-container">
-                    <div class="modal-header">
-                        <h2>${modalTitle}</h2>
-                        <button type="button" class="modal-close-btn">&times;</button>
+    // Create modal HTML with comprehensive form
+    modalContainer.innerHTML = `
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2>${modalTitle}</h2>
+                <button type="button" class="modal-close-btn">&times;</button>
+            </div>
+            <form id="moduleForm" class="module-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="moduleName">Module Name *</label>
+                        <input 
+                            type="text" 
+                            id="moduleName" 
+                            name="name" 
+                            class="form-control" 
+                            required 
+                            placeholder="Enter module name"
+                            value="${existingModule ? this.sanitizeInput(existingModule.name) : ''}"
+                        >
+                        <small class="error-message" id="moduleNameError"></small>
                     </div>
-                    <form id="moduleForm" class="module-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="moduleName">Module Name</label>
-                                <input 
-                                    type="text" 
-                                    id="moduleName" 
-                                    name="name" 
-                                    class="form-control" 
-                                    required 
-                                    placeholder="Enter module name"
-                                    value="${existingModule ? this.sanitizeInput(existingModule.name) : ''}"
-                                >
-                                <small class="error-message" id="moduleNameError"></small>
-                            </div>
-                            <div class="form-group">
-                                <label for="moduleCategory">Category</label>
-                                <select 
-                                    id="moduleCategory" 
-                                    name="category" 
-                                    class="form-control" 
-                                    required
-                                >
-                                    <option value="">Select Category</option>
-                                    <option value="hr" ${existingModule && existingModule.category === 'hr' ? 'selected' : ''}>HR</option>
-                                    <option value="finance" ${existingModule && existingModule.category === 'finance' ? 'selected' : ''}>Finance</option>
-                                    <option value="operations" ${existingModule && existingModule.category === 'operations' ? 'selected' : ''}>Operations</option>
-                                    <option value="integrations" ${existingModule && existingModule.category === 'integrations' ? 'selected' : ''}>Integrations</option>
-                                </select>
-                                <small class="error-message" id="moduleCategoryError"></small>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group full-width">
-                                <label for="moduleDescription">Description</label>
-                                <textarea 
-                                    id="moduleDescription" 
-                                    name="description" 
-                                    class="form-control" 
-                                    rows="3" 
-                                    required 
-                                    placeholder="Describe the module's purpose and functionality"
-                                >${existingModule ? this.sanitizeInput(existingModule.description) : ''}</textarea>
-                                <small class="error-message" id="moduleDescriptionError"></small>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="complianceLevel">Compliance Level</label>
-                                <select 
-                                    id="complianceLevel" 
-                                    name="complianceLevel" 
-                                    class="form-control" 
-                                    required
-                                >
-                                    <option value="">Select Compliance Level</option>
-                                    <option value="low" ${existingModule && existingModule.complianceLevel === 'low' ? 'selected' : ''}>Low</option>
-                                    <option value="medium" ${existingModule && existingModule.complianceLevel === 'medium' ? 'selected' : ''}>Medium</option>
-                                    <option value="high" ${existingModule && existingModule.complianceLevel === 'high' ? 'selected' : ''}>High</option>
-                                </select>
-                                <small class="error-message" id="complianceLevelError"></small>
-                            </div>
-                            <div class="form-group">
-                                <label>Module Status</label>
-                                <div class="toggle-switch">
-                                    <input 
-                                        type="checkbox" 
-                                        id="moduleActiveStatus" 
-                                        name="isActive" 
-                                        ${existingModule ? (existingModule.isActive ? 'checked' : '') : 'checked'}
-                                    >
-                                    <label for="moduleActiveStatus" class="toggle-slider"></label>
-                                    <span id="moduleStatusText">
-                                        ${existingModule ? (existingModule.isActive ? 'Active' : 'Inactive') : 'Active'}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group full-width">
-                                <label>Permissions</label>
-                                <div class="permissions-grid" id="permissionsContainer">
-                                    ${this.generatePermissionsCheckboxes(existingModule)}
-                                </div>
-                                <small class="error-message" id="permissionsError"></small>
-                            </div>
-                        </div>
-
-                        <div class="modal-actions">
-                            <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
-                            <button type="submit" class="btn btn-primary save-btn">
-                                ${isEditMode ? 'Update Module' : 'Save Module'}
-                            </button>
-                        </div>
-                    </form>
+                    <div class="form-group">
+                        <label for="moduleCategory">Module Category *</label>
+                        <select 
+                            id="moduleCategory" 
+                            name="category" 
+                            class="form-control" 
+                            required
+                        >
+                            <option value="">Select Category</option>
+                            <option value="hr" ${existingModule && existingModule.category === 'hr' ? 'selected' : ''}>HR Solutions</option>
+                            <option value="financial" ${existingModule && existingModule.category === 'financial' ? 'selected' : ''}>Financial Solutions</option>
+                            <option value="operational" ${existingModule && existingModule.category === 'operational' ? 'selected' : ''}>Operational Solutions</option>
+                            <option value="integrations" ${existingModule && existingModule.category === 'integrations' ? 'selected' : ''}>Integrations</option>
+                        </select>
+                        <small class="error-message" id="moduleCategoryError"></small>
+                    </div>
                 </div>
-            `;
 
-            // Append to body
-            document.body.appendChild(modalContainer);
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label for="moduleDescription">Description</label>
+                        <textarea 
+                            id="moduleDescription" 
+                            name="description" 
+                            class="form-control" 
+                            rows="3" 
+                            placeholder="Enter module description"
+                        >${existingModule ? this.sanitizeInput(existingModule.description || '') : ''}</textarea>
+                    </div>
+                </div>
 
-            // Get form elements
-            const form = modalContainer.querySelector('#moduleForm');
-            const closeBtn = modalContainer.querySelector('.modal-close-btn');
-            const cancelBtn = modalContainer.querySelector('.cancel-btn');
-            const moduleActiveStatus = modalContainer.querySelector('#moduleActiveStatus');
-            const moduleStatusText = modalContainer.querySelector('#moduleStatusText');
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Status *</label>
+                        <select 
+                            id="moduleStatus" 
+                            name="status" 
+                            class="form-control" 
+                            required
+                        >
+                            <option value="active" ${existingModule && existingModule.status === 'active' ? 'selected' : ''}>Active</option>
+                            <option value="inactive" ${existingModule && existingModule.status === 'inactive' ? 'selected' : ''}>Inactive</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Pricing Plan</label>
+                        <select 
+                            id="pricingPlan" 
+                            name="pricingPlan" 
+                            class="form-control"
+                        >
+                            <option value="">Select Pricing Plan</option>
+                            <option value="basic">Basic</option>
+                            <option value="professional">Professional</option>
+                            <option value="enterprise">Enterprise</option>
+                        </select>
+                    </div>
+                </div>
 
-            // Toggle status text
-            moduleActiveStatus.addEventListener('change', (e) => {
-                moduleStatusText.textContent = e.target.checked ? 'Active' : 'Inactive';
-            });
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Access Level</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="accessLevel" value="superadmin"> Superadmin
+                            </label>
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="accessLevel" value="company_admin"> Company Admin
+                            </label>
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="accessLevel" value="hr_manager"> HR Manager
+                            </label>
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="accessLevel" value="employee"> Employee
+                            </label>
+                        </div>
+                    </div>
+                </div>
 
-            // Close modal function
-            const closeModal = () => {
-                document.body.removeChild(modalContainer);
-            };
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Features Included</label>
+                        <div id="featuresContainer">
+                            ${this.renderFeatureCheckboxes()}
+                        </div>
+                    </div>
+                </div>
 
-            // Close event listeners
-            closeBtn.addEventListener('click', closeModal);
-            cancelBtn.addEventListener('click', closeModal);
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Integration Options</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="integrations" value="servicenow"> ServiceNow & ITSM
+                            </label>
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="integrations" value="payroll"> Payroll & Finance
+                            </label>
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="integrations" value="benefits"> Employee Benefits
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Audit Logging</label>
+                        <div class="toggle-switch">
+                            <input 
+                                type="checkbox" 
+                                id="auditLogging" 
+                                name="auditLogging"
+                                ${existingModule && existingModule.auditLogging ? 'checked' : ''}
+                            >
+                            <label for="auditLogging" class="toggle-slider"></label>
+                        </div>
+                    </div>
+                </div>
 
-            // Form submission
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary save-btn">
+                        ${isEditMode ? 'Update Module' : 'Create Module'}
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    // Append to body
+    document.body.appendChild(modalContainer);
+
+    // Get form elements
+    const form = modalContainer.querySelector('#moduleForm');
+    const closeBtn = modalContainer.querySelector('.modal-close-btn');
+    const cancelBtn = modalContainer.querySelector('.cancel-btn');
+
+    // Close modal function
+    const closeModal = () => {
+        document.body.removeChild(modalContainer);
+    };
+
+    // Close event listeners
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+
+    // Form submission
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Validate form
+        if (this.validateModuleForm(form)) {
+            try {
+                // Collect form data
+                const formData = this.collectModuleFormData(form);
                 
-                // Validate form
-                if (this.validateModuleForm(form)) {
-                    try {
-                        // Collect form data
-                        const formData = this.collectModuleFormData(form);
-                        
-                        // Send data to server
-                        let response;
-                        if (isEditMode) {
-                            // Update existing module
-                            response = await this.updateModule(existingModule._id, formData);
-                        } else {
-                            // Create new module
-                            response = await this.createModule(formData);
-                        }
-                        
-                        // Show success notification
-                        this.showNotification(
-                            isEditMode ? 'Module updated successfully' : 'Module created successfully', 
-                            'success'
-                        );
-                        
-                        // Close modal
-                        closeModal();
-                        
-                        // Reload modules
-                        this.loadModules();
-                    } catch (error) {
-                        // Error handling
-                        console.error('Module submission error:', error);
-                        this.showNotification(error.message || 'Failed to submit module', 'error');
-                    }
+                // Send data to server
+                if (existingModule && existingModule._id) {
+                    // Update existing module
+                    await this.updateModule(existingModule._id, formData);
+                    this.showNotification('Module updated successfully', 'success');
+                } else {
+                    // Create new module
+                    await this.createModule(formData);
+                    this.showNotification('Module created successfully', 'success');
                 }
-            });
+                
+                // Close modal
+                closeModal();
+                
+                // Reload modules
+                this.loadModules();
+            } catch (error) {
+                console.error('Module submission error:', error);
+                this.showNotification(error.message || 'Failed to submit module', 'error');
+            }
+        }
+    });
 
-            // Return the modal container for any additional manipulation if needed
+     // Return the modal container for any additional manipulation if needed
               modalContainer.style.display = 'flex';
             return modalContainer;
         }
+
+           // Method to render feature checkboxes
+renderFeatureCheckboxes() {
+    const features = {
+        'HR Solutions': [
+            'People Management',
+            'Performance Management',
+            'Attendance & Leave Management',
+            'Payroll & Compensation',
+            'Employee Self-Service',
+            'WiseRecruit'
+        ],
+        'Financial Solutions': [
+            'Payroll Processing',
+            'SmartExpenses',
+            'Financial Reporting',
+            'Book-keeping',
+            'Taxation & Compliance',
+            'GlobalInvoice',
+            'Invoice & Billing',
+            'Asset Management'
+        ],
+        'Operational Solutions': [
+            'Project & Task Management',
+            'ShiftMaster',
+            'StockFlow',
+            'Vendor & Supplier Management',
+            'Workflow Automation',
+            'Facility Management'
+        ],
+        'Integrations': [
+            'ServiceNow & ITSM',
+            'Payroll & Finance Integrations',
+            'Employee Benefits',
+            'Talent Management'
+        ]
+    };
+
+    return Object.entries(features).map(([category, categoryFeatures]) => `
+        <div class="feature-category">
+            <h4>${category}</h4>
+            <div class="feature-checkboxes">
+                ${categoryFeatures.map(feature => `
+                    <label class="checkbox-inline">
+                        <input 
+                            type="checkbox" 
+                            name="features" 
+                            value="${feature.toLowerCase().replace(/\s+/g, '_')}"
+                        > ${feature}
+                    </label>
+                `).join('')}
+            </div>
+        </div>
+    `).join('');
+}
 
         generatePermissionsCheckboxes(existingModule = null) {
             const permissionGroups = {
@@ -739,57 +822,68 @@
                 .join('');
         }
 
-       validateModuleForm(form) {
-            // Reset previous error states
-            const errorFields = form.querySelectorAll('.error-message');
-            errorFields.forEach(field => field.textContent = '');
+      validateModuleForm(form) {
+    // Reset previous error states
+    const errorFields = form.querySelectorAll('.error-message');
+    errorFields.forEach(field => field.textContent = '');
 
-            // Validation flags
-            let isValid = true;
+    // Validation flags
+    let isValid = true;
 
-            // Validate Module Name
-            const moduleName = form.querySelector('#moduleName');
-            if (!moduleName.value.trim()) {
-                this.markFieldAsInvalid(moduleName, 'Module name is required');
-                isValid = false;
-            }
+    // Validate Module Name
+    const moduleName = form.querySelector('#moduleName');
+    if (!moduleName.value.trim()) {
+        this.markFieldAsInvalid(moduleName, 'Module name is required');
+        isValid = false;
+    }
 
-            // Validate Category
-            const moduleCategory = form.querySelector('#moduleCategory');
-            if (!moduleCategory.value) {
-                this.markFieldAsInvalid(moduleCategory, 'Please select a category');
-                isValid = false;
-            }
+    // Validate Category
+    const moduleCategory = form.querySelector('#moduleCategory');
+    if (!moduleCategory.value) {
+        this.markFieldAsInvalid(moduleCategory, 'Please select a module category');
+        isValid = false;
+    }
 
-            // Validate Description
-            const moduleDescription = form.querySelector('#moduleDescription');
-            if (!moduleDescription.value.trim()) {
-                this.markFieldAsInvalid(moduleDescription, 'Description is required');
-                isValid = false;
-            }
+    // Validate Status
+    const moduleStatus = form.querySelector('#moduleStatus');
+    if (!moduleStatus.value) {
+        this.markFieldAsInvalid(moduleStatus, 'Please select a status');
+        isValid = false;
+    }
 
-            // Validate Compliance Level
-            const complianceLevel = form.querySelector('#complianceLevel');
-            if (!complianceLevel.value) {
-                this.markFieldAsInvalid(complianceLevel, 'Please select a compliance level');
-                isValid = false;
-            }
-
-            // Validate Permissions (at least one must be selected)
-            const permissionsContainer = form.querySelector('#permissionsContainer');
-            const selectedPermissions = permissionsContainer.querySelectorAll('input[name="permissions"]:checked');
-            
-            if (selectedPermissions.length === 0) {
-                const permissionsError = form.querySelector('#permissionsError');
-                if (permissionsError) {
-                    permissionsError.textContent = 'Select at least one permission';
-                    permissionsError.style.visibility = 'visible';
-                }
-                isValid = false;
-            }
-
-            return isValid;
+    // Validate Access Level (at least one must be selected)
+    const accessLevels = form.querySelectorAll('input[name="accessLevel"]:checked');
+    if (accessLevels.length === 0) {
+        const accessLevelError = document.createElement('div');
+        accessLevelError.className = 'error-message';
+        accessLevelError.textContent = 'Select at least one access level';
+        accessLevelError.style.color = 'red';
+        
+        const accessLevelContainer = form.querySelector('.checkbox-group');
+        if (accessLevelContainer) {
+            accessLevelContainer.appendChild(accessLevelError);
         }
+        isValid = false;
+    }
+
+    // Validate Features (at least one must be selected)
+    const features = form.querySelectorAll('input[name="features"]:checked');
+    if (features.length === 0) {
+        const featuresError = document.createElement('div');
+        featuresError.className = 'error-message';
+        featuresError.textContent = 'Select at least one feature';
+        featuresError.style.color = 'red';
+        
+        const featuresContainer = form.querySelector('#featuresContainer');
+        if (featuresContainer) {
+            featuresContainer.appendChild(featuresError);
+        }
+        isValid = false;
+    }
+
+    return isValid;
+}
+
 
         markFieldAsInvalid(field, errorMessage) {
             const errorElement = field.nextElementSibling;
@@ -810,28 +904,75 @@
         }
 
         collectModuleFormData(form) {
-            // Collect basic module information
-            const moduleData = {
-                name: form.querySelector('#moduleName').value.trim(),
-                category: form.querySelector('#moduleCategory').value,
-                description: form.querySelector('#moduleDescription').value.trim(),
-                complianceLevel: form.querySelector('#complianceLevel').value,
-                isActive: form.querySelector('#moduleActiveStatus').checked
-            };
+    // Collect basic module information
+    const moduleData = {
+        name: form.querySelector('#moduleName').value.trim(),
+        category: form.querySelector('#moduleCategory').value,
+        description: form.querySelector('#moduleDescription').value.trim() || '',
+        status: form.querySelector('#moduleStatus').value,
+        pricingPlan: form.querySelector('#pricingPlan').value || null,
+        auditLogging: form.querySelector('#auditLogging').checked
+    };
 
-            // Collect selected permissions
-            const selectedPermissions = Array.from(
-                form.querySelectorAll('input[name="permissions"]:checked')
-            ).map(checkbox => ({
-                id: checkbox.value,
-                category: checkbox.dataset.category
-            }));
+    // Collect access levels
+    const accessLevels = Array.from(
+        form.querySelectorAll('input[name="accessLevel"]:checked')
+    ).map(checkbox => checkbox.value);
+    moduleData.accessLevels = accessLevels;
 
-            // Add permissions to module data
-            moduleData.permissions = selectedPermissions;
+    // Collect features
+    const features = Array.from(
+        form.querySelectorAll('input[name="features"]:checked')
+    ).map(checkbox => ({
+        value: checkbox.value,
+        category: this.getCategoryForFeature(checkbox.value)
+    }));
+    moduleData.features = features;
 
-            return moduleData;
-        }
+    // Collect integration options
+    const integrations = Array.from(
+        form.querySelectorAll('input[name="integrations"]:checked')
+    ).map(checkbox => checkbox.value);
+    moduleData.integrations = integrations;
+
+    return moduleData;
+}
+
+        // Helper method to determine feature category
+getCategoryForFeature(featureValue) {
+    const featureCategories = {
+        'people_management': 'HR Solutions',
+        'performance_management': 'HR Solutions',
+        'attendance_&_leave_management': 'HR Solutions',
+        'payroll_&_compensation': 'HR Solutions',
+        'employee_self-service': 'HR Solutions',
+        'wiserecruit': 'HR Solutions',
+
+        'payroll_processing': 'Financial Solutions',
+        'smartexpenses': 'Financial Solutions',
+        'financial_reporting': 'Financial Solutions',
+        'book-keeping': 'Financial Solutions',
+        'taxation_&_compliance': 'Financial Solutions',
+        'globalinvoice': 'Financial Solutions',
+        'invoice_&_billing': 'Financial Solutions',
+        'asset_management': 'Financial Solutions',
+
+        'project_&_task_management': 'Operational Solutions',
+        'shiftmaster': 'Operational Solutions',
+        'stockflow': 'Operational Solutions',
+        'vendor_&_supplier_management': 'Operational Solutions',
+        'workflow_automation': 'Operational Solutions',
+        'facility_management': 'Operational Solutions',
+
+        'servicenow_&_itsm': 'Integrations',
+        'payroll_&_finance_integrations': 'Integrations',
+        'employee_benefits': 'Integrations',
+        'talent_management': 'Integrations'
+    };
+
+    return featureCategories[featureValue] || 'Uncategorized';
+}
+
 
         async createModule(moduleData) {
             try {
