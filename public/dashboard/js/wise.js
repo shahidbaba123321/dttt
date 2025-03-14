@@ -259,140 +259,199 @@
         }
                 // Handle Add New Module Method
         handleAddNewModule() {
-            // Create modal dynamically if not exists
-            if (!this.moduleModal) {
-                this.createModuleModal();
-            }
-
-            // Reset form
-            this.moduleForm.reset();
-            this.populateFeatureCheckboxes();
-            
-            // Show modal
-            this.moduleModal.classList.add('show');
-            
-            // Setup form submission
-            this.moduleForm.onsubmit = this.handleModuleFormSubmit;
+    try {
+        // Create modal dynamically if not exists
+        if (!this.moduleModal) {
+            this.createModuleModal();
         }
+
+        // Verify modal exists before proceeding
+        if (!this.moduleModal) {
+            console.error('Failed to create module modal');
+            return;
+        }
+
+        // Reset form
+        this.moduleForm.reset();
+        this.populateFeatureCheckboxes();
+        
+        // Show modal
+        this.moduleModal.classList.add('show');
+        
+        // Setup form submission
+        this.moduleForm.onsubmit = this.handleModuleFormSubmit;
+    } catch (error) {
+        console.error('Error in handleAddNewModule:', error);
+    }
+}
 
         // Create Module Modal Method
         createModuleModal() {
-            const modalHTML = `
-                <div class="modal" id="moduleModal">
-                    <div class="modal-dialog">
-                        <div class="modal-header">
-                            <h2>Add New Module</h2>
-                            <button class="modal-close" type="button">&times;</button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="moduleForm">
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label>Module Name</label>
-                                        <input type="text" name="moduleName" class="form-control" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Module Category</label>
-                                        <select name="moduleCategory" class="form-control" required>
-                                            <option value="">Select Category</option>
-                                            <option value="hr">HR Solutions</option>
-                                            <option value="finance">Financial Solutions</option>
-                                            <option value="operations">Operational Solutions</option>
-                                            <option value="integrations">Integrations</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                
+    try {
+        // Check if modal already exists
+        if (document.getElementById('moduleModal')) {
+            console.warn('Module modal already exists');
+            return;
+        }
+
+        const modalHTML = `
+            <div class="modal" id="moduleModal">
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h2>Add New Module</h2>
+                        <button class="modal-close" type="button">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="moduleForm">
+                            <div class="form-row">
                                 <div class="form-group">
-                                    <label>Description</label>
-                                    <textarea name="moduleDescription" class="form-control" rows="3"></textarea>
+                                    <label>Module Name</label>
+                                    <input type="text" name="moduleName" class="form-control" required>
                                 </div>
-
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label>Status</label>
-                                        <select name="moduleStatus" class="form-control">
-                                            <option value="active">Active</option>
-                                            <option value="inactive">Inactive</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Compliance Level</label>
-                                        <select name="complianceLevel" class="form-control">
-                                            <option value="low">Low</option>
-                                            <option value="medium">Medium</option>
-                                            <option value="high">High</option>
-                                        </select>
-                                    </div>
-                                </div>
-
                                 <div class="form-group">
-                                    <label>Access Levels</label>
-                                    <div class="permissions-grid">
-                                        <label class="form-check">
-                                            <input type="checkbox" name="accessLevels" value="superadmin" class="form-check-input">
-                                            Superadmin
-                                        </label>
-                                        <label class="form-check">
-                                            <input type="checkbox" name="accessLevels" value="companyadmin" class="form-check-input">
-                                            Company Admin
-                                        </label>
-                                        <label class="form-check">
-                                            <input type="checkbox" name="accessLevels" value="hrmanager" class="form-check-input">
-                                            HR Manager
-                                        </label>
-                                        <label class="form-check">
-                                            <input type="checkbox" name="accessLevels" value="employee" class="form-check-input">
-                                            Employee
-                                        </label>
-                                    </div>
+                                    <label>Module Category</label>
+                                    <select name="moduleCategory" class="form-control" required>
+                                        <option value="">Select Category</option>
+                                        <option value="hr">HR Solutions</option>
+                                        <option value="finance">Financial Solutions</option>
+                                        <option value="operations">Operational Solutions</option>
+                                        <option value="integrations">Integrations</option>
+                                    </select>
                                 </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea name="moduleDescription" class="form-control" rows="3"></textarea>
+                            </div>
 
-                                <div class="form-group" id="featuresContainer">
-                                    <!-- Features will be dynamically populated -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Status</label>
+                                    <select name="moduleStatus" class="form-control">
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
                                 </div>
+                                <div class="form-group">
+                                    <label>Compliance Level</label>
+                                    <select name="complianceLevel" class="form-control">
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                    </select>
+                                </div>
+                            </div>
 
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label>Pricing Plan</label>
-                                        <select name="pricingPlan" class="form-control">
-                                            <option value="">Select Pricing Plan</option>
-                                            <option value="basic">Basic</option>
-                                            <option value="professional">Professional</option>
-                                            <option value="enterprise">Enterprise</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Audit Logging</label>
-                                        <div class="toggle-switch">
-                                            <input type="checkbox" name="auditLogging" id="auditLoggingToggle">
-                                            <label for="auditLoggingToggle" class="toggle-slider"></label>
-                                        </div>
+                            <div class="form-group">
+                                <label>Access Levels</label>
+                                <div class="permissions-grid">
+                                    <label class="form-check">
+                                        <input type="checkbox" name="accessLevels" value="superadmin" class="form-check-input">
+                                        Superadmin
+                                    </label>
+                                    <label class="form-check">
+                                        <input type="checkbox" name="accessLevels" value="companyadmin" class="form-check-input">
+                                        Company Admin
+                                    </label>
+                                    <label class="form-check">
+                                        <input type="checkbox" name="accessLevels" value="hrmanager" class="form-check-input">
+                                        HR Manager
+                                    </label>
+                                    <label class="form-check">
+                                        <input type="checkbox" name="accessLevels" value="employee" class="form-check-input">
+                                        Employee
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group" id="featuresContainer">
+                                <!-- Features will be dynamically populated -->
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Pricing Plan</label>
+                                    <select name="pricingPlan" class="form-control">
+                                        <option value="">Select Pricing Plan</option>
+                                        <option value="basic">Basic</option>
+                                        <option value="professional">Professional</option>
+                                        <option value="enterprise">Enterprise</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Audit Logging</label>
+                                    <div class="toggle-switch">
+                                        <input type="checkbox" name="auditLogging" id="auditLoggingToggle">
+                                        <label for="auditLoggingToggle" class="toggle-slider"></label>
                                     </div>
                                 </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" id="cancelModuleBtn">Cancel</button>
-                            <button type="submit" form="moduleForm" class="btn btn-primary">Save Module</button>
-                        </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="cancelModuleBtn">Cancel</button>
+                        <button type="submit" form="moduleForm" class="btn btn-primary">Save Module</button>
                     </div>
                 </div>
-            `;
+            </div>
+        `;
 
-            // Create modal element
-            const modalContainer = document.createElement('div');
-            modalContainer.innerHTML = modalHTML;
-            document.body.appendChild(modalContainer.firstChild);
+        // Create modal element
+        const modalContainer = document.createElement('div');
+        modalContainer.innerHTML = modalHTML;
+        
+        // Append to body
+        document.body.appendChild(modalContainer.firstChild);
 
-            // Cache modal reference
-            this.moduleModal = document.getElementById('moduleModal');
-            this.moduleForm = document.getElementById('moduleForm');
+        // Cache modal reference
+        this.moduleModal = document.getElementById('moduleModal');
+        this.moduleForm = document.getElementById('moduleForm');
 
-            // Setup close and cancel buttons
-            this.moduleModal.querySelector('.modal-close').addEventListener('click', this.closeModuleModal);
-            document.getElementById('cancelModuleBtn').addEventListener('click', this.closeModuleModal);
+        // Verify modal and form exist
+        if (!this.moduleModal) {
+            console.error('Failed to create module modal: Modal not found');
+            return;
         }
+
+        if (!this.moduleForm) {
+            console.error('Failed to create module modal: Form not found');
+            return;
+        }
+
+        // Setup close button
+        const closeButton = this.moduleModal.querySelector('.modal-close');
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                try {
+                    this.closeModuleModal();
+                } catch (closeError) {
+                    console.error('Error closing modal:', closeError);
+                }
+            });
+        } else {
+            console.error('Close button not found in module modal');
+        }
+
+        // Setup cancel button
+        const cancelButton = document.getElementById('cancelModuleBtn');
+        if (cancelButton) {
+            cancelButton.addEventListener('click', () => {
+                try {
+                    this.closeModuleModal();
+                } catch (cancelError) {
+                    console.error('Error canceling modal:', cancelError);
+                }
+            });
+        } else {
+            console.error('Cancel button not found in module modal');
+        }
+
+        console.log('Module modal created successfully');
+    } catch (error) {
+        console.error('Comprehensive error creating module modal:', error);
+    }
+}
 
         // Populate Feature Checkboxes Method
         populateFeatureCheckboxes() {
@@ -454,10 +513,12 @@
 
         // Close Module Modal Method
         closeModuleModal() {
-            if (this.moduleModal) {
-                this.moduleModal.classList.remove('show');
-            }
-        }
+    if (this.moduleModal) {
+        this.moduleModal.classList.remove('show');
+    } else {
+        console.warn('Attempted to close non-existent module modal');
+    }
+}
                 // Module Form Submission Method
         async handleModuleFormSubmit(event) {
             event.preventDefault();
