@@ -1,948 +1,598 @@
 (function() {
-    // Check if WiseManager already exists
+    'use strict';
+
+    // Prevent multiple instantiations
     if (window.WiseManager) {
-        return; // Exit if already defined
+        console.warn('WiseManager is already defined');
+        return;
     }
 
-class WiseManager {
-    constructor(apiBaseUrl) {
-        this.baseUrl = apiBaseUrl;
-        this.token = localStorage.getItem('token');
-        this.currentPage = 1;
-        this.pageSize = 10;
-        this.totalModules = 0;
-        this.modules = [];
-        this.currentModuleId = null;
-        this.filters = {
-            search: '',
-            category: 'all',
-            complianceLevel: '',
-            status: ''
-        };
-
-        // Make instance available globally
-        window.wiseManager = this;
-        
-        this.initializeElements();
-        this.initializeStyles();
-        this.initializeEventListeners();
-        this.loadInitialData();
-    }
-
-    initializeStyles() {
-        const styles = `
-            .module-toggle {
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-            }
-
-            .switch {
-                position: relative;
-                display: inline-block;
-                width: 48px;
-                height: 24px;
-            }
-
-            .switch input {
-                opacity: 0;
-                width: 0;
-                height: 0;
-            }
-
-            .slider {
-                position: absolute;
-                cursor: pointer;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background-color: #cbd5e1;
-                transition: .4s;
-            }
-
-            .slider:before {
-                position: absolute;
-                content: "";
-                height: 18px;
-                width: 18px;
-                left: 3px;
-                bottom: 3px;
-                background-color: white;
-                transition: .4s;
-            }
-
-            input:checked + .slider {
-                background-color: var(--success-color);
-            }
-
-            input:focus + .slider {
-                box-shadow: 0 0 1px var(--success-color);
-            }
-
-            input:checked + .slider:before {
-                transform: translateX(24px);
-            }
-
-            .slider.round {
-                border-radius: 24px;
-            }
-
-            .slider.round:before {
-                border-radius: 50%;
-            }
-
-            .module-status {
-                font-size: 0.875rem;
-                font-weight: 500;
-            }
-
-            .module-active {
-                color: var(--success-color);
-            }
-
-            .module-inactive {
-                color: var(--text-tertiary);
-            }
-        `;
-
-        const styleSheet = document.createElement('style');
-        styleSheet.textContent = styles;
-        document.head.appendChild(styleSheet);
-    }
-
-    initializeElements() {
-        // Main containers
-        this.modulesTableBody = document.getElementById('modulesTableBody');
-        this.paginationControls = document.getElementById('paginationControls');
-        
-        // Search and filters
-        this.searchInput = document.getElementById('moduleSearch');
-        this.categoryTabs = document.querySelectorAll('.category-tab');
-        this.complianceFilter = document.getElementById('complianceFilter');
-        this.statusFilter = document.getElementById('statusFilter');
-        
-        // Modals
-        this.moduleModal = document.getElementById('moduleModal');
-        this.deleteModal = document.getElementById('deleteModal');
-        this.activityLogsModal = document.getElementById('activityLogsModal');
-        
-        // Forms
-        this.moduleForm = document.getElementById('moduleForm');
-        
-        // Buttons
-        this.createModuleBtn = document.getElementById('createModuleBtn');
-        this.saveModuleBtn = document.getElementById('saveModule');
-        this.confirmDeleteBtn = document.getElementById('confirmDelete');
-        
-        // Modal close buttons
-        this.closeModuleModal = document.getElementById('closeModuleModal');
-        this.cancelModuleModal = document.getElementById('cancelModuleModal');
-        this.closeDeleteModal = document.getElementById('closeDeleteModal');
-        this.cancelDelete = document.getElementById('cancelDelete');
-
-        // Stats elements
-        this.startRange = document.getElementById('startRange');
-        this.endRange = document.getElementById('endRange');
-        this.totalModulesElement = document.getElementById('totalModules');
-
-        // Error handling for missing elements
-        Object.entries(this).forEach(([key, value]) => {
-            if (key !== 'token' && key !== 'currentPage' && key !== 'pageSize' && 
-                key !== 'totalModules' && key !== 'modules' && 
-                key !== 'currentModuleId' && key !== 'filters' && key !== 'baseUrl' && !value) {
-                console.error(`Element not found: ${key}`);
-            }
-        });
-    }
-        initializeEventListeners() {
-        // Module management
-        this.createModuleBtn?.addEventListener('click', () => this.showCreateModuleModal());
-        this.saveModuleBtn?.addEventListener('click', () => this.saveModule());
-        this.confirmDeleteBtn?.addEventListener('click', () => this.deleteModule());
-
-        // Modal close events
-        this.closeModuleModal?.addEventListener('click', () => this.closeModal(this.moduleModal));
-        this.cancelModuleModal?.addEventListener('click', () => this.closeModal(this.moduleModal));
-        this.closeDeleteModal?.addEventListener('click', () => this.closeModal(this.deleteModal));
-        this.cancelDelete?.addEventListener('click', () => this.closeModal(this.deleteModal));
-
-        // Category tabs
-        this.categoryTabs.forEach(tab => {
-            tab.addEventListener('click', (e) => {
-                // Remove active class from all tabs
-                this.categoryTabs.forEach(t => t.classList.remove('active'));
-                
-                // Add active class to clicked tab
-                e.target.classList.add('active');
-                
-                // Set category filter
-                this.filters.category = e.target.dataset.category;
-                this.currentPage = 1;
-                this.loadModules();
-            });
-        });
-
-        // Search and filters
-        this.searchInput?.addEventListener('input', debounce((e) => {
-            this.filters.search = e.target.value;
-            this.currentPage = 1;
-            this.loadModules();
-        }, 300));
-
-        this.complianceFilter?.addEventListener('change', () => {
-            this.filters.complianceLevel = this.complianceFilter.value;
-            this.currentPage = 1;
-            this.loadModules();
-        });
-
-        this.statusFilter?.addEventListener('change', () => {
-            this.filters.status = this.statusFilter.value;
-            this.currentPage = 1;
-            this.loadModules();
-        });
-
-        // Form validation
-        this.moduleForm?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.saveModule();
-        });
-
-        // Click outside modal to close
-        window.addEventListener('click', (e) => {
-            if (e.target === this.moduleModal) this.closeModal(this.moduleModal);
-            if (e.target === this.deleteModal) this.closeModal(this.deleteModal);
-        });
-
-        // Prevent modal close when clicking inside
-        this.moduleModal?.querySelector('.modal-content')?.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-
-        this.deleteModal?.querySelector('.modal-content')?.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-
-        // Form input validation
-        const moduleNameInput = document.getElementById('moduleName');
-        moduleNameInput?.addEventListener('input', (e) => {
-            const name = e.target.value.trim();
-            if (name.length < 2) {
-                e.target.setCustomValidity('Module name must be at least 2 characters long');
-            } else {
-                e.target.setCustomValidity('');
-            }
-            e.target.reportValidity();
-        });
-    }
-
-    async loadInitialData() {
-        try {
-            this.showLoading();
-            await Promise.all([
-                this.loadModules(),
-                this.setupActivityLogsModal()
-            ]);
-            this.hideLoading();
-        } catch (error) {
-            console.error('Error loading initial data:', error);
-            this.showError('Failed to load initial data');
-            this.hideLoading();
-        }
-    }
-
-    async loadModules() {
-        try {
-            const queryParams = new URLSearchParams({
-                page: this.currentPage,
-                limit: this.pageSize,
-                ...this.filters
-            });
-
-            // Remove undefined or empty values from query params
-            Array.from(queryParams.entries()).forEach(([key, value]) => {
-                if (value === 'undefined' || value === '') {
-                    queryParams.delete(key);
-                }
-            });
-
-            const response = await fetch(`${this.baseUrl}/modules?${queryParams}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch modules');
-            }
-
-            const result = await response.json();
+    // WiseManager Class Definition
+    class WiseManager {
+        constructor(apiBaseUrl) {
+            // Configuration
+            this.apiBaseUrl = apiBaseUrl;
+            this.token = localStorage.getItem('token');
             
-            if (!result.success) {
-                throw new Error(result.message || 'Failed to load modules');
-            }
+            // Pagination and Filtering
+            this.currentPage = 1;
+            this.pageSize = 10;
+            this.totalModules = 0;
+            this.currentCategory = 'all';
+            this.currentComplianceLevel = '';
+            this.searchQuery = '';
 
-            this.modules = result.data || [];
-            this.totalModules = result.pagination.total || 0;
+            // Bind methods to ensure correct context
+            this.fetchModules = this.fetchModules.bind(this);
+            this.renderModules = this.renderModules.bind(this);
+            this.handleCategoryChange = this.handleCategoryChange.bind(this);
+            this.handleSearchInput = this.handleSearchInput.bind(this);
+            this.handleComplianceFilter = this.handleComplianceFilter.bind(this);
 
-            this.renderModules();
-            this.updatePagination();
-            this.updateDisplayRange();
-
-        } catch (error) {
-            console.error('Error loading modules:', error);
-            this.showError('Failed to load modules');
+            // Initialize
+            this.initializeDOMElements();
+            this.initializeEventListeners();
+            this.fetchModules();
         }
-    }
 
-    renderModules() {
-        if (!this.modulesTableBody) return;
+        initializeDOMElements() {
+            // Category Tabs
+            this.categoryTabs = document.querySelectorAll('.category-tab');
+            
+            // Filter Elements
+            this.searchInput = document.getElementById('moduleSearchInput');
+            this.complianceFilter = document.getElementById('complianceFilter');
+            
+            // Table Container
+            this.modulesTableContainer = document.getElementById('modulesTableContainer');
+            
+            // Pagination Container
+            this.paginationContainer = document.getElementById('modulesPagination');
+            
+            // Add New Module Button
+            this.addNewModuleBtn = document.getElementById('addNewModuleBtn');
+        }
 
-        if (!this.modules || this.modules.length === 0) {
-            this.modulesTableBody.innerHTML = `
+        initializeEventListeners() {
+            // Category Tab Listeners
+            this.categoryTabs.forEach(tab => {
+                tab.addEventListener('click', this.handleCategoryChange);
+            });
+
+            // Search Input Listener
+            this.searchInput.addEventListener('input', this.handleSearchInput);
+
+            // Compliance Filter Listener
+            this.complianceFilter.addEventListener('change', this.handleComplianceFilter);
+
+            // Add New Module Button Listener
+            this.addNewModuleBtn.addEventListener('click', this.openAddModuleModal.bind(this));
+        }
+
+        handleCategoryChange(event) {
+            // Remove active class from all tabs
+            this.categoryTabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+            
+            // Update current category
+            this.currentCategory = event.target.dataset.category;
+            
+            // Reset to first page
+            this.currentPage = 1;
+            
+            // Fetch modules with new category
+            this.fetchModules();
+        }
+
+        handleSearchInput() {
+            // Update search query
+            this.searchQuery = this.searchInput.value.trim();
+            
+            // Reset to first page
+            this.currentPage = 1;
+            
+            // Fetch modules with search query
+            this.fetchModules();
+        }
+
+        handleComplianceFilter() {
+            // Update compliance level
+            this.currentComplianceLevel = this.complianceFilter.value;
+            
+            // Reset to first page
+            this.currentPage = 1;
+            
+            // Fetch modules with new filter
+            this.fetchModules();
+        }
+
+            async fetchModules() {
+            try {
+                // Construct query parameters
+                const params = new URLSearchParams({
+                    page: this.currentPage,
+                    limit: this.pageSize,
+                    category: this.currentCategory === 'all' ? '' : this.currentCategory,
+                    complianceLevel: this.currentComplianceLevel,
+                    search: this.searchQuery
+                });
+
+                // Fetch modules from API
+                const response = await fetch(`${this.apiBaseUrl}/modules?${params}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                // Parse response
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Failed to fetch modules');
+                }
+
+                // Update total modules and render
+                this.totalModules = result.pagination.total;
+                this.renderModules(result.data);
+                this.renderPagination(result.pagination);
+
+            } catch (error) {
+                console.error('Error fetching modules:', error);
+                this.showErrorNotification(error.message);
+            }
+        }
+
+        renderModules(modules) {
+            // Clear existing table
+            this.modulesTableContainer.innerHTML = '';
+
+            // Create table if it doesn't exist
+            const table = document.createElement('table');
+            table.className = 'modules-table';
+
+            // Create table header
+            const thead = document.createElement('thead');
+            thead.innerHTML = `
                 <tr>
-                    <td colspan="7" class="no-data">
-                        <div class="no-data-message">
-                            <i class="fas fa-cubes"></i>
-                            <p>No modules found</p>
-                        </div>
-                    </td>
+                    <th>Module Name</th>
+                    <th>Category</th>
+                    <th>Compliance Level</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                 </tr>
             `;
-            return;
-        }
+            table.appendChild(thead);
 
-        this.modulesTableBody.innerHTML = this.modules.map(module => `
-            <tr>
-                <td>
-                    <span class="module-name">${this.escapeHtml(module.name)}</span>
-                </td>
-                <td>
-                    <span class="module-category-badge ${module.category}">
-                        ${this.escapeHtml(this.capitalizeFirstLetter(module.category))}
-                    </span>
-                </td>
-                <td>${this.escapeHtml(module.description)}</td>
-                <td>
-                    <span class="compliance-badge ${module.complianceLevel}">
-                        ${this.capitalizeFirstLetter(module.complianceLevel)}
-                    </span>
-                </td>
-                <td>
-                    <div class="module-toggle">
-                        <label class="switch">
-                            <input type="checkbox" 
-                                   ${module.isActive ? 'checked' : ''} 
-                                   data-action="toggle-status"
-                                   data-module-id="${module._id}">
-                            <span class="slider round"></span>
-                        </label>
-                        <span class="module-status ${module.isActive ? 'module-active' : 'module-inactive'}">
+            // Create table body
+            const tbody = document.createElement('tbody');
+
+            // Render modules
+            modules.forEach(module => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${module.name}</td>
+                    <td>${this.capitalizeFirstLetter(module.category)}</td>
+                    <td>${this.capitalizeFirstLetter(module.complianceLevel)}</td>
+                    <td>
+                        <span class="module-status ${module.isActive ? 'active' : 'inactive'}">
                             ${module.isActive ? 'Active' : 'Inactive'}
                         </span>
-                    </div>
-                </td>
-                <td>
-                    <div class="subscription-tiers">
-                        ${module.subscriptionTiers.map(tier => `
-                            <span class="subscription-tier">${this.capitalizeFirstLetter(tier)}</span>
-                        `).join('')}
-                    </div>
-                </td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="action-button edit" 
-                                data-action="edit"
-                                data-module-id="${module._id}"
-                                title="Edit Module">
-                            <i class="fas fa-edit"></i>
+                    </td>
+                    <td class="action-buttons">
+                        <button 
+                            class="action-btn edit" 
+                            data-id="${module._id}"
+                            onclick="window.companiesManager.editModule('${module._id}')"
+                        >
+                            Edit
                         </button>
-                        <button class="action-button" 
-                                data-action="activity-logs"
-                                data-module-id="${module._id}"
-                                title="View Activity Logs">
-                            <i class="fas fa-history"></i>
+                        <button 
+                            class="action-btn toggle" 
+                            data-id="${module._id}"
+                            onclick="window.companiesManager.toggleModuleStatus('${module._id}')"
+                        >
+                            ${module.isActive ? 'Deactivate' : 'Activate'}
                         </button>
-                        <button class="action-button delete" 
-                                data-action="delete"
-                                data-module-id="${module._id}"
-                                title="Delete Module">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-
-        this.initializeTableActions();
-    }
-
-        initializeTableActions() {
-        if (!this.modulesTableBody) return;
-
-        // Remove any existing event listeners
-        const oldElements = this.modulesTableBody.querySelectorAll('.action-button, .switch input');
-        oldElements.forEach(element => {
-            element.replaceWith(element.cloneNode(true));
-        });
-
-        // Add new event listeners
-        const buttons = this.modulesTableBody.querySelectorAll('.action-button');
-        buttons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                const action = button.dataset.action;
-                const moduleId = button.dataset.moduleId;
-
-                switch (action) {
-                    case 'edit':
-                        this.showEditModuleModal(moduleId);
-                        break;
-                    case 'activity-logs':
-                        this.showActivityLogsModal(moduleId);
-                        break;
-                    case 'delete':
-                        this.showDeleteModal(moduleId);
-                        break;
-                }
-            });
-        });
-
-        // Add module status toggle listeners
-        const statusToggles = this.modulesTableBody.querySelectorAll('input[data-action="toggle-status"]');
-        statusToggles.forEach(toggle => {
-            toggle.addEventListener('change', (e) => {
-                const moduleId = toggle.dataset.moduleId;
-                this.toggleModuleStatus(moduleId);
-            });
-        });
-    }
-
-    showCreateModuleModal() {
-    this.currentModuleId = null;
-    this.moduleForm.reset();
-    document.getElementById('modalTitle').textContent = 'Add New Module';
-    this.moduleModal.style.display = 'flex';
-    document.getElementById('moduleName').focus();
-}
-    async showEditModuleModal(moduleId) {
-        try {
-            this.showLoading();
-            const response = await fetch(`${this.baseUrl}/modules/${moduleId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
+                    </td>
+                `;
+                tbody.appendChild(row);
             });
 
-            if (!response.ok) throw new Error('Failed to fetch module details');
-
-            const result = await response.json();
-            if (!result.success) throw new Error(result.message || 'Failed to fetch module details');
-
-            const module = result.data;
-            this.currentModuleId = moduleId;
-
-            document.getElementById('modalTitle').textContent = 'Edit Module';
-            document.getElementById('moduleName').value = module.name || '';
-            document.getElementById('moduleCategory').value = module.category || '';
-            document.getElementById('moduleDescription').value = module.description || '';
-            document.getElementById('complianceLevel').value = module.complianceLevel || '';
-            document.getElementById('moduleStatus').checked = module.isActive || false;
-
-            // Set subscription tiers
-            const tierCheckboxes = document.querySelectorAll('input[name="subscriptionTiers"]');
-            tierCheckboxes.forEach(checkbox => {
-                checkbox.checked = module.subscriptionTiers.includes(checkbox.value);
-            });
-
-            this.moduleModal.classList.add('show');
-            document.getElementById('moduleName').focus();
-
-        } catch (error) {
-            console.error('Error loading module details:', error);
-            this.showError('Failed to load module details');
-        } finally {
-            this.hideLoading();
+            table.appendChild(tbody);
+            this.modulesTableContainer.appendChild(table);
         }
-    }
 
-    async saveModule() {
-        try {
-            // Collect form data
-            const moduleData = {
-                name: document.getElementById('moduleName').value.trim(),
-                category: document.getElementById('moduleCategory').value,
-                description: document.getElementById('moduleDescription').value.trim(),
-                complianceLevel: document.getElementById('complianceLevel').value,
-                isActive: document.getElementById('moduleStatus').checked,
-                subscriptionTiers: Array.from(
-                    document.querySelectorAll('input[name="subscriptionTiers"]:checked')
-                ).map(checkbox => checkbox.value)
-            };
+        renderPagination(paginationData) {
+            // Clear existing pagination
+            this.paginationContainer.innerHTML = '';
 
-            // Validate module data
-            const validationErrors = this.validateModuleData(moduleData);
-            if (validationErrors.length > 0) {
-                this.showError(validationErrors[0]);
+            // Create pagination info
+            const paginationInfo = document.createElement('div');
+            paginationInfo.className = 'pagination-info';
+            paginationInfo.textContent = `
+                Page ${paginationData.page} of ${paginationData.totalPages} 
+                (Total ${paginationData.total} modules)
+            `;
+
+            // Create pagination controls
+            const paginationControls = document.createElement('div');
+            paginationControls.className = 'pagination-controls';
+
+            // Previous button
+            const prevButton = document.createElement('button');
+            prevButton.className = 'pagination-btn';
+            prevButton.textContent = 'Previous';
+            prevButton.disabled = paginationData.page === 1;
+            prevButton.addEventListener('click', () => {
+                if (this.currentPage > 1) {
+                    this.currentPage--;
+                    this.fetchModules();
+                }
+            });
+
+            // Next button
+            const nextButton = document.createElement('button');
+            nextButton.className = 'pagination-btn';
+            nextButton.textContent = 'Next';
+            nextButton.disabled = paginationData.page === paginationData.totalPages;
+            nextButton.addEventListener('click', () => {
+                if (this.currentPage < paginationData.totalPages) {
+                    this.currentPage++;
+                    this.fetchModules();
+                }
+            });
+
+            // Append buttons to controls
+            paginationControls.appendChild(prevButton);
+            paginationControls.appendChild(nextButton);
+
+            // Append to pagination container
+            this.paginationContainer.appendChild(paginationInfo);
+            this.paginationContainer.appendChild(paginationControls);
+        }
+
+        // Utility method to capitalize first letter
+        capitalizeFirstLetter(string) {
+            if (!string) return '';
+            return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+        }
+
+            openAddModuleModal() {
+            // Create modal dynamically if not exists
+            let modalOverlay = document.getElementById('moduleModalOverlay');
+            if (!modalOverlay) {
+                modalOverlay = this.createModuleModal();
+            }
+
+            // Reset form
+            this.resetModuleForm();
+
+            // Show modal
+            modalOverlay.classList.add('show');
+        }
+
+        createModuleModal() {
+            const modalOverlay = document.createElement('div');
+            modalOverlay.id = 'moduleModalOverlay';
+            modalOverlay.className = 'modal-overlay';
+            modalOverlay.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 id="moduleModalTitle">Add New Module</h2>
+                        <button id="closeModuleModal" class="modal-close">&times;</button>
+                    </div>
+                    <form id="moduleForm" class="module-form">
+                        <div class="form-group">
+                            <label for="moduleName">Module Name</label>
+                            <input type="text" id="moduleName" name="moduleName" class="form-control" required>
+                            <div id="moduleNameError" class="form-error"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="moduleCategory">Category</label>
+                            <select id="moduleCategory" name="moduleCategory" class="form-control" required>
+                                <option value="">Select Category</option>
+                                <option value="hr">HR</option>
+                                <option value="finance">Finance</option>
+                                <option value="operations">Operations</option>
+                                <option value="integrations">Integrations</option>
+                            </select>
+                            <div id="moduleCategoryError" class="form-error"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="moduleDescription">Description</label>
+                            <textarea id="moduleDescription" name="moduleDescription" class="form-control" required></textarea>
+                            <div id="moduleDescriptionError" class="form-error"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="moduleComplianceLevel">Compliance Level</label>
+                            <select id="moduleComplianceLevel" name="moduleComplianceLevel" class="form-control" required>
+                                <option value="">Select Compliance Level</option>
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                            <div id="moduleComplianceLevelError" class="form-error"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="modulePermissions">Permissions</label>
+                            <textarea id="modulePermissions" name="modulePermissions" class="form-control" 
+                                placeholder="Enter module permissions (comma-separated)"></textarea>
+                            <div id="modulePermissionsError" class="form-error"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="moduleSubscriptionTiers">Subscription Tiers</label>
+                            <textarea id="moduleSubscriptionTiers" name="moduleSubscriptionTiers" class="form-control" 
+                                placeholder="Enter subscription tiers (comma-separated)"></textarea>
+                            <div id="moduleSubscriptionTiersError" class="form-error"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="moduleActiveStatus" name="moduleActiveStatus"> 
+                                Active Module
+                            </label>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" id="cancelModuleBtn" class="modal-btn modal-btn-secondary">Cancel</button>
+                            <button type="submit" id="saveModuleBtn" class="modal-btn modal-btn-primary">Save Module</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            // Add event listeners
+            document.body.appendChild(modalOverlay);
+
+            // Close modal button
+            const closeModalBtn = modalOverlay.querySelector('#closeModuleModal');
+            closeModalBtn.addEventListener('click', () => this.closeModuleModal());
+
+            // Cancel button
+            const cancelBtn = modalOverlay.querySelector('#cancelModuleBtn');
+            cancelBtn.addEventListener('click', () => this.closeModuleModal());
+
+            // Form submission
+            const moduleForm = modalOverlay.querySelector('#moduleForm');
+            moduleForm.addEventListener('submit', (e) => this.handleModuleSubmit(e));
+
+            return modalOverlay;
+        }
+
+        resetModuleForm() {
+            const form = document.getElementById('moduleForm');
+            if (form) {
+                form.reset();
+                // Clear any previous error messages
+                form.querySelectorAll('.form-error').forEach(el => el.textContent = '');
+            }
+        }
+
+        closeModuleModal() {
+            const modalOverlay = document.getElementById('moduleModalOverlay');
+            if (modalOverlay) {
+                modalOverlay.classList.remove('show');
+            }
+        }
+
+        async handleModuleSubmit(event) {
+            event.preventDefault();
+
+            // Validate form
+            if (!this.validateModuleForm()) {
                 return;
             }
 
-            this.showLoading();
+            try {
+                // Prepare module data
+                const moduleData = this.getModuleFormData();
 
-            const url = this.currentModuleId
-                ? `${this.baseUrl}/modules/${this.currentModuleId}`
-                : `${this.baseUrl}/modules`;
+                // Determine if it's an add or edit operation
+                const isEditMode = this.currentEditModuleId;
+                const url = isEditMode 
+                    ? `${this.apiBaseUrl}/modules/${this.currentEditModuleId}` 
+                    : `${this.apiBaseUrl}/modules`;
+                const method = isEditMode ? 'PUT' : 'POST';
 
-            const method = this.currentModuleId ? 'PUT' : 'POST';
+                // Send request
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(moduleData)
+                });
 
-            const response = await fetch(url, {
-                method: method,
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(moduleData)
-            });
+                const result = await response.json();
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to save module');
-            }
-
-            const result = await response.json();
-            
-            if (!result.success) {
-                throw new Error(result.message || 'Failed to save module');
-            }
-
-            this.closeModal(this.moduleModal);
-            await this.loadModules();
-
-            this.showSuccess(
-                this.currentModuleId 
-                    ? 'Module updated successfully' 
-                    : 'Module created successfully'
-            );
-
-        } catch (error) {
-            console.error('Error saving module:', error);
-            this.showError(error.message || 'Failed to save module');
-        } finally {
-            this.hideLoading();
-        }
-    }
-
-    validateModuleData(moduleData) {
-        const errors = [];
-
-        if (!moduleData.name || moduleData.name.length < 2) {
-            errors.push('Module name must be at least 2 characters long');
-        }
-
-        if (!moduleData.category) {
-            errors.push('Category is required');
-        }
-
-        if (!moduleData.description) {
-            errors.push('Description is required');
-        }
-
-        if (!moduleData.complianceLevel) {
-            errors.push('Compliance level is required');
-        }
-
-        if (moduleData.subscriptionTiers.length === 0) {
-            errors.push('At least one subscription tier must be selected');
-        }
-
-        return errors;
-    }
-
-        async deleteModule() {
-        try {
-            this.showLoading();
-
-            const response = await fetch(`${this.baseUrl}/modules/${this.currentModuleId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
+                if (!response.ok) {
+                    throw new Error(result.message || 'Failed to save module');
                 }
-            });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to delete module');
+                // Show success notification
+                this.showSuccessNotification(
+                    isEditMode ? 'Module updated successfully' : 'Module created successfully'
+                );
+
+                // Close modal and refresh modules
+                this.closeModuleModal();
+                this.fetchModules();
+
+                // Reset edit mode
+                this.currentEditModuleId = null;
+
+            } catch (error) {
+                console.error('Error saving module:', error);
+                this.showErrorNotification(error.message);
             }
-
-            const result = await response.json();
-            
-            if (!result.success) {
-                throw new Error(result.message || 'Failed to delete module');
-            }
-
-            this.closeModal(this.deleteModal);
-            await this.loadModules();
-            this.showSuccess('Module deleted successfully');
-
-        } catch (error) {
-            console.error('Error deleting module:', error);
-            this.showError(error.message || 'Failed to delete module');
-        } finally {
-            this.hideLoading();
         }
-    }
 
-    async toggleModuleStatus(moduleId) {
-        try {
-            const module = this.modules.find(m => m._id === moduleId);
-            if (!module) throw new Error('Module not found');
+        validateModuleForm() {
+            const form = document.getElementById('moduleForm');
+            let isValid = true;
 
-            const newStatus = !module.isActive;
-
-            this.showLoading();
-
-            const response = await fetch(`${this.baseUrl}/modules/${moduleId}/status`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ isActive: newStatus })
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to update module status');
+            // Validate module name
+            const moduleName = document.getElementById('moduleName');
+            const moduleNameError = document.getElementById('moduleNameError');
+            if (!moduleName.value.trim()) {
+                moduleNameError.textContent = 'Module name is required';
+                isValid = false;
+            } else {
+                moduleNameError.textContent = '';
             }
 
-            const result = await response.json();
-            
-            if (!result.success) {
-                throw new Error(result.message || 'Failed to update module status');
-            }
+            // Add more validation as needed for other fields
 
-            await this.loadModules();
-            this.showSuccess(`Module ${newStatus ? 'activated' : 'deactivated'} successfully`);
-
-        } catch (error) {
-            console.error('Error toggling module status:', error);
-            this.showError(error.message || 'Failed to update module status');
-        } finally {
-            this.hideLoading();
+            return isValid;
         }
-    }
 
-    async setupActivityLogsModal() {
-        // Activity logs modal initialization
-        const activityLogsTableBody = document.getElementById('activityLogsTableBody');
-        const logTypeFilter = document.getElementById('logTypeFilter');
-        const startDateFilter = document.getElementById('startDateFilter');
-        const endDateFilter = document.getElementById('endDateFilter');
-        const activityLogsPagination = document.getElementById('activityLogsPagination');
-
-        // Add event listeners for filtering activity logs
-        logTypeFilter?.addEventListener('change', () => this.loadActivityLogs());
-        startDateFilter?.addEventListener('change', () => this.loadActivityLogs());
-        endDateFilter?.addEventListener('change', () => this.loadActivityLogs());
-    }
-
-    async showActivityLogsModal(moduleId) {
-        try {
-            this.showLoading();
-            
-            // Reset filters
-            const logTypeFilter = document.getElementById('logTypeFilter');
-            const startDateFilter = document.getElementById('startDateFilter');
-            const endDateFilter = document.getElementById('endDateFilter');
-            
-            if (logTypeFilter) logTypeFilter.value = '';
-            if (startDateFilter) startDateFilter.value = '';
-            if (endDateFilter) endDateFilter.value = '';
-
-            // Load initial activity logs
-            await this.loadActivityLogs(moduleId);
-            
-            // Show modal
-            this.activityLogsModal.classList.add('show');
-
-        } catch (error) {
-            console.error('Error showing activity logs:', error);
-            this.showError('Failed to load activity logs');
-        } finally {
-            this.hideLoading();
+        getModuleFormData() {
+            return {
+                name: document.getElementById('moduleName').value.trim(),
+                category: document.getElementById('moduleCategory').value,
+                description: document.getElementById('moduleDescription').value.trim(),
+                complianceLevel: document.getElementById('moduleComplianceLevel').value,
+                permissions: document.getElementById('modulePermissions').value.trim().split(',').map(p => p.trim()),
+                subscriptionTiers: document.getElementById('moduleSubscriptionTiers').value.trim().split(',').map(t => t.trim()),
+                isActive: document.getElementById('moduleActiveStatus').checked
+            };
         }
-    }
 
-    async loadActivityLogs(moduleId, page = 1) {
-        try {
-            const logTypeFilter = document.getElementById('logTypeFilter');
-            const startDateFilter = document.getElementById('startDateFilter');
-            const endDateFilter = document.getElementById('endDateFilter');
-            const activityLogsTableBody = document.getElementById('activityLogsTableBody');
+            async editModule(moduleId) {
+            try {
+                // Fetch module details
+                const response = await fetch(`${this.apiBaseUrl}/modules/${moduleId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
 
-            const queryParams = new URLSearchParams({
-                moduleId: moduleId,
-                page: page,
-                limit: 10,
-                type: logTypeFilter?.value || '',
-                startDate: startDateFilter?.value || '',
-                endDate: endDateFilter?.value || ''
-            });
+                const result = await response.json();
 
-            const response = await fetch(`${this.baseUrl}/modules/activity-logs?${queryParams}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
+                if (!response.ok) {
+                    throw new Error(result.message || 'Failed to fetch module details');
                 }
+
+                // Store current edit module ID
+                this.currentEditModuleId = moduleId;
+
+                // Open modal and populate form
+                this.openAddModuleModal();
+
+                // Update modal title
+                const modalTitle = document.getElementById('moduleModalTitle');
+                modalTitle.textContent = 'Edit Module';
+
+                // Populate form fields
+                const module = result.data;
+                document.getElementById('moduleName').value = module.name;
+                document.getElementById('moduleCategory').value = module.category;
+                document.getElementById('moduleDescription').value = module.description;
+                document.getElementById('moduleComplianceLevel').value = module.complianceLevel;
+                document.getElementById('modulePermissions').value = module.permissions ? module.permissions.join(', ') : '';
+                document.getElementById('moduleSubscriptionTiers').value = module.subscriptionTiers ? module.subscriptionTiers.join(', ') : '';
+                document.getElementById('moduleActiveStatus').checked = module.isActive;
+
+            } catch (error) {
+                console.error('Error editing module:', error);
+                this.showErrorNotification(error.message);
+            }
+        }
+
+        async toggleModuleStatus(moduleId) {
+            try {
+                // Fetch current module status
+                const response = await fetch(`${this.apiBaseUrl}/modules/${moduleId}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        isActive: !this.getCurrentModuleStatus(moduleId)
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Failed to toggle module status');
+                }
+
+                // Show success notification
+                this.showSuccessNotification(
+                    `Module ${result.data.isActive ? 'activated' : 'deactivated'} successfully`
+                );
+
+                // Refresh modules list
+                this.fetchModules();
+
+            } catch (error) {
+                console.error('Error toggling module status:', error);
+                this.showErrorNotification(error.message);
+            }
+        }
+
+        getCurrentModuleStatus(moduleId) {
+            const moduleRow = document.querySelector(`[data-id="${moduleId}"]`).closest('tr');
+            const statusCell = moduleRow.querySelector('.module-status');
+            return statusCell.classList.contains('active');
+        }
+
+        showSuccessNotification(message) {
+            if (window.dashboardApp && window.dashboardApp.userInterface) {
+                window.dashboardApp.userInterface.showSuccessNotification(message);
+            } else {
+                alert(message);
+            }
+        }
+
+        showErrorNotification(message) {
+            if (window.dashboardApp && window.dashboardApp.userInterface) {
+                window.dashboardApp.userInterface.showErrorNotification(message);
+            } else {
+                alert(message);
+            }
+        }
+
+        // Cleanup method for when the module is no longer needed
+        cleanup() {
+            // Remove event listeners
+            this.categoryTabs.forEach(tab => {
+                tab.removeEventListener('click', this.handleCategoryChange);
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch activity logs');
+            this.searchInput.removeEventListener('input', this.handleSearchInput);
+            this.complianceFilter.removeEventListener('change', this.handleComplianceFilter);
+
+            // Remove modal if it exists
+            const modalOverlay = document.getElementById('moduleModalOverlay');
+            if (modalOverlay) {
+                modalOverlay.remove();
             }
 
-            const result = await response.json();
-            
-            if (!result.success) {
-                throw new Error(result.message || 'Failed to load activity logs');
-            }
-
-            // Render activity logs
-            activityLogsTableBody.innerHTML = result.data.map(log => `
-                <tr>
-                    <td>${new Date(log.timestamp).toLocaleString()}</td>
-                    <td>${this.escapeHtml(log.moduleName)}</td>
-                    <td>${this.escapeHtml(log.type)}</td>
-                    <td>${this.escapeHtml(log.user)}</td>
-                    <td>${this.escapeHtml(JSON.stringify(log.details))}</td>
-                </tr>
-            `).join('');
-
-            // Update pagination
-            this.updateActivityLogsPagination(result.pagination);
-
-        } catch (error) {
-            console.error('Error loading activity logs:', error);
-            this.showError('Failed to load activity logs');
+            // Clear any references
+            this.categoryTabs = null;
+            this.searchInput = null;
+            this.complianceFilter = null;
+            this.modulesTableContainer = null;
+            this.paginationContainer = null;
+            this.addNewModuleBtn = null;
         }
     }
 
-    updateActivityLogsPagination(pagination) {
-        const activityLogsPagination = document.getElementById('activityLogsPagination');
-        
-        if (!activityLogsPagination) return;
-
-        let paginationHTML = '';
-
-        // Previous button
-        paginationHTML += `
-            <button class="pagination-button" 
-                    ${pagination.page === 1 ? 'disabled' : ''}
-                    onclick="window.wiseManager.loadActivityLogs(null, ${pagination.page - 1})">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-        `;
-
-        // Page numbers
-        for (let i = 1; i <= pagination.totalPages; i++) {
-            paginationHTML += `
-                <button class="pagination-button ${i === pagination.page ? 'active' : ''}"
-                        onclick="window.wiseManager.loadActivityLogs(null, ${i})">
-                    ${i}
-                </button>
-            `;
-        }
-
-        // Next button
-        paginationHTML += `
-            <button class="pagination-button" 
-                    ${pagination.page === pagination.totalPages ? 'disabled' : ''}
-                    onclick="window.wiseManager.loadActivityLogs(null, ${pagination.page + 1})">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-        `;
-
-        activityLogsPagination.innerHTML = paginationHTML;
-    }
-
-        updatePagination() {
-        if (!this.paginationControls) return;
-
-        const totalPages = Math.ceil(this.totalModules / this.pageSize);
-        let paginationHTML = '';
-
-        // Previous button
-        paginationHTML += `
-            <button class="pagination-button" 
-                    ${this.currentPage === 1 ? 'disabled' : ''}
-                    onclick="window.wiseManager.changePage(${this.currentPage - 1})">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-        `;
-
-        // Page numbers
-        for (let i = 1; i <= totalPages; i++) {
-            if (
-                i === 1 || 
-                i === totalPages || 
-                (i >= this.currentPage - 1 && i <= this.currentPage + 1)
-            ) {
-                paginationHTML += `
-                    <button class="pagination-button ${i === this.currentPage ? 'active' : ''}"
-                            onclick="window.wiseManager.changePage(${i})">
-                        ${i}
-                    </button>
-                `;
-            } else if (
-                i === this.currentPage - 2 || 
-                i === this.currentPage + 2
-            ) {
-                paginationHTML += `<span class="pagination-ellipsis">...</span>`;
-            }
-        }
-
-        // Next button
-        paginationHTML += `
-            <button class="pagination-button" 
-                    ${this.currentPage === totalPages ? 'disabled' : ''}
-                    onclick="window.wiseManager.changePage(${this.currentPage + 1})">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-        `;
-
-        this.paginationControls.innerHTML = paginationHTML;
-    }
-
-    updateDisplayRange() {
-        if (!this.startRange || !this.endRange || !this.totalModulesElement) return;
-
-        const start = (this.currentPage - 1) * this.pageSize + 1;
-        const end = Math.min(start + this.pageSize - 1, this.totalModules);
-
-        this.startRange.textContent = this.totalModules === 0 ? 0 : start;
-        this.endRange.textContent = end;
-        this.totalModulesElement.textContent = this.totalModules;
-    }
-
-    changePage(page) {
-        const totalPages = Math.ceil(this.totalModules / this.pageSize);
-        if (page < 1 || page > totalPages) return;
-        
-        this.currentPage = page;
-        this.loadModules();
-    }
-
-    closeModal(modal) {
-    if (!modal) return;
-    modal.style.display = 'none';
-    if (modal === this.moduleModal) {
-        this.moduleForm.reset();
-        this.currentModuleId = null;
-    }
-}
-
-    showLoading() {
-        const loader = document.createElement('div');
-        loader.className = 'loading-overlay';
-        loader.innerHTML = `
-            <div class="loading-spinner">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Loading...</span>
-            </div>
-        `;
-        document.body.appendChild(loader);
-    }
-
-    hideLoading() {
-        const loader = document.querySelector('.loading-overlay');
-        if (loader) {
-            loader.remove();
-        }
-    }
-
-    showError(message) {
-        const notification = document.createElement('div');
-        notification.className = 'notification error';
-        notification.innerHTML = `
-            <div class="notification-content">
-                <i class="fas fa-exclamation-circle"></i>
-                <span>${this.escapeHtml(message)}</span>
-            </div>
-        `;
-        this.showNotification(notification);
-    }
-
-    showSuccess(message) {
-        const notification = document.createElement('div');
-        notification.className = 'notification success';
-        notification.innerHTML = `
-            <div class="notification-content">
-                <i class="fas fa-check-circle"></i>
-                <span>${this.escapeHtml(message)}</span>
-            </div>
-        `;
-        this.showNotification(notification);
-    }
-
-    showNotification(notification) {
-        // Remove existing notifications
-        document.querySelectorAll('.notification').forEach(n => n.remove());
-
-        // Add new notification
-        document.body.appendChild(notification);
-
-        // Remove after delay
-        setTimeout(() => {
-            notification.style.animation = 'slideOut 0.3s ease-in';
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
-    }
-
-    escapeHtml(unsafe) {
-        if (!unsafe) return '';
-        return unsafe
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
-    }
-
-    capitalizeFirstLetter(string) {
-        if (!string) return '';
-        return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
-    }
-
-    cleanup() {
-        // Remove event listeners
-        // Reset state
-        // Clear references
-        this.modules = [];
-        this.currentModuleId = null;
-        this.currentPage = 1;
-
-        // Remove any lingering modals or notifications
-        document.querySelectorAll('.notification, .loading-overlay').forEach(el => el.remove());
-    }
-}
-
-// Helper function for debouncing
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-// Register the class globally
-window.WiseManager = WiseManager;
+    // Expose the WiseManager to the global scope
+    window.WiseManager = WiseManager;
 })();
