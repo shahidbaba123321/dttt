@@ -109,152 +109,170 @@
         }
 
             async fetchModules() {
-            try {
-                // Construct query parameters
-                const params = new URLSearchParams({
-                    page: this.currentPage,
-                    limit: this.pageSize,
-                    category: this.currentCategory === 'all' ? '' : this.currentCategory,
-                    complianceLevel: this.currentComplianceLevel,
-                    search: this.searchQuery
-                });
+    try {
+        // Construct query parameters
+        const params = new URLSearchParams({
+            page: this.currentPage.toString(),
+            limit: this.pageSize.toString(),
+            // Only add parameters if they have a value
+            ...(this.currentCategory !== 'all' && { category: this.currentCategory }),
+            ...(this.currentComplianceLevel && { complianceLevel: this.currentComplianceLevel }),
+            ...(this.searchQuery && { search: this.searchQuery })
+        });
 
-                // Fetch modules from API
-                const response = await fetch(`${this.apiBaseUrl}/modules?${params}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+        // Log the constructed URL for debugging
+        console.log('Fetch URL:', `${this.apiBaseUrl}/modules?${params}`);
 
-                // Parse response
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.message || 'Failed to fetch modules');
-                }
-
-                // Update total modules and render
-                this.totalModules = result.pagination.total;
-                this.renderModules(result.data);
-                this.renderPagination(result.pagination);
-
-            } catch (error) {
-                console.error('Error fetching modules:', error);
-                this.showErrorNotification(error.message);
+        const response = await fetch(`${this.apiBaseUrl}/modules?${params}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
             }
+        });
+
+        // Parse response
+        const result = await response.json();
+
+        // Log full response for debugging
+        console.log('Full API Response:', result);
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to fetch modules');
         }
+
+        // Update total modules and render
+        this.totalModules = result.pagination.total;
+        this.renderModules(result.data);
+        this.renderPagination(result.pagination);
+
+    } catch (error) {
+        console.error('Detailed Error Fetching Modules:', {
+            message: error.message,
+            stack: error.stack
+        });
+        
+        // Enhanced error handling
+        if (window.dashboardApp && window.dashboardApp.userInterface) {
+            window.dashboardApp.userInterface.showErrorNotification(
+                `Failed to load modules: ${error.message}`
+            );
+        } else {
+            alert(`Failed to load modules: ${error.message}`);
+        }
+    }
+}
 
         renderModules(modules) {
-            // Clear existing table
-            this.modulesTableContainer.innerHTML = '';
+    // Clear existing table
+    this.modulesTableContainer.innerHTML = '';
 
-            // Create table if it doesn't exist
-            const table = document.createElement('table');
-            table.className = 'modules-table';
+    // Create table if it doesn't exist
+    const table = document.createElement('table');
+    table.className = 'modules-table';
 
-            // Create table header
-            const thead = document.createElement('thead');
-            thead.innerHTML = `
-                <tr>
-                    <th>Module Name</th>
-                    <th>Category</th>
-                    <th>Compliance Level</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            `;
-            table.appendChild(thead);
+    // Create table header
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+        <tr>
+            <th>Module Name</th>
+            <th>Category</th>
+            <th>Compliance Level</th>
+            <th>Usage Count</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    `;
+    table.appendChild(thead);
 
-            // Create table body
-            const tbody = document.createElement('tbody');
+    // Create table body
+    const tbody = document.createElement('tbody');
 
-            // Render modules
-            modules.forEach(module => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${module.name}</td>
-                    <td>${this.capitalizeFirstLetter(module.category)}</td>
-                    <td>${this.capitalizeFirstLetter(module.complianceLevel)}</td>
-                    <td>
-                        <span class="module-status ${module.isActive ? 'active' : 'inactive'}">
-                            ${module.isActive ? 'Active' : 'Inactive'}
-                        </span>
-                    </td>
-                    <td class="action-buttons">
-                        <button 
-                            class="action-btn edit" 
-                            data-id="${module._id}"
-                            onclick="window.companiesManager.editModule('${module._id}')"
-                        >
-                            Edit
-                        </button>
-                        <button 
-                            class="action-btn toggle" 
-                            data-id="${module._id}"
-                            onclick="window.companiesManager.toggleModuleStatus('${module._id}')"
-                        >
-                            ${module.isActive ? 'Deactivate' : 'Activate'}
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
+    // Render modules
+    modules.forEach(module => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${module.name}</td>
+            <td>${this.capitalizeFirstLetter(module.category)}</td>
+            <td>${this.capitalizeFirstLetter(module.complianceLevel)}</td>
+            <td>${module.usageCount || 0}</td>
+            <td>
+                <span class="module-status ${module.isActive ? 'active' : 'inactive'}">
+                    ${module.isActive ? 'Active' : 'Inactive'}
+                </span>
+            </td>
+            <td class="action-buttons">
+                <button 
+                    class="action-btn edit" 
+                    data-id="${module._id}"
+                    onclick="window.companiesManager.editModule('${module._id}')"
+                >
+                    Edit
+                </button>
+                <button 
+                    class="action-btn toggle" 
+                    data-id="${module._id}"
+                    onclick="window.companiesManager.toggleModuleStatus('${module._id}')"
+                >
+                    ${module.isActive ? 'Deactivate' : 'Activate'}
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
 
-            table.appendChild(tbody);
-            this.modulesTableContainer.appendChild(table);
-        }
-
+    table.appendChild(tbody);
+    this.modulesTableContainer.appendChild(table);
+}
+        
         renderPagination(paginationData) {
-            // Clear existing pagination
-            this.paginationContainer.innerHTML = '';
+    // Clear existing pagination
+    this.paginationContainer.innerHTML = '';
 
-            // Create pagination info
-            const paginationInfo = document.createElement('div');
-            paginationInfo.className = 'pagination-info';
-            paginationInfo.textContent = `
-                Page ${paginationData.page} of ${paginationData.totalPages} 
-                (Total ${paginationData.total} modules)
-            `;
+    // Create pagination info
+    const paginationInfo = document.createElement('div');
+    paginationInfo.className = 'pagination-info';
+    paginationInfo.textContent = `
+        Page ${paginationData.page} of ${paginationData.totalPages} 
+        (Total ${paginationData.total} modules)
+    `;
 
-            // Create pagination controls
-            const paginationControls = document.createElement('div');
-            paginationControls.className = 'pagination-controls';
+    // Create pagination controls
+    const paginationControls = document.createElement('div');
+    paginationControls.className = 'pagination-controls';
 
-            // Previous button
-            const prevButton = document.createElement('button');
-            prevButton.className = 'pagination-btn';
-            prevButton.textContent = 'Previous';
-            prevButton.disabled = paginationData.page === 1;
-            prevButton.addEventListener('click', () => {
-                if (this.currentPage > 1) {
-                    this.currentPage--;
-                    this.fetchModules();
-                }
-            });
-
-            // Next button
-            const nextButton = document.createElement('button');
-            nextButton.className = 'pagination-btn';
-            nextButton.textContent = 'Next';
-            nextButton.disabled = paginationData.page === paginationData.totalPages;
-            nextButton.addEventListener('click', () => {
-                if (this.currentPage < paginationData.totalPages) {
-                    this.currentPage++;
-                    this.fetchModules();
-                }
-            });
-
-            // Append buttons to controls
-            paginationControls.appendChild(prevButton);
-            paginationControls.appendChild(nextButton);
-
-            // Append to pagination container
-            this.paginationContainer.appendChild(paginationInfo);
-            this.paginationContainer.appendChild(paginationControls);
+    // Previous button
+    const prevButton = document.createElement('button');
+    prevButton.className = 'pagination-btn';
+    prevButton.textContent = 'Previous';
+    prevButton.disabled = paginationData.page === 1;
+    prevButton.addEventListener('click', () => {
+        if (this.currentPage > 1) {
+            this.currentPage--;
+            this.fetchModules();
         }
+    });
 
+    // Next button
+    const nextButton = document.createElement('button');
+    nextButton.className = 'pagination-btn';
+    nextButton.textContent = 'Next';
+    nextButton.disabled = !paginationData.hasMore;
+    nextButton.addEventListener('click', () => {
+        if (paginationData.hasMore) {
+            this.currentPage++;
+            this.fetchModules();
+        }
+    });
+
+    // Append buttons to controls
+    paginationControls.appendChild(prevButton);
+    paginationControls.appendChild(nextButton);
+
+    // Append to pagination container
+    this.paginationContainer.appendChild(paginationInfo);
+    this.paginationContainer.appendChild(paginationControls);
+}
         // Utility method to capitalize first letter
         capitalizeFirstLetter(string) {
             if (!string) return '';
