@@ -22,50 +22,17 @@
             this.auditLogsPerPage = 10;
             this.totalAuditLogs = 0;
 
-            // Bind methods to ensure correct context
-            this.bindMethods();
-
             // DOM Element References
             this.initializeDOMReferences();
+
+            // Bind methods to ensure correct context
+            this.bindMethodContext();
 
             // Bind events
             this.bindEvents();
 
             // Initialize the module
             this.initialize();
-        }
-
-        // Method to bind all class methods
-        bindMethods() {
-            const methodsToBind = [
-                'loadModules',
-                'renderModules',
-                'updatePagination',
-                'changePage',
-                'showAddModuleModal',
-                'createModule',
-                'updateModule',
-                'validateModuleForm',
-                'collectModuleFormData',
-                'markFieldAsInvalid',
-                'loadAuditLogs',
-                'renderAuditLogs',
-                'updateAuditLogPagination',
-                'changeAuditLogPage',
-                'deleteModule',
-                'editModule',
-                'exportModules',
-                'downloadExportedFile',
-                'setupAdvancedSearch',
-                'fetchWithAuth',
-                'showNotification'
-            ];
-
-            methodsToBind.forEach(methodName => {
-                if (typeof this[methodName] === 'function') {
-                    this[methodName] = this[methodName].bind(this);
-                }
-            });
         }
 
         initializeDOMReferences() {
@@ -93,50 +60,68 @@
             this.auditLogsShowingCount = document.getElementById('auditLogsShowingCount');
         }
 
+        bindMethodContext() {
+            // List of methods to bind
+            const methodsToBind = [
+                'loadModules',
+                'renderModules',
+                'updatePagination',
+                'changePage',
+                'showAddModuleModal',
+                'createModule',
+                'updateModule',
+                'validateModuleForm',
+                'collectModuleFormData',
+                'loadAuditLogs',
+                'renderAuditLogs',
+                'updateAuditLogPagination',
+                'deleteModule',
+                'editModule',
+                'exportModules',
+                'sanitizeInput',
+                'renderFeatureCheckboxes',
+                'getCategoryForFeature',
+                'sanitizeCategory'
+            ];
+
+            // Bind only existing methods
+            methodsToBind.forEach(methodName => {
+                if (typeof this[methodName] === 'function') {
+                    this[methodName] = this[methodName].bind(this);
+                }
+            });
+        }
+
         bindEvents() {
-    // Ensure method is bound correctly
-    this.showAddModuleModal = this.showAddModuleModal.bind(this);
-    this.setupAdvancedSearch = this.setupAdvancedSearch.bind(this);
-    this.exportModules = this.exportModules.bind(this);
+            // Module Management Events
+            if (this.addNewModuleBtn) {
+                this.addNewModuleBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.showAddModuleModal();
+                });
+            }
 
-    // Module Management Events
-    if (this.addNewModuleBtn) {
-        // Remove any existing event listeners first
-        this.addNewModuleBtn.removeEventListener('click', this.showAddModuleModal);
-        this.addNewModuleBtn.addEventListener('click', (e) => {
-            e.preventDefault(); // Prevent any default button behavior
-            e.stopPropagation(); // Stop event propagation
-            this.showAddModuleModal();
-        });
-    }
+            if (this.categoryFilter) {
+                this.categoryFilter.addEventListener('change', this.loadModules);
+            }
 
-    if (this.categoryFilter) {
-        this.categoryFilter.addEventListener('change', this.loadModules);
-    }
-    if (this.complianceFilter) {
-        this.complianceFilter.addEventListener('change', this.loadModules);
-    }
-    if (this.searchModulesBtn) {
-        this.searchModulesBtn.addEventListener('click', this.loadModules);
-    }
-    if (this.prevModulesPageBtn) {
-        this.prevModulesPageBtn.addEventListener('click', () => this.changePage(-1));
-    }
-    if (this.nextModulesPageBtn) {
-        this.nextModulesPageBtn.addEventListener('click', () => this.changePage(1));
-    }
+            if (this.complianceFilter) {
+                this.complianceFilter.addEventListener('change', this.loadModules);
+            }
 
-    // Audit Logs Events
-    if (this.applyAuditFiltersBtn) {
-        this.applyAuditFiltersBtn.addEventListener('click', this.loadAuditLogs);
-    }
-    if (this.prevAuditLogsPageBtn) {
-        this.prevAuditLogsPageBtn.addEventListener('click', () => this.changeAuditLogPage(-1));
-    }
-    if (this.nextAuditLogsPageBtn) {
-        this.nextAuditLogsPageBtn.addEventListener('click', () => this.changeAuditLogPage(1));
-    }
-}
+            if (this.searchModulesBtn) {
+                this.searchModulesBtn.addEventListener('click', this.loadModules);
+            }
+
+            if (this.prevModulesPageBtn) {
+                this.prevModulesPageBtn.addEventListener('click', () => this.changePage(-1));
+            }
+
+            if (this.nextModulesPageBtn) {
+                this.nextModulesPageBtn.addEventListener('click', () => this.changePage(1));
+            }
+        }
 
         initialize() {
             // Initial load of modules
@@ -147,102 +132,48 @@
         }
 
         setupAdditionalFeatures() {
-    // Remove existing buttons if they exist
-    const existingExportButton = document.querySelector('.export-modules');
-    const existingAdvancedSearchButton = document.querySelector('.advanced-search');
-    
-    if (existingExportButton) {
-        existingExportButton.remove();
-    }
-    if (existingAdvancedSearchButton) {
-        existingAdvancedSearchButton.remove();
-    }
+            // Add export functionality
+            const exportButton = document.createElement('button');
+            exportButton.className = 'btn btn-secondary export-modules';
+            exportButton.innerHTML = '<i class="fas fa-file-export"></i> Export Modules';
+            exportButton.addEventListener('click', this.exportModules);
 
-    // Add export functionality
-    const exportButton = document.createElement('button');
-    exportButton.className = 'btn btn-secondary export-modules';
-    exportButton.innerHTML = '<i class="fas fa-file-export"></i> Export Modules';
-    exportButton.addEventListener('click', this.exportModules);
+            // Add advanced search functionality
+            const advancedSearchButton = document.createElement('button');
+            advancedSearchButton.className = 'btn btn-secondary advanced-search';
+            advancedSearchButton.innerHTML = '<i class="fas fa-search-plus"></i> Advanced Search';
+            advancedSearchButton.addEventListener('click', this.setupAdvancedSearch);
 
-    // Add advanced search functionality
-    const advancedSearchButton = document.createElement('button');
-    advancedSearchButton.className = 'btn btn-secondary advanced-search';
-    advancedSearchButton.innerHTML = '<i class="fas fa-search-plus"></i> Advanced Search';
-    advancedSearchButton.addEventListener('click', this.setupAdvancedSearch);
-
-    // Add buttons to the header actions
-    const headerActions = document.querySelector('.header-actions');
-    if (headerActions) {
-        headerActions.appendChild(advancedSearchButton);
-        headerActions.appendChild(exportButton);
-    }
-}
-
-
-        async fetchWithAuth(url, options = {}) {
-            const defaultHeaders = {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            };
-
-            const mergedOptions = {
-                ...options,
-                headers: {
-                    ...defaultHeaders,
-                    ...options.headers
-                }
-            };
-
-            try {
-                const response = await fetch(url, mergedOptions);
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'An error occurred');
-                }
-
-                return await response.json();
-            } catch (error) {
-                console.error('Fetch error:', error);
-                this.showNotification(error.message, 'error');
-                throw error;
+            // Add buttons to the header actions
+            const headerActions = document.querySelector('.header-actions');
+            if (headerActions) {
+                headerActions.appendChild(advancedSearchButton);
+                headerActions.appendChild(exportButton);
             }
         }
 
+        // Utility methods
+        sanitizeInput(input) {
+            if (!input) return '';
+            const div = document.createElement('div');
+            div.textContent = input;
+            return div.innerHTML;
+        }
+
         showNotification(message, type = 'info') {
-    // Check if dashboard notification exists
-    if (window.dashboardApp && window.dashboardApp.userInterface) {
-        window.dashboardApp.userInterface.showNotification(message, type);
-    } else {
-        // Fallback notification
-        const notificationContainer = document.createElement('div');
-        notificationContainer.className = `notification ${type}`;
-        notificationContainer.textContent = message;
-        
-        // Style the notification
-        notificationContainer.style.position = 'fixed';
-        notificationContainer.style.top = '20px';
-        notificationContainer.style.right = '20px';
-        notificationContainer.style.padding = '10px';
-        notificationContainer.style.backgroundColor = 
-            type === 'error' ? '#f8d7da' : 
-            type === 'success' ? '#d4edda' : 
-            '#e2e3e5';
-        notificationContainer.style.border = '1px solid';
-        notificationContainer.style.borderRadius = '5px';
-        notificationContainer.style.zIndex = '1000';
+            if (window.dashboardApp && window.dashboardApp.userInterface) {
+                window.dashboardApp.userInterface.showNotification(message, type);
+            } else {
+                console.log(`${type.toUpperCase()}: ${message}`);
+            }
+        }
 
-        // Add to body
-        document.body.appendChild(notificationContainer);
+        // Placeholder for advanced search method
+        setupAdvancedSearch() {
+            console.log('Advanced search setup');
+        }
 
-        // Remove after 3 seconds
-        setTimeout(() => {
-            document.body.removeChild(notificationContainer);
-        }, 3000);
-    }
-}
-
-           async loadModules() {
+            async loadModules() {
             try {
                 // Prepare query parameters
                 const category = this.categoryFilter ? this.categoryFilter.value : '';
@@ -283,92 +214,6 @@
             }
         }
 
-        renderFeatures(features) {
-    // Find the features container
-    const featuresContainer = document.getElementById('featuresContainer');
-    
-    // Check if container exists
-    if (!featuresContainer) {
-        console.error('Features container not found');
-        
-        // Optional: Create the container if it doesn't exist
-        const newContainer = document.createElement('div');
-        newContainer.id = 'featuresContainer';
-        
-        // Try to find a suitable parent to append the container
-        const parentElement = document.querySelector('.pricing-features-section') || 
-                               document.querySelector('.plan-details') || 
-                               document.body;
-        
-        parentElement.appendChild(newContainer);
-        
-        // If still unable to find/create container, log and return
-        if (!newContainer) {
-            this.showNotification('Unable to render features', 'error');
-            return;
-        }
-    }
-
-    // Clear existing features
-    featuresContainer.innerHTML = '';
-
-    // Check if features exist
-    if (!features || features.length === 0) {
-        featuresContainer.innerHTML = `
-            <div class="no-features-message">
-                <p>No features available</p>
-            </div>
-        `;
-        return;
-    }
-
-    // Render features
-    features.forEach(feature => {
-        const featureElement = document.createElement('div');
-        featureElement.className = 'feature-item';
-        featureElement.innerHTML = `
-            <span class="feature-icon">
-                <i class="${feature.icon || 'fas fa-check'}"></i>
-            </span>
-            <span class="feature-name">${this.sanitizeInput(feature.name)}</span>
-            <span class="feature-description">${this.sanitizeInput(feature.description)}</span>
-        `;
-        featuresContainer.appendChild(featureElement);
-    });
-}
-
-        sanitizeInput(input) {
-    if (!input) return '';
-    const div = document.createElement('div');
-    div.textContent = input;
-    return div.innerHTML;
-}
-
-        async loadAvailableFeatures() {
-    try {
-        // Existing feature loading logic
-        const response = await this.fetchWithAuth(`${this.apiBaseUrl}/features`);
-        
-        // Check if response contains features
-        if (!response.data || !Array.isArray(response.data)) {
-            throw new Error('Invalid features response');
-        }
-
-        // Render features
-        this.renderFeatures(response.data);
-    } catch (error) {
-        console.error('Failed to load features:', error);
-        
-        // Show user-friendly error message
-        this.showNotification('Unable to load features. Please try again later.', 'error');
-        
-        // Optional: Render fallback features or empty state
-        this.renderFeatures([]);
-    }
-}
-
-
-
         renderModules(modules) {
             // Ensure we have a container
             if (!this.modulesGridContainer) return;
@@ -395,19 +240,19 @@
                     <div class="module-card-header">
                         <h3 class="module-title">${this.sanitizeInput(module.name)}</h3>
                         <div class="module-status">
-                            <span class="status-indicator ${module.isActive ? 'status-active' : 'status-inactive'}"></span>
-                            ${module.isActive ? 'Active' : 'Inactive'}
+                            <span class="status-indicator ${module.status === 'active' ? 'status-active' : 'status-inactive'}"></span>
+                            ${module.status ? module.status.charAt(0).toUpperCase() + module.status.slice(1) : 'N/A'}
                         </div>
                     </div>
                     <div class="module-category">
-                        ${this.sanitizeInput(module.category.toUpperCase())}
+                        ${this.sanitizeInput(this.formatCategoryName(module.category))}
                     </div>
                     <div class="module-description">
-                        ${this.sanitizeInput(module.description)}
+                        ${this.sanitizeInput(module.description || 'No description provided')}
                     </div>
                     <div class="module-details">
                         <div class="module-compliance">
-                            Compliance: ${this.sanitizeInput(module.complianceLevel.toUpperCase())}
+                            Compliance: ${this.sanitizeInput(module.complianceLevel ? module.complianceLevel.toUpperCase() : 'N/A')}
                         </div>
                     </div>
                     <div class="module-actions">
@@ -463,12 +308,11 @@
             this.loadModules();
         }
 
-        sanitizeInput(input) {
-            // Basic input sanitization
-            if (!input) return '';
-            const div = document.createElement('div');
-            div.textContent = input;
-            return div.innerHTML;
+        formatCategoryName(category) {
+            if (!category) return 'Uncategorized';
+            return category
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, l => l.toUpperCase());
         }
 
         async deleteModule(moduleId) {
@@ -503,428 +347,193 @@
             }
         }
 
-         showAddModuleModal(existingModule = null) {
-    // Remove any existing modal first
-    const existingModal = document.getElementById('moduleFormModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-
-    // Create modal container
-    const modalContainer = document.createElement('div');
-    modalContainer.id = 'moduleFormModal';
-    modalContainer.className = 'modal-overlay';
-    
-    // Determine modal title and action
-    const isEditMode = !!existingModule;
-    const modalTitle = isEditMode ? 'Edit Module' : 'Create New Module';
-
-    // Create modal HTML with comprehensive form
-    modalContainer.innerHTML = `
-        <div class="modal-container">
-            <div class="modal-header">
-                <h2>${modalTitle}</h2>
-                <button type="button" class="modal-close-btn">&times;</button>
-            </div>
-            <form id="moduleForm" class="module-form">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="moduleName">Module Name *</label>
-                        <input 
-                            type="text" 
-                            id="moduleName" 
-                            name="name" 
-                            class="form-control" 
-                            required 
-                            placeholder="Enter module name"
-                            value="${existingModule ? this.sanitizeInput(existingModule.name) : ''}"
-                        >
-                        <small class="error-message" id="moduleNameError"></small>
-                    </div>
-                    <div class="form-group">
-                        <label for="moduleCategory">Module Category *</label>
-                        <select 
-                            id="moduleCategory" 
-                            name="category" 
-                            class="form-control" 
-                            required
-                        >
-                            <option value="">Select Category</option>
-                            <option value="hr_solutions" ${existingModule && existingModule.category === 'hr_solutions' ? 'selected' : ''}>HR Solutions</option>
-                            <option value="financial_solutions" ${existingModule && existingModule.category === 'financial_solutions' ? 'selected' : ''}>Financial Solutions</option>
-                            <option value="operational_solutions" ${existingModule && existingModule.category === 'operational_solutions' ? 'selected' : ''}>Operational Solutions</option>
-                            <option value="integrations" ${existingModule && existingModule.category === 'integrations' ? 'selected' : ''}>Integrations</option>
-                        </select>
-                        <small class="error-message" id="moduleCategoryError"></small>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group full-width">
-                        <label for="moduleDescription">Description</label>
-                        <textarea 
-                            id="moduleDescription" 
-                            name="description" 
-                            class="form-control" 
-                            rows="3" 
-                            placeholder="Enter module description"
-                        >${existingModule ? this.sanitizeInput(existingModule.description || '') : ''}</textarea>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Status *</label>
-                        <select 
-                            id="moduleStatus" 
-                            name="status" 
-                            class="form-control" 
-                            required
-                        >
-                            <option value="active" ${existingModule && existingModule.status === 'active' ? 'selected' : ''}>Active</option>
-                            <option value="inactive" ${existingModule && existingModule.status === 'inactive' ? 'selected' : ''}>Inactive</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Pricing Plan</label>
-                        <select 
-                            id="pricingPlan" 
-                            name="pricingPlan" 
-                            class="form-control"
-                        >
-                            <option value="">Select Pricing Plan</option>
-                            <option value="basic">Basic</option>
-                            <option value="professional">Professional</option>
-                            <option value="enterprise">Enterprise</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Access Level</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-inline">
-                                <input type="checkbox" name="accessLevel" value="superadmin"> Superadmin
-                            </label>
-                            <label class="checkbox-inline">
-                                <input type="checkbox" name="accessLevel" value="company_admin"> Company Admin
-                            </label>
-                            <label class="checkbox-inline">
-                                <input type="checkbox" name="accessLevel" value="hr_manager"> HR Manager
-                            </label>
-                            <label class="checkbox-inline">
-                                <input type="checkbox" name="accessLevel" value="employee"> Employee
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group full-width">
-                        <label>Features Included</label>
-                        <div id="featuresContainer">
-                            ${this.renderFeatureCheckboxes()}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Compliance Level *</label>
-                        <select 
-                            id="complianceLevel" 
-                            name="complianceLevel" 
-                            class="form-control" 
-                            required
-                        >
-                            <option value="">Select Compliance Level</option>
-                            <option value="low" ${existingModule && existingModule.complianceLevel === 'low' ? 'selected' : ''}>Low</option>
-                            <option value="medium" ${existingModule && existingModule.complianceLevel === 'medium' ? 'selected' : ''}>Medium</option>
-                            <option value="high" ${existingModule && existingModule.complianceLevel === 'high' ? 'selected' : ''}>High</option>
-                        </select>
-                        <small class="error-message" id="complianceLevelError"></small>
-                    </div>
-                    <div class="form-group">
-                        <label>Audit Logging</label>
-                        <div class="toggle-switch">
-                            <input 
-                                type="checkbox" 
-                                id="auditLogging" 
-                                name="auditLogging"
-                                ${existingModule && existingModule.auditLogging ? 'checked' : ''}
-                            >
-                            <label for="auditLogging" class="toggle-slider"></label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
-                    <button type="submit" class="btn btn-primary save-btn">
-                        ${isEditMode ? 'Update Module' : 'Create Module'}
-                    </button>
-                </div>
-            </form>
-        </div>
-    `;
-
-    // Append to body
-    document.body.appendChild(modalContainer);
-
-    // Get form elements
-    const form = modalContainer.querySelector('#moduleForm');
-    const closeBtn = modalContainer.querySelector('.modal-close-btn');
-    const cancelBtn = modalContainer.querySelector('.cancel-btn');
-
-    // Close modal function
-    const closeModal = () => {
-        document.body.removeChild(modalContainer);
-    };
-
-    // Close event listeners
-    closeBtn.addEventListener('click', closeModal);
-    cancelBtn.addEventListener('click', closeModal);
-
-    // Form submission
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        // Validate form
-        if (this.validateModuleForm(form)) {
-            try {
-                // Collect form data
-                const formData = this.collectModuleFormData(form);
-                
-                // Send data to server
-                if (existingModule && existingModule._id) {
-                    // Update existing module
-                    await this.updateModule(existingModule._id, formData);
-                    this.showNotification('Module updated successfully', 'success');
-                } else {
-                    // Create new module
-                    await this.createModule(formData);
-                    this.showNotification('Module created successfully', 'success');
-                }
-                
-                // Close modal
-                closeModal();
-                
-                // Reload modules
-                this.loadModules();
-            } catch (error) {
-                console.error('Module submission error:', error);
-                this.showNotification(error.message || 'Failed to submit module', 'error');
-            }
-        }
-    });
-
-    // Trigger modal display
-    setTimeout(() => {
-        modalContainer.classList.add('show');
-    }, 50);
-
-   // Return the modal container for any additional manipulation if needed
-              modalContainer.style.display = 'flex';
-            return modalContainer;
-        }
-    
-     
-
-        // Additional method to handle modal closing
-closeModuleModal() {
-    const modal = document.getElementById('moduleFormModal');
-    if (modal) {
-        modal.classList.remove('show');
-        setTimeout(() => {
-            document.body.removeChild(modal);
-        }, 300); // Match the transition time
-    }
-}
-
-           // Method to render feature checkboxes
-renderFeatureCheckboxes() {
-    const features = {
-        'hr_solutions': [
-            'People Management',
-            'Performance Management',
-            'Attendance & Leave Management',
-            'Payroll & Compensation',
-            'Employee Self-Service',
-            'WiseRecruit'
-        ],
-        'financial_solutions': [
-            'Payroll Processing',
-            'SmartExpenses',
-            'Financial Reporting',
-            'Book-keeping',
-            'Taxation & Compliance',
-            'GlobalInvoice',
-            'Invoice & Billing',
-            'Asset Management'
-        ],
-        'operational_solutions': [
-            'Project & Task Management',
-            'ShiftMaster',
-            'StockFlow',
-            'Vendor & Supplier Management',
-            'Workflow Automation',
-            'Facility Management'
-        ],
-        'integrations': [
-            'ServiceNow & ITSM',
-            'Payroll & Finance Integrations',
-            'Employee Benefits',
-            'Talent Management'
-        ]
-    };
-
-
-    return Object.entries(features).map(([category, categoryFeatures]) => `
-        <div class="feature-category">
-            <h4>${this.formatCategoryName(category)}</h4>
-            <div class="feature-checkboxes">
-                ${categoryFeatures.map(feature => `
-                    <label class="checkbox-inline">
-                        <input 
-                            type="checkbox" 
-                            name="features" 
-                            value="${feature.toLowerCase().replace(/\s+/g, '_')}"
-                        > ${feature}
-                    </label>
-                `).join('')}
-            </div>
-        </div>
-    `).join('');
-}
-
-        // Helper method to format category name
-formatCategoryName(category) {
-    return category
-        .replace(/_/g, ' ')
-        .replace(/\b\w/g, l => l.toUpperCase());
-}
-
-
-        generatePermissionsCheckboxes(existingModule = null) {
-            const permissionGroups = {
-                hr: [
-                    { id: 'view_employees', name: 'View Employees' },
-                    { id: 'manage_employees', name: 'Manage Employees' },
-                    { id: 'view_recruitment', name: 'View Recruitment' }
-                ],
-                finance: [
-                    { id: 'view_payroll', name: 'View Payroll' },
-                    { id: 'manage_payroll', name: 'Manage Payroll' },
-                    { id: 'view_expenses', name: 'View Expenses' }
-                ],
-                operations: [
-                    { id: 'view_projects', name: 'View Projects' },
-                    { id: 'manage_projects', name: 'Manage Projects' },
-                    { id: 'view_tasks', name: 'View Tasks' }
-                ],
-                integrations: [
-                    { id: 'manage_integrations', name: 'Manage Integrations' },
-                    { id: 'view_api_logs', name: 'View API Logs' }
-                ]
+        async fetchWithAuth(url, options = {}) {
+            const defaultHeaders = {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
             };
 
-            const selectedPermissions = existingModule && existingModule.permissions 
-                ? existingModule.permissions.map(p => p.id || p) 
-                : [];
+            const mergedOptions = {
+                ...options,
+                headers: {
+                    ...defaultHeaders,
+                    ...options.headers
+                }
+            };
 
-            return Object.entries(permissionGroups)
-                .map(([category, permissions]) => 
-                    `<div class="permission-group">
-                        <h4>${category.toUpperCase()} Permissions</h4>
-                        ${permissions.map(perm => `
-                            <div class="permission-checkbox">
-                                <input 
-                                    type="checkbox" 
-                                    id="${perm.id}" 
-                                    name="permissions" 
-                                    value="${perm.id}"
-                                    data-category="${category}"
-                                    ${selectedPermissions.includes(perm.id) ? 'checked' : ''}
-                                >
-                                <label for="${perm.id}">${perm.name}</label>
-                            </div>
-                        `).join('')}
-                    </div>`
-                )
-                .join('');
+            try {
+                const response = await fetch(url, mergedOptions);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'An error occurred');
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('Fetch error:', error);
+                this.showNotification(error.message, 'error');
+                throw error;
+            }
         }
 
-      validateModuleForm(form) {
-    // Reset previous error states
-    const errorFields = form.querySelectorAll('.error-message');
-    errorFields.forEach(field => field.textContent = '');
+            async createModule(moduleData) {
+            try {
+                // Send module creation request
+                const response = await this.fetchWithAuth(`${this.apiBaseUrl}/modules`, {
+                    method: 'POST',
+                    body: JSON.stringify(moduleData)
+                });
 
-    // Validation flags
-    let isValid = true;
+                // Validate response
+                if (!response || !response.data) {
+                    throw new Error('No data returned from server');
+                }
 
-    // Validate Module Name
-    const moduleName = form.querySelector('#moduleName');
-    if (!moduleName.value.trim()) {
-        this.markFieldAsInvalid(moduleName, 'Module name is required');
-        isValid = false;
-    }
-
-    // Validate Category
-    const moduleCategory = form.querySelector('#moduleCategory');
-    try {
-        this.sanitizeCategory(moduleCategory.value);
-    } catch (error) {
-        this.markFieldAsInvalid(moduleCategory, 'Please select a valid module category');
-        isValid = false;
-    }
-
-    // Validate Status
-    const moduleStatus = form.querySelector('#moduleStatus');
-    if (!moduleStatus.value) {
-        this.markFieldAsInvalid(moduleStatus, 'Please select a status');
-        isValid = false;
-    }
-
-    // Validate Access Level (at least one must be selected)
-    const accessLevels = form.querySelectorAll('input[name="accessLevel"]:checked');
-    if (accessLevels.length === 0) {
-        const accessLevelError = document.createElement('div');
-        accessLevelError.className = 'error-message';
-        accessLevelError.textContent = 'Select at least one access level';
-        accessLevelError.style.color = 'red';
-        
-        const accessLevelContainer = form.querySelector('.checkbox-group');
-        if (accessLevelContainer) {
-            accessLevelContainer.appendChild(accessLevelError);
+                // Return the created module
+                return response.data;
+            } catch (error) {
+                console.error('Module creation error:', error);
+                
+                // Provide more detailed error handling
+                const errorMessage = error.message || 'Failed to create module';
+                this.showNotification(errorMessage, 'error');
+                
+                throw error;
+            }
         }
-        isValid = false;
-    }
-          // Validate Compliance Level
-    const complianceLevel = form.querySelector('#complianceLevel');
-    if (!complianceLevel.value) {
-        this.markFieldAsInvalid(complianceLevel, 'Please select a compliance level');
-        isValid = false;
-    }
 
-    // Validate Features (at least one must be selected)
-    const features = form.querySelectorAll('input[name="features"]:checked');
-    if (features.length === 0) {
-        const featuresError = document.createElement('div');
-        featuresError.className = 'error-message';
-        featuresError.textContent = 'Select at least one feature';
-        featuresError.style.color = 'red';
-        
-        const featuresContainer = form.querySelector('#featuresContainer');
-        if (featuresContainer) {
-            featuresContainer.appendChild(featuresError);
+        async updateModule(moduleId, moduleData) {
+            try {
+                // Validate moduleId
+                if (!moduleId || typeof moduleId !== 'string') {
+                    throw new Error('Invalid module identifier');
+                }
+
+                // Send module update request
+                const response = await this.fetchWithAuth(`${this.apiBaseUrl}/modules/${moduleId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(moduleData)
+                });
+
+                // Validate response
+                if (!response || !response.data) {
+                    throw new Error('No data returned from server');
+                }
+
+                // Return the updated module
+                return response.data;
+            } catch (error) {
+                console.error('Module update error:', error);
+                
+                // Provide more detailed error handling
+                const errorMessage = error.message || 'Failed to update module';
+                this.showNotification(errorMessage, 'error');
+                
+                throw error;
+            }
         }
-        isValid = false;
-    }
 
-    return isValid;
-}
+        validateModuleForm(form) {
+            // Reset previous error states
+            const errorFields = form.querySelectorAll('.error-message');
+            errorFields.forEach(field => field.textContent = '');
 
+            // Validation flags
+            let isValid = true;
+
+            // Validate Module Name
+            const moduleName = form.querySelector('#moduleName');
+            if (!moduleName.value.trim()) {
+                this.markFieldAsInvalid(moduleName, 'Module name is required');
+                isValid = false;
+            }
+
+            // Validate Category
+            const moduleCategory = form.querySelector('#moduleCategory');
+            try {
+                this.sanitizeCategory(moduleCategory.value);
+            } catch (error) {
+                this.markFieldAsInvalid(moduleCategory, 'Please select a valid module category');
+                isValid = false;
+            }
+
+            // Validate Status
+            const moduleStatus = form.querySelector('#moduleStatus');
+            if (!moduleStatus.value) {
+                this.markFieldAsInvalid(moduleStatus, 'Please select a status');
+                isValid = false;
+            }
+
+            // Validate Compliance Level
+            const complianceLevel = form.querySelector('#complianceLevel');
+            if (!complianceLevel.value) {
+                this.markFieldAsInvalid(complianceLevel, 'Please select a compliance level');
+                isValid = false;
+            }
+
+            // Validate Access Level (at least one must be selected)
+            const accessLevels = form.querySelectorAll('input[name="accessLevel"]:checked');
+            if (accessLevels.length === 0) {
+                const accessLevelContainer = form.querySelector('.checkbox-group');
+                const accessLevelError = document.createElement('div');
+                accessLevelError.className = 'error-message';
+                accessLevelError.textContent = 'Select at least one access level';
+                accessLevelError.style.color = 'red';
+                
+                if (accessLevelContainer) {
+                    accessLevelContainer.appendChild(accessLevelError);
+                }
+                isValid = false;
+            }
+
+            // Validate Features (at least one must be selected)
+            const features = form.querySelectorAll('input[name="features"]:checked');
+            if (features.length === 0) {
+                const featuresContainer = form.querySelector('#featuresContainer');
+                const featuresError = document.createElement('div');
+                featuresError.className = 'error-message';
+                featuresError.textContent = 'Select at least one feature';
+                featuresError.style.color = 'red';
+                
+                if (featuresContainer) {
+                    featuresContainer.appendChild(featuresError);
+                }
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        collectModuleFormData(form) {
+            // Collect basic module information
+            const moduleData = {
+                name: form.querySelector('#moduleName').value.trim(),
+                category: this.sanitizeCategory(form.querySelector('#moduleCategory').value),
+                description: form.querySelector('#moduleDescription').value.trim() || '',
+                status: form.querySelector('#moduleStatus').value,
+                complianceLevel: form.querySelector('#complianceLevel').value,
+                pricingPlan: form.querySelector('#pricingPlan').value || null,
+                auditLogging: form.querySelector('#auditLogging').checked
+            };
+
+            // Collect access levels
+            const accessLevels = Array.from(
+                form.querySelectorAll('input[name="accessLevel"]:checked')
+            ).map(checkbox => checkbox.value);
+            moduleData.accessLevels = accessLevels;
+
+            // Collect features
+            const features = Array.from(
+                form.querySelectorAll('input[name="features"]:checked')
+            ).map(checkbox => ({
+                value: checkbox.value,
+                category: this.getCategoryForFeature(checkbox.value)
+            }));
+            moduleData.features = features;
+
+            return moduleData;
+        }
 
         markFieldAsInvalid(field, errorMessage) {
             const errorElement = field.nextElementSibling;
@@ -935,150 +544,169 @@ formatCategoryName(category) {
             field.classList.add('invalid');
         }
 
-        clearFieldError(field) {
-            const errorElement = field.nextElementSibling;
-            if (errorElement && errorElement.classList.contains('error-message')) {
-                errorElement.textContent = '';
-                errorElement.style.visibility = 'hidden';
+        sanitizeCategory(category) {
+            // Mapping to ensure consistent category values
+            const categoryMap = {
+                'hr_solutions': 'hr_solutions',
+                'financial_solutions': 'financial_solutions',
+                'operational_solutions': 'operational_solutions',
+                'integrations': 'integrations'
+            };
+
+            // Validate and return the category
+            if (categoryMap[category]) {
+                return categoryMap[category];
             }
-            field.classList.remove('invalid');
+
+            // Throw an error if category is invalid
+            throw new Error('Invalid module category');
         }
 
-        collectModuleFormData(form) {
-    // Collect basic module information
-    const moduleData = {
-        name: form.querySelector('#moduleName').value.trim(),
-        category: this.sanitizeCategory(form.querySelector('#moduleCategory').value),
-        description: form.querySelector('#moduleDescription').value.trim() || '',
-        status: form.querySelector('#moduleStatus').value,
-        pricingPlan: form.querySelector('#pricingPlan').value || null,
-                complianceLevel: form.querySelector('#complianceLevel').value,
+        getCategoryForFeature(featureValue) {
+            const featureCategories = {
+                // HR Solutions
+                'people_management': 'hr_solutions',
+                'performance_management': 'hr_solutions',
+                'attendance_&_leave_management': 'hr_solutions',
+                'payroll_&_compensation': 'hr_solutions',
+                'employee_self-service': 'hr_solutions',
+                'wiserecruit': 'hr_solutions',
 
-        auditLogging: form.querySelector('#auditLogging').checked
-    };
+                // Financial Solutions
+                'payroll_processing': 'financial_solutions',
+                'smartexpenses': 'financial_solutions',
+                'financial_reporting': 'financial_solutions',
+                'book-keeping': 'financial_solutions',
+                'taxation_&_compliance': 'financial_solutions',
+                'globalinvoice': 'financial_solutions',
+                'invoice_&_billing': 'financial_solutions',
+                'asset_management': 'financial_solutions',
 
-    // Collect access levels
-    const accessLevels = Array.from(
-        form.querySelectorAll('input[name="accessLevel"]:checked')
-    ).map(checkbox => checkbox.value);
-    moduleData.accessLevels = accessLevels;
+                // Operational Solutions
+                'project_&_task_management': 'operational_solutions',
+                'shiftmaster': 'operational_solutions',
+                'stockflow': 'operational_solutions',
+                'vendor_&_supplier_management': 'operational_solutions',
+                'workflow_automation': 'operational_solutions',
+                'facility_management': 'operational_solutions',
 
-    // Collect features
-    const features = Array.from(
-        form.querySelectorAll('input[name="features"]:checked')
-    ).map(checkbox => ({
-        value: checkbox.value,
-        category: this.getCategoryForFeature(checkbox.value)
-    }));
-    moduleData.features = features;
+                // Integrations
+                'servicenow_&_itsm': 'integrations',
+                'payroll_&_finance_integrations': 'integrations',
+                'employee_benefits': 'integrations',
+                'talent_management': 'integrations'
+            };
 
-    // Collect integration options
-    const integrations = Array.from(
-        form.querySelectorAll('input[name="integrations"]:checked')
-    ).map(checkbox => checkbox.value);
-    moduleData.integrations = integrations;
+            return featureCategories[featureValue] || 'integrations';
+        }
 
-    return moduleData;
-}
+            renderFeatureCheckboxes() {
+            const features = {
+                'hr_solutions': [
+                    'People Management',
+                    'Performance Management',
+                    'Attendance & Leave Management',
+                    'Payroll & Compensation',
+                    'Employee Self-Service',
+                    'WiseRecruit'
+                ],
+                'financial_solutions': [
+                    'Payroll Processing',
+                    'SmartExpenses',
+                    'Financial Reporting',
+                    'Book-keeping',
+                    'Taxation & Compliance',
+                    'GlobalInvoice',
+                    'Invoice & Billing',
+                    'Asset Management'
+                ],
+                'operational_solutions': [
+                    'Project & Task Management',
+                    'ShiftMaster',
+                    'StockFlow',
+                    'Vendor & Supplier Management',
+                    'Workflow Automation',
+                    'Facility Management'
+                ],
+                'integrations': [
+                    'ServiceNow & ITSM',
+                    'Payroll & Finance Integrations',
+                    'Employee Benefits',
+                    'Talent Management'
+                ]
+            };
 
-        // Add a method to sanitize and validate category
-sanitizeCategory(category) {
-    // Mapping to ensure consistent category values
-    const categoryMap = {
-        'hr_solutions': 'hr_solutions',
-        'financial_solutions': 'financial_solutions',
-        'operational_solutions': 'operational_solutions',
-        'integrations': 'integrations'
-    };
+            return Object.entries(features).map(([category, categoryFeatures]) => `
+                <div class="feature-category">
+                    <h4>${this.formatCategoryName(category)}</h4>
+                    <div class="feature-checkboxes">
+                        ${categoryFeatures.map(feature => `
+                            <label class="checkbox-inline">
+                                <input 
+                                    type="checkbox" 
+                                    name="features" 
+                                    value="${feature.toLowerCase().replace(/\s+/g, '_')}"
+                                > ${feature}
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
 
-    // Validate and return the category
-    if (categoryMap[category]) {
-        return categoryMap[category];
-    }
-
-    // Throw an error if category is invalid
-    throw new Error('Invalid module category');
-}
-
-        // Helper method to determine feature category
-getCategoryForFeature(featureValue) {
-     const featureCategories = {
-        // Mapping for HR Solutions
-        'people_management': 'hr_solutions',
-        'performance_management': 'hr_solutions',
-        'attendance_&_leave_management': 'hr_solutions',
-        'payroll_&_compensation': 'hr_solutions',
-        'employee_self-service': 'hr_solutions',
-        'wiserecruit': 'hr_solutions',
-
-        // Mapping for Financial Solutions
-        'payroll_processing': 'financial_solutions',
-        'smartexpenses': 'financial_solutions',
-        'financial_reporting': 'financial_solutions',
-        'book-keeping': 'financial_solutions',
-        'taxation_&_compliance': 'financial_solutions',
-        'globalinvoice': 'financial_solutions',
-        'invoice_&_billing': 'financial_solutions',
-        'asset_management': 'financial_solutions',
-
-        // Mapping for Operational Solutions
-        'project_&_task_management': 'operational_solutions',
-        'shiftmaster': 'operational_solutions',
-        'stockflow': 'operational_solutions',
-        'vendor_&_supplier_management': 'operational_solutions',
-        'workflow_automation': 'operational_solutions',
-        'facility_management': 'operational_solutions',
-
-        // Mapping for Integrations
-        'servicenow_&_itsm': 'integrations',
-        'payroll_&_finance_integrations': 'integrations',
-        'employee_benefits': 'integrations',
-        'talent_management': 'integrations'
-    };
-    
-    return featureCategories[featureValue] || 'integrations';
-
-
-        async createModule(moduleData) {
+        async exportModules() {
             try {
-                // Send module creation request
-                const response = await this.fetchWithAuth(`${this.apiBaseUrl}/modules`, {
-                    method: 'POST',
-                    body: JSON.stringify(moduleData)
+                // Prepare export parameters
+                const category = this.categoryFilter ? this.categoryFilter.value : '';
+                const complianceLevel = this.complianceFilter ? this.complianceFilter.value : '';
+                const search = this.moduleSearchInput ? this.moduleSearchInput.value.trim() : '';
+
+                // Construct query string
+                const queryParams = new URLSearchParams({
+                    ...(category && { category }),
+                    ...(complianceLevel && { complianceLevel }),
+                    ...(search && { search })
                 });
 
-                // Return the created module
-                return response.data;
+                // Fetch export data
+                const response = await this.fetchWithAuth(
+                    `${this.apiBaseUrl}/modules/export?${queryParams}`
+                );
+
+                // Trigger file download
+                this.downloadExportedFile(response.data, 'modules_export.csv');
             } catch (error) {
-                // Error handling
-                console.error('Module creation error:', error);
-                throw error;
+                console.error('Export error:', error);
+                this.showNotification('Failed to export modules', 'error');
             }
         }
 
-        async updateModule(moduleId, moduleData) {
-            try {
-                // Send module update request
-                const response = await this.fetchWithAuth(`${this.apiBaseUrl}/modules/${moduleId}`, {
-                    method: 'PUT',
-                    body: JSON.stringify(moduleData)
-                });
-
-                // Return the updated module
-                return response.data;
-            } catch (error) {
-                // Error handling
-                console.error('Module update error:', error);
-                throw error;
-            }
+        downloadExportedFile(data, filename) {
+            // Create a Blob from the data
+            const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
+            
+            // Create a link element
+            const link = document.createElement('a');
+            
+            // Create a temporary URL for the blob
+            const url = URL.createObjectURL(blob);
+            
+            // Set link attributes
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            
+            // Append to body, click, and remove
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         setupAdvancedSearch() {
             // Create advanced search modal
             const modalContainer = document.createElement('div');
-            modalContainer.className = 'advanced-search-modal';
+            modalContainer.className = 'modal-overlay';
             modalContainer.innerHTML = `
-                <div class="modal-content">
+                <div class="modal-container">
                     <div class="modal-header">
                         <h3>Advanced Module Search</h3>
                         <button class="close-btn">&times;</button>
@@ -1093,9 +721,9 @@ getCategoryForFeature(featureValue) {
                                 <label>Category</label>
                                 <select id="advancedCategorySearch" class="form-control">
                                     <option value="">All Categories</option>
-                                    <option value="hr">HR</option>
-                                    <option value="finance">Finance</option>
-                                    <option value="operations">Operations</option>
+                                    <option value="hr_solutions">HR Solutions</option>
+                                    <option value="financial_solutions">Financial Solutions</option>
+                                    <option value="operational_solutions">Operational Solutions</option>
                                     <option value="integrations">Integrations</option>
                                 </select>
                             </div>
@@ -1153,8 +781,6 @@ getCategoryForFeature(featureValue) {
                 if (this.moduleSearchInput) this.moduleSearchInput.value = nameSearch;
                 if (this.categoryFilter) this.categoryFilter.value = categorySearch;
                 if (this.complianceFilter) this.complianceFilter.value = complianceSearch;
-
-                // Additional status filtering can be implemented if needed
 
                 // Trigger module search
                 this.loadModules();
@@ -1366,51 +992,15 @@ getCategoryForFeature(featureValue) {
             document.body.appendChild(modalContainer);
         }
 
-        async exportModules() {
-            try {
-                // Prepare export parameters
-                const category = this.categoryFilter ? this.categoryFilter.value : '';
-                const complianceLevel = this.complianceFilter ? this.complianceFilter.value : '';
-                const search = this.moduleSearchInput ? this.moduleSearchInput.value.trim() : '';
-
-                // Construct query string
-                const queryParams = new URLSearchParams({
-                    ...(category && { category }),
-                    ...(complianceLevel && { complianceLevel }),
-                    ...(search && { search })
-                });
-
-                // Fetch export data
-                const response = await this.fetchWithAuth(
-                    `${this.apiBaseUrl}/modules/export?${queryParams}`
-                );
-
-                // Trigger file download
-                this.downloadExportedFile(response.data, 'modules_export.csv');
-            } catch (error) {
-                console.error('Export error:', error);
-                this.showNotification('Failed to export modules', 'error');
+        // Cleanup method
+        cleanup() {
+            // Remove event listeners
+            if (this.addNewModuleBtn) {
+                this.addNewModuleBtn.removeEventListener('click', this.showAddModuleModal);
             }
-        }
 
-        downloadExportedFile(data, filename) {
-            // Create a Blob from the data
-            const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
-            
-            // Create a link element
-            const link = document.createElement('a');
-            
-            // Create a temporary URL for the blob
-            const url = URL.createObjectURL(blob);
-            
-            // Set link attributes
-            link.setAttribute('href', url);
-            link.setAttribute('download', filename);
-            
-            // Append to body, click, and remove
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // Clear any ongoing requests or timers
+            // Add any specific cleanup logic here
         }
     }
 
