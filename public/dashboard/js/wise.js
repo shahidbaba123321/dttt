@@ -631,19 +631,20 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Integration Options</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-inline">
-                                <input type="checkbox" name="integrations" value="servicenow"> ServiceNow & ITSM
-                            </label>
-                            <label class="checkbox-inline">
-                                <input type="checkbox" name="integrations" value="payroll"> Payroll & Finance
-                            </label>
-                            <label class="checkbox-inline">
-                                <input type="checkbox" name="integrations" value="benefits"> Employee Benefits
-                            </label>
-                        </div>
-                    </div>
+            <label>Compliance Level *</label>
+            <select 
+                id="complianceLevel" 
+                name="complianceLevel" 
+                class="form-control" 
+                required
+            >
+                <option value="">Select Compliance Level</option>
+                <option value="low" ${existingModule && existingModule.complianceLevel === 'low' ? 'selected' : ''}>Low</option>
+                <option value="medium" ${existingModule && existingModule.complianceLevel === 'medium' ? 'selected' : ''}>Medium</option>
+                <option value="high" ${existingModule && existingModule.complianceLevel === 'high' ? 'selected' : ''}>High</option>
+            </select>
+            <small class="error-message" id="complianceLevelError"></small>
+        </div>
                     <div class="form-group">
                         <label>Audit Logging</label>
                         <div class="toggle-switch">
@@ -887,6 +888,12 @@ renderFeatureCheckboxes() {
         }
         isValid = false;
     }
+          // Validate Compliance Level
+    const complianceLevel = form.querySelector('#complianceLevel');
+    if (!complianceLevel.value) {
+        this.markFieldAsInvalid(complianceLevel, 'Please select a compliance level');
+        isValid = false;
+    }
 
     // Validate Features (at least one must be selected)
     const features = form.querySelectorAll('input[name="features"]:checked');
@@ -933,6 +940,8 @@ renderFeatureCheckboxes() {
         description: form.querySelector('#moduleDescription').value.trim() || '',
         status: form.querySelector('#moduleStatus').value,
         pricingPlan: form.querySelector('#pricingPlan').value || null,
+                complianceLevel: form.querySelector('#complianceLevel').value,
+
         auditLogging: form.querySelector('#auditLogging').checked
     };
 
