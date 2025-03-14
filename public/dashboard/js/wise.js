@@ -12,46 +12,19 @@
             // Base configuration
             this.apiBaseUrl = apiBaseUrl;
             this.token = localStorage.getItem('token');
-            
-            // Pagination settings
-            this.currentModulePage = 1;
-            this.modulesPerPage = 10;
+            this.currentPage = 1;
+            this.pageSize = 10;
             this.totalModules = 0;
 
-            this.currentAuditLogPage = 1;
-            this.auditLogsPerPage = 10;
-            this.totalAuditLogs = 0;
-
             // DOM Element References
-            this.initializeDOMReferences();
-
-            // Bind methods to ensure correct context
-            this.bindMethodContext();
-
-            this.showAddModuleModal = this.showAddModuleModal.bind(this);
-    this.exportModules = this.exportModules.bind(this);
-    this.setupAdvancedSearch = this.setupAdvancedSearch.bind(this);
-    this.sanitizeCategory = this.sanitizeCategory.bind(this);
-
-            // Bind events
-            this.bindEvents();
-
-            // Initialize the module
-            this.initialize();
-        }
-
-        initializeDOMReferences() {
-            // Module Management References
             this.modulesGridContainer = document.getElementById('modulesGridContainer');
             this.addNewModuleBtn = document.getElementById('addNewModuleBtn');
+            this.moduleModal = document.getElementById('moduleModal');
+            this.moduleForm = document.getElementById('moduleForm');
             this.categoryFilter = document.getElementById('categoryFilter');
             this.complianceFilter = document.getElementById('complianceFilter');
             this.moduleSearchInput = document.getElementById('moduleSearchInput');
             this.searchModulesBtn = document.getElementById('searchModulesBtn');
-            this.prevModulesPageBtn = document.getElementById('prevModulesPageBtn');
-            this.nextModulesPageBtn = document.getElementById('nextModulesPageBtn');
-            this.pageNumberContainer = document.getElementById('pageNumberContainer');
-            this.modulesShowingCount = document.getElementById('modulesShowingCount');
 
             // Audit Logs References
             this.auditLogsTableBody = document.getElementById('auditLogsTableBody');
@@ -59,1200 +32,766 @@
             this.auditEndDate = document.getElementById('auditEndDate');
             this.activityTypeFilter = document.getElementById('activityTypeFilter');
             this.applyAuditFiltersBtn = document.getElementById('applyAuditFiltersBtn');
-            this.prevAuditLogsPageBtn = document.getElementById('prevAuditLogsPageBtn');
-            this.nextAuditLogsPageBtn = document.getElementById('nextAuditLogsPageBtn');
-            this.auditLogsPageNumberContainer = document.getElementById('auditLogsPageNumberContainer');
-            this.auditLogsShowingCount = document.getElementById('auditLogsShowingCount');
+
+            // Pagination References
+            this.prevModulesPageBtn = document.getElementById('prevModulesPageBtn');
+            this.nextModulesPageBtn = document.getElementById('nextModulesPageBtn');
+            this.modulesShowingCount = document.getElementById('modulesShowingCount');
+            this.pageNumberContainer = document.getElementById('pageNumberContainer');
+
+            // Bind methods
+            this.initializeEventListeners = this.initializeEventListeners.bind(this);
+            this.fetchModules = this.fetchModules.bind(this);
+            this.renderModules = this.renderModules.bind(this);
+            this.handleAddNewModule = this.handleAddNewModule.bind(this);
+            this.handleModuleFormSubmit = this.handleModuleFormSubmit.bind(this);
+            this.fetchAuditLogs = this.fetchAuditLogs.bind(this);
+
+            // Initialize
+            this.init();
         }
 
-        bindMethodContext() {
-            // List of methods to bind
-            const methodsToBind = [
-                'loadModules',
-                'renderModules',
-                'updatePagination',
-                'changePage',
-                'showAddModuleModal',
-                'createModule',
-                'updateModule',
-                'validateModuleForm',
-                'collectModuleFormData',
-                'loadAuditLogs',
-                'renderAuditLogs',
-                'updateAuditLogPagination',
-                'deleteModule',
-                'editModule',
-                'exportModules',
-                'sanitizeInput',
-                'renderFeatureCheckboxes',
-                'getCategoryForFeature',
-                'sanitizeCategory'
-            ];
+        init() {
+            this.initializeEventListeners();
+            this.fetchModules();
+            this.fetchAuditLogs();
+        }
 
-            // Bind only existing methods
-            methodsToBind.forEach(methodName => {
-                if (typeof this[methodName] === 'function') {
-                    this[methodName] = this[methodName].bind(this);
+        initializeEventListeners() {
+            // Add New Module Button
+            this.addNewModuleBtn.addEventListener('click', this.handleAddNewModule);
+
+            // Filters
+            this.categoryFilter.addEventListener('change', this.fetchModules);
+            this.complianceFilter.addEventListener('change', this.fetchModules);
+            this.searchModulesBtn.addEventListener('click', this.fetchModules);
+            this.moduleSearchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') this.fetchModules();
+            });
+
+            // Pagination
+            this.prevModulesPageBtn.addEventListener('click', () => {
+                if (this.currentPage > 1) {
+                    this.currentPage--;
+                    this.fetchModules();
                 }
             });
+
+            this.nextModulesPageBtn.addEventListener('click', () => {
+                this.currentPage++;
+                this.fetchModules();
+            });
+
+            // Audit Logs
+            this.applyAuditFiltersBtn.addEventListener('click', this.fetchAuditLogs);
         }
 
-        bindEvents() {
-            // Module Management Events
-            if (this.addNewModuleBtn) {
-        // Remove any existing event listeners first
-        this.addNewModuleBtn.removeEventListener('click', this.showAddModuleModal);
-        
-        // Add new event listener with explicit binding
-        this.addNewModuleBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.showAddModuleModal();
-        });
-    } else {
-        console.error('Add New Module button not found');
+        // Placeholder methods to be implemented in subsequent parts
+        async fetchModules() {}
+        renderModules() {}
+        handleAddNewModule() {}
+        handleModuleFormSubmit() {}
+        async fetchAuditLogs() {}
+
+        // Utility method for error handling
+        handleError(error, context = 'Operation') {
+            console.error(`${context} failed:`, error);
+            window.dashboardApp.userInterface.showErrorNotification(
+                `${context} failed. Please try again.`
+            );
+        }
     }
-            if (this.categoryFilter) {
-                this.categoryFilter.addEventListener('change', this.loadModules);
-            }
-
-            if (this.complianceFilter) {
-                this.complianceFilter.addEventListener('change', this.loadModules);
-            }
-
-            if (this.searchModulesBtn) {
-                this.searchModulesBtn.addEventListener('click', this.loadModules);
-            }
-
-            if (this.prevModulesPageBtn) {
-                this.prevModulesPageBtn.addEventListener('click', () => this.changePage(-1));
-            }
-
-            if (this.nextModulesPageBtn) {
-                this.nextModulesPageBtn.addEventListener('click', () => this.changePage(1));
-            }
-        }
-
-        initialize() {
-            // Initial load of modules
-            this.loadModules();
-
-            // Setup additional features
-            this.setupAdditionalFeatures();
-        }
-
-        showAddModuleModal(existingModule = null) {
-    // Remove any existing modal first
-    const existingModal = document.getElementById('moduleFormModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-
-    // Create modal container
-    const modalContainer = document.createElement('div');
-    modalContainer.id = 'moduleFormModal';
-    modalContainer.className = 'modal-overlay';
-    
-    // Determine modal title and action
-    const isEditMode = !!existingModule;
-    const modalTitle = isEditMode ? 'Edit Module' : 'Create New Module';
-
-    // Create modal HTML with comprehensive form
-    modalContainer.innerHTML = `
-        <div class="modal-container">
-            <div class="modal-header">
-                <h2>${modalTitle}</h2>
-                <button type="button" class="modal-close-btn">&times;</button>
-            </div>
-            <form id="moduleForm" class="module-form">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="moduleName">Module Name *</label>
-                        <input 
-                            type="text" 
-                            id="moduleName" 
-                            name="name" 
-                            class="form-control" 
-                            required 
-                            placeholder="Enter module name"
-                            value="${existingModule ? this.sanitizeInput(existingModule.name) : ''}"
-                        >
-                        <small class="error-message" id="moduleNameError"></small>
-                    </div>
-                    <div class="form-group">
-                        <label for="moduleCategory">Module Category *</label>
-                        <select 
-                            id="moduleCategory" 
-                            name="category" 
-                            class="form-control" 
-                            required
-                        >
-                            <option value="">Select Category</option>
-                            <option value="hr_solutions" ${existingModule && existingModule.category === 'hr_solutions' ? 'selected' : ''}>HR Solutions</option>
-                            <option value="financial_solutions" ${existingModule && existingModule.category === 'financial_solutions' ? 'selected' : ''}>Financial Solutions</option>
-                            <option value="operational_solutions" ${existingModule && existingModule.category === 'operational_solutions' ? 'selected' : ''}>Operational Solutions</option>
-                            <option value="integrations" ${existingModule && existingModule.category === 'integrations' ? 'selected' : ''}>Integrations</option>
-                        </select>
-                        <small class="error-message" id="moduleCategoryError"></small>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group full-width">
-                        <label for="moduleDescription">Description</label>
-                        <textarea 
-                            id="moduleDescription" 
-                            name="description" 
-                            class="form-control" 
-                            rows="3" 
-                            placeholder="Enter module description"
-                        >${existingModule ? this.sanitizeInput(existingModule.description || '') : ''}</textarea>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Status *</label>
-                        <select 
-                            id="moduleStatus" 
-                            name="status" 
-                            class="form-control" 
-                            required
-                        >
-                            <option value="active" ${existingModule && existingModule.status === 'active' ? 'selected' : ''}>Active</option>
-                            <option value="inactive" ${existingModule && existingModule.status === 'inactive' ? 'selected' : ''}>Inactive</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Pricing Plan</label>
-                        <select 
-                            id="pricingPlan" 
-                            name="pricingPlan" 
-                            class="form-control"
-                        >
-                            <option value="">Select Pricing Plan</option>
-                            <option value="basic">Basic</option>
-                            <option value="professional">Professional</option>
-                            <option value="enterprise">Enterprise</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Access Level</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-inline">
-                                <input type="checkbox" name="accessLevel" value="superadmin"> Superadmin
-                            </label>
-                            <label class="checkbox-inline">
-                                <input type="checkbox" name="accessLevel" value="company_admin"> Company Admin
-                            </label>
-                            <label class="checkbox-inline">
-                                <input type="checkbox" name="accessLevel" value="hr_manager"> HR Manager
-                            </label>
-                            <label class="checkbox-inline">
-                                <input type="checkbox" name="accessLevel" value="employee"> Employee
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group full-width">
-                        <label>Features Included</label>
-                        <div id="featuresContainer">
-                            ${this.renderFeatureCheckboxes()}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Compliance Level *</label>
-                        <select 
-                            id="complianceLevel" 
-                            name="complianceLevel" 
-                            class="form-control" 
-                            required
-                        >
-                            <option value="">Select Compliance Level</option>
-                            <option value="low" ${existingModule && existingModule.complianceLevel === 'low' ? 'selected' : ''}>Low</option>
-                            <option value="medium" ${existingModule && existingModule.complianceLevel === 'medium' ? 'selected' : ''}>Medium</option>
-                            <option value="high" ${existingModule && existingModule.complianceLevel === 'high' ? 'selected' : ''}>High</option>
-                        </select>
-                        <small class="error-message" id="complianceLevelError"></small>
-                    </div>
-                    <div class="form-group">
-                        <label>Audit Logging</label>
-                        <div class="toggle-switch">
-                            <input 
-                                type="checkbox" 
-                                id="auditLogging" 
-                                name="auditLogging"
-                                ${existingModule && existingModule.auditLogging ? 'checked' : ''}
-                            >
-                            <label for="auditLogging" class="toggle-slider"></label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
-                    <button type="submit" class="btn btn-primary save-btn">
-                        ${isEditMode ? 'Update Module' : 'Create Module'}
-                    </button>
-                </div>
-            </form>
-        </div>
-    `;
-
-    // Append to body
-    document.body.appendChild(modalContainer);
-
-    // Get form elements
-    const form = modalContainer.querySelector('#moduleForm');
-    const closeBtn = modalContainer.querySelector('.modal-close-btn');
-    const cancelBtn = modalContainer.querySelector('.cancel-btn');
-
-    // Close modal function
-    const closeModal = () => {
-        document.body.removeChild(modalContainer);
-    };
-
-    // Close event listeners
-    closeBtn.addEventListener('click', closeModal);
-    cancelBtn.addEventListener('click', closeModal);
-
-    // Form submission
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        // Validate form
-        if (this.validateModuleForm(form)) {
-            try {
-                // Collect form data
-                const formData = this.collectModuleFormData(form);
-                
-                // Send data to server
-                if (existingModule && existingModule._id) {
-                    // Update existing module
-                    await this.updateModule(existingModule._id, formData);
-                    this.showNotification('Module updated successfully', 'success');
-                } else {
-                    // Create new module
-                    await this.createModule(formData);
-                    this.showNotification('Module created successfully', 'success');
-                }
-                
-                // Close modal
-                closeModal();
-                
-                // Reload modules
-                this.loadModules();
-            } catch (error) {
-                console.error('Module submission error:', error);
-                this.showNotification(error.message || 'Failed to submit module', 'error');
-            }
-        }
-    });
-
-    // Trigger modal display
-    setTimeout(() => {
-        modalContainer.classList.add('show');
-    }, 50);
-
-    return modalContainer;
-}
-
-        setupAdditionalFeatures() {
-    // Remove existing buttons first
-    const headerActions = document.querySelector('.header-actions');
-    if (headerActions) {
-        // Remove existing advanced search and export buttons
-        const existingAdvancedSearchBtn = headerActions.querySelector('.advanced-search');
-        const existingExportBtn = headerActions.querySelector('.export-modules');
-
-        if (existingAdvancedSearchBtn) {
-            existingAdvancedSearchBtn.remove();
-        }
-        if (existingExportBtn) {
-            existingExportBtn.remove();
-        }
-
-        // Add export functionality
-        const exportButton = document.createElement('button');
-        exportButton.className = 'btn btn-secondary export-modules';
-        exportButton.innerHTML = '<i class="fas fa-file-export"></i> Export Modules';
-        exportButton.addEventListener('click', this.exportModules);
-
-        // Add advanced search functionality
-        const advancedSearchButton = document.createElement('button');
-        advancedSearchButton.className = 'btn btn-secondary advanced-search';
-        advancedSearchButton.innerHTML = '<i class="fas fa-search-plus"></i> Advanced Search';
-        advancedSearchButton.addEventListener('click', this.setupAdvancedSearch);
-
-        // Append buttons
-        headerActions.appendChild(advancedSearchButton);
-        headerActions.appendChild(exportButton);
-    }
-}
-
-        // Utility methods
-        sanitizeInput(input) {
-            if (!input) return '';
-            const div = document.createElement('div');
-            div.textContent = input;
-            return div.innerHTML;
-        }
-
-        showNotification(message, type = 'info') {
-            if (window.dashboardApp && window.dashboardApp.userInterface) {
-                window.dashboardApp.userInterface.showNotification(message, type);
-            } else {
-                console.log(`${type.toUpperCase()}: ${message}`);
-            }
-        }
-
-        // Placeholder for advanced search method
-        setupAdvancedSearch() {
-            console.log('Advanced search setup');
-        }
-
-            async loadModules() {
+            async fetchModules() {
             try {
                 // Prepare query parameters
-                const category = this.categoryFilter ? this.categoryFilter.value : '';
-                const complianceLevel = this.complianceFilter ? this.complianceFilter.value : '';
-                const search = this.moduleSearchInput ? this.moduleSearchInput.value.trim() : '';
+                const category = this.categoryFilter.value;
+                const complianceLevel = this.complianceFilter.value;
+                const search = this.moduleSearchInput.value;
 
-                // Construct query string
-                const queryParams = new URLSearchParams({
-                    page: this.currentModulePage,
-                    limit: this.modulesPerPage,
-                    ...(category && { category }),
-                    ...(complianceLevel && { complianceLevel }),
-                    ...(search && { search })
-                });
+                // Construct API endpoint
+                const url = new URL(`${this.apiBaseUrl}/modules`);
+                url.searchParams.append('page', this.currentPage);
+                url.searchParams.append('limit', this.pageSize);
+                
+                if (category) url.searchParams.append('category', category);
+                if (complianceLevel) url.searchParams.append('complianceLevel', complianceLevel);
+                if (search) url.searchParams.append('search', search);
 
                 // Fetch modules
-                const response = await this.fetchWithAuth(
-                    `${this.apiBaseUrl}/modules?${queryParams}`
-                );
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch modules');
+                }
+
+                const data = await response.json();
 
                 // Update total modules and pagination
-                this.totalModules = response.pagination.total;
-                this.updatePagination(response.pagination);
-
-                // Render modules
-                this.renderModules(response.data);
-
+                this.totalModules = data.pagination.total;
+                this.renderModules(data.data);
+                this.updatePagination(data.pagination);
             } catch (error) {
-                console.error('Error loading modules:', error);
-                if (this.modulesGridContainer) {
-                    this.modulesGridContainer.innerHTML = `
-                        <div class="error-message">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <p>Failed to load modules. ${error.message}</p>
-                        </div>
-                    `;
-                }
+                this.handleError(error, 'Fetching Modules');
+                this.renderNoModulesState();
             }
         }
 
         renderModules(modules) {
-            // Ensure we have a container
-            if (!this.modulesGridContainer) return;
-
             // Clear existing modules
             this.modulesGridContainer.innerHTML = '';
 
-            // Check if no modules
+            // Handle empty state
             if (!modules || modules.length === 0) {
-                this.modulesGridContainer.innerHTML = `
-                    <div class="no-modules">
-                        <i class="fas fa-cube"></i>
-                        <p>No modules found</p>
-                    </div>
-                `;
+                this.renderNoModulesState();
                 return;
             }
 
-            // Render each module
+            // Render modules
             modules.forEach(module => {
-                const moduleCard = document.createElement('div');
-                moduleCard.className = 'module-card';
-                moduleCard.innerHTML = `
-                    <div class="module-card-header">
-                        <h3 class="module-title">${this.sanitizeInput(module.name)}</h3>
-                        <div class="module-status">
-                            <span class="status-indicator ${module.status === 'active' ? 'status-active' : 'status-inactive'}"></span>
-                            ${module.status ? module.status.charAt(0).toUpperCase() + module.status.slice(1) : 'N/A'}
-                        </div>
-                    </div>
-                    <div class="module-category">
-                        ${this.sanitizeInput(this.formatCategoryName(module.category))}
-                    </div>
-                    <div class="module-description">
-                        ${this.sanitizeInput(module.description || 'No description provided')}
-                    </div>
-                    <div class="module-details">
-                        <div class="module-compliance">
-                            Compliance: ${this.sanitizeInput(module.complianceLevel ? module.complianceLevel.toUpperCase() : 'N/A')}
-                        </div>
-                    </div>
-                    <div class="module-actions">
-                        <button class="module-action-btn edit-module" data-id="${module._id}">
-                            <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <button class="module-action-btn delete-module" data-id="${module._id}">
-                            <i class="fas fa-trash"></i> Delete
-                        </button>
-                    </div>
-                `;
-
-                // Add event listeners for edit and delete
-                const editBtn = moduleCard.querySelector('.edit-module');
-                const deleteBtn = moduleCard.querySelector('.delete-module');
-
-                editBtn.addEventListener('click', () => this.editModule(module));
-                deleteBtn.addEventListener('click', () => this.deleteModule(module._id));
-
+                const moduleCard = this.createModuleCard(module);
                 this.modulesGridContainer.appendChild(moduleCard);
             });
         }
 
-        updatePagination(pagination) {
-            // Ensure we have the necessary elements
-            if (!this.modulesShowingCount || !this.prevModulesPageBtn || 
-                !this.nextModulesPageBtn || !this.pageNumberContainer) return;
+        createModuleCard(module) {
+            const card = document.createElement('div');
+            card.className = 'module-card';
+            card.innerHTML = `
+                <div class="module-card-header">
+                    <h3 class="module-title">${module.name}</h3>
+                    <div class="module-status">
+                        <span class="status-indicator ${module.isActive ? 'status-active' : 'status-inactive'}"></span>
+                        ${module.isActive ? 'Active' : 'Inactive'}
+                    </div>
+                </div>
+                <div class="module-category">
+                    ${module.category.toUpperCase()} Solutions
+                </div>
+                <div class="module-description">
+                    ${module.description || 'No description available'}
+                </div>
+                <div class="module-details">
+                    <span class="module-compliance">
+                        Compliance Level: ${module.complianceLevel.toUpperCase()}
+                    </span>
+                </div>
+                <div class="module-actions">
+                    <button class="module-action-btn edit-module" data-module-id="${module._id}">
+                        <i class="fas fa-edit"></i> Edit
+                    </button>
+                    <button class="module-action-btn delete-module" data-module-id="${module._id}">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            `;
 
+            // Add event listeners for edit and delete
+            const editBtn = card.querySelector('.edit-module');
+            const deleteBtn = card.querySelector('.delete-module');
+
+            editBtn.addEventListener('click', () => this.handleEditModule(module));
+            deleteBtn.addEventListener('click', () => this.handleDeleteModule(module._id));
+
+            return card;
+        }
+
+        updatePagination(pagination) {
             // Update showing count
             this.modulesShowingCount.textContent = `Showing ${pagination.page} of ${pagination.totalPages} pages`;
 
-            // Update page buttons
+            // Update pagination buttons
             this.prevModulesPageBtn.disabled = pagination.page === 1;
             this.nextModulesPageBtn.disabled = pagination.page === pagination.totalPages;
 
             // Generate page numbers
+            this.generatePageNumbers(pagination);
+        }
+
+        generatePageNumbers(pagination) {
+            // Clear existing page numbers
             this.pageNumberContainer.innerHTML = '';
+
+            // Generate page number buttons
             for (let i = 1; i <= pagination.totalPages; i++) {
                 const pageBtn = document.createElement('button');
                 pageBtn.textContent = i;
-                pageBtn.className = `page-number ${i === pagination.page ? 'active' : ''}`;
+                pageBtn.className = 'page-number';
+                
+                if (i === pagination.page) {
+                    pageBtn.classList.add('active');
+                }
+
                 pageBtn.addEventListener('click', () => {
-                    this.currentModulePage = i;
-                    this.loadModules();
+                    this.currentPage = i;
+                    this.fetchModules();
                 });
+
                 this.pageNumberContainer.appendChild(pageBtn);
             }
         }
 
-        changePage(direction) {
-            // Change page based on direction
-            this.currentModulePage += direction;
-            this.loadModules();
-        }
-
-        formatCategoryName(category) {
-            if (!category) return 'Uncategorized';
-            return category
-                .replace(/_/g, ' ')
-                .replace(/\b\w/g, l => l.toUpperCase());
-        }
-
-        async deleteModule(moduleId) {
-            try {
-                // Confirm deletion
-                const confirmDelete = confirm('Are you sure you want to delete this module?');
-                if (!confirmDelete) return;
-
-                // Send delete request
-                await this.fetchWithAuth(`${this.apiBaseUrl}/modules/${moduleId}`, {
-                    method: 'DELETE'
-                });
-
-                // Show success notification
-                this.showNotification('Module deleted successfully', 'success');
-
-                // Reload modules
-                this.loadModules();
-            } catch (error) {
-                console.error('Error deleting module:', error);
-                this.showNotification('Failed to delete module', 'error');
-            }
-        }
-
-        async editModule(module) {
-            try {
-                // Open modal with module details
-                this.showAddModuleModal(module);
-            } catch (error) {
-                console.error('Error preparing module edit:', error);
-                this.showNotification('Failed to prepare module for editing', 'error');
-            }
-        }
-
-        async fetchWithAuth(url, options = {}) {
-            const defaultHeaders = {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            };
-
-            const mergedOptions = {
-                ...options,
-                headers: {
-                    ...defaultHeaders,
-                    ...options.headers
-                }
-            };
-
-            try {
-                const response = await fetch(url, mergedOptions);
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'An error occurred');
-                }
-
-                return await response.json();
-            } catch (error) {
-                console.error('Fetch error:', error);
-                this.showNotification(error.message, 'error');
-                throw error;
-            }
-        }
-
-            async createModule(moduleData) {
-            try {
-                // Send module creation request
-                const response = await this.fetchWithAuth(`${this.apiBaseUrl}/modules`, {
-                    method: 'POST',
-                    body: JSON.stringify(moduleData)
-                });
-
-                // Validate response
-                if (!response || !response.data) {
-                    throw new Error('No data returned from server');
-                }
-
-                // Return the created module
-                return response.data;
-            } catch (error) {
-                console.error('Module creation error:', error);
-                
-                // Provide more detailed error handling
-                const errorMessage = error.message || 'Failed to create module';
-                this.showNotification(errorMessage, 'error');
-                
-                throw error;
-            }
-        }
-
-        async updateModule(moduleId, moduleData) {
-            try {
-                // Validate moduleId
-                if (!moduleId || typeof moduleId !== 'string') {
-                    throw new Error('Invalid module identifier');
-                }
-
-                // Send module update request
-                const response = await this.fetchWithAuth(`${this.apiBaseUrl}/modules/${moduleId}`, {
-                    method: 'PUT',
-                    body: JSON.stringify(moduleData)
-                });
-
-                // Validate response
-                if (!response || !response.data) {
-                    throw new Error('No data returned from server');
-                }
-
-                // Return the updated module
-                return response.data;
-            } catch (error) {
-                console.error('Module update error:', error);
-                
-                // Provide more detailed error handling
-                const errorMessage = error.message || 'Failed to update module';
-                this.showNotification(errorMessage, 'error');
-                
-                throw error;
-            }
-        }
-
-        validateModuleForm(form) {
-            // Reset previous error states
-            const errorFields = form.querySelectorAll('.error-message');
-            errorFields.forEach(field => field.textContent = '');
-
-            // Validation flags
-            let isValid = true;
-
-            // Validate Module Name
-            const moduleName = form.querySelector('#moduleName');
-            if (!moduleName.value.trim()) {
-                this.markFieldAsInvalid(moduleName, 'Module name is required');
-                isValid = false;
-            }
-
-            // Validate Category
-            const moduleCategory = form.querySelector('#moduleCategory');
-            try {
-                this.sanitizeCategory(moduleCategory.value);
-            } catch (error) {
-                this.markFieldAsInvalid(moduleCategory, 'Please select a valid module category');
-                isValid = false;
-            }
-
-            // Validate Status
-            const moduleStatus = form.querySelector('#moduleStatus');
-            if (!moduleStatus.value) {
-                this.markFieldAsInvalid(moduleStatus, 'Please select a status');
-                isValid = false;
-            }
-
-            // Validate Compliance Level
-            const complianceLevel = form.querySelector('#complianceLevel');
-            if (!complianceLevel.value) {
-                this.markFieldAsInvalid(complianceLevel, 'Please select a compliance level');
-                isValid = false;
-            }
-
-            // Validate Access Level (at least one must be selected)
-            const accessLevels = form.querySelectorAll('input[name="accessLevel"]:checked');
-            if (accessLevels.length === 0) {
-                const accessLevelContainer = form.querySelector('.checkbox-group');
-                const accessLevelError = document.createElement('div');
-                accessLevelError.className = 'error-message';
-                accessLevelError.textContent = 'Select at least one access level';
-                accessLevelError.style.color = 'red';
-                
-                if (accessLevelContainer) {
-                    accessLevelContainer.appendChild(accessLevelError);
-                }
-                isValid = false;
-            }
-
-            // Validate Features (at least one must be selected)
-            const features = form.querySelectorAll('input[name="features"]:checked');
-            if (features.length === 0) {
-                const featuresContainer = form.querySelector('#featuresContainer');
-                const featuresError = document.createElement('div');
-                featuresError.className = 'error-message';
-                featuresError.textContent = 'Select at least one feature';
-                featuresError.style.color = 'red';
-                
-                if (featuresContainer) {
-                    featuresContainer.appendChild(featuresError);
-                }
-                isValid = false;
-            }
-
-            return isValid;
-        }
-
-        collectModuleFormData(form) {
-    // Collect basic module information
-    const moduleData = {
-        name: form.querySelector('#moduleName').value.trim(),
-        category: this.sanitizeCategory(form.querySelector('#moduleCategory').value),
-        description: form.querySelector('#moduleDescription').value.trim() || '',
-        status: form.querySelector('#moduleStatus').value,
-        complianceLevel: form.querySelector('#complianceLevel').value,
-        pricingPlan: form.querySelector('#pricingPlan').value || null,
-        auditLogging: form.querySelector('#auditLogging').checked
-    };
-
-    // Collect access levels
-    const accessLevels = Array.from(
-        form.querySelectorAll('input[name="accessLevel"]:checked')
-    ).map(checkbox => checkbox.value);
-    moduleData.accessLevels = accessLevels;
-
-    // Collect features
-    const features = Array.from(
-        form.querySelectorAll('input[name="features"]:checked')
-    ).map(checkbox => ({
-        value: checkbox.value,
-        category: this.getCategoryForFeature(checkbox.value)
-    }));
-    moduleData.features = features;
-
-    return moduleData;
-}
-
-        markFieldAsInvalid(field, errorMessage) {
-            const errorElement = field.nextElementSibling;
-            if (errorElement && errorElement.classList.contains('error-message')) {
-                errorElement.textContent = errorMessage;
-                errorElement.style.visibility = 'visible';
-            }
-            field.classList.add('invalid');
-        }
-
-        sanitizeCategory(category) {
-    // Mapping to ensure consistent category values
-    const categoryMap = {
-        'hr_solutions': 'hr_solutions',
-        'financial_solutions': 'financial_solutions',
-        'operational_solutions': 'operational_solutions',
-        'integrations': 'integrations'
-    };
-
-    // Convert to lowercase and trim
-    const sanitizedCategory = category.toLowerCase().trim();
-
-    // Validate and return the category
-    if (categoryMap[sanitizedCategory]) {
-        return categoryMap[sanitizedCategory];
-    }
-
-    // Throw an error if category is invalid
-    throw new Error('Invalid module category');
-}
-
-        getCategoryForFeature(featureValue) {
-            const featureCategories = {
-                // HR Solutions
-                'people_management': 'hr_solutions',
-                'performance_management': 'hr_solutions',
-                'attendance_&_leave_management': 'hr_solutions',
-                'payroll_&_compensation': 'hr_solutions',
-                'employee_self-service': 'hr_solutions',
-                'wiserecruit': 'hr_solutions',
-
-                // Financial Solutions
-                'payroll_processing': 'financial_solutions',
-                'smartexpenses': 'financial_solutions',
-                'financial_reporting': 'financial_solutions',
-                'book-keeping': 'financial_solutions',
-                'taxation_&_compliance': 'financial_solutions',
-                'globalinvoice': 'financial_solutions',
-                'invoice_&_billing': 'financial_solutions',
-                'asset_management': 'financial_solutions',
-
-                // Operational Solutions
-                'project_&_task_management': 'operational_solutions',
-                'shiftmaster': 'operational_solutions',
-                'stockflow': 'operational_solutions',
-                'vendor_&_supplier_management': 'operational_solutions',
-                'workflow_automation': 'operational_solutions',
-                'facility_management': 'operational_solutions',
-
-                // Integrations
-                'servicenow_&_itsm': 'integrations',
-                'payroll_&_finance_integrations': 'integrations',
-                'employee_benefits': 'integrations',
-                'talent_management': 'integrations'
-            };
-
-            return featureCategories[featureValue] || 'integrations';
-        }
-
-            renderFeatureCheckboxes() {
-            const features = {
-                'hr_solutions': [
-                    'People Management',
-                    'Performance Management',
-                    'Attendance & Leave Management',
-                    'Payroll & Compensation',
-                    'Employee Self-Service',
-                    'WiseRecruit'
-                ],
-                'financial_solutions': [
-                    'Payroll Processing',
-                    'SmartExpenses',
-                    'Financial Reporting',
-                    'Book-keeping',
-                    'Taxation & Compliance',
-                    'GlobalInvoice',
-                    'Invoice & Billing',
-                    'Asset Management'
-                ],
-                'operational_solutions': [
-                    'Project & Task Management',
-                    'ShiftMaster',
-                    'StockFlow',
-                    'Vendor & Supplier Management',
-                    'Workflow Automation',
-                    'Facility Management'
-                ],
-                'integrations': [
-                    'ServiceNow & ITSM',
-                    'Payroll & Finance Integrations',
-                    'Employee Benefits',
-                    'Talent Management'
-                ]
-            };
-
-            return Object.entries(features).map(([category, categoryFeatures]) => `
-                <div class="feature-category">
-                    <h4>${this.formatCategoryName(category)}</h4>
-                    <div class="feature-checkboxes">
-                        ${categoryFeatures.map(feature => `
-                            <label class="checkbox-inline">
-                                <input 
-                                    type="checkbox" 
-                                    name="features" 
-                                    value="${feature.toLowerCase().replace(/\s+/g, '_')}"
-                                > ${feature}
-                            </label>
-                        `).join('')}
-                    </div>
+        renderNoModulesState() {
+            this.modulesGridContainer.innerHTML = `
+                <div class="no-modules">
+                    <i class="fas fa-cubes"></i>
+                    <p>No modules found. Create your first module!</p>
                 </div>
-            `).join('');
+            `;
         }
-
-        async exportModules() {
-            try {
-                // Prepare export parameters
-                const category = this.categoryFilter ? this.categoryFilter.value : '';
-                const complianceLevel = this.complianceFilter ? this.complianceFilter.value : '';
-                const search = this.moduleSearchInput ? this.moduleSearchInput.value.trim() : '';
-
-                // Construct query string
-                const queryParams = new URLSearchParams({
-                    ...(category && { category }),
-                    ...(complianceLevel && { complianceLevel }),
-                    ...(search && { search })
-                });
-
-                // Fetch export data
-                const response = await this.fetchWithAuth(
-                    `${this.apiBaseUrl}/modules/export?${queryParams}`
-                );
-
-                // Trigger file download
-                this.downloadExportedFile(response.data, 'modules_export.csv');
-            } catch (error) {
-                console.error('Export error:', error);
-                this.showNotification('Failed to export modules', 'error');
+            handleAddNewModule() {
+            // Create modal dynamically if not exists
+            if (!this.moduleModal) {
+                this.createModuleModal();
             }
+
+            // Reset form
+            this.moduleForm.reset();
+            this.populateFeatureCheckboxes();
+            
+            // Show modal
+            this.moduleModal.classList.add('show');
+            
+            // Setup form submission
+            this.moduleForm.onsubmit = this.handleModuleFormSubmit;
         }
 
-        downloadExportedFile(data, filename) {
-            // Create a Blob from the data
-            const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
-            
-            // Create a link element
-            const link = document.createElement('a');
-            
-            // Create a temporary URL for the blob
-            const url = URL.createObjectURL(blob);
-            
-            // Set link attributes
-            link.setAttribute('href', url);
-            link.setAttribute('download', filename);
-            
-            // Append to body, click, and remove
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        setupAdvancedSearch() {
-            // Create advanced search modal
-            const modalContainer = document.createElement('div');
-            modalContainer.className = 'modal-overlay';
-            modalContainer.innerHTML = `
-                <div class="modal-container">
-                    <div class="modal-header">
-                        <h3>Advanced Module Search</h3>
-                        <button class="close-btn">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="search-form">
-                            <div class="form-group">
-                                <label>Name Contains</label>
-                                <input type="text" id="advancedNameSearch" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label>Category</label>
-                                <select id="advancedCategorySearch" class="form-control">
-                                    <option value="">All Categories</option>
-                                    <option value="hr_solutions">HR Solutions</option>
-                                    <option value="financial_solutions">Financial Solutions</option>
-                                    <option value="operational_solutions">Operational Solutions</option>
-                                    <option value="integrations">Integrations</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Compliance Level</label>
-                                <select id="advancedComplianceSearch" class="form-control">
-                                    <option value="">All Levels</option>
-                                    <option value="low">Low</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="high">High</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Status</label>
-                                <select id="advancedStatusSearch" class="form-control">
-                                    <option value="">All Statuses</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
-                            </div>
+        createModuleModal() {
+            const modalHTML = `
+                <div class="modal" id="moduleModal">
+                    <div class="modal-dialog">
+                        <div class="modal-header">
+                            <h2>Add New Module</h2>
+                            <button class="modal-close" type="button">&times;</button>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button id="applyAdvancedSearch" class="btn btn-primary">Apply Search</button>
-                        <button id="resetAdvancedSearch" class="btn btn-secondary">Reset</button>
+                        <div class="modal-body">
+                            <form id="moduleForm">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Module Name</label>
+                                        <input type="text" name="moduleName" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Module Category</label>
+                                        <select name="moduleCategory" class="form-control" required>
+                                            <option value="">Select Category</option>
+                                            <option value="hr">HR Solutions</option>
+                                            <option value="finance">Financial Solutions</option>
+                                            <option value="operations">Operational Solutions</option>
+                                            <option value="integrations">Integrations</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Description</label>
+                                    <textarea name="moduleDescription" class="form-control" rows="3"></textarea>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Status</label>
+                                        <select name="moduleStatus" class="form-control">
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Compliance Level</label>
+                                        <select name="complianceLevel" class="form-control">
+                                            <option value="low">Low</option>
+                                            <option value="medium">Medium</option>
+                                            <option value="high">High</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Access Levels</label>
+                                    <div class="permissions-grid">
+                                        <label class="form-check">
+                                            <input type="checkbox" name="accessLevels" value="superadmin" class="form-check-input">
+                                            Superadmin
+                                        </label>
+                                        <label class="form-check">
+                                            <input type="checkbox" name="accessLevels" value="companyadmin" class="form-check-input">
+                                            Company Admin
+                                        </label>
+                                        <label class="form-check">
+                                            <input type="checkbox" name="accessLevels" value="hrmanager" class="form-check-input">
+                                            HR Manager
+                                        </label>
+                                        <label class="form-check">
+                                            <input type="checkbox" name="accessLevels" value="employee" class="form-check-input">
+                                            Employee
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group" id="featuresContainer">
+                                    <!-- Features will be dynamically populated -->
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label>Pricing Plan</label>
+                                        <select name="pricingPlan" class="form-control">
+                                            <option value="">Select Pricing Plan</option>
+                                            <option value="basic">Basic</option>
+                                            <option value="professional">Professional</option>
+                                            <option value="enterprise">Enterprise</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Audit Logging</label>
+                                        <div class="toggle-switch">
+                                            <input type="checkbox" name="auditLogging" id="auditLoggingToggle">
+                                            <label for="auditLoggingToggle" class="toggle-slider"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" id="cancelModuleBtn">Cancel</button>
+                            <button type="submit" form="moduleForm" class="btn btn-primary">Save Module</button>
+                        </div>
                     </div>
                 </div>
             `;
 
-            // Append to body
-            document.body.appendChild(modalContainer);
+            // Create modal element
+            const modalContainer = document.createElement('div');
+            modalContainer.innerHTML = modalHTML;
+            document.body.appendChild(modalContainer.firstChild);
 
-            // Get elements
-            const closeBtn = modalContainer.querySelector('.close-btn');
-            const applySearchBtn = modalContainer.querySelector('#applyAdvancedSearch');
-            const resetSearchBtn = modalContainer.querySelector('#resetAdvancedSearch');
+            // Cache modal reference
+            this.moduleModal = document.getElementById('moduleModal');
 
-            // Close modal function
-            const closeModal = () => {
-                document.body.removeChild(modalContainer);
+            // Setup close and cancel buttons
+            this.moduleModal.querySelector('.modal-close').addEventListener('click', this.closeModuleModal.bind(this));
+            document.getElementById('cancelModuleBtn').addEventListener('click', this.closeModuleModal.bind(this));
+        }
+
+        populateFeatureCheckboxes() {
+            const featuresContainer = document.getElementById('featuresContainer');
+            featuresContainer.innerHTML = ''; // Clear existing
+
+            const featureCategories = {
+                'HR Solutions': [
+                    'People Management', 
+                    'Performance Management', 
+                    'Attendance & Leave Management', 
+                    'Payroll & Compensation', 
+                    'Employee Self-Service', 
+                    'WiseRecruit'
+                ],
+                'Financial Solutions': [
+                    'Payroll Processing', 
+                    'SmartExpenses', 
+                    'Financial Reporting', 
+                    'Book-keeping', 
+                    'Taxation & Compliance', 
+                    'GlobalInvoice', 
+                    'Invoice & Billing', 
+                    'Asset Management'
+                ]
+                // Add other categories as needed
             };
 
-            // Close event listener
-            closeBtn.addEventListener('click', closeModal);
+            Object.entries(featureCategories).forEach(([category, features]) => {
+                const categoryHeader = document.createElement('h3');
+                categoryHeader.textContent = category;
+                featuresContainer.appendChild(categoryHeader);
 
-            // Apply search
-            applySearchBtn.addEventListener('click', () => {
-                // Collect advanced search parameters
-                const nameSearch = document.getElementById('advancedNameSearch').value.trim();
-                const categorySearch = document.getElementById('advancedCategorySearch').value;
-                const complianceSearch = document.getElementById('advancedComplianceSearch').value;
-                const statusSearch = document.getElementById('advancedStatusSearch').value;
-
-                // Update filter inputs
-                if (this.moduleSearchInput) this.moduleSearchInput.value = nameSearch;
-                if (this.categoryFilter) this.categoryFilter.value = categorySearch;
-                if (this.complianceFilter) this.complianceFilter.value = complianceSearch;
-
-                // Trigger module search
-                this.loadModules();
-
-                // Close modal
-                closeModal();
-            });
-
-            // Reset search
-            resetSearchBtn.addEventListener('click', () => {
-                // Reset all search inputs
-                document.getElementById('advancedNameSearch').value = '';
-                document.getElementById('advancedCategorySearch').value = '';
-                document.getElementById('advancedComplianceSearch').value = '';
-                document.getElementById('advancedStatusSearch').value = '';
+                features.forEach(feature => {
+                    const featureWrapper = document.createElement('label');
+                    featureWrapper.className = 'form-check';
+                    featureWrapper.innerHTML = `
+                        <input type="checkbox" name="features" value="${feature}" class="form-check-input">
+                        ${feature}
+                    `;
+                    featuresContainer.appendChild(featureWrapper);
+                });
             });
         }
 
-            async loadAuditLogs() {
-            try {
-                // Prepare query parameters
-                const startDate = this.auditStartDate ? this.auditStartDate.value : '';
-                const endDate = this.auditEndDate ? this.auditEndDate.value : '';
-                const activityType = this.activityTypeFilter ? this.activityTypeFilter.value : '';
+        closeModuleModal() {
+            if (this.moduleModal) {
+                this.moduleModal.classList.remove('show');
+            }
+        }
 
-                // Construct query string
-                const queryParams = new URLSearchParams({
-                    page: this.currentAuditLogPage,
-                    limit: this.auditLogsPerPage,
-                    ...(startDate && { startDate }),
-                    ...(endDate && { endDate }),
-                    ...(activityType && { type: activityType })
+         async handleModuleFormSubmit(event) {
+            event.preventDefault();
+            
+            // Validate form
+            if (!this.validateModuleForm()) {
+                return;
+            }
+
+            // Collect form data
+            const formData = this.collectModuleFormData();
+
+            try {
+                // Determine if this is an edit or create operation
+                const url = this.currentEditingModule 
+                    ? `${this.apiBaseUrl}/modules/${this.currentEditingModule._id}` 
+                    : `${this.apiBaseUrl}/modules`;
+                
+                const method = this.currentEditingModule ? 'PUT' : 'POST';
+
+                // Send request
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
                 });
 
-                // Fetch audit logs
-                const response = await this.fetchWithAuth(
-                    `${this.apiBaseUrl}/modules/activity-logs?${queryParams}`
+                // Handle response
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to save module');
+                }
+
+                const result = await response.json();
+
+                // Show success notification
+                window.dashboardApp.userInterface.showSuccessNotification(
+                    this.currentEditingModule 
+                        ? 'Module updated successfully' 
+                        : 'New module created successfully'
                 );
 
-                // Update total audit logs and pagination
-                this.totalAuditLogs = response.pagination.total;
-                this.updateAuditLogPagination(response.pagination);
+                // Close modal and refresh modules
+                this.closeModuleModal();
+                this.currentEditingModule = null;
+                this.fetchModules();
+            } catch (error) {
+                this.handleError(error, 'Saving Module');
+            }
+        }
+
+        validateModuleForm() {
+            const form = document.getElementById('moduleForm');
+            const moduleName = form.moduleName.value.trim();
+            const moduleCategory = form.moduleCategory.value;
+            
+            // Basic validation
+            if (!moduleName) {
+                this.showFormError('Module Name is required');
+                return false;
+            }
+
+            if (!moduleCategory) {
+                this.showFormError('Module Category is required');
+                return false;
+            }
+
+            // Additional custom validations can be added here
+            return true;
+        }
+
+        collectModuleFormData() {
+            const form = document.getElementById('moduleForm');
+            
+            // Collect basic module data
+            const moduleData = {
+                name: form.moduleName.value.trim(),
+                category: form.moduleCategory.value,
+                description: form.moduleDescription.value.trim(),
+                isActive: form.moduleStatus.value === 'active',
+                complianceLevel: form.complianceLevel.value,
+                
+                // Collect access levels
+                accessLevels: Array.from(
+                    form.querySelectorAll('input[name="accessLevels"]:checked')
+                ).map(el => el.value),
+
+                // Collect features
+                features: Array.from(
+                    form.querySelectorAll('input[name="features"]:checked')
+                ).map(el => el.value),
+
+                // Additional details
+                pricingPlan: form.pricingPlan.value,
+                auditLogging: form.auditLoggingToggle.checked
+            };
+
+            return moduleData;
+        }
+
+        handleEditModule(module) {
+            // Set current editing module
+            this.currentEditingModule = module;
+
+            // Create modal if not exists
+            if (!this.moduleModal) {
+                this.createModuleModal();
+            }
+
+            // Populate form with existing module data
+            this.populateEditModuleForm(module);
+
+            // Show modal
+            this.moduleModal.classList.add('show');
+
+            // Update form submission handler
+            this.moduleForm.onsubmit = this.handleModuleFormSubmit.bind(this);
+        }
+
+        populateEditModuleForm(module) {
+            const form = document.getElementById('moduleForm');
+
+            // Populate basic fields
+            form.moduleName.value = module.name;
+            form.moduleCategory.value = module.category;
+            form.moduleDescription.value = module.description || '';
+            form.moduleStatus.value = module.isActive ? 'active' : 'inactive';
+            form.complianceLevel.value = module.complianceLevel;
+            form.pricingPlan.value = module.pricingPlan || '';
+            form.auditLoggingToggle.checked = module.auditLogging || false;
+
+            // Reset and repopulate features
+            this.populateFeatureCheckboxes();
+
+            // Check previously selected features and access levels
+            if (module.features) {
+                module.features.forEach(feature => {
+                    const checkbox = form.querySelector(`input[name="features"][value="${feature}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
+
+            if (module.accessLevels) {
+                module.accessLevels.forEach(level => {
+                    const checkbox = form.querySelector(`input[name="accessLevels"][value="${level}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
+        }
+
+        showFormError(message) {
+            // Create or get error container
+            let errorContainer = this.moduleModal.querySelector('.form-error');
+            if (!errorContainer) {
+                errorContainer = document.createElement('div');
+                errorContainer.className = 'form-error text-danger';
+                this.moduleModal.querySelector('.modal-body').prepend(errorContainer);
+            }
+
+            // Show error message
+            errorContainer.textContent = message;
+            errorContainer.style.display = 'block';
+
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                errorContainer.style.display = 'none';
+            }, 3000);
+        }
+
+        async handleDeleteModule(moduleId) {
+            // Confirm deletion
+            const confirmDelete = window.confirm('Are you sure you want to delete this module?');
+            
+            if (!confirmDelete) return;
+
+            try {
+                const response = await fetch(`${this.apiBaseUrl}/modules/${moduleId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to delete module');
+                }
+
+                // Show success notification
+                window.dashboardApp.userInterface.showSuccessNotification('Module deleted successfully');
+
+                // Refresh modules
+                this.fetchModules();
+            } catch (error) {
+                this.handleError(error, 'Deleting Module');
+            }
+        }
+
+         async fetchAuditLogs() {
+            try {
+                // Prepare query parameters
+                const startDate = this.auditStartDate.value;
+                const endDate = this.auditEndDate.value;
+                const activityType = this.activityTypeFilter.value;
+
+                // Construct API endpoint
+                const url = new URL(`${this.apiBaseUrl}/modules/activity-logs`);
+                
+                if (startDate) url.searchParams.append('startDate', startDate);
+                if (endDate) url.searchParams.append('endDate', endDate);
+                if (activityType) url.searchParams.append('type', activityType);
+
+                // Fetch audit logs
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch audit logs');
+                }
+
+                const data = await response.json();
 
                 // Render audit logs
-                this.renderAuditLogs(response.data);
-
+                this.renderAuditLogs(data.data);
+                this.updateAuditLogsPagination(data.pagination);
             } catch (error) {
-                console.error('Error loading audit logs:', error);
-                if (this.auditLogsTableBody) {
-                    this.auditLogsTableBody.innerHTML = `
-                        <tr>
-                            <td colspan="5" class="error-message">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                Failed to load audit logs. ${error.message}
-                            </td>
-                        </tr>
-                    `;
-                }
+                this.handleError(error, 'Fetching Audit Logs');
+                this.renderNoAuditLogsState();
             }
         }
 
         renderAuditLogs(logs) {
-            // Ensure we have a table body
-            if (!this.auditLogsTableBody) return;
-
             // Clear existing logs
             this.auditLogsTableBody.innerHTML = '';
 
-            // Check if no logs
+            // Handle empty state
             if (!logs || logs.length === 0) {
-                this.auditLogsTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="no-logs">
-                            <i class="fas fa-history"></i>
-                            No audit logs found
-                        </td>
-                    </tr>
-                `;
+                this.renderNoAuditLogsState();
                 return;
             }
 
-            // Render each log
+            // Render logs
             logs.forEach(log => {
-                const logRow = document.createElement('tr');
-                logRow.innerHTML = `
-                    <td>${this.formatTimestamp(log.timestamp)}</td>
-                    <td>${this.formatActivityType(log.type)}</td>
-                    <td>${this.sanitizeInput(log.moduleName || 'N/A')}</td>
-                    <td>${this.sanitizeInput(log.userName || 'System')}</td>
-                    <td>
-                        <button class="btn-view-details" data-log-id="${log._id}">
-                            View Details
-                        </button>
-                    </td>
-                `;
-
-                // Add event listener for log details
-                const viewDetailsBtn = logRow.querySelector('.btn-view-details');
-                viewDetailsBtn.addEventListener('click', () => this.showLogDetails(log));
-
+                const logRow = this.createAuditLogRow(log);
                 this.auditLogsTableBody.appendChild(logRow);
             });
         }
 
-        updateAuditLogPagination(pagination) {
-            // Ensure we have the necessary elements
-            if (!this.auditLogsShowingCount || !this.prevAuditLogsPageBtn || 
-                !this.nextAuditLogsPageBtn || !this.auditLogsPageNumberContainer) return;
-
-            // Update showing count
-            this.auditLogsShowingCount.textContent = `Showing ${pagination.page} of ${pagination.totalPages} pages`;
-
-            // Update page buttons
-            this.prevAuditLogsPageBtn.disabled = pagination.page === 1;
-            this.nextAuditLogsPageBtn.disabled = pagination.page === pagination.totalPages;
-
-            // Generate page numbers
-            this.auditLogsPageNumberContainer.innerHTML = '';
-            for (let i = 1; i <= pagination.totalPages; i++) {
-                const pageBtn = document.createElement('button');
-                pageBtn.textContent = i;
-                pageBtn.className = `page-number ${i === pagination.page ? 'active' : ''}`;
-                pageBtn.addEventListener('click', () => {
-                    this.currentAuditLogPage = i;
-                    this.loadAuditLogs();
-                });
-                this.auditLogsPageNumberContainer.appendChild(pageBtn);
-            }
+        createAuditLogRow(log) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${new Date(log.timestamp).toLocaleString()}</td>
+                <td>
+                    <span class="badge ${this.getActivityBadgeClass(log.type)}">
+                        ${this.formatActivityType(log.type)}
+                    </span>
+                </td>
+                <td>${log.moduleName || 'N/A'}</td>
+                <td>${log.user || 'System'}</td>
+                <td>${this.formatLogDetails(log.details)}</td>
+            `;
+            return row;
         }
 
-        changeAuditLogPage(direction) {
-            // Change page based on direction
-            this.currentAuditLogPage += direction;
-            this.loadAuditLogs();
-        }
-
-        formatTimestamp(timestamp) {
-            try {
-                return new Date(timestamp).toLocaleString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
-            } catch (error) {
-                return 'Invalid Date';
-            }
+        getActivityBadgeClass(type) {
+            const badgeClasses = {
+                'MODULE_CREATED': 'badge-success',
+                'MODULE_UPDATED': 'badge-primary',
+                'MODULE_DELETED': 'badge-danger',
+                'MODULE_STATUS_CHANGED': 'badge-warning'
+            };
+            return badgeClasses[type] || 'badge-secondary';
         }
 
         formatActivityType(type) {
-            const activityTypes = {
-                MODULE_CREATED: 'Module Created',
-                MODULE_UPDATED: 'Module Updated',
-                MODULE_DELETED: 'Module Deleted',
-                MODULE_STATUS_CHANGED: 'Status Changed'
-            };
-
-            return activityTypes[type] || type;
+            return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
         }
 
-        showLogDetails(log) {
-            // Create modal for log details
-            const modalContainer = document.createElement('div');
-            modalContainer.className = 'log-details-modal';
-            modalContainer.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Log Details</h3>
-                        <button class="close-btn">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <table class="log-details-table">
-                            <tr>
-                                <th>Timestamp</th>
-                                <td>${this.formatTimestamp(log.timestamp)}</td>
-                            </tr>
-                            <tr>
-                                <th>Activity Type</th>
-                                <td>${this.formatActivityType(log.type)}</td>
-                            </tr>
-                            <tr>
-                                <th>Module Name</th>
-                                <td>${this.sanitizeInput(log.moduleName || 'N/A')}</td>
-                            </tr>
-                            <tr>
-                                <th>User</th>
-                                <td>${this.sanitizeInput(log.userName || 'System')}</td>
-                            </tr>
-                            <tr>
-                                <th>Details</th>
-                                <td>
-                                    <pre>${JSON.stringify(log.details, null, 2)}</pre>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
+        formatLogDetails(details) {
+            if (!details) return 'No additional details';
+            
+            // Convert object to readable string
+            return Object.entries(details)
+                .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
+                .join(', ');
+        }
+
+        updateAuditLogsPagination(pagination) {
+            // Update showing count
+            const auditLogsShowingCount = document.getElementById('auditLogsShowingCount');
+            auditLogsShowingCount.textContent = `Showing ${pagination.page} of ${pagination.totalPages} pages`;
+
+            // Update pagination buttons
+            const prevAuditLogsPageBtn = document.getElementById('prevAuditLogsPageBtn');
+            const nextAuditLogsPageBtn = document.getElementById('nextAuditLogsPageBtn');
+            
+            prevAuditLogsPageBtn.disabled = pagination.page === 1;
+            nextAuditLogsPageBtn.disabled = pagination.page === pagination.totalPages;
+
+            // Generate page numbers
+            this.generateAuditLogsPageNumbers(pagination);
+        }
+
+        generateAuditLogsPageNumbers(pagination) {
+            const pageNumberContainer = document.getElementById('auditLogsPageNumberContainer');
+            pageNumberContainer.innerHTML = '';
+
+            for (let i = 1; i <= pagination.totalPages; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.textContent = i;
+                pageBtn.className = 'page-number';
+                
+                if (i === pagination.page) {
+                    pageBtn.classList.add('active');
+                }
+
+                pageBtn.addEventListener('click', () => {
+                    // Implement pagination logic if needed
+                });
+
+                pageNumberContainer.appendChild(pageBtn);
+            }
+        }
+
+        renderNoAuditLogsState() {
+            this.auditLogsTableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center">
+                        <div class="no-audit-logs">
+                            <i class="fas fa-history"></i>
+                            <p>No audit logs found</p>
+                        </div>
+                    </td>
+                </tr>
             `;
-
-            // Add close functionality
-            const closeBtn = modalContainer.querySelector('.close-btn');
-            closeBtn.addEventListener('click', () => {
-                document.body.removeChild(modalContainer);
-            });
-
-            // Append to body
-            document.body.appendChild(modalContainer);
         }
 
-        // Cleanup method
         cleanup() {
             // Remove event listeners
             if (this.addNewModuleBtn) {
-                this.addNewModuleBtn.removeEventListener('click', this.showAddModuleModal);
+                this.addNewModuleBtn.removeEventListener('click', this.handleAddNewModule);
             }
 
-            // Clear any ongoing requests or timers
-            // Add any specific cleanup logic here
+            // Remove modal if exists
+            if (this.moduleModal) {
+                this.moduleModal.remove();
+            }
+
+            // Clear references
+            this.modulesGridContainer = null;
+            this.addNewModuleBtn = null;
+            this.moduleModal = null;
+            this.moduleForm = null;
+            this.currentEditingModule = null;
         }
     }
 
-    // Expose the WiseManager to the global scope
+    // Expose WiseManager to the global scope
     window.WiseManager = WiseManager;
 })();
