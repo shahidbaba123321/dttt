@@ -1650,8 +1650,169 @@ button {
 /* Modules Grid */
 .modules-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: var(--spacing-lg);
+    padding: var(--spacing-lg) 0;
+}
+
+    /* Module Card Styling */
+.module-card {
+    background-color: var(--neutral-100);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-subtle);
+    border: 1px solid var(--neutral-300);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.module-card:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-medium);
+}
+    /* Module Card Header */
+.module-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    background-color: var(--neutral-200);
+    border-bottom: 1px solid var(--neutral-300);
+}
+
+.module-title {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--neutral-500);
+    margin: 0;
+}
+
+.module-status {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--font-size-xs);
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.status-active {
+    background-color: var(--success-color);
+}
+
+.status-inactive {
+    background-color: var(--danger-color);
+}
+
+/* Module Category */
+.module-category {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: rgba(26, 95, 122, 0.05);
+    color: var(--neutral-400);
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Module Description */
+.module-description {
+    padding: var(--spacing-md);
+    flex-grow: 1;
+    color: var(--neutral-500);
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+}
+
+/* Module Details */
+.module-details {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--neutral-200);
+    border-top: 1px solid var(--neutral-300);
+}
+
+.module-compliance {
+    color: var(--neutral-400);
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+}
+
+/* Module Actions */
+.module-actions {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-md);
+    background-color: var(--neutral-200);
+    border-top: 1px solid var(--neutral-300);
+}
+
+.module-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-xs);
+    transition: all 0.3s ease;
+    width: calc(50% - var(--spacing-sm));
+}
+
+.module-action-btn.edit-module {
+    background-color: var(--primary-color);
+    color: var(--neutral-100);
+}
+
+.module-action-btn.edit-module:hover {
+    background-color: var(--primary-dark);
+}
+
+.module-action-btn.delete-module {
+    background-color: var(--danger-color);
+    color: var(--neutral-100);
+}
+
+.module-action-btn.delete-module:hover {
+    background-color: darken(var(--danger-color), 10%);
+}
+
+.module-action-btn i {
+    margin-right: var(--spacing-xs);
+}
+
+/* No Modules State */
+.no-modules {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+    background-color: var(--neutral-200);
+    border-radius: var(--border-radius-lg);
+    text-align: center;
+}
+
+.no-modules i {
+    font-size: 3rem;
+    color: var(--neutral-400);
+    margin-bottom: var(--spacing-md);
+}
+
+.no-modules p {
+    color: var(--neutral-500);
+    font-size: var(--font-size-base);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .modules-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Error Message Styling */
