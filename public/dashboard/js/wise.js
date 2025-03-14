@@ -47,6 +47,8 @@
             this.handleModuleFormSubmit = this.handleModuleFormSubmit.bind(this);
             this.fetchAuditLogs = this.fetchAuditLogs.bind(this);
 
+            
+
             // Initialize
             this.init();
         }
@@ -86,12 +88,7 @@
             this.applyAuditFiltersBtn.addEventListener('click', this.fetchAuditLogs);
         }
 
-        // Placeholder methods to be implemented in subsequent parts
-        async fetchModules() {}
-        renderModules() {}
-        handleAddNewModule() {}
-        handleModuleFormSubmit() {}
-        async fetchAuditLogs() {}
+        
 
         // Utility method for error handling
         handleError(error, context = 'Operation') {
