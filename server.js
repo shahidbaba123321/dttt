@@ -3655,85 +3655,178 @@ app.post('/api/companies/:companyId/invoice', verifyToken, verifyAdmin, async (r
 // 1. Get All Modules
 app.get('/api/modules', verifyToken, verifyAdmin, async (req, res) => {
     try {
-        // Get pagination parameters
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
+        // Validate and parse pagination parameters
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 10));
         const skip = (page - 1) * limit;
 
-        // Get search and filter parameters
+        // Prepare logging context
+        const requestContext = {
+            userId: req.user.userId,
+            userRole: req.user.role,
+            requestTimestamp: new Date()
+        };
+
+        // Get search and filter parameters with sanitization
         const { search, category, complianceLevel } = req.query;
         const filter = {};
 
-        // Add search filter
-        if (search) {
+        // Add search filter with multiple field support
+        if (search && typeof search === 'string') {
             filter.$or = [
                 { name: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } }
+                { description: { $regex: search, $options: 'i' } },
+                { category: { $regex: search, $options: 'i' } }
             ];
         }
 
-        // Add category filter
-        if (category) {
-            filter.category = category;
+        // Add category filter with validation
+        const validCategories = ['hr', 'finance', 'operations', 'integrations'];
+        if (category && validCategories.includes(category.toLowerCase())) {
+            filter.category = category.toLowerCase();
         }
 
-        // Add compliance level filter
-        if (complianceLevel) {
-            filter.complianceLevel = complianceLevel;
+        // Add compliance level filter with validation
+        const validComplianceLevels = ['low', 'medium', 'high'];
+        if (complianceLevel && validComplianceLevels.includes(complianceLevel.toLowerCase())) {
+            filter.complianceLevel = complianceLevel.toLowerCase();
         }
 
-        // Get total count for pagination
-        const totalModules = await database.collection('modules').countDocuments(filter);
+        // Logging the constructed filter for debugging
+        console.log('Module Query Filter:', {
+            filter,
+            pagination: { page, limit, skip },
+            context: requestContext
+        });
 
-        // Fetch modules with pagination
-        const modules = await database.collection('modules')
-            .find(filter)
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .toArray();
+        // Perform database operations with error handling
+        const [totalModules, modules] = await Promise.all([
+            database.collection('modules').countDocuments(filter),
+            database.collection('modules')
+                .find(filter)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .toArray()
+        ]);
 
-        // Enhance modules with additional metadata
-        const enhancedModules = modules.map(module => ({
-            ...module,
-            usageCount: this.calculateModuleUsage(module._id)
+        // Enhanced modules with usage count
+        const enhancedModules = await Promise.all(modules.map(async (module) => {
+            try {
+                const usageCount = await calculateModuleUsage(module._id);
+                return {
+                    ...module,
+                    usageCount,
+                    // Additional metadata can be added here
+                    lastUpdated: module.updatedAt || module.createdAt
+                };
+            } catch (usageError) {
+                console.error(`Usage calculation error for module ${module._id}:`, usageError);
+                return {
+                    ...module,
+                    usageCount: 0,
+                    usageCalculationError: true
+                };
+            }
         }));
 
+        // Prepare pagination metadata
+        const totalPages = Math.ceil(totalModules / limit);
+        const hasMore = page < totalPages;
+
+        // Audit logging
+        await createAuditLog('MODULE_LIST_VIEWED', req.user.userId, null, {
+            pageViewed: page,
+            totalModules,
+            filterApplied: JSON.stringify(filter)
+        });
+
+        // Send successful response
         res.json({
             success: true,
             data: enhancedModules,
             pagination: {
                 total: totalModules,
                 page,
-                totalPages: Math.ceil(totalModules / limit),
-                hasMore: page * limit < totalModules
+                limit,
+                totalPages,
+                hasMore
+            },
+            metadata: {
+                requestTimestamp: requestContext.requestTimestamp,
+                processedAt: new Date()
             }
         });
+
     } catch (error) {
-        console.error('Error fetching modules:', error);
+        // Comprehensive error handling
+        console.error('Detailed Module Fetch Error:', {
+            message: error.message,
+            stack: error.stack,
+            requestQuery: req.query
+        });
+
+        // Create error log
+        await createErrorLog('MODULE_FETCH_ERROR', {
+            userId: req.user?.userId,
+            errorMessage: error.message,
+            requestDetails: req.query
+        });
+
+        // Send error response
         res.status(500).json({
             success: false,
-            message: 'Error fetching modules',
-            error: error.message
+            message: 'Failed to retrieve modules',
+            error: {
+                message: error.message,
+                code: 'INTERNAL_SERVER_ERROR'
+            }
         });
     }
 });
 
-// Helper function to calculate module usage
-async function calculateModuleUsage(moduleId) {
+// Helper function for error logging
+async function createErrorLog(type, details) {
     try {
-        // Count how many companies are using this module
-        const usageCount = await database.collection('company_modules').countDocuments({
-            moduleId: new ObjectId(moduleId),
-            status: 'active'
+        await database.collection('error_logs').insertOne({
+            type,
+            timestamp: new Date(),
+            ...details
         });
-        return usageCount;
-    } catch (error) {
-        console.error('Error calculating module usage:', error);
-        return 0;
+    } catch (logError) {
+        console.error('Error logging failed:', logError);
     }
 }
 
+// Helper function to calculate module usage
+async function calculateModuleUsage(moduleId) {
+    try {
+        // Ensure moduleId is converted to ObjectId
+        const objectId = typeof moduleId === 'string' 
+            ? new ObjectId(moduleId) 
+            : moduleId;
+
+        // Detailed logging
+        console.log('Calculating usage for moduleId:', objectId);
+
+        // Count how many companies are using this module
+        const usageCount = await database.collection('company_modules').countDocuments({
+            moduleId: objectId,
+            status: 'active'
+        });
+
+        console.log(`Usage count for ${objectId}: ${usageCount}`);
+
+        return usageCount;
+    } catch (error) {
+        console.error('Detailed Error in calculateModuleUsage:', {
+            moduleId,
+            error: error.message,
+            stack: error.stack
+        });
+        return 0;
+    }
+}
 // 2. Create New Module
 app.post('/api/modules', verifyToken, verifyAdmin, async (req, res) => {
     const session = client.startSession();
