@@ -503,7 +503,7 @@
             }
         }
 
-          showAddModuleModal(existingModule = null) {
+         showAddModuleModal(existingModule = null) {
     // Remove any existing modal first
     const existingModal = document.getElementById('moduleFormModal');
     if (existingModal) {
@@ -550,9 +550,9 @@
                             required
                         >
                             <option value="">Select Category</option>
-                            <option value="hr" ${existingModule && existingModule.category === 'hr' ? 'selected' : ''}>HR Solutions</option>
-                            <option value="financial" ${existingModule && existingModule.category === 'financial' ? 'selected' : ''}>Financial Solutions</option>
-                            <option value="operational" ${existingModule && existingModule.category === 'operational' ? 'selected' : ''}>Operational Solutions</option>
+                            <option value="hr_solutions" ${existingModule && existingModule.category === 'hr_solutions' ? 'selected' : ''}>HR Solutions</option>
+                            <option value="financial_solutions" ${existingModule && existingModule.category === 'financial_solutions' ? 'selected' : ''}>Financial Solutions</option>
+                            <option value="operational_solutions" ${existingModule && existingModule.category === 'operational_solutions' ? 'selected' : ''}>Operational Solutions</option>
                             <option value="integrations" ${existingModule && existingModule.category === 'integrations' ? 'selected' : ''}>Integrations</option>
                         </select>
                         <small class="error-message" id="moduleCategoryError"></small>
@@ -631,20 +631,20 @@
 
                 <div class="form-row">
                     <div class="form-group">
-            <label>Compliance Level *</label>
-            <select 
-                id="complianceLevel" 
-                name="complianceLevel" 
-                class="form-control" 
-                required
-            >
-                <option value="">Select Compliance Level</option>
-                <option value="low" ${existingModule && existingModule.complianceLevel === 'low' ? 'selected' : ''}>Low</option>
-                <option value="medium" ${existingModule && existingModule.complianceLevel === 'medium' ? 'selected' : ''}>Medium</option>
-                <option value="high" ${existingModule && existingModule.complianceLevel === 'high' ? 'selected' : ''}>High</option>
-            </select>
-            <small class="error-message" id="complianceLevelError"></small>
-        </div>
+                        <label>Compliance Level *</label>
+                        <select 
+                            id="complianceLevel" 
+                            name="complianceLevel" 
+                            class="form-control" 
+                            required
+                        >
+                            <option value="">Select Compliance Level</option>
+                            <option value="low" ${existingModule && existingModule.complianceLevel === 'low' ? 'selected' : ''}>Low</option>
+                            <option value="medium" ${existingModule && existingModule.complianceLevel === 'medium' ? 'selected' : ''}>Medium</option>
+                            <option value="high" ${existingModule && existingModule.complianceLevel === 'high' ? 'selected' : ''}>High</option>
+                        </select>
+                        <small class="error-message" id="complianceLevelError"></small>
+                    </div>
                     <div class="form-group">
                         <label>Audit Logging</label>
                         <div class="toggle-switch">
@@ -724,10 +724,11 @@
         modalContainer.classList.add('show');
     }, 50);
 
-    // Return the modal container for any additional manipulation if needed
+   // Return the modal container for any additional manipulation if needed
               modalContainer.style.display = 'flex';
             return modalContainer;
         }
+    
      
 
         // Additional method to handle modal closing
@@ -744,7 +745,7 @@ closeModuleModal() {
            // Method to render feature checkboxes
 renderFeatureCheckboxes() {
     const features = {
-        'HR Solutions': [
+        'hr_solutions': [
             'People Management',
             'Performance Management',
             'Attendance & Leave Management',
@@ -752,7 +753,7 @@ renderFeatureCheckboxes() {
             'Employee Self-Service',
             'WiseRecruit'
         ],
-        'Financial Solutions': [
+        'financial_solutions': [
             'Payroll Processing',
             'SmartExpenses',
             'Financial Reporting',
@@ -762,7 +763,7 @@ renderFeatureCheckboxes() {
             'Invoice & Billing',
             'Asset Management'
         ],
-        'Operational Solutions': [
+        'operational_solutions': [
             'Project & Task Management',
             'ShiftMaster',
             'StockFlow',
@@ -770,7 +771,7 @@ renderFeatureCheckboxes() {
             'Workflow Automation',
             'Facility Management'
         ],
-        'Integrations': [
+        'integrations': [
             'ServiceNow & ITSM',
             'Payroll & Finance Integrations',
             'Employee Benefits',
@@ -778,9 +779,10 @@ renderFeatureCheckboxes() {
         ]
     };
 
+
     return Object.entries(features).map(([category, categoryFeatures]) => `
         <div class="feature-category">
-            <h4>${category}</h4>
+            <h4>${this.formatCategoryName(category)}</h4>
             <div class="feature-checkboxes">
                 ${categoryFeatures.map(feature => `
                     <label class="checkbox-inline">
@@ -795,6 +797,14 @@ renderFeatureCheckboxes() {
         </div>
     `).join('');
 }
+
+        // Helper method to format category name
+formatCategoryName(category) {
+    return category
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, l => l.toUpperCase());
+}
+
 
         generatePermissionsCheckboxes(existingModule = null) {
             const permissionGroups = {
@@ -862,8 +872,10 @@ renderFeatureCheckboxes() {
 
     // Validate Category
     const moduleCategory = form.querySelector('#moduleCategory');
-    if (!moduleCategory.value) {
-        this.markFieldAsInvalid(moduleCategory, 'Please select a module category');
+    try {
+        this.sanitizeCategory(moduleCategory.value);
+    } catch (error) {
+        this.markFieldAsInvalid(moduleCategory, 'Please select a valid module category');
         isValid = false;
     }
 
@@ -936,7 +948,7 @@ renderFeatureCheckboxes() {
     // Collect basic module information
     const moduleData = {
         name: form.querySelector('#moduleName').value.trim(),
-        category: form.querySelector('#moduleCategory').value,
+        category: this.sanitizeCategory(form.querySelector('#moduleCategory').value),
         description: form.querySelector('#moduleDescription').value.trim() || '',
         status: form.querySelector('#moduleStatus').value,
         pricingPlan: form.querySelector('#pricingPlan').value || null,
@@ -969,40 +981,62 @@ renderFeatureCheckboxes() {
     return moduleData;
 }
 
-        // Helper method to determine feature category
-getCategoryForFeature(featureValue) {
-    const featureCategories = {
-        'people_management': 'HR Solutions',
-        'performance_management': 'HR Solutions',
-        'attendance_&_leave_management': 'HR Solutions',
-        'payroll_&_compensation': 'HR Solutions',
-        'employee_self-service': 'HR Solutions',
-        'wiserecruit': 'HR Solutions',
-
-        'payroll_processing': 'Financial Solutions',
-        'smartexpenses': 'Financial Solutions',
-        'financial_reporting': 'Financial Solutions',
-        'book-keeping': 'Financial Solutions',
-        'taxation_&_compliance': 'Financial Solutions',
-        'globalinvoice': 'Financial Solutions',
-        'invoice_&_billing': 'Financial Solutions',
-        'asset_management': 'Financial Solutions',
-
-        'project_&_task_management': 'Operational Solutions',
-        'shiftmaster': 'Operational Solutions',
-        'stockflow': 'Operational Solutions',
-        'vendor_&_supplier_management': 'Operational Solutions',
-        'workflow_automation': 'Operational Solutions',
-        'facility_management': 'Operational Solutions',
-
-        'servicenow_&_itsm': 'Integrations',
-        'payroll_&_finance_integrations': 'Integrations',
-        'employee_benefits': 'Integrations',
-        'talent_management': 'Integrations'
+        // Add a method to sanitize and validate category
+sanitizeCategory(category) {
+    // Mapping to ensure consistent category values
+    const categoryMap = {
+        'hr_solutions': 'hr_solutions',
+        'financial_solutions': 'financial_solutions',
+        'operational_solutions': 'operational_solutions',
+        'integrations': 'integrations'
     };
 
-    return featureCategories[featureValue] || 'Uncategorized';
+    // Validate and return the category
+    if (categoryMap[category]) {
+        return categoryMap[category];
+    }
+
+    // Throw an error if category is invalid
+    throw new Error('Invalid module category');
 }
+
+        // Helper method to determine feature category
+getCategoryForFeature(featureValue) {
+     const featureCategories = {
+        // Mapping for HR Solutions
+        'people_management': 'hr_solutions',
+        'performance_management': 'hr_solutions',
+        'attendance_&_leave_management': 'hr_solutions',
+        'payroll_&_compensation': 'hr_solutions',
+        'employee_self-service': 'hr_solutions',
+        'wiserecruit': 'hr_solutions',
+
+        // Mapping for Financial Solutions
+        'payroll_processing': 'financial_solutions',
+        'smartexpenses': 'financial_solutions',
+        'financial_reporting': 'financial_solutions',
+        'book-keeping': 'financial_solutions',
+        'taxation_&_compliance': 'financial_solutions',
+        'globalinvoice': 'financial_solutions',
+        'invoice_&_billing': 'financial_solutions',
+        'asset_management': 'financial_solutions',
+
+        // Mapping for Operational Solutions
+        'project_&_task_management': 'operational_solutions',
+        'shiftmaster': 'operational_solutions',
+        'stockflow': 'operational_solutions',
+        'vendor_&_supplier_management': 'operational_solutions',
+        'workflow_automation': 'operational_solutions',
+        'facility_management': 'operational_solutions',
+
+        // Mapping for Integrations
+        'servicenow_&_itsm': 'integrations',
+        'payroll_&_finance_integrations': 'integrations',
+        'employee_benefits': 'integrations',
+        'talent_management': 'integrations'
+    };
+    
+    return featureCategories[featureValue] || 'integrations';
 
 
         async createModule(moduleData) {
