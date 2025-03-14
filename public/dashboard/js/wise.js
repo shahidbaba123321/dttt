@@ -842,7 +842,7 @@
                 console.error('Failed to send error log:', error);
             }
         }
-    }
+    
     // Expose to global scope
     window.WiseManager = WiseManager;
 })();
