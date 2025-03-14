@@ -28,6 +28,8 @@
             // Bind methods to ensure correct context
             this.bindMethodContext();
 
+            this.showAddModuleModal = this.showAddModuleModal.bind(this);
+
             // Bind events
             this.bindEvents();
 
@@ -130,6 +132,230 @@
             // Setup additional features
             this.setupAdditionalFeatures();
         }
+
+        showAddModuleModal(existingModule = null) {
+    // Remove any existing modal first
+    const existingModal = document.getElementById('moduleFormModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Create modal container
+    const modalContainer = document.createElement('div');
+    modalContainer.id = 'moduleFormModal';
+    modalContainer.className = 'modal-overlay';
+    
+    // Determine modal title and action
+    const isEditMode = !!existingModule;
+    const modalTitle = isEditMode ? 'Edit Module' : 'Create New Module';
+
+    // Create modal HTML with comprehensive form
+    modalContainer.innerHTML = `
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2>${modalTitle}</h2>
+                <button type="button" class="modal-close-btn">&times;</button>
+            </div>
+            <form id="moduleForm" class="module-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="moduleName">Module Name *</label>
+                        <input 
+                            type="text" 
+                            id="moduleName" 
+                            name="name" 
+                            class="form-control" 
+                            required 
+                            placeholder="Enter module name"
+                            value="${existingModule ? this.sanitizeInput(existingModule.name) : ''}"
+                        >
+                        <small class="error-message" id="moduleNameError"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="moduleCategory">Module Category *</label>
+                        <select 
+                            id="moduleCategory" 
+                            name="category" 
+                            class="form-control" 
+                            required
+                        >
+                            <option value="">Select Category</option>
+                            <option value="hr_solutions" ${existingModule && existingModule.category === 'hr_solutions' ? 'selected' : ''}>HR Solutions</option>
+                            <option value="financial_solutions" ${existingModule && existingModule.category === 'financial_solutions' ? 'selected' : ''}>Financial Solutions</option>
+                            <option value="operational_solutions" ${existingModule && existingModule.category === 'operational_solutions' ? 'selected' : ''}>Operational Solutions</option>
+                            <option value="integrations" ${existingModule && existingModule.category === 'integrations' ? 'selected' : ''}>Integrations</option>
+                        </select>
+                        <small class="error-message" id="moduleCategoryError"></small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label for="moduleDescription">Description</label>
+                        <textarea 
+                            id="moduleDescription" 
+                            name="description" 
+                            class="form-control" 
+                            rows="3" 
+                            placeholder="Enter module description"
+                        >${existingModule ? this.sanitizeInput(existingModule.description || '') : ''}</textarea>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Status *</label>
+                        <select 
+                            id="moduleStatus" 
+                            name="status" 
+                            class="form-control" 
+                            required
+                        >
+                            <option value="active" ${existingModule && existingModule.status === 'active' ? 'selected' : ''}>Active</option>
+                            <option value="inactive" ${existingModule && existingModule.status === 'inactive' ? 'selected' : ''}>Inactive</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Pricing Plan</label>
+                        <select 
+                            id="pricingPlan" 
+                            name="pricingPlan" 
+                            class="form-control"
+                        >
+                            <option value="">Select Pricing Plan</option>
+                            <option value="basic">Basic</option>
+                            <option value="professional">Professional</option>
+                            <option value="enterprise">Enterprise</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Access Level</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="accessLevel" value="superadmin"> Superadmin
+                            </label>
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="accessLevel" value="company_admin"> Company Admin
+                            </label>
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="accessLevel" value="hr_manager"> HR Manager
+                            </label>
+                            <label class="checkbox-inline">
+                                <input type="checkbox" name="accessLevel" value="employee"> Employee
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Features Included</label>
+                        <div id="featuresContainer">
+                            ${this.renderFeatureCheckboxes()}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Compliance Level *</label>
+                        <select 
+                            id="complianceLevel" 
+                            name="complianceLevel" 
+                            class="form-control" 
+                            required
+                        >
+                            <option value="">Select Compliance Level</option>
+                            <option value="low" ${existingModule && existingModule.complianceLevel === 'low' ? 'selected' : ''}>Low</option>
+                            <option value="medium" ${existingModule && existingModule.complianceLevel === 'medium' ? 'selected' : ''}>Medium</option>
+                            <option value="high" ${existingModule && existingModule.complianceLevel === 'high' ? 'selected' : ''}>High</option>
+                        </select>
+                        <small class="error-message" id="complianceLevelError"></small>
+                    </div>
+                    <div class="form-group">
+                        <label>Audit Logging</label>
+                        <div class="toggle-switch">
+                            <input 
+                                type="checkbox" 
+                                id="auditLogging" 
+                                name="auditLogging"
+                                ${existingModule && existingModule.auditLogging ? 'checked' : ''}
+                            >
+                            <label for="auditLogging" class="toggle-slider"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary save-btn">
+                        ${isEditMode ? 'Update Module' : 'Create Module'}
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    // Append to body
+    document.body.appendChild(modalContainer);
+
+    // Get form elements
+    const form = modalContainer.querySelector('#moduleForm');
+    const closeBtn = modalContainer.querySelector('.modal-close-btn');
+    const cancelBtn = modalContainer.querySelector('.cancel-btn');
+
+    // Close modal function
+    const closeModal = () => {
+        document.body.removeChild(modalContainer);
+    };
+
+    // Close event listeners
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+
+    // Form submission
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // Validate form
+        if (this.validateModuleForm(form)) {
+            try {
+                // Collect form data
+                const formData = this.collectModuleFormData(form);
+                
+                // Send data to server
+                if (existingModule && existingModule._id) {
+                    // Update existing module
+                    await this.updateModule(existingModule._id, formData);
+                    this.showNotification('Module updated successfully', 'success');
+                } else {
+                    // Create new module
+                    await this.createModule(formData);
+                    this.showNotification('Module created successfully', 'success');
+                }
+                
+                // Close modal
+                closeModal();
+                
+                // Reload modules
+                this.loadModules();
+            } catch (error) {
+                console.error('Module submission error:', error);
+                this.showNotification(error.message || 'Failed to submit module', 'error');
+            }
+        }
+    });
+
+    // Trigger modal display
+    setTimeout(() => {
+        modalContainer.classList.add('show');
+    }, 50);
+
+    return modalContainer;
+}
 
         setupAdditionalFeatures() {
             // Add export functionality
