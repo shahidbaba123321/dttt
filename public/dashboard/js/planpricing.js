@@ -753,7 +753,7 @@ showConfirmationModal(title, message) {
             setTimeout(() => reject(new Error('Request timed out')), 10000)
         );
 
-        const fetchPlansPromise = fetch(`${this.baseUrl}/plans`, {
+        const fetchPlansPromise = fetch(`${this.baseUrl}/plans/:planId`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${this.token}`,
