@@ -38,6 +38,16 @@
             // Module Selection References
             this.modulesContainer = null;
 
+            // Add null checks
+    if (!this.plansGridContainer) {
+        console.error('Plans grid container not found');
+    }
+
+    if (!this.addNewPlanBtn) {
+        console.error('Add new plan button not found');
+    }
+
+
             // Bind methods to maintain correct context
             this.bindMethods();
 
@@ -98,12 +108,24 @@
 
         // Error Handling Utility
         handleError(error, context = 'Operation') {
-            console.error(`${context} failed:`, error);
-            window.dashboardApp.userInterface.showErrorNotification(
-                `${context} failed. Please try again.`
-            );
-        }
+    // More comprehensive error logging
+    console.error(`${context} failed:`, {
+        message: error.message,
+        stack: error.stack,
+        context: context
+    });
 
+    // Fallback error notification
+    const errorMessage = error.message || `${context} failed. Please try again.`;
+    
+    // Check if userInterface exists before calling
+    if (window.dashboardApp && window.dashboardApp.userInterface) {
+        window.dashboardApp.userInterface.showErrorNotification(errorMessage);
+    } else {
+        // Fallback alert if notification system is not available
+        alert(errorMessage);
+    }
+}
         // Event Listeners Initialization
         initializeEventListeners() {
             // Add New Plan Button
@@ -130,39 +152,53 @@
         }
                 // Fetch Plans Method
         async fetchPlans() {
-            try {
-                // Construct API endpoint
-                const url = new URL(`${this.apiBaseUrl}/plans`);
-                url.searchParams.append('page', this.currentPage);
-                url.searchParams.append('limit', this.pageSize);
-
-                // Fetch plans
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch plans');
-                }
-
-                const data = await response.json();
-
-                // Update total plans and pagination
-                this.totalPlans = data.pagination.total;
-                this.renderPlans(data.data);
-                this.updatePagination(data.pagination);
-
-                return data.data;
-            } catch (error) {
-                this.handleError(error, 'Fetching Plans');
-                this.renderNoPlansState();
-                return [];
-            }
+    try {
+        // Ensure plansGridContainer exists
+        if (!this.plansGridContainer) {
+            console.error('Plans grid container not found');
+            return [];
         }
+
+        // Construct API endpoint
+        const url = new URL(`${this.apiBaseUrl}/plans`);
+        url.searchParams.append('page', this.currentPage);
+        url.searchParams.append('limit', this.pageSize);
+
+        // Fetch plans
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch plans');
+        }
+
+        const data = await response.json();
+
+        // Validate data structure
+        if (!data || !data.data || !data.pagination) {
+            console.error('Invalid response structure:', data);
+            this.renderNoPlansState();
+            return [];
+        }
+
+        // Update total plans and pagination
+        this.totalPlans = data.pagination.total || 0;
+        this.renderPlans(data.data);
+        this.updatePagination(data.pagination);
+
+        return data.data;
+    } catch (error) {
+        console.error('Detailed fetch plans error:', error);
+        this.handleError(error, 'Fetching Plans');
+        this.renderNoPlansState();
+        return [];
+    }
+}
 
         // Render Plans Method
         renderPlans(plans) {
@@ -230,16 +266,28 @@
 
         // Update Pagination Method
         updatePagination(pagination) {
-            // Update showing count
-            this.plansShowingCount.textContent = `Showing ${pagination.page} of ${pagination.totalPages} pages`;
+    // Ensure pagination object is valid
+    if (!pagination || typeof pagination !== 'object') {
+        console.error('Invalid pagination object:', pagination);
+        return;
+    }
 
-            // Update pagination buttons
-            this.prevPlansPageBtn.disabled = pagination.page === 1;
-            this.nextPlansPageBtn.disabled = pagination.page === pagination.totalPages;
+    // Null checks for DOM elements
+    if (!this.prevPlansPageBtn || !this.nextPlansPageBtn || !this.plansShowingCount || !this.pageNumberContainer) {
+        console.error('Pagination elements are not properly initialized');
+        return;
+    }
 
-            // Generate page numbers
-            this.generatePageNumbers(pagination);
-        }
+    // Update showing count
+    this.plansShowingCount.textContent = `Showing ${pagination.page || 1} of ${pagination.totalPages || 1} pages`;
+
+    // Update pagination buttons
+    this.prevPlansPageBtn.disabled = (pagination.page <= 1);
+    this.nextPlansPageBtn.disabled = (pagination.page >= (pagination.totalPages || 1));
+
+    // Generate page numbers
+    this.generatePageNumbers(pagination);
+}
 
         // Generate Page Numbers Method
         generatePageNumbers(pagination) {
@@ -267,13 +315,28 @@
 
         // Render No Plans State Method
         renderNoPlansState() {
-            this.plansGridContainer.innerHTML = `
-                <div class="no-plans">
-                    <i class="fas fa-tags"></i>
-                    <p>No pricing plans found. Create your first plan!</p>
-                </div>
-            `;
+    // Add null check for plansGridContainer
+    if (!this.plansGridContainer) {
+        console.error('Plans grid container is null');
+        
+        // Try to find the container again
+        this.plansGridContainer = document.getElementById('plansGridContainer');
+        
+        // If still null, log and return
+        if (!this.plansGridContainer) {
+            console.error('Unable to find plans grid container');
+            return;
         }
+    }
+
+    this.plansGridContainer.innerHTML = `
+        <div class="no-plans">
+            <i class="fas fa-tags"></i>
+            <p>No pricing plans found. Create your first plan!</p>
+        </div>
+    `;
+}
+
                 // Handle Add New Plan Method
         handleAddNewPlan() {
             // Create modal dynamically if not exists
