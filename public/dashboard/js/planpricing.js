@@ -1,50 +1,44 @@
 (function() {
     'use strict';
 
-    // Check if WiseManager already exists
-    if (window.WiseManager) {
-        console.log('WiseManager already exists');
+    // Check if PricingManager already exists
+    if (window.PricingManager) {
+        console.log('PricingManager already exists');
         return;
     }
 
-    class WiseManager {
+    class PricingManager {
         constructor(apiBaseUrl) {
             // Base configuration
             this.apiBaseUrl = apiBaseUrl;
             this.token = localStorage.getItem('token');
             this.currentPage = 1;
             this.pageSize = 10;
-            this.totalModules = 0;
-            this.currentEditingModule = null;
+            this.totalPlans = 0;
             this.currentEditingPlan = null;
 
             // DOM Element References
-            this.modulesGridContainer = document.getElementById('modulesGridContainer');
-            this.addNewModuleBtn = document.getElementById('addNewModuleBtn');
+            this.plansGridContainer = document.getElementById('plansGridContainer');
             this.addNewPlanBtn = document.getElementById('addNewPlanBtn');
-            this.moduleModal = null;
-            this.moduleForm = null;
             this.planModal = null;
             this.planForm = null;
-            this.categoryFilter = document.getElementById('categoryFilter');
-            this.complianceFilter = document.getElementById('complianceFilter');
-            this.moduleSearchInput = document.getElementById('moduleSearchInput');
-            this.searchModulesBtn = document.getElementById('searchModulesBtn');
-
-            // Audit Logs References
-            this.auditLogsTableBody = document.getElementById('auditLogsTableBody');
-            this.auditStartDate = document.getElementById('auditStartDate');
-            this.auditEndDate = document.getElementById('auditEndDate');
-            this.activityTypeFilter = document.getElementById('activityTypeFilter');
-            this.applyAuditFiltersBtn = document.getElementById('applyAuditFiltersBtn');
+            this.planNameInput = null;
+            this.planTypeSelect = null;
+            this.planDescriptionTextarea = null;
+            this.planPriceInput = null;
+            this.billingCycleSelect = null;
+            this.planStatusSelect = null;
 
             // Pagination References
-            this.prevModulesPageBtn = document.getElementById('prevModulesPageBtn');
-            this.nextModulesPageBtn = document.getElementById('nextModulesPageBtn');
-            this.modulesShowingCount = document.getElementById('modulesShowingCount');
+            this.prevPlansPageBtn = document.getElementById('prevPlansPageBtn');
+            this.nextPlansPageBtn = document.getElementById('nextPlansPageBtn');
+            this.plansShowingCount = document.getElementById('plansShowingCount');
             this.pageNumberContainer = document.getElementById('pageNumberContainer');
 
-            // Bind all methods to maintain correct context
+            // Module Selection References
+            this.modulesContainer = null;
+
+            // Bind methods to maintain correct context
             this.bindMethods();
 
             // Initialize
@@ -56,42 +50,21 @@
             // Initialization and core methods
             [
                 'init', 'initializeEventListeners', 'handleError', 
-                'addUserInfoStyles', 'cleanup'
-            ].forEach(method => {
-                this[method] = this[method].bind(this);
-            });
-
-            // Module-related methods
-            [
-                'fetchModules', 'renderModules', 'createModuleCard', 
-                'updatePagination', 'generatePageNumbers', 
-                'renderNoModulesState', 'handleAddNewModule', 
-                'createModuleModal', 'populateFeatureCheckboxes', 
-                'closeModuleModal', 'handleModuleFormSubmit', 
-                'handleEditModule', 'handleDeleteModule', 
-                'collectPermissions', 'validateModuleForm', 
-                'showFormError'
-            ].forEach(method => {
-                this[method] = this[method].bind(this);
-            });
-
-            // Audit logs methods
-            [
-                'fetchAuditLogs', 'renderAuditLogs', 
-                'createAuditLogRow', 'formatTimestamp', 
-                'getActivityBadgeClass', 'formatActivityType', 
-                'formatLogDetails', 'updateAuditLogsPagination', 
-                'generateAuditLogsPageNumbers', 
-                'renderNoAuditLogsState'
+                'cleanup', 'addUserInfoStyles'
             ].forEach(method => {
                 this[method] = this[method].bind(this);
             });
 
             // Plan-related methods
             [
-                'handleAddNewPlan', 'createPlanModal', 
-                'closePlanModal', 'handlePlanFormSubmit', 
-                'populateModulesForPlan'
+                'fetchPlans', 'renderPlans', 'createPlanCard', 
+                'updatePagination', 'generatePageNumbers', 
+                'renderNoPlansState', 'handleAddNewPlan', 
+                'createPlanModal', 'closePlanModal', 
+                'handlePlanFormSubmit', 'handleEditPlan', 
+                'handleDeletePlan', 'collectPlanDetails', 
+                'validatePlanForm', 'populateModulesForPlan',
+                'populateEditPlanForm'
             ].forEach(method => {
                 this[method] = this[method].bind(this);
             });
@@ -101,8 +74,7 @@
         init() {
             this.initializeEventListeners();
             this.addUserInfoStyles();
-            this.fetchModules();
-            this.fetchAuditLogs();
+            this.fetchPlans();
         }
 
         // Add User Info Styles Method
@@ -132,79 +104,39 @@
             );
         }
 
-        
-                // Event Listeners Initialization
+        // Event Listeners Initialization
         initializeEventListeners() {
-            // Add New Module Button
-            if (this.addNewModuleBtn) {
-                this.addNewModuleBtn.addEventListener('click', this.handleAddNewModule);
-            }
-
             // Add New Plan Button
             if (this.addNewPlanBtn) {
                 this.addNewPlanBtn.addEventListener('click', this.handleAddNewPlan);
             }
 
-            // Modules Filters
-            if (this.categoryFilter) {
-                this.categoryFilter.addEventListener('change', this.fetchModules);
-            }
-
-            if (this.complianceFilter) {
-                this.complianceFilter.addEventListener('change', this.fetchModules);
-            }
-
-            if (this.searchModulesBtn) {
-                this.searchModulesBtn.addEventListener('click', this.fetchModules);
-            }
-
-            if (this.moduleSearchInput) {
-                this.moduleSearchInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') this.fetchModules();
-                });
-            }
-
-            // Pagination
-            if (this.prevModulesPageBtn) {
-                this.prevModulesPageBtn.addEventListener('click', () => {
+            // Pagination Buttons
+            if (this.prevPlansPageBtn) {
+                this.prevPlansPageBtn.addEventListener('click', () => {
                     if (this.currentPage > 1) {
                         this.currentPage--;
-                        this.fetchModules();
+                        this.fetchPlans();
                     }
                 });
             }
 
-            if (this.nextModulesPageBtn) {
-                this.nextModulesPageBtn.addEventListener('click', () => {
+            if (this.nextPlansPageBtn) {
+                this.nextPlansPageBtn.addEventListener('click', () => {
                     this.currentPage++;
-                    this.fetchModules();
+                    this.fetchPlans();
                 });
             }
-
-            // Audit Logs
-            if (this.applyAuditFiltersBtn) {
-                this.applyAuditFiltersBtn.addEventListener('click', this.fetchAuditLogs);
-            }
         }
-
-        // Fetch Modules Method
-        async fetchModules() {
+                // Fetch Plans Method
+        async fetchPlans() {
             try {
-                // Prepare query parameters
-                const category = this.categoryFilter.value;
-                const complianceLevel = this.complianceFilter.value;
-                const search = this.moduleSearchInput.value;
-
                 // Construct API endpoint
-                const url = new URL(`${this.apiBaseUrl}/modules`);
+                const url = new URL(`${this.apiBaseUrl}/plans`);
                 url.searchParams.append('page', this.currentPage);
                 url.searchParams.append('limit', this.pageSize);
-                
-                if (category) url.searchParams.append('category', category);
-                if (complianceLevel) url.searchParams.append('complianceLevel', complianceLevel);
-                if (search) url.searchParams.append('search', search);
 
-                // Fetch modules
+                // Fetch plans
                 const response = await fetch(url, {
                     method: 'GET',
                     headers: {
@@ -214,91 +146,84 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to fetch modules');
+                    throw new Error('Failed to fetch plans');
                 }
 
                 const data = await response.json();
 
-                // Update total modules and pagination
-                this.totalModules = data.pagination.total;
-                this.renderModules(data.data);
+                // Update total plans and pagination
+                this.totalPlans = data.pagination.total;
+                this.renderPlans(data.data);
                 this.updatePagination(data.pagination);
 
                 return data.data;
             } catch (error) {
-                this.handleError(error, 'Fetching Modules');
-                this.renderNoModulesState();
+                this.handleError(error, 'Fetching Plans');
+                this.renderNoPlansState();
                 return [];
             }
         }
 
-        // Render Modules Method
-        renderModules(modules) {
-            // Clear existing modules
-            this.modulesGridContainer.innerHTML = '';
+        // Render Plans Method
+        renderPlans(plans) {
+            // Clear existing plans
+            this.plansGridContainer.innerHTML = '';
 
             // Handle empty state
-            if (!modules || modules.length === 0) {
-                this.renderNoModulesState();
+            if (!plans || plans.length === 0) {
+                this.renderNoPlansState();
                 return;
             }
 
-            // Render modules
-            modules.forEach(module => {
-                const moduleCard = this.createModuleCard(module);
-                this.modulesGridContainer.appendChild(moduleCard);
+            // Render plans
+            plans.forEach(plan => {
+                const planCard = this.createPlanCard(plan);
+                this.plansGridContainer.appendChild(planCard);
             });
         }
 
-        // Create Module Card Method
-        createModuleCard(module) {
+        // Create Plan Card Method
+        createPlanCard(plan) {
             const card = document.createElement('div');
-            card.className = 'module-card';
+            card.className = 'plan-card';
             
-            // Extract permissions if exists
-            const permissions = module.permissions || {};
-            const accessLevels = permissions.accessLevels 
-                ? permissions.accessLevels.join(', ') 
-                : 'N/A';
+            // Prepare included modules display
+            const includedModules = plan.includedModules && plan.includedModules.length > 0
+                ? plan.includedModules.map(module => module.name).join(', ')
+                : 'No modules included';
 
             card.innerHTML = `
-                <div class="module-card-header">
-                    <h3 class="module-title">${module.name}</h3>
-                    <div class="module-status">
-                        <span class="status-indicator ${module.isActive ? 'status-active' : 'status-inactive'}"></span>
-                        ${module.isActive ? 'Active' : 'Inactive'}
+                <div class="plan-card-header">
+                    <h3 class="plan-title">${plan.name}</h3>
+                    <div class="plan-status">
+                        <span class="status-indicator ${plan.status === 'active' ? 'status-active' : 'status-inactive'}"></span>
+                        ${plan.status}
                     </div>
                 </div>
-                <div class="module-category">
-                    ${module.category.toUpperCase()} Solutions
+                <div class="plan-details">
+                    <div class="plan-type">${plan.type.toUpperCase()} Plan</div>
+                    <div class="plan-price">$${plan.price.toFixed(2)} / ${plan.billingCycle}</div>
+                    <div class="plan-description">${plan.description || 'No description'}</div>
+                    <div class="plan-modules">
+                        <strong>Included Modules:</strong> ${includedModules}
+                    </div>
                 </div>
-                <div class="module-description">
-                    ${module.description || 'No description available'}
-                </div>
-                <div class="module-details">
-                    <span class="module-compliance">
-                        Compliance Level: ${module.complianceLevel.toUpperCase()}
-                    </span>
-                    <span class="module-access-levels">
-                        Access Levels: ${accessLevels}
-                    </span>
-                </div>
-                <div class="module-actions">
-                    <button class="module-action-btn edit-module" data-module-id="${module._id}">
+                <div class="plan-actions">
+                    <button class="plan-action-btn edit-plan" data-plan-id="${plan._id}">
                         <i class="fas fa-edit"></i> Edit
                     </button>
-                    <button class="module-action-btn delete-module" data-module-id="${module._id}">
+                    <button class="plan-action-btn delete-plan" data-plan-id="${plan._id}">
                         <i class="fas fa-trash"></i> Delete
                     </button>
                 </div>
             `;
 
             // Add event listeners for edit and delete
-            const editBtn = card.querySelector('.edit-module');
-            const deleteBtn = card.querySelector('.delete-module');
+            const editBtn = card.querySelector('.edit-plan');
+            const deleteBtn = card.querySelector('.delete-plan');
 
-            editBtn.addEventListener('click', () => this.handleEditModule(module));
-            deleteBtn.addEventListener('click', () => this.handleDeleteModule(module._id));
+            editBtn.addEventListener('click', () => this.handleEditPlan(plan));
+            deleteBtn.addEventListener('click', () => this.handleDeletePlan(plan._id));
 
             return card;
         }
@@ -306,11 +231,11 @@
         // Update Pagination Method
         updatePagination(pagination) {
             // Update showing count
-            this.modulesShowingCount.textContent = `Showing ${pagination.page} of ${pagination.totalPages} pages`;
+            this.plansShowingCount.textContent = `Showing ${pagination.page} of ${pagination.totalPages} pages`;
 
             // Update pagination buttons
-            this.prevModulesPageBtn.disabled = pagination.page === 1;
-            this.nextModulesPageBtn.disabled = pagination.page === pagination.totalPages;
+            this.prevPlansPageBtn.disabled = pagination.page === 1;
+            this.nextPlansPageBtn.disabled = pagination.page === pagination.totalPages;
 
             // Generate page numbers
             this.generatePageNumbers(pagination);
@@ -333,500 +258,136 @@
 
                 pageBtn.addEventListener('click', () => {
                     this.currentPage = i;
-                    this.fetchModules();
+                    this.fetchPlans();
                 });
 
                 this.pageNumberContainer.appendChild(pageBtn);
             }
         }
 
-        // Render No Modules State Method
-        renderNoModulesState() {
-            this.modulesGridContainer.innerHTML = `
-                <div class="no-modules">
-                    <i class="fas fa-cubes"></i>
-                    <p>No modules found. Create your first module!</p>
+        // Render No Plans State Method
+        renderNoPlansState() {
+            this.plansGridContainer.innerHTML = `
+                <div class="no-plans">
+                    <i class="fas fa-tags"></i>
+                    <p>No pricing plans found. Create your first plan!</p>
                 </div>
             `;
         }
-                // Handle Add New Module Method
-        handleAddNewModule() {
-            // Check if modal already exists
-            if (!this.moduleModal) {
-                // Create modal
-                this.createModuleModal()
+                // Handle Add New Plan Method
+        handleAddNewPlan() {
+            // Create modal dynamically if not exists
+            if (!this.planModal) {
+                this.createPlanModal()
                     .then(() => {
                         // Reset form
-                        this.moduleForm.reset();
-                        this.populateFeatureCheckboxes();
+                        this.planForm.reset();
+                        this.populateModulesForPlan();
                         
                         // Show modal
-                        this.moduleModal.classList.add('show');
+                        this.planModal.classList.add('show');
                         
                         // Setup form submission
-                        this.moduleForm.onsubmit = this.handleModuleFormSubmit;
+                        this.planForm.onsubmit = this.handlePlanFormSubmit;
                     })
                     .catch(error => {
-                        console.error('Failed to create module modal:', error);
+                        console.error('Failed to create plan modal:', error);
                         window.dashboardApp.userInterface.showErrorNotification(
-                            'Unable to open module form. Please try again.'
+                            'Unable to open plan form. Please try again.'
                         );
                     });
             } else {
                 // Reset form
-                this.moduleForm.reset();
-                this.populateFeatureCheckboxes();
+                this.planForm.reset();
+                this.populateModulesForPlan();
                 
                 // Show modal
-                this.moduleModal.classList.add('show');
+                this.planModal.classList.add('show');
                 
                 // Setup form submission
-                this.moduleForm.onsubmit = this.handleModuleFormSubmit;
+                this.planForm.onsubmit = this.handlePlanFormSubmit;
             }
         }
 
-        // Populate Feature Checkboxes Method
-        populateFeatureCheckboxes() {
-            const featuresContainer = document.getElementById('featuresContainer');
-            featuresContainer.innerHTML = ''; // Clear existing
-
-            const featureCategories = {
-                'HR Solutions': [
-                    'People Management', 
-                    'Performance Management', 
-                    'Attendance & Leave Management', 
-                    'Payroll & Compensation', 
-                    'Employee Self-Service', 
-                    'WiseRecruit'
-                ],
-                'Financial Solutions': [
-                    'Payroll Processing', 
-                    'SmartExpenses', 
-                    'Financial Reporting', 
-                    'Book-keeping', 
-                    'Taxation & Compliance', 
-                    'GlobalInvoice', 
-                    'Invoice & Billing', 
-                    'Asset Management'
-                ],
-                'Operational Solutions': [
-                    'Project & Task Management',
-                    'ShiftMaster',
-                    'StockFlow',
-                    'Vendor & Supplier Management',
-                    'Workflow Automation',
-                    'Facility Management'
-                ],
-                'Integrations': [
-                    'ServiceNow & ITSM',
-                    'Payroll & Finance Integrations',
-                    'Employee Benefits',
-                    'Talent Management',
-                    'Pricing Plan Association'
-                ]
-            };
-
-            Object.entries(featureCategories).forEach(([category, features]) => {
-                const categoryHeader = document.createElement('h3');
-                categoryHeader.textContent = category;
-                featuresContainer.appendChild(categoryHeader);
-
-                features.forEach(feature => {
-                    const featureWrapper = document.createElement('label');
-                    featureWrapper.className = 'form-check';
-                    featureWrapper.innerHTML = `
-                        <input type="checkbox" name="features" value="${feature}" class="form-check-input">
-                        ${feature}
-                    `;
-                    featuresContainer.appendChild(featureWrapper);
-                });
-            });
-        }
-
-        // Collect Permissions Method
-        collectPermissions() {
-            const accessLevels = Array.from(
-                this.moduleForm.querySelectorAll('input[name="accessLevels"]:checked')
-            ).map(el => el.value);
-
-            const features = Array.from(
-                this.moduleForm.querySelectorAll('input[name="features"]:checked')
-            ).map(el => el.value);
-
-            const pricingPlan = this.moduleForm.pricingPlan.value;
-            const auditLogging = this.moduleForm.auditLoggingToggle.checked;
-
-            return {
-                accessLevels,
-                features,
-                pricingPlan,
-                auditLogging
-            };
-        }
-
-        // Module Form Submission Method
-        async handleModuleFormSubmit(event) {
-            event.preventDefault();
-            
-            // Collect form data
-            const formData = {
-                name: this.moduleForm.moduleName.value.trim(),
-                category: this.moduleForm.moduleCategory.value,
-                description: this.moduleForm.moduleDescription.value.trim(),
-                complianceLevel: this.moduleForm.complianceLevel.value,
-                isActive: this.moduleForm.moduleStatus.value === 'active',
-                
-                // Collect additional fields
-                permissions: this.collectPermissions(),
-                subscriptionTiers: []  // Currently empty, can be expanded later
-            };
-
-            // Validate form data
-            if (!this.validateModuleForm(formData)) {
-                return;
-            }
-
-            try {
-                const url = this.currentEditingModule 
-                    ? `${this.apiBaseUrl}/modules/${this.currentEditingModule._id}` 
-                    : `${this.apiBaseUrl}/modules`;
-                
-                const method = this.currentEditingModule ? 'PUT' : 'POST';
-
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Failed to save module');
-                }
-
-                const result = await response.json();
-
-                // Show success notification
-                window.dashboardApp.userInterface.showSuccessNotification(
-                    this.currentEditingModule 
-                        ? 'Module updated successfully' 
-                        : 'New module created successfully'
-                );
-
-                // Refresh audit logs and modules
-                await Promise.all([
-                    this.fetchAuditLogs(),
-                    this.fetchModules()
-                ]);
-
-                // Close modal
-                this.closeModuleModal();
-                this.currentEditingModule = null;
-
-                return result;
-            } catch (error) {
-                this.handleError(error, 'Saving Module');
-                throw error;
-            }
-        }
-
-        // Validate Module Form Method
-        validateModuleForm(formData) {
-            // Name validation
-            if (!formData.name) {
-                this.showFormError('Module Name is required');
-                return false;
-            }
-
-            // Category validation
-            if (!formData.category) {
-                this.showFormError('Module Category is required');
-                return false;
-            }
-
-            // Access levels validation
-            if (formData.permissions.accessLevels.length === 0) {
-                this.showFormError('Select at least one access level');
-                return false;
-            }
-
-            // Features validation
-            if (formData.permissions.features.length === 0) {
-                this.showFormError('Select at least one feature');
-                return false;
-            }
-
-            // Pricing plan validation
-            if (!formData.permissions.pricingPlan) {
-                this.showFormError('Select a pricing plan');
-                return false;
-            }
-
-            return true;
-        }
-
-        // Show Form Error Method
-        showFormError(message) {
-            // Create or get error container
-            let errorContainer = this.moduleModal.querySelector('.form-error');
-            if (!errorContainer) {
-                errorContainer = document.createElement('div');
-                errorContainer.className = 'form-error text-danger';
-                this.moduleModal.querySelector('.modal-body').prepend(errorContainer);
-            }
-
-            // Show error message
-            errorContainer.textContent = message;
-            errorContainer.style.display = 'block';
-
-            // Auto-hide after 3 seconds
-            setTimeout(() => {
-                errorContainer.style.display = 'none';
-            }, 3000);
-        }
-
-        // Close Module Modal Method
-        closeModuleModal() {
-            if (this.moduleModal) {
-                this.moduleModal.classList.remove('show');
-            } else {
-                console.warn('Attempted to close non-existent module modal');
-            }
-        }
-                // Handle Edit Module Method
-        handleEditModule(module) {
-            try {
-                // Ensure modal and form exist
-                if (!this.moduleModal || !this.moduleForm) {
-                    this.createModuleModal()
-                        .then(() => this.populateEditForm(module))
-                        .catch(error => {
-                            console.error('Failed to create modal:', error);
-                        });
-                    return;
-                }
-
-                this.populateEditForm(module);
-            } catch (error) {
-                console.error('Error in handleEditModule:', error);
-            }
-        }
-
-        // Populate Edit Form Method
-        populateEditForm(module) {
-            // Set current editing module
-            this.currentEditingModule = module;
-
-            const form = this.moduleForm;
-
-            // Basic module details
-            if (form.moduleName) form.moduleName.value = module.name || '';
-            if (form.moduleCategory) form.moduleCategory.value = module.category || '';
-            if (form.moduleDescription) form.moduleDescription.value = module.description || '';
-            
-            // Status
-            if (form.moduleStatus) {
-                form.moduleStatus.value = module.isActive ? 'active' : 'inactive';
-            }
-
-            // Compliance Level
-            if (form.complianceLevel) {
-                form.complianceLevel.value = module.complianceLevel || 'low';
-            }
-
-            // Reset and repopulate features
-            this.populateFeatureCheckboxes();
-
-            // Handle permissions (if stored in permissions field)
-            if (module.permissions) {
-                const permissions = module.permissions;
-
-                // Populate access levels
-                if (permissions.accessLevels && permissions.accessLevels.length > 0) {
-                    permissions.accessLevels.forEach(level => {
-                        const checkbox = form.querySelector(`input[name="accessLevels"][value="${level}"]`);
-                        if (checkbox) checkbox.checked = true;
-                    });
-                }
-
-                // Populate features
-                if (permissions.features && permissions.features.length > 0) {
-                    permissions.features.forEach(feature => {
-                        const checkbox = form.querySelector(`input[name="features"][value="${feature}"]`);
-                        if (checkbox) checkbox.checked = true;
-                    });
-                }
-
-                // Populate pricing plan
-                if (form.pricingPlan) {
-                    form.pricingPlan.value = permissions.pricingPlan || '';
-                }
-
-                // Populate audit logging
-                if (form.auditLoggingToggle) {
-                    form.auditLoggingToggle.checked = permissions.auditLogging || false;
-                }
-            }
-
-            // Show modal
-            if (this.moduleModal) {
-                this.moduleModal.classList.add('show');
-            }
-
-            // Update form submission to edit mode
-            this.moduleForm.onsubmit = this.handleModuleFormSubmit;
-        }
-
-        // Handle Delete Module Method
-        async handleDeleteModule(moduleId) {
-            // Confirm deletion
-            const confirmDelete = window.confirm('Are you sure you want to delete this module?');
-            
-            if (!confirmDelete) return;
-
-            try {
-                const response = await fetch(`${this.apiBaseUrl}/modules/${moduleId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Failed to delete module');
-                }
-
-                // Show success notification
-                window.dashboardApp.userInterface.showSuccessNotification('Module deleted successfully');
-
-                // Refresh audit logs and modules
-                await Promise.all([
-                    this.fetchAuditLogs(),
-                    this.fetchModules()
-                ]);
-            } catch (error) {
-                this.handleError(error, 'Deleting Module');
-            }
-        }
-
-        // Create Module Modal Method
-        createModuleModal() {
+        // Create Plan Modal Method
+        createPlanModal() {
             return new Promise((resolve, reject) => {
                 try {
                     // Check if modal already exists
-                    const existingModal = document.getElementById('moduleModal');
+                    const existingModal = document.getElementById('planModal');
                     if (existingModal) {
-                        this.moduleModal = existingModal;
-                        this.moduleForm = document.getElementById('moduleForm');
-                        resolve(this.moduleModal);
+                        this.planModal = existingModal;
+                        this.planForm = document.getElementById('planForm');
+                        resolve(this.planModal);
                         return;
                     }
 
                     // Create a container div to hold the modal
                     const modalContainer = document.createElement('div');
                     modalContainer.innerHTML = `
-                        <div class="modal" id="moduleModal">
+                        <div class="modal" id="planModal">
                             <div class="modal-dialog">
                                 <div class="modal-header">
-                                    <h2>Add New Module</h2>
+                                    <h2>Add New Pricing Plan</h2>
                                     <button class="modal-close" type="button">&times;</button>
                                 </div>
                                 <div class="modal-body">
-                                    <form id="moduleForm">
+                                    <form id="planForm">
                                         <div class="form-row">
                                             <div class="form-group">
-                                                <label>Module Name</label>
-                                                <input type="text" name="moduleName" class="form-control" required>
+                                                <label>Plan Name</label>
+                                                <input type="text" name="planName" class="form-control" required>
                                             </div>
                                             <div class="form-group">
-                                                <label>Module Category</label>
-                                                <select name="moduleCategory" class="form-control" required>
-                                                    <option value="">Select Category</option>
-                                                    <option value="hr">HR Solutions</option>
-                                                    <option value="finance">Financial Solutions</option>
-                                                    <option value="operations">Operational Solutions</option>
-                                                    <option value="integrations">Integrations</option>
+                                                <label>Plan Type</label>
+                                                <select name="planType" class="form-control" required>
+                                                    <option value="">Select Plan Type</option>
+                                                    <option value="basic">Basic</option>
+                                                    <option value="professional">Professional</option>
+                                                    <option value="enterprise">Enterprise</option>
                                                 </select>
                                             </div>
                                         </div>
                                         
                                         <div class="form-group">
                                             <label>Description</label>
-                                            <textarea name="moduleDescription" class="form-control" rows="3"></textarea>
+                                            <textarea name="planDescription" class="form-control" rows="3"></textarea>
                                         </div>
 
                                         <div class="form-row">
                                             <div class="form-group">
-                                                <label>Status</label>
-                                                <select name="moduleStatus" class="form-control">
-                                                    <option value="active">Active</option>
-                                                    <option value="inactive">Inactive</option>
-                                                </select>
+                                                <label>Price</label>
+                                                <input type="number" name="planPrice" class="form-control" step="0.01" min="0" required>
                                             </div>
                                             <div class="form-group">
-                                                <label>Compliance Level</label>
-                                                <select name="complianceLevel" class="form-control">
-                                                    <option value="low">Low</option>
-                                                    <option value="medium">Medium</option>
-                                                    <option value="high">High</option>
+                                                <label>Billing Cycle</label>
+                                                <select name="billingCycle" class="form-control" required>
+                                                    <option value="">Select Billing Cycle</option>
+                                                    <option value="monthly">Monthly</option>
+                                                    <option value="annually">Annually</option>
                                                 </select>
                                             </div>
                                         </div>
 
                                         <div class="form-group">
-                                            <label>Access Levels</label>
-                                            <div class="permissions-grid">
-                                                <label class="form-check">
-                                                    <input type="checkbox" name="accessLevels" value="superadmin" class="form-check-input">
-                                                    Superadmin
-                                                </label>
-                                                <label class="form-check">
-                                                    <input type="checkbox" name="accessLevels" value="companyadmin" class="form-check-input">
-                                                    Company Admin
-                                                </label>
-                                                <label class="form-check">
-                                                    <input type="checkbox" name="accessLevels" value="hrmanager" class="form-check-input">
-                                                    HR Manager
-                                                </label>
-                                                <label class="form-check">
-                                                    <input type="checkbox" name="accessLevels" value="employee" class="form-check-input">
-                                                    Employee
-                                                </label>
+                                            <label>Included Modules</label>
+                                            <div id="modulesContainer" class="modules-grid">
+                                                <!-- Modules will be dynamically populated -->
                                             </div>
                                         </div>
 
-                                        <div class="form-group" id="featuresContainer">
-                                            <!-- Features will be dynamically populated -->
-                                        </div>
-
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label>Pricing Plan</label>
-                                                <select name="pricingPlan" class="form-control">
-                                                    <option value="">Select Pricing Plan</option>
-                                                    <option value="basic">Basic</option>
-                                                    <option value="professional">Professional</option>
-                                                    <option value="enterprise">Enterprise</option>
-                                                </select>
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Audit Logging</label>
-                                                <div class="toggle-switch">
-                                                    <input type="checkbox" name="auditLogging" id="auditLoggingToggle">
-                                                    <label for="auditLoggingToggle" class="toggle-slider"></label>
-                                                </div>
-                                            </div>
+                                        <div class="form-group">
+                                            <label>Status</label>
+                                            <select name="planStatus" class="form-control" required>
+                                                <option value="active">Active</option>
+                                                <option value="inactive">Inactive</option>
+                                            </select>
                                         </div>
                                     </form>
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" id="cancelModuleBtn">Cancel</button>
-                                    <button type="submit" form="moduleForm" class="btn btn-primary">Save Module</button>
+                                    <button type="button" class="btn btn-secondary" id="cancelPlanBtn">Cancel</button>
+                                    <button type="submit" form="planForm" class="btn btn-primary">Save Plan</button>
                                 </div>
                             </div>
                         </div>
@@ -846,79 +407,100 @@
                     requestAnimationFrame(() => {
                         try {
                             // Cache modal reference
-                            this.moduleModal = document.getElementById('moduleModal');
-                            this.moduleForm = document.getElementById('moduleForm');
+                            this.planModal = document.getElementById('planModal');
+                            this.planForm = document.getElementById('planForm');
+                            this.modulesContainer = document.getElementById('modulesContainer');
+
+                            // Cache form input references
+                            this.planNameInput = this.planForm.planName;
+                            this.planTypeSelect = this.planForm.planType;
+                            this.planDescriptionTextarea = this.planForm.planDescription;
+                            this.planPriceInput = this.planForm.planPrice;
+                            this.billingCycleSelect = this.planForm.billingCycle;
+                            this.planStatusSelect = this.planForm.planStatus;
 
                             // Verify modal and form exist
-                            if (!this.moduleModal) {
-                                reject(new Error('Failed to create module modal: Modal not found'));
+                            if (!this.planModal) {
+                                reject(new Error('Failed to create plan modal: Modal not found'));
                                 return;
                             }
 
-                            if (!this.moduleForm) {
-                                reject(new Error('Failed to create module modal: Form not found'));
+                            if (!this.planForm) {
+                                reject(new Error('Failed to create plan modal: Form not found'));
                                 return;
                             }
 
                             // Setup close button
-                            const closeButton = this.moduleModal.querySelector('.modal-close');
+                            const closeButton = this.planModal.querySelector('.modal-close');
                             if (closeButton) {
                                 closeButton.addEventListener('click', () => {
                                     try {
-                                        this.closeModuleModal();
+                                        this.closePlanModal();
                                     } catch (closeError) {
                                         console.error('Error closing modal:', closeError);
                                     }
                                 });
                             } else {
-                                console.error('Close button not found in module modal');
+                                console.error('Close button not found in plan modal');
                             }
 
                             // Setup cancel button
-                            const cancelButton = document.getElementById('cancelModuleBtn');
+                            const cancelButton = document.getElementById('cancelPlanBtn');
                             if (cancelButton) {
                                 cancelButton.addEventListener('click', () => {
                                     try {
-                                        this.closeModuleModal();
+                                        this.closePlanModal();
                                     } catch (cancelError) {
                                         console.error('Error canceling modal:', cancelError);
                                     }
                                 });
                             } else {
-                                console.error('Cancel button not found in module modal');
+                                console.error('Cancel button not found in plan modal');
                             }
 
-                            console.log('Module modal created successfully');
-                            resolve(this.moduleModal);
+                            console.log('Plan modal created successfully');
+                            resolve(this.planModal);
                         } catch (error) {
-                            console.error('Error setting up module modal:', error);
+                            console.error('Error setting up plan modal:', error);
                             reject(error);
                         }
                     });
                 } catch (error) {
-                    console.error('Comprehensive error creating module modal:', error);
+                    console.error('Comprehensive error creating plan modal:', error);
                     reject(error);
                 }
             });
         }
-                // Fetch Audit Logs Method
-        async fetchAuditLogs() {
+
+        // Populate Modules for Plan Method
+        async populateModulesForPlan() {
             try {
-                // Prepare query parameters
-                const startDate = this.auditStartDate ? this.auditStartDate.value : null;
-                const endDate = this.auditEndDate ? this.auditEndDate.value : null;
-                const activityType = this.activityTypeFilter ? this.activityTypeFilter.value : null;
+                // Fetch modules from the server
+                const modules = await this.fetchModules();
 
-                // Construct API endpoint
-                const url = new URL(`${this.apiBaseUrl}/modules/activity-logs`);
-                
-                // Add query parameters
-                if (startDate) url.searchParams.append('startDate', startDate);
-                if (endDate) url.searchParams.append('endDate', endDate);
-                if (activityType) url.searchParams.append('type', activityType);
+                // Clear existing modules
+                this.modulesContainer.innerHTML = '';
 
-                // Fetch audit logs
-                const response = await fetch(url, {
+                // Populate modules as checkboxes
+                modules.forEach(module => {
+                    const moduleWrapper = document.createElement('label');
+                    moduleWrapper.className = 'form-check';
+                    moduleWrapper.innerHTML = `
+                        <input type="checkbox" name="includedModules" value="${module._id}" class="form-check-input">
+                        ${module.name}
+                    `;
+                    this.modulesContainer.appendChild(moduleWrapper);
+                });
+            } catch (error) {
+                console.error('Error populating modules:', error);
+                this.modulesContainer.innerHTML = '<p>Unable to load modules</p>';
+            }
+        }
+
+        // Fetch Modules Method (to populate module selection)
+        async fetchModules() {
+            try {
+                const response = await fetch(`${this.apiBaseUrl}/modules`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${this.token}`,
@@ -927,313 +509,306 @@
                 });
 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Failed to fetch audit logs: ${errorText}`);
+                    throw new Error('Failed to fetch modules');
                 }
 
                 const data = await response.json();
-
-                // Render audit logs
-                this.renderAuditLogs(data.data || []);
-                
-                // Update pagination if available
-                if (data.pagination) {
-                    this.updateAuditLogsPagination(data.pagination);
-                }
+                return data.data || [];
             } catch (error) {
-                console.error('Error fetching audit logs:', error);
-                this.renderNoAuditLogsState();
+                this.handleError(error, 'Fetching Modules');
+                return [];
+            }
+        }
+
+        // Close Plan Modal Method
+        closePlanModal() {
+            if (this.planModal) {
+                this.planModal.classList.remove('show');
+            } else {
+                console.warn('Attempted to close non-existent plan modal');
+            }
+        }
+                // Handle Plan Form Submission Method
+        async handlePlanFormSubmit(event) {
+            event.preventDefault();
+            
+            // Collect plan details
+            const planDetails = this.collectPlanDetails();
+
+            // Validate plan details
+            if (!this.validatePlanForm(planDetails)) {
+                return;
+            }
+
+            try {
+                // Determine if this is a new plan or an update
+                const url = this.currentEditingPlan 
+                    ? `${this.apiBaseUrl}/plans/${this.currentEditingPlan._id}` 
+                    : `${this.apiBaseUrl}/plans`;
                 
-                // Show user-friendly error notification
-                window.dashboardApp.userInterface.showErrorNotification(
-                    'Unable to retrieve audit logs. Please try again later.'
+                const method = this.currentEditingPlan ? 'PUT' : 'POST';
+
+                // Send request to create or update plan
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(planDetails)
+                });
+
+                // Handle response
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to save plan');
+                }
+
+                const result = await response.json();
+
+                // Show success notification
+                window.dashboardApp.userInterface.showSuccessNotification(
+                    this.currentEditingPlan 
+                        ? 'Plan updated successfully' 
+                        : 'New plan created successfully'
                 );
-            }
-        }
 
-        // Render Audit Logs Method
-        renderAuditLogs(logs) {
-            // Clear existing logs
-            if (!this.auditLogsTableBody) {
-                console.error('Audit logs table body not found');
-                return;
-            }
+                // Close modal and refresh plans
+                this.closePlanModal();
+                this.currentEditingPlan = null;
+                this.fetchPlans();
 
-            this.auditLogsTableBody.innerHTML = '';
-
-            // Handle empty state
-            if (!logs || logs.length === 0) {
-                this.renderNoAuditLogsState();
-                return;
-            }
-
-            // Render logs
-            logs.forEach(log => {
-                const row = this.createAuditLogRow(log);
-                this.auditLogsTableBody.appendChild(row);
-            });
-        }
-
-        // Create Audit Log Row Method
-        createAuditLogRow(log) {
-            const row = document.createElement('tr');
-            
-            // Determine user display
-            const userName = log.user 
-                ? (log.user.name || log.user.email || 'Unknown User') 
-                : 'System';
-
-            row.innerHTML = `
-                <td>${this.formatTimestamp(log.timestamp)}</td>
-                <td>
-                    <span class="badge ${this.getActivityBadgeClass(log.type)}">
-                        ${this.formatActivityType(log.type)}
-                    </span>
-                </td>
-                <td>${log.details?.moduleName || log.details?.moduleDetails?.name || 'N/A'}</td>
-                <td>
-                    <div class="user-info">
-                        <span class="user-name">${userName}</span>
-                        ${log.user && log.user.email 
-                            ? `<small class="user-email">(${log.user.email})</small>` 
-                            : ''}
-                    </div>
-                </td>
-                <td class="log-details">${this.formatLogDetails(log.details)}</td>
-            `;
-            return row;
-        }
-
-        // Utility Methods for Audit Logging
-        formatTimestamp(timestamp) {
-            try {
-                return new Date(timestamp).toLocaleString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
+                return result;
             } catch (error) {
-                console.error('Error formatting timestamp:', error);
-                return timestamp;
+                this.handleError(error, 'Saving Plan');
+                throw error;
             }
         }
 
-        // Get Activity Badge Class Method
-        getActivityBadgeClass(type) {
-            const badgeClasses = {
-                'MODULE_CREATED': 'badge-success',
-                'MODULE_UPDATED': 'badge-primary',
-                'MODULE_DELETED': 'badge-danger',
-                'MODULE_STATUS_CHANGED': 'badge-warning',
-                'MODULE_FEATURE_ADDED': 'badge-info',
-                'MODULE_PERMISSION_MODIFIED': 'badge-secondary'
+        // Collect Plan Details Method
+        collectPlanDetails() {
+            // Collect included modules
+            const includedModules = Array.from(
+                this.planForm.querySelectorAll('input[name="includedModules"]:checked')
+            ).map(el => el.value);
+
+            // Return plan details object
+            return {
+                name: this.planNameInput.value.trim(),
+                type: this.planTypeSelect.value,
+                description: this.planDescriptionTextarea.value.trim(),
+                price: parseFloat(this.planPriceInput.value),
+                billingCycle: this.billingCycleSelect.value,
+                includedModules: includedModules,
+                status: this.planStatusSelect.value
             };
-            return badgeClasses[type] || 'badge-secondary';
         }
 
-        // Format Activity Type Method
-        formatActivityType(type) {
-            return type
-                .replace(/_/g, ' ')
-                .replace(/\b\w/g, l => l.toUpperCase());
+        // Validate Plan Form Method
+        validatePlanForm(planDetails) {
+            // Name validation
+            if (!planDetails.name) {
+                this.showFormError('Plan Name is required');
+                return false;
+            }
+
+            // Type validation
+            if (!planDetails.type) {
+                this.showFormError('Plan Type is required');
+                return false;
+            }
+
+            // Price validation
+            if (isNaN(planDetails.price) || planDetails.price <= 0) {
+                this.showFormError('Valid Price is required');
+                return false;
+            }
+
+            // Billing cycle validation
+            if (!planDetails.billingCycle) {
+                this.showFormError('Billing Cycle is required');
+                return false;
+            }
+
+            // Modules validation
+            if (planDetails.includedModules.length === 0) {
+                this.showFormError('Select at least one module');
+                return false;
+            }
+
+            // Status validation
+            if (!planDetails.status) {
+                this.showFormError('Plan Status is required');
+                return false;
+            }
+
+            return true;
         }
 
-        // Format Log Details Method
-        formatLogDetails(details) {
-            if (!details) return 'No additional details';
-            
-            try {
-                // If details is a string, return it directly
-                if (typeof details === 'string') return details;
-                
-                // If details is an object, format it nicely
-                const formattedDetails = [];
+        // Show Form Error Method
+        showFormError(message) {
+            // Create or get error container
+            let errorContainer = this.planModal.querySelector('.form-error');
+            if (!errorContainer) {
+                errorContainer = document.createElement('div');
+                errorContainer.className = 'form-error text-danger';
+                this.planModal.querySelector('.modal-body').prepend(errorContainer);
+            }
 
-                // Handle module name and category
-                if (details.moduleName) {
-                    formattedDetails.push(`Module: ${details.moduleName}`);
-                }
+            // Show error message
+            errorContainer.textContent = message;
+            errorContainer.style.display = 'block';
 
-                if (details.category) {
-                    formattedDetails.push(`Category: ${details.category}`);
-                }
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                errorContainer.style.display = 'none';
+            }, 3000);
+        }
 
-                // Handle module details
-                if (details.moduleDetails) {
-                    const moduleDetails = details.moduleDetails;
-                    formattedDetails.push('Module Details:');
-                    formattedDetails.push(`  Name: ${moduleDetails.name}`);
-                    formattedDetails.push(`  Category: ${moduleDetails.category}`);
-                    formattedDetails.push(`  Description: ${moduleDetails.description}`);
-                    formattedDetails.push(`  Compliance Level: ${moduleDetails.complianceLevel}`);
-                    formattedDetails.push(`  Active: ${moduleDetails.isActive}`);
-                }
+        // Handle Edit Plan Method
+        handleEditPlan(plan) {
+            // Set current editing plan
+            this.currentEditingPlan = plan;
 
-                // Handle changes
-                if (details.changes) {
-                    formattedDetails.push('Changes:');
-                    Object.entries(details.changes).forEach(([key, value]) => {
-                        formattedDetails.push(`  ${key}: ${JSON.stringify(value)}`);
+            // Ensure modal exists
+            if (!this.planModal) {
+                this.createPlanModal()
+                    .then(() => this.populateEditPlanForm(plan))
+                    .catch(error => {
+                        console.error('Failed to create modal:', error);
                     });
-                }
-
-                return formattedDetails.join('\n');
-            } catch (error) {
-                console.error('Error formatting log details:', error);
-                return 'Unable to format details';
-            }
-        }
-
-        // Update Audit Logs Pagination Method
-        updateAuditLogsPagination(pagination) {
-            // Update showing count
-            const auditLogsShowingCount = document.getElementById('auditLogsShowingCount');
-            auditLogsShowingCount.textContent = `Showing ${pagination.page} of ${pagination.totalPages} pages`;
-
-            // Update pagination buttons
-            const prevAuditLogsPageBtn = document.getElementById('prevAuditLogsPageBtn');
-            const nextAuditLogsPageBtn = document.getElementById('nextAuditLogsPageBtn');
-            
-            prevAuditLogsPageBtn.disabled = pagination.page === 1;
-            nextAuditLogsPageBtn.disabled = pagination.page === pagination.totalPages;
-
-            // Generate page numbers
-            this.generateAuditLogsPageNumbers(pagination);
-        }
-
-        // Generate Audit Logs Page Numbers Method
-        generateAuditLogsPageNumbers(pagination) {
-            const pageNumberContainer = document.getElementById('auditLogsPageNumberContainer');
-            pageNumberContainer.innerHTML = '';
-
-            for (let i = 1; i <= pagination.totalPages; i++) {
-                const pageBtn = document.createElement('button');
-                pageBtn.textContent = i;
-                pageBtn.className = 'page-number';
-                
-                if (i === pagination.page) {
-                    pageBtn.classList.add('active');
-                }
-
-                pageBtn.addEventListener('click', () => {
-                    // Update current page and fetch logs
-                    this.currentPage = i;
-                    this.fetchAuditLogs();
-                });
-
-                pageNumberContainer.appendChild(pageBtn);
-            }
-        }
-
-        // Render No Audit Logs State Method
-        renderNoAuditLogsState() {
-            if (!this.auditLogsTableBody) {
-                console.error('Audit logs table body not found');
                 return;
             }
 
-            this.auditLogsTableBody.innerHTML = `
-                <tr>
-                    <td colspan="5" class="text-center">
-                        <div class="no-audit-logs">
-                            <i class="fas fa-history"></i>
-                            <p>No audit logs found. Recent module activities will appear here.</p>
-                        </div>
-                    </td>
-                </tr>
-            `;
+            // Populate edit form
+            this.populateEditPlanForm(plan);
+        }
+
+        // Populate Edit Plan Form Method
+        populateEditPlanForm(plan) {
+            // Populate basic plan details
+            this.planNameInput.value = plan.name;
+            this.planTypeSelect.value = plan.type;
+            this.planDescriptionTextarea.value = plan.description || '';
+            this.planPriceInput.value = plan.price.toFixed(2);
+            this.billingCycleSelect.value = plan.billingCycle;
+            this.planStatusSelect.value = plan.status;
+
+            // Populate included modules
+            const moduleCheckboxes = this.planForm.querySelectorAll('input[name="includedModules"]');
+            moduleCheckboxes.forEach(checkbox => {
+                checkbox.checked = plan.includedModules.some(
+                    module => module._id === checkbox.value
+                );
+            });
+
+            // Show modal
+            this.planModal.classList.add('show');
+
+            // Update form submission to edit mode
+            this.planForm.onsubmit = this.handlePlanFormSubmit;
+        }
+
+        // Handle Delete Plan Method
+        async handleDeletePlan(planId) {
+            // Confirm deletion
+            const confirmDelete = window.confirm('Are you sure you want to delete this plan?');
+            
+            if (!confirmDelete) return;
+
+            try {
+                const response = await fetch(`${this.apiBaseUrl}/plans/${planId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to delete plan');
+                }
+
+                // Show success notification
+                window.dashboardApp.userInterface.showSuccessNotification('Plan deleted successfully');
+
+                // Refresh plans
+                this.fetchPlans();
+            } catch (error) {
+                this.handleError(error, 'Deleting Plan');
+            }
         }
                 // Cleanup Method
         cleanup() {
             // Remove event listeners
-            if (this.addNewModuleBtn) {
-                this.addNewModuleBtn.removeEventListener('click', this.handleAddNewModule);
-            }
-
             if (this.addNewPlanBtn) {
                 this.addNewPlanBtn.removeEventListener('click', this.handleAddNewPlan);
             }
 
-            if (this.categoryFilter) {
-                this.categoryFilter.removeEventListener('change', this.fetchModules);
-            }
-
-            if (this.complianceFilter) {
-                this.complianceFilter.removeEventListener('change', this.fetchModules);
-            }
-
-            if (this.searchModulesBtn) {
-                this.searchModulesBtn.removeEventListener('click', this.fetchModules);
-            }
-
-            if (this.moduleSearchInput) {
-                this.moduleSearchInput.removeEventListener('keypress', () => {
-                    if (event.key === 'Enter') this.fetchModules();
-                });
-            }
-
-            if (this.prevModulesPageBtn) {
-                this.prevModulesPageBtn.removeEventListener('click', () => {
+            if (this.prevPlansPageBtn) {
+                this.prevPlansPageBtn.removeEventListener('click', () => {
                     if (this.currentPage > 1) {
                         this.currentPage--;
-                        this.fetchModules();
+                        this.fetchPlans();
                     }
                 });
             }
 
-            if (this.nextModulesPageBtn) {
-                this.nextModulesPageBtn.removeEventListener('click', () => {
+            if (this.nextPlansPageBtn) {
+                this.nextPlansPageBtn.removeEventListener('click', () => {
                     this.currentPage++;
-                    this.fetchModules();
+                    this.fetchPlans();
                 });
             }
 
-            if (this.applyAuditFiltersBtn) {
-                this.applyAuditFiltersBtn.removeEventListener('click', this.fetchAuditLogs);
-            }
-
-            // Remove modals if exists
-            if (this.moduleModal) {
-                this.moduleModal.remove();
-            }
-
+            // Remove modal if exists
             if (this.planModal) {
+                // Remove close button event listener
+                const closeButton = this.planModal.querySelector('.modal-close');
+                if (closeButton) {
+                    closeButton.removeEventListener('click', this.closePlanModal);
+                }
+
+                // Remove cancel button event listener
+                const cancelButton = document.getElementById('cancelPlanBtn');
+                if (cancelButton) {
+                    cancelButton.removeEventListener('click', this.closePlanModal);
+                }
+
+                // Remove the modal from the DOM
                 this.planModal.remove();
             }
 
+            // Clear form submission event
+            if (this.planForm) {
+                this.planForm.onsubmit = null;
+            }
+
             // Clear references
-            this.modulesGridContainer = null;
-            this.addNewModuleBtn = null;
+            this.plansGridContainer = null;
             this.addNewPlanBtn = null;
-            this.moduleModal = null;
-            this.moduleForm = null;
             this.planModal = null;
             this.planForm = null;
-            this.categoryFilter = null;
-            this.complianceFilter = null;
-            this.moduleSearchInput = null;
-            this.searchModulesBtn = null;
-            this.auditLogsTableBody = null;
-            this.auditStartDate = null;
-            this.auditEndDate = null;
-            this.activityTypeFilter = null;
-            this.applyAuditFiltersBtn = null;
-            this.prevModulesPageBtn = null;
-            this.nextModulesPageBtn = null;
-            this.modulesShowingCount = null;
+            this.planNameInput = null;
+            this.planTypeSelect = null;
+            this.planDescriptionTextarea = null;
+            this.planPriceInput = null;
+            this.billingCycleSelect = null;
+            this.planStatusSelect = null;
+            this.modulesContainer = null;
+            this.prevPlansPageBtn = null;
+            this.nextPlansPageBtn = null;
+            this.plansShowingCount = null;
             this.pageNumberContainer = null;
 
             // Reset state
             this.currentPage = 1;
-            this.totalModules = 0;
-            this.currentEditingModule = null;
+            this.totalPlans = 0;
             this.currentEditingPlan = null;
         }
     }
 
-    // Expose WiseManager to the global scope
-    window.WiseManager = WiseManager;
+    // Expose PricingManager to the global scope
+    window.PricingManager = PricingManager;
 })();
