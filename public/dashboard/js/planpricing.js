@@ -18,49 +18,38 @@
             this.currentEditingPlan = null;
 
             // DOM Element References
-            this.plansGridContainer = document.getElementById('plansGridContainer');
-            this.addNewPlanBtn = document.getElementById('addNewPlanBtn');
+            this.plansGridContainer = null;
+            this.addNewPlanBtn = null;
             this.planModal = null;
             this.planForm = null;
+            this.prevPlansPageBtn = null;
+            this.nextPlansPageBtn = null;
+            this.plansShowingCount = null;
+            this.pageNumberContainer = null;
+
+            // Form Input References
             this.planNameInput = null;
             this.planTypeSelect = null;
             this.planDescriptionTextarea = null;
             this.planPriceInput = null;
             this.billingCycleSelect = null;
             this.planStatusSelect = null;
-
-            // Pagination References
-            this.prevPlansPageBtn = document.getElementById('prevPlansPageBtn');
-            this.nextPlansPageBtn = document.getElementById('nextPlansPageBtn');
-            this.plansShowingCount = document.getElementById('plansShowingCount');
-            this.pageNumberContainer = document.getElementById('pageNumberContainer');
-
-            // Module Selection References
             this.modulesContainer = null;
-
-            // Add null checks
-    if (!this.plansGridContainer) {
-        console.error('Plans grid container not found');
-    }
-
-    if (!this.addNewPlanBtn) {
-        console.error('Add new plan button not found');
-    }
-
 
             // Bind methods to maintain correct context
             this.bindMethods();
 
-            // Initialize
-            this.init();
+            // Use a slight delay to ensure DOM is ready
+            this.initializeDOMReferences();
         }
 
         // Method to bind all class methods
         bindMethods() {
             // Initialization and core methods
             [
-                'init', 'initializeEventListeners', 'handleError', 
-                'cleanup', 'addUserInfoStyles'
+                'init', 'initializeDOMReferences', 'initializeEventListeners', 
+                'handleError', 'logMissingElements', 'addUserInfoStyles', 
+                'cleanup'
             ].forEach(method => {
                 this[method] = this[method].bind(this);
             });
@@ -74,9 +63,51 @@
                 'handlePlanFormSubmit', 'handleEditPlan', 
                 'handleDeletePlan', 'collectPlanDetails', 
                 'validatePlanForm', 'populateModulesForPlan',
-                'populateEditPlanForm'
+                'populateEditPlanForm', 'showFormError',
+                'fetchModules'
             ].forEach(method => {
                 this[method] = this[method].bind(this);
+            });
+        }
+
+        // Method to initialize DOM references
+        initializeDOMReferences() {
+            requestAnimationFrame(() => {
+                try {
+                    // Select DOM elements
+                    this.plansGridContainer = document.getElementById('plansGridContainer');
+                    this.addNewPlanBtn = document.getElementById('addNewPlanBtn');
+                    this.prevPlansPageBtn = document.getElementById('prevPlansPageBtn');
+                    this.nextPlansPageBtn = document.getElementById('nextPlansPageBtn');
+                    this.plansShowingCount = document.getElementById('plansShowingCount');
+                    this.pageNumberContainer = document.getElementById('pageNumberContainer');
+
+                    // Log if elements are missing
+                    this.logMissingElements();
+
+                    // Initialize
+                    this.init();
+                } catch (error) {
+                    console.error('Error initializing DOM references:', error);
+                }
+            });
+        }
+
+        // Log missing elements
+        logMissingElements() {
+            const elementsToCheck = [
+                { element: this.plansGridContainer, name: 'Plans Grid Container' },
+                { element: this.addNewPlanBtn, name: 'Add New Plan Button' },
+                { element: this.prevPlansPageBtn, name: 'Previous Plans Page Button' },
+                { element: this.nextPlansPageBtn, name: 'Next Plans Page Button' },
+                { element: this.plansShowingCount, name: 'Plans Showing Count' },
+                { element: this.pageNumberContainer, name: 'Page Number Container' }
+            ];
+
+            elementsToCheck.forEach(({ element, name }) => {
+                if (!element) {
+                    console.warn(`${name} not found in the DOM`);
+                }
             });
         }
 
@@ -108,29 +139,31 @@
 
         // Error Handling Utility
         handleError(error, context = 'Operation') {
-    // More comprehensive error logging
-    console.error(`${context} failed:`, {
-        message: error.message,
-        stack: error.stack,
-        context: context
-    });
+            console.error(`${context} failed:`, {
+                message: error.message,
+                stack: error.stack,
+                context: context
+            });
 
-    // Fallback error notification
-    const errorMessage = error.message || `${context} failed. Please try again.`;
-    
-    // Check if userInterface exists before calling
-    if (window.dashboardApp && window.dashboardApp.userInterface) {
-        window.dashboardApp.userInterface.showErrorNotification(errorMessage);
-    } else {
-        // Fallback alert if notification system is not available
-        alert(errorMessage);
-    }
-}
+            // Fallback error notification
+            const errorMessage = error.message || `${context} failed. Please try again.`;
+            
+            // Check if userInterface exists before calling
+            if (window.dashboardApp && window.dashboardApp.userInterface) {
+                window.dashboardApp.userInterface.showErrorNotification(errorMessage);
+            } else {
+                // Fallback alert if notification system is not available
+                alert(errorMessage);
+            }
+        }
+
         // Event Listeners Initialization
         initializeEventListeners() {
             // Add New Plan Button
             if (this.addNewPlanBtn) {
                 this.addNewPlanBtn.addEventListener('click', this.handleAddNewPlan);
+            } else {
+                console.warn('Add New Plan button not found. Skipping event listener.');
             }
 
             // Pagination Buttons
@@ -141,6 +174,8 @@
                         this.fetchPlans();
                     }
                 });
+            } else {
+                console.warn('Previous Plans Page button not found. Skipping event listener.');
             }
 
             if (this.nextPlansPageBtn) {
@@ -148,57 +183,64 @@
                     this.currentPage++;
                     this.fetchPlans();
                 });
+            } else {
+                console.warn('Next Plans Page button not found. Skipping event listener.');
             }
         }
                 // Fetch Plans Method
         async fetchPlans() {
-    try {
-        // Ensure plansGridContainer exists
-        if (!this.plansGridContainer) {
-            console.error('Plans grid container not found');
-            return [];
-        }
-
-        // Construct API endpoint
-        const url = new URL(`${this.apiBaseUrl}/plans`);
-        url.searchParams.append('page', this.currentPage);
-        url.searchParams.append('limit', this.pageSize);
-
-        // Fetch plans
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
+            // Ensure plansGridContainer exists
+            if (!this.plansGridContainer) {
+                this.plansGridContainer = document.getElementById('plansGridContainer');
+                
+                // If still not found, log and return
+                if (!this.plansGridContainer) {
+                    console.error('Plans grid container persistently missing');
+                    return [];
+                }
             }
-        });
 
-        if (!response.ok) {
-            throw new Error('Failed to fetch plans');
+            try {
+                // Construct API endpoint
+                const url = new URL(`${this.apiBaseUrl}/plans`);
+                url.searchParams.append('page', this.currentPage);
+                url.searchParams.append('limit', this.pageSize);
+
+                // Fetch plans
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch plans');
+                }
+
+                const data = await response.json();
+
+                // Validate data structure
+                if (!data || !data.data || !data.pagination) {
+                    console.error('Invalid response structure:', data);
+                    this.renderNoPlansState();
+                    return [];
+                }
+
+                // Update total plans and pagination
+                this.totalPlans = data.pagination.total || 0;
+                this.renderPlans(data.data);
+                this.updatePagination(data.pagination);
+
+                return data.data;
+            } catch (error) {
+                console.error('Detailed fetch plans error:', error);
+                this.handleError(error, 'Fetching Plans');
+                this.renderNoPlansState();
+                return [];
+            }
         }
-
-        const data = await response.json();
-
-        // Validate data structure
-        if (!data || !data.data || !data.pagination) {
-            console.error('Invalid response structure:', data);
-            this.renderNoPlansState();
-            return [];
-        }
-
-        // Update total plans and pagination
-        this.totalPlans = data.pagination.total || 0;
-        this.renderPlans(data.data);
-        this.updatePagination(data.pagination);
-
-        return data.data;
-    } catch (error) {
-        console.error('Detailed fetch plans error:', error);
-        this.handleError(error, 'Fetching Plans');
-        this.renderNoPlansState();
-        return [];
-    }
-}
 
         // Render Plans Method
         renderPlans(plans) {
@@ -266,28 +308,29 @@
 
         // Update Pagination Method
         updatePagination(pagination) {
-    // Ensure pagination object is valid
-    if (!pagination || typeof pagination !== 'object') {
-        console.error('Invalid pagination object:', pagination);
-        return;
-    }
+            // Ensure pagination object is valid
+            if (!pagination || typeof pagination !== 'object') {
+                console.error('Invalid pagination object:', pagination);
+                return;
+            }
 
-    // Null checks for DOM elements
-    if (!this.prevPlansPageBtn || !this.nextPlansPageBtn || !this.plansShowingCount || !this.pageNumberContainer) {
-        console.error('Pagination elements are not properly initialized');
-        return;
-    }
+            // Null checks for DOM elements
+            if (!this.prevPlansPageBtn || !this.nextPlansPageBtn || 
+                !this.plansShowingCount || !this.pageNumberContainer) {
+                console.error('Pagination elements are not properly initialized');
+                return;
+            }
 
-    // Update showing count
-    this.plansShowingCount.textContent = `Showing ${pagination.page || 1} of ${pagination.totalPages || 1} pages`;
+            // Update showing count
+            this.plansShowingCount.textContent = `Showing ${pagination.page || 1} of ${pagination.totalPages || 1} pages`;
 
-    // Update pagination buttons
-    this.prevPlansPageBtn.disabled = (pagination.page <= 1);
-    this.nextPlansPageBtn.disabled = (pagination.page >= (pagination.totalPages || 1));
+            // Update pagination buttons
+            this.prevPlansPageBtn.disabled = (pagination.page <= 1);
+            this.nextPlansPageBtn.disabled = (pagination.page >= (pagination.totalPages || 1));
 
-    // Generate page numbers
-    this.generatePageNumbers(pagination);
-}
+            // Generate page numbers
+            this.generatePageNumbers(pagination);
+        }
 
         // Generate Page Numbers Method
         generatePageNumbers(pagination) {
@@ -295,7 +338,7 @@
             this.pageNumberContainer.innerHTML = '';
 
             // Generate page number buttons
-            for (let i = 1; i <= pagination.totalPages; i++) {
+            for (let i = 1; i <= (pagination.totalPages || 1); i++) {
                 const pageBtn = document.createElement('button');
                 pageBtn.textContent = i;
                 pageBtn.className = 'page-number';
@@ -315,28 +358,47 @@
 
         // Render No Plans State Method
         renderNoPlansState() {
-    // Add null check for plansGridContainer
-    if (!this.plansGridContainer) {
-        console.error('Plans grid container is null');
-        
-        // Try to find the container again
-        this.plansGridContainer = document.getElementById('plansGridContainer');
-        
-        // If still null, log and return
-        if (!this.plansGridContainer) {
-            console.error('Unable to find plans grid container');
-            return;
+            // Ensure container exists
+            if (!this.plansGridContainer) {
+                this.plansGridContainer = document.getElementById('plansGridContainer');
+            }
+
+            // Final check before rendering
+            if (!this.plansGridContainer) {
+                console.error('Unable to render no plans state: Container not found');
+                return;
+            }
+
+            this.plansGridContainer.innerHTML = `
+                <div class="no-plans">
+                    <i class="fas fa-tags"></i>
+                    <p>No pricing plans found. Create your first plan!</p>
+                </div>
+            `;
         }
-    }
 
-    this.plansGridContainer.innerHTML = `
-        <div class="no-plans">
-            <i class="fas fa-tags"></i>
-            <p>No pricing plans found. Create your first plan!</p>
-        </div>
-    `;
-}
+        // Fetch Modules Method (to populate module selection)
+        async fetchModules() {
+            try {
+                const response = await fetch(`${this.apiBaseUrl}/modules`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
 
+                if (!response.ok) {
+                    throw new Error('Failed to fetch modules');
+                }
+
+                const data = await response.json();
+                return data.data || [];
+            } catch (error) {
+                this.handleError(error, 'Fetching Modules');
+                return [];
+            }
+        }
                 // Handle Add New Plan Method
         handleAddNewPlan() {
             // Create modal dynamically if not exists
@@ -355,9 +417,7 @@
                     })
                     .catch(error => {
                         console.error('Failed to create plan modal:', error);
-                        window.dashboardApp.userInterface.showErrorNotification(
-                            'Unable to open plan form. Please try again.'
-                        );
+                        this.handleError(error, 'Opening Plan Form');
                     });
             } else {
                 // Reset form
@@ -381,11 +441,12 @@
                     if (existingModal) {
                         this.planModal = existingModal;
                         this.planForm = document.getElementById('planForm');
+                        this.modulesContainer = document.getElementById('modulesContainer');
                         resolve(this.planModal);
                         return;
                     }
 
-                    // Create a container div to hold the modal
+                    // Create modal HTML
                     const modalContainer = document.createElement('div');
                     modalContainer.innerHTML = `
                         <div class="modal" id="planModal">
@@ -456,20 +517,13 @@
                         </div>
                     `;
 
-                    // Ensure the modal is added to the DOM
-                    const firstChild = modalContainer.firstElementChild;
-                    if (!firstChild) {
-                        reject(new Error('Failed to create modal container'));
-                        return;
-                    }
-
                     // Append to body
-                    document.body.appendChild(firstChild);
+                    document.body.appendChild(modalContainer.firstElementChild);
 
                     // Use requestAnimationFrame to ensure DOM is ready
                     requestAnimationFrame(() => {
                         try {
-                            // Cache modal reference
+                            // Cache modal references
                             this.planModal = document.getElementById('planModal');
                             this.planForm = document.getElementById('planForm');
                             this.modulesContainer = document.getElementById('modulesContainer');
@@ -496,13 +550,7 @@
                             // Setup close button
                             const closeButton = this.planModal.querySelector('.modal-close');
                             if (closeButton) {
-                                closeButton.addEventListener('click', () => {
-                                    try {
-                                        this.closePlanModal();
-                                    } catch (closeError) {
-                                        console.error('Error closing modal:', closeError);
-                                    }
-                                });
+                                closeButton.addEventListener('click', this.closePlanModal);
                             } else {
                                 console.error('Close button not found in plan modal');
                             }
@@ -510,13 +558,7 @@
                             // Setup cancel button
                             const cancelButton = document.getElementById('cancelPlanBtn');
                             if (cancelButton) {
-                                cancelButton.addEventListener('click', () => {
-                                    try {
-                                        this.closePlanModal();
-                                    } catch (cancelError) {
-                                        console.error('Error canceling modal:', cancelError);
-                                    }
-                                });
+                                cancelButton.addEventListener('click', this.closePlanModal);
                             } else {
                                 console.error('Cancel button not found in plan modal');
                             }
@@ -557,29 +599,6 @@
             } catch (error) {
                 console.error('Error populating modules:', error);
                 this.modulesContainer.innerHTML = '<p>Unable to load modules</p>';
-            }
-        }
-
-        // Fetch Modules Method (to populate module selection)
-        async fetchModules() {
-            try {
-                const response = await fetch(`${this.apiBaseUrl}/modules`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch modules');
-                }
-
-                const data = await response.json();
-                return data.data || [];
-            } catch (error) {
-                this.handleError(error, 'Fetching Modules');
-                return [];
             }
         }
 
@@ -848,11 +867,17 @@
                 this.planForm.onsubmit = null;
             }
 
-            // Clear references
+            // Clear references to DOM elements
             this.plansGridContainer = null;
             this.addNewPlanBtn = null;
             this.planModal = null;
             this.planForm = null;
+            this.prevPlansPageBtn = null;
+            this.nextPlansPageBtn = null;
+            this.plansShowingCount = null;
+            this.pageNumberContainer = null;
+
+            // Clear form input references
             this.planNameInput = null;
             this.planTypeSelect = null;
             this.planDescriptionTextarea = null;
@@ -860,10 +885,6 @@
             this.billingCycleSelect = null;
             this.planStatusSelect = null;
             this.modulesContainer = null;
-            this.prevPlansPageBtn = null;
-            this.nextPlansPageBtn = null;
-            this.plansShowingCount = null;
-            this.pageNumberContainer = null;
 
             // Reset state
             this.currentPage = 1;
