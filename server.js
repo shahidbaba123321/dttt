@@ -226,6 +226,8 @@ let modules;
 let module_activity_logs;
 let company_modules;
 let deleted_modules;
+let plan_activity_logs;
+
 
 
 // Initialize Redis separately after ensuring connection
@@ -334,7 +336,8 @@ async function initializeDatabase() {
             'modules',
     'module_activity_logs',
     'company_modules',
-    'deleted_modules'
+    'deleted_modules',
+    'plan_activity_logs'        
         ];
 
         // Create collections if they don't exist
@@ -386,6 +389,8 @@ async function initializeDatabase() {
         module_activity_logs = database.collection('module_activity_logs');
         company_modules = database.collection('company_modules');
         deleted_modules = database.collection('deleted_modules');
+        plan_activity_logs = database.collection('plan_activity_logs');
+
 
         // Function to check and create index if needed
         const ensureIndex = async (collection, indexSpec, options = {}) => {
@@ -487,7 +492,38 @@ async function initializeDatabase() {
             
             // Deleted modules indexes
             ensureIndex(deleted_modules, { originalId: 1 }),
-            ensureIndex(deleted_modules, { deletedAt: -1 })
+            ensureIndex(deleted_modules, { deletedAt: -1 }),
+
+
+            ensureIndex(database.collection('plan_activity_logs'), { 
+    type: 1, 
+    timestamp: -1 
+}, { 
+    name: 'plan_activity_type_timestamp_index' 
+}),
+ensureIndex(database.collection('plan_activity_logs'), { 
+    'details.planId': 1 
+}, { 
+    name: 'plan_activity_plan_id_index' 
+}),
+ensureIndex(database.collection('plan_activity_logs'), { 
+    'details.planName': 1 
+}, { 
+    name: 'plan_activity_plan_name_index' 
+}),
+ensureIndex(database.collection('plan_activity_logs'), { 
+    userId: 1, 
+    type: 1 
+}, { 
+    name: 'plan_activity_user_type_index' 
+}),
+
+            
+ensureIndex(database.collection('plan_activity_logs'), { type: 1 }),
+ensureIndex(database.collection('plan_activity_logs'), { timestamp: -1 }),
+ensureIndex(database.collection('plan_activity_logs'), { userId: 1 })
+
+            
         ];
         await Promise.all(indexPromises);
         
@@ -1005,15 +1041,18 @@ async function createAuditLog(logType, userId, companyId, details, session = nul
         // Determine the target collection based on log type and context
         let targetCollection;
 
-        if (logType.startsWith('MODULE_')) {
-            // Use module_activity_logs for module-specific logs
-            targetCollection = database.collection('module_activity_logs');
-        } else if (companyId) {
-            // Use company_audit_logs if companyId is present
-            targetCollection = company_audit_logs;
-        } else {
-            // Default to general audit_logs
-            targetCollection = audit_logs;
+        switch (true) {
+            case logType.startsWith('MODULE_'):
+                targetCollection = database.collection('module_activity_logs');
+                break;
+            case logType.startsWith('PLAN_'):
+                targetCollection = database.collection('plan_activity_logs');
+                break;
+            case !!companyId:
+                targetCollection = company_audit_logs;
+                break;
+            default:
+                targetCollection = audit_logs;
         }
 
         // Comprehensive log details
@@ -5052,14 +5091,24 @@ app.post('/api/plans', verifyToken, verifyAdmin, async (req, res) => {
 
             const result = await database.collection('plans').insertOne(plan, { session });
 
-            // Create audit log
+            // Create comprehensive audit log
             await createAuditLog(
                 'PLAN_CREATED',
                 req.user.userId,
-                result.insertedId,
+                null, // No company ID in this context
                 {
+                    planId: result.insertedId,
                     planName: name,
-                    planDetails: plan
+                    planDetails: {
+                        name,
+                        description,
+                        monthlyPrice,
+                        annualPrice,
+                        currency,
+                        features,
+                        isActive
+                    },
+                    createdBy: req.user.userId
                 },
                 session
             );
