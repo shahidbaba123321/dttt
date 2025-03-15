@@ -172,6 +172,11 @@
         createModuleCard(module) {
     const card = document.createElement('div');
     card.className = 'module-card';
+    
+    // Extract permissions if exists
+    const permissions = module.permissions || {};
+    const accessLevels = permissions.accessLevels ? permissions.accessLevels.join(', ') : 'N/A';
+
     card.innerHTML = `
         <div class="module-card-header">
             <h3 class="module-title">${module.name}</h3>
@@ -189,6 +194,9 @@
         <div class="module-details">
             <span class="module-compliance">
                 Compliance Level: ${module.complianceLevel.toUpperCase()}
+            </span>
+            <span class="module-access-levels">
+                Access Levels: ${accessLevels}
             </span>
         </div>
         <div class="module-actions">
@@ -210,6 +218,7 @@
 
     return card;
 }
+        
         // Update Pagination Method
         updatePagination(pagination) {
             // Update showing count
@@ -548,7 +557,7 @@
     }
 }
                 // Module Form Submission Method
-        async handleModuleFormSubmit(event) {
+       ync handleModuleFormSubmit(event) {
     event.preventDefault();
     
     // Collect form data according to the database schema
@@ -559,21 +568,9 @@
         complianceLevel: this.moduleForm.complianceLevel.value,
         isActive: this.moduleForm.moduleStatus.value === 'active',
         
-        // Add fields that match your database schema
-        permissions: [], // You can modify this based on your requirements
-        subscriptionTiers: [], // You can modify this based on your requirements
-        
-        // Additional fields you want to track
-        accessLevels: Array.from(
-            this.moduleForm.querySelectorAll('input[name="accessLevels"]:checked')
-        ).map(el => el.value),
-        
-        features: Array.from(
-            this.moduleForm.querySelectorAll('input[name="features"]:checked')
-        ).map(el => el.value),
-        
-        pricingPlan: this.moduleForm.pricingPlan.value,
-        auditLogging: this.moduleForm.auditLoggingToggle.checked
+        // Collect additional fields
+        permissions: this.collectPermissions(),
+        subscriptionTiers: this.collectSubscriptionTiers()
     };
 
     try {
@@ -620,6 +617,35 @@
         throw error;
     }
 }
+        // Method to collect permissions (Access Levels)
+collectPermissions() {
+    const accessLevels = Array.from(
+        this.moduleForm.querySelectorAll('input[name="accessLevels"]:checked')
+    ).map(el => el.value);
+
+    const features = Array.from(
+        this.moduleForm.querySelectorAll('input[name="features"]:checked')
+    ).map(el => el.value);
+
+    const pricingPlan = this.moduleForm.pricingPlan.value;
+    const auditLogging = this.moduleForm.auditLoggingToggle.checked;
+
+    return {
+        accessLevels,
+        features,
+        pricingPlan,
+        auditLogging
+    };
+}
+
+// Method to collect subscription tiers (if needed)
+collectSubscriptionTiers() {
+    // You can expand this method if you have specific subscription tier logic
+    return [];
+}
+
+
+        
 
         // Validate Module Form Method
         validateModuleForm(formData) {
@@ -720,30 +746,35 @@ populateEditForm(module) {
     // Reset and repopulate features
     this.populateFeatureCheckboxes();
 
-    // Populate features if available
-    if (module.features && module.features.length > 0) {
-        module.features.forEach(feature => {
-            const checkbox = form.querySelector(`input[name="features"][value="${feature}"]`);
-            if (checkbox) checkbox.checked = true;
-        });
-    }
+    // Handle permissions (if stored in permissions field)
+    if (module.permissions) {
+        const permissions = module.permissions;
 
-    // Populate access levels if available
-    if (module.accessLevels && module.accessLevels.length > 0) {
-        module.accessLevels.forEach(level => {
-            const checkbox = form.querySelector(`input[name="accessLevels"][value="${level}"]`);
-            if (checkbox) checkbox.checked = true;
-        });
-    }
+        // Populate access levels
+        if (permissions.accessLevels && permissions.accessLevels.length > 0) {
+            permissions.accessLevels.forEach(level => {
+                const checkbox = form.querySelector(`input[name="accessLevels"][value="${level}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
 
-    // Pricing Plan (if you want to add this to your form)
-    if (form.pricingPlan) {
-        form.pricingPlan.value = module.pricingPlan || '';
-    }
+        // Populate features
+        if (permissions.features && permissions.features.length > 0) {
+            permissions.features.forEach(feature => {
+                const checkbox = form.querySelector(`input[name="features"][value="${feature}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
 
-    // Audit Logging (if you want to add this to your form)
-    if (form.auditLoggingToggle) {
-        form.auditLoggingToggle.checked = module.auditLogging || false;
+        // Populate pricing plan
+        if (form.pricingPlan) {
+            form.pricingPlan.value = permissions.pricingPlan || '';
+        }
+
+        // Populate audit logging
+        if (form.auditLoggingToggle) {
+            form.auditLoggingToggle.checked = permissions.auditLogging || false;
+        }
     }
 
     // Show modal
@@ -754,6 +785,7 @@ populateEditForm(module) {
     // Update form submission to edit mode
     this.moduleForm.onsubmit = this.handleModuleFormSubmit;
 }
+
 
 
 
