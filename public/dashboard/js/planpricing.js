@@ -538,58 +538,59 @@ async getClientIP() {
     }
         // Validate plan form data
     validatePlanData(formData, modules) {
-        const errors = [];
+    const errors = [];
 
-        // Name validation
-        if (!formData.name || formData.name.trim().length < 3) {
-            errors.push('Plan name must be at least 3 characters long');
-        }
-
-        // Description validation (optional, but with max length)
-        if (formData.description && formData.description.length > 500) {
-            errors.push('Description cannot exceed 500 characters');
-        }
-
-        // Price validations
-        if (formData.monthlyRate <= 0) {
-            errors.push('Monthly rate must be a positive number');
-        }
-
-        if (formData.annualRate <= 0) {
-            errors.push('Annual rate must be a positive number');
-        }
-
-        // Module validation
-        if (!formData.modules || formData.modules.length === 0) {
-            errors.push('Select at least one module for the plan');
-        }
-
-        // Validate selected modules exist
-        const validModuleIds = modules.map(module => module._id);
-        const invalidModules = formData.modules.filter(moduleId => 
-            !validModuleIds.includes(moduleId)
-        );
-
-        if (invalidModules.length > 0) {
-            errors.push('Some selected modules are invalid');
-        }
-
-        return errors;
+    // Name validation
+    if (!formData.name || formData.name.trim().length < 3) {
+        errors.push('Plan name must be at least 3 characters long');
     }
+
+    // Description validation (optional, but with max length)
+    if (formData.description && formData.description.length > 500) {
+        errors.push('Description cannot exceed 500 characters');
+    }
+
+    // Price validations
+    if (formData.monthlyRate <= 0) {
+        errors.push('Monthly rate must be a positive number');
+    }
+
+    if (formData.annualRate <= 0) {
+        errors.push('Annual rate must be a positive number');
+    }
+
+    // Module validation
+    if (!formData.modules || formData.modules.length === 0) {
+        errors.push('Select at least one module for the plan');
+    }
+
+    // Validate selected modules exist
+    const validModuleIds = modules.map(module => module._id || module.id);
+    const invalidModules = formData.modules.filter(moduleId => 
+        !validModuleIds.includes(moduleId)
+    );
+
+    if (invalidModules.length > 0) {
+        errors.push('Some selected modules are invalid');
+    }
+
+    return errors;
+}
 
     // Save plan method
     async savePlan(modules) {
     try {
         // Collect form data
         const formData = {
-            name: document.getElementById('planName').value.trim(),
-            description: document.getElementById('planDescription').value.trim(),
-            currency: document.getElementById('planCurrency').value,
-            monthlyRate: parseFloat(document.getElementById('monthlyRate').value),
-            annualRate: parseFloat(document.getElementById('annualRate').value),
-            status: document.getElementById('planStatus').value,
-            modules: Array.from(document.querySelectorAll('#modulesContainer input:checked'))
-                .map(checkbox => checkbox.value)
+            name: document.getElementById('planName')?.value.trim() || '',
+            description: document.getElementById('planDescription')?.value.trim() || '',
+            currency: document.getElementById('planCurrency')?.value || 'USD',
+            monthlyRate: parseFloat(document.getElementById('monthlyRate')?.value || 0),
+            annualRate: parseFloat(document.getElementById('annualRate')?.value || 0),
+            status: document.getElementById('planStatus')?.value || 'active',
+            modules: Array.from(
+                document.querySelectorAll('#modulesContainer input:checked')
+            ).map(checkbox => checkbox.value)
         };
 
         // Validate form data
@@ -611,7 +612,7 @@ async getClientIP() {
         const planPayload = {
             ...formData,
             ...convertedPrices,
-            createdBy: this.getUserId(),
+            createdBy: this.getUserId(), // Implement method to get current user ID
             createdAt: new Date().toISOString()
         };
 
@@ -631,19 +632,6 @@ async getClientIP() {
             throw new Error(responseData.message || 'Failed to create plan');
         }
 
-        // Create detailed audit log
-        await this.createAuditLog('CREATED', {
-            planId: responseData.plan._id,
-            planName: formData.name,
-            planDetails: {
-                currency: formData.currency,
-                monthlyRate: formData.monthlyRate,
-                annualRate: formData.annualRate,
-                status: formData.status,
-                moduleCount: formData.modules.length
-            }
-        });
-
         // Show success notification
         this.showSuccessNotification('Plan created successfully');
 
@@ -651,26 +639,17 @@ async getClientIP() {
         await this.fetchAndDisplayPlans();
 
         // Close modal
-        $('#planCreationModal').modal('hide');
+        this.hideModal();
 
         return responseData.plan;
 
     } catch (error) {
-        // Create error audit log
-        await this.createAuditLog('CREATE_FAILED', {
-            errorMessage: error.message,
-            attemptedPlanData: {
-                name: formData.name,
-                currency: formData.currency
-            }
-        });
-
         console.error('Error saving plan:', error);
         this.showErrorNotification(error.message);
-        
         throw error;
     }
 }
+
 async editPlan(planId) {
     try {
         // Fetch plan details
@@ -837,27 +816,41 @@ showConfirmationModal(title, message) {
     }
 
     // Show validation errors
-    showValidationErrors(errors) {
-        // Create error message container
-        const errorContainer = document.createElement('div');
-        errorContainer.className = 'alert alert-danger';
-        errorContainer.innerHTML = `
-            <strong>Validation Errors:</strong>
-            <ul>
-                ${errors.map(error => `<li>${error}</li>`).join('')}
-            </ul>
-        `;
-
-        // Insert error container before the form
-        const modalBody = document.querySelector('#planCreationModal .modal-body');
-        const existingErrors = modalBody.querySelector('.alert-danger');
-        
-        if (existingErrors) {
-            existingErrors.remove();
-        }
-
-        modalBody.insertBefore(errorContainer, modalBody.firstChild);
+   showValidationErrors(errors) {
+    // Create error message container
+    const modalBody = document.querySelector('#planCreationModal .modal-body');
+    
+    // Remove existing error messages
+    const existingErrors = modalBody.querySelector('.validation-errors');
+    if (existingErrors) {
+        existingErrors.remove();
     }
+
+    // Create new error message
+    const errorContainer = document.createElement('div');
+    errorContainer.className = 'validation-errors alert alert-danger';
+    errorContainer.innerHTML = `
+        <strong>Validation Errors:</strong>
+        <ul>
+            ${errors.map(error => `<li>${error}</li>`).join('')}
+        </ul>
+    `;
+
+    // Insert error container at the top of the modal body
+    modalBody.insertBefore(errorContainer, modalBody.firstChild);
+}
+
+    showSuccessNotification(message) {
+    console.log(message);
+    // Fallback notification if no global notification system
+    alert(message);
+}
+
+    getUserId() {
+    // Example implementation - adjust based on your user session management
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    return userData ? userData._id : null;
+}
 
     // Fetch and display existing plans
   async fetchAndDisplayPlans() {
