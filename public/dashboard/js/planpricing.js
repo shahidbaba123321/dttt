@@ -1,898 +1,618 @@
 (function() {
-    'use strict';
+'use strict';
 
-    // Check if PricingManager already exists
-    if (window.PricingManager) {
-        console.log('PricingManager already exists');
-        return;
+// Check if PricingManager already exists
+if (window.PricingManager) {
+    console.log('PricingManager already exists');
+    return;
+}
+
+class PricingManager {
+    constructor(baseUrl) {
+        // Base configuration
+        this.baseUrl = baseUrl || 'https://18.215.160.136.nip.io/api';
+        this.token = localStorage.getItem('token');
+        this.currentPage = 1;
+        this.pageSize = 10;
+        this.totalPlans = 0;
+
+        // Currency configurations
+        this.currencies = [
+            { code: 'USD', symbol: '$', name: 'US Dollar', conversionRates: {
+                INR: 0.012, 
+                AED: 0.27, 
+                QAR: 0.27, 
+                GBP: 0.79
+            }},
+            { code: 'INR', symbol: '₹', name: 'Indian Rupee', conversionRates: {
+                USD: 83.50, 
+                AED: 22.70, 
+                QAR: 22.70, 
+                GBP: 66.50
+            }},
+            { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham', conversionRates: {
+                USD: 3.67, 
+                INR: 0.044, 
+                QAR: 1.0, 
+                GBP: 2.93
+            }},
+            { code: 'QAR', symbol: 'ر.ق', name: 'Qatari Riyal', conversionRates: {
+                USD: 3.64, 
+                INR: 0.044, 
+                AED: 1.0, 
+                GBP: 2.90
+            }},
+            { code: 'GBP', symbol: '£', name: 'British Pound', conversionRates: {
+                USD: 1.26, 
+                INR: 0.015, 
+                AED: 0.34, 
+                QAR: 0.34
+            }}
+        ];
+
+        // Markup configurations
+        this.markupRules = {
+            INR: { 
+                USD: 1.3, 
+                AED: 1.3, 
+                QAR: 1.3, 
+                GBP: 1.4 
+            },
+            USD: { 
+                GBP: 1.2 
+            },
+            AED: { 
+                GBP: 1.3 
+            },
+            QAR: { 
+                GBP: 1.3 
+            }
+        };
+
+        // Initialize event listeners and setup
+        this.initializeEventListeners();
     }
 
-    class PricingManager {
-        constructor(apiBaseUrl) {
-            // Base configuration
-            this.apiBaseUrl = apiBaseUrl;
-            this.token = localStorage.getItem('token');
-            this.currentPage = 1;
-            this.pageSize = 10;
-            this.totalPlans = 0;
-            this.currentEditingPlan = null;
-
-            // DOM Element References
-            this.plansGridContainer = null;
-            this.addNewPlanBtn = null;
-            this.planModal = null;
-            this.planForm = null;
-            this.prevPlansPageBtn = null;
-            this.nextPlansPageBtn = null;
-            this.plansShowingCount = null;
-            this.pageNumberContainer = null;
-
-            // Form Input References
-            this.planNameInput = null;
-            this.planTypeSelect = null;
-            this.planDescriptionTextarea = null;
-            this.planPriceInput = null;
-            this.billingCycleSelect = null;
-            this.planStatusSelect = null;
-            this.modulesContainer = null;
-
-            // Bind methods to maintain correct context
-            this.bindMethods();
-
-            // Use a slight delay to ensure DOM is ready
-            this.initializeDOMReferences();
+    // Method to initialize event listeners
+    initializeEventListeners() {
+        const addNewPlanBtn = document.getElementById('addNewPlanBtn');
+        if (addNewPlanBtn) {
+            addNewPlanBtn.addEventListener('click', () => this.showPlanCreationModal());
         }
+    }
 
-        // Method to bind all class methods
-        bindMethods() {
-            // Initialization and core methods
-            [
-                'init', 'initializeDOMReferences', 'initializeEventListeners', 
-                'handleError', 'logMissingElements', 'addUserInfoStyles', 
-                'cleanup'
-            ].forEach(method => {
-                this[method] = this[method].bind(this);
-            });
-
-            // Plan-related methods
-            [
-                'fetchPlans', 'renderPlans', 'createPlanCard', 
-                'updatePagination', 'generatePageNumbers', 
-                'renderNoPlansState', 'handleAddNewPlan', 
-                'createPlanModal', 'closePlanModal', 
-                'handlePlanFormSubmit', 'handleEditPlan', 
-                'handleDeletePlan', 'collectPlanDetails', 
-                'validatePlanForm', 'populateModulesForPlan',
-                'populateEditPlanForm', 'showFormError',
-                'fetchModules'
-            ].forEach(method => {
-                this[method] = this[method].bind(this);
-            });
-        }
-
-        // Method to initialize DOM references
-        initializeDOMReferences() {
-            requestAnimationFrame(() => {
-                try {
-                    // Select DOM elements
-                    this.plansGridContainer = document.getElementById('plansGridContainer');
-                    this.addNewPlanBtn = document.getElementById('addNewPlanBtn');
-                    this.prevPlansPageBtn = document.getElementById('prevPlansPageBtn');
-                    this.nextPlansPageBtn = document.getElementById('nextPlansPageBtn');
-                    this.plansShowingCount = document.getElementById('plansShowingCount');
-                    this.pageNumberContainer = document.getElementById('pageNumberContainer');
-
-                    // Log if elements are missing
-                    this.logMissingElements();
-
-                    // Initialize
-                    this.init();
-                } catch (error) {
-                    console.error('Error initializing DOM references:', error);
-                }
-            });
-        }
-
-        // Log missing elements
-        logMissingElements() {
-            const elementsToCheck = [
-                { element: this.plansGridContainer, name: 'Plans Grid Container' },
-                { element: this.addNewPlanBtn, name: 'Add New Plan Button' },
-                { element: this.prevPlansPageBtn, name: 'Previous Plans Page Button' },
-                { element: this.nextPlansPageBtn, name: 'Next Plans Page Button' },
-                { element: this.plansShowingCount, name: 'Plans Showing Count' },
-                { element: this.pageNumberContainer, name: 'Page Number Container' }
-            ];
-
-            elementsToCheck.forEach(({ element, name }) => {
-                if (!element) {
-                    console.warn(`${name} not found in the DOM`);
-                }
-            });
-        }
-
-        // Initialization method
-        init() {
-            this.initializeEventListeners();
-            this.addUserInfoStyles();
-            this.fetchPlans();
-        }
-
-        // Add User Info Styles Method
-        addUserInfoStyles() {
-            const styleSheet = document.createElement('style');
-            styleSheet.textContent = `
-                .user-info {
-                    display: flex;
-                    flex-direction: column;
-                }
-                .user-name {
-                    font-weight: 600;
-                }
-                .user-email {
-                    color: var(--text-tertiary, #6B7280);
-                    font-size: 0.75rem;
-                }
-            `;
-            document.head.appendChild(styleSheet);
-        }
-
-        // Error Handling Utility
-        handleError(error, context = 'Operation') {
-            console.error(`${context} failed:`, {
-                message: error.message,
-                stack: error.stack,
-                context: context
-            });
-
-            // Fallback error notification
-            const errorMessage = error.message || `${context} failed. Please try again.`;
+    // Fetch live currency rates
+    async fetchLiveCurrencyRates() {
+        try {
+            // Use a reliable, free currency exchange rate API
+            const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
             
-            // Check if userInterface exists before calling
-            if (window.dashboardApp && window.dashboardApp.userInterface) {
-                window.dashboardApp.userInterface.showErrorNotification(errorMessage);
-            } else {
-                // Fallback alert if notification system is not available
-                alert(errorMessage);
-            }
-        }
-
-        // Event Listeners Initialization
-        initializeEventListeners() {
-            // Add New Plan Button
-            if (this.addNewPlanBtn) {
-                this.addNewPlanBtn.addEventListener('click', this.handleAddNewPlan);
-            } else {
-                console.warn('Add New Plan button not found. Skipping event listener.');
+            if (!response.ok) {
+                throw new Error('Failed to fetch live currency rates');
             }
 
-            // Pagination Buttons
-            if (this.prevPlansPageBtn) {
-                this.prevPlansPageBtn.addEventListener('click', () => {
-                    if (this.currentPage > 1) {
-                        this.currentPage--;
-                        this.fetchPlans();
-                    }
-                });
-            } else {
-                console.warn('Previous Plans Page button not found. Skipping event listener.');
-            }
+            const ratesData = await response.json();
+            
+            // Update currencies with live rates
+            this.currencies = this.currencies.map(currency => {
+                if (currency.code === 'USD') {
+                    // For USD, create conversion rates for other currencies
+                    return {
+                        ...currency,
+                        conversionRates: {
+                            INR: ratesData.rates.INR,
+                            AED: ratesData.rates.AED,
+                            QAR: ratesData.rates.QAR,
+                            GBP: ratesData.rates.GBP
+                        }
+                    };
+                } else {
+                    // For other currencies, calculate rates based on USD
+                    return {
+                        ...currency,
+                        conversionRates: {
+                            USD: 1 / ratesData.rates[currency.code],
+                            INR: ratesData.rates[currency.code] / ratesData.rates.INR,
+                            AED: ratesData.rates[currency.code] / ratesData.rates.AED,
+                            QAR: ratesData.rates[currency.code] / ratesData.rates.QAR,
+                            GBP: ratesData.rates[currency.code] / ratesData.rates.GBP
+                        }
+                    };
+                }
+            });
 
-            if (this.nextPlansPageBtn) {
-                this.nextPlansPageBtn.addEventListener('click', () => {
-                    this.currentPage++;
-                    this.fetchPlans();
-                });
-            } else {
-                console.warn('Next Plans Page button not found. Skipping event listener.');
-            }
-        }
-                // Fetch Plans Method
-        async fetchPlans() {
-            // Ensure plansGridContainer exists
-            if (!this.plansGridContainer) {
-                this.plansGridContainer = document.getElementById('plansGridContainer');
+            // Cache rates in localStorage with timestamp
+            localStorage.setItem('currencyRates', JSON.stringify({
+                rates: this.currencies,
+                timestamp: Date.now()
+            }));
+
+            return this.currencies;
+        } catch (error) {
+            console.error('Error fetching live currency rates:', error);
+            
+            // Fallback to cached rates if available
+            const cachedRates = localStorage.getItem('currencyRates');
+            if (cachedRates) {
+                const { rates, timestamp } = JSON.parse(cachedRates);
                 
-                // If still not found, log and return
-                if (!this.plansGridContainer) {
-                    console.error('Plans grid container persistently missing');
-                    return [];
+                // Use cached rates if less than 24 hours old
+                if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
+                    this.currencies = rates;
+                    return rates;
                 }
             }
 
-            try {
-                // Construct API endpoint
-                const url = new URL(`${this.apiBaseUrl}/plans`);
-                url.searchParams.append('page', this.currentPage);
-                url.searchParams.append('limit', this.pageSize);
+            // If no cached rates, use predefined rates
+            return this.currencies;
+        }
+    }
 
-                // Fetch plans
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch plans');
-                }
-
-                const data = await response.json();
-
-                // Validate data structure
-                if (!data || !data.data || !data.pagination) {
-                    console.error('Invalid response structure:', data);
-                    this.renderNoPlansState();
-                    return [];
-                }
-
-                // Update total plans and pagination
-                this.totalPlans = data.pagination.total || 0;
-                this.renderPlans(data.data);
-                this.updatePagination(data.pagination);
-
-                return data.data;
-            } catch (error) {
-                console.error('Detailed fetch plans error:', error);
-                this.handleError(error, 'Fetching Plans');
-                this.renderNoPlansState();
-                return [];
+    // Method to get currency rates with caching and auto-refresh
+    async getCurrencyRates() {
+        const cachedRates = localStorage.getItem('currencyRates');
+        
+        if (cachedRates) {
+            const { rates, timestamp } = JSON.parse(cachedRates);
+            
+            // Check if cached rates are less than 24 hours old
+            if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
+                this.currencies = rates;
+                return rates;
             }
         }
 
-        // Render Plans Method
-        renderPlans(plans) {
-            // Clear existing plans
-            this.plansGridContainer.innerHTML = '';
+        // Fetch fresh rates if no valid cache exists
+        return await this.fetchLiveCurrencyRates();
+    }
 
-            // Handle empty state
-            if (!plans || plans.length === 0) {
-                this.renderNoPlansState();
+    // Currency conversion method with markup
+    async convertCurrency(amount, fromCurrency, toCurrency) {
+        try {
+            // Ensure we have the latest rates
+            await this.getCurrencyRates();
+
+            // Find source and target currency configurations
+            const sourceCurrency = this.currencies.find(c => c.code === fromCurrency);
+            const targetCurrency = this.currencies.find(c => c.code === toCurrency);
+
+            if (!sourceCurrency || !targetCurrency) {
+                console.error('Invalid currency conversion');
+                return null;
+            }
+
+            // Base conversion
+            const baseAmount = amount / sourceCurrency.conversionRates[toCurrency];
+
+            // Apply markup if exists
+            const markupRules = this.markupRules[fromCurrency];
+            if (markupRules && markupRules[toCurrency]) {
+                return baseAmount * markupRules[toCurrency];
+            }
+
+            return baseAmount;
+        } catch (error) {
+            console.error('Currency conversion error:', error);
+            return null;
+        }
+    }
+
+        // Fetch available modules for plan creation
+    async fetchAvailableModules() {
+        try {
+            const response = await fetch(`${this.baseUrl}/modules`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch modules');
+            }
+
+            const data = await response.json();
+            return data.modules || [];
+        } catch (error) {
+            console.error('Error fetching modules:', error);
+            return [];
+        }
+    }
+
+    // Create dynamic plan creation modal
+    async showPlanCreationModal() {
+        try {
+            // Fetch available modules
+            const modules = await this.fetchAvailableModules();
+
+            // Create modal container
+            const modalContainer = document.getElementById('planFormModalContainer');
+            modalContainer.innerHTML = `
+                <div class="modal fade" id="planCreationModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Create New Plan</h5>
+                                <button type="button" class="close" data-dismiss="modal">
+                                    <span>&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="planCreationForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Plan Name</label>
+                                                <input type="text" class="form-control" id="planName" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Currency</label>
+                                                <select class="form-control" id="planCurrency">
+                                                    ${this.currencies.map(currency => 
+                                                        `<option value="${currency.code}">${currency.name} (${currency.symbol})</option>`
+                                                    ).join('')}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Plan Description</label>
+                                        <textarea class="form-control" id="planDescription" rows="3"></textarea>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Monthly Rate</label>
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text" id="currencySymbol">$</span>
+                                                    </div>
+                                                    <input type="number" class="form-control" id="monthlyRate" min="0" step="0.01" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Annual Rate</label>
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text" id="currencySymbol">$</span>
+                                                    </div>
+                                                    <input type="number" class="form-control" id="annualRate" min="0" step="0.01" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Plan Status</label>
+                                        <select class="form-control" id="planStatus">
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Select Modules</label>
+                                        <div id="modulesContainer">
+                                            ${modules.map(module => `
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" 
+                                                           value="${module._id}" 
+                                                           id="module-${module._id}">
+                                                    <label class="form-check-label" for="module-${module._id}">
+                                                        ${module.name}
+                                                    </label>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" id="savePlanBtn">Save Plan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Add event listeners
+            this.setupPlanCreationModalListeners(modules);
+
+            // Show the modal (assuming Bootstrap is used)
+            $('#planCreationModal').modal('show');
+
+        } catch (error) {
+            console.error('Error creating plan modal:', error);
+            // Show error notification
+        }
+    }
+
+    // Setup event listeners for plan creation modal
+    setupPlanCreationModalListeners(modules) {
+        // Currency symbol update
+        const currencySelect = document.getElementById('planCurrency');
+        const currencySymbols = document.querySelectorAll('#currencySymbol');
+        
+        currencySelect.addEventListener('change', (e) => {
+            const selectedCurrency = this.currencies.find(c => c.code === e.target.value);
+            currencySymbols.forEach(symbol => {
+                symbol.textContent = selectedCurrency.symbol;
+            });
+        });
+
+        // Save plan button
+        const savePlanBtn = document.getElementById('savePlanBtn');
+        savePlanBtn.addEventListener('click', () => this.savePlan(modules));
+    }
+
+    // Example usage method to demonstrate conversion
+    async demonstrateCurrencyConversion() {
+        try {
+            // Convert 1000 INR to USD
+            const convertedAmount = await this.convertCurrency(1000, 'INR', 'USD');
+            console.log('Converted Amount:', convertedAmount);
+        } catch (error) {
+            console.error('Conversion demonstration failed:', error);
+        }
+    }
+        // Validate plan form data
+    validatePlanData(formData, modules) {
+        const errors = [];
+
+        // Name validation
+        if (!formData.name || formData.name.trim().length < 3) {
+            errors.push('Plan name must be at least 3 characters long');
+        }
+
+        // Description validation (optional, but with max length)
+        if (formData.description && formData.description.length > 500) {
+            errors.push('Description cannot exceed 500 characters');
+        }
+
+        // Price validations
+        if (formData.monthlyRate <= 0) {
+            errors.push('Monthly rate must be a positive number');
+        }
+
+        if (formData.annualRate <= 0) {
+            errors.push('Annual rate must be a positive number');
+        }
+
+        // Module validation
+        if (!formData.modules || formData.modules.length === 0) {
+            errors.push('Select at least one module for the plan');
+        }
+
+        // Validate selected modules exist
+        const validModuleIds = modules.map(module => module._id);
+        const invalidModules = formData.modules.filter(moduleId => 
+            !validModuleIds.includes(moduleId)
+        );
+
+        if (invalidModules.length > 0) {
+            errors.push('Some selected modules are invalid');
+        }
+
+        return errors;
+    }
+
+    // Save plan method
+    async savePlan(modules) {
+        try {
+            // Collect form data
+            const formData = {
+                name: document.getElementById('planName').value.trim(),
+                description: document.getElementById('planDescription').value.trim(),
+                currency: document.getElementById('planCurrency').value,
+                monthlyRate: parseFloat(document.getElementById('monthlyRate').value),
+                annualRate: parseFloat(document.getElementById('annualRate').value),
+                status: document.getElementById('planStatus').value,
+                modules: Array.from(document.querySelectorAll('#modulesContainer input:checked'))
+                    .map(checkbox => checkbox.value)
+            };
+
+            // Validate form data
+            const validationErrors = this.validatePlanData(formData, modules);
+            if (validationErrors.length > 0) {
+                // Show validation errors
+                this.showValidationErrors(validationErrors);
                 return;
             }
 
-            // Render plans
-            plans.forEach(plan => {
-                const planCard = this.createPlanCard(plan);
-                this.plansGridContainer.appendChild(planCard);
+            // Convert prices to other currencies
+            const convertedPrices = await this.convertPricesToAllCurrencies(
+                formData.monthlyRate, 
+                formData.annualRate, 
+                formData.currency
+            );
+
+            // Prepare plan payload
+            const planPayload = {
+                ...formData,
+                ...convertedPrices,
+                createdBy: this.getUserId(), // Implement method to get current user ID
+                createdAt: new Date().toISOString()
+            };
+
+            // Send plan to backend
+            const response = await fetch(`${this.baseUrl}/plans`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(planPayload)
             });
+
+            const responseData = await response.json();
+
+            if (!response.ok) {
+                throw new Error(responseData.message || 'Failed to create plan');
+            }
+
+            // Show success notification
+            this.showSuccessNotification('Plan created successfully');
+
+            // Refresh plans list
+            await this.fetchAndDisplayPlans();
+
+            // Close modal
+            $('#planCreationModal').modal('hide');
+
+        } catch (error) {
+            console.error('Error saving plan:', error);
+            this.showErrorNotification(error.message);
+        }
+    }
+
+    // Convert prices to all supported currencies
+    async convertPricesToAllCurrencies(monthlyRate, annualRate, baseCurrency) {
+        const convertedPrices = {
+            prices: {}
+        };
+
+        // Convert to each supported currency
+        for (const currency of this.currencies) {
+            if (currency.code !== baseCurrency) {
+                convertedPrices.prices[currency.code] = {
+                    monthlyRate: await this.convertCurrency(monthlyRate, baseCurrency, currency.code),
+                    annualRate: await this.convertCurrency(annualRate, baseCurrency, currency.code)
+                };
+            }
         }
 
-        // Create Plan Card Method
-        createPlanCard(plan) {
-            const card = document.createElement('div');
-            card.className = 'plan-card';
-            
-            // Prepare included modules display
-            const includedModules = plan.includedModules && plan.includedModules.length > 0
-                ? plan.includedModules.map(module => module.name).join(', ')
-                : 'No modules included';
+        return convertedPrices;
+    }
 
-            card.innerHTML = `
-                <div class="plan-card-header">
-                    <h3 class="plan-title">${plan.name}</h3>
-                    <div class="plan-status">
-                        <span class="status-indicator ${plan.status === 'active' ? 'status-active' : 'status-inactive'}"></span>
-                        ${plan.status}
-                    </div>
+    // Show validation errors
+    showValidationErrors(errors) {
+        // Create error message container
+        const errorContainer = document.createElement('div');
+        errorContainer.className = 'alert alert-danger';
+        errorContainer.innerHTML = `
+            <strong>Validation Errors:</strong>
+            <ul>
+                ${errors.map(error => `<li>${error}</li>`).join('')}
+            </ul>
+        `;
+
+        // Insert error container before the form
+        const modalBody = document.querySelector('#planCreationModal .modal-body');
+        const existingErrors = modalBody.querySelector('.alert-danger');
+        
+        if (existingErrors) {
+            existingErrors.remove();
+        }
+
+        modalBody.insertBefore(errorContainer, modalBody.firstChild);
+    }
+
+    // Fetch and display existing plans
+    async fetchAndDisplayPlans() {
+        try {
+            const response = await fetch(`${this.baseUrl}/plans`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch plans');
+            }
+
+            const data = await response.json();
+            this.displayPlans(data.plans);
+
+        } catch (error) {
+            console.error('Error fetching plans:', error);
+            this.showErrorNotification('Failed to load plans');
+        }
+    }
+
+    // Display plans in the plans container
+    displayPlans(plans) {
+        const plansContainer = document.getElementById('plansListContainer');
+        
+        // Clear existing content
+        plansContainer.innerHTML = '';
+
+        // Create plan cards
+        plans.forEach(plan => {
+            const planCard = document.createElement('div');
+            planCard.className = 'plan-card';
+            planCard.innerHTML = `
+                <div class="plan-header">
+                    <h3>${plan.name}</h3>
+                    <span class="plan-status ${plan.status}">
+                        ${plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}
+                    </span>
                 </div>
-                <div class="plan-details">
-                    <div class="plan-type">${plan.type.toUpperCase()} Plan</div>
-                    <div class="plan-price">$${plan.price.toFixed(2)} / ${plan.billingCycle}</div>
-                    <div class="plan-description">${plan.description || 'No description'}</div>
+                <div class="plan-body">
+                    <p>${plan.description || 'No description provided'}</p>
+                    <div class="plan-pricing">
+                        <div>Monthly: ${plan.currency} ${plan.monthlyRate.toFixed(2)}</div>
+                        <div>Annual: ${plan.currency} ${plan.annualRate.toFixed(2)}</div>
+                    </div>
                     <div class="plan-modules">
-                        <strong>Included Modules:</strong> ${includedModules}
+                        <strong>Modules:</strong>
+                        ${plan.modules.map(module => `<span class="badge">${module.name}</span>`).join('')}
                     </div>
                 </div>
                 <div class="plan-actions">
-                    <button class="plan-action-btn edit-plan" data-plan-id="${plan._id}">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="plan-action-btn delete-plan" data-plan-id="${plan._id}">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
+                    <button class="btn btn-sm btn-primary edit-plan" data-id="${plan._id}">Edit</button>
+                    <button class="btn btn-sm btn-danger delete-plan" data-id="${plan._id}">Delete</button>
                 </div>
             `;
 
-            // Add event listeners for edit and delete
-            const editBtn = card.querySelector('.edit-plan');
-            const deleteBtn = card.querySelector('.delete-plan');
-
-            editBtn.addEventListener('click', () => this.handleEditPlan(plan));
-            deleteBtn.addEventListener('click', () => this.handleDeletePlan(plan._id));
-
-            return card;
-        }
-
-        // Update Pagination Method
-        updatePagination(pagination) {
-            // Ensure pagination object is valid
-            if (!pagination || typeof pagination !== 'object') {
-                console.error('Invalid pagination object:', pagination);
-                return;
-            }
-
-            // Null checks for DOM elements
-            if (!this.prevPlansPageBtn || !this.nextPlansPageBtn || 
-                !this.plansShowingCount || !this.pageNumberContainer) {
-                console.error('Pagination elements are not properly initialized');
-                return;
-            }
-
-            // Update showing count
-            this.plansShowingCount.textContent = `Showing ${pagination.page || 1} of ${pagination.totalPages || 1} pages`;
-
-            // Update pagination buttons
-            this.prevPlansPageBtn.disabled = (pagination.page <= 1);
-            this.nextPlansPageBtn.disabled = (pagination.page >= (pagination.totalPages || 1));
-
-            // Generate page numbers
-            this.generatePageNumbers(pagination);
-        }
-
-        // Generate Page Numbers Method
-        generatePageNumbers(pagination) {
-            // Clear existing page numbers
-            this.pageNumberContainer.innerHTML = '';
-
-            // Generate page number buttons
-            for (let i = 1; i <= (pagination.totalPages || 1); i++) {
-                const pageBtn = document.createElement('button');
-                pageBtn.textContent = i;
-                pageBtn.className = 'page-number';
-                
-                if (i === pagination.page) {
-                    pageBtn.classList.add('active');
-                }
-
-                pageBtn.addEventListener('click', () => {
-                    this.currentPage = i;
-                    this.fetchPlans();
-                });
-
-                this.pageNumberContainer.appendChild(pageBtn);
-            }
-        }
-
-        // Render No Plans State Method
-        renderNoPlansState() {
-            // Ensure container exists
-            if (!this.plansGridContainer) {
-                this.plansGridContainer = document.getElementById('plansGridContainer');
-            }
-
-            // Final check before rendering
-            if (!this.plansGridContainer) {
-                console.error('Unable to render no plans state: Container not found');
-                return;
-            }
-
-            this.plansGridContainer.innerHTML = `
-                <div class="no-plans">
-                    <i class="fas fa-tags"></i>
-                    <p>No pricing plans found. Create your first plan!</p>
-                </div>
-            `;
-        }
-
-        // Fetch Modules Method (to populate module selection)
-        async fetchModules() {
-            try {
-                const response = await fetch(`${this.apiBaseUrl}/modules`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch modules');
-                }
-
-                const data = await response.json();
-                return data.data || [];
-            } catch (error) {
-                this.handleError(error, 'Fetching Modules');
-                return [];
-            }
-        }
-                // Handle Add New Plan Method
-        handleAddNewPlan() {
-            // Create modal dynamically if not exists
-            if (!this.planModal) {
-                this.createPlanModal()
-                    .then(() => {
-                        // Reset form
-                        this.planForm.reset();
-                        this.populateModulesForPlan();
-                        
-                        // Show modal
-                        this.planModal.classList.add('show');
-                        
-                        // Setup form submission
-                        this.planForm.onsubmit = this.handlePlanFormSubmit;
-                    })
-                    .catch(error => {
-                        console.error('Failed to create plan modal:', error);
-                        this.handleError(error, 'Opening Plan Form');
-                    });
-            } else {
-                // Reset form
-                this.planForm.reset();
-                this.populateModulesForPlan();
-                
-                // Show modal
-                this.planModal.classList.add('show');
-                
-                // Setup form submission
-                this.planForm.onsubmit = this.handlePlanFormSubmit;
-            }
-        }
-
-        // Create Plan Modal Method
-        createPlanModal() {
-            return new Promise((resolve, reject) => {
-                try {
-                    // Check if modal already exists
-                    const existingModal = document.getElementById('planModal');
-                    if (existingModal) {
-                        this.planModal = existingModal;
-                        this.planForm = document.getElementById('planForm');
-                        this.modulesContainer = document.getElementById('modulesContainer');
-                        resolve(this.planModal);
-                        return;
-                    }
-
-                    // Create modal HTML
-                    const modalContainer = document.createElement('div');
-                    modalContainer.innerHTML = `
-                        <div class="modal" id="planModal">
-                            <div class="modal-dialog">
-                                <div class="modal-header">
-                                    <h2>Add New Pricing Plan</h2>
-                                    <button class="modal-close" type="button">&times;</button>
-                                </div>
-                                <div class="modal-body">
-                                    <form id="planForm">
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label>Plan Name</label>
-                                                <input type="text" name="planName" class="form-control" required>
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Plan Type</label>
-                                                <select name="planType" class="form-control" required>
-                                                    <option value="">Select Plan Type</option>
-                                                    <option value="basic">Basic</option>
-                                                    <option value="professional">Professional</option>
-                                                    <option value="enterprise">Enterprise</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="form-group">
-                                            <label>Description</label>
-                                            <textarea name="planDescription" class="form-control" rows="3"></textarea>
-                                        </div>
-
-                                        <div class="form-row">
-                                            <div class="form-group">
-                                                <label>Price</label>
-                                                <input type="number" name="planPrice" class="form-control" step="0.01" min="0" required>
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Billing Cycle</label>
-                                                <select name="billingCycle" class="form-control" required>
-                                                    <option value="">Select Billing Cycle</option>
-                                                    <option value="monthly">Monthly</option>
-                                                    <option value="annually">Annually</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label>Included Modules</label>
-                                            <div id="modulesContainer" class="modules-grid">
-                                                <!-- Modules will be dynamically populated -->
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label>Status</label>
-                                            <select name="planStatus" class="form-control" required>
-                                                <option value="active">Active</option>
-                                                <option value="inactive">Inactive</option>
-                                            </select>
-                                        </div>
-                                    </form>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" id="cancelPlanBtn">Cancel</button>
-                                    <button type="submit" form="planForm" class="btn btn-primary">Save Plan</button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-
-                    // Append to body
-                    document.body.appendChild(modalContainer.firstElementChild);
-
-                    // Use requestAnimationFrame to ensure DOM is ready
-                    requestAnimationFrame(() => {
-                        try {
-                            // Cache modal references
-                            this.planModal = document.getElementById('planModal');
-                            this.planForm = document.getElementById('planForm');
-                            this.modulesContainer = document.getElementById('modulesContainer');
-
-                            // Cache form input references
-                            this.planNameInput = this.planForm.planName;
-                            this.planTypeSelect = this.planForm.planType;
-                            this.planDescriptionTextarea = this.planForm.planDescription;
-                            this.planPriceInput = this.planForm.planPrice;
-                            this.billingCycleSelect = this.planForm.billingCycle;
-                            this.planStatusSelect = this.planForm.planStatus;
-
-                            // Verify modal and form exist
-                            if (!this.planModal) {
-                                reject(new Error('Failed to create plan modal: Modal not found'));
-                                return;
-                            }
-
-                            if (!this.planForm) {
-                                reject(new Error('Failed to create plan modal: Form not found'));
-                                return;
-                            }
-
-                            // Setup close button
-                            const closeButton = this.planModal.querySelector('.modal-close');
-                            if (closeButton) {
-                                closeButton.addEventListener('click', this.closePlanModal);
-                            } else {
-                                console.error('Close button not found in plan modal');
-                            }
-
-                            // Setup cancel button
-                            const cancelButton = document.getElementById('cancelPlanBtn');
-                            if (cancelButton) {
-                                cancelButton.addEventListener('click', this.closePlanModal);
-                            } else {
-                                console.error('Cancel button not found in plan modal');
-                            }
-
-                            console.log('Plan modal created successfully');
-                            resolve(this.planModal);
-                        } catch (error) {
-                            console.error('Error setting up plan modal:', error);
-                            reject(error);
-                        }
-                    });
-                } catch (error) {
-                    console.error('Comprehensive error creating plan modal:', error);
-                    reject(error);
-                }
-            });
-        }
-
-        // Populate Modules for Plan Method
-        async populateModulesForPlan() {
-            try {
-                // Fetch modules from the server
-                const modules = await this.fetchModules();
-
-                // Clear existing modules
-                this.modulesContainer.innerHTML = '';
-
-                // Populate modules as checkboxes
-                modules.forEach(module => {
-                    const moduleWrapper = document.createElement('label');
-                    moduleWrapper.className = 'form-check';
-                    moduleWrapper.innerHTML = `
-                        <input type="checkbox" name="includedModules" value="${module._id}" class="form-check-input">
-                        ${module.name}
-                    `;
-                    this.modulesContainer.appendChild(moduleWrapper);
-                });
-            } catch (error) {
-                console.error('Error populating modules:', error);
-                this.modulesContainer.innerHTML = '<p>Unable to load modules</p>';
-            }
-        }
-
-        // Close Plan Modal Method
-        closePlanModal() {
-            if (this.planModal) {
-                this.planModal.classList.remove('show');
-            } else {
-                console.warn('Attempted to close non-existent plan modal');
-            }
-        }
-                // Handle Plan Form Submission Method
-        async handlePlanFormSubmit(event) {
-            event.preventDefault();
-            
-            // Collect plan details
-            const planDetails = this.collectPlanDetails();
-
-            // Validate plan details
-            if (!this.validatePlanForm(planDetails)) {
-                return;
-            }
-
-            try {
-                // Determine if this is a new plan or an update
-                const url = this.currentEditingPlan 
-                    ? `${this.apiBaseUrl}/plans/${this.currentEditingPlan._id}` 
-                    : `${this.apiBaseUrl}/plans`;
-                
-                const method = this.currentEditingPlan ? 'PUT' : 'POST';
-
-                // Send request to create or update plan
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(planDetails)
-                });
-
-                // Handle response
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Failed to save plan');
-                }
-
-                const result = await response.json();
-
-                // Show success notification
-                window.dashboardApp.userInterface.showSuccessNotification(
-                    this.currentEditingPlan 
-                        ? 'Plan updated successfully' 
-                        : 'New plan created successfully'
-                );
-
-                // Close modal and refresh plans
-                this.closePlanModal();
-                this.currentEditingPlan = null;
-                this.fetchPlans();
-
-                return result;
-            } catch (error) {
-                this.handleError(error, 'Saving Plan');
-                throw error;
-            }
-        }
-
-        // Collect Plan Details Method
-        collectPlanDetails() {
-            // Collect included modules
-            const includedModules = Array.from(
-                this.planForm.querySelectorAll('input[name="includedModules"]:checked')
-            ).map(el => el.value);
-
-            // Return plan details object
-            return {
-                name: this.planNameInput.value.trim(),
-                type: this.planTypeSelect.value,
-                description: this.planDescriptionTextarea.value.trim(),
-                price: parseFloat(this.planPriceInput.value),
-                billingCycle: this.billingCycleSelect.value,
-                includedModules: includedModules,
-                status: this.planStatusSelect.value
-            };
-        }
-
-        // Validate Plan Form Method
-        validatePlanForm(planDetails) {
-            // Name validation
-            if (!planDetails.name) {
-                this.showFormError('Plan Name is required');
-                return false;
-            }
-
-            // Type validation
-            if (!planDetails.type) {
-                this.showFormError('Plan Type is required');
-                return false;
-            }
-
-            // Price validation
-            if (isNaN(planDetails.price) || planDetails.price <= 0) {
-                this.showFormError('Valid Price is required');
-                return false;
-            }
-
-            // Billing cycle validation
-            if (!planDetails.billingCycle) {
-                this.showFormError('Billing Cycle is required');
-                return false;
-            }
-
-            // Modules validation
-            if (planDetails.includedModules.length === 0) {
-                this.showFormError('Select at least one module');
-                return false;
-            }
-
-            // Status validation
-            if (!planDetails.status) {
-                this.showFormError('Plan Status is required');
-                return false;
-            }
-
-            return true;
-        }
-
-        // Show Form Error Method
-        showFormError(message) {
-            // Create or get error container
-            let errorContainer = this.planModal.querySelector('.form-error');
-            if (!errorContainer) {
-                errorContainer = document.createElement('div');
-                errorContainer.className = 'form-error text-danger';
-                this.planModal.querySelector('.modal-body').prepend(errorContainer);
-            }
-
-            // Show error message
-            errorContainer.textContent = message;
-            errorContainer.style.display = 'block';
-
-            // Auto-hide after 3 seconds
-            setTimeout(() => {
-                errorContainer.style.display = 'none';
-            }, 3000);
-        }
-
-        // Handle Edit Plan Method
-        handleEditPlan(plan) {
-            // Set current editing plan
-            this.currentEditingPlan = plan;
-
-            // Ensure modal exists
-            if (!this.planModal) {
-                this.createPlanModal()
-                    .then(() => this.populateEditPlanForm(plan))
-                    .catch(error => {
-                        console.error('Failed to create modal:', error);
-                    });
-                return;
-            }
-
-            // Populate edit form
-            this.populateEditPlanForm(plan);
-        }
-
-        // Populate Edit Plan Form Method
-        populateEditPlanForm(plan) {
-            // Populate basic plan details
-            this.planNameInput.value = plan.name;
-            this.planTypeSelect.value = plan.type;
-            this.planDescriptionTextarea.value = plan.description || '';
-            this.planPriceInput.value = plan.price.toFixed(2);
-            this.billingCycleSelect.value = plan.billingCycle;
-            this.planStatusSelect.value = plan.status;
-
-            // Populate included modules
-            const moduleCheckboxes = this.planForm.querySelectorAll('input[name="includedModules"]');
-            moduleCheckboxes.forEach(checkbox => {
-                checkbox.checked = plan.includedModules.some(
-                    module => module._id === checkbox.value
-                );
-            });
-
-            // Show modal
-            this.planModal.classList.add('show');
-
-            // Update form submission to edit mode
-            this.planForm.onsubmit = this.handlePlanFormSubmit;
-        }
-
-        // Handle Delete Plan Method
-        async handleDeletePlan(planId) {
-            // Confirm deletion
-            const confirmDelete = window.confirm('Are you sure you want to delete this plan?');
-            
-            if (!confirmDelete) return;
-
-            try {
-                const response = await fetch(`${this.apiBaseUrl}/plans/${planId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Failed to delete plan');
-                }
-
-                // Show success notification
-                window.dashboardApp.userInterface.showSuccessNotification('Plan deleted successfully');
-
-                // Refresh plans
-                this.fetchPlans();
-            } catch (error) {
-                this.handleError(error, 'Deleting Plan');
-            }
-        }
-                // Cleanup Method
-        cleanup() {
-            // Remove event listeners
-            if (this.addNewPlanBtn) {
-                this.addNewPlanBtn.removeEventListener('click', this.handleAddNewPlan);
-            }
-
-            if (this.prevPlansPageBtn) {
-                this.prevPlansPageBtn.removeEventListener('click', () => {
-                    if (this.currentPage > 1) {
-                        this.currentPage--;
-                        this.fetchPlans();
-                    }
-                });
-            }
-
-            if (this.nextPlansPageBtn) {
-                this.nextPlansPageBtn.removeEventListener('click', () => {
-                    this.currentPage++;
-                    this.fetchPlans();
-                });
-            }
-
-            // Remove modal if exists
-            if (this.planModal) {
-                // Remove close button event listener
-                const closeButton = this.planModal.querySelector('.modal-close');
-                if (closeButton) {
-                    closeButton.removeEventListener('click', this.closePlanModal);
-                }
-
-                // Remove cancel button event listener
-                const cancelButton = document.getElementById('cancelPlanBtn');
-                if (cancelButton) {
-                    cancelButton.removeEventListener('click', this.closePlanModal);
-                }
-
-                // Remove the modal from the DOM
-                this.planModal.remove();
-            }
-
-            // Clear form submission event
-            if (this.planForm) {
-                this.planForm.onsubmit = null;
-            }
-
-            // Clear references to DOM elements
-            this.plansGridContainer = null;
-            this.addNewPlanBtn = null;
-            this.planModal = null;
-            this.planForm = null;
-            this.prevPlansPageBtn = null;
-            this.nextPlansPageBtn = null;
-            this.plansShowingCount = null;
-            this.pageNumberContainer = null;
-
-            // Clear form input references
-            this.planNameInput = null;
-            this.planTypeSelect = null;
-            this.planDescriptionTextarea = null;
-            this.planPriceInput = null;
-            this.billingCycleSelect = null;
-            this.planStatusSelect = null;
-            this.modulesContainer = null;
-
-            // Reset state
-            this.currentPage = 1;
-            this.totalPlans = 0;
-            this.currentEditingPlan = null;
-        }
+            plansContainer.appendChild(planCard);
+        });
+
+        // Add event listeners for edit and delete
+        this.setupPlanCardListeners();
     }
 
-    // Expose PricingManager to the global scope
-    window.PricingManager = PricingManager;
+    // Setup listeners for plan card actions
+    setupPlanCardListeners() {
+        const editButtons = document.querySelectorAll('.edit-plan');
+        const deleteButtons = document.querySelectorAll('.delete-plan');
+
+        editButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const planId = e.target.dataset.id;
+                this.editPlan(planId);
+            });
+        });
+
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const planId = e.target.dataset.id;
+                this.deletePlan(planId);
+            });
+        });
+    }
+
+    // Placeholder methods for edit and delete
+    editPlan(planId) {
+        console.log('Editing plan:', planId);
+        // Implement plan editing logic
+    }
+
+    deletePlan(planId) {
+        console.log('Deleting plan:', planId);
+        // Implement plan deletion logic
+    }
+}
+
+// Expose the PricingManager to the global window object
+window.PricingManager = PricingManager;
 })();
