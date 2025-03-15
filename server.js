@@ -944,42 +944,75 @@ async function initializeDefaultRoles() {
 
 
 // Audit logging functions
-async function createAuditLog(logType, userId, companyId, details, session = null) {
+async function createAuditLog(logType, userId, companyId, details, session = null, moduleId = null) {
     try {
         const auditLog = {
             type: logType,
             timestamp: new Date(),
             userId: new ObjectId(userId),
             details: details,
-            ip: details?.ip || null, // Access IP from details object
-            userAgent: details?.userAgent || null // Access User Agent from details object
+            ip: details?.ip || null,
+            userAgent: details?.userAgent || null
         };
 
-        // Add companyId if provided
-        if (companyId) {
-            auditLog.companyId = new ObjectId(companyId);
-            if (session) {
-                await company_audit_logs.insertOne(auditLog, { session });
-            } else {
-                await company_audit_logs.insertOne(auditLog);
-            }
-        } else {
-            // If companyId is not provided, log to the general audit_logs collection
-            if (session) {
-                await audit_logs.insertOne(auditLog, { session });
-            } else {
-                await audit_logs.insertOne(auditLog);
-            }
+        // Add moduleId if provided
+        if (moduleId) {
+            auditLog.moduleId = new ObjectId(moduleId);
         }
 
-        console.log('Audit log created:', auditLog);
+        // Determine the target collection based on log type and context
+        let targetCollection;
+
+        if (logType.startsWith('MODULE_')) {
+            // Use module_activity_logs for module-specific logs
+            targetCollection = database.collection('module_activity_logs');
+        } else if (companyId) {
+            // Use company_audit_logs if companyId is present
+            targetCollection = company_audit_logs;
+        } else {
+            // Default to general audit_logs
+            targetCollection = audit_logs;
+        }
+
+        // Insert log with or without session
+        if (session) {
+            await targetCollection.insertOne(auditLog, { session });
+        } else {
+            await targetCollection.insertOne(auditLog);
+        }
+
+        console.log(`Audit log created in ${targetCollection.collectionName}:`, auditLog);
+        return auditLog;
     } catch (error) {
-        console.error('Error creating audit log:', error);
-        // Consider throwing the error to handle it at a higher level
-        throw error; 
+        console.error('Error creating audit log:', {
+            logType,
+            userId,
+            companyId,
+            moduleId,
+            details,
+            error: error.message
+        });
+
+        // Optional: Log errors to a separate error collection
+        try {
+            await database.collection('error_logs').insertOne({
+                type: 'AUDIT_LOG_CREATION_ERROR',
+                timestamp: new Date(),
+                details: {
+                    logType,
+                    userId,
+                    companyId,
+                    moduleId,
+                    errorMessage: error.message
+                }
+            });
+        } catch (logError) {
+            console.error('Failed to log audit log creation error:', logError);
+        }
+
+        throw error;
     }
 }
-
 // Middleware Functions
 
 // Token verification middleware
