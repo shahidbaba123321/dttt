@@ -69,6 +69,12 @@ class PricingManager {
             }
         };
 
+        // Bind methods to ensure correct context
+        this.showPlanCreationModal = this.showPlanCreationModal.bind(this);
+        this.setupPlanCreationModalListeners = this.setupPlanCreationModalListeners.bind(this);
+        this.showModal = this.showModal.bind(this);
+        this.hideModal = this.hideModal.bind(this);
+
         // Initialize event listeners and setup
         this.initializeEventListeners();
         this.fetchAndDisplayPlans();
@@ -201,128 +207,172 @@ class PricingManager {
 
         // Fetch available modules for plan creation
     async fetchAvailableModules() {
-    try {
-        console.log('Fetching modules with:', {
-            baseUrl: this.baseUrl,
-            token: this.token ? 'Token present' : 'No token'
-        });
+        try {
+            const response = await fetch(`${this.baseUrl}/modules`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
 
-        const response = await fetch(`${this.baseUrl}/modules`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
+            if (!response.ok) {
+                throw new Error('Failed to fetch modules');
             }
-        });
 
-        // Log raw response
-        console.log('Modules Response status:', response.status);
-        
-        // Parse response
-        const responseData = await response.json();
-        
-        // Log parsed response
-        console.log('Modules Response data:', responseData);
+            const responseData = await response.json();
+            const modules = responseData.data || responseData.modules || responseData;
 
-        // Check response structure
-        if (!response.ok) {
-            throw new Error(responseData.message || 'Failed to fetch modules');
-        }
+            if (!modules || !Array.isArray(modules)) {
+                console.warn('No modules found or invalid module data');
+                return [];
+            }
 
-        // Determine the correct path to modules
-        const modules = responseData.data || responseData.modules || responseData;
+            return modules;
 
-        // Validate modules
-        if (!modules || !Array.isArray(modules)) {
-            console.warn('No modules found or invalid module data');
+        } catch (error) {
+            console.error('Modules Fetch Error:', error);
+            this.showErrorNotification(`Failed to load modules: ${error.message}`);
             return [];
         }
-
-        console.log('Fetched Modules:', modules);
-        return modules;
-
-    } catch (error) {
-        console.error('Comprehensive Modules Fetch Error:', {
-            message: error.message,
-            stack: error.stack,
-            name: error.name
-        });
-
-        // Show error notification
-        this.showErrorNotification(`Failed to load modules: ${error.message}`);
-
-        // Return empty array to prevent breaking the form
-        return [];
     }
-}
+
+
+    showErrorNotification(message) {
+        console.error(message);
+        // Fallback notification if no global notification system
+        alert(message);
+    }
+
+
+    
 
 
     // Create dynamic plan creation modal
     async showPlanCreationModal() {
-    try {
-        // Fetch available modules
-        const modules = await this.fetchAvailableModules();
+        try {
+            // Fetch available modules
+            const modules = await this.fetchAvailableModules();
 
-        // Create modal container
-        const modalContainer = document.getElementById('planFormModalContainer');
-        modalContainer.innerHTML = `
-            <div class="modal" id="planCreationModal" tabindex="-1" role="dialog">
-                <div class="modal-dialog modal-lg" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Create New Plan</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="planCreationForm">
-                                <!-- Previous form fields remain the same -->
-                                
-                                <div class="form-group">
-                                    <label>Select Modules</label>
-                                    <div id="modulesContainer">
-                                        ${modules.length > 0 ? 
-                                            modules.map(module => `
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" 
-                                                           value="${module._id || module.id}" 
-                                                           id="module-${module._id || module.id}">
-                                                    <label class="form-check-label" for="module-${module._id || module.id}">
-                                                        ${module.name}
-                                                    </label>
-                                                </div>
-                                            `).join('') : 
-                                            `<div class="alert alert-warning">
-                                                No modules available. Please add modules first.
-                                            </div>`
-                                        }
+            // Create modal container
+            const modalContainer = document.getElementById('planFormModalContainer');
+            if (!modalContainer) {
+                throw new Error('Modal container not found');
+            }
+
+            modalContainer.innerHTML = `
+                <div class="modal" id="planCreationModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Create New Plan</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="planCreationForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Plan Name</label>
+                                                <input type="text" class="form-control" id="planName" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Currency</label>
+                                                <select class="form-control" id="planCurrency">
+                                                    ${this.currencies.map(currency => 
+                                                        `<option value="${currency.code}">${currency.name} (${currency.symbol})</option>`
+                                                    ).join('')}
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary close-modal" data-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" id="savePlanBtn" ${modules.length === 0 ? 'disabled' : ''}>
-                                Save Plan
-                            </button>
+                                    
+                                    <div class="form-group">
+                                        <label>Plan Description</label>
+                                        <textarea class="form-control" id="planDescription" rows="3"></textarea>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Monthly Rate</label>
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text" id="currencySymbol">$</span>
+                                                    </div>
+                                                    <input type="number" class="form-control" id="monthlyRate" min="0" step="0.01" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Annual Rate</label>
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text" id="currencySymbol">$</span>
+                                                    </div>
+                                                    <input type="number" class="form-control" id="annualRate" min="0" step="0.01" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Plan Status</label>
+                                        <select class="form-control" id="planStatus">
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Select Modules</label>
+                                        <div id="modulesContainer">
+                                            ${modules.length > 0 ? 
+                                                modules.map(module => `
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" 
+                                                               value="${module._id || module.id}" 
+                                                               id="module-${module._id || module.id}">
+                                                        <label class="form-check-label" for="module-${module._id || module.id}">
+                                                            ${module.name}
+                                                        </label>
+                                                    </div>
+                                                `).join('') : 
+                                                `<div class="alert alert-warning">
+                                                    No modules available. Please add modules first.
+                                                </div>`
+                                            }
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary close-modal" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" id="savePlanBtn" ${modules.length === 0 ? 'disabled' : ''}>
+                                    Save Plan
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        `;
+            `;
 
-        // Create method to show modal
-        this.showModal();
+            // Create method to show modal
+            this.showModal();
 
-        // Add event listeners
-        this.setupPlanCreationModalListeners(modules);
+            // Add event listeners
+            this.setupPlanCreationModalListeners(modules);
 
-    } catch (error) {
-        console.error('Error creating plan modal:', error);
-        this.showErrorNotification('Failed to create plan modal');
+        } catch (error) {
+            console.error('Error creating plan modal:', error);
+            this.showErrorNotification(`Failed to create plan modal: ${error.message}`);
+        }
     }
-}
 
     // Debugging method to verify modules endpoint
 async debugModulesEndpoint() {
@@ -357,73 +407,78 @@ async debugModulesEndpoint() {
 
 
     showModal() {
-    const modal = document.getElementById('planCreationModal');
-    if (modal) {
-        modal.style.display = 'block';
-        modal.classList.add('show');
-        
-        // Add backdrop
-        const backdrop = document.createElement('div');
-        backdrop.classList.add('modal-backdrop', 'fade', 'show');
-        document.body.appendChild(backdrop);
+        const modal = document.getElementById('planCreationModal');
+        if (modal) {
+            modal.style.display = 'block';
+            modal.classList.add('show');
+            
+            // Add backdrop
+            const backdrop = document.createElement('div');
+            backdrop.classList.add('modal-backdrop', 'fade', 'show');
+            document.body.appendChild(backdrop);
 
-        // Add event listeners for closing
-        const closeButtons = modal.querySelectorAll('[data-dismiss="modal"], .close-modal');
-        closeButtons.forEach(button => {
-            button.addEventListener('click', () => this.hideModal());
-        });
+            // Close on backdrop click
+            backdrop.addEventListener('click', () => this.hideModal());
 
-        // Close on backdrop click
-        backdrop.addEventListener('click', () => this.hideModal());
-
-        // Close on escape key
-        document.addEventListener('keydown', this.handleEscapeKey);
+            // Close on escape key
+            document.addEventListener('keydown', this.handleEscapeKey);
+        }
     }
-}
+
     hideModal() {
-    const modal = document.getElementById('planCreationModal');
-    const backdrop = document.querySelector('.modal-backdrop');
-    
-    if (modal) {
-        modal.style.display = 'none';
-        modal.classList.remove('show');
-    }
-    
-    if (backdrop) {
-        backdrop.remove();
-    }
+        const modal = document.getElementById('planCreationModal');
+        const backdrop = document.querySelector('.modal-backdrop');
+        
+        if (modal) {
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+        }
+        
+        if (backdrop) {
+            backdrop.remove();
+        }
 
-    // Remove escape key listener
-    document.removeEventListener('keydown', this.handleEscapeKey);
-}
+        // Remove escape key listener
+        document.removeEventListener('keydown', this.handleEscapeKey);
+    }
 
 handleEscapeKey = (event) => {
-    if (event.key === 'Escape') {
-        this.hideModal();
+        if (event.key === 'Escape') {
+            this.hideModal();
+        }
     }
-}
 
     
     // Setup event listeners for plan creation modal
     setupPlanCreationModalListeners(modules) {
-    // Currency symbol update
-    const currencySelect = document.getElementById('planCurrency');
-    const currencySymbols = document.querySelectorAll('#currencySymbol');
-    
-    currencySelect.addEventListener('change', (e) => {
-        const selectedCurrency = this.currencies.find(c => c.code === e.target.value);
-        currencySymbols.forEach(symbol => {
-            symbol.textContent = selectedCurrency.symbol;
-        });
-    });
+        // Currency symbol update
+        const currencySelect = document.getElementById('planCurrency');
+        const currencySymbols = document.querySelectorAll('#currencySymbol');
+        
+        if (currencySelect) {
+            currencySelect.addEventListener('change', (e) => {
+                const selectedCurrency = this.currencies.find(c => c.code === e.target.value);
+                currencySymbols.forEach(symbol => {
+                    symbol.textContent = selectedCurrency.symbol;
+                });
+            });
+        }
 
-    // Save plan button
-    const savePlanBtn = document.getElementById('savePlanBtn');
-    savePlanBtn.addEventListener('click', () => {
-        this.savePlan(modules);
-        this.hideModal(); // Close modal after saving
-    });
-}
+        // Save plan button
+        const savePlanBtn = document.getElementById('savePlanBtn');
+        if (savePlanBtn) {
+            savePlanBtn.addEventListener('click', () => {
+                this.savePlan(modules);
+                this.hideModal();
+            });
+        }
+        // Close modal buttons
+        const closeButtons = document.querySelectorAll('[data-dismiss="modal"], .close-modal');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', () => this.hideModal());
+        });
+    }
+
 
     // Add this method to the PricingManager class
 async createAuditLog(action, details) {
