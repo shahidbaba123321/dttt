@@ -557,7 +557,7 @@
     }
 }
                 // Module Form Submission Method
-       ync handleModuleFormSubmit(event) {
+       async handleModuleFormSubmit(event) {
     event.preventDefault();
     
     // Collect form data according to the database schema
