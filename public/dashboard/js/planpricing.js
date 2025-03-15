@@ -540,38 +540,45 @@ async getClientIP() {
     validatePlanData(formData, modules) {
     const errors = [];
 
-    // Name validation
-    if (!formData.name || formData.name.trim().length < 3) {
-        errors.push('Plan name must be at least 3 characters long');
-    }
+    // Comprehensive validation
+    try {
+        // Name validation
+        if (formData.name.length < 3) {
+            errors.push('Plan name must be at least 3 characters long');
+        }
 
-    // Description validation (optional, but with max length)
-    if (formData.description && formData.description.length > 500) {
-        errors.push('Description cannot exceed 500 characters');
-    }
+        // Description validation (optional, but with max length)
+        if (formData.description && formData.description.length > 500) {
+            errors.push('Description cannot exceed 500 characters');
+        }
 
-    // Price validations
-    if (formData.monthlyRate <= 0) {
-        errors.push('Monthly rate must be a positive number');
-    }
+        // Price validations
+        if (formData.monthlyRate <= 0) {
+            errors.push('Monthly rate must be a positive number');
+        }
 
-    if (formData.annualRate <= 0) {
-        errors.push('Annual rate must be a positive number');
-    }
+        if (formData.annualRate <= 0) {
+            errors.push('Annual rate must be a positive number');
+        }
 
-    // Module validation
-    if (!formData.modules || formData.modules.length === 0) {
-        errors.push('Select at least one module for the plan');
-    }
+        // Module validation
+        if (!formData.modules || formData.modules.length === 0) {
+            errors.push('Select at least one module for the plan');
+        }
 
-    // Validate selected modules exist
-    const validModuleIds = modules.map(module => module._id || module.id);
-    const invalidModules = formData.modules.filter(moduleId => 
-        !validModuleIds.includes(moduleId)
-    );
+        // Validate selected modules exist
+        const validModuleIds = modules.map(module => module._id || module.id);
+        const invalidModules = formData.modules.filter(moduleId => 
+            !validModuleIds.includes(moduleId)
+        );
 
-    if (invalidModules.length > 0) {
-        errors.push('Some selected modules are invalid');
+        if (invalidModules.length > 0) {
+            errors.push('Some selected modules are invalid');
+        }
+
+    } catch (error) {
+        // Catch any unexpected validation errors
+        errors.push(error.message);
     }
 
     return errors;
@@ -580,18 +587,19 @@ async getClientIP() {
     // Save plan method
     async savePlan(modules) {
     try {
-        // Collect form data
+        // Collect form data with more robust collection
         const formData = {
-            name: document.getElementById('planName')?.value.trim() || '',
-            description: document.getElementById('planDescription')?.value.trim() || '',
-            currency: document.getElementById('planCurrency')?.value || 'USD',
-            monthlyRate: parseFloat(document.getElementById('monthlyRate')?.value || 0),
-            annualRate: parseFloat(document.getElementById('annualRate')?.value || 0),
-            status: document.getElementById('planStatus')?.value || 'active',
-            modules: Array.from(
-                document.querySelectorAll('#modulesContainer input:checked')
-            ).map(checkbox => checkbox.value)
+            name: this.getInputValue('planName', 'Plan Name'),
+            description: this.getInputValue('planDescription', '', false),
+            currency: this.getInputValue('planCurrency', 'Currency'),
+            monthlyRate: this.getNumericInputValue('monthlyRate', 'Monthly Rate'),
+            annualRate: this.getNumericInputValue('annualRate', 'Annual Rate'),
+            status: this.getInputValue('planStatus', 'Plan Status'),
+            modules: this.getSelectedModules()
         };
+
+        // Log collected form data for debugging
+        console.log('Collected Form Data:', formData);
 
         // Validate form data
         const validationErrors = this.validatePlanData(formData, modules);
@@ -612,9 +620,12 @@ async getClientIP() {
         const planPayload = {
             ...formData,
             ...convertedPrices,
-            createdBy: this.getUserId(), // Implement method to get current user ID
+            createdBy: this.getUserId(),
             createdAt: new Date().toISOString()
         };
+
+        // Log payload for debugging
+        console.log('Plan Payload:', planPayload);
 
         // Send plan to backend
         const response = await fetch(`${this.baseUrl}/plans`, {
@@ -626,7 +637,13 @@ async getClientIP() {
             body: JSON.stringify(planPayload)
         });
 
+        // Log raw response for debugging
+        console.log('Response Status:', response.status);
+        
         const responseData = await response.json();
+        
+        // Log response data
+        console.log('Response Data:', responseData);
 
         if (!response.ok) {
             throw new Error(responseData.message || 'Failed to create plan');
@@ -644,11 +661,72 @@ async getClientIP() {
         return responseData.plan;
 
     } catch (error) {
-        console.error('Error saving plan:', error);
-        this.showErrorNotification(error.message);
+        // Log full error details
+        console.error('Complete Error Details:', {
+            message: error.message,
+            name: error.name,
+            stack: error.stack
+        });
+
+        this.showErrorNotification(`Failed to save plan: ${error.message}`);
         throw error;
     }
 }
+
+    // Helper method to get input value with validation
+getInputValue(elementId, fieldName, required = true) {
+    const element = document.getElementById(elementId);
+    
+    if (!element) {
+        console.error(`Element not found: ${elementId}`);
+        if (required) {
+            throw new Error(`${fieldName} is required`);
+        }
+        return '';
+    }
+
+    const value = element.value.trim();
+
+    if (required && (!value || value.length === 0)) {
+        throw new Error(`${fieldName} is required`);
+    }
+
+    return value;
+}
+
+// Helper method to get numeric input value
+getNumericInputValue(elementId, fieldName) {
+    const element = document.getElementById(elementId);
+    
+    if (!element) {
+        console.error(`Element not found: ${elementId}`);
+        throw new Error(`${fieldName} is required`);
+    }
+
+    const value = parseFloat(element.value);
+
+    if (isNaN(value) || value <= 0) {
+        throw new Error(`${fieldName} must be a positive number`);
+    }
+
+    return value;
+}
+
+    // Helper method to get selected modules
+getSelectedModules() {
+    const selectedModules = Array.from(
+        document.querySelectorAll('#modulesContainer input:checked')
+    ).map(checkbox => checkbox.value);
+
+    if (selectedModules.length === 0) {
+        throw new Error('At least one module must be selected');
+    }
+
+    return selectedModules;
+}
+
+
+
 
 async editPlan(planId) {
     try {
