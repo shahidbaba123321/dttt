@@ -71,6 +71,7 @@ class PricingManager {
 
         // Initialize event listeners and setup
         this.initializeEventListeners();
+        this.fetchAndDisplayPlans();
     }
 
     // Method to initialize event listeners
@@ -733,28 +734,95 @@ showConfirmationModal(title, message) {
     }
 
     // Fetch and display existing plans
-    async fetchAndDisplayPlans() {
-        try {
-            const response = await fetch(`${this.baseUrl}/plans`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+   async fetchAndDisplayPlans() {
+    const plansContainer = document.getElementById('plansListContainer');
+    
+    try {
+        // Clear container and show loading state
+        plansContainer.innerHTML = `
+            <div class="loading-container">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <p class="mt-2">Loading plans...</p>
+            </div>
+        `;
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch plans');
+        // Add error handling and timeout
+        const fetchPlanTimeout = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Request timed out')), 10000)
+        );
+
+        const fetchPlansPromise = fetch(`${this.baseUrl}/plans`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
             }
+        });
 
-            const data = await response.json();
-            this.displayPlans(data.plans);
+        // Race between fetch and timeout
+        const response = await Promise.race([
+            fetchPlansPromise,
+            fetchPlanTimeout
+        ]);
 
-        } catch (error) {
-            console.error('Error fetching plans:', error);
-            this.showErrorNotification('Failed to load plans');
+        // Check if response is ok
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to fetch plans');
         }
+
+        const data = await response.json();
+
+        // Check if plans array exists and has items
+        if (!data.plans || data.plans.length === 0) {
+            plansContainer.innerHTML = `
+                <div class="no-plans-container">
+                    <i class="fas fa-folder-open text-muted" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3">No Plans Found</h4>
+                    <p class="text-muted">Click "Add New Plan" to create your first plan.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Display plans
+        this.displayPlans(data.plans);
+
+    } catch (error) {
+        console.error('Error fetching plans:', error);
+        
+        // Detailed error handling
+        plansContainer.innerHTML = `
+            <div class="error-container">
+                <i class="fas fa-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">Failed to Load Plans</h4>
+                <p class="text-muted">${error.message}</p>
+                <button id="retryFetchPlans" class="btn btn-primary mt-3">
+                    <i class="fas fa-redo"></i> Retry
+                </button>
+            </div>
+        `;
+
+        // Add retry event listener
+        const retryButton = document.getElementById('retryFetchPlans');
+        if (retryButton) {
+            retryButton.addEventListener('click', () => this.fetchAndDisplayPlans());
+        }
+
+        // Log the error
+        this.createAuditLog('PLANS_FETCH_FAILED', {
+            errorMessage: error.message,
+            timestamp: new Date().toISOString()
+        });
     }
+}
+    refreshPlans() {
+    this.fetchAndDisplayPlans();
+}
+    
+
 
     // Display plans in the plans container
     displayPlans(plans) {
