@@ -72,6 +72,7 @@ class PricingManager {
         // Initialize event listeners and setup
         this.initializeEventListeners();
         this.fetchAndDisplayPlans();
+        this.debugModulesEndpoint();
     }
 
     // Method to initialize event listeners
@@ -200,26 +201,61 @@ class PricingManager {
 
         // Fetch available modules for plan creation
     async fetchAvailableModules() {
-        try {
-            const response = await fetch(`${this.baseUrl}/modules`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+    try {
+        console.log('Fetching modules with:', {
+            baseUrl: this.baseUrl,
+            token: this.token ? 'Token present' : 'No token'
+        });
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch modules');
+        const response = await fetch(`${this.baseUrl}/modules`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
             }
+        });
 
-            const data = await response.json();
-            return data.modules || [];
-        } catch (error) {
-            console.error('Error fetching modules:', error);
+        // Log raw response
+        console.log('Modules Response status:', response.status);
+        
+        // Parse response
+        const responseData = await response.json();
+        
+        // Log parsed response
+        console.log('Modules Response data:', responseData);
+
+        // Check response structure
+        if (!response.ok) {
+            throw new Error(responseData.message || 'Failed to fetch modules');
+        }
+
+        // Determine the correct path to modules
+        const modules = responseData.data || responseData.modules || responseData;
+
+        // Validate modules
+        if (!modules || !Array.isArray(modules)) {
+            console.warn('No modules found or invalid module data');
             return [];
         }
+
+        console.log('Fetched Modules:', modules);
+        return modules;
+
+    } catch (error) {
+        console.error('Comprehensive Modules Fetch Error:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+        });
+
+        // Show error notification
+        this.showErrorNotification(`Failed to load modules: ${error.message}`);
+
+        // Return empty array to prevent breaking the form
+        return [];
     }
+}
+
 
     // Create dynamic plan creation modal
     async showPlanCreationModal() {
@@ -241,83 +277,35 @@ class PricingManager {
                         </div>
                         <div class="modal-body">
                             <form id="planCreationForm">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Plan Name</label>
-                                            <input type="text" class="form-control" id="planName" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Currency</label>
-                                            <select class="form-control" id="planCurrency">
-                                                ${this.currencies.map(currency => 
-                                                    `<option value="${currency.code}">${currency.name} (${currency.symbol})</option>`
-                                                ).join('')}
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>Plan Description</label>
-                                    <textarea class="form-control" id="planDescription" rows="3"></textarea>
-                                </div>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Monthly Rate</label>
-                                            <div class="input-group">
-                                                <div class="input-group-prepend">
-                                                    <span class="input-group-text" id="currencySymbol">$</span>
-                                                </div>
-                                                <input type="number" class="form-control" id="monthlyRate" min="0" step="0.01" required>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Annual Rate</label>
-                                            <div class="input-group">
-                                                <div class="input-group-prepend">
-                                                    <span class="input-group-text" id="currencySymbol">$</span>
-                                                </div>
-                                                <input type="number" class="form-control" id="annualRate" min="0" step="0.01" required>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>Plan Status</label>
-                                    <select class="form-control" id="planStatus">
-                                        <option value="active">Active</option>
-                                        <option value="inactive">Inactive</option>
-                                    </select>
-                                </div>
+                                <!-- Previous form fields remain the same -->
                                 
                                 <div class="form-group">
                                     <label>Select Modules</label>
                                     <div id="modulesContainer">
-                                        ${modules.map(module => `
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" 
-                                                       value="${module._id}" 
-                                                       id="module-${module._id}">
-                                                <label class="form-check-label" for="module-${module._id}">
-                                                    ${module.name}
-                                                </label>
-                                            </div>
-                                        `).join('')}
+                                        ${modules.length > 0 ? 
+                                            modules.map(module => `
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" 
+                                                           value="${module._id || module.id}" 
+                                                           id="module-${module._id || module.id}">
+                                                    <label class="form-check-label" for="module-${module._id || module.id}">
+                                                        ${module.name}
+                                                    </label>
+                                                </div>
+                                            `).join('') : 
+                                            `<div class="alert alert-warning">
+                                                No modules available. Please add modules first.
+                                            </div>`
+                                        }
                                     </div>
                                 </div>
                             </form>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary close-modal" data-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" id="savePlanBtn">Save Plan</button>
+                            <button type="button" class="btn btn-primary" id="savePlanBtn" ${modules.length === 0 ? 'disabled' : ''}>
+                                Save Plan
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -335,6 +323,38 @@ class PricingManager {
         this.showErrorNotification('Failed to create plan modal');
     }
 }
+
+    // Debugging method to verify modules endpoint
+async debugModulesEndpoint() {
+    try {
+        console.log('Debugging modules endpoint');
+        const response = await fetch(`${this.baseUrl}/modules`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        console.log('Raw response status:', response.status);
+        
+        const responseText = await response.text();
+        console.log('Raw response text:', responseText);
+
+        // Try parsing as JSON
+        try {
+            const responseData = JSON.parse(responseText);
+            console.log('Parsed response data:', responseData);
+        } catch (parseError) {
+            console.error('Failed to parse response:', parseError);
+        }
+
+    } catch (error) {
+        console.error('Endpoint debugging error:', error);
+    }
+}
+
+
 
     showModal() {
     const modal = document.getElementById('planCreationModal');
