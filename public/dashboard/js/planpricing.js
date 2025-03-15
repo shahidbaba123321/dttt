@@ -537,7 +537,7 @@ async getClientIP() {
         }
     }
         // Validate plan form data
-    validatePlanData(formData, modules) {
+   validatePlanData(formData, modules) {
     const errors = [];
 
     // Comprehensive validation
@@ -547,33 +547,23 @@ async getClientIP() {
             errors.push('Plan name must be at least 3 characters long');
         }
 
-        // Description validation (optional, but with max length)
-        if (formData.description && formData.description.length > 500) {
-            errors.push('Description cannot exceed 500 characters');
+        // Description validation 
+        if (formData.description.length < 10) {
+            errors.push('Description must be at least 10 characters long');
         }
 
         // Price validations
-        if (formData.monthlyRate <= 0) {
-            errors.push('Monthly rate must be a positive number');
+        if (formData.monthlyPrice <= 0) {
+            errors.push('Monthly price must be a positive number');
         }
 
-        if (formData.annualRate <= 0) {
-            errors.push('Annual rate must be a positive number');
+        if (formData.annualPrice <= 0) {
+            errors.push('Annual price must be a positive number');
         }
 
         // Module validation
-        if (!formData.modules || formData.modules.length === 0) {
+        if (!formData.features || formData.features.length === 0) {
             errors.push('Select at least one module for the plan');
-        }
-
-        // Validate selected modules exist
-        const validModuleIds = modules.map(module => module._id || module.id);
-        const invalidModules = formData.modules.filter(moduleId => 
-            !validModuleIds.includes(moduleId)
-        );
-
-        if (invalidModules.length > 0) {
-            errors.push('Some selected modules are invalid');
         }
 
     } catch (error) {
@@ -583,19 +573,19 @@ async getClientIP() {
 
     return errors;
 }
-
     // Save plan method
     async savePlan(modules) {
     try {
         // Collect form data with more robust collection
         const formData = {
             name: this.getInputValue('planName', 'Plan Name'),
-            description: this.getInputValue('planDescription', '', false),
+            description: this.getInputValue('planDescription', 'Description'),
             currency: this.getInputValue('planCurrency', 'Currency'),
-            monthlyRate: this.getNumericInputValue('monthlyRate', 'Monthly Rate'),
-            annualRate: this.getNumericInputValue('annualRate', 'Annual Rate'),
-            status: this.getInputValue('planStatus', 'Plan Status'),
-            modules: this.getSelectedModules()
+            monthlyPrice: this.getNumericInputValue('monthlyRate', 'Monthly Rate'),
+            annualPrice: this.getNumericInputValue('annualRate', 'Annual Rate'),
+            isActive: this.getInputValue('planStatus', 'Plan Status') === 'active',
+            trialPeriod: 0, // Default trial period
+            features: this.getSelectedModuleNames(modules)
         };
 
         // Log collected form data for debugging
@@ -609,24 +599,6 @@ async getClientIP() {
             return;
         }
 
-        // Convert prices to other currencies
-        const convertedPrices = await this.convertPricesToAllCurrencies(
-            formData.monthlyRate, 
-            formData.annualRate, 
-            formData.currency
-        );
-
-        // Prepare plan payload
-        const planPayload = {
-            ...formData,
-            ...convertedPrices,
-            createdBy: this.getUserId(),
-            createdAt: new Date().toISOString()
-        };
-
-        // Log payload for debugging
-        console.log('Plan Payload:', planPayload);
-
         // Send plan to backend
         const response = await fetch(`${this.baseUrl}/plans`, {
             method: 'POST',
@@ -634,7 +606,7 @@ async getClientIP() {
                 'Authorization': `Bearer ${this.token}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(planPayload)
+            body: JSON.stringify(formData)
         });
 
         // Log raw response for debugging
@@ -658,7 +630,7 @@ async getClientIP() {
         // Close modal
         this.hideModal();
 
-        return responseData.plan;
+        return responseData.data;
 
     } catch (error) {
         // Log full error details
