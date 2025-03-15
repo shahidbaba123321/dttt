@@ -933,6 +933,12 @@ async toggleModuleStatus(moduleId, isActive) {
         // Create Audit Log Row Method
         createAuditLogRow(log) {
     const row = document.createElement('tr');
+    
+    // Determine user display
+    const userName = log.user 
+        ? (log.user.name || log.user.email || 'Unknown User') 
+        : 'System';
+
     row.innerHTML = `
         <td>${this.formatTimestamp(log.timestamp)}</td>
         <td>
@@ -940,12 +946,20 @@ async toggleModuleStatus(moduleId, isActive) {
                 ${this.formatActivityType(log.type)}
             </span>
         </td>
-        <td>${log.moduleName || 'N/A'}</td>
-        <td>${log.user || 'System'}</td>
-        <td>${this.formatLogDetails(log.details)}</td>
+        <td>${log.details?.moduleName || log.details?.moduleDetails?.name || 'N/A'}</td>
+        <td>
+            <div class="user-info">
+                <span class="user-name">${userName}</span>
+                ${log.user && log.user.email 
+                    ? `<small class="user-email">(${log.user.email})</small>` 
+                    : ''}
+            </div>
+        </td>
+        <td class="log-details">${this.formatLogDetails(log.details)}</td>
     `;
     return row;
 }
+
         // Utility Methods for Audit Logging
 formatTimestamp(timestamp) {
     try {
@@ -984,7 +998,7 @@ formatActivityType(type) {
 }
 
         // Format Log Details Method
-        formatLogDetails(details) {
+   formatLogDetails(details) {
     if (!details) return 'No additional details';
     
     try {
@@ -992,20 +1006,47 @@ formatActivityType(type) {
         if (typeof details === 'string') return details;
         
         // If details is an object, format it nicely
-        return Object.entries(details)
-            .map(([key, value]) => {
-                // Handle different types of values
-                const formattedValue = typeof value === 'object' 
-                    ? JSON.stringify(value) 
-                    : value;
-                return `${key}: ${formattedValue}`;
-            })
-            .join(', ');
+        const formattedDetails = [];
+
+        // Handle specific module-related log types
+        if (details.moduleName) {
+            formattedDetails.push(`Module: ${details.moduleName}`);
+        }
+
+        if (details.category) {
+            formattedDetails.push(`Category: ${details.category}`);
+        }
+
+        if (details.complianceLevel) {
+            formattedDetails.push(`Compliance Level: ${details.complianceLevel}`);
+        }
+
+        // Handle module details
+        if (details.moduleDetails) {
+            const moduleDetails = details.moduleDetails;
+            formattedDetails.push('Module Details:');
+            formattedDetails.push(`  Name: ${moduleDetails.name}`);
+            formattedDetails.push(`  Category: ${moduleDetails.category}`);
+            formattedDetails.push(`  Description: ${moduleDetails.description}`);
+            formattedDetails.push(`  Compliance Level: ${moduleDetails.complianceLevel}`);
+            formattedDetails.push(`  Active: ${moduleDetails.isActive}`);
+        }
+
+        // Handle changes
+        if (details.changes) {
+            formattedDetails.push('Changes:');
+            Object.entries(details.changes).forEach(([key, value]) => {
+                formattedDetails.push(`  ${key}: ${JSON.stringify(value)}`);
+            });
+        }
+
+        return formattedDetails.join('\n');
     } catch (error) {
         console.error('Error formatting log details:', error);
         return 'Unable to format details';
     }
 }
+
 
 
         // Update Audit Logs Pagination Method
