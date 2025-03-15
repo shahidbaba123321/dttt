@@ -74,6 +74,8 @@ class PricingManager {
         this.setupPlanCreationModalListeners = this.setupPlanCreationModalListeners.bind(this);
         this.showModal = this.showModal.bind(this);
         this.hideModal = this.hideModal.bind(this);
+                this.getSelectedModuleNames = this.getSelectedModuleNames.bind(this);
+
 
         // Initialize event listeners and setup
         this.initializeEventListeners();
@@ -243,6 +245,8 @@ class PricingManager {
         // Fallback notification if no global notification system
         alert(message);
     }
+
+    
 
 
     
@@ -450,7 +454,10 @@ handleEscapeKey = (event) => {
 
     
     // Setup event listeners for plan creation modal
-    setupPlanCreationModalListeners(modules) {
+   setupPlanCreationModalListeners(modules) {
+        // Log modules for debugging
+        this.logModules(modules);
+
         // Currency symbol update
         const currencySelect = document.getElementById('planCurrency');
         const currencySymbols = document.querySelectorAll('#currencySymbol');
@@ -468,16 +475,19 @@ handleEscapeKey = (event) => {
         const savePlanBtn = document.getElementById('savePlanBtn');
         if (savePlanBtn) {
             savePlanBtn.addEventListener('click', () => {
-                this.savePlan(modules);
+                // Ensure modules is passed
+                this.savePlan(modules || []);
                 this.hideModal();
             });
         }
+
         // Close modal buttons
         const closeButtons = document.querySelectorAll('[data-dismiss="modal"], .close-modal');
         closeButtons.forEach(button => {
             button.addEventListener('click', () => this.hideModal());
         });
     }
+
 
 
     // Add this method to the PricingManager class
@@ -573,78 +583,126 @@ async getClientIP() {
 
     return errors;
 }
+
+    // Helper method to get selected module names
+    getSelectedModuleNames(modules) {
+        // Ensure modules is an array
+        if (!Array.isArray(modules)) {
+            console.warn('Modules is not an array:', modules);
+            return [];
+        }
+
+        const selectedModuleIds = Array.from(
+            document.querySelectorAll('#modulesContainer input:checked')
+        ).map(checkbox => checkbox.value);
+
+        if (selectedModuleIds.length === 0) {
+            throw new Error('At least one module must be selected');
+        }
+
+        // Map selected module IDs to their names
+        return selectedModuleIds.map(moduleId => {
+            const module = modules.find(m => {
+                // Handle different possible ID formats
+                return (m._id || m.id || m.moduleId) === moduleId;
+            });
+
+            if (!module) {
+                console.warn(`Module with ID ${moduleId} not found`);
+                return moduleId; // Return the ID if no matching module found
+            }
+            return module.name;
+        });
+    }
+
     // Save plan method
     async savePlan(modules) {
-    try {
-        // Collect form data with more robust collection
-        const formData = {
-            name: this.getInputValue('planName', 'Plan Name'),
-            description: this.getInputValue('planDescription', 'Description'),
-            currency: this.getInputValue('planCurrency', 'Currency'),
-            monthlyPrice: this.getNumericInputValue('monthlyRate', 'Monthly Rate'),
-            annualPrice: this.getNumericInputValue('annualRate', 'Annual Rate'),
-            isActive: this.getInputValue('planStatus', 'Plan Status') === 'active',
-            trialPeriod: 0, // Default trial period
-            features: this.getSelectedModuleNames(modules)
-        };
+        try {
+            // Collect form data with more robust collection
+            const formData = {
+                name: this.getInputValue('planName', 'Plan Name'),
+                description: this.getInputValue('planDescription', 'Description'),
+                currency: this.getInputValue('planCurrency', 'Currency'),
+                monthlyPrice: this.getNumericInputValue('monthlyRate', 'Monthly Rate'),
+                annualPrice: this.getNumericInputValue('annualRate', 'Annual Rate'),
+                isActive: this.getInputValue('planStatus', 'Plan Status') === 'active',
+                trialPeriod: 0, // Default trial period
+                features: this.getSelectedModuleNames(modules)
+            };
 
-        // Log collected form data for debugging
-        console.log('Collected Form Data:', formData);
+            // Log collected form data for debugging
+            console.log('Collected Form Data:', formData);
 
-        // Validate form data
-        const validationErrors = this.validatePlanData(formData, modules);
-        if (validationErrors.length > 0) {
-            // Show validation errors
-            this.showValidationErrors(validationErrors);
-            return;
+            // Validate form data
+            const validationErrors = this.validatePlanData(formData, modules);
+            if (validationErrors.length > 0) {
+                // Show validation errors
+                this.showValidationErrors(validationErrors);
+                return;
+            }
+
+            // Send plan to backend
+            const response = await fetch(`${this.baseUrl}/plans`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            // Log raw response for debugging
+            console.log('Response Status:', response.status);
+            
+            const responseData = await response.json();
+            
+            // Log response data
+            console.log('Response Data:', responseData);
+
+            if (!response.ok) {
+                throw new Error(responseData.message || 'Failed to create plan');
+            }
+
+            // Show success notification
+            this.showSuccessNotification('Plan created successfully');
+
+            // Refresh plans list
+            await this.fetchAndDisplayPlans();
+
+            // Close modal
+            this.hideModal();
+
+            return responseData.data;
+
+        } catch (error) {
+            // Log full error details
+            console.error('Complete Error Details:', {
+                message: error.message,
+                name: error.name,
+                stack: error.stack
+            });
+
+            this.showErrorNotification(`Failed to save plan: ${error.message}`);
+            throw error;
         }
-
-        // Send plan to backend
-        const response = await fetch(`${this.baseUrl}/plans`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        });
-
-        // Log raw response for debugging
-        console.log('Response Status:', response.status);
-        
-        const responseData = await response.json();
-        
-        // Log response data
-        console.log('Response Data:', responseData);
-
-        if (!response.ok) {
-            throw new Error(responseData.message || 'Failed to create plan');
-        }
-
-        // Show success notification
-        this.showSuccessNotification('Plan created successfully');
-
-        // Refresh plans list
-        await this.fetchAndDisplayPlans();
-
-        // Close modal
-        this.hideModal();
-
-        return responseData.data;
-
-    } catch (error) {
-        // Log full error details
-        console.error('Complete Error Details:', {
-            message: error.message,
-            name: error.name,
-            stack: error.stack
-        });
-
-        this.showErrorNotification(`Failed to save plan: ${error.message}`);
-        throw error;
     }
-}
 
+    // Debugging method to log modules
+    logModules(modules) {
+        console.log('Modules received:', modules);
+        console.log('Modules type:', typeof modules);
+        console.log('Is Array:', Array.isArray(modules));
+        
+        if (Array.isArray(modules)) {
+            modules.forEach((module, index) => {
+                console.log(`Module ${index}:`, module);
+                console.log(`Module ${index} ID:`, module._id || module.id || module.moduleId);
+            });
+        }
+    }
+
+
+    
     // Helper method to get input value with validation
 getInputValue(elementId, fieldName, required = true) {
     const element = document.getElementById(elementId);
