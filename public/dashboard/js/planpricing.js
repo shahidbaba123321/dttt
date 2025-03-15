@@ -223,136 +223,187 @@ class PricingManager {
 
     // Create dynamic plan creation modal
     async showPlanCreationModal() {
-        try {
-            // Fetch available modules
-            const modules = await this.fetchAvailableModules();
+    try {
+        // Fetch available modules
+        const modules = await this.fetchAvailableModules();
 
-            // Create modal container
-            const modalContainer = document.getElementById('planFormModalContainer');
-            modalContainer.innerHTML = `
-                <div class="modal fade" id="planCreationModal" tabindex="-1" role="dialog">
-                    <div class="modal-dialog modal-lg" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Create New Plan</h5>
-                                <button type="button" class="close" data-dismiss="modal">
-                                    <span>&times;</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <form id="planCreationForm">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Plan Name</label>
-                                                <input type="text" class="form-control" id="planName" required>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Currency</label>
-                                                <select class="form-control" id="planCurrency">
-                                                    ${this.currencies.map(currency => 
-                                                        `<option value="${currency.code}">${currency.name} (${currency.symbol})</option>`
-                                                    ).join('')}
-                                                </select>
-                                            </div>
+        // Create modal container
+        const modalContainer = document.getElementById('planFormModalContainer');
+        modalContainer.innerHTML = `
+            <div class="modal" id="planCreationModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Create New Plan</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="planCreationForm">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Plan Name</label>
+                                            <input type="text" class="form-control" id="planName" required>
                                         </div>
                                     </div>
-                                    
-                                    <div class="form-group">
-                                        <label>Plan Description</label>
-                                        <textarea class="form-control" id="planDescription" rows="3"></textarea>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Currency</label>
+                                            <select class="form-control" id="planCurrency">
+                                                ${this.currencies.map(currency => 
+                                                    `<option value="${currency.code}">${currency.name} (${currency.symbol})</option>`
+                                                ).join('')}
+                                            </select>
+                                        </div>
                                     </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Monthly Rate</label>
-                                                <div class="input-group">
-                                                    <div class="input-group-prepend">
-                                                        <span class="input-group-text" id="currencySymbol">$</span>
-                                                    </div>
-                                                    <input type="number" class="form-control" id="monthlyRate" min="0" step="0.01" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Plan Description</label>
+                                    <textarea class="form-control" id="planDescription" rows="3"></textarea>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Monthly Rate</label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text" id="currencySymbol">$</span>
                                                 </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Annual Rate</label>
-                                                <div class="input-group">
-                                                    <div class="input-group-prepend">
-                                                        <span class="input-group-text" id="currencySymbol">$</span>
-                                                    </div>
-                                                    <input type="number" class="form-control" id="annualRate" min="0" step="0.01" required>
-                                                </div>
+                                                <input type="number" class="form-control" id="monthlyRate" min="0" step="0.01" required>
                                             </div>
                                         </div>
                                     </div>
-                                    
-                                    <div class="form-group">
-                                        <label>Plan Status</label>
-                                        <select class="form-control" id="planStatus">
-                                            <option value="active">Active</option>
-                                            <option value="inactive">Inactive</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label>Select Modules</label>
-                                        <div id="modulesContainer">
-                                            ${modules.map(module => `
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" 
-                                                           value="${module._id}" 
-                                                           id="module-${module._id}">
-                                                    <label class="form-check-label" for="module-${module._id}">
-                                                        ${module.name}
-                                                    </label>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Annual Rate</label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text" id="currencySymbol">$</span>
                                                 </div>
-                                            `).join('')}
+                                                <input type="number" class="form-control" id="annualRate" min="0" step="0.01" required>
+                                            </div>
                                         </div>
                                     </div>
-                                </form>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn btn-primary" id="savePlanBtn">Save Plan</button>
-                            </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Plan Status</label>
+                                    <select class="form-control" id="planStatus">
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Select Modules</label>
+                                    <div id="modulesContainer">
+                                        ${modules.map(module => `
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       value="${module._id}" 
+                                                       id="module-${module._id}">
+                                                <label class="form-check-label" for="module-${module._id}">
+                                                    ${module.name}
+                                                </label>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary close-modal" data-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="savePlanBtn">Save Plan</button>
                         </div>
                     </div>
                 </div>
-            `;
+            </div>
+        `;
 
-            // Add event listeners
-            this.setupPlanCreationModalListeners(modules);
+        // Create method to show modal
+        this.showModal();
 
-            // Show the modal (assuming Bootstrap is used)
-            $('#planCreationModal').modal('show');
+        // Add event listeners
+        this.setupPlanCreationModalListeners(modules);
 
-        } catch (error) {
-            console.error('Error creating plan modal:', error);
-            // Show error notification
-        }
+    } catch (error) {
+        console.error('Error creating plan modal:', error);
+        this.showErrorNotification('Failed to create plan modal');
     }
+}
 
-    // Setup event listeners for plan creation modal
-    setupPlanCreationModalListeners(modules) {
-        // Currency symbol update
-        const currencySelect = document.getElementById('planCurrency');
-        const currencySymbols = document.querySelectorAll('#currencySymbol');
+    showModal() {
+    const modal = document.getElementById('planCreationModal');
+    if (modal) {
+        modal.style.display = 'block';
+        modal.classList.add('show');
         
-        currencySelect.addEventListener('change', (e) => {
-            const selectedCurrency = this.currencies.find(c => c.code === e.target.value);
-            currencySymbols.forEach(symbol => {
-                symbol.textContent = selectedCurrency.symbol;
-            });
+        // Add backdrop
+        const backdrop = document.createElement('div');
+        backdrop.classList.add('modal-backdrop', 'fade', 'show');
+        document.body.appendChild(backdrop);
+
+        // Add event listeners for closing
+        const closeButtons = modal.querySelectorAll('[data-dismiss="modal"], .close-modal');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', () => this.hideModal());
         });
 
-        // Save plan button
-        const savePlanBtn = document.getElementById('savePlanBtn');
-        savePlanBtn.addEventListener('click', () => this.savePlan(modules));
+        // Close on backdrop click
+        backdrop.addEventListener('click', () => this.hideModal());
+
+        // Close on escape key
+        document.addEventListener('keydown', this.handleEscapeKey);
     }
+}
+    hideModal() {
+    const modal = document.getElementById('planCreationModal');
+    const backdrop = document.querySelector('.modal-backdrop');
+    
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('show');
+    }
+    
+    if (backdrop) {
+        backdrop.remove();
+    }
+
+    // Remove escape key listener
+    document.removeEventListener('keydown', this.handleEscapeKey);
+}
+
+handleEscapeKey = (event) => {
+    if (event.key === 'Escape') {
+        this.hideModal();
+    }
+}
+
+    
+    // Setup event listeners for plan creation modal
+    setupPlanCreationModalListeners(modules) {
+    // Currency symbol update
+    const currencySelect = document.getElementById('planCurrency');
+    const currencySymbols = document.querySelectorAll('#currencySymbol');
+    
+    currencySelect.addEventListener('change', (e) => {
+        const selectedCurrency = this.currencies.find(c => c.code === e.target.value);
+        currencySymbols.forEach(symbol => {
+            symbol.textContent = selectedCurrency.symbol;
+        });
+    });
+
+    // Save plan button
+    const savePlanBtn = document.getElementById('savePlanBtn');
+    savePlanBtn.addEventListener('click', () => {
+        this.savePlan(modules);
+        this.hideModal(); // Close modal after saving
+    });
+}
 
     // Add this method to the PricingManager class
 async createAuditLog(action, details) {
