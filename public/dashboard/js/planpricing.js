@@ -314,46 +314,69 @@
                 this.createNewPlan();
             });
         }
-                showModulesSelectionModal() {
-            // Clear any existing modal content
+                showModulesSelectionModal(existingModules = []) {
+    // Clear any existing modal content
+    this.modalContainer.innerHTML = '';
+
+    // Create modules selection modal structure
+    const modalWrapper = document.createElement('div');
+    modalWrapper.className = 'modal show';
+    
+    modalWrapper.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Select Modules</h2>
+                <button class="modal-close" id="closeModulesModal">&times;</button>
+            </div>
+            <div class="modules-info">
+                <p>Select modules for your plan. You can choose between 1-10 modules.</p>
+            </div>
+            <div class="modules-grid" id="modulesContainer"></div>
+            <div class="selected-modules-preview" id="modulesInfoContainer"></div>
+            <div class="modal-footer">
+                <button type="button" id="cancelModulesBtn" class="modal-btn modal-btn-secondary">Cancel</button>
+                <button type="button" id="saveModulesBtn" class="modal-btn modal-btn-primary">Save Modules</button>
+            </div>
+        </div>
+    `;
+
+    this.modalContainer.appendChild(modalWrapper);
+
+    // Pre-select existing modules if editing
+    if (existingModules && existingModules.length > 0) {
+        this.selectedModules = existingModules.map(moduleId => ({
+            id: moduleId,
+            name: '' // You might want to fetch the module name
+        }));
+    }
+
+    // Fetch and populate modules
+    this.fetchModules();
+
+    // Close modal event listeners
+    const closeModulesModal = document.getElementById('closeModulesModal');
+    const cancelModulesBtn = document.getElementById('cancelModulesBtn');
+    const saveModulesBtn = document.getElementById('saveModulesBtn');
+
+    if (closeModulesModal) {
+        closeModulesModal.addEventListener('click', () => {
             this.modalContainer.innerHTML = '';
+        });
+    }
 
-            // Create modules selection modal structure
-            const modalWrapper = document.createElement('div');
-            modalWrapper.className = 'modal show';
-            
-            modalWrapper.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2 class="modal-title">Select Modules</h2>
-                        <button class="modal-close" id="closeModulesModal">&times;</button>
-                    </div>
-                    <div class="modules-grid" id="modulesContainer"></div>
-                    <div class="modal-footer">
-                        <button type="button" id="cancelModulesBtn" class="modal-btn modal-btn-secondary">Cancel</button>
-                        <button type="button" id="saveModulesBtn" class="modal-btn modal-btn-primary">Save Modules</button>
-                    </div>
-                </div>
-            `;
+    if (cancelModulesBtn) {
+        cancelModulesBtn.addEventListener('click', () => {
+            this.modalContainer.innerHTML = '';
+        });
+    }
 
-            this.modalContainer.appendChild(modalWrapper);
-
-            // Fetch and populate modules
-            this.fetchModules();
-
-            // Close modal event listeners
-            document.getElementById('closeModulesModal').addEventListener('click', () => {
-                this.modalContainer.innerHTML = '';
-            });
-
-            document.getElementById('cancelModulesBtn').addEventListener('click', () => {
-                this.modalContainer.innerHTML = '';
-            });
-
-            document.getElementById('saveModulesBtn').addEventListener('click', () => {
+    if (saveModulesBtn) {
+        saveModulesBtn.addEventListener('click', () => {
+            if (this.validateModuleSelection()) {
                 this.saveSelectedModules();
-            });
-        }
+            }
+        });
+    }
 
         async fetchModules() {
             try {
@@ -387,16 +410,78 @@
         }
 
         saveSelectedModules() {
-            const selectedModuleCheckboxes = document.querySelectorAll('#modulesContainer input:checked');
-            this.selectedModules = Array.from(selectedModuleCheckboxes).map(checkbox => checkbox.value);
+    // Get all checked module checkboxes
+    const selectedModuleCheckboxes = document.querySelectorAll('#modulesContainer input:checked');
+    
+    // Map selected module IDs
+    this.selectedModules = Array.from(selectedModuleCheckboxes).map(checkbox => ({
+        id: checkbox.value,
+        name: checkbox.nextElementSibling.textContent
+    }));
+    
+    // More robust button selection
+    let selectModulesBtn = document.getElementById('selectModulesBtn');
+    if (!selectModulesBtn) {
+        selectModulesBtn = document.getElementById('editSelectModulesBtn');
+    }
+    
+    // Additional null check before modifying
+    if (selectModulesBtn) {
+        selectModulesBtn.innerHTML = `
+            <i class="fas fa-cubes"></i> 
+            ${this.selectedModules.length} Modules Selected
+        `;
+    } else {
+        // Fallback logging
+        console.warn('Module selection button not found');
+        this.showNotification('Unable to update module selection button', 'warning');
+    }
+    
+    // Optional: Show selected modules in a tooltip or dropdown
+    this.displaySelectedModulesList();
+    
+    // Close modules modal
+    this.modalContainer.innerHTML = '';
+}
+
+        displaySelectedModulesList() {
+    try {
+        // Create a tooltip or dropdown to show selected modules
+        const moduleListContainer = document.createElement('div');
+        moduleListContainer.className = 'selected-modules-list';
+        
+        if (this.selectedModules.length > 0) {
+            const modulesList = document.createElement('ul');
+            this.selectedModules.forEach(module => {
+                const moduleItem = document.createElement('li');
+                moduleItem.innerHTML = `
+                    <span class="module-icon"><i class="fas fa-cube"></i></span>
+                    ${module.name}
+                `;
+                modulesList.appendChild(moduleItem);
+            });
             
-            // Update modules display in main form
-            const selectModulesBtn = document.getElementById('selectModulesBtn');
-            selectModulesBtn.textContent = `${this.selectedModules.length} Modules Selected`;
-            
-            // Close modules modal
-            this.modalContainer.innerHTML = '';
+            moduleListContainer.appendChild(modulesList);
+        } else {
+            moduleListContainer.innerHTML = 'No modules selected';
         }
+        
+        // More robust container selection
+        const modulesInfoContainer = document.getElementById('modulesInfoContainer');
+        if (modulesInfoContainer) {
+            modulesInfoContainer.innerHTML = '';
+            modulesInfoContainer.appendChild(moduleListContainer);
+        } else {
+            console.warn('Modules info container not found');
+        }
+    } catch (error) {
+        console.error('Error in displaySelectedModulesList:', error);
+        this.showNotification('Error displaying selected modules', 'error');
+    }
+}
+
+
+        
 
         async createNewPlan() {
             try {
