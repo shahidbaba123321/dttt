@@ -8,10 +8,12 @@
     }
 
     class PricingManager {
-        constructor(apiBaseUrl) {
+        constructor(apiBaseUrl, axiosInstance = axios) {
             // Configuration
             this.apiBaseUrl = apiBaseUrl;
             this.token = localStorage.getItem('token');
+                    this.axios = axiosInstance;
+
             
             // DOM Elements
             this.plansContainer = document.getElementById('plansContainer');
@@ -284,36 +286,54 @@
         }
 
         async fetchModules() {
-            try {
-                const response = await axios.get(`${this.apiBaseUrl}/modules`, {
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`
-                    }
-                });
+    try {
+        let response;
+        if (typeof axios !== 'undefined') {
+            // Use axios if available
+            response = await axios.get(`${this.apiBaseUrl}/modules`, {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+        } else {
+            // Fallback to native fetch
+            const fetchResponse = await fetch(`${this.apiBaseUrl}/modules`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
 
-                const modulesContainer = document.getElementById('modulesContainer');
-                modulesContainer.innerHTML = '';
-
-                response.data.data.forEach(module => {
-                    const moduleElement = document.createElement('div');
-                    moduleElement.className = 'module-checkbox';
-                    moduleElement.innerHTML = `
-                        <input 
-                            type="checkbox" 
-                            id="module-${module._id}" 
-                            value="${module._id}"
-                            ${this.selectedModules.includes(module._id) ? 'checked' : ''}
-                        >
-                        <label for="module-${module._id}">${module.name}</label>
-                    `;
-                    modulesContainer.appendChild(moduleElement);
-                });
-            } catch (error) {
-                console.error('Error fetching modules:', error);
-                this.showNotification('Failed to fetch modules', 'error');
+            if (!fetchResponse.ok) {
+                throw new Error('Network response was not ok');
             }
+
+            response = await fetchResponse.json();
         }
 
+        const modulesContainer = document.getElementById('modulesContainer');
+        modulesContainer.innerHTML = '';
+
+        response.data.forEach(module => {
+            const moduleElement = document.createElement('div');
+            moduleElement.className = 'module-checkbox';
+            moduleElement.innerHTML = `
+                <input 
+                    type="checkbox" 
+                    id="module-${module._id}" 
+                    value="${module._id}"
+                    ${this.selectedModules.includes(module._id) ? 'checked' : ''}
+                >
+                <label for="module-${module._id}">${module.name}</label>
+            `;
+            modulesContainer.appendChild(moduleElement);
+        });
+    } catch (error) {
+        console.error('Error fetching modules:', error);
+        this.showNotification('Failed to fetch modules', 'error');
+    }
+}
         saveSelectedModules() {
             const selectedModuleCheckboxes = document.querySelectorAll('#modulesContainer input:checked');
             this.selectedModules = Array.from(selectedModuleCheckboxes).map(checkbox => checkbox.value);
