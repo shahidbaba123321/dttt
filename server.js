@@ -946,10 +946,47 @@ async function initializeDefaultRoles() {
 // Audit logging functions
 async function createAuditLog(logType, userId, companyId, details, session = null, moduleId = null) {
     try {
+        // Fetch user details before creating the log
+        let userDetails = { 
+            name: 'System', 
+            email: 'system@example.com',
+            role: 'system'
+        };
+        
+        if (userId) {
+            try {
+                const user = await database.collection('users').findOne(
+                    { _id: new ObjectId(userId) },
+                    { 
+                        projection: { 
+                            name: 1, 
+                            email: 1, 
+                            role: 1 
+                        } 
+                    }
+                );
+
+                if (user) {
+                    userDetails = {
+                        name: user.name || user.email.split('@')[0],
+                        email: user.email,
+                        role: user.role || 'user'
+                    };
+                }
+            } catch (userFetchError) {
+                console.error('Error fetching user details:', {
+                    userId,
+                    error: userFetchError.message
+                });
+            }
+        }
+
+        // Prepare audit log entry
         const auditLog = {
             type: logType,
             timestamp: new Date(),
-            userId: new ObjectId(userId),
+            userId: userId ? new ObjectId(userId) : null,
+            user: userDetails,  // Include full user details
             details: details,
             ip: details?.ip || null,
             userAgent: details?.userAgent || null
@@ -958,6 +995,11 @@ async function createAuditLog(logType, userId, companyId, details, session = nul
         // Add moduleId if provided
         if (moduleId) {
             auditLog.moduleId = new ObjectId(moduleId);
+        }
+
+        // Add companyId if provided
+        if (companyId) {
+            auditLog.companyId = new ObjectId(companyId);
         }
 
         // Determine the target collection based on log type and context
@@ -974,26 +1016,46 @@ async function createAuditLog(logType, userId, companyId, details, session = nul
             targetCollection = audit_logs;
         }
 
+        // Comprehensive log details
+        const logDetails = {
+            ...details,
+            originalDetails: { ...details }  // Keep original details for reference
+        };
+
+        // Update auditLog with comprehensive details
+        auditLog.details = logDetails;
+
         // Insert log with or without session
+        let result;
         if (session) {
-            await targetCollection.insertOne(auditLog, { session });
+            result = await targetCollection.insertOne(auditLog, { session });
         } else {
-            await targetCollection.insertOne(auditLog);
+            result = await targetCollection.insertOne(auditLog);
         }
 
-        console.log(`Audit log created in ${targetCollection.collectionName}:`, auditLog);
+        // Detailed logging
+        console.log(`Audit log created in ${targetCollection.collectionName}:`, {
+            logType,
+            userId,
+            moduleId,
+            collectionName: targetCollection.collectionName,
+            insertedId: result.insertedId
+        });
+
         return auditLog;
     } catch (error) {
+        // Comprehensive error handling
         console.error('Error creating audit log:', {
             logType,
             userId,
             companyId,
             moduleId,
             details,
-            error: error.message
+            errorMessage: error.message,
+            errorStack: error.stack
         });
 
-        // Optional: Log errors to a separate error collection
+        // Log errors to a separate error collection
         try {
             await database.collection('error_logs').insertOne({
                 type: 'AUDIT_LOG_CREATION_ERROR',
@@ -1003,13 +1065,18 @@ async function createAuditLog(logType, userId, companyId, details, session = nul
                     userId,
                     companyId,
                     moduleId,
-                    errorMessage: error.message
+                    errorMessage: error.message,
+                    errorStack: error.stack
                 }
             });
         } catch (logError) {
-            console.error('Failed to log audit log creation error:', logError);
+            console.error('Failed to log audit log creation error:', {
+                originalError: error,
+                logError
+            });
         }
 
+        // Rethrow the original error
         throw error;
     }
 }
