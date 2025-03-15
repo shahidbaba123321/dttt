@@ -170,47 +170,46 @@
 
         // Create Module Card Method
         createModuleCard(module) {
-            const card = document.createElement('div');
-            card.className = 'module-card';
-            card.innerHTML = `
-                <div class="module-card-header">
-                    <h3 class="module-title">${module.name}</h3>
-                    <div class="module-status">
-                        <span class="status-indicator ${module.isActive ? 'status-active' : 'status-inactive'}"></span>
-                        ${module.isActive ? 'Active' : 'Inactive'}
-                    </div>
-                </div>
-                <div class="module-category">
-                    ${module.category.toUpperCase()} Solutions
-                </div>
-                <div class="module-description">
-                    ${module.description || 'No description available'}
-                </div>
-                <div class="module-details">
-                    <span class="module-compliance">
-                        Compliance Level: ${module.complianceLevel.toUpperCase()}
-                    </span>
-                </div>
-                <div class="module-actions">
-                    <button class="module-action-btn edit-module" data-module-id="${module._id}">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="module-action-btn delete-module" data-module-id="${module._id}">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </div>
-            `;
+    const card = document.createElement('div');
+    card.className = 'module-card';
+    card.innerHTML = `
+        <div class="module-card-header">
+            <h3 class="module-title">${module.name}</h3>
+            <div class="module-status">
+                <span class="status-indicator ${module.isActive ? 'status-active' : 'status-inactive'}"></span>
+                ${module.isActive ? 'Active' : 'Inactive'}
+            </div>
+        </div>
+        <div class="module-category">
+            ${module.category.toUpperCase()} Solutions
+        </div>
+        <div class="module-description">
+            ${module.description || 'No description available'}
+        </div>
+        <div class="module-details">
+            <span class="module-compliance">
+                Compliance Level: ${module.complianceLevel.toUpperCase()}
+            </span>
+        </div>
+        <div class="module-actions">
+            <button class="module-action-btn edit-module" data-module-id="${module._id}">
+                <i class="fas fa-edit"></i> Edit
+            </button>
+            <button class="module-action-btn delete-module" data-module-id="${module._id}">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+        </div>
+    `;
 
-            // Add event listeners for edit and delete
-            const editBtn = card.querySelector('.edit-module');
-            const deleteBtn = card.querySelector('.delete-module');
+    // Add event listeners for edit and delete
+    const editBtn = card.querySelector('.edit-module');
+    const deleteBtn = card.querySelector('.delete-module');
 
-            editBtn.addEventListener('click', () => this.handleEditModule(module));
-            deleteBtn.addEventListener('click', () => this.handleDeleteModule(module._id));
+    editBtn.addEventListener('click', () => this.handleEditModule(module));
+    deleteBtn.addEventListener('click', () => this.handleDeleteModule(module._id));
 
-            return card;
-        }
-
+    return card;
+}
         // Update Pagination Method
         updatePagination(pagination) {
             // Update showing count
@@ -552,19 +551,27 @@
         async handleModuleFormSubmit(event) {
     event.preventDefault();
     
-    // Collect form data
+    // Collect form data according to the database schema
     const formData = {
         name: this.moduleForm.moduleName.value.trim(),
         category: this.moduleForm.moduleCategory.value,
         description: this.moduleForm.moduleDescription.value.trim(),
-        isActive: this.moduleForm.moduleStatus.value === 'active',
         complianceLevel: this.moduleForm.complianceLevel.value,
+        isActive: this.moduleForm.moduleStatus.value === 'active',
+        
+        // Add fields that match your database schema
+        permissions: [], // You can modify this based on your requirements
+        subscriptionTiers: [], // You can modify this based on your requirements
+        
+        // Additional fields you want to track
         accessLevels: Array.from(
             this.moduleForm.querySelectorAll('input[name="accessLevels"]:checked')
         ).map(el => el.value),
+        
         features: Array.from(
             this.moduleForm.querySelectorAll('input[name="features"]:checked')
         ).map(el => el.value),
+        
         pricingPlan: this.moduleForm.pricingPlan.value,
         auditLogging: this.moduleForm.auditLoggingToggle.checked
     };
@@ -590,6 +597,8 @@
             throw new Error(errorData.message || 'Failed to save module');
         }
 
+        const result = await response.json();
+
         // Show success notification
         window.dashboardApp.userInterface.showSuccessNotification(
             this.currentEditingModule 
@@ -604,10 +613,14 @@
         this.closeModuleModal();
         this.currentEditingModule = null;
         this.fetchModules();
+
+        return result;
     } catch (error) {
         this.handleError(error, 'Saving Module');
+        throw error;
     }
 }
+
         // Validate Module Form Method
         validateModuleForm(formData) {
             // Name validation
@@ -668,85 +681,80 @@
     try {
         // Ensure modal and form exist
         if (!this.moduleModal || !this.moduleForm) {
-            console.log('Creating module modal');
-            this.createModuleModal();
+            this.createModuleModal()
+                .then(() => this.populateEditForm(module))
+                .catch(error => {
+                    console.error('Failed to create modal:', error);
+                });
+            return;
         }
 
-        // Add a small delay to ensure modal is created
-        setTimeout(() => {
-            // Double-check modal and form exist
-            if (!this.moduleModal || !this.moduleForm) {
-                console.error('Failed to create module modal');
-                return;
-            }
-
-            // Set current editing module
-            this.currentEditingModule = module;
-
-            // Safely access form elements with fallback
-            const form = this.moduleForm;
-
-            // Populate form fields with null checks
-            if (form.moduleName) form.moduleName.value = module.name || '';
-            if (form.moduleCategory) form.moduleCategory.value = module.category || '';
-            if (form.moduleDescription) form.moduleDescription.value = module.description || '';
-            
-            // Status
-            if (form.moduleStatus) {
-                form.moduleStatus.value = module.isActive ? 'active' : 'inactive';
-            }
-
-            // Compliance Level
-            if (form.complianceLevel) {
-                form.complianceLevel.value = module.complianceLevel || 'low';
-            }
-
-            // Pricing Plan
-            if (form.pricingPlan) {
-                form.pricingPlan.value = module.pricingPlan || '';
-            }
-
-            // Audit Logging
-            if (form.auditLoggingToggle) {
-                form.auditLoggingToggle.checked = module.auditLogging || false;
-            }
-
-            // Reset and repopulate features
-            this.populateFeatureCheckboxes();
-
-            // Check previously selected features
-            if (module.features && module.features.length > 0) {
-                module.features.forEach(feature => {
-                    const checkbox = form.querySelector(`input[name="features"][value="${feature}"]`);
-                    if (checkbox) checkbox.checked = true;
-                });
-            }
-
-            // Check previously selected access levels
-            if (module.accessLevels && module.accessLevels.length > 0) {
-                module.accessLevels.forEach(level => {
-                    const checkbox = form.querySelector(`input[name="accessLevels"][value="${level}"]`);
-                    if (checkbox) checkbox.checked = true;
-                });
-            }
-
-            // Show modal
-            if (this.moduleModal) {
-                this.moduleModal.classList.add('show');
-            }
-
-            // Update form submission to edit mode
-            this.moduleForm.onsubmit = this.handleModuleFormSubmit;
-
-        }, 100);  // Small delay to ensure DOM is ready
-
+        this.populateEditForm(module);
     } catch (error) {
         console.error('Error in handleEditModule:', error);
-        window.dashboardApp.userInterface.showErrorNotification(
-            'Failed to load module for editing. Please try again.'
-        );
     }
 }
+
+// New method to populate edit form
+populateEditForm(module) {
+    // Set current editing module
+    this.currentEditingModule = module;
+
+    const form = this.moduleForm;
+
+    // Basic module details
+    if (form.moduleName) form.moduleName.value = module.name || '';
+    if (form.moduleCategory) form.moduleCategory.value = module.category || '';
+    if (form.moduleDescription) form.moduleDescription.value = module.description || '';
+    
+    // Status
+    if (form.moduleStatus) {
+        form.moduleStatus.value = module.isActive ? 'active' : 'inactive';
+    }
+
+    // Compliance Level
+    if (form.complianceLevel) {
+        form.complianceLevel.value = module.complianceLevel || 'low';
+    }
+
+    // Reset and repopulate features
+    this.populateFeatureCheckboxes();
+
+    // Populate features if available
+    if (module.features && module.features.length > 0) {
+        module.features.forEach(feature => {
+            const checkbox = form.querySelector(`input[name="features"][value="${feature}"]`);
+            if (checkbox) checkbox.checked = true;
+        });
+    }
+
+    // Populate access levels if available
+    if (module.accessLevels && module.accessLevels.length > 0) {
+        module.accessLevels.forEach(level => {
+            const checkbox = form.querySelector(`input[name="accessLevels"][value="${level}"]`);
+            if (checkbox) checkbox.checked = true;
+        });
+    }
+
+    // Pricing Plan (if you want to add this to your form)
+    if (form.pricingPlan) {
+        form.pricingPlan.value = module.pricingPlan || '';
+    }
+
+    // Audit Logging (if you want to add this to your form)
+    if (form.auditLoggingToggle) {
+        form.auditLoggingToggle.checked = module.auditLogging || false;
+    }
+
+    // Show modal
+    if (this.moduleModal) {
+        this.moduleModal.classList.add('show');
+    }
+
+    // Update form submission to edit mode
+    this.moduleForm.onsubmit = this.handleModuleFormSubmit;
+}
+
 
 
         // Handle Delete Module Method
