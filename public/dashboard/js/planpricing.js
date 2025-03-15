@@ -353,6 +353,52 @@ class PricingManager {
         savePlanBtn.addEventListener('click', () => this.savePlan(modules));
     }
 
+    // Add this method to the PricingManager class
+async createAuditLog(action, details) {
+    try {
+        const logPayload = {
+            type: `PLAN_${action.toUpperCase()}`,
+            timestamp: new Date().toISOString(),
+            userId: this.getUserId(), // Implement method to get current user ID
+            details: {
+                ...details,
+                ipAddress: await this.getClientIP(),
+                userAgent: navigator.userAgent
+            }
+        };
+
+        const response = await fetch(`${this.baseUrl}/audit-logs`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(logPayload)
+        });
+
+        if (!response.ok) {
+            console.warn('Failed to create audit log', await response.json());
+        }
+
+        return logPayload;
+    } catch (error) {
+        console.error('Audit logging error:', error);
+    }
+}
+
+// Method to get client IP (optional, can use server-side method)
+async getClientIP() {
+    try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        return data.ip;
+    } catch (error) {
+        console.warn('Could not fetch IP address');
+        return 'Unknown';
+    }
+}
+    
+
     // Example usage method to demonstrate conversion
     async demonstrateCurrencyConversion() {
         try {
@@ -406,72 +452,243 @@ class PricingManager {
 
     // Save plan method
     async savePlan(modules) {
-        try {
-            // Collect form data
-            const formData = {
-                name: document.getElementById('planName').value.trim(),
-                description: document.getElementById('planDescription').value.trim(),
-                currency: document.getElementById('planCurrency').value,
-                monthlyRate: parseFloat(document.getElementById('monthlyRate').value),
-                annualRate: parseFloat(document.getElementById('annualRate').value),
-                status: document.getElementById('planStatus').value,
-                modules: Array.from(document.querySelectorAll('#modulesContainer input:checked'))
-                    .map(checkbox => checkbox.value)
-            };
+    try {
+        // Collect form data
+        const formData = {
+            name: document.getElementById('planName').value.trim(),
+            description: document.getElementById('planDescription').value.trim(),
+            currency: document.getElementById('planCurrency').value,
+            monthlyRate: parseFloat(document.getElementById('monthlyRate').value),
+            annualRate: parseFloat(document.getElementById('annualRate').value),
+            status: document.getElementById('planStatus').value,
+            modules: Array.from(document.querySelectorAll('#modulesContainer input:checked'))
+                .map(checkbox => checkbox.value)
+        };
 
-            // Validate form data
-            const validationErrors = this.validatePlanData(formData, modules);
-            if (validationErrors.length > 0) {
-                // Show validation errors
-                this.showValidationErrors(validationErrors);
-                return;
-            }
-
-            // Convert prices to other currencies
-            const convertedPrices = await this.convertPricesToAllCurrencies(
-                formData.monthlyRate, 
-                formData.annualRate, 
-                formData.currency
-            );
-
-            // Prepare plan payload
-            const planPayload = {
-                ...formData,
-                ...convertedPrices,
-                createdBy: this.getUserId(), // Implement method to get current user ID
-                createdAt: new Date().toISOString()
-            };
-
-            // Send plan to backend
-            const response = await fetch(`${this.baseUrl}/plans`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(planPayload)
-            });
-
-            const responseData = await response.json();
-
-            if (!response.ok) {
-                throw new Error(responseData.message || 'Failed to create plan');
-            }
-
-            // Show success notification
-            this.showSuccessNotification('Plan created successfully');
-
-            // Refresh plans list
-            await this.fetchAndDisplayPlans();
-
-            // Close modal
-            $('#planCreationModal').modal('hide');
-
-        } catch (error) {
-            console.error('Error saving plan:', error);
-            this.showErrorNotification(error.message);
+        // Validate form data
+        const validationErrors = this.validatePlanData(formData, modules);
+        if (validationErrors.length > 0) {
+            // Show validation errors
+            this.showValidationErrors(validationErrors);
+            return;
         }
+
+        // Convert prices to other currencies
+        const convertedPrices = await this.convertPricesToAllCurrencies(
+            formData.monthlyRate, 
+            formData.annualRate, 
+            formData.currency
+        );
+
+        // Prepare plan payload
+        const planPayload = {
+            ...formData,
+            ...convertedPrices,
+            createdBy: this.getUserId(),
+            createdAt: new Date().toISOString()
+        };
+
+        // Send plan to backend
+        const response = await fetch(`${this.baseUrl}/plans`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(planPayload)
+        });
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+            throw new Error(responseData.message || 'Failed to create plan');
+        }
+
+        // Create detailed audit log
+        await this.createAuditLog('CREATED', {
+            planId: responseData.plan._id,
+            planName: formData.name,
+            planDetails: {
+                currency: formData.currency,
+                monthlyRate: formData.monthlyRate,
+                annualRate: formData.annualRate,
+                status: formData.status,
+                moduleCount: formData.modules.length
+            }
+        });
+
+        // Show success notification
+        this.showSuccessNotification('Plan created successfully');
+
+        // Refresh plans list
+        await this.fetchAndDisplayPlans();
+
+        // Close modal
+        $('#planCreationModal').modal('hide');
+
+        return responseData.plan;
+
+    } catch (error) {
+        // Create error audit log
+        await this.createAuditLog('CREATE_FAILED', {
+            errorMessage: error.message,
+            attemptedPlanData: {
+                name: formData.name,
+                currency: formData.currency
+            }
+        });
+
+        console.error('Error saving plan:', error);
+        this.showErrorNotification(error.message);
+        
+        throw error;
     }
+}
+async editPlan(planId) {
+    try {
+        // Fetch plan details
+        const response = await fetch(`${this.baseUrl}/plans/${planId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const planData = await response.json();
+
+        // Create audit log for plan view
+        await this.createAuditLog('VIEWED', {
+            planId: planId,
+            planName: planData.name,
+            action: 'Attempting to edit'
+        });
+
+        // Open edit modal with plan details
+        this.openEditPlanModal(planData);
+
+    } catch (error) {
+        // Log view attempt failure
+        await this.createAuditLog('VIEW_FAILED', {
+            planId: planId,
+            errorMessage: error.message
+        });
+
+        console.error('Error fetching plan details:', error);
+        this.showErrorNotification('Failed to load plan details');
+    }
+}
+
+async deletePlan(planId) {
+    try {
+        // Show confirmation modal
+        const confirmed = await this.showConfirmationModal(
+            'Delete Plan', 
+            'Are you sure you want to delete this plan? This action cannot be undone.'
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        // Fetch plan details before deletion for logging
+        const planResponse = await fetch(`${this.baseUrl}/plans/${planId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        const planData = await planResponse.json();
+
+        // Delete plan
+        const response = await fetch(`${this.baseUrl}/plans/${planId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to delete plan');
+        }
+
+        // Create detailed deletion audit log
+        await this.createAuditLog('DELETED', {
+            planId: planId,
+            planName: planData.name,
+            planDetails: {
+                currency: planData.currency,
+                monthlyRate: planData.monthlyRate,
+                annualRate: planData.annualRate
+            }
+        });
+
+        // Show success notification
+        this.showSuccessNotification('Plan deleted successfully');
+
+        // Refresh plans list
+        await this.fetchAndDisplayPlans();
+
+    } catch (error) {
+        // Log deletion attempt failure
+        await this.createAuditLog('DELETE_FAILED', {
+            planId: planId,
+            errorMessage: error.message
+        });
+
+        console.error('Error deleting plan:', error);
+        this.showErrorNotification(error.message);
+    }
+}
+
+    // Utility method for confirmation modal
+showConfirmationModal(title, message) {
+    return new Promise((resolve) => {
+        // Create confirmation modal dynamically
+        const modalContainer = document.getElementById('confirmationModalContainer');
+        modalContainer.innerHTML = `
+            <div class="modal fade" id="confirmationModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">${title}</h5>
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <p>${message}</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-danger" id="confirmButton">Confirm</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Show modal
+        $('#confirmationModal').modal('show');
+
+        // Setup confirmation logic
+        const confirmButton = document.getElementById('confirmButton');
+        confirmButton.onclick = () => {
+            $('#confirmationModal').modal('hide');
+            resolve(true);
+        };
+
+        // Cancel logic
+        const closeButtons = document.querySelectorAll('#confirmationModal [data-dismiss="modal"]');
+        closeButtons.forEach(button => {
+            button.onclick = () => {
+                $('#confirmationModal').modal('hide');
+                resolve(false);
+            };
+        });
+    });
+}
+
 
     // Convert prices to all supported currencies
     async convertPricesToAllCurrencies(monthlyRate, annualRate, baseCurrency) {
