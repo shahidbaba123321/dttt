@@ -734,7 +734,7 @@ showConfirmationModal(title, message) {
     }
 
     // Fetch and display existing plans
-   async fetchAndDisplayPlans() {
+  async fetchAndDisplayPlans() {
     const plansContainer = document.getElementById('plansListContainer');
     
     try {
@@ -748,12 +748,13 @@ showConfirmationModal(title, message) {
             </div>
         `;
 
-        // Add error handling and timeout
-        const fetchPlanTimeout = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Request timed out')), 10000)
-        );
+        // Enhanced logging for debugging
+        console.log('Fetching plans with:', {
+            baseUrl: this.baseUrl,
+            token: this.token ? 'Token present' : 'No token'
+        });
 
-        const fetchPlansPromise = fetch(`${this.baseUrl}/plans/:planId`, {
+        const response = await fetch(`${this.baseUrl}/plans`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${this.token}`,
@@ -761,22 +762,25 @@ showConfirmationModal(title, message) {
             }
         });
 
-        // Race between fetch and timeout
-        const response = await Promise.race([
-            fetchPlansPromise,
-            fetchPlanTimeout
-        ]);
+        // Log raw response
+        console.log('Response status:', response.status);
+        
+        // Parse response
+        const responseData = await response.json();
+        
+        // Log parsed response
+        console.log('Response data:', responseData);
 
-        // Check if response is ok
+        // Check response structure
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to fetch plans');
+            throw new Error(responseData.message || 'Failed to fetch plans');
         }
 
-        const data = await response.json();
+        // Determine the correct path to plans
+        const plans = responseData.data || responseData.plans || responseData;
 
-        // Check if plans array exists and has items
-        if (!data.plans || data.plans.length === 0) {
+        // Check if plans exist
+        if (!plans || plans.length === 0) {
             plansContainer.innerHTML = `
                 <div class="no-plans-container">
                     <i class="fas fa-folder-open text-muted" style="font-size: 3rem;"></i>
@@ -788,17 +792,21 @@ showConfirmationModal(title, message) {
         }
 
         // Display plans
-        this.displayPlans(data.plans);
+        this.displayPlans(plans);
 
     } catch (error) {
-        console.error('Error fetching plans:', error);
+        console.error('Comprehensive Plan Fetch Error:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+        });
         
         // Detailed error handling
         plansContainer.innerHTML = `
             <div class="error-container">
                 <i class="fas fa-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
                 <h4 class="mt-3">Failed to Load Plans</h4>
-                <p class="text-muted">${error.message}</p>
+                <p class="text-muted">Error: ${error.message}</p>
                 <button id="retryFetchPlans" class="btn btn-primary mt-3">
                     <i class="fas fa-redo"></i> Retry
                 </button>
@@ -814,10 +822,12 @@ showConfirmationModal(title, message) {
         // Log the error
         this.createAuditLog('PLANS_FETCH_FAILED', {
             errorMessage: error.message,
+            errorStack: error.stack,
             timestamp: new Date().toISOString()
         });
     }
 }
+
     refreshPlans() {
     this.fetchAndDisplayPlans();
 }
@@ -825,47 +835,60 @@ showConfirmationModal(title, message) {
 
 
     // Display plans in the plans container
-    displayPlans(plans) {
-        const plansContainer = document.getElementById('plansListContainer');
-        
-        // Clear existing content
-        plansContainer.innerHTML = '';
+   displayPlans(plans) {
+    const plansContainer = document.getElementById('plansListContainer');
+    
+    // Clear existing content
+    plansContainer.innerHTML = '';
 
-        // Create plan cards
-        plans.forEach(plan => {
-            const planCard = document.createElement('div');
-            planCard.className = 'plan-card';
-            planCard.innerHTML = `
-                <div class="plan-header">
-                    <h3>${plan.name}</h3>
-                    <span class="plan-status ${plan.status}">
-                        ${plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}
-                    </span>
+    // Normalize plan data
+    const normalizedPlans = plans.map(plan => ({
+        _id: plan._id || plan.id,
+        name: plan.name,
+        description: plan.description || 'No description',
+        currency: plan.currency || 'USD',
+        monthlyRate: plan.monthlyPrice || plan.monthlyRate,
+        annualRate: plan.annualPrice || plan.annualRate,
+        status: plan.status || plan.isActive ? 'active' : 'inactive',
+        modules: plan.modules || plan.features || []
+    }));
+
+    // Create plan cards
+    normalizedPlans.forEach(plan => {
+        const planCard = document.createElement('div');
+        planCard.className = 'plan-card';
+        planCard.innerHTML = `
+            <div class="plan-header">
+                <h3>${plan.name}</h3>
+                <span class="plan-status ${plan.status}">
+                    ${plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}
+                </span>
+            </div>
+            <div class="plan-body">
+                <p>${plan.description}</p>
+                <div class="plan-pricing">
+                    <div>Monthly: ${plan.currency} ${plan.monthlyRate.toFixed(2)}</div>
+                    <div>Annual: ${plan.currency} ${plan.annualRate.toFixed(2)}</div>
                 </div>
-                <div class="plan-body">
-                    <p>${plan.description || 'No description provided'}</p>
-                    <div class="plan-pricing">
-                        <div>Monthly: ${plan.currency} ${plan.monthlyRate.toFixed(2)}</div>
-                        <div>Annual: ${plan.currency} ${plan.annualRate.toFixed(2)}</div>
-                    </div>
-                    <div class="plan-modules">
-                        <strong>Modules:</strong>
-                        ${plan.modules.map(module => `<span class="badge">${module.name}</span>`).join('')}
-                    </div>
+                <div class="plan-modules">
+                    <strong>Modules:</strong>
+                    ${plan.modules.map(module => 
+                        `<span class="badge">${typeof module === 'string' ? module : module.name}</span>`
+                    ).join('')}
                 </div>
-                <div class="plan-actions">
-                    <button class="btn btn-sm btn-primary edit-plan" data-id="${plan._id}">Edit</button>
-                    <button class="btn btn-sm btn-danger delete-plan" data-id="${plan._id}">Delete</button>
-                </div>
-            `;
+            </div>
+            <div class="plan-actions">
+                <button class="btn btn-sm btn-primary edit-plan" data-id="${plan._id}">Edit</button>
+                <button class="btn btn-sm btn-danger delete-plan" data-id="${plan._id}">Delete</button>
+            </div>
+        `;
 
-            plansContainer.appendChild(planCard);
-        });
+        plansContainer.appendChild(planCard);
+    });
 
-        // Add event listeners for edit and delete
-        this.setupPlanCardListeners();
-    }
-
+    // Setup listeners for plan actions
+    this.setupPlanCardListeners();
+}
     // Setup listeners for plan card actions
     setupPlanCardListeners() {
         const editButtons = document.querySelectorAll('.edit-plan');
