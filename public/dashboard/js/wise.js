@@ -558,17 +558,14 @@
 }
                 // Module Form Submission Method
        async handleModuleFormSubmit(event) {
-    event.preventDefault();
+     event.preventDefault();
     
-    // Collect form data according to the database schema
     const formData = {
         name: this.moduleForm.moduleName.value.trim(),
         category: this.moduleForm.moduleCategory.value,
         description: this.moduleForm.moduleDescription.value.trim(),
         complianceLevel: this.moduleForm.complianceLevel.value,
         isActive: this.moduleForm.moduleStatus.value === 'active',
-        
-        // Collect additional fields
         permissions: this.collectPermissions(),
         subscriptionTiers: this.collectSubscriptionTiers()
     };
@@ -603,13 +600,15 @@
                 : 'New module created successfully'
         );
 
-        // Refresh audit logs immediately after module creation/update
-        this.fetchAuditLogs();
+        // Refresh audit logs and modules
+        await Promise.all([
+            this.fetchAuditLogs(),
+            this.fetchModules()
+        ]);
 
-        // Close modal and refresh modules
+        // Close modal
         this.closeModuleModal();
         this.currentEditingModule = null;
-        this.fetchModules();
 
         return result;
     } catch (error) {
@@ -617,6 +616,8 @@
         throw error;
     }
 }
+
+        
         // Method to collect permissions (Access Levels)
 collectPermissions() {
     const accessLevels = Array.from(
@@ -786,39 +787,75 @@ populateEditForm(module) {
     this.moduleForm.onsubmit = this.handleModuleFormSubmit;
 }
 
+        // Toggle Module Status Method
+async toggleModuleStatus(moduleId, isActive) {
+    try {
+        const response = await fetch(`${this.apiBaseUrl}/modules/${moduleId}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ isActive })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to change module status');
+        }
+
+        // Show success notification
+        window.dashboardApp.userInterface.showSuccessNotification(
+            `Module ${isActive ? 'activated' : 'deactivated'} successfully`
+        );
+
+        // Refresh audit logs and modules
+        await Promise.all([
+            this.fetchAuditLogs(),
+            this.fetchModules()
+        ]);
+    } catch (error) {
+        this.handleError(error, 'Changing Module Status');
+    }
+}
+
+
 
 
 
         // Handle Delete Module Method
         async handleDeleteModule(moduleId) {
-            // Confirm deletion
-            const confirmDelete = window.confirm('Are you sure you want to delete this module?');
-            
-            if (!confirmDelete) return;
+    const confirmDelete = window.confirm('Are you sure you want to delete this module?');
+    
+    if (!confirmDelete) return;
 
-            try {
-                const response = await fetch(`${this.apiBaseUrl}/modules/${moduleId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${this.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Failed to delete module');
-                }
-
-                // Show success notification
-                window.dashboardApp.userInterface.showSuccessNotification('Module deleted successfully');
-
-                // Refresh modules
-                this.fetchModules();
-            } catch (error) {
-                this.handleError(error, 'Deleting Module');
+    try {
+        const response = await fetch(`${this.apiBaseUrl}/modules/${moduleId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
             }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to delete module');
         }
+
+        // Show success notification
+        window.dashboardApp.userInterface.showSuccessNotification('Module deleted successfully');
+
+        // Refresh audit logs and modules
+        await Promise.all([
+            this.fetchAuditLogs(),
+            this.fetchModules()
+        ]);
+    } catch (error) {
+        this.handleError(error, 'Deleting Module');
+    }
+}
+
                 // Fetch Audit Logs Method
         async fetchAuditLogs() {
     try {
