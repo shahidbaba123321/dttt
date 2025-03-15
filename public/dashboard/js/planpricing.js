@@ -8,12 +8,13 @@
     }
 
     class PricingManager {
-        constructor(apiBaseUrl, axiosInstance = axios) {
+        constructor(apiBaseUrl) {
             // Configuration
             this.apiBaseUrl = apiBaseUrl;
             this.token = localStorage.getItem('token');
-                    this.axios = axiosInstance;
-
+            
+            // Determine HTTP client
+            this.httpClient = this.determineHttpClient();
             
             // DOM Elements
             this.plansContainer = document.getElementById('plansContainer');
@@ -62,7 +63,76 @@
             // Initialize event listeners
             this.initializeEventListeners();
         }
-                initializeEventListeners() {
+                determineHttpClient() {
+            if (typeof axios !== 'undefined') {
+                return {
+                    get: (url, config) => axios.get(url, config),
+                    post: (url, data, config) => axios.post(url, data, config),
+                    put: (url, data, config) => axios.put(url, data, config),
+                    delete: (url, config) => axios.delete(url, config)
+                };
+            }
+
+            // Fallback to fetch
+            return {
+                get: (url, config) => fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        ...config.headers,
+                        'Authorization': this.token ? `Bearer ${this.token}` : '',
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                }),
+                post: (url, data, config) => fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        ...config.headers,
+                        'Authorization': this.token ? `Bearer ${this.token}` : '',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                }).then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                }),
+                put: (url, data, config) => fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        ...config.headers,
+                        'Authorization': this.token ? `Bearer ${this.token}` : '',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                }).then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                }),
+                delete: (url, config) => fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        ...config.headers,
+                        'Authorization': this.token ? `Bearer ${this.token}` : '',
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+            };
+        }
+
+        initializeEventListeners() {
             // Add Plan Button Event Listener
             this.addPlanBtn.addEventListener('click', () => this.showAddPlanModal());
 
@@ -105,8 +175,7 @@
 
             return { monthlyPrice: monthlyNum, annualPrice: annualNum };
         }
-
-        // Notification Methods
+                // Notification Methods
         showNotification(message, type = 'info') {
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
@@ -130,7 +199,8 @@
                 default: return 'fa-info-circle';
             }
         }
-                // Modal Generation Methods
+
+        // Modal Generation Methods
         showAddPlanModal() {
             // Clear any existing modal content
             this.modalContainer.innerHTML = '';
@@ -286,54 +356,36 @@
         }
 
         async fetchModules() {
-    try {
-        let response;
-        if (typeof axios !== 'undefined') {
-            // Use axios if available
-            response = await axios.get(`${this.apiBaseUrl}/modules`, {
-                headers: {
-                    'Authorization': `Bearer ${this.token}`
-                }
-            });
-        } else {
-            // Fallback to native fetch
-            const fetchResponse = await fetch(`${this.apiBaseUrl}/modules`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+            try {
+                const response = await this.httpClient.get(`${this.apiBaseUrl}/modules`, {
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`
+                    }
+                });
 
-            if (!fetchResponse.ok) {
-                throw new Error('Network response was not ok');
+                const modulesContainer = document.getElementById('modulesContainer');
+                modulesContainer.innerHTML = '';
+
+                response.data.forEach(module => {
+                    const moduleElement = document.createElement('div');
+                    moduleElement.className = 'module-checkbox';
+                    moduleElement.innerHTML = `
+                        <input 
+                            type="checkbox" 
+                            id="module-${module._id}" 
+                            value="${module._id}"
+                            ${this.selectedModules.includes(module._id) ? 'checked' : ''}
+                        >
+                        <label for="module-${module._id}">${module.name}</label>
+                    `;
+                    modulesContainer.appendChild(moduleElement);
+                });
+            } catch (error) {
+                console.error('Error fetching modules:', error);
+                this.showNotification('Failed to fetch modules', 'error');
             }
-
-            response = await fetchResponse.json();
         }
 
-        const modulesContainer = document.getElementById('modulesContainer');
-        modulesContainer.innerHTML = '';
-
-        response.data.forEach(module => {
-            const moduleElement = document.createElement('div');
-            moduleElement.className = 'module-checkbox';
-            moduleElement.innerHTML = `
-                <input 
-                    type="checkbox" 
-                    id="module-${module._id}" 
-                    value="${module._id}"
-                    ${this.selectedModules.includes(module._id) ? 'checked' : ''}
-                >
-                <label for="module-${module._id}">${module.name}</label>
-            `;
-            modulesContainer.appendChild(moduleElement);
-        });
-    } catch (error) {
-        console.error('Error fetching modules:', error);
-        this.showNotification('Failed to fetch modules', 'error');
-    }
-}
         saveSelectedModules() {
             const selectedModuleCheckboxes = document.querySelectorAll('#modulesContainer input:checked');
             this.selectedModules = Array.from(selectedModuleCheckboxes).map(checkbox => checkbox.value);
@@ -370,7 +422,7 @@
                 };
 
                 // Send request to create plan
-                const response = await axios.post(`${this.apiBaseUrl}/plans`, planData, {
+                const response = await this.httpClient.post(`${this.apiBaseUrl}/plans`, planData, {
                     headers: {
                         'Authorization': `Bearer ${this.token}`,
                         'Content-Type': 'application/json'
@@ -390,7 +442,7 @@
         }
                 async fetchPlans() {
             try {
-                const response = await axios.get(`${this.apiBaseUrl}/plans`, {
+                const response = await this.httpClient.get(`${this.apiBaseUrl}/plans`, {
                     headers: {
                         'Authorization': `Bearer ${this.token}`
                     }
@@ -595,7 +647,7 @@
                 };
 
                 // Send request to update plan
-                const response = await axios.put(`${this.apiBaseUrl}/plans/${planId}`, planData, {
+                const response = await this.httpClient.put(`${this.apiBaseUrl}/plans/${planId}`, planData, {
                     headers: {
                         'Authorization': `Bearer ${this.token}`,
                         'Content-Type': 'application/json'
@@ -658,7 +710,7 @@
         async deletePlan(planId) {
             try {
                 // Send request to delete plan
-                const response = await axios.delete(`${this.apiBaseUrl}/plans/${planId}`, {
+                const response = await this.httpClient.delete(`${this.apiBaseUrl}/plans/${planId}`, {
                     headers: {
                         'Authorization': `Bearer ${this.token}`
                     }
@@ -686,7 +738,7 @@
 
         async fetchActivityLogs(type = '', dateRange = '7') {
             try {
-                const response = await axios.get(`${this.apiBaseUrl}/activity-logs`, {
+                const response = await this.httpClient.get(`${this.apiBaseUrl}/activity-logs`, {
                     headers: {
                         'Authorization': `Bearer ${this.token}`
                     },
@@ -733,6 +785,202 @@
                 console.error('Initialization error:', error);
                 this.showNotification('Failed to initialize pricing management', 'error');
             }
+        }
+
+        // Method to handle currency conversion and pricing adjustments
+        calculateConvertedPrices(baseAmount, baseCurrency, targetCurrencies) {
+            const convertedPrices = {};
+
+            targetCurrencies.forEach(targetCurrency => {
+                if (baseCurrency !== targetCurrency) {
+                    const convertedAmount = this.convertCurrency(baseAmount, baseCurrency, targetCurrency);
+                    convertedPrices[targetCurrency] = {
+                        amount: convertedAmount,
+                        symbol: this.currencies[targetCurrency].symbol
+                    };
+                }
+            });
+
+            return convertedPrices;
+        }
+
+        // Advanced pricing validation with multi-currency support
+        validatePlanPricing(monthlyPrice, annualPrice, baseCurrency) {
+            const { monthlyPrice: validMonthly, annualPrice: validAnnual } = this.validatePricing(monthlyPrice, annualPrice);
+
+            // Calculate converted prices for other currencies
+            const targetCurrencies = Object.keys(this.currencies).filter(currency => currency !== baseCurrency);
+            const convertedMonthlyPrices = this.calculateConvertedPrices(validMonthly, baseCurrency, targetCurrencies);
+            const convertedAnnualPrices = this.calculateConvertedPrices(validAnnual, baseCurrency, targetCurrencies);
+
+            return {
+                base: {
+                    monthly: validMonthly,
+                    annual: validAnnual,
+                    currency: baseCurrency
+                },
+                converted: {
+                    monthly: convertedMonthlyPrices,
+                    annual: convertedAnnualPrices
+                }
+            };
+        }
+
+        // Comprehensive module selection with advanced filtering
+        async fetchAndFilterModules(filterOptions = {}) {
+            try {
+                const response = await this.httpClient.get(`${this.apiBaseUrl}/modules`, {
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`
+                    },
+                    params: filterOptions
+                });
+
+                // Advanced module filtering and categorization
+                const modules = response.data.data;
+                const categorizedModules = this.categorizeModules(modules);
+
+                return {
+                    all: modules,
+                    categorized: categorizedModules
+                };
+            } catch (error) {
+                console.error('Error fetching modules:', error);
+                this.showNotification('Failed to fetch modules', 'error');
+                return { all: [], categorized: {} };
+            }
+        }
+
+        categorizeModules(modules) {
+            const categories = {};
+
+            modules.forEach(module => {
+                if (!categories[module.category]) {
+                    categories[module.category] = [];
+                }
+                categories[module.category].push(module);
+            });
+
+            return categories;
+        }
+
+        // Audit and Compliance Logging
+        async logPlanAction(action, planDetails) {
+            try {
+                const logData = {
+                    action: action,
+                    planId: planDetails._id,
+                    planName: planDetails.name,
+                    timestamp: new Date().toISOString(),
+                    user: {
+                        id: this.getUserId(), // Implement method to get current user ID
+                        name: this.getUserName() // Implement method to get current user name
+                    }
+                };
+
+                await this.httpClient.post(`${this.apiBaseUrl}/audit-logs`, logData, {
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`
+                    }
+                });
+            } catch (error) {
+                console.error('Error logging plan action:', error);
+            }
+        }
+
+        // Placeholder methods - implement these based on your authentication system
+        getUserId() {
+            // Retrieve user ID from token or session
+            return localStorage.getItem('userId');
+        }
+
+        getUserName() {
+            // Retrieve username from token or session
+            return localStorage.getItem('userName');
+        }
+                // Performance and Error Tracking
+        trackPerformance(methodName, startTime) {
+            const endTime = performance.now();
+            const duration = endTime - startTime;
+            
+            console.log(`Performance: ${methodName} took ${duration.toFixed(2)}ms`);
+            
+            // Optional: Send performance metrics to a tracking service
+            if (duration > 1000) {
+                this.logPerformanceIssue(methodName, duration);
+            }
+        }
+
+        logPerformanceIssue(methodName, duration) {
+            try {
+                const performanceLog = {
+                    method: methodName,
+                    duration: duration,
+                    timestamp: new Date().toISOString(),
+                    userId: this.getUserId()
+                };
+
+                this.httpClient.post(`${this.apiBaseUrl}/performance-logs`, performanceLog, {
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`
+                    }
+                });
+            } catch (error) {
+                console.error('Error logging performance issue:', error);
+            }
+        }
+
+        // Error Boundary and Comprehensive Error Handling
+        async safeExecute(method, ...args) {
+            const startTime = performance.now();
+            try {
+                const result = await method.apply(this, args);
+                this.trackPerformance(method.name, startTime);
+                return result;
+            } catch (error) {
+                console.error(`Error in ${method.name}:`, error);
+                
+                // Comprehensive error handling
+                const errorLog = {
+                    method: method.name,
+                    error: error.message,
+                    stack: error.stack,
+                    timestamp: new Date().toISOString(),
+                    userId: this.getUserId()
+                };
+
+                try {
+                    await this.httpClient.post(`${this.apiBaseUrl}/error-logs`, errorLog, {
+                        headers: {
+                            'Authorization': `Bearer ${this.token}`
+                        }
+                    });
+                } catch (logError) {
+                    console.error('Error logging failed:', logError);
+                }
+
+                // User-friendly error notification
+                this.showNotification(
+                    error.userMessage || 'An unexpected error occurred. Please try again.',
+                    'error'
+                );
+
+                throw error;
+            }
+        }
+
+        // Cleanup and Resource Management
+        cleanup() {
+            // Remove event listeners
+            this.addPlanBtn.removeEventListener('click', this.showAddPlanModal);
+            
+            // Clear modal container
+            this.modalContainer.innerHTML = '';
+            
+            // Reset state
+            this.plans = [];
+            this.modules = [];
+            this.selectedModules = [];
         }
     }
 
