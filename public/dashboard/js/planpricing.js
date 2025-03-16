@@ -279,10 +279,29 @@ reinitializeEventListeners() {
 
 
     showErrorNotification(message) {
-        console.error(message);
-        // Fallback notification if no global notification system
-        alert(message);
-    }
+    console.error('Error Notification:', message);
+    
+    // Create error notification element
+    const notificationContainer = document.createElement('div');
+    notificationContainer.className = 'error-notification';
+    notificationContainer.innerHTML = `
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error!</strong> ${message}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    `;
+
+    // Append to body
+    document.body.appendChild(notificationContainer);
+
+    // Remove notification after 5 seconds
+    setTimeout(() => {
+        notificationContainer.remove();
+    }, 5000);
+}
+
 
     
 
@@ -1122,8 +1141,18 @@ getSelectedModules() {
 
 
 async editPlan(planId) {
+    console.log('Edit Plan Method Called');
+    console.log('Plan ID:', planId);
+
+    // Validate planId
+    if (!planId) {
+        console.error('No plan ID provided for editing');
+        this.showErrorNotification('Invalid plan ID');
+        return;
+    }
+
     try {
-        console.log(`Attempting to edit plan: ${planId}`);
+        console.log(`Attempting to fetch plan details for ID: ${planId}`);
 
         // Fetch plan details
         const response = await fetch(`${this.baseUrl}/plans/${planId}`, {
@@ -1134,24 +1163,51 @@ async editPlan(planId) {
             }
         });
 
+        console.log('Fetch Response Status:', response.status);
+
         if (!response.ok) {
-            throw new Error('Failed to fetch plan details');
+            const errorText = await response.text();
+            console.error('Fetch Error Response:', errorText);
+            throw new Error(`Failed to fetch plan details: ${errorText}`);
         }
 
         const responseData = await response.json();
+        console.log('Received Plan Data:', responseData);
+
+        // Validate response data
+        if (!responseData || !responseData.data) {
+            console.error('Invalid response data structure');
+            this.showErrorNotification('Invalid plan data received');
+            return;
+        }
+
         const plan = responseData.data;
 
-        console.log('Fetched Plan Details:', plan);
+        // Log plan details
+        console.log('Plan Details for Editing:', plan);
+
+        // Ensure plan has required properties
+        if (!plan._id) {
+            console.error('Plan is missing _id', plan);
+            this.showErrorNotification('Invalid plan data');
+            return;
+        }
 
         // Create edit modal
         this.createEditPlanModal(plan);
 
     } catch (error) {
-        console.error('Error fetching plan details:', error);
+        // Comprehensive error logging
+        console.error('Complete Error Details for Plan Edit:', {
+            message: error.message,
+            name: error.name,
+            stack: error.stack
+        });
+
+        // Show detailed error notification
         this.showErrorNotification(`Failed to load plan details: ${error.message}`);
     }
 }
-
 
 
     // Create Edit Plan Modal
@@ -1755,7 +1811,7 @@ showConfirmationModal(title, message) {
 
     
     // Setup listeners for plan card actions
-    setupPlanCardListeners() {
+   setupPlanCardListeners() {
     console.log('Setting up plan card listeners');
 
     // Log all edit and delete buttons
@@ -1765,11 +1821,11 @@ showConfirmationModal(title, message) {
     console.log(`Edit buttons found: ${editButtons.length}`);
     console.log(`Delete buttons found: ${deleteButtons.length}`);
 
-    // Detailed logging for each button
+    // Edit Buttons Listener
     editButtons.forEach((button, index) => {
         console.log(`Edit Button ${index}:`, {
-            id: button.id,
-            dataId: button.dataset.id,
+            button: button,
+            dataId: button.getAttribute('data-id'),
             innerHTML: button.innerHTML
         });
 
@@ -1782,12 +1838,24 @@ showConfirmationModal(title, message) {
             e.preventDefault();
             e.stopPropagation();
 
+            console.log('Edit button clicked');
+            console.log('Event target:', e.target);
+            console.log('Closest button:', e.target.closest('.edit-plan'));
+
             try {
-                const planId = oldButton.getAttribute('data-id');
-                console.log(`Attempting to edit plan: ${planId}`);
+                // Multiple methods to get plan ID
+                const planId = 
+                    oldButton.getAttribute('data-id') || 
+                    oldButton.dataset.id || 
+                    e.target.getAttribute('data-id') || 
+                    e.target.dataset.id ||
+                    e.target.closest('.edit-plan')?.getAttribute('data-id');
+
+                console.log('Retrieved Plan ID for Edit:', planId);
 
                 if (!planId) {
                     console.error('No plan ID found for edit');
+                    this.showErrorNotification('Unable to determine plan ID for editing');
                     return;
                 }
 
@@ -1795,14 +1863,16 @@ showConfirmationModal(title, message) {
                 this.editPlan(planId);
             } catch (error) {
                 console.error('Error in edit button listener:', error);
+                this.showErrorNotification(`Edit failed: ${error.message}`);
             }
         });
     });
 
+    // Delete Buttons Listener
     deleteButtons.forEach((button, index) => {
         console.log(`Delete Button ${index}:`, {
-            id: button.id,
-            dataId: button.dataset.id,
+            button: button,
+            dataId: button.getAttribute('data-id'),
             innerHTML: button.innerHTML
         });
 
@@ -1815,12 +1885,24 @@ showConfirmationModal(title, message) {
             e.preventDefault();
             e.stopPropagation();
 
+            console.log('Delete button clicked');
+            console.log('Event target:', e.target);
+            console.log('Closest button:', e.target.closest('.delete-plan'));
+
             try {
-                const planId = oldButton.getAttribute('data-id');
-                console.log(`Attempting to delete plan: ${planId}`);
+                // Multiple methods to get plan ID
+                const planId = 
+                    oldButton.getAttribute('data-id') || 
+                    oldButton.dataset.id || 
+                    e.target.getAttribute('data-id') || 
+                    e.target.dataset.id ||
+                    e.target.closest('.delete-plan')?.getAttribute('data-id');
+
+                console.log('Retrieved Plan ID for Delete:', planId);
 
                 if (!planId) {
                     console.error('No plan ID found for delete');
+                    this.showErrorNotification('Unable to determine plan ID for deletion');
                     return;
                 }
 
@@ -1828,11 +1910,14 @@ showConfirmationModal(title, message) {
                 this.deletePlan(planId);
             } catch (error) {
                 console.error('Error in delete button listener:', error);
+                this.showErrorNotification(`Delete failed: ${error.message}`);
             }
         });
     });
-}
 
+    // Additional logging for debugging
+    console.log('Plan card listeners setup complete');
+}
 
 
     // Placeholder methods for edit and delete
