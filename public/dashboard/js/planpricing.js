@@ -247,101 +247,168 @@ class PricingManager {
 
     // Create dynamic plan creation modal
     async showPlanCreationModal() {
-        try {
-            // Log the start of modal creation
-            console.log('Attempting to create plan creation modal');
+    try {
+        // Log the start of modal creation
+        console.log('Attempting to create plan creation modal');
 
-            // Fetch available modules
-            const modules = await this.fetchAvailableModules();
+        // Fetch available modules
+        const modules = await this.fetchAvailableModules();
 
-            // Find or create modal container
-            let modalContainer = document.getElementById('planFormModalContainer');
-            if (!modalContainer) {
-                console.warn('Modal container not found, creating new container');
-                modalContainer = document.createElement('div');
-                modalContainer.id = 'planFormModalContainer';
-                document.body.appendChild(modalContainer);
-            }
+        // Find or create modal container
+        let modalContainer = document.getElementById('planFormModalContainer');
+        if (!modalContainer) {
+            console.warn('Modal container not found, creating new container');
+            modalContainer = document.createElement('div');
+            modalContainer.id = 'planFormModalContainer';
+            document.body.appendChild(modalContainer);
+        }
 
-            // Create modal HTML
-            const modalDiv = document.createElement('div');
-            modalDiv.innerHTML = `
-                <div class="modal" id="planCreationModal" tabindex="-1" role="dialog">
-                    <div class="modal-dialog modal-lg" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Create New Plan</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <form id="planCreationForm">
-                                    <!-- Form content remains the same as in previous implementation -->
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Plan Name</label>
-                                                <input type="text" class="form-control" id="planName" required>
-                                            </div>
+        // Create modal HTML
+        const modalDiv = document.createElement('div');
+        modalDiv.innerHTML = `
+            <div class="modal" id="planCreationModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Create New Plan</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="planCreationForm">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Plan Name</label>
+                                            <input type="text" class="form-control" id="planName" required>
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Currency</label>
-                                                <select class="form-control" id="planCurrency">
-                                                    ${this.currencies.map(currency => 
-                                                        `<option value="${currency.code}">${currency.name} (${currency.symbol})</option>`
-                                                    ).join('')}
-                                                </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Currency</label>
+                                            <select class="form-control" id="planCurrency">
+                                                ${this.currencies.map(currency => 
+                                                    `<option value="${currency.code}">${currency.name} (${currency.symbol})</option>`
+                                                ).join('')}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Plan Description</label>
+                                    <textarea class="form-control" id="planDescription" rows="3"></textarea>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Monthly Rate</label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text" id="currencySymbol">$</span>
+                                                </div>
+                                                <input type="number" class="form-control" id="monthlyRate" min="0" step="0.01" required>
                                             </div>
                                         </div>
                                     </div>
-                                    
-                                    <!-- Rest of the form remains the same -->
-                                </form>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn btn-primary" id="savePlanBtn" ${modules.length === 0 ? 'disabled' : ''}>
-                                    Save Plan
-                                </button>
-                            </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Annual Rate</label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text" id="currencySymbol">$</span>
+                                                </div>
+                                                <input type="number" class="form-control" id="annualRate" min="0" step="0.01" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Trial Period (Days)</label>
+                                            <input type="number" class="form-control" id="trialPeriod" min="0" value="0">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Plan Status</label>
+                                            <select class="form-control" id="planStatus">
+                                                <option value="active">Active</option>
+                                                <option value="inactive">Inactive</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Select Modules</label>
+                                    <div id="modulesContainer">
+                                        ${modules.length > 0 ? 
+                                            modules.map(module => `
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" 
+                                                           value="${module._id || module.id}" 
+                                                           id="module-${module._id || module.id}">
+                                                    <label class="form-check-label" for="module-${module._id || module.id}">
+                                                        ${module.name}
+                                                    </label>
+                                                </div>
+                                            `).join('') : 
+                                            `<div class="alert alert-warning">
+                                                No modules available. Please add modules first.
+                                            </div>`
+                                        }
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="savePlanBtn" ${modules.length === 0 ? 'disabled' : ''}>
+                                Save Plan
+                            </button>
                         </div>
                     </div>
                 </div>
-            `;
+            </div>
+        `;
 
-            // Remove any existing modal with the same ID
-            const existingModal = document.getElementById('planCreationModal');
-            if (existingModal) {
-                console.log('Removing existing modal');
-                existingModal.remove();
-            }
-
-            // Append to container
-            modalContainer.appendChild(modalDiv.firstElementChild);
-
-            // Log modal creation
-            console.log('Modal created and appended to container');
-
-            // Show modal
-            this.showModal('planCreationModal');
-
-            // Add event listeners
-            this.setupPlanCreationModalListeners(modules);
-
-        } catch (error) {
-            // Comprehensive error logging
-            console.error('Complete Error Details for Plan Creation Modal:', {
-                message: error.message,
-                name: error.name,
-                stack: error.stack
-            });
-
-            // Show error notification
-            this.showErrorNotification(`Failed to create plan modal: ${error.message}`);
+        // Remove any existing modal with the same ID
+        const existingModal = document.getElementById('planCreationModal');
+        if (existingModal) {
+            console.log('Removing existing modal');
+            existingModal.remove();
         }
+
+        // Append to container
+        modalContainer.appendChild(modalDiv.firstElementChild);
+
+        // Log modal creation
+        console.log('Modal created and appended to container');
+
+        // Show modal
+        this.showModal('planCreationModal');
+
+        // Add event listeners
+        this.setupPlanCreationModalListeners(modules);
+
+    } catch (error) {
+        // Comprehensive error logging
+        console.error('Complete Error Details for Plan Creation Modal:', {
+            message: error.message,
+            name: error.name,
+            stack: error.stack
+        });
+
+        // Show error notification
+        this.showErrorNotification(`Failed to create plan modal: ${error.message}`);
     }
+}
+    
         // Setup event listeners for plan creation modal
     setupPlanCreationModalListeners(modules) {
         // Log modules for debugging
@@ -508,16 +575,17 @@ class PricingManager {
     async savePlan(modules) {
         try {
             // Collect form data with more robust collection
-            const formData = {
-                name: this.getInputValue('planName', 'Plan Name'),
-                description: this.getInputValue('planDescription', 'Description'),
-                currency: this.getInputValue('planCurrency', 'Currency'),
-                monthlyPrice: this.getNumericInputValue('monthlyRate', 'Monthly Rate'),
-                annualPrice: this.getNumericInputValue('annualRate', 'Annual Rate'),
-                isActive: this.getInputValue('planStatus', 'Plan Status') === 'active',
-                trialPeriod: 0, // Default trial period
-                features: this.getSelectedModuleNames(modules)
-            };
+             const formData = {
+            name: this.getInputValue('planName', 'Plan Name'),
+            description: this.getInputValue('planDescription', 'Description'),
+            currency: this.getInputValue('planCurrency', 'Currency'),
+            monthlyPrice: this.getNumericInputValue('monthlyRate', 'Monthly Rate'),
+            annualPrice: this.getNumericInputValue('annualRate', 'Annual Rate'),
+            trialPeriod: parseInt(document.getElementById('trialPeriod').value) || 0,
+            isActive: this.getInputValue('planStatus', 'Plan Status') === 'active',
+            features: this.getSelectedModuleNames(modules)
+        };
+
 
             // Log collected form data for debugging
             console.log('Collected Form Data:', formData);
