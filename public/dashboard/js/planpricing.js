@@ -620,6 +620,21 @@ class PricingManager {
                 throw new Error(responseData.message || 'Failed to create plan');
             }
 
+              // Create audit log for plan creation
+        await this.createAuditLog('PLAN_CREATED', {
+            planId: responseData.data._id,
+            planName: formData.name,
+            planDetails: {
+                currency: formData.currency,
+                monthlyPrice: formData.monthlyPrice,
+                annualPrice: formData.annualPrice,
+                trialPeriod: formData.trialPeriod,
+                isActive: formData.isActive,
+                features: formData.features
+            }
+        });
+
+
             // Show success notification
             this.showSuccessNotification('Plan created successfully');
 
@@ -638,6 +653,12 @@ class PricingManager {
                 name: error.name,
                 stack: error.stack
             });
+
+             await this.createAuditLog('PLAN_CREATION_FAILED', {
+            errorMessage: error.message,
+            errorStack: error.stack
+        });
+
 
             this.showErrorNotification(`Failed to save plan: ${error.message}`);
             throw error;
@@ -1328,6 +1349,14 @@ class PricingManager {
             throw new Error(responseData.message || 'Failed to update plan');
         }
 
+         // Create audit log for plan update
+        await this.createAuditLog('PLAN_UPDATED', {
+            planId: formData.planId,
+            planName: formData.name,
+            changes: this.calculatePlanChanges(existingPlan, formData)
+        });
+
+
         // Show success notification
         this.showSuccessNotification('Plan updated successfully');
 
@@ -1341,6 +1370,13 @@ class PricingManager {
 
     } catch (error) {
         console.error('Error updating plan:', error);
+
+         // Log error to audit logs
+        await this.createAuditLog('PLAN_UPDATE_FAILED', {
+            planId: formData?.planId,
+            errorMessage: error.message,
+            errorStack: error.stack
+        });
         this.showErrorNotification(error.message);
         throw error;
     }
@@ -1446,6 +1482,19 @@ class PricingManager {
                 throw new Error(responseData.message || 'Failed to delete plan');
             }
 
+            // Create audit log for plan deletion
+        await this.createAuditLog('PLAN_DELETED', {
+            planId: planId,
+            planName: plan.name,
+            planDetails: {
+                currency: plan.currency,
+                monthlyPrice: plan.monthlyPrice,
+                annualPrice: plan.annualPrice,
+                trialPeriod: plan.trialPeriod,
+                isActive: plan.isActive
+            }
+        });
+
             // Show success notification
             this.showSuccessNotification('Plan deleted successfully');
 
@@ -1453,6 +1502,14 @@ class PricingManager {
             await this.fetchAndDisplayPlans();
 
         } catch (error) {
+
+            // Log error to audit logs
+        await this.createAuditLog('PLAN_DELETION_FAILED', {
+            planId: planId,
+            errorMessage: error.message,
+            errorStack: error.stack
+        });
+            
             console.error('Error deleting plan:', error);
             this.showErrorNotification(error.message);
         }
@@ -1699,6 +1756,123 @@ class PricingManager {
             console.error('Audit logging error:', error);
         }
     }
+
+    async fetchPlanActivityLogs(filter = 'all', page = 1, limit = 10) {
+    try {
+        const queryParams = new URLSearchParams({
+            filter,
+            page: page.toString(),
+            limit: limit.toString()
+        });
+
+        const response = await fetch(`${this.baseUrl}/plan-activity-logs?${queryParams}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch activity logs');
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching activity logs:', error);
+        this.showErrorNotification('Failed to load activity logs');
+        return { logs: [], total: 0 };
+}
+
+        renderActivityLogs(logs) {
+    const container = document.getElementById('activityLogContainer');
+    const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+
+    // Clear existing content
+    container.innerHTML = '';
+
+    if (logs.length === 0) {
+        container.innerHTML = `
+            <div class="no-activities-placeholder">
+                <i class="fas fa-inbox text-muted"></i>
+                <p>No recent activities</p>
+            </div>
+        `;
+        loadMoreBtn.style.display = 'none';
+        return;
+    }
+
+    // Render activity logs with more detailed information
+    logs.forEach(log => {
+        const logItem = document.createElement('div');
+        logItem.className = 'activity-log-item';
+        
+        // Determine icon and color based on activity type
+        const iconMap = {
+            'PLAN_CREATED': { 
+                icon: 'fa-plus-circle', 
+                color: 'text-success',
+                message: `Created plan <strong>${log.details.planName}</strong>`
+            },
+            'PLAN_UPDATED': { 
+                icon: 'fa-edit', 
+                color: 'text-warning',
+                message: `Updated plan <strong>${log.details.planName}</strong>`
+            },
+            'PLAN_DELETED': { 
+                icon: 'fa-trash-alt', 
+                color: 'text-danger',
+                message: `Deleted plan <strong>${log.details.planName}</strong>`
+            },
+            'PLAN_CREATION_FAILED': { 
+                icon: 'fa-times-circle', 
+                color: 'text-danger',
+                message: `Plan creation failed: ${log.details.errorMessage}`
+            },
+            'PLAN_UPDATE_FAILED': { 
+                icon: 'fa-times-circle', 
+                color: 'text-danger',
+                message: `Plan update failed: ${log.details.errorMessage}`
+            },
+            'PLAN_DELETION_FAILED': { 
+                icon: 'fa-times-circle', 
+                color: 'text-danger',
+                message: `Plan deletion failed: ${log.details.errorMessage}`
+            }
+        };
+
+        const logDetails = iconMap[log.type] || { 
+            icon: 'fa-history', 
+            color: 'text-muted',
+            message: log.type 
+        };
+
+        logItem.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas ${logDetails.icon} ${logDetails.color} activity-icon"></i>
+                <div class="flex-grow-1">
+                    <div class="activity-details">
+                        ${logDetails.message}
+                    </div>
+                    <small class="activity-timestamp text-muted">
+                        ${this.formatTimestamp(log.timestamp)}
+                    </small>
+                </div>
+            </div>
+        `;
+
+        container.appendChild(logItem);
+    });
+
+    // Handle load more button
+    if (logs.length >= 10) {
+        loadMoreBtn.style.display = 'block';
+    } else {
+        loadMoreBtn.style.display = 'none';
+    }
+}
+
 
     // Method to get client IP
     async getClientIP() {
