@@ -490,5 +490,18 @@
         </div>
     </div>
 </div>
+
+    <script>
+        function showLogDetails(encodedDetails) {
+    try {
+        const details = decodeURIComponent(encodedDetails);
+        const modalBody = document.getElementById('logDetailsModalBody');
+        modalBody.innerHTML = `<pre>${details}</pre>`;
+        $('#logDetailsModal').modal('show');
+    } catch (error) {
+        console.error('Error showing log details:', error);
+    }
+}
+    </script>
 </body>
 </html>
