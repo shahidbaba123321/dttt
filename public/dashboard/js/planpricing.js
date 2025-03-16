@@ -75,13 +75,22 @@ class PricingManager {
         this.showModal = this.showModal.bind(this);
         this.hideModal = this.hideModal.bind(this);
                 this.getSelectedModuleNames = this.getSelectedModuleNames.bind(this);
+         this.initializeActivityLogFeature = this.initializeActivityLogFeature.bind(this);
+    this.setupActivityLogFeature = this.setupActivityLogFeature.bind(this);
+    this.loadActivityLogs = this.loadActivityLogs.bind(this);
+    this.loadMoreActivityLogs = this.loadMoreActivityLogs.bind(this);
+
 
 
         // Initialize event listeners and setup
         this.initializeEventListeners();
         this.fetchAndDisplayPlans();
         this.debugModulesEndpoint();
-            this.initializeActivityLogFeature();
+         try {
+        this.initializeActivityLogFeature();
+    } catch (error) {
+        console.warn('Error initializing activity log feature:', error);
+    }
 
     }
 
@@ -92,6 +101,11 @@ class PricingManager {
             addNewPlanBtn.addEventListener('click', () => this.showPlanCreationModal());
         }
     }
+
+    reinitializeActivityLogFeature() {
+    // This method can be called after dynamic content loading
+    this.setupActivityLogFeature();
+}
 
     // Fetch live currency rates
     async fetchLiveCurrencyRates() {
@@ -637,22 +651,12 @@ formatTimestamp(timestamp) {
 
 // Initialize activity log functionality
 initializeActivityLogFeature() {
-    const filterSelect = document.getElementById('activityLogFilter');
-    const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
-
-    // Initial load
-    this.loadActivityLogs();
-
-    // Filter change event
-    filterSelect.addEventListener('change', (e) => {
-        this.loadActivityLogs(e.target.value);
-    });
-
-    // Load more button
-    loadMoreBtn.addEventListener('click', () => {
-        // Implement pagination logic
-        this.loadMoreActivityLogs();
-    });
+    // Wait for DOM to be fully loaded
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', this.setupActivityLogFeature.bind(this));
+    } else {
+        this.setupActivityLogFeature();
+    }
 }
 
 // Load activity logs
@@ -665,7 +669,30 @@ async loadActivityLogs(filter = 'all') {
     }
 }
 
- 
+ setupActivityLogFeature() {
+    // Get elements with null checks
+    const filterSelect = document.getElementById('activityLogFilter');
+    const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+
+    // Only proceed if elements exist
+    if (filterSelect) {
+        // Initial load
+        this.loadActivityLogs();
+
+        // Filter change event
+        filterSelect.addEventListener('change', (e) => {
+            this.loadActivityLogs(e.target.value);
+        });
+    }
+
+    if (loadMoreBtn) {
+        // Load more button
+        loadMoreBtn.addEventListener('click', () => {
+            this.loadMoreActivityLogs();
+        });
+    }
+}
+
 
     
     async loadMoreActivityLogs() {
