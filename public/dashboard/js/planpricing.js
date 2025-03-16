@@ -81,6 +81,8 @@ class PricingManager {
         this.initializeEventListeners();
         this.fetchAndDisplayPlans();
         this.debugModulesEndpoint();
+            this.initializeActivityLogFeature();
+
     }
 
     // Method to initialize event listeners
@@ -520,6 +522,238 @@ async createAuditLog(action, details) {
         return logPayload;
     } catch (error) {
         console.error('Audit logging error:', error);
+    }
+}
+
+    async fetchPlanActivityLogs(filter = 'all', page = 1, limit = 10) {
+    try {
+        const queryParams = new URLSearchParams({
+            filter,
+            page: page.toString(),
+            limit: limit.toString()
+        });
+
+        const response = await fetch(`${this.baseUrl}/plan-activity-logs?${queryParams}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch activity logs');
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching activity logs:', error);
+        this.showErrorNotification('Failed to load activity logs');
+        return { logs: [], total: 0 };
+    }
+}
+
+renderActivityLogs(logs) {
+    const container = document.getElementById('activityLogContainer');
+    const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+
+    // Clear existing content
+    container.innerHTML = '';
+
+    if (logs.length === 0) {
+        container.innerHTML = `
+            <div class="no-activities-placeholder">
+                <i class="fas fa-inbox text-muted"></i>
+                <p>No recent activities</p>
+            </div>
+        `;
+        loadMoreBtn.style.display = 'none';
+        return;
+    }
+
+    // Render activity logs
+    logs.forEach(log => {
+        const logItem = document.createElement('div');
+        logItem.className = 'activity-log-item';
+        
+        // Determine icon based on activity type
+        const iconMap = {
+            'PLAN_CREATED': 'fa-plus-circle text-success',
+            'PLAN_UPDATED': 'fa-edit text-warning',
+            'PLAN_DELETED': 'fa-trash-alt text-danger'
+        };
+
+        const icon = iconMap[log.type] || 'fa-history';
+
+        logItem.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas ${icon} activity-icon"></i>
+                <div class="flex-grow-1">
+                    <div class="activity-details">
+                        ${this.formatActivityLogMessage(log)}
+                    </div>
+                    <small class="activity-timestamp text-muted">
+                        ${this.formatTimestamp(log.timestamp)}
+                    </small>
+                </div>
+            </div>
+        `;
+
+        container.appendChild(logItem);
+    });
+
+    // Handle load more button
+    if (logs.length >= 10) {
+        loadMoreBtn.style.display = 'block';
+    } else {
+        loadMoreBtn.style.display = 'none';
+    }
+}
+
+formatActivityLogMessage(log) {
+    switch(log.type) {
+        case 'PLAN_CREATED':
+            return `Plan <strong>${log.details.planName}</strong> was created`;
+        case 'PLAN_UPDATED':
+            return `Plan <strong>${log.details.planName}</strong> was updated`;
+        case 'PLAN_DELETED':
+            return `Plan <strong>${log.details.planName}</strong> was deleted`;
+        default:
+            return log.type;
+    }
+}
+
+formatTimestamp(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// Initialize activity log functionality
+initializeActivityLogFeature() {
+    const filterSelect = document.getElementById('activityLogFilter');
+    const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+
+    // Initial load
+    this.loadActivityLogs();
+
+    // Filter change event
+    filterSelect.addEventListener('change', (e) => {
+        this.loadActivityLogs(e.target.value);
+    });
+
+    // Load more button
+    loadMoreBtn.addEventListener('click', () => {
+        // Implement pagination logic
+        this.loadMoreActivityLogs();
+    });
+}
+
+// Load activity logs
+async loadActivityLogs(filter = 'all') {
+    try {
+        const data = await this.fetchPlanActivityLogs(filter);
+        this.renderActivityLogs(data.logs);
+    } catch (error) {
+        console.error('Error loading activity logs:', error);
+    }
+}
+
+ 
+
+    
+    async loadMoreActivityLogs() {
+    // Initialize page tracking if not already done
+    if (!this.activityLogCurrentPage) {
+        this.activityLogCurrentPage = 1;
+    }
+
+    try {
+        // Increment page number
+        this.activityLogCurrentPage++;
+
+        // Get current filter
+        const filterSelect = document.getElementById('activityLogFilter');
+        const currentFilter = filterSelect.value;
+
+        // Fetch next page of logs
+        const data = await this.fetchPlanActivityLogs(
+            currentFilter, 
+            this.activityLogCurrentPage
+        );
+
+        // Check if new logs exist
+        if (data.logs.length === 0) {
+            // No more logs to load
+            const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+            loadMoreBtn.style.display = 'none';
+            this.showErrorNotification('No more activities to load');
+            
+            // Decrement page back since no logs were found
+            this.activityLogCurrentPage--;
+            return;
+        }
+
+        // Append new logs to existing container
+        const container = document.getElementById('activityLogContainer');
+        
+        // Remove no activities placeholder if it exists
+        const placeholder = container.querySelector('.no-activities-placeholder');
+        if (placeholder) {
+            placeholder.remove();
+        }
+
+        // Render and append new logs
+        data.logs.forEach(log => {
+            const logItem = document.createElement('div');
+            logItem.className = 'activity-log-item';
+            
+            // Determine icon based on activity type
+            const iconMap = {
+                'PLAN_CREATED': 'fa-plus-circle text-success',
+                'PLAN_UPDATED': 'fa-edit text-warning',
+                'PLAN_DELETED': 'fa-trash-alt text-danger'
+            };
+
+            const icon = iconMap[log.type] || 'fa-history';
+
+            logItem.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="fas ${icon} activity-icon"></i>
+                    <div class="flex-grow-1">
+                        <div class="activity-details">
+                            ${this.formatActivityLogMessage(log)}
+                        </div>
+                        <small class="activity-timestamp text-muted">
+                            ${this.formatTimestamp(log.timestamp)}
+                        </small>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(logItem);
+        });
+
+        // Update load more button visibility
+        const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+        if (data.logs.length < 10) {
+            loadMoreBtn.style.display = 'none';
+        }
+
+    } catch (error) {
+        console.error('Error loading more activity logs:', error);
+        
+        // Decrement page back in case of error
+        this.activityLogCurrentPage--;
+
+        // Show error notification
+        this.showErrorNotification('Failed to load more activities');
     }
 }
 
