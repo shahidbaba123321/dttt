@@ -79,6 +79,8 @@ class PricingManager {
     this.setupActivityLogFeature = this.setupActivityLogFeature.bind(this);
     this.loadActivityLogs = this.loadActivityLogs.bind(this);
     this.loadMoreActivityLogs = this.loadMoreActivityLogs.bind(this);
+            this.createEditPlanModal = this.createEditPlanModal.bind(this);
+
 
 
 
@@ -428,25 +430,54 @@ async debugModulesEndpoint() {
 
 
 
-    showModal() {
-        const modal = document.getElementById('planCreationModal');
-        if (modal) {
-            modal.style.display = 'block';
-            modal.classList.add('show');
-            
-            // Add backdrop
-            const backdrop = document.createElement('div');
-            backdrop.classList.add('modal-backdrop', 'fade', 'show');
-            document.body.appendChild(backdrop);
+    showModal(modalId = 'planCreationModal') {
+    // Remove any existing modals
+    const existingModals = document.querySelectorAll('.modal');
+    existingModals.forEach(modal => modal.remove());
 
-            // Close on backdrop click
-            backdrop.addEventListener('click', () => this.hideModal());
+    // Remove any existing backdrops
+    const existingBackdrops = document.querySelectorAll('.modal-backdrop');
+    existingBackdrops.forEach(backdrop => backdrop.remove());
 
-            // Close on escape key
-            document.addEventListener('keydown', this.handleEscapeKey);
+    // Find the modal
+    const modal = document.getElementById(modalId);
+    
+    if (modal) {
+        // Append modal to body if not already there
+        if (!document.body.contains(modal)) {
+            document.body.appendChild(modal);
         }
-    }
 
+        // Show modal
+        modal.style.display = 'block';
+        modal.classList.add('show');
+        
+        // Add backdrop
+        const backdrop = document.createElement('div');
+        backdrop.classList.add('modal-backdrop', 'fade', 'show');
+        document.body.appendChild(backdrop);
+
+        // Close on backdrop click
+        backdrop.addEventListener('click', () => this.hideModal(modalId));
+
+        // Close on escape key
+        const escapeHandler = (event) => {
+            if (event.key === 'Escape') {
+                this.hideModal(modalId);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+
+        // Add close button listeners
+        const closeButtons = modal.querySelectorAll('[data-dismiss="modal"], .close');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', () => this.hideModal(modalId));
+        });
+    } else {
+        console.error(`Modal with id ${modalId} not found`);
+    }
+}
+    
     hideModal() {
         const modal = document.getElementById('planCreationModal');
         const backdrop = document.querySelector('.modal-backdrop');
@@ -1047,10 +1078,18 @@ async editPlan(planId) {
     }
 }
 
+
     // Create Edit Plan Modal
 createEditPlanModal(plan) {
+    // Remove any existing modals
+    const existingModal = document.getElementById('planEditModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
     const modalContainer = document.getElementById('planFormModalContainer');
-    modalContainer.innerHTML = `
+    const modalDiv = document.createElement('div');
+    modalDiv.innerHTML = `
         <div class="modal" id="planEditModal" tabindex="-1" role="dialog">
             <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
@@ -1136,13 +1175,16 @@ createEditPlanModal(plan) {
         </div>
     `;
 
+    // Append to container
+    modalContainer.appendChild(modalDiv.firstElementChild);
+
     // Show modal
-    this.showModal();
+    this.showModal('planEditModal');
 
     // Setup event listeners
     this.setupEditPlanModalListeners(plan);
 }
-
+    
     setupEditPlanModalListeners(plan) {
     // Currency symbol update
     const currencySelect = document.getElementById('editPlanCurrency');
@@ -1351,9 +1393,16 @@ async deletePlan(planId) {
     // Utility method for confirmation modal
 showConfirmationModal(title, message) {
     return new Promise((resolve) => {
+        // Remove any existing confirmation modals
+        const existingModal = document.getElementById('confirmationModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
         // Create confirmation modal dynamically
         const modalContainer = document.getElementById('confirmationModalContainer');
-        modalContainer.innerHTML = `
+        const modalDiv = document.createElement('div');
+        modalDiv.innerHTML = `
             <div class="modal" id="confirmationModal" tabindex="-1">
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -1373,13 +1422,16 @@ showConfirmationModal(title, message) {
             </div>
         `;
 
+        // Append to container
+        modalContainer.appendChild(modalDiv.firstElementChild);
+
         // Show modal
-        this.showModal();
+        this.showModal('confirmationModal');
 
         // Setup confirmation logic
         const confirmButton = document.getElementById('confirmButton');
         confirmButton.onclick = () => {
-            this.hideModal();
+            this.hideModal('confirmationModal');
             resolve(true);
         };
 
@@ -1387,13 +1439,12 @@ showConfirmationModal(title, message) {
         const closeButtons = document.querySelectorAll('#confirmationModal [data-dismiss="modal"]');
         closeButtons.forEach(button => {
             button.onclick = () => {
-                this.hideModal();
+                this.hideModal('confirmationModal');
                 resolve(false);
             };
         });
     });
 }
-
 
     // Convert prices to all supported currencies
     async convertPricesToAllCurrencies(monthlyRate, annualRate, baseCurrency) {
