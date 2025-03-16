@@ -980,6 +980,9 @@ getMarkup(fromCurrency, toCurrency) {
     }
         // Display plans in the plans container
    displayPlans(plans) {
+    // Store plans as a class property
+    this.plans = plans;
+
     const plansContainer = document.getElementById('plansListContainer');
     
     // Clear existing content
@@ -1093,6 +1096,7 @@ formatPriceForCurrency(plan, currency, type) {
     return `${baseCurrencySymbol} ${basePrice.toFixed(2)}`;
 }
 
+
 // Method to get currency symbol
 getCurrencySymbol(currencyCode) {
     const currencySymbols = {
@@ -1112,9 +1116,16 @@ setupPlanCurrencySelectors() {
             const selectedCurrency = e.target.value;
             const planCard = e.target.closest('.plan-card');
             
+            // Get current plan data
+            const plan = this.getCurrentPlanData(e.target);
+            
+            if (!plan) {
+                console.error('Unable to find plan data');
+                return;
+            }
+
             // Update monthly price
             const monthlyPriceElement = planCard.querySelector('.plan-monthly-price');
-            const plan = this.getCurrentPlanData(e.target);
             monthlyPriceElement.textContent = this.formatPriceForCurrency(plan, selectedCurrency, 'monthly');
             
             // Update annual price
@@ -1124,13 +1135,36 @@ setupPlanCurrencySelectors() {
     });
 }
 
+
     // Helper method to get current plan data
 getCurrentPlanData(element) {
     const planId = element.getAttribute('data-plan-id');
-    // You might want to store plans in a class property or fetch from backend
-    // This is a placeholder implementation
-    return this.plans.find(plan => plan._id === planId);
+    
+    // Find the plan in the stored plans array
+    const plan = this.plans.find(p => 
+        (p._id || p.id) === planId
+    );
+
+    if (!plan) {
+        console.error('Plan not found:', planId);
+        return null;
+    }
+
+    // Normalize plan data
+    return {
+        _id: plan._id || plan.id,
+        name: plan.name,
+        description: plan.description || 'No description',
+        baseCurrency: plan.currency || 'USD',
+        convertedPrices: plan.convertedPrices || {},
+        monthlyRate: this.normalizePrice(plan.monthlyPrice || plan.monthlyRate),
+        annualRate: this.normalizePrice(plan.annualPrice || plan.annualRate),
+        status: plan.status || (plan.isActive ? 'active' : 'inactive'),
+        modules: plan.modules || plan.features || [],
+        trialPeriod: plan.trialPeriod || 0
+    };
 }
+
 
     // Helper method to normalize price
     normalizePrice(price) {
