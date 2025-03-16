@@ -1885,6 +1885,49 @@ escapeHtml(unsafe) {
         }
     }
 
+    // Method to get meaningful user information
+getUserDisplayInfo(log) {
+    // Check for user details in different possible locations
+    const userDetails = 
+        log.user || 
+        log.details?.user || 
+        log.details?.userDetails || 
+        {};
+
+    // Prioritize name, then email, then fallback
+    const name = userDetails.name || 
+                 userDetails.fullName || 
+                 userDetails.username || 
+                 userDetails.email?.split('@')[0] ||
+                 'System User';
+    
+    const email = userDetails.email || 'system@example.com';
+
+    return {
+        name: name,
+        email: email,
+        initials: this.generateUserInitials(name)
+    };
+}
+
+
+// Generate user initials with more robust logic
+generateUserInitials(name) {
+    if (!name) return 'SU';
+
+    // Try to get initials from full name
+    const initials = name
+        .split(' ')
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+
+    return initials || 'SU';
+}
+
+
+
     // Render activity logs
     renderActivityLogs(logs) {
     const container = document.getElementById('activityLogContainer');
@@ -1906,6 +1949,9 @@ escapeHtml(unsafe) {
 
     // Render activity logs with enhanced details
     logs.forEach(log => {
+        // Get user display information
+        const userInfo = this.getUserDisplayInfo(log);
+
         const logItem = document.createElement('div');
         logItem.className = 'activity-log-item';
         
@@ -1926,14 +1972,14 @@ escapeHtml(unsafe) {
                 color: 'text-danger',
                 category: 'Plan Deletion'
             },
+            'PLAN_DETAILS_VIEWED': { 
+                icon: 'fa-eye', 
+                color: 'text-info',
+                category: 'Plan Viewed'
+            },
             'PLAN_EDIT_MODAL_FAILED': { 
                 icon: 'fa-exclamation-triangle', 
-                color: 'text-danger',
-                category: 'Modal Error'
-            },
-            'PLAN_CREATION_MODAL_FAILED': { 
-                icon: 'fa-exclamation-triangle', 
-                color: 'text-danger',
+                color: 'text-warning',
                 category: 'Modal Error'
             },
             'PLAN_CREATION_FAILED': { 
@@ -1960,12 +2006,14 @@ escapeHtml(unsafe) {
             category: 'System Activity'
         };
 
-        // Format timestamp with more details
+        // Format timestamp
         const formattedTime = this.formatDetailedTimestamp(log.timestamp);
 
-        // Prepare user information
-        const userName = log.details?.user?.name || log.details?.user?.email || 'System User';
-        const userEmail = log.details?.user?.email || 'system@example.com';
+        // Generate user avatar with dynamic color
+        const avatarHue = this.generateHueFromString(userInfo.name);
+
+        // Prepare log message
+        const logMessage = this.formatActivityLogMessage(log);
 
         // Prepare additional context
         const additionalContext = this.prepareLogContext(log);
@@ -1983,21 +2031,23 @@ escapeHtml(unsafe) {
                 </div>
                 <div class="activity-log-body">
                     <div class="activity-main-message">
-                        ${this.formatActivityLogMessage(log)}
+                        ${this.escapeHtml(logMessage)}
                     </div>
                     <div class="activity-user-details">
                         <div class="user-avatar">
-                            ${this.generateUserAvatar(userName)}
+                            <div class="user-initials-avatar" style="background-color: hsl(${avatarHue}, 50%, 50%);">
+                                ${userInfo.initials}
+                            </div>
                         </div>
                         <div class="user-info">
-                            <div class="user-name">${userName}</div>
-                            <div class="user-email">${userEmail}</div>
+                            <div class="user-name">${this.escapeHtml(userInfo.name)}</div>
+                            <div class="user-email">${this.escapeHtml(userInfo.email)}</div>
                         </div>
                     </div>
                     ${additionalContext ? `
                         <div class="activity-additional-context">
                             <strong>Details:</strong>
-                            <pre>${JSON.stringify(additionalContext, null, 2)}</pre>
+                            <pre>${this.escapeHtml(JSON.stringify(additionalContext, null, 2))}</pre>
                         </div>
                     ` : ''}
                 </div>
@@ -2014,6 +2064,21 @@ escapeHtml(unsafe) {
         loadMoreBtn.style.display = 'none';
     }
 }
+
+
+    // Helper method to prepare additional context
+prepareAdditionalContext(log) {
+    const context = this.prepareLogContext(log);
+    if (!context) return '';
+
+    return `
+        <div class="activity-additional-context">
+            <strong>Details:</strong>
+            <pre>${JSON.stringify(context, null, 2)}</pre>
+        </div>
+    `;
+}
+
 
     // Format detailed timestamp
 formatDetailedTimestamp(timestamp) {
@@ -2091,7 +2156,7 @@ generateHueFromString(str) {
     for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);
     }
-    return hash % 360;
+    return Math.abs(hash) % 360;
 }
 
 
