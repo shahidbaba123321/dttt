@@ -1143,18 +1143,8 @@ getSelectedModules() {
 
 
 async editPlan(planId) {
-    console.log('Edit Plan Method Called');
-    console.log('Plan ID:', planId);
-
-    // Validate planId
-    if (!planId) {
-        console.error('No plan ID provided for editing');
-        this.showErrorNotification('Invalid plan ID');
-        return;
-    }
-
     try {
-        console.log(`Attempting to fetch plan details for ID: ${planId}`);
+        console.log(`Attempting to edit plan: ${planId}`);
 
         // Fetch plan details
         const response = await fetch(`${this.baseUrl}/plans/${planId}`, {
@@ -1165,49 +1155,19 @@ async editPlan(planId) {
             }
         });
 
-        console.log('Fetch Response Status:', response.status);
-
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Fetch Error Response:', errorText);
-            throw new Error(`Failed to fetch plan details: ${errorText}`);
+            throw new Error('Failed to fetch plan details');
         }
 
         const responseData = await response.json();
-        console.log('Received Plan Data:', responseData);
-
-        // Validate response data
-        if (!responseData || !responseData.data) {
-            console.error('Invalid response data structure', responseData);
-            this.showErrorNotification('Invalid plan data received');
-            return;
-        }
-
         const plan = responseData.data;
-
-        // Log plan details
-        console.log('Plan Details for Editing:', plan);
-
-        // Ensure plan has required properties
-        if (!plan._id) {
-            console.error('Plan is missing _id', plan);
-            this.showErrorNotification('Invalid plan data');
-            return;
-        }
 
         // Create edit modal
         this.createEditPlanModal(plan);
 
     } catch (error) {
-        // Comprehensive error logging
-        console.error('Complete Error Details for Plan Edit:', {
-            message: error.message,
-            name: error.name,
-            stack: error.stack
-        });
-
-        // Show detailed error notification
-        this.showErrorNotification(`Failed to load plan details: ${error.message}`);
+        console.error('Error in editPlan:', error);
+        this.showErrorNotification(`Failed to edit plan: ${error.message}`);
     }
 }
 
@@ -1830,111 +1790,36 @@ showConfirmationModal(title, message) {
    setupPlanCardListeners() {
     console.log('Setting up plan card listeners');
 
-    // Log all edit and delete buttons
-    const editButtons = document.querySelectorAll('.edit-plan');
-    const deleteButtons = document.querySelectorAll('.delete-plan');
-
-    console.log(`Edit buttons found: ${editButtons.length}`);
-    console.log(`Delete buttons found: ${deleteButtons.length}`);
-
     // Edit Buttons Listener
-    editButtons.forEach((button, index) => {
-        console.log(`Edit Button ${index}:`, {
-            button: button,
-            dataId: button.getAttribute('data-id'),
-            innerHTML: button.innerHTML
-        });
-
+    const editButtons = document.querySelectorAll('.edit-plan');
+    editButtons.forEach(button => {
         // Remove existing listeners
         const oldButton = button.cloneNode(true);
         button.parentNode.replaceChild(oldButton, button);
 
-        // Add new listener with comprehensive error handling
         oldButton.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
 
-            console.log('Edit button clicked');
-            console.log('Event target:', e.target);
-            console.log('Closest button:', e.target.closest('.edit-plan'));
+            const planId = 
+                oldButton.getAttribute('data-id') || 
+                oldButton.dataset.id || 
+                e.target.getAttribute('data-id') || 
+                e.target.dataset.id;
 
-            try {
-                // Multiple methods to get plan ID
-                const planId = 
-                    oldButton.getAttribute('data-id') || 
-                    oldButton.dataset.id || 
-                    e.target.getAttribute('data-id') || 
-                    e.target.dataset.id ||
-                    e.target.closest('.edit-plan')?.getAttribute('data-id');
+            console.log('Edit button clicked. Plan ID:', planId);
 
-                console.log('Retrieved Plan ID for Edit:', planId);
-
-                if (!planId) {
-                    console.error('No plan ID found for edit');
-                    this.showErrorNotification('Unable to determine plan ID for editing');
-                    return;
-                }
-
-                // Bind context and call method
-                this.editPlan(planId);
-            } catch (error) {
-                console.error('Error in edit button listener:', error);
-                this.showErrorNotification(`Edit failed: ${error.message}`);
+            if (!planId) {
+                console.error('No plan ID found for edit');
+                this.showErrorNotification('Unable to determine plan ID for editing');
+                return;
             }
+
+            // Ensure method is bound correctly
+            this.editPlan(planId);
         });
     });
-
-    // Delete Buttons Listener
-    deleteButtons.forEach((button, index) => {
-        console.log(`Delete Button ${index}:`, {
-            button: button,
-            dataId: button.getAttribute('data-id'),
-            innerHTML: button.innerHTML
-        });
-
-        // Remove existing listeners
-        const oldButton = button.cloneNode(true);
-        button.parentNode.replaceChild(oldButton, button);
-
-        // Add new listener with comprehensive error handling
-        oldButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            console.log('Delete button clicked');
-            console.log('Event target:', e.target);
-            console.log('Closest button:', e.target.closest('.delete-plan'));
-
-            try {
-                // Multiple methods to get plan ID
-                const planId = 
-                    oldButton.getAttribute('data-id') || 
-                    oldButton.dataset.id || 
-                    e.target.getAttribute('data-id') || 
-                    e.target.dataset.id ||
-                    e.target.closest('.delete-plan')?.getAttribute('data-id');
-
-                console.log('Retrieved Plan ID for Delete:', planId);
-
-                if (!planId) {
-                    console.error('No plan ID found for delete');
-                    this.showErrorNotification('Unable to determine plan ID for deletion');
-                    return;
-                }
-
-                // Bind context and call method
-                this.deletePlan(planId);
-            } catch (error) {
-                console.error('Error in delete button listener:', error);
-                this.showErrorNotification(`Delete failed: ${error.message}`);
-            }
-        });
-    });
-
-    // Additional logging for debugging
-    console.log('Plan card listeners setup complete');
 }
-
 
     // Placeholder methods for edit and delete
     editPlan(planId) {
