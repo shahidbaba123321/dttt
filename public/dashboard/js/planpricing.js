@@ -2031,40 +2031,53 @@ formatDetailedTimestamp(timestamp) {
 }
 // Prepare additional context for log
 prepareLogContext(log) {
-    // Extract meaningful context based on log type
-    const contextMap = {
-        'PLAN_CREATED': () => ({
-            planName: log.details?.planName,
-            monthlyPrice: log.details?.planDetails?.monthlyPrice,
-            annualPrice: log.details?.planDetails?.annualPrice,
-            currency: log.details?.planDetails?.currency
+    // More comprehensive context extraction
+    const contextExtractors = {
+        'PLAN_CREATED': (details) => ({
+            'Plan Name': details?.planName || details?.name,
+            'Monthly Price': details?.planDetails?.monthlyPrice,
+            'Annual Price': details?.planDetails?.annualPrice,
+            'Currency': details?.planDetails?.currency,
+            'Active': details?.planDetails?.isActive
         }),
-        'PLAN_UPDATED': () => ({
-            planName: log.details?.planName,
-            changes: log.details?.changes
-        }),
-        'PLAN_DELETED': () => ({
-            planName: log.details?.planName,
-            planDetails: log.details?.planDetails
+        'PLAN_UPDATED': (details) => {
+            if (!details?.changes) return null;
+            
+            return Object.entries(details.changes).reduce((acc, [key, value]) => {
+                acc[key] = {
+                    from: value.from,
+                    to: value.to
+                };
+                return acc;
+            }, {});
+        },
+        'PLAN_DELETED': (details) => ({
+            'Plan Name': details?.planName,
+            'Deletion Time': new Date().toISOString()
         })
     };
 
-    const contextExtractor = contextMap[log.type];
-    return contextExtractor ? contextExtractor() : null;
+    // Extract context based on log type
+    const extractor = contextExtractors[log.type];
+    return extractor ? extractor(log.details) : null;
 }
 
+
 // Generate user avatar
-generateUserAvatar(userName) {
+generateUserAvatar(userName, userEmail) {
+    // Prefer full name, fall back to email
+    const displayName = userName || userEmail.split('@')[0];
+
     // Generate initials
-    const initials = userName
+    const initials = displayName
         .split(' ')
         .map(word => word[0])
         .join('')
         .toUpperCase()
         .slice(0, 2);
 
-    // Generate a consistent color based on the name
-    const hue = this.generateHueFromString(userName);
+    // Generate a consistent color based on the name/email
+    const hue = this.generateHueFromString(displayName);
     
     return `
         <div class="user-initials-avatar" style="background-color: hsl(${hue}, 50%, 50%);">
@@ -2072,7 +2085,6 @@ generateUserAvatar(userName) {
         </div>
     `;
 }
-
 // Generate consistent color hue from string
 generateHueFromString(str) {
     let hash = 0;
@@ -2084,34 +2096,100 @@ generateHueFromString(str) {
 
 
     // Format activity log message
-    formatActivityLogMessage(log) {
-    switch(log.type) {
-        case 'PLAN_CREATED':
-            return `Created plan <strong>${log.details?.planName || 'Unnamed Plan'}</strong>`;
-        case 'PLAN_UPDATED':
-            return `Updated plan <strong>${log.details?.planName || 'Unnamed Plan'}</strong>`;
-        case 'PLAN_DELETED':
-            return `Deleted plan <strong>${log.details?.planName || 'Unnamed Plan'}</strong>`;
-        case 'PLAN_EDIT_MODAL_FAILED':
-            return `Failed to open edit modal: ${log.details?.errorMessage || 'Unknown error'}`;
-        case 'PLAN_CREATION_FAILED':
-            return `Plan creation failed: ${log.details?.errorMessage || 'Unknown error'}`;
-        default:
-            return log.type;
-    }
+   formatActivityLogMessage(log) {
+    // Detailed log type mapping
+    const logTypeDetails = {
+        'PLAN_CREATED': {
+            baseMessage: 'Created plan',
+            getDetails: (details) => {
+                const planName = details?.planName || details?.name || 'Unnamed Plan';
+                const currency = details?.planDetails?.currency || '';
+                const monthlyPrice = details?.planDetails?.monthlyPrice ? 
+                    `${currency} ${details.planDetails.monthlyPrice}` : '';
+                
+                return `${planName} ${monthlyPrice ? `(${monthlyPrice} monthly)` : ''}`;
+            }
+        },
+        'PLAN_UPDATED': {
+            baseMessage: 'Updated plan',
+            getDetails: (details) => {
+                const planName = details?.planName || 'Unnamed Plan';
+                const changes = details?.changes ? 
+                    Object.keys(details.changes).join(', ') : 
+                    'No specific changes';
+                
+                return `${planName} (Changes: ${changes})`;
+            }
+        },
+        'PLAN_DELETED': {
+            baseMessage: 'Deleted plan',
+            getDetails: (details) => {
+                return details?.planName || details?.name || 'Unnamed Plan';
+            }
+        },
+        'PLAN_DETAILS_VIEWED': {
+            baseMessage: 'Viewed plan details',
+            getDetails: (details) => {
+                return details?.planName || details?.name || 'Unnamed Plan';
+            }
+        },
+        'PLAN_EDIT_MODAL_FAILED': {
+            baseMessage: 'Failed to open edit modal',
+            getDetails: (details) => details?.errorMessage || 'Unknown error'
+        },
+        'PLAN_CREATION_FAILED': {
+            baseMessage: 'Plan creation failed',
+            getDetails: (details) => details?.errorMessage || 'Unknown error'
+        }
+    };
+
+    // Get log type details
+    const logType = logTypeDetails[log.type] || {
+        baseMessage: log.type,
+        getDetails: () => ''
+    };
+
+    // Construct full message
+    const baseMessage = logType.baseMessage;
+    const details = logType.getDetails(log.details);
+
+    return `${baseMessage}: ${details}`;
 }
 
+
     // Format timestamp
-    formatTimestamp(timestamp) {
-        const date = new Date(timestamp);
+   formatDetailedTimestamp(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+
+    // Relative time logic
+    if (diffInDays === 0) {
+        // Today
         return date.toLocaleString('en-US', {
-            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        }) + ' Today';
+    } else if (diffInDays === 1) {
+        // Yesterday
+        return date.toLocaleString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        }) + ' Yesterday';
+    } else {
+        // Older dates
+        return date.toLocaleString('en-US', {
             month: 'short',
             day: 'numeric',
+            year: 'numeric',
             hour: '2-digit',
-            minute: '2-digit'
+            minute: '2-digit',
+            hour12: true
         });
     }
+}
 
     // Initialize activity log functionality
     initializeActivityLogFeature() {
