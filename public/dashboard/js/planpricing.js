@@ -304,12 +304,6 @@ reinitializeEventListeners() {
             document.body.appendChild(modalContainer);
         }
 
-        // Remove any existing modals
-        const existingModal = document.getElementById('planCreationModal');
-        if (existingModal) {
-            existingModal.remove();
-        }
-
         // Create modal HTML
         const modalDiv = document.createElement('div');
         modalDiv.innerHTML = `
@@ -414,6 +408,12 @@ reinitializeEventListeners() {
             </div>
         `;
 
+        // Remove any existing modal with the same ID
+        const existingModal = document.getElementById('planCreationModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
         // Append to container
         modalContainer.appendChild(modalDiv.firstElementChild);
 
@@ -473,37 +473,30 @@ showModal(modalId = 'planCreationModal') {
     // Comprehensive logging
     console.log(`Attempting to show modal with ID: ${modalId}`);
 
-    // Log all existing modals
-    const existingModals = document.querySelectorAll('.modal');
-    console.log(`Existing modals before removal: ${existingModals.length}`);
-
-    // Remove any existing modals
-    existingModals.forEach(modal => {
-        console.log(`Removing modal: ${modal.id}`);
-        modal.remove();
-    });
-
     // Remove any existing backdrops
     const existingBackdrops = document.querySelectorAll('.modal-backdrop');
     existingBackdrops.forEach(backdrop => backdrop.remove());
 
-    // Find the modal
-    const modal = document.getElementById(modalId);
-    
-    // Log modal search results
-    console.log(`Modal found: ${!!modal}`);
-    if (!modal) {
-        // Log all elements in the document for debugging
-        console.log('All elements in the document:');
-        document.querySelectorAll('*').forEach(el => {
-            if (el.id) {
-                console.log(el.id);
-            }
-        });
+    // Find the modal container
+    const modalContainer = document.getElementById('planFormModalContainer');
+    if (!modalContainer) {
+        console.error('Modal container not found');
+        return;
     }
 
+    // Find the modal
+    let modal = document.getElementById(modalId);
+    
+    // If modal doesn't exist in the document, check the container
+    if (!modal) {
+        modal = modalContainer.querySelector(`#${modalId}`);
+    }
+
+    // Log modal search results
+    console.log(`Modal found: ${!!modal}`);
+
     if (modal) {
-        // Append modal to body if not already there
+        // Ensure modal is in the document body
         if (!document.body.contains(modal)) {
             console.log('Appending modal to body');
             document.body.appendChild(modal);
@@ -542,27 +535,41 @@ showModal(modalId = 'planCreationModal') {
         console.error(`Modal with id ${modalId} not found`);
         
         // Additional debugging information
-        const allModalContainers = document.querySelectorAll('[id$="ModalContainer"]');
-        console.log('Existing modal containers:', allModalContainers);
+        console.log('Modal Container Contents:', modalContainer.innerHTML);
     }
 }
-    
-    hideModal() {
-        const modal = document.getElementById('planCreationModal');
-        const backdrop = document.querySelector('.modal-backdrop');
-        
-        if (modal) {
-            modal.style.display = 'none';
-            modal.classList.remove('show');
-        }
-        
-        if (backdrop) {
-            backdrop.remove();
-        }
 
-        // Remove escape key listener
-        document.removeEventListener('keydown', this.handleEscapeKey);
+    
+    hideModal(modalId = 'planCreationModal') {
+    console.log(`Attempting to hide modal: ${modalId}`);
+
+    // Find modal in document or modal container
+    let modal = document.getElementById(modalId);
+    if (!modal) {
+        const modalContainer = document.getElementById('planFormModalContainer');
+        if (modalContainer) {
+            modal = modalContainer.querySelector(`#${modalId}`);
+        }
     }
+
+    // Remove modal
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('show');
+        
+        // Optional: remove from DOM if needed
+        // modal.remove();
+    }
+
+    // Remove backdrop
+    const backdrop = document.querySelector('.modal-backdrop');
+    if (backdrop) {
+        backdrop.remove();
+    }
+
+    // Remove escape key listener
+    document.removeEventListener('keydown', this.escapeHandler);
+}
 
 handleEscapeKey = (event) => {
         if (event.key === 'Escape') {
