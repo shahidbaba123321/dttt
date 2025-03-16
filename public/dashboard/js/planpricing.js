@@ -2499,7 +2499,7 @@ generateHueFromString(str) {
     }
 }
 
-    renderActivityLogsTable(logs) {
+  renderActivityLogsTable(logs) {
     const tableBody = document.getElementById('activityLogTableBody');
     
     // Clear existing rows
@@ -2521,7 +2521,7 @@ generateHueFromString(str) {
     }
 
     // Render logs
-    logs.forEach(log => {
+    logs.forEach((log, index) => {
         // Determine activity type
         const activityTypeMap = {
             'PLAN_CREATED': 'Plan Created',
@@ -2538,8 +2538,7 @@ generateHueFromString(str) {
 
         // Prepare log details for modal
         const logDetails = this.prepareLogContext(log) || {};
-        const encodedDetails = encodeURIComponent(JSON.stringify(logDetails, null, 2));
-
+        
         // Create table row
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -2548,11 +2547,17 @@ generateHueFromString(str) {
             <td>${this.extractPlanName(log)}</td>
             <td>${userName}</td>
             <td>
-                <button class="btn btn-sm btn-info" onclick="showLogDetails('${encodedDetails}')">
+                <button class="btn btn-sm btn-info" data-log-index="${index}">
                     View Details
                 </button>
             </td>
         `;
+
+        // Add click event listener to the button
+        const detailsButton = row.querySelector('button');
+        detailsButton.addEventListener('click', () => {
+            this.showLogDetails(logDetails);
+        });
 
         tableBody.appendChild(row);
     });
@@ -2563,6 +2568,44 @@ generateHueFromString(str) {
         loadMoreBtn.style.display = logs.length < 10 ? 'none' : 'block';
     }
 }
+
+    // Method to show log details within the class
+showLogDetails(logDetails) {
+    try {
+        const modalBody = document.getElementById('logDetailsModalBody');
+        const modal = document.getElementById('logDetailsModal');
+        
+        // Convert log details to formatted JSON string
+        const formattedDetails = JSON.stringify(logDetails, null, 2);
+        
+        // Populate modal body
+        modalBody.innerHTML = `<pre>${this.escapeHtml(formattedDetails)}</pre>`;
+        
+        // Show modal using vanilla JavaScript
+        modal.classList.add('show');
+        modal.style.display = 'block';
+        
+        // Add backdrop
+        const backdrop = document.createElement('div');
+        backdrop.classList.add('modal-backdrop', 'fade', 'show');
+        document.body.appendChild(backdrop);
+
+        // Close modal functionality
+        const closeButtons = modal.querySelectorAll('[data-dismiss="modal"]');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                backdrop.remove();
+            });
+        });
+    } catch (error) {
+        console.error('Error showing log details:', error);
+        this.showErrorNotification('Failed to display log details');
+    }
+}
+
+
 
 
     // Ensure these methods are defined in the class
