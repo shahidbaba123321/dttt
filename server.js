@@ -521,7 +521,11 @@ ensureIndex(database.collection('plan_activity_logs'), {
             
 ensureIndex(database.collection('plan_activity_logs'), { type: 1 }),
 ensureIndex(database.collection('plan_activity_logs'), { timestamp: -1 }),
-ensureIndex(database.collection('plan_activity_logs'), { userId: 1 })
+ensureIndex(database.collection('plan_activity_logs'), { userId: 1 }),
+            // Add to your index creation in initializeDatabase
+ensureIndex(plan_activity_logs, { timestamp: -1 }),
+ensureIndex(plan_activity_logs, { type: 1, timestamp: -1 }),
+ensureIndex(plan_activity_logs, { userId: 1, timestamp: -1 })
 
             
         ];
@@ -5319,6 +5323,171 @@ app.delete('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
         });
     } finally {
         await session.endSession();
+    }
+});
+
+// Add this to your server.js file
+app.get('/api/plan-activity-logs', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        // Extract query parameters
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const filter = req.query.filter || 'all';
+
+        // Calculate skip value for pagination
+        const skip = (page - 1) * limit;
+
+        // Prepare filter query
+        const filterQuery = filter === 'all' 
+            ? {} 
+            : { type: filter };
+
+        // Aggregate pipeline for fetching and transforming logs
+        const pipeline = [
+            // Match filter
+            { $match: filterQuery },
+
+            // Sort by timestamp (most recent first)
+            { $sort: { timestamp: -1 } },
+
+            // Pagination
+            { $skip: skip },
+            { $limit: limit },
+
+            // Optional: Lookup user details (if needed)
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'userId',
+                    foreignField: '_id',
+                    as: 'userDetails'
+                }
+            },
+
+            // Deconstruct user details
+            {
+                $unwind: {
+                    path: '$userDetails',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+
+            // Project to shape the output
+            {
+                $project: {
+                    type: 1,
+                    timestamp: 1,
+                    details: 1,
+                    user: {
+                        name: '$userDetails.name',
+                        email: '$userDetails.email'
+                    }
+                }
+            }
+        ];
+
+        // Execute aggregation
+        const logs = await plan_activity_logs.aggregate(pipeline).toArray();
+
+        // Count total logs for pagination
+        const totalLogsQuery = filter === 'all' 
+            ? {} 
+            : { type: filter };
+        const totalLogs = await plan_activity_logs.countDocuments(totalLogsQuery);
+
+        // Prepare response
+        res.json({
+            success: true,
+            logs: logs,
+            total: totalLogs,
+            page: page,
+            totalPages: Math.ceil(totalLogs / limit)
+        });
+
+    } catch (error) {
+        console.error('Error fetching plan activity logs:', {
+            error: error.message,
+            stack: error.stack
+        });
+
+        // Create a security log for unexpected errors
+        await security_logs.insertOne({
+            type: 'PLAN_ACTIVITY_LOGS_FETCH_ERROR',
+            timestamp: new Date(),
+            error: error.message,
+            details: {
+                query: req.query,
+                userId: req.user.userId
+            }
+        });
+
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching plan activity logs',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+
+// Optional: Endpoint for detailed activity log
+app.get('/api/plan-activity-logs/:logId', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { logId } = req.params;
+
+        // Validate logId
+        if (!ObjectId.isValid(logId)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid log ID format'
+            });
+        }
+
+        // Fetch detailed log
+        const log = await plan_activity_logs.findOne({ 
+            _id: new ObjectId(logId) 
+        });
+
+        if (!log) {
+            return res.status(404).json({
+                success: false,
+                message: 'Activity log not found'
+            });
+        }
+
+        // Lookup user details
+        const userDetails = await database.collection('users').findOne(
+            { _id: log.userId },
+            { projection: { name: 1, email: 1 } }
+        );
+
+        // Enrich log with user details
+        const enrichedLog = {
+            ...log,
+            user: userDetails || { name: 'System', email: 'system@example.com' }
+        };
+
+        // Create audit log for log access
+        await createAuditLog(
+            'PLAN_ACTIVITY_LOG_VIEWED',
+            req.user.userId,
+            null,
+            {
+                logId: log._id,
+                logType: log.type
+            }
+        );
+
+        res.json({
+            success: true,
+            log: enrichedLog
+        });
+
+    } catch (error) {
+        console.error('Error fetching specific plan activity log:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching activity log details'
+        });
     }
 });
 
