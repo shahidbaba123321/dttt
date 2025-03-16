@@ -626,37 +626,46 @@ async adjustPricingForMultipleCurrencies(formData) {
         for (const targetCurrency of supportedCurrencies) {
             if (targetCurrency === formData.currency) continue;
 
-            // Get markup
-            const markup = this.getMarkup(formData.currency, targetCurrency);
+            try {
+                // Convert monthly price
+                const convertedMonthlyPrice = await this.convertCurrency(
+                    formData.monthlyPrice, 
+                    formData.currency, 
+                    targetCurrency
+                );
 
-            // Convert monthly price
-            const convertedMonthlyPrice = await this.convertCurrency(
-                formData.monthlyPrice, 
-                formData.currency, 
-                targetCurrency
-            );
+                // Convert annual price
+                const convertedAnnualPrice = await this.convertCurrency(
+                    formData.annualPrice, 
+                    formData.currency, 
+                    targetCurrency
+                );
 
-            // Convert annual price
-            const convertedAnnualPrice = await this.convertCurrency(
-                formData.annualPrice, 
-                formData.currency, 
-                targetCurrency
-            );
+                // Get markup
+                const markup = this.getMarkup(formData.currency, targetCurrency);
 
-            // Apply markup if exists
-            const adjustedMonthlyPrice = markup 
-                ? convertedMonthlyPrice * markup 
-                : convertedMonthlyPrice;
+                // Apply markup if exists
+                const adjustedMonthlyPrice = markup 
+                    ? convertedMonthlyPrice * markup 
+                    : convertedMonthlyPrice;
 
-            const adjustedAnnualPrice = markup 
-                ? convertedAnnualPrice * markup 
-                : convertedAnnualPrice;
+                const adjustedAnnualPrice = markup 
+                    ? convertedAnnualPrice * markup 
+                    : convertedAnnualPrice;
 
-            // Store converted and adjusted prices
-            convertedPrices[targetCurrency] = {
-                monthlyPrice: Math.round(adjustedMonthlyPrice * 100) / 100,
-                annualPrice: Math.round(adjustedAnnualPrice * 100) / 100
-            };
+                // Store converted and adjusted prices
+                convertedPrices[targetCurrency] = {
+                    monthlyPrice: Math.round(adjustedMonthlyPrice * 100) / 100,
+                    annualPrice: Math.round(adjustedAnnualPrice * 100) / 100
+                };
+            } catch (conversionError) {
+                console.warn(`Conversion error for ${targetCurrency}:`, conversionError);
+                // Fallback to base currency price if conversion fails
+                convertedPrices[targetCurrency] = {
+                    monthlyPrice: formData.monthlyPrice,
+                    annualPrice: formData.annualPrice
+                };
+            }
         }
 
         // Add converted prices to the form data
@@ -666,10 +675,17 @@ async adjustPricingForMultipleCurrencies(formData) {
     } catch (error) {
         console.error('Currency conversion error:', error);
         // Fallback to original pricing if conversion fails
-        return formData;
+        return {
+            ...formData,
+            convertedPrices: {
+                [formData.currency]: {
+                    monthlyPrice: formData.monthlyPrice,
+                    annualPrice: formData.annualPrice
+                }
+            }
+        };
     }
 }
-
 // Helper method to get markup
 getMarkup(fromCurrency, toCurrency) {
     const markupRules = {
@@ -723,17 +739,14 @@ getMarkup(fromCurrency, toCurrency) {
             return;
         }
 
-        // Send plan to backend with converted prices
+        // Send plan to backend
         const response = await fetch(`${this.baseUrl}/plans`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${this.token}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                ...adjustedPricing,
-                convertedPrices: adjustedPricing.convertedPrices
-            })
+            body: JSON.stringify(adjustedPricing)
         });
 
         const responseData = await response.json();
@@ -776,6 +789,7 @@ getMarkup(fromCurrency, toCurrency) {
         throw error;
     }
 }
+
     
     // Show validation errors
     showValidationErrors(errors) {
@@ -1986,34 +2000,28 @@ escapeHtml(unsafe) {
     }
         // Currency conversion method with markup
     async convertCurrency(amount, fromCurrency, toCurrency) {
-        try {
-            // Ensure we have the latest rates
-            await this.getCurrencyRates();
+    try {
+        // Ensure we have the latest rates
+        await this.getCurrencyRates();
 
-            // Find source and target currency configurations
-            const sourceCurrency = this.currencies.find(c => c.code === fromCurrency);
-            const targetCurrency = this.currencies.find(c => c.code === toCurrency);
+        // Find source and target currency configurations
+        const sourceCurrency = this.currencies.find(c => c.code === fromCurrency);
+        const targetCurrency = this.currencies.find(c => c.code === toCurrency);
 
-            if (!sourceCurrency || !targetCurrency) {
-                console.error('Invalid currency conversion');
-                return null;
-            }
-
-            // Base conversion
-            const baseAmount = amount / sourceCurrency.conversionRates[toCurrency];
-
-            // Apply markup if exists
-            const markupRules = this.markupRules[fromCurrency];
-            if (markupRules && markupRules[toCurrency]) {
-                return baseAmount * markupRules[toCurrency];
-            }
-
-            return baseAmount;
-        } catch (error) {
-            console.error('Currency conversion error:', error);
-            return null;
+        if (!sourceCurrency || !targetCurrency) {
+            console.error('Invalid currency conversion');
+            return amount;
         }
+
+        // Base conversion
+        const baseAmount = amount / sourceCurrency.conversionRates[toCurrency];
+
+        return baseAmount;
+    } catch (error) {
+        console.error('Currency conversion error:', error);
+        return amount;
     }
+}
 
     // Method to get currency rates with caching and auto-refresh
     async getCurrencyRates() {
@@ -2064,9 +2072,12 @@ escapeHtml(unsafe) {
             }
         };
 
+        // Determine the correct audit log endpoint
+        const auditLogEndpoint = `${this.baseUrl}/plan-activity-logs`; // Updated endpoint
+
         // Use a try-catch with more robust error handling
         try {
-            const response = await fetch(`${this.baseUrl}/audit-logs`, {
+            const response = await fetch(auditLogEndpoint, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${this.token}`,
@@ -2083,12 +2094,20 @@ escapeHtml(unsafe) {
                     statusText: response.statusText,
                     responseText: responseText
                 });
+
+                // Optional: Log to console or local storage if server logging fails
+                console.warn('Audit Log Payload:', logPayload);
+                
                 return null;
             }
 
             return logPayload;
         } catch (fetchError) {
             console.error('Fetch error in audit logging:', fetchError);
+            
+            // Optional: Fallback logging mechanism
+            console.warn('Audit Log Payload (Fetch Failed):', logPayload);
+            
             return null;
         }
     } catch (error) {
