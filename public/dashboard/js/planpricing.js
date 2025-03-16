@@ -491,23 +491,10 @@ async debugModulesEndpoint() {
 showModal(modalId = 'planCreationModal') {
     console.log(`Attempting to show modal: ${modalId}`);
 
-    // Find the modal
-    let modal = document.getElementById(modalId);
+    const modal = document.getElementById(modalId);
     
-    // Log modal search results
-    console.log(`Modal found: ${!!modal}`);
-
     if (!modal) {
         console.error(`Modal with id ${modalId} not found`);
-        
-        // Log all elements in the document
-        console.log('All elements in the document:');
-        document.querySelectorAll('*').forEach(el => {
-            if (el.id) {
-                console.log(el.id);
-            }
-        });
-        
         return;
     }
 
@@ -517,11 +504,10 @@ showModal(modalId = 'planCreationModal') {
 
     // Ensure modal is in the document body
     if (!document.body.contains(modal)) {
-        console.log('Appending modal to body');
         document.body.appendChild(modal);
     }
 
-    // Show modal
+    // Show modal explicitly
     modal.style.display = 'block';
     modal.classList.add('show');
     
@@ -530,61 +516,12 @@ showModal(modalId = 'planCreationModal') {
     backdrop.classList.add('modal-backdrop', 'fade', 'show');
     document.body.appendChild(backdrop);
 
-    // Close on backdrop click
-    backdrop.addEventListener('click', () => this.hideModal(modalId));
-
-    // Close on escape key
-    const escapeHandler = (event) => {
-        if (event.key === 'Escape') {
-            this.hideModal(modalId);
-        }
-    };
-    document.addEventListener('keydown', escapeHandler);
-
-    // Add close button listeners
-    const closeButtons = modal.querySelectorAll('[data-dismiss="modal"], .close');
-    closeButtons.forEach(button => {
-        button.addEventListener('click', () => this.hideModal(modalId));
-    });
-
     // Ensure modal is on top of other elements
     modal.style.zIndex = '1050';
     backdrop.style.zIndex = '1040';
 
     console.log('Modal displayed successfully');
 }
-    
-    hideModal(modalId = 'planCreationModal') {
-    console.log(`Attempting to hide modal: ${modalId}`);
-
-    // Find modal in document or modal container
-    let modal = document.getElementById(modalId);
-    if (!modal) {
-        const modalContainer = document.getElementById('planFormModalContainer');
-        if (modalContainer) {
-            modal = modalContainer.querySelector(`#${modalId}`);
-        }
-    }
-
-    // Remove modal
-    if (modal) {
-        modal.style.display = 'none';
-        modal.classList.remove('show');
-        
-        // Optional: remove from DOM if needed
-        // modal.remove();
-    }
-
-    // Remove backdrop
-    const backdrop = document.querySelector('.modal-backdrop');
-    if (backdrop) {
-        backdrop.remove();
-    }
-
-    // Remove escape key listener
-    document.removeEventListener('keydown', this.escapeHandler);
-}
-
 handleEscapeKey = (event) => {
         if (event.key === 'Escape') {
             this.hideModal();
@@ -1197,7 +1134,7 @@ createEditPlanModal(plan) {
         // Create modal HTML
         const modalDiv = document.createElement('div');
         modalDiv.innerHTML = `
-            <div class="modal" id="planEditModal" tabindex="-1" role="dialog">
+            <div class="modal" id="planEditModal" tabindex="-1" role="dialog" style="display:block;">
                 <div class="modal-dialog modal-lg" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -1287,18 +1224,22 @@ createEditPlanModal(plan) {
 
         console.log('Modal created and appended');
 
-        // Show modal
+        // Show modal with explicit method
         this.showModal('planEditModal');
 
         // Setup event listeners
         this.setupEditPlanModalListeners(plan);
+
+        // Add backdrop manually
+        const backdrop = document.createElement('div');
+        backdrop.classList.add('modal-backdrop', 'fade', 'show');
+        document.body.appendChild(backdrop);
 
     } catch (error) {
         console.error('Error creating edit plan modal:', error);
         this.showErrorNotification(`Failed to create edit modal: ${error.message}`);
     }
 }
-
 
 
     
