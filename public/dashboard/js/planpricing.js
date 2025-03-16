@@ -126,6 +126,8 @@ this.setupPlanCreationModalListeners = this.setupPlanCreationModalListeners.bind
 
             // Debug modules endpoint
             this.debugModulesEndpoint();
+                this.setupSubscriptionManagementListeners();
+
 
         } catch (error) {
             console.error('Error during PricingManager initialization:', error);
@@ -219,6 +221,177 @@ this.setupPlanCreationModalListeners = this.setupPlanCreationModalListeners.bind
             notificationContainer.remove();
         }, 5000);
     }
+
+    setupSubscriptionManagementListeners() {
+    // Wait for DOM to be fully loaded
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            this.initializeSubscriptionEventListeners();
+        });
+    } else {
+        this.initializeSubscriptionEventListeners();
+    }
+}
+
+    initializeSubscriptionEventListeners() {
+    // Find the create new subscription button
+    const createSubscriptionBtn = document.getElementById('createNewSubscriptionBtn');
+    
+    if (createSubscriptionBtn) {
+        // Remove existing listeners first
+        const oldButton = createSubscriptionBtn.cloneNode(true);
+        createSubscriptionBtn.parentNode.replaceChild(oldButton, createSubscriptionBtn);
+        
+        // Add new listener
+        oldButton.addEventListener('click', () => {
+            if (typeof this.showSubscriptionCreationModal === 'function') {
+                this.showSubscriptionCreationModal();
+            } else {
+                console.error('showSubscriptionCreationModal method is not available');
+            }
+        });
+    }
+
+    // Additional initialization for subscription-related features
+    this.fetchSubscriptions();
+}
+
+// Method to fetch and display subscriptions
+async fetchSubscriptions() {
+    try {
+        const subscriptionsContainer = document.getElementById('subscriptionsListContainer');
+        
+        // Show loading state
+        subscriptionsContainer.innerHTML = `
+            <div class="loading-container">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <p class="mt-2">Loading subscriptions...</p>
+            </div>
+        `;
+
+        // Fetch subscriptions
+        const response = await fetch(`${this.baseUrl}/subscriptions`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch subscriptions');
+        }
+
+        const responseData = await response.json();
+        const subscriptions = responseData.data || responseData.subscriptions || responseData;
+
+        // Check if subscriptions exist
+        if (!subscriptions || subscriptions.length === 0) {
+            subscriptionsContainer.innerHTML = `
+                <div class="no-subscriptions-container">
+                    <i class="fas fa-folder-open text-muted" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3">No Subscriptions Found</h4>
+                    <p class="text-muted">Click "Create New Subscription" to get started.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Display subscriptions
+        this.displaySubscriptions(subscriptions);
+
+    } catch (error) {
+        console.error('Subscription Fetch Error:', error);
+        
+        const subscriptionsContainer = document.getElementById('subscriptionsListContainer');
+        subscriptionsContainer.innerHTML = `
+            <div class="error-container">
+                <i class="fas fa-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">Failed to Load Subscriptions</h4>
+                <p class="text-muted">Error: ${error.message}</p>
+                <button id="retryFetchSubscriptions" class="btn btn-primary mt-3">
+                    <i class="fas fa-redo"></i> Retry
+                </button>
+            </div>
+        `;
+
+        // Add retry event listener
+        const retryButton = document.getElementById('retryFetchSubscriptions');
+        if (retryButton) {
+            retryButton.addEventListener('click', () => this.fetchSubscriptions());
+        }
+    }
+}
+
+// Method to display subscriptions
+displaySubscriptions(subscriptions) {
+    const subscriptionsContainer = document.getElementById('subscriptionsListContainer');
+    
+    // Clear existing content
+    subscriptionsContainer.innerHTML = '';
+
+    // Create subscription cards
+    subscriptions.forEach(subscription => {
+        const subscriptionCard = document.createElement('div');
+        subscriptionCard.className = 'subscription-card';
+        
+        subscriptionCard.innerHTML = `
+            <div class="subscription-header">
+                <h3>${subscription.planName}</h3>
+                <span class="subscription-status ${subscription.status}">
+                    ${subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1)}
+                </span>
+            </div>
+            <div class="subscription-body">
+                <div class="subscription-details">
+                    <p><strong>Users:</strong> ${subscription.userCount}</p>
+                    <p><strong>Start Date:</strong> ${new Date(subscription.startDate).toLocaleDateString()}</p>
+                    <p><strong>End Date:</strong> ${new Date(subscription.endDate).toLocaleDateString()}</p>
+                    <p><strong>Auto-Renewal:</strong> ${subscription.autoRenewal ? 'Yes' : 'No'}</p>
+                </div>
+            </div>
+            <div class="subscription-actions">
+                <button class="btn btn-sm btn-primary edit-subscription" data-id="${subscription._id}">
+                    Manage
+                </button>
+                <button class="btn btn-sm btn-danger cancel-subscription" data-id="${subscription._id}">
+                    Cancel
+                </button>
+            </div>
+        `;
+
+        subscriptionsContainer.appendChild(subscriptionCard);
+    });
+
+    // Setup listeners for subscription actions
+    this.setupSubscriptionCardListeners();
+}
+
+// Setup listeners for subscription card actions
+setupSubscriptionCardListeners() {
+    const editButtons = document.querySelectorAll('.edit-subscription');
+    const cancelButtons = document.querySelectorAll('.cancel-subscription');
+
+    // Edit subscription listeners
+    editButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const subscriptionId = e.target.getAttribute('data-id');
+            this.showSubscriptionEditModal(subscriptionId);
+        });
+    });
+
+    // Cancel subscription listeners
+    cancelButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const subscriptionId = e.target.getAttribute('data-id');
+            this.showSubscriptionCancellationModal(subscriptionId);
+        });
+    });
+}
+
+    
 
     // Debugging method to verify modules endpoint
     async debugModulesEndpoint() {
@@ -686,6 +859,350 @@ async adjustPricingForMultipleCurrencies(formData) {
         };
     }
 }
+async showSubscriptionCreationModal() {
+    try {
+        // Fetch available plans
+        const plansResponse = await fetch(`${this.baseUrl}/plans`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!plansResponse.ok) {
+            throw new Error('Failed to fetch plans');
+        }
+
+        const plansData = await plansResponse.json();
+        const plans = plansData.data || plansData.plans || plansData;
+
+        // Find or create modal container
+        let modalContainer = document.getElementById('subscriptionFormModalContainer');
+        if (!modalContainer) {
+            modalContainer = document.createElement('div');
+            modalContainer.id = 'subscriptionFormModalContainer';
+            document.body.appendChild(modalContainer);
+        }
+
+        // Remove any existing modal
+        const existingModal = document.getElementById('subscriptionCreationModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Create modal HTML
+        const modalDiv = document.createElement('div');
+        modalDiv.innerHTML = `
+            <div class="modal" id="subscriptionCreationModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Create New Subscription</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="subscriptionCreationForm">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Select Plan</label>
+                                            <select class="form-control" id="subscriptionPlan" required>
+                                                <option value="">Choose a Plan</option>
+                                                ${plans.map(plan => `
+                                                    <option value="${plan._id}">
+                                                        ${plan.name} - 
+                                                        ${plan.currency} ${plan.monthlyPrice}/month
+                                                    </option>
+                                                `).join('')}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Number of Users</label>
+                                            <input type="number" class="form-control" 
+                                                   id="subscriptionUserCount" 
+                                                   min="1" 
+                                                   required 
+                                                   placeholder="Enter number of users">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Start Date</label>
+                                            <input type="date" class="form-control" 
+                                                   id="subscriptionStartDate" 
+                                                   required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>End Date</label>
+                                            <input type="date" class="form-control" 
+                                                   id="subscriptionEndDate" 
+                                                   required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Payment Status</label>
+                                            <select class="form-control" id="subscriptionPaymentStatus">
+                                                <option value="pending">Pending</option>
+                                                <option value="paid">Paid</option>
+                                                <option value="failed">Payment Failed</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Auto-Renewal</label>
+                                            <div class="custom-control custom-switch">
+                                                <input type="checkbox" 
+                                                       class="custom-control-input" 
+                                                       id="subscriptionAutoRenewal">
+                                                <label class="custom-control-label" 
+                                                       for="subscriptionAutoRenewal">
+                                                    Enable Auto-Renewal
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Coupon Code (Optional)</label>
+                                    <div class="input-group">
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="subscriptionCouponCode" 
+                                               placeholder="Enter coupon code">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary" 
+                                                    type="button" 
+                                                    id="validateCouponBtn">
+                                                Validate
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="createSubscriptionBtn">
+                                Create Subscription
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Append to container
+        modalContainer.appendChild(modalDiv.firstElementChild);
+
+        // Setup event listeners
+        this.setupSubscriptionCreationModalListeners(plans);
+
+        // Show modal
+        this.showModal('subscriptionCreationModal');
+
+    } catch (error) {
+        console.error('Error creating subscription modal:', error);
+        this.showErrorNotification(`Failed to create subscription modal: ${error.message}`);
+    }
+}
+
+// Setup event listeners for subscription creation modal
+setupSubscriptionCreationModalListeners(plans) {
+    // Plan selection listener to update pricing dynamically
+    const planSelect = document.getElementById('subscriptionPlan');
+    const userCountInput = document.getElementById('subscriptionUserCount');
+    const startDateInput = document.getElementById('subscriptionStartDate');
+    const endDateInput = document.getElementById('subscriptionEndDate');
+    const createSubscriptionBtn = document.getElementById('createSubscriptionBtn');
+    const validateCouponBtn = document.getElementById('validateCouponBtn');
+
+    // Set default dates
+    const today = new Date();
+    startDateInput.valueAsDate = today;
+    
+    // Calculate end date based on plan (default to monthly)
+    const endDate = new Date(today);
+    endDate.setMonth(endDate.getMonth() + 1);
+    endDateInput.valueAsDate = endDate;
+
+    // Plan selection change listener
+    planSelect.addEventListener('change', (e) => {
+        const selectedPlanId = e.target.value;
+        const selectedPlan = plans.find(plan => plan._id === selectedPlanId);
+        
+        if (selectedPlan) {
+            // Optional: Update user count based on plan
+            userCountInput.max = selectedPlan.maxUsers || 100;
+        }
+    });
+
+    // Validate coupon button
+    validateCouponBtn.addEventListener('click', () => {
+        const couponCode = document.getElementById('subscriptionCouponCode').value;
+        this.validateCoupon(couponCode);
+    });
+
+    // Create subscription button
+    createSubscriptionBtn.addEventListener('click', () => {
+        this.createSubscription();
+    });
+
+    // Date range validation
+    startDateInput.addEventListener('change', () => {
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        
+        if (startDate >= endDate) {
+            endDate.setMonth(startDate.getMonth() + 1);
+            endDateInput.valueAsDate = endDate;
+        }
+    });
+}
+
+// Validate coupon method
+async validateCoupon(couponCode) {
+    // If no coupon code is provided, return immediately
+    if (!couponCode || couponCode.trim() === '') {
+        return {
+            success: true,
+            message: 'No coupon code provided',
+            discount: 0
+        };
+    }
+
+    try {
+        const response = await fetch(`${this.baseUrl}/validate-coupon`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ couponCode })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            this.showSuccessNotification('Coupon validated successfully');
+            return result;
+        } else {
+            this.showErrorNotification(result.message || 'Invalid coupon code');
+            return {
+                success: false,
+                message: result.message || 'Invalid coupon code',
+                discount: 0
+            };
+        }
+    } catch (error) {
+        console.error('Coupon validation error:', error);
+        this.showErrorNotification('Failed to validate coupon');
+        return {
+            success: false,
+            message: 'Coupon validation failed',
+            discount: 0
+        };
+    }
+}
+
+// Create subscription method
+async createSubscription() {
+    try {
+        // Collect form data
+        const formData = {
+            planId: document.getElementById('subscriptionPlan').value,
+            userCount: parseInt(document.getElementById('subscriptionUserCount').value),
+            startDate: document.getElementById('subscriptionStartDate').value,
+            endDate: document.getElementById('subscriptionEndDate').value,
+            paymentStatus: document.getElementById('subscriptionPaymentStatus').value,
+            autoRenewal: document.getElementById('subscriptionAutoRenewal').checked,
+            couponCode: document.getElementById('subscriptionCouponCode').value || null
+        };
+
+        // Optional: Validate coupon if provided
+        if (formData.couponCode) {
+            const couponValidation = await this.validateCoupon(formData.couponCode);
+            
+            if (!couponValidation.success) {
+                // Optionally, you can prevent subscription creation if coupon is invalid
+                throw new Error(couponValidation.message);
+            }
+
+            // If coupon is valid, you might want to apply the discount
+            formData.couponDiscount = couponValidation.discount;
+        }
+
+        // Validate form data
+        this.validateSubscriptionData(formData);
+
+        // Send subscription creation request
+        const response = await fetch(`${this.baseUrl}/subscriptions`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            this.showSuccessNotification('Subscription created successfully');
+            this.hideModal('subscriptionCreationModal');
+            // Refresh subscriptions list
+            this.fetchSubscriptions();
+        } else {
+            throw new Error(result.message || 'Failed to create subscription');
+        }
+    } catch (error) {
+        console.error('Subscription creation error:', error);
+        this.showErrorNotification(error.message);
+    }
+}
+// Validate subscription data
+validateSubscriptionData(formData) {
+    const errors = [];
+
+    if (!formData.planId) {
+        errors.push('Please select a plan');
+    }
+
+    if (formData.userCount <= 0) {
+        errors.push('Number of users must be positive');
+    }
+
+    if (!formData.startDate || !formData.endDate) {
+        errors.push('Start and end dates are required');
+    }
+
+    const startDate = new Date(formData.startDate);
+    const endDate = new Date(formData.endDate);
+
+    if (startDate >= endDate) {
+        errors.push('End date must be after start date');
+    }
+
+    if (errors.length > 0) {
+        throw new Error(errors.join('; '));
+    }
+}
+    
 // Helper method to get markup
 getMarkup(fromCurrency, toCurrency) {
     const markupRules = {
