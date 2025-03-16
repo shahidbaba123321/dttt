@@ -97,7 +97,9 @@ class PricingManager {
             'calculatePlanChanges',
             'validateUpdatePlanData',
             'showConfirmationModal',
-            'convertPricesToAllCurrencies'
+            'convertPricesToAllCurrencies',
+            'createAuditLog',
+            'renderActivityLogs'
         ];
 
         // Safely bind methods
@@ -245,211 +247,7 @@ class PricingManager {
         }
     }
 
-    // Create dynamic plan creation modal
-    async showPlanCreationModal() {
-    try {
-        // Log the start of modal creation
-        console.log('Attempting to create plan creation modal');
-
-        // Fetch available modules
-        const modules = await this.fetchAvailableModules();
-
-        // Find or create modal container
-        let modalContainer = document.getElementById('planFormModalContainer');
-        if (!modalContainer) {
-            console.warn('Modal container not found, creating new container');
-            modalContainer = document.createElement('div');
-            modalContainer.id = 'planFormModalContainer';
-            document.body.appendChild(modalContainer);
-        }
-
-        // Create modal HTML
-        const modalDiv = document.createElement('div');
-        modalDiv.innerHTML = `
-            <div class="modal" id="planCreationModal" tabindex="-1" role="dialog">
-                <div class="modal-dialog modal-lg" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Create New Plan</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="planCreationForm">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Plan Name</label>
-                                            <input type="text" class="form-control" id="planName" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Currency</label>
-                                            <select class="form-control" id="planCurrency">
-                                                ${this.currencies.map(currency => 
-                                                    `<option value="${currency.code}">${currency.name} (${currency.symbol})</option>`
-                                                ).join('')}
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>Plan Description</label>
-                                    <textarea class="form-control" id="planDescription" rows="3"></textarea>
-                                </div>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Monthly Rate</label>
-                                            <div class="input-group">
-                                                <div class="input-group-prepend">
-                                                    <span class="input-group-text" id="currencySymbol">$</span>
-                                                </div>
-                                                <input type="number" class="form-control" id="monthlyRate" min="0" step="0.01" required>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Annual Rate</label>
-                                            <div class="input-group">
-                                                <div class="input-group-prepend">
-                                                    <span class="input-group-text" id="currencySymbol">$</span>
-                                                </div>
-                                                <input type="number" class="form-control" id="annualRate" min="0" step="0.01" required>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Trial Period (Days)</label>
-                                            <input type="number" class="form-control" id="trialPeriod" min="0" value="0">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Plan Status</label>
-                                            <select class="form-control" id="planStatus">
-                                                <option value="active">Active</option>
-                                                <option value="inactive">Inactive</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>Select Modules</label>
-                                    <div id="modulesContainer">
-                                        ${modules.length > 0 ? 
-                                            modules.map(module => `
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" 
-                                                           value="${module._id || module.id}" 
-                                                           id="module-${module._id || module.id}">
-                                                    <label class="form-check-label" for="module-${module._id || module.id}">
-                                                        ${module.name}
-                                                    </label>
-                                                </div>
-                                            `).join('') : 
-                                            `<div class="alert alert-warning">
-                                                No modules available. Please add modules first.
-                                            </div>`
-                                        }
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" id="savePlanBtn" ${modules.length === 0 ? 'disabled' : ''}>
-                                Save Plan
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Remove any existing modal with the same ID
-        const existingModal = document.getElementById('planCreationModal');
-        if (existingModal) {
-            console.log('Removing existing modal');
-            existingModal.remove();
-        }
-
-        // Append to container
-        modalContainer.appendChild(modalDiv.firstElementChild);
-
-        // Log modal creation
-        console.log('Modal created and appended to container');
-
-        // Show modal
-        this.showModal('planCreationModal');
-
-        // Add event listeners
-        this.setupPlanCreationModalListeners(modules);
-
-    } catch (error) {
-        // Comprehensive error logging
-        console.error('Complete Error Details for Plan Creation Modal:', {
-            message: error.message,
-            name: error.name,
-            stack: error.stack
-        });
-
-        // Show error notification
-        this.showErrorNotification(`Failed to create plan modal: ${error.message}`);
-    }
-}
-    
-        // Setup event listeners for plan creation modal
-    setupPlanCreationModalListeners(modules) {
-        // Log modules for debugging
-        this.logModules(modules);
-
-        // Currency symbol update
-        const currencySelect = document.getElementById('planCurrency');
-        const currencySymbols = document.querySelectorAll('#currencySymbol');
-        
-        if (currencySelect) {
-            currencySelect.addEventListener('change', (e) => {
-                const selectedCurrency = this.currencies.find(c => c.code === e.target.value);
-                currencySymbols.forEach(symbol => {
-                    symbol.textContent = selectedCurrency.symbol;
-                });
-            });
-        }
-
-        // Save plan button
-        const savePlanBtn = document.getElementById('savePlanBtn');
-        if (savePlanBtn) {
-            // Remove existing listeners
-            const oldButton = savePlanBtn.cloneNode(true);
-            savePlanBtn.parentNode.replaceChild(oldButton, savePlanBtn);
-
-            // Add new listener
-            oldButton.addEventListener('click', () => {
-                // Ensure modules is passed
-                this.savePlan(modules || []);
-                this.hideModal();
-            });
-        }
-
-        // Close modal buttons
-        const closeButtons = document.querySelectorAll('[data-dismiss="modal"], .close-modal');
-        closeButtons.forEach(button => {
-            button.addEventListener('click', () => this.hideModal());
-        });
-    }
-
-    // Debugging method to log modules
+    // Logging method to log modules
     logModules(modules) {
         console.log('Modules received:', modules);
         console.log('Modules type:', typeof modules);
@@ -570,30 +368,24 @@ class PricingManager {
 
         return errors;
     }
-
-    // Save plan method
+        // Save plan method
     async savePlan(modules) {
         try {
-            // Collect form data with more robust collection
-             const formData = {
-            name: this.getInputValue('planName', 'Plan Name'),
-            description: this.getInputValue('planDescription', 'Description'),
-            currency: this.getInputValue('planCurrency', 'Currency'),
-            monthlyPrice: this.getNumericInputValue('monthlyRate', 'Monthly Rate'),
-            annualPrice: this.getNumericInputValue('annualRate', 'Annual Rate'),
-            trialPeriod: parseInt(document.getElementById('trialPeriod').value) || 0,
-            isActive: this.getInputValue('planStatus', 'Plan Status') === 'active',
-            features: this.getSelectedModuleNames(modules)
-        };
-
-
-            // Log collected form data for debugging
-            console.log('Collected Form Data:', formData);
+            // Collect form data
+            const formData = {
+                name: this.getInputValue('planName', 'Plan Name'),
+                description: this.getInputValue('planDescription', 'Description'),
+                currency: this.getInputValue('planCurrency', 'Currency'),
+                monthlyPrice: this.getNumericInputValue('monthlyRate', 'Monthly Rate'),
+                annualPrice: this.getNumericInputValue('annualRate', 'Annual Rate'),
+                trialPeriod: parseInt(document.getElementById('trialPeriod').value) || 0,
+                isActive: this.getInputValue('planStatus', 'Plan Status') === 'active',
+                features: this.getSelectedModuleNames(modules)
+            };
 
             // Validate form data
             const validationErrors = this.validatePlanData(formData, modules);
             if (validationErrors.length > 0) {
-                // Show validation errors
                 this.showValidationErrors(validationErrors);
                 return;
             }
@@ -608,32 +400,25 @@ class PricingManager {
                 body: JSON.stringify(formData)
             });
 
-            // Log raw response for debugging
-            console.log('Response Status:', response.status);
-            
             const responseData = await response.json();
-            
-            // Log response data
-            console.log('Response Data:', responseData);
 
             if (!response.ok) {
                 throw new Error(responseData.message || 'Failed to create plan');
             }
 
-              // Create audit log for plan creation
-        await this.createAuditLog('PLAN_CREATED', {
-            planId: responseData.data._id,
-            planName: formData.name,
-            planDetails: {
-                currency: formData.currency,
-                monthlyPrice: formData.monthlyPrice,
-                annualPrice: formData.annualPrice,
-                trialPeriod: formData.trialPeriod,
-                isActive: formData.isActive,
-                features: formData.features
-            }
-        });
-
+            // Create audit log for plan creation
+            await this.createAuditLog('PLAN_CREATED', {
+                planId: responseData.data._id,
+                planName: formData.name,
+                planDetails: {
+                    currency: formData.currency,
+                    monthlyPrice: formData.monthlyPrice,
+                    annualPrice: formData.annualPrice,
+                    trialPeriod: formData.trialPeriod,
+                    isActive: formData.isActive,
+                    features: formData.features
+                }
+            });
 
             // Show success notification
             this.showSuccessNotification('Plan created successfully');
@@ -647,24 +432,18 @@ class PricingManager {
             return responseData.data;
 
         } catch (error) {
-            // Log full error details
-            console.error('Complete Error Details:', {
-                message: error.message,
-                name: error.name,
-                stack: error.stack
+            // Log error to audit logs
+            await this.createAuditLog('PLAN_CREATION_FAILED', {
+                errorMessage: error.message,
+                errorStack: error.stack
             });
-
-             await this.createAuditLog('PLAN_CREATION_FAILED', {
-            errorMessage: error.message,
-            errorStack: error.stack
-        });
-
 
             this.showErrorNotification(`Failed to save plan: ${error.message}`);
             throw error;
         }
     }
-        // Show validation errors
+
+    // Show validation errors
     showValidationErrors(errors) {
         // Create error message container
         const modalBody = document.querySelector('#planCreationModal .modal-body');
@@ -865,8 +644,7 @@ class PricingManager {
             });
         }
     }
-
-    // Display plans in the plans container
+        // Display plans in the plans container
     displayPlans(plans) {
         const plansContainer = document.getElementById('plansListContainer');
         
@@ -879,10 +657,11 @@ class PricingManager {
             name: plan.name,
             description: plan.description || 'No description',
             currency: plan.currency || 'USD',
-            monthlyRate: plan.monthlyPrice || plan.monthlyRate,
-            annualRate: plan.annualPrice || plan.annualRate,
+            monthlyRate: this.normalizePrice(plan.monthlyPrice || plan.monthlyRate),
+            annualRate: this.normalizePrice(plan.annualPrice || plan.annualRate),
             status: plan.status || (plan.isActive ? 'active' : 'inactive'),
-            modules: plan.modules || plan.features || []
+            modules: plan.modules || plan.features || [],
+            trialPeriod: plan.trialPeriod || 0
         }));
 
         // Create plan cards
@@ -901,6 +680,7 @@ class PricingManager {
                     <div class="plan-pricing">
                         <div>Monthly: ${plan.currency} ${plan.monthlyRate.toFixed(2)}</div>
                         <div>Annual: ${plan.currency} ${plan.annualRate.toFixed(2)}</div>
+                        ${plan.trialPeriod > 0 ? `<div>Trial Period: ${plan.trialPeriod} days</div>` : ''}
                     </div>
                     <div class="plan-modules">
                         <strong>Modules:</strong>
@@ -921,7 +701,18 @@ class PricingManager {
         // Setup listeners for plan actions
         this.setupPlanCardListeners();
     }
-        // Setup listeners for plan card actions
+
+    // Helper method to normalize price
+    normalizePrice(price) {
+        // Handle different price formats
+        if (typeof price === 'object') {
+            // Handle MongoDB Decimal128 or similar objects
+            return parseFloat(price.$numberDecimal || price.value || 0);
+        }
+        return parseFloat(price || 0);
+    }
+
+    // Setup listeners for plan card actions
     setupPlanCardListeners() {
         console.log('Setting up plan card listeners');
 
@@ -1029,8 +820,7 @@ class PricingManager {
         // Additional logging for debugging
         console.log('Plan card listeners setup complete');
     }
-
-    // Edit Plan Method
+        // Edit Plan Method
     async editPlan(planId) {
         try {
             console.log(`Attempting to edit plan: ${planId}`);
@@ -1056,211 +846,220 @@ class PricingManager {
 
         } catch (error) {
             console.error('Error in editPlan:', error);
+            
+            // Create audit log for edit plan failure
+            await this.createAuditLog('PLAN_EDIT_FAILED', {
+                planId: planId,
+                errorMessage: error.message,
+                errorStack: error.stack
+            });
+
             this.showErrorNotification(`Failed to edit plan: ${error.message}`);
         }
     }
 
     // Create Edit Plan Modal
-   createEditPlanModal(plan) {
-    console.log('Creating Edit Plan Modal');
-    console.log('Full Plan Details:', JSON.stringify(plan, null, 2));
+    createEditPlanModal(plan) {
+        console.log('Creating Edit Plan Modal');
+        console.log('Full Plan Details:', JSON.stringify(plan, null, 2));
 
-    try {
-        // Normalize plan data to handle potential object/string issues
-        const normalizedPlan = {
-            _id: plan._id || plan.id,
-            name: plan.name || '',
-            description: plan.description || '',
-            currency: plan.currency || 'USD',
-            monthlyPrice: typeof plan.monthlyPrice === 'object' 
-                ? (plan.monthlyPrice.value || plan.monthlyPrice.$numberDecimal || 0) 
-                : (parseFloat(plan.monthlyPrice) || 0),
-            annualPrice: typeof plan.annualPrice === 'object' 
-                ? (plan.annualPrice.value || plan.annualPrice.$numberDecimal || 0) 
-                : (parseFloat(plan.annualPrice) || 0),
-            trialPeriod: plan.trialPeriod || 0,
-            isActive: plan.isActive !== undefined ? plan.isActive : true,
-            features: plan.features || plan.modules || []
-        };
+        try {
+            // Normalize plan data to handle potential object/string issues
+            const normalizedPlan = {
+                _id: plan._id || plan.id,
+                name: plan.name || '',
+                description: plan.description || '',
+                currency: plan.currency || 'USD',
+                monthlyPrice: this.normalizePrice(plan.monthlyPrice),
+                annualPrice: this.normalizePrice(plan.annualPrice),
+                trialPeriod: plan.trialPeriod || 0,
+                isActive: plan.isActive !== undefined ? plan.isActive : true,
+                features: plan.features || plan.modules || []
+            };
 
-        console.log('Normalized Plan Data:', JSON.stringify(normalizedPlan, null, 2));
-
-        // Find or create modal container
-        let modalContainer = document.getElementById('planFormModalContainer');
-        if (!modalContainer) {
-            modalContainer = document.createElement('div');
-            modalContainer.id = 'planFormModalContainer';
-            document.body.appendChild(modalContainer);
-        }
-
-        // Remove existing edit modal
-        const existingModal = document.getElementById('planEditModal');
-        if (existingModal) {
-            existingModal.remove();
-        }
-
-        // Fetch available modules
-        const fetchModules = async () => {
-            try {
-                const modules = await this.fetchAvailableModules();
-                return modules;
-            } catch (error) {
-                console.error('Error fetching modules:', error);
-                return [];
+            // Find or create modal container
+            let modalContainer = document.getElementById('planFormModalContainer');
+            if (!modalContainer) {
+                modalContainer = document.createElement('div');
+                modalContainer.id = 'planFormModalContainer';
+                document.body.appendChild(modalContainer);
             }
-        };
 
-        // Create modal HTML
-        const modalDiv = document.createElement('div');
-        modalDiv.innerHTML = `
-            <div class="modal" id="planEditModal" tabindex="-1" role="dialog">
-                <div class="modal-dialog modal-lg" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Edit Plan: ${normalizedPlan.name}</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="planEditForm">
-                                <input type="hidden" id="editPlanId" value="${normalizedPlan._id}">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Plan Name</label>
-                                            <input type="text" class="form-control" id="editPlanName" 
-                                                   value="${normalizedPlan.name}" required>
+            // Remove existing edit modal
+            const existingModal = document.getElementById('planEditModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            // Fetch available modules
+            const fetchModules = async () => {
+                try {
+                    const modules = await this.fetchAvailableModules();
+                    return modules;
+                } catch (error) {
+                    console.error('Error fetching modules:', error);
+                    return [];
+                }
+            };
+
+            // Create modal HTML
+            const modalDiv = document.createElement('div');
+            modalDiv.innerHTML = `
+                <div class="modal" id="planEditModal" tabindex="-1" role="dialog">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Edit Plan: ${normalizedPlan.name}</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="planEditForm">
+                                    <input type="hidden" id="editPlanId" value="${normalizedPlan._id}">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Plan Name</label>
+                                                <input type="text" class="form-control" id="editPlanName" 
+                                                       value="${normalizedPlan.name}" required>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Currency</label>
-                                            <select class="form-control" id="editPlanCurrency">
-                                                ${this.currencies.map(currency => 
-                                                    `<option value="${currency.code}" 
-                                                        ${currency.code === normalizedPlan.currency ? 'selected' : ''}>
-                                                        ${currency.name} (${currency.symbol})
-                                                    </option>`
-                                                ).join('')}
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>Plan Description</label>
-                                    <textarea class="form-control" id="editPlanDescription" rows="3">${normalizedPlan.description}</textarea>
-                                </div>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Monthly Rate</label>
-                                            <div class="input-group">
-                                                <div class="input-group-prepend">
-                                                    <span class="input-group-text" id="editCurrencySymbol">${normalizedPlan.currency}</span>
-                                                </div>
-                                                <input type="number" class="form-control" id="editMonthlyRate" 
-                                                       value="${normalizedPlan.monthlyPrice}" min="0" step="0.01" required>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Currency</label>
+                                                <select class="form-control" id="editPlanCurrency">
+                                                    ${this.currencies.map(currency => 
+                                                        `<option value="${currency.code}" 
+                                                            ${currency.code === normalizedPlan.currency ? 'selected' : ''}>
+                                                            ${currency.name} (${currency.symbol})
+                                                        </option>`
+                                                    ).join('')}
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Annual Rate</label>
-                                            <div class="input-group">
-                                                <div class="input-group-prepend">
-                                                    <span class="input-group-text" id="editCurrencySymbol">${normalizedPlan.currency}</span>
+                                    
+                                    <div class="form-group">
+                                        <label>Plan Description</label>
+                                        <textarea class="form-control" id="editPlanDescription" rows="3">${normalizedPlan.description}</textarea>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Monthly Rate</label>
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text" id="editCurrencySymbol">${normalizedPlan.currency}</span>
+                                                    </div>
+                                                    <input type="number" class="form-control" id="editMonthlyRate" 
+                                                           value="${normalizedPlan.monthlyPrice}" min="0" step="0.01" required>
                                                 </div>
-                                                <input type="number" class="form-control" id="editAnnualRate" 
-                                                       value="${normalizedPlan.annualPrice}" min="0" step="0.01" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Annual Rate</label>
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text" id="editCurrencySymbol">${normalizedPlan.currency}</span>
+                                                    </div>
+                                                    <input type="number" class="form-control" id="editAnnualRate" 
+                                                           value="${normalizedPlan.annualPrice}" min="0" step="0.01" required>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Trial Period (Days)</label>
-                                            <input type="number" class="form-control" id="editTrialPeriod" 
-                                                   value="${normalizedPlan.trialPeriod}" min="0">
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Trial Period (Days)</label>
+                                                <input type="number" class="form-control" id="editTrialPeriod" 
+                                                       value="${normalizedPlan.trialPeriod}" min="0">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label>Plan Status</label>
+                                                <select class="form-control" id="editPlanStatus">
+                                                    <option value="active" ${normalizedPlan.isActive ? 'selected' : ''}>Active</option>
+                                                    <option value="inactive" ${!normalizedPlan.isActive ? 'selected' : ''}>Inactive</option>
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label>Plan Status</label>
-                                            <select class="form-control" id="editPlanStatus">
-                                                <option value="active" ${normalizedPlan.isActive ? 'selected' : ''}>Active</option>
-                                                <option value="inactive" ${!normalizedPlan.isActive ? 'selected' : ''}>Inactive</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <div class="form-group">
-                                    <label>Select Modules</label>
-                                    <div id="editModulesContainer">
-                                        <!-- Modules will be dynamically populated -->
+                                    <div class="form-group">
+                                        <label>Select Modules</label>
+                                        <div id="editModulesContainer">
+                                            <!-- Modules will be dynamically populated -->
+                                        </div>
                                     </div>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" id="updatePlanBtn">Update Plan</button>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" id="updatePlanBtn">Update Plan</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        `;
+            `;
 
-        // Append to container
-        modalContainer.appendChild(modalDiv.firstElementChild);
+            // Append to container
+            modalContainer.appendChild(modalDiv.firstElementChild);
 
-        // Populate modules after appending
-        const modulesContainer = document.getElementById('editModulesContainer');
-        fetchModules().then(modules => {
-            if (modules.length > 0) {
-                const modulesHTML = modules.map(module => `
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" 
-                               value="${module._id || module.id}" 
-                               id="edit-module-${module._id || module.id}"
-                               ${normalizedPlan.features.some(f => 
-                                   f._id === module._id || 
-                                   f.id === module.id || 
-                                   f === module.name
-                               ) ? 'checked' : ''}>
-                        <label class="form-check-label" for="edit-module-${module._id || module.id}">
-                            ${module.name}
-                        </label>
-                    </div>
-                `).join('');
-                modulesContainer.innerHTML = modulesHTML;
-            } else {
-                modulesContainer.innerHTML = `
-                    <div class="alert alert-warning">
-                        No modules available. Please add modules first.
-                    </div>
-                `;
-            }
-        });
+            // Populate modules after appending
+            const modulesContainer = document.getElementById('editModulesContainer');
+            fetchModules().then(modules => {
+                if (modules.length > 0) {
+                    const modulesHTML = modules.map(module => `
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" 
+                                   value="${module._id || module.id}" 
+                                   id="edit-module-${module._id || module.id}"
+                                   ${normalizedPlan.features.some(f => 
+                                       f._id === module._id || 
+                                       f.id === module.id || 
+                                       f === module.name
+                                   ) ? 'checked' : ''}>
+                            <label class="form-check-label" for="edit-module-${module._id || module.id}">
+                                ${module.name}
+                            </label>
+                        </div>
+                    `).join('');
+                    modulesContainer.innerHTML = modulesHTML;
+                } else {
+                    modulesContainer.innerHTML = `
+                        <div class="alert alert-warning">
+                            No modules available. Please add modules first.
+                        </div>
+                    `;
+                }
+            });
 
-        console.log('Modal created and appended');
+            console.log('Modal created and appended');
 
-        // Show modal
-        this.showModal('planEditModal');
+            // Show modal
+            this.showModal('planEditModal');
 
-        // Setup event listeners
-        this.setupEditPlanModalListeners(normalizedPlan);
+            // Setup event listeners
+            this.setupEditPlanModalListeners(normalizedPlan);
 
-    } catch (error) {
-        console.error('Error creating edit plan modal:', error);
-        this.showErrorNotification(`Failed to create edit modal: ${error.message}`);
+        } catch (error) {
+            console.error('Error creating edit plan modal:', error);
+            
+            // Create audit log for modal creation failure
+            await this.createAuditLog('PLAN_EDIT_MODAL_FAILED', {
+                errorMessage: error.message,
+                errorStack: error.stack
+            });
+
+            this.showErrorNotification(`Failed to create edit modal: ${error.message}`);
+        }
     }
-}
         // Setup edit plan modal listeners
     setupEditPlanModalListeners(plan) {
         // Currency symbol update
@@ -1295,93 +1094,92 @@ class PricingManager {
     }
 
     // Update Plan Method
-   async updatePlan() {
-    try {
-        // Collect selected modules
-        const selectedModules = Array.from(
-            document.querySelectorAll('#editModulesContainer input:checked')
-        ).map(checkbox => checkbox.value);
+    async updatePlan() {
+        try {
+            // Collect selected modules
+            const selectedModules = Array.from(
+                document.querySelectorAll('#editModulesContainer input:checked')
+            ).map(checkbox => checkbox.value);
 
-        // Collect form data
-        const formData = {
-            planId: document.getElementById('editPlanId').value,
-            name: document.getElementById('editPlanName').value.trim(),
-            description: document.getElementById('editPlanDescription').value.trim(),
-            currency: document.getElementById('editPlanCurrency').value,
-            monthlyPrice: parseFloat(document.getElementById('editMonthlyRate').value),
-            annualPrice: parseFloat(document.getElementById('editAnnualRate').value),
-            trialPeriod: parseInt(document.getElementById('editTrialPeriod').value) || 0,
-            isActive: document.getElementById('editPlanStatus').value === 'active',
-            features: selectedModules
-        };
-        // Validate form data
-        this.validateUpdatePlanData(formData);
+            // Collect form data
+            const formData = {
+                planId: document.getElementById('editPlanId').value,
+                name: document.getElementById('editPlanName').value.trim(),
+                description: document.getElementById('editPlanDescription').value.trim(),
+                currency: document.getElementById('editPlanCurrency').value,
+                monthlyPrice: parseFloat(document.getElementById('editMonthlyRate').value),
+                annualPrice: parseFloat(document.getElementById('editAnnualRate').value),
+                trialPeriod: parseInt(document.getElementById('editTrialPeriod').value) || 0,
+                isActive: document.getElementById('editPlanStatus').value === 'active',
+                features: selectedModules
+            };
 
-        // Fetch existing plan details for comparison
-        const existingPlanResponse = await fetch(`${this.baseUrl}/plans/${formData.planId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        const existingPlanData = await existingPlanResponse.json();
-        const existingPlan = existingPlanData.data;
+            // Validate form data
+            this.validateUpdatePlanData(formData);
 
-        // Send update request
-        const response = await fetch(`${this.baseUrl}/plans/${formData.planId}`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                ...formData,
-                auditDetails: {
-                    changes: this.calculatePlanChanges(existingPlan, formData)
+            // Fetch existing plan details for comparison
+            const existingPlanResponse = await fetch(`${this.baseUrl}/plans/${formData.planId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
                 }
-            })
-        });
+            });
+            const existingPlanData = await existingPlanResponse.json();
+            const existingPlan = existingPlanData.data;
 
-        const responseData = await response.json();
+            // Send update request
+            const response = await fetch(`${this.baseUrl}/plans/${formData.planId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ...formData,
+                    auditDetails: {
+                        changes: this.calculatePlanChanges(existingPlan, formData)
+                    }
+                })
+            });
 
-        if (!response.ok) {
-            throw new Error(responseData.message || 'Failed to update plan');
+            const responseData = await response.json();
+
+            if (!response.ok) {
+                throw new Error(responseData.message || 'Failed to update plan');
+            }
+
+            // Create audit log for plan update
+            await this.createAuditLog('PLAN_UPDATED', {
+                planId: formData.planId,
+                planName: formData.name,
+                changes: this.calculatePlanChanges(existingPlan, formData)
+            });
+
+            // Show success notification
+            this.showSuccessNotification('Plan updated successfully');
+
+            // Refresh plans list
+            await this.fetchAndDisplayPlans();
+
+            // Close modal
+            this.hideModal();
+
+            return responseData.data;
+
+        } catch (error) {
+            // Log error to audit logs
+            await this.createAuditLog('PLAN_UPDATE_FAILED', {
+                planId: formData?.planId,
+                errorMessage: error.message,
+                errorStack: error.stack
+            });
+
+            this.showErrorNotification(error.message);
+            throw error;
         }
-
-         // Create audit log for plan update
-        await this.createAuditLog('PLAN_UPDATED', {
-            planId: formData.planId,
-            planName: formData.name,
-            changes: this.calculatePlanChanges(existingPlan, formData)
-        });
-
-
-        // Show success notification
-        this.showSuccessNotification('Plan updated successfully');
-
-        // Refresh plans list
-        await this.fetchAndDisplayPlans();
-
-        // Close modal
-        this.hideModal();
-
-        return responseData.data;
-
-    } catch (error) {
-        console.error('Error updating plan:', error);
-
-         // Log error to audit logs
-        await this.createAuditLog('PLAN_UPDATE_FAILED', {
-            planId: formData?.planId,
-            errorMessage: error.message,
-            errorStack: error.stack
-        });
-        this.showErrorNotification(error.message);
-        throw error;
     }
-}
-    
+
     // Calculate changes between existing and new plan
     calculatePlanChanges(existingPlan, newPlan) {
         const changes = {};
@@ -1389,19 +1187,51 @@ class PricingManager {
         // Compare each field
         const fieldsToCompare = [
             'name', 'description', 'currency', 
-            'monthlyPrice', 'annualPrice', 'isActive'
+            'monthlyPrice', 'annualPrice', 'isActive', 
+            'trialPeriod'
         ];
 
         fieldsToCompare.forEach(field => {
-            if (existingPlan[field] !== newPlan[field]) {
+            // Handle potential nested or object values
+            const existingValue = this.normalizeValue(existingPlan[field]);
+            const newValue = this.normalizeValue(newPlan[field]);
+
+            if (existingValue !== newValue) {
                 changes[field] = {
-                    from: existingPlan[field],
-                    to: newPlan[field]
+                    from: existingValue,
+                    to: newValue
                 };
             }
         });
 
+        // Compare features/modules
+        if (JSON.stringify(existingPlan.features) !== JSON.stringify(newPlan.features)) {
+            changes.features = {
+                from: existingPlan.features,
+                to: newPlan.features
+            };
+        }
+
         return changes;
+    }
+
+    // Helper method to normalize values for comparison
+    normalizeValue(value) {
+        // Handle different types of values
+        if (value === null || value === undefined) return null;
+        
+        // Handle object types (like Decimal128)
+        if (typeof value === 'object') {
+            return parseFloat(value.$numberDecimal || value.value || 0);
+        }
+
+        // Handle boolean and string values directly
+        if (typeof value === 'boolean' || typeof value === 'string') {
+            return value;
+        }
+
+        // Handle numeric values
+        return parseFloat(value);
     }
 
     // Validate Update Plan Data
@@ -1424,12 +1254,15 @@ class PricingManager {
             errors.push('Annual price must be a positive number');
         }
 
+        if (formData.trialPeriod < 0) {
+            errors.push('Trial period cannot be negative');
+        }
+
         if (errors.length > 0) {
             throw new Error(errors.join('; '));
         }
     }
-
-    // Delete Plan Method
+        // Delete Plan Method
     async deletePlan(planId) {
         try {
             console.log(`Attempting to delete plan: ${planId}`);
@@ -1468,9 +1301,11 @@ class PricingManager {
                         planName: plan.name,
                         planDetails: {
                             currency: plan.currency,
-                            monthlyPrice: plan.monthlyPrice,
-                            annualPrice: plan.annualPrice,
-                            isActive: plan.isActive
+                            monthlyPrice: this.normalizePrice(plan.monthlyPrice),
+                            annualPrice: this.normalizePrice(plan.annualPrice),
+                            trialPeriod: plan.trialPeriod,
+                            isActive: plan.isActive,
+                            features: plan.features || plan.modules
                         }
                     }
                 })
@@ -1483,17 +1318,17 @@ class PricingManager {
             }
 
             // Create audit log for plan deletion
-        await this.createAuditLog('PLAN_DELETED', {
-            planId: planId,
-            planName: plan.name,
-            planDetails: {
-                currency: plan.currency,
-                monthlyPrice: plan.monthlyPrice,
-                annualPrice: plan.annualPrice,
-                trialPeriod: plan.trialPeriod,
-                isActive: plan.isActive
-            }
-        });
+            await this.createAuditLog('PLAN_DELETED', {
+                planId: planId,
+                planName: plan.name,
+                planDetails: {
+                    currency: plan.currency,
+                    monthlyPrice: this.normalizePrice(plan.monthlyPrice),
+                    annualPrice: this.normalizePrice(plan.annualPrice),
+                    trialPeriod: plan.trialPeriod,
+                    isActive: plan.isActive
+                }
+            });
 
             // Show success notification
             this.showSuccessNotification('Plan deleted successfully');
@@ -1502,14 +1337,13 @@ class PricingManager {
             await this.fetchAndDisplayPlans();
 
         } catch (error) {
-
             // Log error to audit logs
-        await this.createAuditLog('PLAN_DELETION_FAILED', {
-            planId: planId,
-            errorMessage: error.message,
-            errorStack: error.stack
-        });
-            
+            await this.createAuditLog('PLAN_DELETION_FAILED', {
+                planId: planId,
+                errorMessage: error.message,
+                errorStack: error.stack
+            });
+
             console.error('Error deleting plan:', error);
             this.showErrorNotification(error.message);
         }
@@ -1578,7 +1412,8 @@ class PricingManager {
             });
         });
     }
-        // Convert prices to all supported currencies
+
+    // Convert prices to all supported currencies
     async convertPricesToAllCurrencies(monthlyRate, annualRate, baseCurrency) {
         const convertedPrices = {
             prices: {}
@@ -1663,8 +1498,7 @@ class PricingManager {
             return this.currencies;
         }
     }
-
-    // Currency conversion method with markup
+        // Currency conversion method with markup
     async convertCurrency(amount, fromCurrency, toCurrency) {
         try {
             // Ensure we have the latest rates
@@ -1757,123 +1591,6 @@ class PricingManager {
         }
     }
 
-    async fetchPlanActivityLogs(filter = 'all', page = 1, limit = 10) {
-    try {
-        const queryParams = new URLSearchParams({
-            filter,
-            page: page.toString(),
-            limit: limit.toString()
-        });
-
-        const response = await fetch(`${this.baseUrl}/plan-activity-logs?${queryParams}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to fetch activity logs');
-        }
-
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Error fetching activity logs:', error);
-        this.showErrorNotification('Failed to load activity logs');
-        return { logs: [], total: 0 };
-}
-
-        renderActivityLogs(logs) {
-    const container = document.getElementById('activityLogContainer');
-    const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
-
-    // Clear existing content
-    container.innerHTML = '';
-
-    if (logs.length === 0) {
-        container.innerHTML = `
-            <div class="no-activities-placeholder">
-                <i class="fas fa-inbox text-muted"></i>
-                <p>No recent activities</p>
-            </div>
-        `;
-        loadMoreBtn.style.display = 'none';
-        return;
-    }
-
-    // Render activity logs with more detailed information
-    logs.forEach(log => {
-        const logItem = document.createElement('div');
-        logItem.className = 'activity-log-item';
-        
-        // Determine icon and color based on activity type
-        const iconMap = {
-            'PLAN_CREATED': { 
-                icon: 'fa-plus-circle', 
-                color: 'text-success',
-                message: `Created plan <strong>${log.details.planName}</strong>`
-            },
-            'PLAN_UPDATED': { 
-                icon: 'fa-edit', 
-                color: 'text-warning',
-                message: `Updated plan <strong>${log.details.planName}</strong>`
-            },
-            'PLAN_DELETED': { 
-                icon: 'fa-trash-alt', 
-                color: 'text-danger',
-                message: `Deleted plan <strong>${log.details.planName}</strong>`
-            },
-            'PLAN_CREATION_FAILED': { 
-                icon: 'fa-times-circle', 
-                color: 'text-danger',
-                message: `Plan creation failed: ${log.details.errorMessage}`
-            },
-            'PLAN_UPDATE_FAILED': { 
-                icon: 'fa-times-circle', 
-                color: 'text-danger',
-                message: `Plan update failed: ${log.details.errorMessage}`
-            },
-            'PLAN_DELETION_FAILED': { 
-                icon: 'fa-times-circle', 
-                color: 'text-danger',
-                message: `Plan deletion failed: ${log.details.errorMessage}`
-            }
-        };
-
-        const logDetails = iconMap[log.type] || { 
-            icon: 'fa-history', 
-            color: 'text-muted',
-            message: log.type 
-        };
-
-        logItem.innerHTML = `
-            <div class="d-flex align-items-center">
-                <i class="fas ${logDetails.icon} ${logDetails.color} activity-icon"></i>
-                <div class="flex-grow-1">
-                    <div class="activity-details">
-                        ${logDetails.message}
-                    </div>
-                    <small class="activity-timestamp text-muted">
-                        ${this.formatTimestamp(log.timestamp)}
-                    </small>
-                </div>
-            </div>
-        `;
-
-        container.appendChild(logItem);
-    });
-
-    // Handle load more button
-    if (logs.length >= 10) {
-        loadMoreBtn.style.display = 'block';
-    } else {
-        loadMoreBtn.style.display = 'none';
-    }
-}
-
-
     // Method to get client IP
     async getClientIP() {
         try {
@@ -1897,6 +1614,255 @@ class PricingManager {
         console.log(message);
         // Fallback notification if no global notification system
         alert(message);
+    }
+
+    // Fetch plan activity logs
+    async fetchPlanActivityLogs(filter = 'all', page = 1, limit = 10) {
+        try {
+            const queryParams = new URLSearchParams({
+                filter,
+                page: page.toString(),
+                limit: limit.toString()
+            });
+
+            const response = await fetch(`${this.baseUrl}/plan-activity-logs?${queryParams}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch activity logs');
+            }
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching activity logs:', error);
+            this.showErrorNotification('Failed to load activity logs');
+            return { logs: [], total: 0 };
+        }
+    }
+
+    // Render activity logs
+    renderActivityLogs(logs) {
+        const container = document.getElementById('activityLogContainer');
+        const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+
+        // Clear existing content
+        container.innerHTML = '';
+
+        if (logs.length === 0) {
+            container.innerHTML = `
+                <div class="no-activities-placeholder">
+                    <i class="fas fa-inbox text-muted"></i>
+                    <p>No recent activities</p>
+                </div>
+            `;
+            loadMoreBtn.style.display = 'none';
+            return;
+        }
+
+        // Render activity logs
+        logs.forEach(log => {
+            const logItem = document.createElement('div');
+            logItem.className = 'activity-log-item';
+            
+            // Determine icon based on activity type
+            const iconMap = {
+                'PLAN_CREATED': 'fa-plus-circle text-success',
+                'PLAN_UPDATED': 'fa-edit text-warning',
+                'PLAN_DELETED': 'fa-trash-alt text-danger'
+            };
+
+            const icon = iconMap[log.type] || 'fa-history';
+
+            logItem.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="fas ${icon} activity-icon"></i>
+                    <div class="flex-grow-1">
+                        <div class="activity-details">
+                            ${this.formatActivityLogMessage(log)}
+                        </div>
+                        <small class="activity-timestamp text-muted">
+                            ${this.formatTimestamp(log.timestamp)}
+                        </small>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(logItem);
+        });
+
+        // Handle load more button
+        if (logs.length >= 10) {
+            loadMoreBtn.style.display = 'block';
+        } else {
+            loadMoreBtn.style.display = 'none';
+        }
+    }
+
+    // Format activity log message
+    formatActivityLogMessage(log) {
+        switch(log.type) {
+            case 'PLAN_CREATED':
+                return `Plan <strong>${log.details.planName}</strong> was created`;
+            case 'PLAN_UPDATED':
+                return `Plan <strong>${log.details.planName}</strong> was updated`;
+            case 'PLAN_DELETED':
+                return `Plan <strong>${log.details.planName}</strong> was deleted`;
+            default:
+                return log.type;
+        }
+    }
+
+    // Format timestamp
+    formatTimestamp(timestamp) {
+        const date = new Date(timestamp);
+        return date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    // Initialize activity log functionality
+    initializeActivityLogFeature() {
+        // Wait for DOM to be fully loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', this.setupActivityLogFeature.bind(this));
+        } else {
+            this.setupActivityLogFeature();
+        }
+    }
+
+    // Setup activity log feature
+    setupActivityLogFeature() {
+        // Get elements with null checks
+        const filterSelect = document.getElementById('activityLogFilter');
+        const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+
+        // Only proceed if elements exist
+        if (filterSelect) {
+            // Initial load
+            this.loadActivityLogs();
+
+            // Filter change event
+            filterSelect.addEventListener('change', (e) => {
+                this.loadActivityLogs(e.target.value);
+            });
+        }
+
+        if (loadMoreBtn) {
+            // Load more button
+            loadMoreBtn.addEventListener('click', () => {
+                this.loadMoreActivityLogs();
+            });
+        }
+    }
+
+    // Load activity logs
+    async loadActivityLogs(filter = 'all') {
+        try {
+            const data = await this.fetchPlanActivityLogs(filter);
+            this.renderActivityLogs(data.logs);
+        } catch (error) {
+            console.error('Error loading activity logs:', error);
+        }
+    }
+
+    // Load more activity logs
+    async loadMoreActivityLogs() {
+        // Initialize page tracking if not already done
+        if (!this.activityLogCurrentPage) {
+            this.activityLogCurrentPage = 1;
+        }
+
+        try {
+            // Increment page number
+            this.activityLogCurrentPage++;
+
+            // Get current filter
+            const filterSelect = document.getElementById('activityLogFilter');
+            const currentFilter = filterSelect.value;
+
+            // Fetch next page of logs
+            const data = await this.fetchPlanActivityLogs(
+                currentFilter, 
+                this.activityLogCurrentPage
+            );
+
+            // Check if new logs exist
+            if (data.logs.length === 0) {
+                // No more logs to load
+                const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+                loadMoreBtn.style.display = 'none';
+                this.showErrorNotification('No more activities to load');
+                
+                // Decrement page back since no logs were found
+                this.activityLogCurrentPage--;
+                return;
+            }
+
+            // Append new logs to existing container
+            const container = document.getElementById('activityLogContainer');
+            
+            // Remove no activities placeholder if it exists
+            const placeholder = container.querySelector('.no-activities-placeholder');
+            if (placeholder) {
+                placeholder.remove();
+            }
+
+            // Render and append new logs
+            data.logs.forEach(log => {
+                const logItem = document.createElement('div');
+                logItem.className = 'activity-log-item';
+                
+                // Determine icon based on activity type
+                const iconMap = {
+                    'PLAN_CREATED': 'fa-plus-circle text-success',
+                    'PLAN_UPDATED': 'fa-edit text-warning',
+                    'PLAN_DELETED': 'fa-trash-alt text-danger'
+                };
+
+                const icon = iconMap[log.type] || 'fa-history';
+
+                logItem.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="fas ${icon} activity-icon"></i>
+                        <div class="flex-grow-1">
+                            <div class="activity-details">
+                                ${this.formatActivityLogMessage(log)}
+                            </div>
+                            <small class="activity-timestamp text-muted">
+                                ${this.formatTimestamp(log.timestamp)}
+                            </small>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(logItem);
+            });
+
+            // Update load more button visibility
+            const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+            if (data.logs.length < 10) {
+                loadMoreBtn.style.display = 'none';
+            }
+
+        } catch (error) {
+            console.error('Error loading more activity logs:', error);
+            
+            // Decrement page back in case of error
+            this.activityLogCurrentPage--;
+
+            // Show error notification
+            this.showErrorNotification('Failed to load more activities');
+        }
     }
 }
 
