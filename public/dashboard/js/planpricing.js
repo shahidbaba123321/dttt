@@ -1040,131 +1040,142 @@ class PricingManager {
     }
 
     // Create Edit Plan Modal
-    createEditPlanModal(plan) {
-        console.log('Creating Edit Plan Modal');
-        console.log('Plan Details:', plan);
+   createEditPlanModal(plan) {
+    console.log('Creating Edit Plan Modal');
+    console.log('Plan Details:', plan);
 
-        try {
-            // Find or create modal container
-            let modalContainer = document.getElementById('planFormModalContainer');
-            if (!modalContainer) {
-                console.warn('Modal container not found, creating new container');
-                modalContainer = document.createElement('div');
-                modalContainer.id = 'planFormModalContainer';
-                document.body.appendChild(modalContainer);
-            }
+    try {
+        // Find or create modal container
+        let modalContainer = document.getElementById('planFormModalContainer');
+        if (!modalContainer) {
+            console.warn('Modal container not found, creating new container');
+            modalContainer = document.createElement('div');
+            modalContainer.id = 'planFormModalContainer';
+            document.body.appendChild(modalContainer);
+        }
 
-            // Remove existing edit modal
-            const existingModal = document.getElementById('planEditModal');
-            if (existingModal) {
-                console.log('Removing existing edit modal');
-                existingModal.remove();
-            }
+        // Remove existing edit modal
+        const existingModal = document.getElementById('planEditModal');
+        if (existingModal) {
+            console.log('Removing existing edit modal');
+            existingModal.remove();
+        }
 
-            // Create modal HTML
-            const modalDiv = document.createElement('div');
-            modalDiv.innerHTML = `
-                <div class="modal" id="planEditModal" tabindex="-1" role="dialog">
-                    <div class="modal-dialog modal-lg" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Edit Plan: ${plan.name}</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                                <form id="planEditForm">
-                                    <input type="hidden" id="editPlanId" value="${plan._id}">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Plan Name</label>
-                                                <input type="text" class="form-control" id="editPlanName" 
-                                                       value="${plan.name}" required>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Currency</label>
-                                                <select class="form-control" id="editPlanCurrency">
-                                                    ${this.currencies.map(currency => 
-                                                        `<option value="${currency.code}" 
-                                                            ${currency.code === plan.currency ? 'selected' : ''}>
-                                                            ${currency.name} (${currency.symbol})
-                                                        </option>`
-                                                    ).join('')}
-                                                </select>
-                                            </div>
+        // Create modal HTML
+        const modalDiv = document.createElement('div');
+        modalDiv.innerHTML = `
+            <div class="modal" id="planEditModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit Plan: ${plan.name}</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="planEditForm">
+                                <input type="hidden" id="editPlanId" value="${plan._id}">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Plan Name</label>
+                                            <input type="text" class="form-control" id="editPlanName" 
+                                                   value="${plan.name}" required>
                                         </div>
                                     </div>
-                                    
-                                    <div class="form-group">
-                                        <label>Plan Description</label>
-                                        <textarea class="form-control" id="editPlanDescription" rows="3">${plan.description}</textarea>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Currency</label>
+                                            <select class="form-control" id="editPlanCurrency">
+                                                ${this.currencies.map(currency => 
+                                                    `<option value="${currency.code}" 
+                                                        ${currency.code === plan.currency ? 'selected' : ''}>
+                                                        ${currency.name} (${currency.symbol})
+                                                    </option>`
+                                                ).join('')}
+                                            </select>
+                                        </div>
                                     </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Monthly Rate</label>
-                                                <div class="input-group">
-                                                    <div class="input-group-prepend">
-                                                        <span class="input-group-text" id="editCurrencySymbol">${plan.currency}</span>
-                                                    </div>
-                                                    <input type="number" class="form-control" id="editMonthlyRate" 
-                                                           value="${plan.monthlyPrice}" min="0" step="0.01" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Plan Description</label>
+                                    <textarea class="form-control" id="editPlanDescription" rows="3">${plan.description}</textarea>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Monthly Rate</label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text" id="editCurrencySymbol">${plan.currency}</span>
                                                 </div>
+                                                <input type="number" class="form-control" id="editMonthlyRate" 
+                                                       value="${plan.monthlyPrice}" min="0" step="0.01" required>
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label>Annual Rate</label>
-                                                <div class="input-group">
-                                                    <div class="input-group-prepend">
-                                                        <span class="input-group-text" id="editCurrencySymbol">${plan.currency}</span>
-                                                    </div>
-                                                    <input type="number" class="form-control" id="editAnnualRate" 
-                                                           value="${plan.annualPrice}" min="0" step="0.01" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Annual Rate</label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text" id="editCurrencySymbol">${plan.currency}</span>
                                                 </div>
+                                                <input type="number" class="form-control" id="editAnnualRate" 
+                                                       value="${plan.annualPrice}" min="0" step="0.01" required>
                                             </div>
                                         </div>
                                     </div>
-                                    
-                                    <div class="form-group">
-                                        <label>Plan Status</label>
-                                        <select class="form-control" id="editPlanStatus">
-                                            <option value="active" ${plan.isActive ? 'selected' : ''}>Active</option>
-                                            <option value="inactive" ${!plan.isActive ? 'selected' : ''}>Inactive</option>
-                                        </select>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Trial Period (Days)</label>
+                                            <input type="number" class="form-control" id="editTrialPeriod" 
+                                                   value="${plan.trialPeriod || 0}" min="0">
+                                        </div>
                                     </div>
-                                </form>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn btn-primary" id="updatePlanBtn">Update Plan</button>
-                            </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Plan Status</label>
+                                            <select class="form-control" id="editPlanStatus">
+                                                <option value="active" ${plan.isActive ? 'selected' : ''}>Active</option>
+                                                <option value="inactive" ${!plan.isActive ? 'selected' : ''}>Inactive</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="updatePlanBtn">Update Plan</button>
                         </div>
                     </div>
                 </div>
-            `;
+            </div>
+        `;
 
-            // Append to container
-            modalContainer.appendChild(modalDiv.firstElementChild);
+        // Append to container
+        modalContainer.appendChild(modalDiv.firstElementChild);
 
-            console.log('Modal created and appended');
+        console.log('Modal created and appended');
 
-            // Show modal
-            this.showModal('planEditModal');
+        // Show modal
+        this.showModal('planEditModal');
 
-            // Setup event listeners
-            this.setupEditPlanModalListeners(plan);
+        // Setup event listeners
+        this.setupEditPlanModalListeners(plan);
 
-        } catch (error) {
-            console.error('Error creating edit plan modal:', error);
-            this.showErrorNotification(`Failed to create edit modal: ${error.message}`);
-        }
+    } catch (error) {
+        console.error('Error creating edit plan modal:', error);
+        this.showErrorNotification(`Failed to create edit modal: ${error.message}`);
     }
+}
         // Setup edit plan modal listeners
     setupEditPlanModalListeners(plan) {
         // Currency symbol update
@@ -1199,72 +1210,73 @@ class PricingManager {
     }
 
     // Update Plan Method
-    async updatePlan() {
-        try {
-            // Collect form data
-            const formData = {
-                planId: document.getElementById('editPlanId').value,
-                name: document.getElementById('editPlanName').value.trim(),
-                description: document.getElementById('editPlanDescription').value.trim(),
-                currency: document.getElementById('editPlanCurrency').value,
-                monthlyPrice: parseFloat(document.getElementById('editMonthlyRate').value),
-                annualPrice: parseFloat(document.getElementById('editAnnualRate').value),
-                isActive: document.getElementById('editPlanStatus').value === 'active'
-            };
+   async updatePlan() {
+    try {
+        // Collect form data
+        const formData = {
+            planId: document.getElementById('editPlanId').value,
+            name: document.getElementById('editPlanName').value.trim(),
+            description: document.getElementById('editPlanDescription').value.trim(),
+            currency: document.getElementById('editPlanCurrency').value,
+            monthlyPrice: parseFloat(document.getElementById('editMonthlyRate').value),
+            annualPrice: parseFloat(document.getElementById('editAnnualRate').value),
+            trialPeriod: parseInt(document.getElementById('editTrialPeriod').value) || 0,
+            isActive: document.getElementById('editPlanStatus').value === 'active'
+        };
 
-            // Validate form data
-            this.validateUpdatePlanData(formData);
+        // Validate form data
+        this.validateUpdatePlanData(formData);
 
-            // Fetch existing plan details for comparison
-            const existingPlanResponse = await fetch(`${this.baseUrl}/plans/${formData.planId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            const existingPlanData = await existingPlanResponse.json();
-            const existingPlan = existingPlanData.data;
-
-            // Send update request
-            const response = await fetch(`${this.baseUrl}/plans/${formData.planId}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    ...formData,
-                    auditDetails: {
-                        changes: this.calculatePlanChanges(existingPlan, formData)
-                    }
-                })
-            });
-
-            const responseData = await response.json();
-
-            if (!response.ok) {
-                throw new Error(responseData.message || 'Failed to update plan');
+        // Fetch existing plan details for comparison
+        const existingPlanResponse = await fetch(`${this.baseUrl}/plans/${formData.planId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
             }
+        });
+        const existingPlanData = await existingPlanResponse.json();
+        const existingPlan = existingPlanData.data;
 
-            // Show success notification
-            this.showSuccessNotification('Plan updated successfully');
+        // Send update request
+        const response = await fetch(`${this.baseUrl}/plans/${formData.planId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                ...formData,
+                auditDetails: {
+                    changes: this.calculatePlanChanges(existingPlan, formData)
+                }
+            })
+        });
 
-            // Refresh plans list
-            await this.fetchAndDisplayPlans();
+        const responseData = await response.json();
 
-            // Close modal
-            this.hideModal();
-
-            return responseData.data;
-
-        } catch (error) {
-            console.error('Error updating plan:', error);
-            this.showErrorNotification(error.message);
-            throw error;
+        if (!response.ok) {
+            throw new Error(responseData.message || 'Failed to update plan');
         }
-    }
 
+        // Show success notification
+        this.showSuccessNotification('Plan updated successfully');
+
+        // Refresh plans list
+        await this.fetchAndDisplayPlans();
+
+        // Close modal
+        this.hideModal();
+
+        return responseData.data;
+
+    } catch (error) {
+        console.error('Error updating plan:', error);
+        this.showErrorNotification(error.message);
+        throw error;
+    }
+}
+    
     // Calculate changes between existing and new plan
     calculatePlanChanges(existingPlan, newPlan) {
         const changes = {};
