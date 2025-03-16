@@ -1042,13 +1042,31 @@ class PricingManager {
     // Create Edit Plan Modal
    createEditPlanModal(plan) {
     console.log('Creating Edit Plan Modal');
-    console.log('Plan Details:', plan);
+    console.log('Full Plan Details:', JSON.stringify(plan, null, 2));
 
     try {
+        // Normalize plan data to handle potential object/string issues
+        const normalizedPlan = {
+            _id: plan._id || plan.id,
+            name: plan.name || '',
+            description: plan.description || '',
+            currency: plan.currency || 'USD',
+            monthlyPrice: typeof plan.monthlyPrice === 'object' 
+                ? (plan.monthlyPrice.value || plan.monthlyPrice.$numberDecimal || 0) 
+                : (parseFloat(plan.monthlyPrice) || 0),
+            annualPrice: typeof plan.annualPrice === 'object' 
+                ? (plan.annualPrice.value || plan.annualPrice.$numberDecimal || 0) 
+                : (parseFloat(plan.annualPrice) || 0),
+            trialPeriod: plan.trialPeriod || 0,
+            isActive: plan.isActive !== undefined ? plan.isActive : true,
+            features: plan.features || plan.modules || []
+        };
+
+        console.log('Normalized Plan Data:', JSON.stringify(normalizedPlan, null, 2));
+
         // Find or create modal container
         let modalContainer = document.getElementById('planFormModalContainer');
         if (!modalContainer) {
-            console.warn('Modal container not found, creating new container');
             modalContainer = document.createElement('div');
             modalContainer.id = 'planFormModalContainer';
             document.body.appendChild(modalContainer);
@@ -1057,9 +1075,19 @@ class PricingManager {
         // Remove existing edit modal
         const existingModal = document.getElementById('planEditModal');
         if (existingModal) {
-            console.log('Removing existing edit modal');
             existingModal.remove();
         }
+
+        // Fetch available modules
+        const fetchModules = async () => {
+            try {
+                const modules = await this.fetchAvailableModules();
+                return modules;
+            } catch (error) {
+                console.error('Error fetching modules:', error);
+                return [];
+            }
+        };
 
         // Create modal HTML
         const modalDiv = document.createElement('div');
@@ -1068,20 +1096,20 @@ class PricingManager {
                 <div class="modal-dialog modal-lg" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title">Edit Plan: ${plan.name}</h5>
+                            <h5 class="modal-title">Edit Plan: ${normalizedPlan.name}</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
                         <div class="modal-body">
                             <form id="planEditForm">
-                                <input type="hidden" id="editPlanId" value="${plan._id}">
+                                <input type="hidden" id="editPlanId" value="${normalizedPlan._id}">
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Plan Name</label>
                                             <input type="text" class="form-control" id="editPlanName" 
-                                                   value="${plan.name}" required>
+                                                   value="${normalizedPlan.name}" required>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -1090,7 +1118,7 @@ class PricingManager {
                                             <select class="form-control" id="editPlanCurrency">
                                                 ${this.currencies.map(currency => 
                                                     `<option value="${currency.code}" 
-                                                        ${currency.code === plan.currency ? 'selected' : ''}>
+                                                        ${currency.code === normalizedPlan.currency ? 'selected' : ''}>
                                                         ${currency.name} (${currency.symbol})
                                                     </option>`
                                                 ).join('')}
@@ -1101,7 +1129,7 @@ class PricingManager {
                                 
                                 <div class="form-group">
                                     <label>Plan Description</label>
-                                    <textarea class="form-control" id="editPlanDescription" rows="3">${plan.description}</textarea>
+                                    <textarea class="form-control" id="editPlanDescription" rows="3">${normalizedPlan.description}</textarea>
                                 </div>
                                 
                                 <div class="row">
@@ -1110,10 +1138,10 @@ class PricingManager {
                                             <label>Monthly Rate</label>
                                             <div class="input-group">
                                                 <div class="input-group-prepend">
-                                                    <span class="input-group-text" id="editCurrencySymbol">${plan.currency}</span>
+                                                    <span class="input-group-text" id="editCurrencySymbol">${normalizedPlan.currency}</span>
                                                 </div>
                                                 <input type="number" class="form-control" id="editMonthlyRate" 
-                                                       value="${plan.monthlyPrice}" min="0" step="0.01" required>
+                                                       value="${normalizedPlan.monthlyPrice}" min="0" step="0.01" required>
                                             </div>
                                         </div>
                                     </div>
@@ -1122,10 +1150,10 @@ class PricingManager {
                                             <label>Annual Rate</label>
                                             <div class="input-group">
                                                 <div class="input-group-prepend">
-                                                    <span class="input-group-text" id="editCurrencySymbol">${plan.currency}</span>
+                                                    <span class="input-group-text" id="editCurrencySymbol">${normalizedPlan.currency}</span>
                                                 </div>
                                                 <input type="number" class="form-control" id="editAnnualRate" 
-                                                       value="${plan.annualPrice}" min="0" step="0.01" required>
+                                                       value="${normalizedPlan.annualPrice}" min="0" step="0.01" required>
                                             </div>
                                         </div>
                                     </div>
@@ -1136,17 +1164,24 @@ class PricingManager {
                                         <div class="form-group">
                                             <label>Trial Period (Days)</label>
                                             <input type="number" class="form-control" id="editTrialPeriod" 
-                                                   value="${plan.trialPeriod || 0}" min="0">
+                                                   value="${normalizedPlan.trialPeriod}" min="0">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label>Plan Status</label>
                                             <select class="form-control" id="editPlanStatus">
-                                                <option value="active" ${plan.isActive ? 'selected' : ''}>Active</option>
-                                                <option value="inactive" ${!plan.isActive ? 'selected' : ''}>Inactive</option>
+                                                <option value="active" ${normalizedPlan.isActive ? 'selected' : ''}>Active</option>
+                                                <option value="inactive" ${!normalizedPlan.isActive ? 'selected' : ''}>Inactive</option>
                                             </select>
                                         </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Select Modules</label>
+                                    <div id="editModulesContainer">
+                                        <!-- Modules will be dynamically populated -->
                                     </div>
                                 </div>
                             </form>
@@ -1163,13 +1198,42 @@ class PricingManager {
         // Append to container
         modalContainer.appendChild(modalDiv.firstElementChild);
 
+        // Populate modules after appending
+        const modulesContainer = document.getElementById('editModulesContainer');
+        fetchModules().then(modules => {
+            if (modules.length > 0) {
+                const modulesHTML = modules.map(module => `
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" 
+                               value="${module._id || module.id}" 
+                               id="edit-module-${module._id || module.id}"
+                               ${normalizedPlan.features.some(f => 
+                                   f._id === module._id || 
+                                   f.id === module.id || 
+                                   f === module.name
+                               ) ? 'checked' : ''}>
+                        <label class="form-check-label" for="edit-module-${module._id || module.id}">
+                            ${module.name}
+                        </label>
+                    </div>
+                `).join('');
+                modulesContainer.innerHTML = modulesHTML;
+            } else {
+                modulesContainer.innerHTML = `
+                    <div class="alert alert-warning">
+                        No modules available. Please add modules first.
+                    </div>
+                `;
+            }
+        });
+
         console.log('Modal created and appended');
 
         // Show modal
         this.showModal('planEditModal');
 
         // Setup event listeners
-        this.setupEditPlanModalListeners(plan);
+        this.setupEditPlanModalListeners(normalizedPlan);
 
     } catch (error) {
         console.error('Error creating edit plan modal:', error);
@@ -1212,6 +1276,11 @@ class PricingManager {
     // Update Plan Method
    async updatePlan() {
     try {
+        // Collect selected modules
+        const selectedModules = Array.from(
+            document.querySelectorAll('#editModulesContainer input:checked')
+        ).map(checkbox => checkbox.value);
+
         // Collect form data
         const formData = {
             planId: document.getElementById('editPlanId').value,
@@ -1221,9 +1290,9 @@ class PricingManager {
             monthlyPrice: parseFloat(document.getElementById('editMonthlyRate').value),
             annualPrice: parseFloat(document.getElementById('editAnnualRate').value),
             trialPeriod: parseInt(document.getElementById('editTrialPeriod').value) || 0,
-            isActive: document.getElementById('editPlanStatus').value === 'active'
+            isActive: document.getElementById('editPlanStatus').value === 'active',
+            features: selectedModules
         };
-
         // Validate form data
         this.validateUpdatePlanData(formData);
 
