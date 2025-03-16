@@ -1887,75 +1887,219 @@ escapeHtml(unsafe) {
 
     // Render activity logs
     renderActivityLogs(logs) {
-        const container = document.getElementById('activityLogContainer');
-        const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+    const container = document.getElementById('activityLogContainer');
+    const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
 
-        // Clear existing content
-        container.innerHTML = '';
+    // Clear existing content
+    container.innerHTML = '';
 
-        if (logs.length === 0) {
-            container.innerHTML = `
-                <div class="no-activities-placeholder">
-                    <i class="fas fa-inbox text-muted"></i>
-                    <p>No recent activities</p>
-                </div>
-            `;
-            loadMoreBtn.style.display = 'none';
-            return;
-        }
+    if (logs.length === 0) {
+        container.innerHTML = `
+            <div class="no-activities-placeholder">
+                <i class="fas fa-inbox text-muted"></i>
+                <p>No recent activities</p>
+            </div>
+        `;
+        loadMoreBtn.style.display = 'none';
+        return;
+    }
 
-        // Render activity logs
-        logs.forEach(log => {
-            const logItem = document.createElement('div');
-            logItem.className = 'activity-log-item';
-            
-            // Determine icon based on activity type
-            const iconMap = {
-                'PLAN_CREATED': 'fa-plus-circle text-success',
-                'PLAN_UPDATED': 'fa-edit text-warning',
-                'PLAN_DELETED': 'fa-trash-alt text-danger'
-            };
+    // Render activity logs with enhanced details
+    logs.forEach(log => {
+        const logItem = document.createElement('div');
+        logItem.className = 'activity-log-item';
+        
+        // Enhanced icon and color mapping
+        const iconMap = {
+            'PLAN_CREATED': { 
+                icon: 'fa-plus-circle', 
+                color: 'text-success',
+                category: 'Plan Creation'
+            },
+            'PLAN_UPDATED': { 
+                icon: 'fa-edit', 
+                color: 'text-warning',
+                category: 'Plan Update'
+            },
+            'PLAN_DELETED': { 
+                icon: 'fa-trash-alt', 
+                color: 'text-danger',
+                category: 'Plan Deletion'
+            },
+            'PLAN_EDIT_MODAL_FAILED': { 
+                icon: 'fa-exclamation-triangle', 
+                color: 'text-danger',
+                category: 'Modal Error'
+            },
+            'PLAN_CREATION_MODAL_FAILED': { 
+                icon: 'fa-exclamation-triangle', 
+                color: 'text-danger',
+                category: 'Modal Error'
+            },
+            'PLAN_CREATION_FAILED': { 
+                icon: 'fa-times-circle', 
+                color: 'text-danger',
+                category: 'Creation Error'
+            },
+            'PLAN_UPDATE_FAILED': { 
+                icon: 'fa-times-circle', 
+                color: 'text-danger',
+                category: 'Update Error'
+            },
+            'PLAN_DELETION_FAILED': { 
+                icon: 'fa-times-circle', 
+                color: 'text-danger',
+                category: 'Deletion Error'
+            }
+        };
 
-            const icon = iconMap[log.type] || 'fa-history';
+        // Get log details
+        const logDetails = iconMap[log.type] || { 
+            icon: 'fa-history', 
+            color: 'text-muted',
+            category: 'System Activity'
+        };
 
-            logItem.innerHTML = `
-                <div class="d-flex align-items-center">
-                    <i class="fas ${icon} activity-icon"></i>
-                    <div class="flex-grow-1">
-                        <div class="activity-details">
-                            ${this.formatActivityLogMessage(log)}
-                        </div>
-                        <small class="activity-timestamp text-muted">
-                            ${this.formatTimestamp(log.timestamp)}
-                        </small>
+        // Format timestamp with more details
+        const formattedTime = this.formatDetailedTimestamp(log.timestamp);
+
+        // Prepare user information
+        const userName = log.details?.user?.name || log.details?.user?.email || 'System User';
+        const userEmail = log.details?.user?.email || 'system@example.com';
+
+        // Prepare additional context
+        const additionalContext = this.prepareLogContext(log);
+
+        logItem.innerHTML = `
+            <div class="activity-log-card">
+                <div class="activity-log-header">
+                    <div class="activity-icon-container">
+                        <i class="fas ${logDetails.icon} ${logDetails.color} activity-icon"></i>
+                    </div>
+                    <div class="activity-header-details">
+                        <div class="activity-category">${logDetails.category}</div>
+                        <div class="activity-timestamp">${formattedTime}</div>
                     </div>
                 </div>
-            `;
+                <div class="activity-log-body">
+                    <div class="activity-main-message">
+                        ${this.formatActivityLogMessage(log)}
+                    </div>
+                    <div class="activity-user-details">
+                        <div class="user-avatar">
+                            ${this.generateUserAvatar(userName)}
+                        </div>
+                        <div class="user-info">
+                            <div class="user-name">${userName}</div>
+                            <div class="user-email">${userEmail}</div>
+                        </div>
+                    </div>
+                    ${additionalContext ? `
+                        <div class="activity-additional-context">
+                            <strong>Details:</strong>
+                            <pre>${JSON.stringify(additionalContext, null, 2)}</pre>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
 
-            container.appendChild(logItem);
-        });
+        container.appendChild(logItem);
+    });
 
-        // Handle load more button
-        if (logs.length >= 10) {
-            loadMoreBtn.style.display = 'block';
-        } else {
-            loadMoreBtn.style.display = 'none';
-        }
+    // Handle load more button
+    if (logs.length >= 10) {
+        loadMoreBtn.style.display = 'block';
+    } else {
+        loadMoreBtn.style.display = 'none';
     }
+}
+
+    // Format detailed timestamp
+formatDetailedTimestamp(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleString('en-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    });
+}
+// Prepare additional context for log
+prepareLogContext(log) {
+    // Extract meaningful context based on log type
+    const contextMap = {
+        'PLAN_CREATED': () => ({
+            planName: log.details?.planName,
+            monthlyPrice: log.details?.planDetails?.monthlyPrice,
+            annualPrice: log.details?.planDetails?.annualPrice,
+            currency: log.details?.planDetails?.currency
+        }),
+        'PLAN_UPDATED': () => ({
+            planName: log.details?.planName,
+            changes: log.details?.changes
+        }),
+        'PLAN_DELETED': () => ({
+            planName: log.details?.planName,
+            planDetails: log.details?.planDetails
+        })
+    };
+
+    const contextExtractor = contextMap[log.type];
+    return contextExtractor ? contextExtractor() : null;
+}
+
+// Generate user avatar
+generateUserAvatar(userName) {
+    // Generate initials
+    const initials = userName
+        .split(' ')
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+
+    // Generate a consistent color based on the name
+    const hue = this.generateHueFromString(userName);
+    
+    return `
+        <div class="user-initials-avatar" style="background-color: hsl(${hue}, 50%, 50%);">
+            ${initials}
+        </div>
+    `;
+}
+
+// Generate consistent color hue from string
+generateHueFromString(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return hash % 360;
+}
+
 
     // Format activity log message
     formatActivityLogMessage(log) {
-        switch(log.type) {
-            case 'PLAN_CREATED':
-                return `Plan <strong>${log.details.planName}</strong> was created`;
-            case 'PLAN_UPDATED':
-                return `Plan <strong>${log.details.planName}</strong> was updated`;
-            case 'PLAN_DELETED':
-                return `Plan <strong>${log.details.planName}</strong> was deleted`;
-            default:
-                return log.type;
-        }
+    switch(log.type) {
+        case 'PLAN_CREATED':
+            return `Created plan <strong>${log.details?.planName || 'Unnamed Plan'}</strong>`;
+        case 'PLAN_UPDATED':
+            return `Updated plan <strong>${log.details?.planName || 'Unnamed Plan'}</strong>`;
+        case 'PLAN_DELETED':
+            return `Deleted plan <strong>${log.details?.planName || 'Unnamed Plan'}</strong>`;
+        case 'PLAN_EDIT_MODAL_FAILED':
+            return `Failed to open edit modal: ${log.details?.errorMessage || 'Unknown error'}`;
+        case 'PLAN_CREATION_FAILED':
+            return `Plan creation failed: ${log.details?.errorMessage || 'Unknown error'}`;
+        default:
+            return log.type;
     }
+}
 
     // Format timestamp
     formatTimestamp(timestamp) {
