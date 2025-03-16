@@ -2276,6 +2276,7 @@ prepareLogContext(log) {
 }
 
 
+
 // Generate user avatar
 generateUserAvatar(userName, userEmail) {
     // Prefer full name, fall back to email
@@ -2373,35 +2374,14 @@ generateHueFromString(str) {
     // Format timestamp
    formatDetailedTimestamp(timestamp) {
     const date = new Date(timestamp);
-    const now = new Date();
-    const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-
-    // Relative time logic
-    if (diffInDays === 0) {
-        // Today
-        return date.toLocaleString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-        }) + ' Today';
-    } else if (diffInDays === 1) {
-        // Yesterday
-        return date.toLocaleString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-        }) + ' Yesterday';
-    } else {
-        // Older dates
-        return date.toLocaleString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-        });
-    }
+    return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    });
 }
 
     // Initialize activity log functionality
@@ -2519,6 +2499,72 @@ generateHueFromString(str) {
     }
 }
 
+    renderActivityLogsTable(logs) {
+    const tableBody = document.getElementById('activityLogTableBody');
+    
+    // Clear existing rows
+    tableBody.innerHTML = '';
+
+    // Check if no logs
+    if (!logs || logs.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center">
+                    <div class="no-activities-placeholder">
+                        <i class="fas fa-inbox text-muted"></i>
+                        <p>No recent activities</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    // Render logs
+    logs.forEach(log => {
+        // Determine activity type
+        const activityTypeMap = {
+            'PLAN_CREATED': 'Plan Created',
+            'PLAN_UPDATED': 'Plan Updated',
+            'PLAN_DELETED': 'Plan Deleted',
+            'PLAN_VIEWED': 'Plan Viewed'
+        };
+
+        // Get user information
+        const userName = log.user?.name || 
+                         log.details?.user?.name || 
+                         log.details?.userName || 
+                         'System User';
+
+        // Prepare log details for modal
+        const logDetails = this.prepareLogContext(log) || {};
+        const encodedDetails = encodeURIComponent(JSON.stringify(logDetails, null, 2));
+
+        // Create table row
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${this.formatDetailedTimestamp(log.timestamp)}</td>
+            <td>${activityTypeMap[log.type] || log.type}</td>
+            <td>${this.extractPlanName(log)}</td>
+            <td>${userName}</td>
+            <td>
+                <button class="btn btn-sm btn-info" onclick="showLogDetails('${encodedDetails}')">
+                    View Details
+                </button>
+            </td>
+        `;
+
+        tableBody.appendChild(row);
+    });
+
+    // Update load more button visibility
+    const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+    if (loadMoreBtn) {
+        loadMoreBtn.style.display = logs.length < 10 ? 'none' : 'block';
+    }
+}
+
+
     // Ensure these methods are defined in the class
 formatTimestamp(timestamp) {
     const date = new Date(timestamp);
@@ -2545,6 +2591,7 @@ formatActivityType(type) {
 extractPlanName(log) {
     return log.details?.planName || 
            log.details?.name || 
+           log.details?.planDetails?.name || 
            'Unnamed Plan';
 }
     
