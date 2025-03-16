@@ -470,75 +470,68 @@ async debugModulesEndpoint() {
 }
 
 showModal(modalId = 'planCreationModal') {
-    // Comprehensive logging
-    console.log(`Attempting to show modal with ID: ${modalId}`);
+    console.log(`Attempting to show modal: ${modalId}`);
+
+    // Find the modal
+    let modal = document.getElementById(modalId);
+    
+    // Log modal search results
+    console.log(`Modal found: ${!!modal}`);
+
+    if (!modal) {
+        console.error(`Modal with id ${modalId} not found`);
+        
+        // Log all elements in the document
+        console.log('All elements in the document:');
+        document.querySelectorAll('*').forEach(el => {
+            if (el.id) {
+                console.log(el.id);
+            }
+        });
+        
+        return;
+    }
 
     // Remove any existing backdrops
     const existingBackdrops = document.querySelectorAll('.modal-backdrop');
     existingBackdrops.forEach(backdrop => backdrop.remove());
 
-    // Find the modal container
-    const modalContainer = document.getElementById('planFormModalContainer');
-    if (!modalContainer) {
-        console.error('Modal container not found');
-        return;
+    // Ensure modal is in the document body
+    if (!document.body.contains(modal)) {
+        console.log('Appending modal to body');
+        document.body.appendChild(modal);
     }
 
-    // Find the modal
-    let modal = document.getElementById(modalId);
+    // Show modal
+    modal.style.display = 'block';
+    modal.classList.add('show');
     
-    // If modal doesn't exist in the document, check the container
-    if (!modal) {
-        modal = modalContainer.querySelector(`#${modalId}`);
-    }
+    // Add backdrop
+    const backdrop = document.createElement('div');
+    backdrop.classList.add('modal-backdrop', 'fade', 'show');
+    document.body.appendChild(backdrop);
 
-    // Log modal search results
-    console.log(`Modal found: ${!!modal}`);
+    // Close on backdrop click
+    backdrop.addEventListener('click', () => this.hideModal(modalId));
 
-    if (modal) {
-        // Ensure modal is in the document body
-        if (!document.body.contains(modal)) {
-            console.log('Appending modal to body');
-            document.body.appendChild(modal);
+    // Close on escape key
+    const escapeHandler = (event) => {
+        if (event.key === 'Escape') {
+            this.hideModal(modalId);
         }
+    };
+    document.addEventListener('keydown', escapeHandler);
 
-        // Show modal
-        modal.style.display = 'block';
-        modal.classList.add('show');
-        
-        // Add backdrop
-        const backdrop = document.createElement('div');
-        backdrop.classList.add('modal-backdrop', 'fade', 'show');
-        document.body.appendChild(backdrop);
+    // Add close button listeners
+    const closeButtons = modal.querySelectorAll('[data-dismiss="modal"], .close');
+    closeButtons.forEach(button => {
+        button.addEventListener('click', () => this.hideModal(modalId));
+    });
 
-        // Close on backdrop click
-        backdrop.addEventListener('click', () => this.hideModal(modalId));
-
-        // Close on escape key
-        const escapeHandler = (event) => {
-            if (event.key === 'Escape') {
-                this.hideModal(modalId);
-            }
-        };
-        document.addEventListener('keydown', escapeHandler);
-
-        // Add close button listeners
-        const closeButtons = modal.querySelectorAll('[data-dismiss="modal"], .close');
-        closeButtons.forEach(button => {
-            button.addEventListener('click', () => this.hideModal(modalId));
-        });
-
-        // Ensure modal is on top of other elements
-        modal.style.zIndex = '1050';
-        backdrop.style.zIndex = '1040';
-    } else {
-        console.error(`Modal with id ${modalId} not found`);
-        
-        // Additional debugging information
-        console.log('Modal Container Contents:', modalContainer.innerHTML);
-    }
+    // Ensure modal is on top of other elements
+    modal.style.zIndex = '1050';
+    backdrop.style.zIndex = '1040';
 }
-
     
     hideModal(modalId = 'planCreationModal') {
     console.log(`Attempting to hide modal: ${modalId}`);
@@ -1719,7 +1712,7 @@ showConfirmationModal(title, message) {
         currency: plan.currency || 'USD',
         monthlyRate: plan.monthlyPrice || plan.monthlyRate,
         annualRate: plan.annualPrice || plan.annualRate,
-        status: plan.status || plan.isActive ? 'active' : 'inactive',
+        status: plan.status || (plan.isActive ? 'active' : 'inactive'),
         modules: plan.modules || plan.features || []
     }));
 
@@ -1759,36 +1752,87 @@ showConfirmationModal(title, message) {
     // Setup listeners for plan actions
     this.setupPlanCardListeners();
 }
+
+    
     // Setup listeners for plan card actions
     setupPlanCardListeners() {
-    // Remove existing listeners
+    console.log('Setting up plan card listeners');
+
+    // Log all edit and delete buttons
     const editButtons = document.querySelectorAll('.edit-plan');
     const deleteButtons = document.querySelectorAll('.delete-plan');
 
-    editButtons.forEach(button => {
+    console.log(`Edit buttons found: ${editButtons.length}`);
+    console.log(`Delete buttons found: ${deleteButtons.length}`);
+
+    // Detailed logging for each button
+    editButtons.forEach((button, index) => {
+        console.log(`Edit Button ${index}:`, {
+            id: button.id,
+            dataId: button.dataset.id,
+            innerHTML: button.innerHTML
+        });
+
         // Remove existing listeners
         const oldButton = button.cloneNode(true);
         button.parentNode.replaceChild(oldButton, button);
 
-        // Add new listener
+        // Add new listener with comprehensive error handling
         oldButton.addEventListener('click', (e) => {
-            const planId = e.target.dataset.id;
-            this.editPlan(planId);
+            e.preventDefault();
+            e.stopPropagation();
+
+            try {
+                const planId = oldButton.getAttribute('data-id');
+                console.log(`Attempting to edit plan: ${planId}`);
+
+                if (!planId) {
+                    console.error('No plan ID found for edit');
+                    return;
+                }
+
+                // Bind context and call method
+                this.editPlan(planId);
+            } catch (error) {
+                console.error('Error in edit button listener:', error);
+            }
         });
     });
 
-    deleteButtons.forEach(button => {
+    deleteButtons.forEach((button, index) => {
+        console.log(`Delete Button ${index}:`, {
+            id: button.id,
+            dataId: button.dataset.id,
+            innerHTML: button.innerHTML
+        });
+
         // Remove existing listeners
         const oldButton = button.cloneNode(true);
         button.parentNode.replaceChild(oldButton, button);
 
-        // Add new listener
+        // Add new listener with comprehensive error handling
         oldButton.addEventListener('click', (e) => {
-            const planId = e.target.dataset.id;
-            this.deletePlan(planId);
+            e.preventDefault();
+            e.stopPropagation();
+
+            try {
+                const planId = oldButton.getAttribute('data-id');
+                console.log(`Attempting to delete plan: ${planId}`);
+
+                if (!planId) {
+                    console.error('No plan ID found for delete');
+                    return;
+                }
+
+                // Bind context and call method
+                this.deletePlan(planId);
+            } catch (error) {
+                console.error('Error in delete button listener:', error);
+            }
         });
     });
 }
+
 
 
     // Placeholder methods for edit and delete
