@@ -1092,6 +1092,9 @@ async initializePricing() {
                 if (instance.reinitializeActivityLogFeature) {
                     instance.reinitializeActivityLogFeature();
                 }
+                if (instance.reinitializeEventListeners) {
+                    instance.reinitializeEventListeners();
+                }
             }, 100);
 
             this.moduleInstances.set('pricing', instance);
