@@ -699,7 +699,7 @@ getMarkup(fromCurrency, toCurrency) {
 
     
         // Save plan method
-    async savePlan(modules) {
+   async savePlan(modules) {
     try {
         // Collect form data
         const formData = {
@@ -723,14 +723,17 @@ getMarkup(fromCurrency, toCurrency) {
             return;
         }
 
-        // Send plan to backend
+        // Send plan to backend with converted prices
         const response = await fetch(`${this.baseUrl}/plans`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${this.token}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(adjustedPricing)
+            body: JSON.stringify({
+                ...adjustedPricing,
+                convertedPrices: adjustedPricing.convertedPrices
+            })
         });
 
         const responseData = await response.json();
@@ -976,62 +979,158 @@ getMarkup(fromCurrency, toCurrency) {
         }
     }
         // Display plans in the plans container
-    displayPlans(plans) {
-        const plansContainer = document.getElementById('plansListContainer');
+   displayPlans(plans) {
+    const plansContainer = document.getElementById('plansListContainer');
+    
+    // Clear existing content
+    plansContainer.innerHTML = '';
+
+    // Normalize plan data
+    const normalizedPlans = plans.map(plan => ({
+        _id: plan._id || plan.id,
+        name: plan.name,
+        description: plan.description || 'No description',
+        baseCurrency: plan.currency || 'USD',
+        convertedPrices: plan.convertedPrices || {},
+        monthlyRate: this.normalizePrice(plan.monthlyPrice || plan.monthlyRate),
+        annualRate: this.normalizePrice(plan.annualPrice || plan.annualRate),
+        status: plan.status || (plan.isActive ? 'active' : 'inactive'),
+        modules: plan.modules || plan.features || [],
+        trialPeriod: plan.trialPeriod || 0
+    }));
+
+    // Create plan cards
+    normalizedPlans.forEach(plan => {
+        const planCard = document.createElement('div');
+        planCard.className = 'plan-card';
         
-        // Clear existing content
-        plansContainer.innerHTML = '';
+        // Prepare currency options
+        const currencyOptions = Object.keys(plan.convertedPrices || {})
+            .concat(plan.baseCurrency)
+            .filter((value, index, self) => self.indexOf(value) === index);
 
-        // Normalize plan data
-        const normalizedPlans = plans.map(plan => ({
-            _id: plan._id || plan.id,
-            name: plan.name,
-            description: plan.description || 'No description',
-            currency: plan.currency || 'USD',
-            monthlyRate: this.normalizePrice(plan.monthlyPrice || plan.monthlyRate),
-            annualRate: this.normalizePrice(plan.annualPrice || plan.annualRate),
-            status: plan.status || (plan.isActive ? 'active' : 'inactive'),
-            modules: plan.modules || plan.features || [],
-            trialPeriod: plan.trialPeriod || 0
-        }));
-
-        // Create plan cards
-        normalizedPlans.forEach(plan => {
-            const planCard = document.createElement('div');
-            planCard.className = 'plan-card';
-            planCard.innerHTML = `
-                <div class="plan-header">
-                    <h3>${plan.name}</h3>
-                    <span class="plan-status ${plan.status}">
-                        ${plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}
-                    </span>
+        planCard.innerHTML = `
+            <div class="plan-header">
+                <h3>${plan.name}</h3>
+                <span class="plan-status ${plan.status}">
+                    ${plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}
+                </span>
+            </div>
+            <div class="plan-body">
+                <p>${plan.description}</p>
+                
+                <div class="form-group">
+                    <label>Select Currency</label>
+                    <select class="form-control plan-currency-selector" data-plan-id="${plan._id}">
+                        ${currencyOptions.map(currency => `
+                            <option value="${currency}" ${currency === plan.baseCurrency ? 'selected' : ''}>
+                                ${this.getCurrencySymbol(currency)} ${currency}
+                            </option>
+                        `).join('')}
+                    </select>
                 </div>
-                <div class="plan-body">
-                    <p>${plan.description}</p>
-                    <div class="plan-pricing">
-                        <div>Monthly: ${plan.currency} ${plan.monthlyRate.toFixed(2)}</div>
-                        <div>Annual: ${plan.currency} ${plan.annualRate.toFixed(2)}</div>
-                        ${plan.trialPeriod > 0 ? `<div>Trial Period: ${plan.trialPeriod} days</div>` : ''}
+                
+                <div class="plan-pricing">
+                    <div class="monthly-price">
+                        Monthly: 
+                        <span class="plan-monthly-price">
+                            ${this.formatPriceForCurrency(plan, plan.baseCurrency, 'monthly')}
+                        </span>
                     </div>
-                    <div class="plan-modules">
-                        <strong>Modules:</strong>
-                        ${plan.modules.map(module => 
-                            `<span class="badge">${typeof module === 'string' ? module : module.name}</span>`
-                        ).join('')}
+                    <div class="annual-price">
+                        Annual: 
+                        <span class="plan-annual-price">
+                            ${this.formatPriceForCurrency(plan, plan.baseCurrency, 'annual')}
+                        </span>
                     </div>
+                    ${plan.trialPeriod > 0 ? `
+                        <div class="trial-period">
+                            Trial Period: ${plan.trialPeriod} days
+                        </div>
+                    ` : ''}
                 </div>
-                <div class="plan-actions">
-                    <button class="btn btn-sm btn-primary edit-plan" data-id="${plan._id}">Edit</button>
-                    <button class="btn btn-sm btn-danger delete-plan" data-id="${plan._id}">Delete</button>
+                
+                <div class="plan-modules">
+                    <strong>Modules:</strong>
+                    ${plan.modules.map(module => 
+                        `<span class="badge">${typeof module === 'string' ? module : module.name}</span>`
+                    ).join('')}
                 </div>
-            `;
+            </div>
+            <div class="plan-actions">
+                <button class="btn btn-sm btn-primary edit-plan" data-id="${plan._id}">Edit</button>
+                <button class="btn btn-sm btn-danger delete-plan" data-id="${plan._id}">Delete</button>
+            </div>
+        `;
 
-            plansContainer.appendChild(planCard);
-        });
+        plansContainer.appendChild(planCard);
+    });
 
-        // Setup listeners for plan actions
-        this.setupPlanCardListeners();
+    // Setup currency selector listeners
+    this.setupPlanCurrencySelectors();
+
+    // Setup listeners for plan actions
+    this.setupPlanCardListeners();
+}
+
+    // Helper method to format price for selected currency
+formatPriceForCurrency(plan, currency, type) {
+    const currencySymbol = this.getCurrencySymbol(currency);
+    
+    // If converted prices exist and the currency is different from base
+    if (plan.convertedPrices && plan.convertedPrices[currency]) {
+        const price = type === 'monthly' 
+            ? plan.convertedPrices[currency].monthlyPrice 
+            : plan.convertedPrices[currency].annualPrice;
+        
+        return `${currencySymbol} ${price.toFixed(2)}`;
     }
+    
+    // Fallback to base currency
+    const basePrice = type === 'monthly' ? plan.monthlyRate : plan.annualRate;
+    const baseCurrencySymbol = this.getCurrencySymbol(plan.baseCurrency);
+    
+    return `${baseCurrencySymbol} ${basePrice.toFixed(2)}`;
+}
+
+// Method to get currency symbol
+getCurrencySymbol(currencyCode) {
+    const currencySymbols = {
+        'USD': '$',
+        'INR': '₹',
+        'AED': 'د.إ',
+        'QAR': 'ر.ق',
+        'GBP': '£'
+    };
+    return currencySymbols[currencyCode] || currencyCode;
+}
+setupPlanCurrencySelectors() {
+    const currencySelectors = document.querySelectorAll('.plan-currency-selector');
+    
+    currencySelectors.forEach(selector => {
+        selector.addEventListener('change', (e) => {
+            const selectedCurrency = e.target.value;
+            const planCard = e.target.closest('.plan-card');
+            
+            // Update monthly price
+            const monthlyPriceElement = planCard.querySelector('.plan-monthly-price');
+            const plan = this.getCurrentPlanData(e.target);
+            monthlyPriceElement.textContent = this.formatPriceForCurrency(plan, selectedCurrency, 'monthly');
+            
+            // Update annual price
+            const annualPriceElement = planCard.querySelector('.plan-annual-price');
+            annualPriceElement.textContent = this.formatPriceForCurrency(plan, selectedCurrency, 'annual');
+        });
+    });
+}
+
+    // Helper method to get current plan data
+getCurrentPlanData(element) {
+    const planId = element.getAttribute('data-plan-id');
+    // You might want to store plans in a class property or fetch from backend
+    // This is a placeholder implementation
+    return this.plans.find(plan => plan._id === planId);
+}
 
     // Helper method to normalize price
     normalizePrice(price) {
