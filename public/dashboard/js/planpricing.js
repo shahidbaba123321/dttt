@@ -25,7 +25,7 @@ class PricingManager {
                 GBP: 0.79
             }},
             { code: 'INR', symbol: '₹', name: 'Indian Rupee', conversionRates: {
-                USD: 83.50, 
+                USD: 85.50, 
                 AED: 22.70, 
                 QAR: 22.70, 
                 GBP: 66.50
@@ -582,85 +582,198 @@ setupPlanCreationModalListeners(modules) {
         button.addEventListener('click', () => this.hideModal('planCreationModal'));
     });
 }
+
+    // Currency conversion and pricing adjustment method
+async adjustPricingForMultipleCurrencies(formData) {
+    try {
+        // Ensure we have the latest currency rates
+        await this.getCurrencyRates();
+
+        // Create a copy of the form data to avoid mutation
+        const adjustedPricing = { ...formData };
+
+        // Define markup rules
+        const markupRules = {
+            'INR': { 
+                'USD': 1.3,   // +30%
+                'GBP': 1.4,   // +40%
+                'AED': 1.3,   // +30%
+                'QAR': 1.3    // +30%
+            },
+            'USD': { 
+                'GBP': 1.2    // +20%
+            },
+            'AED': { 
+                'GBP': 1.3    // +30%
+            },
+            'QAR': { 
+                'GBP': 1.3    // +30%
+            }
+        };
+
+        // Supported currencies
+        const supportedCurrencies = ['USD', 'INR', 'GBP', 'AED', 'QAR'];
+
+        // Prepare converted prices for all currencies
+        const convertedPrices = {
+            [formData.currency]: {
+                monthlyPrice: formData.monthlyPrice,
+                annualPrice: formData.annualPrice
+            }
+        };
+
+        // Convert prices to other currencies
+        for (const targetCurrency of supportedCurrencies) {
+            if (targetCurrency === formData.currency) continue;
+
+            // Get markup
+            const markup = this.getMarkup(formData.currency, targetCurrency);
+
+            // Convert monthly price
+            const convertedMonthlyPrice = await this.convertCurrency(
+                formData.monthlyPrice, 
+                formData.currency, 
+                targetCurrency
+            );
+
+            // Convert annual price
+            const convertedAnnualPrice = await this.convertCurrency(
+                formData.annualPrice, 
+                formData.currency, 
+                targetCurrency
+            );
+
+            // Apply markup if exists
+            const adjustedMonthlyPrice = markup 
+                ? convertedMonthlyPrice * markup 
+                : convertedMonthlyPrice;
+
+            const adjustedAnnualPrice = markup 
+                ? convertedAnnualPrice * markup 
+                : convertedAnnualPrice;
+
+            // Store converted and adjusted prices
+            convertedPrices[targetCurrency] = {
+                monthlyPrice: Math.round(adjustedMonthlyPrice * 100) / 100,
+                annualPrice: Math.round(adjustedAnnualPrice * 100) / 100
+            };
+        }
+
+        // Add converted prices to the form data
+        adjustedPricing.convertedPrices = convertedPrices;
+
+        return adjustedPricing;
+    } catch (error) {
+        console.error('Currency conversion error:', error);
+        // Fallback to original pricing if conversion fails
+        return formData;
+    }
+}
+
+// Helper method to get markup
+getMarkup(fromCurrency, toCurrency) {
+    const markupRules = {
+        'INR': { 
+            'USD': 1.3,   // +30%
+            'GBP': 1.4,   // +40%
+            'AED': 1.3,   // +30%
+            'QAR': 1.3    // +30%
+        },
+        'USD': { 
+            'GBP': 1.2    // +20%
+        },
+        'AED': { 
+            'GBP': 1.3    // +30%
+        },
+        'QAR': { 
+            'GBP': 1.3    // +30%
+        }
+    };
+
+    // Check if markup exists
+    return markupRules[fromCurrency]?.[toCurrency] || null;
+}
+
     
 
 
     
         // Save plan method
     async savePlan(modules) {
-        try {
-            // Collect form data
-            const formData = {
-                name: this.getInputValue('planName', 'Plan Name'),
-                description: this.getInputValue('planDescription', 'Description'),
-                currency: this.getInputValue('planCurrency', 'Currency'),
-                monthlyPrice: this.getNumericInputValue('monthlyRate', 'Monthly Rate'),
-                annualPrice: this.getNumericInputValue('annualRate', 'Annual Rate'),
-                trialPeriod: parseInt(document.getElementById('trialPeriod').value) || 0,
-                isActive: this.getInputValue('planStatus', 'Plan Status') === 'active',
-                features: this.getSelectedModuleNames(modules)
-            };
+    try {
+        // Collect form data
+        const formData = {
+            name: this.getInputValue('planName', 'Plan Name'),
+            description: this.getInputValue('planDescription', 'Description'),
+            currency: this.getInputValue('planCurrency', 'Currency'),
+            monthlyPrice: this.getNumericInputValue('monthlyRate', 'Monthly Rate'),
+            annualPrice: this.getNumericInputValue('annualRate', 'Annual Rate'),
+            trialPeriod: parseInt(document.getElementById('trialPeriod').value) || 0,
+            isActive: this.getInputValue('planStatus', 'Plan Status') === 'active',
+            features: this.getSelectedModuleNames(modules)
+        };
 
-            // Validate form data
-            const validationErrors = this.validatePlanData(formData, modules);
-            if (validationErrors.length > 0) {
-                this.showValidationErrors(validationErrors);
-                return;
-            }
+        // Adjust pricing for multiple currencies
+        const adjustedPricing = await this.adjustPricingForMultipleCurrencies(formData);
 
-            // Send plan to backend
-            const response = await fetch(`${this.baseUrl}/plans`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
-
-            const responseData = await response.json();
-
-            if (!response.ok) {
-                throw new Error(responseData.message || 'Failed to create plan');
-            }
-
-            // Create audit log for plan creation
-            await this.createAuditLog('PLAN_CREATED', {
-                planId: responseData.data._id,
-                planName: formData.name,
-                planDetails: {
-                    currency: formData.currency,
-                    monthlyPrice: formData.monthlyPrice,
-                    annualPrice: formData.annualPrice,
-                    trialPeriod: formData.trialPeriod,
-                    isActive: formData.isActive,
-                    features: formData.features
-                }
-            });
-
-            // Show success notification
-            this.showSuccessNotification('Plan created successfully');
-
-            // Refresh plans list
-            await this.fetchAndDisplayPlans();
-
-            // Close modal
-            this.hideModal();
-
-            return responseData.data;
-
-        } catch (error) {
-            // Log error to audit logs
-            await this.createAuditLog('PLAN_CREATION_FAILED', {
-                errorMessage: error.message,
-                errorStack: error.stack
-            });
-
-            this.showErrorNotification(`Failed to save plan: ${error.message}`);
-            throw error;
+        // Validate form data
+        const validationErrors = this.validatePlanData(adjustedPricing, modules);
+        if (validationErrors.length > 0) {
+            this.showValidationErrors(validationErrors);
+            return;
         }
-    }
 
+        // Send plan to backend
+        const response = await fetch(`${this.baseUrl}/plans`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(adjustedPricing)
+        });
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+            throw new Error(responseData.message || 'Failed to create plan');
+        }
+
+        // Create audit log for plan creation
+        await this.createAuditLog('PLAN_CREATED', {
+            planId: responseData.data._id,
+            planName: adjustedPricing.name,
+            planDetails: {
+                currency: adjustedPricing.currency,
+                monthlyPrice: adjustedPricing.monthlyPrice,
+                annualPrice: adjustedPricing.annualPrice,
+                convertedPrices: adjustedPricing.convertedPrices
+            }
+        });
+
+        // Show success notification
+        this.showSuccessNotification('Plan created successfully');
+
+        // Refresh plans list
+        await this.fetchAndDisplayPlans();
+
+        // Close modal
+        this.hideModal();
+
+        return responseData.data;
+
+    } catch (error) {
+        // Log error to audit logs
+        await this.createAuditLog('PLAN_CREATION_FAILED', {
+            errorMessage: error.message,
+            errorStack: error.stack
+        });
+
+        this.showErrorNotification(`Failed to save plan: ${error.message}`);
+        throw error;
+    }
+}
+    
     // Show validation errors
     showValidationErrors(errors) {
         // Create error message container
@@ -1334,91 +1447,92 @@ escapeHtml(unsafe) {
 
     // Update Plan Method
     async updatePlan() {
-        try {
-            // Collect selected modules
-            const selectedModules = Array.from(
-                document.querySelectorAll('#editModulesContainer input:checked')
-            ).map(checkbox => checkbox.value);
+    try {
+        // Collect selected modules
+        const selectedModules = Array.from(
+            document.querySelectorAll('#editModulesContainer input:checked')
+        ).map(checkbox => checkbox.value);
 
-            // Collect form data
-            const formData = {
-                planId: document.getElementById('editPlanId').value,
-                name: document.getElementById('editPlanName').value.trim(),
-                description: document.getElementById('editPlanDescription').value.trim(),
-                currency: document.getElementById('editPlanCurrency').value,
-                monthlyPrice: parseFloat(document.getElementById('editMonthlyRate').value),
-                annualPrice: parseFloat(document.getElementById('editAnnualRate').value),
-                trialPeriod: parseInt(document.getElementById('editTrialPeriod').value) || 0,
-                isActive: document.getElementById('editPlanStatus').value === 'active',
-                features: selectedModules
-            };
+        // Collect form data
+        const formData = {
+            planId: document.getElementById('editPlanId').value,
+            name: document.getElementById('editPlanName').value.trim(),
+            description: document.getElementById('editPlanDescription').value.trim(),
+            currency: document.getElementById('editPlanCurrency').value,
+            monthlyPrice: parseFloat(document.getElementById('editMonthlyRate').value),
+            annualPrice: parseFloat(document.getElementById('editAnnualRate').value),
+            trialPeriod: parseInt(document.getElementById('editTrialPeriod').value) || 0,
+            isActive: document.getElementById('editPlanStatus').value === 'active',
+            features: selectedModules
+        };
 
-            // Validate form data
-            this.validateUpdatePlanData(formData);
+        // Adjust pricing for multiple currencies
+        const adjustedPricing = await this.adjustPricingForMultipleCurrencies(formData);
 
-            // Fetch existing plan details for comparison
-            const existingPlanResponse = await fetch(`${this.baseUrl}/plans/${formData.planId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            const existingPlanData = await existingPlanResponse.json();
-            const existingPlan = existingPlanData.data;
+        // Validate form data
+        this.validateUpdatePlanData(adjustedPricing);
 
-            // Send update request
-            const response = await fetch(`${this.baseUrl}/plans/${formData.planId}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    ...formData,
-                    auditDetails: {
-                        changes: this.calculatePlanChanges(existingPlan, formData)
-                    }
-                })
-            });
-
-            const responseData = await response.json();
-
-            if (!response.ok) {
-                throw new Error(responseData.message || 'Failed to update plan');
+        // Fetch existing plan details for comparison
+        const existingPlanResponse = await fetch(`${this.baseUrl}/plans/${adjustedPricing.planId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
             }
+        });
+        const existingPlanData = await existingPlanResponse.json();
+        const existingPlan = existingPlanData.data;
 
-            // Create audit log for plan update
-            await this.createAuditLog('PLAN_UPDATED', {
-                planId: formData.planId,
-                planName: formData.name,
-                changes: this.calculatePlanChanges(existingPlan, formData)
-            });
+        // Send update request
+        const response = await fetch(`${this.baseUrl}/plans/${adjustedPricing.planId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(adjustedPricing)
+        });
 
-            // Show success notification
-            this.showSuccessNotification('Plan updated successfully');
+        const responseData = await response.json();
 
-            // Refresh plans list
-            await this.fetchAndDisplayPlans();
-
-            // Close modal
-            this.hideModal();
-
-            return responseData.data;
-
-        } catch (error) {
-            // Log error to audit logs
-            await this.createAuditLog('PLAN_UPDATE_FAILED', {
-                planId: formData?.planId,
-                errorMessage: error.message,
-                errorStack: error.stack
-            });
-
-            this.showErrorNotification(error.message);
-            throw error;
+        if (!response.ok) {
+            throw new Error(responseData.message || 'Failed to update plan');
         }
-    }
 
+        // Create audit log for plan update
+        await this.createAuditLog('PLAN_UPDATED', {
+            planId: adjustedPricing.planId,
+            planName: adjustedPricing.name,
+            changes: {
+                ...this.calculatePlanChanges(existingPlan, adjustedPricing),
+                convertedPrices: adjustedPricing.convertedPrices
+            }
+        });
+
+        // Show success notification
+        this.showSuccessNotification('Plan updated successfully');
+
+        // Refresh plans list
+        await this.fetchAndDisplayPlans();
+
+        // Close modal
+        this.hideModal();
+
+        return responseData.data;
+
+    } catch (error) {
+        // Log error to audit logs
+        await this.createAuditLog('PLAN_UPDATE_FAILED', {
+            planId: formData?.planId,
+            errorMessage: error.message,
+            errorStack: error.stack
+        });
+
+        this.showErrorNotification(error.message);
+        throw error;
+    }
+}
+    
     // Calculate changes between existing and new plan
     calculatePlanChanges(existingPlan, newPlan) {
         const changes = {};
