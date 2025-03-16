@@ -384,20 +384,18 @@
     </style>
 </head>
 <body>
-    <div class="page-container">
-        <div class="page-header">
-            <h1>Plan Pricing Management</h1>
-            <button id="addNewPlanBtn" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add New Plan
-            </button>
-        </div>
+   <div class="page-container">
+    <div class="page-header">
+        <h1>Plan Pricing Management</h1>
+        <button id="addNewPlanBtn" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New Plan
+        </button>
+    </div>
 
-        <div id="plansListContainer" class="plans-container">
-            <!-- Plans will be dynamically populated here -->
-            <div class="loading-placeholder">
-                <i class="fas fa-spinner fa-spin"></i>
-                Loading Plans...
-            </div>
+    <div id="plansListContainer" class="plans-container">
+        <div class="loading-placeholder">
+            <i class="fas fa-spinner fa-spin"></i>
+            Loading Plans...
         </div>
     </div>
 
@@ -406,32 +404,87 @@
 
     <!-- Confirmation Modal Placeholder -->
     <div id="confirmationModalContainer"></div>
-     <!-- Activity Log Section -->
-        <div class="col-md-4">
-            <div class="card activity-log-container">
-                <div class="card-header">
-                    <h5 class="card-title">
-                        <i class="fas fa-history"></i> Plan Activity Log
-                    </h5>
-                    <div class="filter-options">
-                        <select id="activityLogFilter" class="form-control form-control-sm">
-                            <option value="all">All Activities</option>
-                            <option value="PLAN_CREATED">Plan Created</option>
-                            <option value="PLAN_UPDATED">Plan Updated</option>
-                            <option value="PLAN_DELETED">Plan Deleted</option>
-                        </select>
+
+    <!-- Activity Log Section -->
+    <div class="col-md-4">
+        <div class="card activity-log-container">
+            <div class="card-header">
+                <h5 class="card-title">
+                    <i class="fas fa-history"></i> Plan Activity Log
+                </h5>
+                <div class="filter-options">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label>Date From</label>
+                            <input type="date" id="activityLogDateFrom" class="form-control form-control-sm">
+                        </div>
+                        <div class="col-md-6">
+                            <label>Date To</label>
+                            <input type="date" id="activityLogDateTo" class="form-control form-control-sm">
+                        </div>
+                    </div>
+                    <select id="activityLogFilter" class="form-control form-control-sm mt-2">
+                        <option value="all">All Activities</option>
+                        <option value="PLAN_CREATED">Plan Created</option>
+                        <option value="PLAN_UPDATED">Plan Updated</option>
+                        <option value="PLAN_DELETED">Plan Deleted</option>
+                    </select>
+                    <div class="d-flex justify-content-between mt-2">
+                        <button id="applyActivityLogFilters" class="btn btn-sm btn-primary mr-1">
+                            <i class="fas fa-filter"></i> Apply
+                        </button>
+                        <button id="resetActivityLogFilters" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
                     </div>
                 </div>
-                <div class="card-body" id="activityLogContainer">
-                    <div class="no-activities-placeholder">
-                        <i class="fas fa-inbox text-muted"></i>
-                        <p>No recent activities</p>
-                    </div>
-                </div>
-                <div class="card-footer text-center">
-                    <button id="loadMoreActivitiesBtn" class="btn btn-sm btn-outline-primary" style="display: none;">
-                        Load More Activities
+            </div>
+            <div class="card-body" id="activityLogContainer">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Activity Type</th>
+                            <th>Plan Name</th>
+                            <th>User</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activityLogTableBody">
+                        <tr>
+                            <td colspan="5" class="text-center">
+                                <div class="no-activities-placeholder">
+                                    <i class="fas fa-inbox text-muted"></i>
+                                    <p>No recent activities</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer text-center">
+                <button id="loadMoreActivitiesBtn" class="btn btn-sm btn-outline-primary" style="display: none;">
+                    Load More Activities
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Log Details Modal -->
+    <div class="modal fade" id="logDetailsModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Log Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
                     </button>
+                </div>
+                <div class="modal-body" id="logDetailsModalBody">
+                    <!-- Details will be dynamically populated -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
