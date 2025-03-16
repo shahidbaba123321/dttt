@@ -1990,34 +1990,48 @@ escapeHtml(unsafe) {
     }
 
     // Fetch plan activity logs
-    async fetchPlanActivityLogs(filter = 'all', page = 1, limit = 10) {
-        try {
-            const queryParams = new URLSearchParams({
-                filter,
-                page: page.toString(),
-                limit: limit.toString()
-            });
+   async fetchPlanActivityLogs(
+    type = 'all', 
+    page = 1, 
+    limit = 10, 
+    dateFrom = null, 
+    dateTo = null
+) {
+    try {
+        // Construct query parameters
+        const params = new URLSearchParams({
+            type,
+            page: page.toString(),
+            limit: limit.toString()
+        });
 
-            const response = await fetch(`${this.baseUrl}/plan-activity-logs?${queryParams}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch activity logs');
-            }
-
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.error('Error fetching activity logs:', error);
-            this.showErrorNotification('Failed to load activity logs');
-            return { logs: [], total: 0 };
+        // Add date filters if they exist
+        if (dateFrom) {
+            params.append('dateFrom', dateFrom);
         }
+        if (dateTo) {
+            params.append('dateTo', dateTo);
+        }
+
+        const response = await fetch(`${this.baseUrl}/plan-activity-logs?${params}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch activity logs');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching activity logs:', error);
+        this.showErrorNotification('Failed to load activity logs');
+        return { logs: [], total: 0 };
     }
+}
 
     // Method to get meaningful user information
 getUserDisplayInfo(log) {
@@ -2402,38 +2416,108 @@ generateHueFromString(str) {
 
     // Setup activity log feature
     setupActivityLogFeature() {
-        // Get elements with null checks
-        const filterSelect = document.getElementById('activityLogFilter');
-        const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+    // Initialize filter state
+    this.activityLogFilters = {
+        type: 'all',
+        dateFrom: null,
+        dateTo: null,
+        page: 1,
+        limit: 10
+    };
 
-        // Only proceed if elements exist
-        if (filterSelect) {
-            // Initial load
+    // Get elements with null checks
+    const filterSelect = document.getElementById('activityLogFilter');
+    const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+    const dateFromInput = document.getElementById('activityLogDateFrom');
+    const dateToInput = document.getElementById('activityLogDateTo');
+    const applyFiltersBtn = document.getElementById('applyActivityLogFilters');
+    const resetFiltersBtn = document.getElementById('resetActivityLogFilters');
+
+    // Initial load
+    this.loadActivityLogs();
+
+    // Filter change event for activity type
+    if (filterSelect) {
+        filterSelect.addEventListener('change', (e) => {
+            this.activityLogFilters.type = e.target.value;
+            this.activityLogFilters.page = 1;
             this.loadActivityLogs();
-
-            // Filter change event
-            filterSelect.addEventListener('change', (e) => {
-                this.loadActivityLogs(e.target.value);
-            });
-        }
-
-        if (loadMoreBtn) {
-            // Load more button
-            loadMoreBtn.addEventListener('click', () => {
-                this.loadMoreActivityLogs();
-            });
-        }
+        });
     }
 
+    // Apply filters button
+    if (applyFiltersBtn) {
+        applyFiltersBtn.addEventListener('click', () => {
+            // Update filters
+            this.activityLogFilters.type = filterSelect.value;
+            this.activityLogFilters.dateFrom = dateFromInput.value ? 
+                new Date(dateFromInput.value).toISOString() : null;
+            this.activityLogFilters.dateTo = dateToInput.value ? 
+                new Date(dateToInput.value).toISOString() : null;
+            this.activityLogFilters.page = 1;
+
+            // Load logs with new filters
+            this.loadActivityLogs();
+        });
+    }
+
+    // Reset filters button
+    if (resetFiltersBtn) {
+        resetFiltersBtn.addEventListener('click', () => {
+            // Reset input fields
+            filterSelect.value = 'all';
+            dateFromInput.value = '';
+            dateToInput.value = '';
+
+            // Reset filter state
+            this.activityLogFilters = {
+                type: 'all',
+                dateFrom: null,
+                dateTo: null,
+                page: 1,
+                limit: 10
+            };
+
+            // Reload logs
+            this.loadActivityLogs();
+        });
+    }
+
+    // Load more button
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', () => {
+            // Increment page for load more functionality
+            this.activityLogFilters.page++;
+            this.loadMoreActivityLogs();
+        });
+    }
+}
     // Load activity logs
-    async loadActivityLogs(filter = 'all') {
-        try {
-            const data = await this.fetchPlanActivityLogs(filter);
-            this.renderActivityLogs(data.logs);
-        } catch (error) {
-            console.error('Error loading activity logs:', error);
+   async loadActivityLogs() {
+    try {
+        // Fetch logs with current filters
+        const data = await this.fetchPlanActivityLogs(
+            this.activityLogFilters.type, 
+            this.activityLogFilters.page, 
+            this.activityLogFilters.limit,
+            this.activityLogFilters.dateFrom,
+            this.activityLogFilters.dateTo
+        );
+
+        // Render logs
+        this.renderActivityLogsTable(data.logs);
+
+        // Update load more button visibility
+        const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+        if (loadMoreBtn) {
+            loadMoreBtn.style.display = 
+                data.logs.length < this.activityLogFilters.limit ? 'none' : 'block';
         }
+
+    } catch (error) {
+        console.error('Error loading activity logs:', error);
     }
+}
 
     // Ensure these methods are defined in the class
 formatTimestamp(timestamp) {
@@ -2447,100 +2531,86 @@ formatTimestamp(timestamp) {
     });
 }
 
+    // Helper methods
+formatActivityType(type) {
+    const typeMap = {
+        'PLAN_CREATED': 'Plan Created',
+        'PLAN_UPDATED': 'Plan Updated',
+        'PLAN_DELETED': 'Plan Deleted',
+        'PLAN_VIEWED': 'Plan Viewed'
+    };
+    return typeMap[type] || type;
+}
+
+extractPlanName(log) {
+    return log.details?.planName || 
+           log.details?.name || 
+           'Unnamed Plan';
+}
+    
+formatUserInfo(log) {
+    const user = log.user || log.details?.user || {};
+    return user.name || user.email || 'System User';
+}
+
+prepareLogDetails(log) {
+    return encodeURIComponent(JSON.stringify(log.details || {}, null, 2));
+}
+
+
 
     // Load more activity logs
     async loadMoreActivityLogs() {
-    // Initialize page tracking if not already done
-    if (!this.activityLogCurrentPage) {
-        this.activityLogCurrentPage = 1;
-    }
-
     try {
-        // Increment page number
-        this.activityLogCurrentPage++;
-
-        // Get current filter
-        const filterSelect = document.getElementById('activityLogFilter');
-        const currentFilter = filterSelect ? filterSelect.value : 'all';
-
         // Fetch next page of logs
         const data = await this.fetchPlanActivityLogs(
-            currentFilter, 
-            this.activityLogCurrentPage
+            this.activityLogFilters.type, 
+            this.activityLogFilters.page, 
+            this.activityLogFilters.limit,
+            this.activityLogFilters.dateFrom,
+            this.activityLogFilters.dateTo
         );
 
-        // Check if new logs exist
-        if (!data.logs || data.logs.length === 0) {
+        // Append new logs to existing container
+        const container = document.getElementById('activityLogTableBody');
+        
+        if (data.logs.length === 0) {
             // No more logs to load
             const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
             if (loadMoreBtn) loadMoreBtn.style.display = 'none';
-            this.showErrorNotification('No more activities to load');
-            
-            // Decrement page back since no logs were found
-            this.activityLogCurrentPage--;
             return;
-        }
-
-        // Append new logs to existing container
-        const container = document.getElementById('activityLogContainer');
-        
-        // Remove no activities placeholder if it exists
-        const placeholder = container.querySelector('.no-activities-placeholder');
-        if (placeholder) {
-            placeholder.remove();
         }
 
         // Render and append new logs
         data.logs.forEach(log => {
-            const logItem = document.createElement('div');
-            logItem.className = 'activity-log-item';
-            
-            // Determine icon based on activity type
-            const iconMap = {
-                'PLAN_CREATED': 'fa-plus-circle text-success',
-                'PLAN_UPDATED': 'fa-edit text-warning',
-                'PLAN_DELETED': 'fa-trash-alt text-danger'
-            };
-
-            const icon = iconMap[log.type] || 'fa-history';
-
-            logItem.innerHTML = `
-                <div class="d-flex align-items-center">
-                    <i class="fas ${icon} activity-icon"></i>
-                    <div class="flex-grow-1">
-                        <div class="activity-details">
-                            ${this.formatActivityLogMessage(log)}
-                        </div>
-                        <small class="activity-timestamp text-muted">
-                            ${this.formatTimestamp(log.timestamp)}
-                        </small>
-                    </div>
-                </div>
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${this.formatDetailedTimestamp(log.timestamp)}</td>
+                <td>${this.formatActivityType(log.type)}</td>
+                <td>${this.extractPlanName(log)}</td>
+                <td>${this.formatUserInfo(log)}</td>
+                <td>
+                    <button class="btn btn-sm btn-info" onclick="showLogDetails('${this.prepareLogDetails(log)}')">
+                        View Details
+                    </button>
+                </td>
             `;
-
-            container.appendChild(logItem);
+            container.appendChild(row);
         });
 
         // Update load more button visibility
         const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
         if (loadMoreBtn) {
-            if (data.logs.length < 10) {
-                loadMoreBtn.style.display = 'none';
-            } else {
-                loadMoreBtn.style.display = 'block';
-            }
+            loadMoreBtn.style.display = 
+                data.logs.length < this.activityLogFilters.limit ? 'none' : 'block';
         }
 
     } catch (error) {
         console.error('Error loading more activity logs:', error);
-        
-        // Decrement page back in case of error
-        this.activityLogCurrentPage--;
-
-        // Show error notification
         this.showErrorNotification('Failed to load more activities');
     }
-  }
+}
+
 }
 
 // Expose the PricingManager to the global window object
