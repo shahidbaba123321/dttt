@@ -286,17 +286,23 @@ reinitializeEventListeners() {
 
     
 
-    
-
-
-    
-
-
     // Create dynamic plan creation modal
     async showPlanCreationModal() {
     try {
+        // Log the start of modal creation
+        console.log('Attempting to create plan creation modal');
+
         // Fetch available modules
         const modules = await this.fetchAvailableModules();
+
+        // Find or create modal container
+        let modalContainer = document.getElementById('planFormModalContainer');
+        if (!modalContainer) {
+            console.warn('Modal container not found, creating new container');
+            modalContainer = document.createElement('div');
+            modalContainer.id = 'planFormModalContainer';
+            document.body.appendChild(modalContainer);
+        }
 
         // Remove any existing modals
         const existingModal = document.getElementById('planCreationModal');
@@ -304,8 +310,7 @@ reinitializeEventListeners() {
             existingModal.remove();
         }
 
-        // Create modal container
-        const modalContainer = document.getElementById('planFormModalContainer');
+        // Create modal HTML
         const modalDiv = document.createElement('div');
         modalDiv.innerHTML = `
             <div class="modal" id="planCreationModal" tabindex="-1" role="dialog">
@@ -412,6 +417,9 @@ reinitializeEventListeners() {
         // Append to container
         modalContainer.appendChild(modalDiv.firstElementChild);
 
+        // Log modal creation
+        console.log('Modal created and appended to container');
+
         // Show modal
         this.showModal('planCreationModal');
 
@@ -419,7 +427,14 @@ reinitializeEventListeners() {
         this.setupPlanCreationModalListeners(modules);
 
     } catch (error) {
-        console.error('Error creating plan modal:', error);
+        // Comprehensive error logging
+        console.error('Complete Error Details for Plan Creation Modal:', {
+            message: error.message,
+            name: error.name,
+            stack: error.stack
+        });
+
+        // Show error notification
         this.showErrorNotification(`Failed to create plan modal: ${error.message}`);
     }
 }
@@ -455,9 +470,18 @@ async debugModulesEndpoint() {
 }
 
 showModal(modalId = 'planCreationModal') {
-    // Remove any existing modals
+    // Comprehensive logging
+    console.log(`Attempting to show modal with ID: ${modalId}`);
+
+    // Log all existing modals
     const existingModals = document.querySelectorAll('.modal');
-    existingModals.forEach(modal => modal.remove());
+    console.log(`Existing modals before removal: ${existingModals.length}`);
+
+    // Remove any existing modals
+    existingModals.forEach(modal => {
+        console.log(`Removing modal: ${modal.id}`);
+        modal.remove();
+    });
 
     // Remove any existing backdrops
     const existingBackdrops = document.querySelectorAll('.modal-backdrop');
@@ -466,9 +490,22 @@ showModal(modalId = 'planCreationModal') {
     // Find the modal
     const modal = document.getElementById(modalId);
     
+    // Log modal search results
+    console.log(`Modal found: ${!!modal}`);
+    if (!modal) {
+        // Log all elements in the document for debugging
+        console.log('All elements in the document:');
+        document.querySelectorAll('*').forEach(el => {
+            if (el.id) {
+                console.log(el.id);
+            }
+        });
+    }
+
     if (modal) {
         // Append modal to body if not already there
         if (!document.body.contains(modal)) {
+            console.log('Appending modal to body');
             document.body.appendChild(modal);
         }
 
@@ -503,6 +540,10 @@ showModal(modalId = 'planCreationModal') {
         backdrop.style.zIndex = '1040';
     } else {
         console.error(`Modal with id ${modalId} not found`);
+        
+        // Additional debugging information
+        const allModalContainers = document.querySelectorAll('[id$="ModalContainer"]');
+        console.log('Existing modal containers:', allModalContainers);
     }
 }
     
