@@ -1130,6 +1130,8 @@ getSelectedModules() {
 
 async editPlan(planId) {
     try {
+        console.log(`Attempting to edit plan: ${planId}`);
+
         // Fetch plan details
         const response = await fetch(`${this.baseUrl}/plans/${planId}`, {
             method: 'GET',
@@ -1143,10 +1145,13 @@ async editPlan(planId) {
             throw new Error('Failed to fetch plan details');
         }
 
-        const planData = await response.json();
+        const responseData = await response.json();
+        const plan = responseData.data;
 
-        // Create edit modal dynamically
-        this.createEditPlanModal(planData.data);
+        console.log('Fetched Plan Details:', plan);
+
+        // Create edit modal
+        this.createEditPlanModal(plan);
 
     } catch (error) {
         console.error('Error fetching plan details:', error);
@@ -1155,15 +1160,25 @@ async editPlan(planId) {
 }
 
 
+
     // Create Edit Plan Modal
 createEditPlanModal(plan) {
-    // Remove any existing modals
+    // Find or create modal container
+    let modalContainer = document.getElementById('planFormModalContainer');
+    if (!modalContainer) {
+        console.warn('Modal container not found, creating new container');
+        modalContainer = document.createElement('div');
+        modalContainer.id = 'planFormModalContainer';
+        document.body.appendChild(modalContainer);
+    }
+
+    // Remove existing edit modal
     const existingModal = document.getElementById('planEditModal');
     if (existingModal) {
         existingModal.remove();
     }
 
-    const modalContainer = document.getElementById('planFormModalContainer');
+    // Create modal HTML
     const modalDiv = document.createElement('div');
     modalDiv.innerHTML = `
         <div class="modal" id="planEditModal" tabindex="-1" role="dialog">
@@ -1260,6 +1275,7 @@ createEditPlanModal(plan) {
     // Setup event listeners
     this.setupEditPlanModalListeners(plan);
 }
+
     
     setupEditPlanModalListeners(plan) {
     // Currency symbol update
@@ -1405,6 +1421,8 @@ validateUpdatePlanData(formData) {
 // Delete Plan Method
 async deletePlan(planId) {
     try {
+        console.log(`Attempting to delete plan: ${planId}`);
+
         // Show confirmation modal
         const confirmed = await this.showConfirmationModal(
             'Delete Plan', 
@@ -1412,6 +1430,7 @@ async deletePlan(planId) {
         );
 
         if (!confirmed) {
+            console.log('Plan deletion cancelled');
             return;
         }
 
@@ -1426,7 +1445,7 @@ async deletePlan(planId) {
         const planData = await planResponse.json();
         const plan = planData.data;
 
-        // Send delete request with audit context
+        // Send delete request
         const response = await fetch(`${this.baseUrl}/plans/${planId}`, {
             method: 'DELETE',
             headers: {
@@ -1461,7 +1480,6 @@ async deletePlan(planId) {
     } catch (error) {
         console.error('Error deleting plan:', error);
         this.showErrorNotification(error.message);
-        throw error;
     }
 }
 
@@ -1469,14 +1487,22 @@ async deletePlan(planId) {
     // Utility method for confirmation modal
 showConfirmationModal(title, message) {
     return new Promise((resolve) => {
-        // Remove any existing confirmation modals
+        // Find or create modal container
+        let modalContainer = document.getElementById('confirmationModalContainer');
+        if (!modalContainer) {
+            console.warn('Confirmation modal container not found, creating new container');
+            modalContainer = document.createElement('div');
+            modalContainer.id = 'confirmationModalContainer';
+            document.body.appendChild(modalContainer);
+        }
+
+        // Remove existing confirmation modal
         const existingModal = document.getElementById('confirmationModal');
         if (existingModal) {
             existingModal.remove();
         }
 
-        // Create confirmation modal dynamically
-        const modalContainer = document.getElementById('confirmationModalContainer');
+        // Create confirmation modal
         const modalDiv = document.createElement('div');
         modalDiv.innerHTML = `
             <div class="modal" id="confirmationModal" tabindex="-1">
@@ -1521,7 +1547,6 @@ showConfirmationModal(title, message) {
         });
     });
 }
-
     // Convert prices to all supported currencies
     async convertPricesToAllCurrencies(monthlyRate, annualRate, baseCurrency) {
         const convertedPrices = {
