@@ -109,6 +109,45 @@
     background-color: #000;
     opacity: 0.5;
 }
+        .activity-log-container {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .activity-log-item {
+        border-bottom: 1px solid #eee;
+        padding: 10px;
+        transition: background-color 0.3s ease;
+    }
+
+    .activity-log-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .activity-log-item .activity-icon {
+        margin-right: 10px;
+        color: #6c757d;
+    }
+
+    .activity-log-item .activity-details {
+        font-size: 0.9rem;
+    }
+
+    .activity-log-item .activity-timestamp {
+        color: #6c757d;
+        font-size: 0.8rem;
+    }
+
+    .no-activities-placeholder {
+        text-align: center;
+        color: #6c757d;
+        padding: 20px;
+    }
+
+    .no-activities-placeholder i {
+        font-size: 3rem;
+        margin-bottom: 10px;
+    }
     </style>
 </head>
 <body>
@@ -134,5 +173,36 @@
 
     <!-- Confirmation Modal Placeholder -->
     <div id="confirmationModalContainer"></div>
+     <!-- Activity Log Section -->
+        <div class="col-md-4">
+            <div class="card activity-log-container">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-history"></i> Plan Activity Log
+                    </h5>
+                    <div class="filter-options">
+                        <select id="activityLogFilter" class="form-control form-control-sm">
+                            <option value="all">All Activities</option>
+                            <option value="PLAN_CREATED">Plan Created</option>
+                            <option value="PLAN_UPDATED">Plan Updated</option>
+                            <option value="PLAN_DELETED">Plan Deleted</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body" id="activityLogContainer">
+                    <div class="no-activities-placeholder">
+                        <i class="fas fa-inbox text-muted"></i>
+                        <p>No recent activities</p>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <button id="loadMoreActivitiesBtn" class="btn btn-sm btn-outline-primary" style="display: none;">
+                        Load More Activities
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
