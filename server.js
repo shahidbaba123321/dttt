@@ -4903,17 +4903,6 @@ app.get('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
             });
         }
 
-        // Log request details
-        console.log('Plan Fetch Request:', {
-            planId: planId,
-            requestingUser: {
-                id: req.user.userId,
-                email: req.user.email,
-                role: req.user.role
-            },
-            timestamp: new Date().toISOString()
-        });
-
         // Find plan in database
         const plan = await database.collection('plans').findOne({ 
             _id: new ObjectId(planId) 
@@ -4927,53 +4916,16 @@ app.get('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
             });
         }
 
-        // Define supported currencies
-        const supportedCurrencies = [
-            { 
-                code: 'USD', 
-                symbol: '$', 
-                name: 'US Dollar', 
-                country: 'USA',
-                locale: 'en-US',
-                decimalPlaces: 2
-            },
-            { 
-                code: 'INR', 
-                symbol: '₹', 
-                name: 'Indian Rupee', 
-                country: 'India',
-                locale: 'en-IN',
-                decimalPlaces: 2
-            },
-            { 
-                code: 'AED', 
-                symbol: 'د.إ', 
-                name: 'UAE Dirham', 
-                country: 'UAE',
-                locale: 'ar-AE',
-                decimalPlaces: 2
-            },
-            { 
-                code: 'QAR', 
-                symbol: 'ر.ق', 
-                name: 'Qatari Riyal', 
-                country: 'Qatar',
-                locale: 'ar-QA',
-                decimalPlaces: 2
-            },
-            { 
-                code: 'GBP', 
-                symbol: '£', 
-                name: 'British Pound', 
-                country: 'UK',
-                locale: 'en-GB',
-                decimalPlaces: 2
-            }
-        ];
-
-        // Validate currency
-        const currency = supportedCurrencies.find(c => c.code === plan.currency) || 
-                         supportedCurrencies.find(c => c.code === 'USD');
+        // Ensure convertedPrices exists
+        if (!plan.convertedPrices) {
+            plan.convertedPrices = {
+                USD: { monthlyPrice: plan.monthlyPrice, annualPrice: plan.annualPrice },
+                INR: { monthlyPrice: 0, annualPrice: 0 },
+                AED: { monthlyPrice: 0, annualPrice: 0 },
+                QAR: { monthlyPrice: 0, annualPrice: 0 },
+                GBP: { monthlyPrice: 0, annualPrice: 0 }
+            };
+        }
 
         // Create audit log
         await createAuditLog(
@@ -4983,56 +4935,27 @@ app.get('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
             {
                 planId: plan._id,
                 planName: plan.name,
-                currency: currency.code
+                currency: plan.currency
             }
         );
 
-        // Return plan details with comprehensive currency information
+        // Return plan details with comprehensive information
         res.json({
             success: true,
             data: {
-                _id: plan._id,
-                name: plan.name,
-                description: plan.description,
-                monthlyPrice: plan.monthlyPrice,
-                annualPrice: plan.annualPrice,
-                trialPeriod: plan.trialPeriod,
-                currency: {
-                    code: currency.code,
-                    symbol: currency.symbol,
-                    name: currency.name,
-                    country: currency.country
-                },
-                isActive: plan.isActive,
-                isSystem: plan.isSystem || false,
-                features: plan.features || [],
-                createdAt: plan.createdAt,
-                updatedAt: plan.updatedAt,
-                supportedCurrencies: supportedCurrencies.map(c => ({
-                    code: c.code,
-                    symbol: c.symbol,
-                    name: c.name,
-                    country: c.country
-                }))
+                ...plan,
+                supportedCurrencies: [
+                    { code: 'USD', symbol: '$', name: 'US Dollar', country: 'USA' },
+                    { code: 'INR', symbol: '₹', name: 'Indian Rupee', country: 'India' },
+                    { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham', country: 'UAE' },
+                    { code: 'QAR', symbol: 'ر.ق', name: 'Qatari Riyal', country: 'Qatar' },
+                    { code: 'GBP', symbol: '£', name: 'British Pound', country: 'UK' }
+                ]
             }
         });
 
     } catch (error) {
-        console.error('Error fetching plan details:', {
-            error: error.message,
-            stack: error.stack,
-            planId: req.params.planId
-        });
-
-        // Create security log for unexpected errors
-        await security_logs.insertOne({
-            type: 'PLAN_FETCH_ERROR',
-            timestamp: new Date(),
-            userId: req.user.userId,
-            error: error.message,
-            planId: req.params.planId
-        });
-
+        console.error('Error fetching plan details:', error);
         res.status(500).json({
             success: false,
             message: 'Error fetching plan details',
@@ -5040,7 +4963,6 @@ app.get('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
         });
     }
 });
-
 // Create new plan
 // Create new plan
 app.post('/api/plans', verifyToken, verifyAdmin, async (req, res) => {
@@ -5078,6 +5000,21 @@ app.post('/api/plans', verifyToken, verifyAdmin, async (req, res) => {
                 throw new Error('Plan with this name already exists');
             }
 
+            // Prepare converted prices
+            const convertedPrices = {
+                USD: { monthlyPrice: 0, annualPrice: 0 },
+                INR: { monthlyPrice: 0, annualPrice: 0 },
+                AED: { monthlyPrice: 0, annualPrice: 0 },
+                QAR: { monthlyPrice: 0, annualPrice: 0 },
+                GBP: { monthlyPrice: 0, annualPrice: 0 }
+            };
+
+            // Set base currency prices
+            convertedPrices[currency] = {
+                monthlyPrice: parseFloat(monthlyPrice),
+                annualPrice: parseFloat(annualPrice)
+            };
+
             // Create plan object
             const plan = {
                 name,
@@ -5088,6 +5025,7 @@ app.post('/api/plans', verifyToken, verifyAdmin, async (req, res) => {
                 isActive,
                 currency,
                 features: features.map(f => ({ name: f })),
+                convertedPrices, // Add converted prices
                 createdAt: new Date(),
                 createdBy: new ObjectId(req.user.userId),
                 updatedAt: new Date()
@@ -5099,18 +5037,13 @@ app.post('/api/plans', verifyToken, verifyAdmin, async (req, res) => {
             await createAuditLog(
                 'PLAN_CREATED',
                 req.user.userId,
-                null, // No company ID in this context
+                null,
                 {
                     planId: result.insertedId,
                     planName: name,
                     planDetails: {
-                        name,
-                        description,
-                        monthlyPrice,
-                        annualPrice,
-                        currency,
-                        features,
-                        isActive
+                        ...plan,
+                        convertedPrices
                     },
                     createdBy: req.user.userId
                 },
@@ -5167,18 +5100,6 @@ app.put('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
                 throw new Error('Plan not found');
             }
 
-            // Check if new name conflicts with other plans
-            if (name && name !== existingPlan.name) {
-                const nameExists = await database.collection('plans').findOne({
-                    _id: { $ne: new ObjectId(planId) },
-                    name: { $regex: new RegExp(`^${name}$`, 'i') }
-                }, { session });
-
-                if (nameExists) {
-                    throw new Error('Plan name already exists');
-                }
-            }
-
             // Prepare update data
             const updateData = {
                 ...(name && { name }),
@@ -5191,6 +5112,24 @@ app.put('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
                 updatedAt: new Date(),
                 updatedBy: new ObjectId(req.user.userId)
             };
+
+            // Update converted prices
+            const convertedPrices = existingPlan.convertedPrices || {
+                USD: { monthlyPrice: 0, annualPrice: 0 },
+                INR: { monthlyPrice: 0, annualPrice: 0 },
+                AED: { monthlyPrice: 0, annualPrice: 0 },
+                QAR: { monthlyPrice: 0, annualPrice: 0 },
+                GBP: { monthlyPrice: 0, annualPrice: 0 }
+            };
+
+            // Update prices for the existing currency
+            convertedPrices[existingPlan.currency] = {
+                monthlyPrice: parseFloat(monthlyPrice || existingPlan.monthlyPrice),
+                annualPrice: parseFloat(annualPrice || existingPlan.annualPrice)
+            };
+
+            // Add converted prices to update data
+            updateData.convertedPrices = convertedPrices;
 
             // Update plan
             const result = await database.collection('plans').updateOne(
@@ -5217,7 +5156,10 @@ app.put('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
                 {
                     planId,
                     planName: updatedPlan.name,
-                    changes: getChanges(existingPlan, updatedPlan)
+                    changes: {
+                        ...getChanges(existingPlan, updatedPlan),
+                        convertedPrices: updatedPlan.convertedPrices
+                    }
                 },
                 session
             );
