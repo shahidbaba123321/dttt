@@ -264,6 +264,8 @@ class PricingManager {
 
     
 
+    
+
 
     
 
@@ -1030,30 +1032,259 @@ async editPlan(planId) {
             }
         });
 
+        if (!response.ok) {
+            throw new Error('Failed to fetch plan details');
+        }
+
         const planData = await response.json();
 
-        // Create audit log for plan view
-        await this.createAuditLog('VIEWED', {
-            planId: planId,
-            planName: planData.name,
-            action: 'Attempting to edit'
-        });
-
-        // Open edit modal with plan details
-        this.openEditPlanModal(planData);
+        // Create edit modal dynamically
+        this.createEditPlanModal(planData.data);
 
     } catch (error) {
-        // Log view attempt failure
-        await this.createAuditLog('VIEW_FAILED', {
-            planId: planId,
-            errorMessage: error.message
-        });
-
         console.error('Error fetching plan details:', error);
-        this.showErrorNotification('Failed to load plan details');
+        this.showErrorNotification(`Failed to load plan details: ${error.message}`);
     }
 }
 
+    // Create Edit Plan Modal
+createEditPlanModal(plan) {
+    const modalContainer = document.getElementById('planFormModalContainer');
+    modalContainer.innerHTML = `
+        <div class="modal" id="planEditModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Plan: ${plan.name}</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="planEditForm">
+                            <input type="hidden" id="editPlanId" value="${plan._id}">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Plan Name</label>
+                                        <input type="text" class="form-control" id="editPlanName" 
+                                               value="${plan.name}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Currency</label>
+                                        <select class="form-control" id="editPlanCurrency">
+                                            ${this.currencies.map(currency => 
+                                                `<option value="${currency.code}" 
+                                                    ${currency.code === plan.currency ? 'selected' : ''}>
+                                                    ${currency.name} (${currency.symbol})
+                                                </option>`
+                                            ).join('')}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Plan Description</label>
+                                <textarea class="form-control" id="editPlanDescription" rows="3">${plan.description}</textarea>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Monthly Rate</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text" id="editCurrencySymbol">${plan.currency}</span>
+                                            </div>
+                                            <input type="number" class="form-control" id="editMonthlyRate" 
+                                                   value="${plan.monthlyPrice}" min="0" step="0.01" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Annual Rate</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text" id="editCurrencySymbol">${plan.currency}</span>
+                                            </div>
+                                            <input type="number" class="form-control" id="editAnnualRate" 
+                                                   value="${plan.annualPrice}" min="0" step="0.01" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Plan Status</label>
+                                <select class="form-control" id="editPlanStatus">
+                                    <option value="active" ${plan.isActive ? 'selected' : ''}>Active</option>
+                                    <option value="inactive" ${!plan.isActive ? 'selected' : ''}>Inactive</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="updatePlanBtn">Update Plan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Show modal
+    this.showModal();
+
+    // Setup event listeners
+    this.setupEditPlanModalListeners(plan);
+}
+
+    setupEditPlanModalListeners(plan) {
+    // Currency symbol update
+    const currencySelect = document.getElementById('editPlanCurrency');
+    const currencySymbols = document.querySelectorAll('#editCurrencySymbol');
+    
+    if (currencySelect) {
+        currencySelect.addEventListener('change', (e) => {
+            const selectedCurrency = this.currencies.find(c => c.code === e.target.value);
+            currencySymbols.forEach(symbol => {
+                symbol.textContent = selectedCurrency.symbol;
+            });
+        });
+    }
+
+    // Update plan button
+    const updatePlanBtn = document.getElementById('updatePlanBtn');
+    if (updatePlanBtn) {
+        updatePlanBtn.addEventListener('click', () => this.updatePlan());
+    }
+}
+
+    // Update Plan Method
+async updatePlan() {
+    try {
+        // Collect form data
+        const formData = {
+            planId: document.getElementById('editPlanId').value,
+            name: document.getElementById('editPlanName').value.trim(),
+            description: document.getElementById('editPlanDescription').value.trim(),
+            currency: document.getElementById('editPlanCurrency').value,
+            monthlyPrice: parseFloat(document.getElementById('editMonthlyRate').value),
+            annualPrice: parseFloat(document.getElementById('editAnnualRate').value),
+            isActive: document.getElementById('editPlanStatus').value === 'active'
+        };
+
+        // Validate form data
+        this.validateUpdatePlanData(formData);
+
+        // Fetch existing plan details for comparison
+        const existingPlanResponse = await fetch(`${this.baseUrl}/plans/${formData.planId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        const existingPlanData = await existingPlanResponse.json();
+        const existingPlan = existingPlanData.data;
+
+        // Send update request
+        const response = await fetch(`${this.baseUrl}/plans/${formData.planId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                ...formData,
+                auditDetails: {
+                    changes: this.calculatePlanChanges(existingPlan, formData)
+                }
+            })
+        });
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+            throw new Error(responseData.message || 'Failed to update plan');
+        }
+
+        // Show success notification
+        this.showSuccessNotification('Plan updated successfully');
+
+        // Refresh plans list
+        await this.fetchAndDisplayPlans();
+
+        // Close modal
+        this.hideModal();
+
+        return responseData.data;
+
+    } catch (error) {
+        console.error('Error updating plan:', error);
+        this.showErrorNotification(error.message);
+        throw error;
+    }
+}
+
+    // Calculate changes between existing and new plan
+calculatePlanChanges(existingPlan, newPlan) {
+    const changes = {};
+
+    // Compare each field
+    const fieldsToCompare = [
+        'name', 'description', 'currency', 
+        'monthlyPrice', 'annualPrice', 'isActive'
+    ];
+
+    fieldsToCompare.forEach(field => {
+        if (existingPlan[field] !== newPlan[field]) {
+            changes[field] = {
+                from: existingPlan[field],
+                to: newPlan[field]
+            };
+        }
+    });
+
+    return changes;
+}
+
+
+    
+
+
+    
+    // Validate Update Plan Data
+validateUpdatePlanData(formData) {
+    const errors = [];
+
+    if (!formData.name || formData.name.length < 3) {
+        errors.push('Plan name must be at least 3 characters long');
+    }
+
+    if (!formData.description || formData.description.length < 10) {
+        errors.push('Description must be at least 10 characters long');
+    }
+
+    if (formData.monthlyPrice <= 0) {
+        errors.push('Monthly price must be a positive number');
+    }
+
+    if (formData.annualPrice <= 0) {
+        errors.push('Annual price must be a positive number');
+    }
+
+    if (errors.length > 0) {
+        throw new Error(errors.join('; '));
+    }
+}
+    
+    
+// Delete Plan Method
 async deletePlan(planId) {
     try {
         // Show confirmation modal
@@ -1066,7 +1297,7 @@ async deletePlan(planId) {
             return;
         }
 
-        // Fetch plan details before deletion for logging
+        // Fetch plan details before deletion for audit
         const planResponse = await fetch(`${this.baseUrl}/plans/${planId}`, {
             method: 'GET',
             headers: {
@@ -1075,30 +1306,33 @@ async deletePlan(planId) {
             }
         });
         const planData = await planResponse.json();
+        const plan = planData.data;
 
-        // Delete plan
+        // Send delete request with audit context
         const response = await fetch(`${this.baseUrl}/plans/${planId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${this.token}`,
                 'Content-Type': 'application/json'
-            }
+            },
+            body: JSON.stringify({
+                auditDetails: {
+                    planName: plan.name,
+                    planDetails: {
+                        currency: plan.currency,
+                        monthlyPrice: plan.monthlyPrice,
+                        annualPrice: plan.annualPrice,
+                        isActive: plan.isActive
+                    }
+                }
+            })
         });
+
+        const responseData = await response.json();
 
         if (!response.ok) {
-            throw new Error('Failed to delete plan');
+            throw new Error(responseData.message || 'Failed to delete plan');
         }
-
-        // Create detailed deletion audit log
-        await this.createAuditLog('DELETED', {
-            planId: planId,
-            planName: planData.name,
-            planDetails: {
-                currency: planData.currency,
-                monthlyRate: planData.monthlyRate,
-                annualRate: planData.annualRate
-            }
-        });
 
         // Show success notification
         this.showSuccessNotification('Plan deleted successfully');
@@ -1107,24 +1341,20 @@ async deletePlan(planId) {
         await this.fetchAndDisplayPlans();
 
     } catch (error) {
-        // Log deletion attempt failure
-        await this.createAuditLog('DELETE_FAILED', {
-            planId: planId,
-            errorMessage: error.message
-        });
-
         console.error('Error deleting plan:', error);
         this.showErrorNotification(error.message);
+        throw error;
     }
 }
 
+    
     // Utility method for confirmation modal
 showConfirmationModal(title, message) {
     return new Promise((resolve) => {
         // Create confirmation modal dynamically
         const modalContainer = document.getElementById('confirmationModalContainer');
         modalContainer.innerHTML = `
-            <div class="modal fade" id="confirmationModal" tabindex="-1">
+            <div class="modal" id="confirmationModal" tabindex="-1">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -1144,12 +1374,12 @@ showConfirmationModal(title, message) {
         `;
 
         // Show modal
-        $('#confirmationModal').modal('show');
+        this.showModal();
 
         // Setup confirmation logic
         const confirmButton = document.getElementById('confirmButton');
         confirmButton.onclick = () => {
-            $('#confirmationModal').modal('hide');
+            this.hideModal();
             resolve(true);
         };
 
@@ -1157,7 +1387,7 @@ showConfirmationModal(title, message) {
         const closeButtons = document.querySelectorAll('#confirmationModal [data-dismiss="modal"]');
         closeButtons.forEach(button => {
             button.onclick = () => {
-                $('#confirmationModal').modal('hide');
+                this.hideModal();
                 resolve(false);
             };
         });
