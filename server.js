@@ -5009,11 +5009,45 @@ app.post('/api/plans', verifyToken, verifyAdmin, async (req, res) => {
                 GBP: { monthlyPrice: 0, annualPrice: 0 }
             };
 
-            // Set base currency prices
-            convertedPrices[currency] = {
-                monthlyPrice: parseFloat(monthlyPrice),
-                annualPrice: parseFloat(annualPrice)
+            // Conversion rates (you might want to fetch these dynamically)
+            const conversionRates = {
+                USD: { INR: 83.50, AED: 3.67, QAR: 3.64, GBP: 0.79 },
+                INR: { USD: 0.012, AED: 0.044, QAR: 0.044, GBP: 0.015 },
+                AED: { USD: 0.27, INR: 22.70, QAR: 1.0, GBP: 0.34 },
+                QAR: { USD: 0.27, INR: 22.70, AED: 1.0, GBP: 0.34 },
+                GBP: { USD: 1.26, INR: 66.50, AED: 2.93, QAR: 2.90 }
             };
+
+            // Markup rules
+            const markupRules = {
+                INR: { USD: 1.3, AED: 1.3, QAR: 1.3, GBP: 1.4 },
+                USD: { GBP: 1.2 },
+                AED: { GBP: 1.3 },
+                QAR: { GBP: 1.3 }
+            };
+
+            // Calculate converted prices
+            validCurrencies.forEach(targetCurrency => {
+                if (targetCurrency === currency) {
+                    // Set base currency prices
+                    convertedPrices[targetCurrency] = {
+                        monthlyPrice: parseFloat(monthlyPrice),
+                        annualPrice: parseFloat(annualPrice)
+                    };
+                } else {
+                    // Convert prices
+                    const monthlyRate = parseFloat(monthlyPrice) * conversionRates[currency][targetCurrency];
+                    const annualRate = parseFloat(annualPrice) * conversionRates[currency][targetCurrency];
+
+                    // Apply markup if exists
+                    const markup = markupRules[currency]?.[targetCurrency] || 1;
+                    
+                    convertedPrices[targetCurrency] = {
+                        monthlyPrice: Math.round(monthlyRate * markup * 100) / 100,
+                        annualPrice: Math.round(annualRate * markup * 100) / 100
+                    };
+                }
+            });
 
             // Create plan object
             const plan = {
@@ -5100,6 +5134,58 @@ app.put('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
                 throw new Error('Plan not found');
             }
 
+            // Conversion rates
+            const conversionRates = {
+                USD: { INR: 83.50, AED: 3.67, QAR: 3.64, GBP: 0.79 },
+                INR: { USD: 0.012, AED: 0.044, QAR: 0.044, GBP: 0.015 },
+                AED: { USD: 0.27, INR: 22.70, QAR: 1.0, GBP: 0.34 },
+                QAR: { USD: 0.27, INR: 22.70, AED: 1.0, GBP: 0.34 },
+                GBP: { USD: 1.26, INR: 66.50, AED: 2.93, QAR: 2.90 }
+            };
+
+            // Markup rules
+            const markupRules = {
+                INR: { USD: 1.3, AED: 1.3, QAR: 1.3, GBP: 1.4 },
+                USD: { GBP: 1.2 },
+                AED: { GBP: 1.3 },
+                QAR: { GBP: 1.3 }
+            };
+
+            // Prepare converted prices
+            const convertedPrices = existingPlan.convertedPrices || {
+                USD: { monthlyPrice: 0, annualPrice: 0 },
+                INR: { monthlyPrice: 0, annualPrice: 0 },
+                AED: { monthlyPrice: 0, annualPrice: 0 },
+                QAR: { monthlyPrice: 0, annualPrice: 0 },
+                GBP: { monthlyPrice: 0, annualPrice: 0 }
+            };
+
+            // Recalculate converted prices
+            const validCurrencies = ['USD', 'INR', 'AED', 'QAR', 'GBP'];
+            validCurrencies.forEach(targetCurrency => {
+                if (targetCurrency === existingPlan.currency) {
+                    // Update base currency prices
+                    convertedPrices[targetCurrency] = {
+                        monthlyPrice: parseFloat(monthlyPrice || existingPlan.monthlyPrice),
+                        annualPrice: parseFloat(annualPrice || existingPlan.annualPrice)
+                    };
+                } else {
+                    // Convert prices
+                    const monthlyRate = parseFloat(monthlyPrice || existingPlan.monthlyPrice) * 
+                        conversionRates[existingPlan.currency][targetCurrency];
+                    const annualRate = parseFloat(annualPrice || existingPlan.annualPrice) * 
+                        conversionRates[existingPlan.currency][targetCurrency];
+
+                    // Apply markup if exists
+                    const markup = markupRules[existingPlan.currency]?.[targetCurrency] || 1;
+                    
+                    convertedPrices[targetCurrency] = {
+                        monthlyPrice: Math.round(monthlyRate * markup * 100) / 100,
+                        annualPrice: Math.round(annualRate * markup * 100) / 100
+                    };
+                }
+            });
+
             // Prepare update data
             const updateData = {
                 ...(name && { name }),
@@ -5109,27 +5195,10 @@ app.put('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
                 ...(trialPeriod !== undefined && { trialPeriod: parseInt(trialPeriod) }),
                 ...(isActive !== undefined && { isActive }),
                 ...(features && { features }),
+                convertedPrices,
                 updatedAt: new Date(),
                 updatedBy: new ObjectId(req.user.userId)
             };
-
-            // Update converted prices
-            const convertedPrices = existingPlan.convertedPrices || {
-                USD: { monthlyPrice: 0, annualPrice: 0 },
-                INR: { monthlyPrice: 0, annualPrice: 0 },
-                AED: { monthlyPrice: 0, annualPrice: 0 },
-                QAR: { monthlyPrice: 0, annualPrice: 0 },
-                GBP: { monthlyPrice: 0, annualPrice: 0 }
-            };
-
-            // Update prices for the existing currency
-            convertedPrices[existingPlan.currency] = {
-                monthlyPrice: parseFloat(monthlyPrice || existingPlan.monthlyPrice),
-                annualPrice: parseFloat(annualPrice || existingPlan.annualPrice)
-            };
-
-            // Add converted prices to update data
-            updateData.convertedPrices = convertedPrices;
 
             // Update plan
             const result = await database.collection('plans').updateOne(
@@ -5184,7 +5253,6 @@ app.put('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
         await session.endSession();
     }
 });
-
 // Delete plan
 app.delete('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
     const session = client.startSession();
