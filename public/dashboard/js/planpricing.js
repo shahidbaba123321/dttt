@@ -223,13 +223,24 @@ this.setupPlanCreationModalListeners = this.setupPlanCreationModalListeners.bind
     }
 
     setupSubscriptionManagementListeners() {
-    // Wait for DOM to be fully loaded
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
+    // Ensure DOM is ready and container exists
+    const checkAndInitialize = () => {
+        const subscriptionsContainer = document.getElementById('subscriptionsListContainer');
+        const createSubscriptionBtn = document.getElementById('createNewSubscriptionBtn');
+
+        if (subscriptionsContainer && createSubscriptionBtn) {
             this.initializeSubscriptionEventListeners();
-        });
+        } else {
+            // If not found, retry after a short delay
+            setTimeout(checkAndInitialize, 100);
+        }
+    };
+
+    // Start checking
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', checkAndInitialize);
     } else {
-        this.initializeSubscriptionEventListeners();
+        checkAndInitialize();
     }
 }
 
@@ -259,8 +270,15 @@ this.setupPlanCreationModalListeners = this.setupPlanCreationModalListeners.bind
 // Method to fetch and display subscriptions
 async fetchSubscriptions() {
     try {
+        // Find subscriptions container with null check
         const subscriptionsContainer = document.getElementById('subscriptionsListContainer');
         
+        // Early return if container doesn't exist
+        if (!subscriptionsContainer) {
+            console.warn('Subscriptions container not found. Skipping fetch.');
+            return;
+        }
+
         // Show loading state
         subscriptionsContainer.innerHTML = `
             <div class="loading-container">
@@ -287,9 +305,16 @@ async fetchSubscriptions() {
         const responseData = await response.json();
         const subscriptions = responseData.data || responseData.subscriptions || responseData;
 
+        // Recheck container existence before manipulation
+        const currentContainer = document.getElementById('subscriptionsListContainer');
+        if (!currentContainer) {
+            console.warn('Subscriptions container disappeared during fetch');
+            return;
+        }
+
         // Check if subscriptions exist
         if (!subscriptions || subscriptions.length === 0) {
-            subscriptionsContainer.innerHTML = `
+            currentContainer.innerHTML = `
                 <div class="no-subscriptions-container">
                     <i class="fas fa-folder-open text-muted" style="font-size: 3rem;"></i>
                     <h4 class="mt-3">No Subscriptions Found</h4>
@@ -305,26 +330,31 @@ async fetchSubscriptions() {
     } catch (error) {
         console.error('Subscription Fetch Error:', error);
         
+        // Safely find container
         const subscriptionsContainer = document.getElementById('subscriptionsListContainer');
-        subscriptionsContainer.innerHTML = `
-            <div class="error-container">
-                <i class="fas fa-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
-                <h4 class="mt-3">Failed to Load Subscriptions</h4>
-                <p class="text-muted">Error: ${error.message}</p>
-                <button id="retryFetchSubscriptions" class="btn btn-primary mt-3">
-                    <i class="fas fa-redo"></i> Retry
-                </button>
-            </div>
-        `;
+        
+        if (subscriptionsContainer) {
+            subscriptionsContainer.innerHTML = `
+                <div class="error-container">
+                    <i class="fas fa-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3">Failed to Load Subscriptions</h4>
+                    <p class="text-muted">Error: ${error.message}</p>
+                    <button id="retryFetchSubscriptions" class="btn btn-primary mt-3">
+                        <i class="fas fa-redo"></i> Retry
+                    </button>
+                </div>
+            `;
 
-        // Add retry event listener
-        const retryButton = document.getElementById('retryFetchSubscriptions');
-        if (retryButton) {
-            retryButton.addEventListener('click', () => this.fetchSubscriptions());
+            // Add retry event listener
+            const retryButton = document.getElementById('retryFetchSubscriptions');
+            if (retryButton) {
+                retryButton.addEventListener('click', () => this.fetchSubscriptions());
+            }
+        } else {
+            console.warn('Cannot display error: Subscriptions container not found');
         }
     }
 }
-
 // Method to display subscriptions
 displaySubscriptions(subscriptions) {
     const subscriptionsContainer = document.getElementById('subscriptionsListContainer');
