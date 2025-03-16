@@ -1913,18 +1913,26 @@ escapeHtml(unsafe) {
 
     // Audit logging method
     async createAuditLog(action, details) {
-        try {
-            const logPayload = {
-                type: `PLAN_${action.toUpperCase()}`,
-                timestamp: new Date().toISOString(),
-                userId: this.getUserId(),
-                details: {
-                    ...details,
-                    ipAddress: await this.getClientIP(),
-                    userAgent: navigator.userAgent
-                }
-            };
+    try {
+        // Check if audit logging is enabled or token exists
+        if (!this.token) {
+            console.warn('No token available for audit logging');
+            return null;
+        }
 
+        const logPayload = {
+            type: `PLAN_${action.toUpperCase()}`,
+            timestamp: new Date().toISOString(),
+            userId: this.getUserId(),
+            details: {
+                ...details,
+                ipAddress: await this.safeGetClientIP(),
+                userAgent: navigator.userAgent
+            }
+        };
+
+        // Use a try-catch with more robust error handling
+        try {
             const response = await fetch(`${this.baseUrl}/audit-logs`, {
                 method: 'POST',
                 headers: {
@@ -1934,27 +1942,39 @@ escapeHtml(unsafe) {
                 body: JSON.stringify(logPayload)
             });
 
+            // Log full response for debugging
             if (!response.ok) {
-                console.warn('Failed to create audit log', await response.json());
+                const responseText = await response.text();
+                console.error('Audit log response error:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    responseText: responseText
+                });
+                return null;
             }
 
             return logPayload;
-        } catch (error) {
-            console.error('Audit logging error:', error);
+        } catch (fetchError) {
+            console.error('Fetch error in audit logging:', fetchError);
+            return null;
         }
+    } catch (error) {
+        console.error('Audit logging error:', error);
+        return null;
     }
+}
 
     // Method to get client IP
-    async getClientIP() {
-        try {
-            const response = await fetch('https://api.ipify.org?format=json');
-            const data = await response.json();
-            return data.ip;
-        } catch (error) {
-            console.warn('Could not fetch IP address');
-            return 'Unknown';
-        }
+    async safeGetClientIP() {
+    try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        return data.ip;
+    } catch (error) {
+        console.warn('Could not fetch IP address');
+        return 'Unknown';
     }
+}
 
     // Get user ID from local storage
     getUserId() {
@@ -2415,95 +2435,112 @@ generateHueFromString(str) {
         }
     }
 
+    // Ensure these methods are defined in the class
+formatTimestamp(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+
     // Load more activity logs
     async loadMoreActivityLogs() {
-        // Initialize page tracking if not already done
-        if (!this.activityLogCurrentPage) {
-            this.activityLogCurrentPage = 1;
+    // Initialize page tracking if not already done
+    if (!this.activityLogCurrentPage) {
+        this.activityLogCurrentPage = 1;
+    }
+
+    try {
+        // Increment page number
+        this.activityLogCurrentPage++;
+
+        // Get current filter
+        const filterSelect = document.getElementById('activityLogFilter');
+        const currentFilter = filterSelect ? filterSelect.value : 'all';
+
+        // Fetch next page of logs
+        const data = await this.fetchPlanActivityLogs(
+            currentFilter, 
+            this.activityLogCurrentPage
+        );
+
+        // Check if new logs exist
+        if (!data.logs || data.logs.length === 0) {
+            // No more logs to load
+            const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+            if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+            this.showErrorNotification('No more activities to load');
+            
+            // Decrement page back since no logs were found
+            this.activityLogCurrentPage--;
+            return;
         }
 
-        try {
-            // Increment page number
-            this.activityLogCurrentPage++;
+        // Append new logs to existing container
+        const container = document.getElementById('activityLogContainer');
+        
+        // Remove no activities placeholder if it exists
+        const placeholder = container.querySelector('.no-activities-placeholder');
+        if (placeholder) {
+            placeholder.remove();
+        }
 
-            // Get current filter
-            const filterSelect = document.getElementById('activityLogFilter');
-            const currentFilter = filterSelect.value;
-
-            // Fetch next page of logs
-            const data = await this.fetchPlanActivityLogs(
-                currentFilter, 
-                this.activityLogCurrentPage
-            );
-
-            // Check if new logs exist
-            if (data.logs.length === 0) {
-                // No more logs to load
-                const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
-                loadMoreBtn.style.display = 'none';
-                this.showErrorNotification('No more activities to load');
-                
-                // Decrement page back since no logs were found
-                this.activityLogCurrentPage--;
-                return;
-            }
-
-            // Append new logs to existing container
-            const container = document.getElementById('activityLogContainer');
+        // Render and append new logs
+        data.logs.forEach(log => {
+            const logItem = document.createElement('div');
+            logItem.className = 'activity-log-item';
             
-            // Remove no activities placeholder if it exists
-            const placeholder = container.querySelector('.no-activities-placeholder');
-            if (placeholder) {
-                placeholder.remove();
-            }
+            // Determine icon based on activity type
+            const iconMap = {
+                'PLAN_CREATED': 'fa-plus-circle text-success',
+                'PLAN_UPDATED': 'fa-edit text-warning',
+                'PLAN_DELETED': 'fa-trash-alt text-danger'
+            };
 
-            // Render and append new logs
-            data.logs.forEach(log => {
-                const logItem = document.createElement('div');
-                logItem.className = 'activity-log-item';
-                
-                // Determine icon based on activity type
-                const iconMap = {
-                    'PLAN_CREATED': 'fa-plus-circle text-success',
-                    'PLAN_UPDATED': 'fa-edit text-warning',
-                    'PLAN_DELETED': 'fa-trash-alt text-danger'
-                };
+            const icon = iconMap[log.type] || 'fa-history';
 
-                const icon = iconMap[log.type] || 'fa-history';
-
-                logItem.innerHTML = `
-                    <div class="d-flex align-items-center">
-                        <i class="fas ${icon} activity-icon"></i>
-                        <div class="flex-grow-1">
-                            <div class="activity-details">
-                                ${this.formatActivityLogMessage(log)}
-                            </div>
-                            <small class="activity-timestamp text-muted">
-                                ${this.formatTimestamp(log.timestamp)}
-                            </small>
+            logItem.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="fas ${icon} activity-icon"></i>
+                    <div class="flex-grow-1">
+                        <div class="activity-details">
+                            ${this.formatActivityLogMessage(log)}
                         </div>
+                        <small class="activity-timestamp text-muted">
+                            ${this.formatTimestamp(log.timestamp)}
+                        </small>
                     </div>
-                `;
+                </div>
+            `;
 
-                container.appendChild(logItem);
-            });
+            container.appendChild(logItem);
+        });
 
-            // Update load more button visibility
-            const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+        // Update load more button visibility
+        const loadMoreBtn = document.getElementById('loadMoreActivitiesBtn');
+        if (loadMoreBtn) {
             if (data.logs.length < 10) {
                 loadMoreBtn.style.display = 'none';
+            } else {
+                loadMoreBtn.style.display = 'block';
             }
-
-        } catch (error) {
-            console.error('Error loading more activity logs:', error);
-            
-            // Decrement page back in case of error
-            this.activityLogCurrentPage--;
-
-            // Show error notification
-            this.showErrorNotification('Failed to load more activities');
         }
+
+    } catch (error) {
+        console.error('Error loading more activity logs:', error);
+        
+        // Decrement page back in case of error
+        this.activityLogCurrentPage--;
+
+        // Show error notification
+        this.showErrorNotification('Failed to load more activities');
     }
+  }
 }
 
 // Expose the PricingManager to the global window object
