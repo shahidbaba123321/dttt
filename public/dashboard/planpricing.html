@@ -382,9 +382,81 @@
     }
 }
     </style>
+    <style>
+        /* Subscription Management Styles */
+.subscription-management-container {
+    background-color: var(--neutral-100);
+    padding: 2rem;
+    border-radius: 0.75rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.subscriptions-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.subscription-card {
+    background-color: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.subscription-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.subscription-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: var(--pricing-primary);
+    color: white;
+}
+
+.subscription-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+.subscription-status.active {
+    background-color: rgba(46, 204, 113, 0.2);
+    color: var(--pricing-success);
+}
+
+.subscription-status.pending {
+    background-color: rgba(241, 196, 15, 0.2);
+    color: var(--pricing-warning);
+}
+
+.subscription-status.cancelled {
+    background-color: rgba(231, 76, 60, 0.2);
+    color: var(--pricing-danger);
+}
+
+.subscription-body {
+    padding: 1rem;
+}
+
+.subscription-actions {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+    border-top: 1px solid var(--pricing-border);
+}
+    </style>
 </head>
 <body>
-   <div class="page-container">
+ <div class="page-container">
     <div class="page-header">
         <h1>Plan Pricing Management</h1>
         <button id="addNewPlanBtn" class="btn btn-primary">
@@ -405,7 +477,116 @@
     <!-- Confirmation Modal Placeholder -->
     <div id="confirmationModalContainer"></div>
 
-    <!-- Activity Log Section -->
+         <!-- Subscription Management Section -->
+    <div class="subscription-management-container">
+        <div class="page-header">
+            <h1>Subscription Management</h1>
+            <button id="createNewSubscriptionBtn" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create New Subscription
+            </button>
+        </div>
+
+        <div id="subscriptionsListContainer" class="subscriptions-container">
+            <div class="loading-placeholder">
+                <i class="fas fa-spinner fa-spin"></i>
+                Loading Subscriptions...
+            </div>
+        </div>
+
+        <!-- Subscription Details Modal Placeholder -->
+        <div id="subscriptionFormModalContainer"></div>
+
+        <!-- Subscription Activity Log Section -->
+        <div class="col-md-12">
+            <div class="card subscription-activity-log-container">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-history"></i> Subscription Activity Log
+                    </h5>
+                    
+                    <!-- Filtering Options -->
+                    <div class="filter-options">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label>Date From</label>
+                                <input type="date" id="subscriptionActivityDateFrom" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-3">
+                                <label>Date To</label>
+                                <input type="date" id="subscriptionActivityDateTo" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-3">
+                                <label>Activity Type</label>
+                                <select id="subscriptionActivityTypeFilter" class="form-control form-control-sm">
+                                    <option value="all">All Activities</option>
+                                    <option value="SUBSCRIPTION_CREATED">Created</option>
+                                    <option value="SUBSCRIPTION_UPGRADED">Upgraded</option>
+                                    <option value="SUBSCRIPTION_DOWNGRADED">Downgraded</option>
+                                    <option value="SUBSCRIPTION_RENEWED">Renewed</option>
+                                    <option value="SUBSCRIPTION_CANCELLED">Cancelled</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label>Subscription Status</label>
+                                <select id="subscriptionStatusFilter" class="form-control form-control-sm">
+                                    <option value="all">All Statuses</option>
+                                    <option value="active">Active</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="expired">Expired</option>
+                                    <option value="cancelled">Cancelled</option>
+                                    <option value="suspended">Suspended</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="filter-actions mt-2">
+                            <button id="applySubscriptionActivityFilters" class="btn btn-sm btn-primary mr-2">
+                                <i class="fas fa-filter"></i> Apply Filters
+                            </button>
+                            <button id="resetSubscriptionActivityFilters" class="btn btn-sm btn-secondary">
+                                <i class="fas fa-redo"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subscription Activity Log Table -->
+                <div class="card-body">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Activity Type</th>
+                                <th>Subscription Details</th>
+                                <th>Start Date</th>
+                                <th>Renewal Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="subscriptionActivityLogTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center">
+                                    <div class="no-activities-placeholder">
+                                        <i class="fas fa-inbox text-muted"></i>
+                                        <p>No subscription activities found</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Load More Button -->
+                <div class="card-footer text-center">
+                    <button id="loadMoreSubscriptionActivitiesBtn" class="btn btn-sm btn-outline-primary" style="display: none;">
+                        Load More Activities
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+     <!-- Activity Log Section -->
     <div class="col-md-4">
         <div class="card activity-log-container">
             <div class="card-header">
@@ -490,6 +671,7 @@
         </div>
     </div>
 </div>
+
 
     <script>
         function showLogDetails(encodedDetails) {
