@@ -1058,7 +1058,7 @@ setupSubscriptionCreationModalListeners(plans) {
     const planSelect = document.getElementById('subscriptionPlan');
     const userCountInput = document.getElementById('subscriptionUserCount');
    
-    const endDateInput = document.getElementById('subscriptionEndDate');
+    
     const createSubscriptionBtn = document.getElementById('createSubscriptionBtn');
     const validateCouponBtn = document.getElementById('validateCouponBtn');
 
