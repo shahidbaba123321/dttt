@@ -233,9 +233,10 @@ img {
 .page-container {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
-    background-color: var(--color-background);
+    gap: var(--spacing-xl);
+    padding: var(--spacing-lg);
 }
+
 
 .page-header {
     display: flex;
@@ -255,6 +256,22 @@ img {
     padding: var(--spacing-md);
     background-color: var(--color-background-light);
     border-top: 1px solid var(--color-border);
+}
+
+        .section-container {
+    background-color: var(--color-background-light);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-subtle);
+    padding: var(--spacing-lg);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border);
 }
 
 /* Responsive Visibility */
@@ -700,15 +717,16 @@ img {
     display: none;
     justify-content: center;
     align-items: center;
-    z-index: var(--z-index-modal);
+    z-index: 1000;
     opacity: 0;
-    transition: opacity var(--transition-speed-normal) ease;
+    transition: opacity 0.3s ease;
 }
 
 .modal.show {
     display: flex;
     opacity: 1;
 }
+
 
 /* Modal Dialog */
 .modal-dialog {
@@ -722,9 +740,11 @@ img {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    
+    /* Centering and Animation */
     transform: scale(0.7);
     opacity: 0;
-    transition: all var(--transition-speed-normal) ease;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .modal.show .modal-dialog {
@@ -740,6 +760,7 @@ img {
     padding: var(--spacing-md);
     border-bottom: 1px solid var(--color-border);
 }
+
 
 .modal-title {
     font-size: var(--font-size-lg);
@@ -773,7 +794,6 @@ img {
 .modal-footer {
     display: flex;
     justify-content: flex-end;
-    align-items: center;
     padding: var(--spacing-md);
     border-top: 1px solid var(--color-border);
     gap: var(--spacing-sm);
@@ -819,10 +839,13 @@ img {
 
 /* Responsive Modal Adjustments */
 @media (max-width: 768px) {
+    .plans-container {
+        grid-template-columns: 1fr;
+    }
+
     .modal-dialog {
-        margin: 0;
         width: 95%;
-        max-height: 95vh;
+        margin: 0 auto;
     }
 
     .modal-fullscreen {
@@ -847,6 +870,7 @@ img {
     .modal-footer > * {
         width: 100%;
     }
+    
 }
 
 /* Popup Styles */
@@ -894,10 +918,11 @@ img {
 /* Plan Cards Container */
 .plans-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: var(--spacing-md);
     padding: var(--spacing-md) 0;
 }
+
 
 /* Plan Card Base Styling */
 .plan-card {
@@ -908,16 +933,20 @@ img {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transition: all var(--transition-speed-fast) ease;
+    transition: all 0.3s ease;
     position: relative;
 }
 
-.plan-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-medium);
+.plan-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
 }
 
-/* Plan Card Header */
 .plan-card-header {
     display: flex;
     justify-content: space-between;
@@ -929,20 +958,16 @@ img {
 
 .plan-card-title {
     font-size: var(--font-size-base);
-    font-weight: var(--font-weight-semibold);
+    font-weight: 600;
     color: var(--color-text-primary);
     margin: 0;
 }
 
-/* Plan Status Indicator */
 .plan-status {
-    display: inline-flex;
-    align-items: center;
     padding: var(--spacing-xs) var(--spacing-sm);
     border-radius: var(--border-radius-sm);
     font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-medium);
-    text-transform: uppercase;
+    font-weight: 600;
 }
 
 .plan-status.active {
