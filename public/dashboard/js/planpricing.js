@@ -1063,6 +1063,8 @@ setupSubscriptionCreationModalListeners(plans) {
     const validateCouponBtn = document.getElementById('validateCouponBtn');
 
     // Set default dates
+    const startDateInput = document.getElementById('subscriptionStartDate');
+    const endDateInput = document.getElementById('subscriptionEndDate');
     const today = new Date();
     startDateInput.valueAsDate = today;
     
@@ -1152,9 +1154,12 @@ async validateCoupon(couponCode) {
 
 // Create subscription method
 async createSubscription() {
+    // Declare formData in a broader scope
+    let formData = {};
+
     try {
         // Collect form data with comprehensive logging and validation
-        const formData = {
+        formData = {
             planId: this.getFormValue('subscriptionPlan', 'Plan'),
             userCount: this.getNumericFormValue('subscriptionUserCount', 'User Count'),
             startDate: this.getFormValue('subscriptionStartDate', 'Start Date'),
@@ -1185,21 +1190,12 @@ async createSubscription() {
         console.log('Response Headers:', Object.fromEntries(response.headers.entries()));
 
         // Parse response
-        const result = await response.text(); // Change to text to see full response
-        console.log('Raw Response Body:', result);
-
-        // Try parsing as JSON
-        let parsedResult;
-        try {
-            parsedResult = JSON.parse(result);
-        } catch (parseError) {
-            console.error('Failed to parse response:', parseError);
-            throw new Error(`Server returned non-JSON response: ${result}`);
-        }
+        const result = await response.json();
+        console.log('Parsed Response:', result);
 
         // Check response
         if (!response.ok) {
-            throw new Error(parsedResult.message || 'Failed to create subscription');
+            throw new Error(result.message || 'Failed to create subscription');
         }
 
         // Success handling
@@ -1209,7 +1205,7 @@ async createSubscription() {
         // Refresh subscriptions list
         await this.fetchSubscriptions();
 
-        return parsedResult.data;
+        return result.data;
 
     } catch (error) {
         // Comprehensive error logging
@@ -1227,7 +1223,7 @@ async createSubscription() {
             await this.createAuditLog('SUBSCRIPTION_CREATION_FAILED', {
                 errorMessage: error.message,
                 errorStack: error.stack,
-                formData: formData // Include form data for debugging
+                formData: formData // Use the formData declared earlier
             });
         } catch (auditError) {
             console.error('Audit log creation failed:', auditError);
@@ -1236,6 +1232,7 @@ async createSubscription() {
         throw error;
     }
 }
+
 
     // Helper method to safely get form values
 getFormValue(elementId, fieldName) {
@@ -1251,7 +1248,7 @@ getFormValue(elementId, fieldName) {
     
     return value;
 }
-
+    
 // Helper method to get numeric form values
 getNumericFormValue(elementId, fieldName) {
     const element = document.getElementById(elementId);
@@ -1259,18 +1256,31 @@ getNumericFormValue(elementId, fieldName) {
         throw new Error(`Element not found: ${elementId}`);
     }
     
-    const value = parseInt(element.value);
+    const rawValue = element.value.trim();
+    if (!rawValue) {
+        throw new Error(`${fieldName} is required`);
+    }
+    
+    const value = parseInt(rawValue);
     if (isNaN(value) || value <= 0) {
         throw new Error(`${fieldName} must be a positive number`);
     }
     
     return value;
 }
+
     
 validateDateRange(startDate, endDate) {
+    // Validate input format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(startDate) || !dateRegex.test(endDate)) {
+        throw new Error('Invalid date format. Use YYYY-MM-DD');
+    }
+
     const start = new Date(startDate);
     const end = new Date(endDate);
 
+    // Check for valid dates
     if (isNaN(start.getTime())) {
         throw new Error('Invalid start date');
     }
@@ -1279,8 +1289,17 @@ validateDateRange(startDate, endDate) {
         throw new Error('Invalid end date');
     }
 
+    // Ensure end date is after start date
     if (start >= end) {
         throw new Error('End date must be after start date');
+    }
+
+    // Optional: Add additional validation (e.g., max subscription period)
+    const maxSubscriptionPeriod = 365; // days
+    const daysDifference = Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24));
+    
+    if (daysDifference > maxSubscriptionPeriod) {
+        throw new Error(`Subscription period cannot exceed ${maxSubscriptionPeriod} days`);
     }
 }
 
