@@ -1057,7 +1057,7 @@ setupSubscriptionCreationModalListeners(plans) {
     // Plan selection listener to update pricing dynamically
     const planSelect = document.getElementById('subscriptionPlan');
     const userCountInput = document.getElementById('subscriptionUserCount');
-    const startDateInput = document.getElementById('subscriptionStartDate');
+   
     const endDateInput = document.getElementById('subscriptionEndDate');
     const createSubscriptionBtn = document.getElementById('createSubscriptionBtn');
     const validateCouponBtn = document.getElementById('validateCouponBtn');
