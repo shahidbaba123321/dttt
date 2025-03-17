@@ -1073,6 +1073,11 @@ setupSubscriptionCreationModalListeners(plans) {
     endDate.setMonth(endDate.getMonth() + 1);
     endDateInput.valueAsDate = endDate;
 
+    // Add event listener to update billing cycle when dates change
+    startDateInput.addEventListener('change', this.updateBillingCycleDisplay.bind(this));
+    endDateInput.addEventListener('change', this.updateBillingCycleDisplay.bind(this));
+
+
     // Plan selection change listener
     planSelect.addEventListener('change', (e) => {
         const selectedPlanId = e.target.value;
@@ -1106,6 +1111,18 @@ setupSubscriptionCreationModalListeners(plans) {
         }
     });
 }
+
+    updateBillingCycleDisplay() {
+    const startDateInput = document.getElementById('subscriptionStartDate');
+    const endDateInput = document.getElementById('subscriptionEndDate');
+
+    if (startDateInput.value && endDateInput.value) {
+        const billingCycle = this.determineBillingCycle();
+        // Optionally, you can update a display element to show the current billing cycle
+        console.log('Current Billing Cycle:', billingCycle);
+    }
+}
+
 
 // Validate coupon method
 async validateCoupon(couponCode) {
@@ -1154,19 +1171,18 @@ async validateCoupon(couponCode) {
 
 // Create subscription method
 async createSubscription() {
-    // Declare formData in a broader scope
-    let formData = {};
-
     try {
-        // Collect form data with comprehensive logging and validation
-        formData = {
+        // Get company ID (you'll need to implement a way to select or get the company)
+        const companyId = await this.getCompanyId();
+
+        // Collect form data to match server requirements
+        const formData = {
+            companyId: companyId,
             planId: this.getFormValue('subscriptionPlan', 'Plan'),
-            userCount: this.getNumericFormValue('subscriptionUserCount', 'User Count'),
+            billingCycle: this.determineBillingCycle(), // New method to determine billing cycle
             startDate: this.getFormValue('subscriptionStartDate', 'Start Date'),
             endDate: this.getFormValue('subscriptionEndDate', 'End Date'),
-            paymentStatus: this.getFormValue('subscriptionPaymentStatus', 'Payment Status'),
-            autoRenewal: document.getElementById('subscriptionAutoRenewal').checked,
-            couponCode: document.getElementById('subscriptionCouponCode').value || null
+            discountCode: document.getElementById('subscriptionCouponCode').value || null
         };
 
         // Comprehensive logging
@@ -1194,7 +1210,7 @@ async createSubscription() {
         console.log('Parsed Response:', result);
 
         // Check response
-        if (!response.ok) {
+        if (!result.success) {
             throw new Error(result.message || 'Failed to create subscription');
         }
 
@@ -1223,7 +1239,7 @@ async createSubscription() {
             await this.createAuditLog('SUBSCRIPTION_CREATION_FAILED', {
                 errorMessage: error.message,
                 errorStack: error.stack,
-                formData: formData // Use the formData declared earlier
+                formData: formData
             });
         } catch (auditError) {
             console.error('Audit log creation failed:', auditError);
@@ -1232,6 +1248,99 @@ async createSubscription() {
         throw error;
     }
 }
+
+    // Method to get company ID
+async getCompanyId() {
+    try {
+        // Fetch companies for the current user
+        const response = await fetch(`${this.baseUrl}/companies`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch companies');
+        }
+
+        const result = await response.json();
+        const companies = result.data || result.companies || result;
+
+        // If only one company, return its ID
+        if (companies.length === 1) {
+            return companies[0]._id;
+        }
+
+        // If multiple companies, show a selection modal
+        return this.showCompanySelectionModal(companies);
+
+    } catch (error) {
+        console.error('Error getting company ID:', error);
+        throw new Error('Unable to determine company for subscription');
+    }
+}
+
+    // Method to show company selection modal
+showCompanySelectionModal(companies) {
+    return new Promise((resolve, reject) => {
+        // Create modal dynamically
+        const modalContainer = document.createElement('div');
+        modalContainer.innerHTML = `
+            <div class="modal" id="companySelectionModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Select Company</h5>
+                        </div>
+                        <div class="modal-body">
+                            <select id="companySelection" class="form-control">
+                                ${companies.map(company => `
+                                    <option value="${company._id}">${company.name}</option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" id="selectCompanyBtn">Select</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modalContainer.firstElementChild);
+
+        const modal = document.getElementById('companySelectionModal');
+        const selectButton = document.getElementById('selectCompanyBtn');
+        const companySelect = document.getElementById('companySelection');
+
+        selectButton.addEventListener('click', () => {
+            const selectedCompanyId = companySelect.value;
+            modal.remove();
+            resolve(selectedCompanyId);
+        });
+
+        // Show modal
+        this.showModal('companySelectionModal');
+    });
+}
+
+    // Method to determine billing cycle based on dates
+determineBillingCycle() {
+    const startDate = new Date(document.getElementById('subscriptionStartDate').value);
+    const endDate = new Date(document.getElementById('subscriptionEndDate').value);
+
+    // Calculate months difference
+    const monthsDifference = (endDate.getFullYear() - startDate.getFullYear()) * 12 + 
+                              (endDate.getMonth() - startDate.getMonth());
+
+    // Determine billing cycle
+    return monthsDifference >= 12 ? 'annual' : 'monthly';
+}
+
+
+
 
 
     // Helper method to safely get form values
