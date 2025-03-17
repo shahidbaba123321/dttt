@@ -1153,69 +1153,24 @@ async validateCoupon(couponCode) {
 // Create subscription method
 async createSubscription() {
     try {
-        // Collect form data with comprehensive logging
-        const planElement = document.getElementById('subscriptionPlan');
-        const userCountElement = document.getElementById('subscriptionUserCount');
-        const startDateElement = document.getElementById('subscriptionStartDate');
-        const endDateElement = document.getElementById('subscriptionEndDate');
-        const paymentStatusElement = document.getElementById('subscriptionPaymentStatus');
-        const autoRenewalElement = document.getElementById('subscriptionAutoRenewal');
-        const couponCodeElement = document.getElementById('subscriptionCouponCode');
-
-        // Log all form elements for debugging
-        console.log('Form Elements:', {
-            planElement,
-            userCountElement,
-            startDateElement,
-            endDateElement,
-            paymentStatusElement,
-            autoRenewalElement,
-            couponCodeElement
-        });
-
-        // Collect form data with null checks and logging
+        // Collect form data with comprehensive logging and validation
         const formData = {
-            planId: planElement ? planElement.value : null,
-            userCount: userCountElement ? parseInt(userCountElement.value) : null,
-            startDate: startDateElement ? startDateElement.value : null,
-            endDate: endDateElement ? endDateElement.value : null,
-            paymentStatus: paymentStatusElement ? paymentStatusElement.value : null,
-            autoRenewal: autoRenewalElement ? autoRenewalElement.checked : false,
-            couponCode: couponCodeElement ? (couponCodeElement.value || null) : null
+            planId: this.getFormValue('subscriptionPlan', 'Plan'),
+            userCount: this.getNumericFormValue('subscriptionUserCount', 'User Count'),
+            startDate: this.getFormValue('subscriptionStartDate', 'Start Date'),
+            endDate: this.getFormValue('subscriptionEndDate', 'End Date'),
+            paymentStatus: this.getFormValue('subscriptionPaymentStatus', 'Payment Status'),
+            autoRenewal: document.getElementById('subscriptionAutoRenewal').checked,
+            couponCode: document.getElementById('subscriptionCouponCode').value || null
         };
 
-        // Comprehensive logging of form data
-        console.log('Subscription Form Data:', formData);
+        // Comprehensive logging
+        console.log('Subscription Creation Payload:', JSON.stringify(formData, null, 2));
 
-        // Validate form data with detailed error messages
-        const validationErrors = [];
+        // Validate dates
+        this.validateDateRange(formData.startDate, formData.endDate);
 
-        if (!formData.planId) validationErrors.push('Plan selection is required');
-        if (!formData.userCount || formData.userCount <= 0) validationErrors.push('Valid user count is required');
-        if (!formData.startDate) validationErrors.push('Start date is required');
-        if (!formData.endDate) validationErrors.push('End date is required');
-        if (!formData.paymentStatus) validationErrors.push('Payment status is required');
-
-        // If there are validation errors, throw with detailed message
-        if (validationErrors.length > 0) {
-            throw new Error(validationErrors.join('; '));
-        }
-
-        // Optional: Validate coupon if provided
-        if (formData.couponCode) {
-            const couponValidation = await this.validateCoupon(formData.couponCode);
-            
-            if (!couponValidation.success) {
-                throw new Error(couponValidation.message);
-            }
-
-            // If coupon is valid, add discount information
-            formData.couponDiscount = couponValidation.discount;
-        }
-
-        // Send subscription creation request with detailed logging
-        console.log('Sending subscription creation request with payload:', formData);
-
+        // Send subscription creation request
         const response = await fetch(`${this.baseUrl}/subscriptions`, {
             method: 'POST',
             headers: {
@@ -1225,21 +1180,26 @@ async createSubscription() {
             body: JSON.stringify(formData)
         });
 
-        // Log raw response for debugging
-        console.log('Raw Response:', {
-            status: response.status,
-            statusText: response.statusText
-        });
+        // Log raw response details
+        console.log('Response Status:', response.status);
+        console.log('Response Headers:', Object.fromEntries(response.headers.entries()));
 
         // Parse response
-        const result = await response.json();
+        const result = await response.text(); // Change to text to see full response
+        console.log('Raw Response Body:', result);
 
-        // Log parsed result
-        console.log('Parsed Response:', result);
+        // Try parsing as JSON
+        let parsedResult;
+        try {
+            parsedResult = JSON.parse(result);
+        } catch (parseError) {
+            console.error('Failed to parse response:', parseError);
+            throw new Error(`Server returned non-JSON response: ${result}`);
+        }
 
         // Check response
         if (!response.ok) {
-            throw new Error(result.message || 'Failed to create subscription');
+            throw new Error(parsedResult.message || 'Failed to create subscription');
         }
 
         // Success handling
@@ -1249,7 +1209,7 @@ async createSubscription() {
         // Refresh subscriptions list
         await this.fetchSubscriptions();
 
-        return result.data;
+        return parsedResult.data;
 
     } catch (error) {
         // Comprehensive error logging
@@ -1262,17 +1222,69 @@ async createSubscription() {
         // Show detailed error notification
         this.showErrorNotification(`Subscription creation failed: ${error.message}`);
 
-        // Optional: Log to audit trail
-        this.createAuditLog('SUBSCRIPTION_CREATION_FAILED', {
-            errorMessage: error.message,
-            errorStack: error.stack
-        }).catch(logError => {
-            console.error('Failed to log audit:', logError);
-        });
+        // Modify audit log to handle potential issues
+        try {
+            await this.createAuditLog('SUBSCRIPTION_CREATION_FAILED', {
+                errorMessage: error.message,
+                errorStack: error.stack,
+                formData: formData // Include form data for debugging
+            });
+        } catch (auditError) {
+            console.error('Audit log creation failed:', auditError);
+        }
 
         throw error;
     }
 }
+
+    // Helper method to safely get form values
+getFormValue(elementId, fieldName) {
+    const element = document.getElementById(elementId);
+    if (!element) {
+        throw new Error(`Element not found: ${elementId}`);
+    }
+    
+    const value = element.value.trim();
+    if (!value) {
+        throw new Error(`${fieldName} is required`);
+    }
+    
+    return value;
+}
+
+// Helper method to get numeric form values
+getNumericFormValue(elementId, fieldName) {
+    const element = document.getElementById(elementId);
+    if (!element) {
+        throw new Error(`Element not found: ${elementId}`);
+    }
+    
+    const value = parseInt(element.value);
+    if (isNaN(value) || value <= 0) {
+        throw new Error(`${fieldName} must be a positive number`);
+    }
+    
+    return value;
+}
+    
+validateDateRange(startDate, endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (isNaN(start.getTime())) {
+        throw new Error('Invalid start date');
+    }
+
+    if (isNaN(end.getTime())) {
+        throw new Error('Invalid end date');
+    }
+
+    if (start >= end) {
+        throw new Error('End date must be after start date');
+    }
+}
+
+    
 // Validate subscription data
 validateSubscriptionData(formData) {
     const errors = [];
@@ -2668,18 +2680,19 @@ escapeHtml(unsafe) {
     }
 
     // Audit logging method
-    async createAuditLog(action, details) {
+   async createAuditLog(action, details) {
     try {
-        // Check if audit logging is enabled or token exists
+        // Ensure we have a valid token
         if (!this.token) {
             console.warn('No token available for audit logging');
             return null;
         }
 
+        // Prepare log payload
         const logPayload = {
             type: `PLAN_${action.toUpperCase()}`,
             timestamp: new Date().toISOString(),
-            userId: this.getUserId(),
+            userId: this.getUserId() || 'unknown',
             details: {
                 ...details,
                 ipAddress: await this.safeGetClientIP(),
@@ -2687,50 +2700,51 @@ escapeHtml(unsafe) {
             }
         };
 
-        // Determine the correct audit log endpoint
-        const auditLogEndpoint = `${this.baseUrl}/plan-activity-logs`; // Updated endpoint
+        // Log the payload for debugging
+        console.log('Audit Log Payload:', logPayload);
 
-        // Use a try-catch with more robust error handling
-        try {
-            const response = await fetch(auditLogEndpoint, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(logPayload)
-            });
+        // Use a more generic endpoint if plan-activity-logs fails
+        const auditLogEndpoints = [
+            `${this.baseUrl}/plan-activity-logs`,
+            `${this.baseUrl}/audit-logs`,
+            `${this.baseUrl}/logs`
+        ];
 
-            // Log full response for debugging
-            if (!response.ok) {
-                const responseText = await response.text();
-                console.error('Audit log response error:', {
-                    status: response.status,
-                    statusText: response.statusText,
-                    responseText: responseText
+        // Try multiple endpoints
+        for (const endpoint of auditLogEndpoints) {
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(logPayload)
                 });
 
-                // Optional: Log to console or local storage if server logging fails
-                console.warn('Audit Log Payload:', logPayload);
-                
-                return null;
-            }
+                // Log response details
+                console.log(`Audit Log Response from ${endpoint}:`, {
+                    status: response.status,
+                    statusText: response.statusText
+                });
 
-            return logPayload;
-        } catch (fetchError) {
-            console.error('Fetch error in audit logging:', fetchError);
-            
-            // Optional: Fallback logging mechanism
-            console.warn('Audit Log Payload (Fetch Failed):', logPayload);
-            
-            return null;
+                if (response.ok) {
+                    return logPayload;
+                }
+            } catch (endpointError) {
+                console.warn(`Failed to log to ${endpoint}:`, endpointError);
+            }
         }
+
+        // Fallback logging
+        console.warn('Failed to log audit entry through all endpoints');
+        return null;
+
     } catch (error) {
-        console.error('Audit logging error:', error);
+        console.error('Comprehensive Audit Logging Error:', error);
         return null;
     }
 }
-
     // Method to get client IP
     async safeGetClientIP() {
     try {
