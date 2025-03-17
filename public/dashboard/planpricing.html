@@ -728,6 +728,7 @@ img {
 }
 
 
+
 /* Modal Dialog */
 .modal-dialog {
     position: relative;
@@ -736,23 +737,23 @@ img {
     max-height: 90vh;
     background-color: var(--color-background-light);
     border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-strong);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     
-    /* Centering and Animation */
+    /* Centered Positioning and Animation */
+    margin: auto;
     transform: scale(0.7);
     opacity: 0;
     transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
-
+        
 .modal.show .modal-dialog {
     transform: scale(1);
     opacity: 1;
 }
 
-/* Modal Header */
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -790,7 +791,6 @@ img {
     overflow-y: auto;
 }
 
-/* Modal Footer */
 .modal-footer {
     display: flex;
     justify-content: flex-end;
@@ -843,9 +843,10 @@ img {
         grid-template-columns: 1fr;
     }
 
-    .modal-dialog {
+     .modal-dialog {
         width: 95%;
-        margin: 0 auto;
+        margin: auto;
+        max-height: 95vh;
     }
 
     .modal-fullscreen {
@@ -918,22 +919,20 @@ img {
 /* Plan Cards Container */
 .plans-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: var(--spacing-md);
-    padding: var(--spacing-md) 0;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg) 0;
 }
 
-
-/* Plan Card Base Styling */
 .plan-card {
     background-color: var(--color-background-light);
     border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-md);
-    box-shadow: var(--shadow-subtle);
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    transition: all 0.3s ease;
     position: relative;
 }
 
@@ -947,18 +946,23 @@ img {
     background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
 }
 
+.plan-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+}
+
 .plan-card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-md);
     background-color: var(--color-background);
     border-bottom: 1px solid var(--color-border);
 }
 
 .plan-card-title {
     font-size: var(--font-size-base);
-    font-weight: 600;
+    font-weight: 700;
     color: var(--color-text-primary);
     margin: 0;
 }
@@ -968,25 +972,29 @@ img {
     border-radius: var(--border-radius-sm);
     font-size: var(--font-size-xs);
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .plan-status.active {
     background-color: rgba(46, 204, 113, 0.1);
     color: var(--color-success-dark);
+    border: 1px solid rgba(46, 204, 113, 0.3);
 }
 
 .plan-status.inactive {
     background-color: rgba(231, 76, 60, 0.1);
     color: var(--color-danger-dark);
+    border: 1px solid rgba(231, 76, 60, 0.3);
 }
-
 /* Plan Card Body */
 .plan-card-body {
-    flex-grow: 1;
     padding: var(--spacing-md);
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
 }
+
 
 /* Currency Selector */
 .plan-currency-selector {
@@ -1005,7 +1013,7 @@ img {
     background-color: var(--color-background);
     padding: var(--spacing-sm);
     border-radius: var(--border-radius-sm);
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
 }
 
 .plan-pricing-item {
@@ -1019,23 +1027,22 @@ img {
     color: var(--color-text-muted);
     margin-bottom: var(--spacing-xs);
 }
-
+        
 .plan-pricing-value {
-    font-weight: var(--font-weight-semibold);
+    font-weight: 600;
     color: var(--color-text-primary);
 }
 
-/* Modules/Features List */
 .plan-modules {
     display: flex;
     flex-wrap: wrap;
     gap: var(--spacing-xs);
-    margin-bottom: var(--spacing-sm);
+    margin-top: auto;
 }
 
 .plan-modules .badge {
     background-color: var(--color-primary-light);
-    color: var(--color-background-light);
+    color: white;
     padding: var(--spacing-xs) var(--spacing-sm);
     border-radius: var(--border-radius-sm);
     font-size: var(--font-size-xs);
@@ -1046,7 +1053,7 @@ img {
     display: flex;
     justify-content: flex-end;
     gap: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-md);
     background-color: var(--color-background);
     border-top: 1px solid var(--color-border);
 }
