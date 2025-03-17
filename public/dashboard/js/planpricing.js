@@ -199,28 +199,28 @@ this.setupPlanCreationModalListeners = this.setupPlanCreationModalListeners.bind
     }
 
     showErrorNotification(message) {
-        console.error('Error Notification:', message);
-        
-        // Create error notification element
-        const notificationContainer = document.createElement('div');
-        notificationContainer.className = 'error-notification';
-        notificationContainer.innerHTML = `
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <strong>Error!</strong> ${message}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        `;
+    console.error('Error Notification:', message);
+    
+    // Create error notification element
+    const notificationContainer = document.createElement('div');
+    notificationContainer.className = 'error-notification';
+    notificationContainer.innerHTML = `
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error!</strong> ${message}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    `;
 
-        // Append to body
-        document.body.appendChild(notificationContainer);
+    // Append to body
+    document.body.appendChild(notificationContainer);
 
-        // Remove notification after 5 seconds
-        setTimeout(() => {
-            notificationContainer.remove();
-        }, 5000);
-    }
+    // Remove notification after 5 seconds
+    setTimeout(() => {
+        notificationContainer.remove();
+    }, 5000);
+}
 
     setupSubscriptionManagementListeners() {
     // Ensure DOM is ready and container exists
@@ -1153,34 +1153,69 @@ async validateCoupon(couponCode) {
 // Create subscription method
 async createSubscription() {
     try {
-        // Collect form data
+        // Collect form data with comprehensive logging
+        const planElement = document.getElementById('subscriptionPlan');
+        const userCountElement = document.getElementById('subscriptionUserCount');
+        const startDateElement = document.getElementById('subscriptionStartDate');
+        const endDateElement = document.getElementById('subscriptionEndDate');
+        const paymentStatusElement = document.getElementById('subscriptionPaymentStatus');
+        const autoRenewalElement = document.getElementById('subscriptionAutoRenewal');
+        const couponCodeElement = document.getElementById('subscriptionCouponCode');
+
+        // Log all form elements for debugging
+        console.log('Form Elements:', {
+            planElement,
+            userCountElement,
+            startDateElement,
+            endDateElement,
+            paymentStatusElement,
+            autoRenewalElement,
+            couponCodeElement
+        });
+
+        // Collect form data with null checks and logging
         const formData = {
-            planId: document.getElementById('subscriptionPlan').value,
-            userCount: parseInt(document.getElementById('subscriptionUserCount').value),
-            startDate: document.getElementById('subscriptionStartDate').value,
-            endDate: document.getElementById('subscriptionEndDate').value,
-            paymentStatus: document.getElementById('subscriptionPaymentStatus').value,
-            autoRenewal: document.getElementById('subscriptionAutoRenewal').checked,
-            couponCode: document.getElementById('subscriptionCouponCode').value || null
+            planId: planElement ? planElement.value : null,
+            userCount: userCountElement ? parseInt(userCountElement.value) : null,
+            startDate: startDateElement ? startDateElement.value : null,
+            endDate: endDateElement ? endDateElement.value : null,
+            paymentStatus: paymentStatusElement ? paymentStatusElement.value : null,
+            autoRenewal: autoRenewalElement ? autoRenewalElement.checked : false,
+            couponCode: couponCodeElement ? (couponCodeElement.value || null) : null
         };
+
+        // Comprehensive logging of form data
+        console.log('Subscription Form Data:', formData);
+
+        // Validate form data with detailed error messages
+        const validationErrors = [];
+
+        if (!formData.planId) validationErrors.push('Plan selection is required');
+        if (!formData.userCount || formData.userCount <= 0) validationErrors.push('Valid user count is required');
+        if (!formData.startDate) validationErrors.push('Start date is required');
+        if (!formData.endDate) validationErrors.push('End date is required');
+        if (!formData.paymentStatus) validationErrors.push('Payment status is required');
+
+        // If there are validation errors, throw with detailed message
+        if (validationErrors.length > 0) {
+            throw new Error(validationErrors.join('; '));
+        }
 
         // Optional: Validate coupon if provided
         if (formData.couponCode) {
             const couponValidation = await this.validateCoupon(formData.couponCode);
             
             if (!couponValidation.success) {
-                // Optionally, you can prevent subscription creation if coupon is invalid
                 throw new Error(couponValidation.message);
             }
 
-            // If coupon is valid, you might want to apply the discount
+            // If coupon is valid, add discount information
             formData.couponDiscount = couponValidation.discount;
         }
 
-        // Validate form data
-        this.validateSubscriptionData(formData);
+        // Send subscription creation request with detailed logging
+        console.log('Sending subscription creation request with payload:', formData);
 
-        // Send subscription creation request
         const response = await fetch(`${this.baseUrl}/subscriptions`, {
             method: 'POST',
             headers: {
@@ -1190,19 +1225,52 @@ async createSubscription() {
             body: JSON.stringify(formData)
         });
 
+        // Log raw response for debugging
+        console.log('Raw Response:', {
+            status: response.status,
+            statusText: response.statusText
+        });
+
+        // Parse response
         const result = await response.json();
 
-        if (result.success) {
-            this.showSuccessNotification('Subscription created successfully');
-            this.hideModal('subscriptionCreationModal');
-            // Refresh subscriptions list
-            this.fetchSubscriptions();
-        } else {
+        // Log parsed result
+        console.log('Parsed Response:', result);
+
+        // Check response
+        if (!response.ok) {
             throw new Error(result.message || 'Failed to create subscription');
         }
+
+        // Success handling
+        this.showSuccessNotification('Subscription created successfully');
+        this.hideModal('subscriptionCreationModal');
+        
+        // Refresh subscriptions list
+        await this.fetchSubscriptions();
+
+        return result.data;
+
     } catch (error) {
-        console.error('Subscription creation error:', error);
-        this.showErrorNotification(error.message);
+        // Comprehensive error logging
+        console.error('Subscription Creation Error:', {
+            message: error.message,
+            name: error.name,
+            stack: error.stack
+        });
+
+        // Show detailed error notification
+        this.showErrorNotification(`Subscription creation failed: ${error.message}`);
+
+        // Optional: Log to audit trail
+        this.createAuditLog('SUBSCRIPTION_CREATION_FAILED', {
+            errorMessage: error.message,
+            errorStack: error.stack
+        }).catch(logError => {
+            console.error('Failed to log audit:', logError);
+        });
+
+        throw error;
     }
 }
 // Validate subscription data
