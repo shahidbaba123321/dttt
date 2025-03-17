@@ -123,6 +123,8 @@ class PricingManager {
 
             this.showPlanCreationModal = this.showPlanCreationModal.bind(this);
 this.setupPlanCreationModalListeners = this.setupPlanCreationModalListeners.bind(this);
+            this.showSubscriptionEditModal = this.showSubscriptionEditModal.bind(this);
+    this.updateSubscription = this.updateSubscription.bind(this);
 
             // Debug modules endpoint
             this.debugModulesEndpoint();
@@ -406,22 +408,298 @@ setupSubscriptionCardListeners() {
 
     // Edit subscription listeners
     editButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            const subscriptionId = e.target.getAttribute('data-id');
-            this.showSubscriptionEditModal(subscriptionId);
+        // Remove existing listeners
+        const oldButton = button.cloneNode(true);
+        button.parentNode.replaceChild(oldButton, button);
+
+        // Add new listener
+        oldButton.addEventListener('click', (e) => {
+            const subscriptionId = oldButton.getAttribute('data-id');
+            
+            // Ensure method exists and is bound correctly
+            if (typeof this.showSubscriptionEditModal === 'function') {
+                this.showSubscriptionEditModal(subscriptionId);
+            } else {
+                console.error('showSubscriptionEditModal method is not available');
+            }
         });
     });
 
     // Cancel subscription listeners
     cancelButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            const subscriptionId = e.target.getAttribute('data-id');
+        // Similar approach for cancel buttons
+        const oldButton = button.cloneNode(true);
+        button.parentNode.replaceChild(oldButton, button);
+
+        oldButton.addEventListener('click', (e) => {
+            const subscriptionId = oldButton.getAttribute('data-id');
             this.showSubscriptionCancellationModal(subscriptionId);
         });
     });
 }
 
     
+showSubscriptionEditModal(subscriptionId) {
+    try {
+        console.log(`Attempting to edit subscription: ${subscriptionId}`);
+
+        // Fetch subscription details
+        this.fetchSubscriptionDetails(subscriptionId)
+            .then(subscription => {
+                // Create edit modal dynamically
+                const modalContainer = document.getElementById('subscriptionFormModalContainer') || 
+                    (() => {
+                        const container = document.createElement('div');
+                        container.id = 'subscriptionFormModalContainer';
+                        document.body.appendChild(container);
+                        return container;
+                    })();
+
+                // Remove existing modal
+                const existingModal = document.getElementById('subscriptionEditModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+
+                // Create modal HTML
+                const modalDiv = document.createElement('div');
+                modalDiv.innerHTML = `
+                    <div class="modal" id="subscriptionEditModal" tabindex="-1" role="dialog">
+                        <div class="modal-dialog modal-lg" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Edit Subscription: ${subscription.planName}</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="subscriptionEditForm">
+                                        <input type="hidden" id="editSubscriptionId" value="${subscription._id}">
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Plan</label>
+                                                    <select class="form-control" id="editSubscriptionPlan" required>
+                                                        ${this.plans.map(plan => `
+                                                            <option value="${plan._id}" 
+                                                                    ${plan._id === subscription.planId ? 'selected' : ''}>
+                                                                ${plan.name}
+                                                            </option>
+                                                        `).join('')}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Billing Cycle</label>
+                                                    <select class="form-control" id="editSubscriptionBillingCycle">
+                                                        <option value="monthly" 
+                                                                ${subscription.billingCycle === 'monthly' ? 'selected' : ''}>
+                                                            Monthly
+                                                        </option>
+                                                        <option value="annual" 
+                                                                ${subscription.billingCycle === 'annual' ? 'selected' : ''}>
+                                                            Annual
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Start Date</label>
+                                                    <input type="date" class="form-control" 
+                                                           id="editSubscriptionStartDate" 
+                                                           value="${this.formatDateForInput(subscription.startDate)}" 
+                                                           required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>End Date</label>
+                                                    <input type="date" class="form-control" 
+                                                           id="editSubscriptionEndDate" 
+                                                           value="${this.formatDateForInput(subscription.endDate)}" 
+                                                           required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Coupon Code</label>
+                                                    <input type="text" class="form-control" 
+                                                           id="editSubscriptionCouponCode" 
+                                                           value="${subscription.discountCode || ''}">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Status</label>
+                                                    <select class="form-control" id="editSubscriptionStatus">
+                                                        <option value="active" 
+                                                                ${subscription.status === 'active' ? 'selected' : ''}>
+                                                            Active
+                                                        </option>
+                                                        <option value="pending" 
+                                                                ${subscription.status === 'pending' ? 'selected' : ''}>
+                                                            Pending
+                                                        </option>
+                                                        <option value="cancelled" 
+                                                                ${subscription.status === 'cancelled' ? 'selected' : ''}>
+                                                            Cancelled
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-primary" id="updateSubscriptionBtn">
+                                        Update Subscription
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Append to container
+                modalContainer.appendChild(modalDiv.firstElementChild);
+
+                // Setup event listeners
+                this.setupSubscriptionEditModalListeners();
+
+                // Show modal
+                this.showModal('subscriptionEditModal');
+            })
+            .catch(error => {
+                console.error('Error fetching subscription details:', error);
+                this.showErrorNotification(`Failed to load subscription details: ${error.message}`);
+            });
+    } catch (error) {
+        console.error('Error in showSubscriptionEditModal:', error);
+        this.showErrorNotification(`Failed to open edit modal: ${error.message}`);
+    }
+}
+// Fetch subscription details
+async fetchSubscriptionDetails(subscriptionId) {
+    try {
+        const response = await fetch(`${this.baseUrl}/subscriptions/${subscriptionId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch subscription details');
+        }
+
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.message || 'Unable to retrieve subscription details');
+        }
+
+        return result.data;
+    } catch (error) {
+        console.error('Subscription Details Fetch Error:', error);
+        throw error;
+    }
+}
+// Setup listeners for subscription edit modal
+setupSubscriptionEditModalListeners() {
+    // Update subscription button
+    const updateSubscriptionBtn = document.getElementById('updateSubscriptionBtn');
+    if (updateSubscriptionBtn) {
+        updateSubscriptionBtn.addEventListener('click', () => this.updateSubscription());
+    }
+
+    // Coupon validation
+    const couponCodeInput = document.getElementById('editSubscriptionCouponCode');
+    if (couponCodeInput) {
+        couponCodeInput.addEventListener('change', () => {
+            const couponCode = couponCodeInput.value.trim();
+            if (couponCode) {
+                this.validateCoupon(couponCode);
+            }
+        });
+    }
+}
+// Update subscription method
+async updateSubscription() {
+    try {
+        // Collect form data
+        const formData = {
+            subscriptionId: document.getElementById('editSubscriptionId').value,
+            planId: document.getElementById('editSubscriptionPlan').value,
+            billingCycle: document.getElementById('editSubscriptionBillingCycle').value,
+            startDate: document.getElementById('editSubscriptionStartDate').value,
+            endDate: document.getElementById('editSubscriptionEndDate').value,
+            discountCode: document.getElementById('editSubscriptionCouponCode').value || null,
+            status: document.getElementById('editSubscriptionStatus').value
+        };
+
+        // Send update request
+        const response = await fetch(`${this.baseUrl}/subscriptions/${formData.subscriptionId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.message || 'Failed to update subscription');
+        }
+
+        // Success handling
+        this.showSuccessNotification('Subscription updated successfully');
+        this.hideModal('subscriptionEditModal');
+        
+        // Refresh subscriptions list
+        await this.fetchSubscriptions();
+
+        return result.data;
+
+    } catch (error) {
+        console.error('Subscription Update Error:', error);
+        this.showErrorNotification(`Failed to update subscription: ${error.message}`);
+        throw error;
+    }
+}
+
+    // Helper method to format date for input
+formatDateForInput(dateString) {
+    if (!dateString) return '';
+    
+    const date = new Date(dateString);
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+        console.warn('Invalid date:', dateString);
+        return '';
+    }
+
+    // Format as YYYY-MM-DD for input
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
 
     // Debugging method to verify modules endpoint
     async debugModulesEndpoint() {
