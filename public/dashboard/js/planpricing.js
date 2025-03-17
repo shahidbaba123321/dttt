@@ -125,6 +125,8 @@ class PricingManager {
 this.setupPlanCreationModalListeners = this.setupPlanCreationModalListeners.bind(this);
             this.showSubscriptionEditModal = this.showSubscriptionEditModal.bind(this);
     this.updateSubscription = this.updateSubscription.bind(this);
+             this.fetchPlans = this.fetchPlans.bind(this);
+    this.fetchSubscriptionDetails = this.fetchSubscriptionDetails.bind(this);
 
             // Debug modules endpoint
             this.debugModulesEndpoint();
@@ -443,8 +445,19 @@ showSubscriptionEditModal(subscriptionId) {
     try {
         console.log(`Attempting to edit subscription: ${subscriptionId}`);
 
-        // Fetch subscription details
-        this.fetchSubscriptionDetails(subscriptionId)
+        // Fetch plans if not already loaded
+        const preparePlansAndSubscription = async () => {
+            // Ensure plans are loaded
+            if (!this.plans || this.plans.length === 0) {
+                await this.fetchPlans();
+            }
+
+            // Fetch subscription details
+            return this.fetchSubscriptionDetails(subscriptionId);
+        };
+
+        // Fetch plans and subscription details
+        preparePlansAndSubscription()
             .then(subscription => {
                 // Create edit modal dynamically
                 const modalContainer = document.getElementById('subscriptionFormModalContainer') || 
@@ -589,10 +602,10 @@ showSubscriptionEditModal(subscriptionId) {
         this.showErrorNotification(`Failed to open edit modal: ${error.message}`);
     }
 }
-// Fetch subscription details
-async fetchSubscriptionDetails(subscriptionId) {
+
+    async fetchPlans() {
     try {
-        const response = await fetch(`${this.baseUrl}/subscriptions/${subscriptionId}`, {
+        const response = await fetch(`${this.baseUrl}/plans`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${this.token}`,
@@ -601,16 +614,56 @@ async fetchSubscriptionDetails(subscriptionId) {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to fetch subscription details');
+            throw new Error('Failed to fetch plans');
         }
 
         const result = await response.json();
         
         if (!result.success) {
-            throw new Error(result.message || 'Unable to retrieve subscription details');
+            throw new Error(result.message || 'Unable to retrieve plans');
         }
 
-        return result.data;
+        // Store plans
+        this.plans = result.data || result.plans || result;
+
+        return this.plans;
+    } catch (error) {
+        console.error('Plans Fetch Error:', error);
+        throw error;
+    }
+}
+
+// Fetch subscription details
+async fetchSubscriptionDetails(subscriptionId) {
+    try {
+        // Fetch all subscriptions first
+        const response = await fetch(`${this.baseUrl}/subscriptions`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch subscriptions');
+        }
+
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.message || 'Unable to retrieve subscriptions');
+        }
+
+        // Find the specific subscription
+        const subscriptions = result.data || result.subscriptions || result;
+        const subscription = subscriptions.find(sub => sub._id === subscriptionId);
+
+        if (!subscription) {
+            throw new Error(`Subscription with ID ${subscriptionId} not found`);
+        }
+
+        return subscription;
     } catch (error) {
         console.error('Subscription Details Fetch Error:', error);
         throw error;
