@@ -1469,7 +1469,7 @@ class PricingManager {
             console.error('Error syncing local logs:', error);
         }
     }
-}
+
     // Get user ID from local storage
     getUserId() {
         const userData = JSON.parse(localStorage.getItem('userData'));
@@ -1743,7 +1743,7 @@ class PricingManager {
             initials: this.generateUserInitials(name)
         };
     }
-}
+
     // Initialize activity log functionality
     initializeActivityLogFeature() {
         // Wait for DOM to be fully loaded
