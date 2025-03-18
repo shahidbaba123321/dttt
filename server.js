@@ -984,6 +984,8 @@ async function initializeDefaultRoles() {
 
 
 // Audit logging functions
+
+// Middleware Functions
 async function createAuditLog(logType, userId, companyId, details, session = null, moduleId = null) {
     try {
         // Fetch user details before creating the log
@@ -1051,6 +1053,9 @@ async function createAuditLog(logType, userId, companyId, details, session = nul
                 break;
             case logType.startsWith('PLAN_'):
                 targetCollection = database.collection('plan_activity_logs');
+                break;
+            case logType.startsWith('SUBSCRIPTION_'):
+                targetCollection = database.collection('subscription_logs');
                 break;
             case !!companyId:
                 targetCollection = company_audit_logs;
@@ -1123,8 +1128,6 @@ async function createAuditLog(logType, userId, companyId, details, session = nul
         throw error;
     }
 }
-// Middleware Functions
-
 // Token verification middleware
 const verifyToken = async (req, res, next) => {
     try {
