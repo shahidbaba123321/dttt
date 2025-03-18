@@ -394,7 +394,7 @@ class PricingManager {
             return 'Unknown';
         }
     }
-}
+
      // Currency conversion method with markup
     async convertCurrency(amount, fromCurrency, toCurrency) {
         try {
@@ -574,7 +574,7 @@ class PricingManager {
             console.error('Conversion demonstration failed:', error);
         }
     }
-}
+
     // Show Plan Creation Modal
     async showPlanCreationModal() {
         try {
@@ -1215,7 +1215,7 @@ class PricingManager {
             this.showErrorNotification(error.message);
         }
     }
-}
+
     // Setup plan currency selectors
     setupPlanCurrencySelectors() {
         const currencySelectors = document.querySelectorAll('.plan-currency-selector');
