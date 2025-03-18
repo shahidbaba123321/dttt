@@ -194,7 +194,7 @@ class PricingManager {
             console.error('Error in reinitializeEventListeners:', error);
         }
     }
-}
+
        // Helper method to escape HTML to prevent XSS
     escapeHtml(unsafe) {
         if (!unsafe) return '';
