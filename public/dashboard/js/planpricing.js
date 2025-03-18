@@ -101,6 +101,7 @@ class PricingManager {
             'displaySubscriptions',
             'showSubscriptionEditModal',
             'updateSubscription',
+            'setupSubscriptionCardListeners',
 
             // Utility methods
             'showModal',
@@ -394,6 +395,213 @@ class PricingManager {
             return 'Unknown';
         }
     }
+
+    // Fetch subscriptions method
+async fetchSubscriptions() {
+    try {
+        console.log('Fetching subscriptions...');
+        
+        const response = await fetch(`${this.baseUrl}/subscriptions`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch subscriptions');
+        }
+
+        const responseData = await response.json();
+        const subscriptions = responseData.data || responseData.subscriptions || responseData;
+
+        console.log('Subscriptions fetched:', subscriptions);
+
+        // Store subscriptions
+        this.subscriptions = subscriptions;
+
+        // Display subscriptions
+        this.displaySubscriptions(subscriptions);
+
+    } catch (error) {
+        console.error('Subscription Fetch Error:', error);
+        this.showErrorNotification(`Failed to load subscriptions: ${error.message}`);
+    }
+}
+
+// Display subscriptions method
+displaySubscriptions(subscriptions) {
+    const subscriptionsContainer = document.getElementById('subscriptionsListContainer');
+    
+    // Clear existing content
+    subscriptionsContainer.innerHTML = '';
+
+    if (!subscriptions || subscriptions.length === 0) {
+        subscriptionsContainer.innerHTML = `
+            <div class="no-subscriptions-container">
+                <i class="fas fa-folder-open text-muted" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">No Subscriptions Found</h4>
+                <p class="text-muted">Click "Create New Subscription" to get started.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Create subscription cards
+    subscriptions.forEach(subscription => {
+        const subscriptionCard = document.createElement('div');
+        subscriptionCard.className = 'subscription-card';
+        
+        subscriptionCard.innerHTML = `
+            <div class="subscription-header">
+                <h3>${subscription.planName || 'Unnamed Plan'}</h3>
+                <span class="subscription-status ${subscription.status || 'pending'}">
+                    ${(subscription.status || 'pending').charAt(0).toUpperCase() + (subscription.status || 'pending').slice(1)}
+                </span>
+            </div>
+            <div class="subscription-body">
+                <div class="subscription-details">
+                    <p><strong>Users:</strong> ${subscription.userCount || 'N/A'}</p>
+                    <p><strong>Start Date:</strong> ${subscription.startDate ? new Date(subscription.startDate).toLocaleDateString() : 'N/A'}</p>
+                    <p><strong>End Date:</strong> ${subscription.endDate ? new Date(subscription.endDate).toLocaleDateString() : 'N/A'}</p>
+                    <p><strong>Auto-Renewal:</strong> ${subscription.autoRenewal ? 'Yes' : 'No'}</p>
+                </div>
+            </div>
+            <div class="subscription-actions">
+                <button class="btn btn-sm btn-primary edit-subscription" data-id="${subscription._id}">
+                    Manage
+                </button>
+                <button class="btn btn-sm btn-danger cancel-subscription" data-id="${subscription._id}">
+                    Cancel
+                </button>
+            </div>
+        `;
+
+        subscriptionsContainer.appendChild(subscriptionCard);
+    });
+
+    // Setup listeners for subscription actions
+    this.setupSubscriptionCardListeners();
+}
+
+// Show Subscription Creation Modal
+showSubscriptionCreationModal() {
+    try {
+        console.log('Attempting to show subscription creation modal');
+        
+        // Create modal dynamically
+        const modalContainer = document.getElementById('subscriptionFormModalContainer') || 
+            (() => {
+                const container = document.createElement('div');
+                container.id = 'subscriptionFormModalContainer';
+                document.body.appendChild(container);
+                return container;
+            })();
+
+        // Remove existing modal
+        const existingModal = document.getElementById('subscriptionCreationModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Create modal HTML (basic implementation)
+        const modalDiv = document.createElement('div');
+        modalDiv.innerHTML = `
+            <div class="modal" id="subscriptionCreationModal" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Create New Subscription</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Subscription creation form to be implemented</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="createSubscriptionBtn">Create Subscription</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Append to container
+        modalContainer.appendChild(modalDiv.firstElementChild);
+
+        // Show modal
+        this.showModal('subscriptionCreationModal');
+
+    } catch (error) {
+        console.error('Error showing subscription creation modal:', error);
+        this.showErrorNotification(`Failed to show subscription modal: ${error.message}`);
+    }
+}
+
+// Create Subscription Method
+async createSubscription() {
+    try {
+        console.log('Creating subscription...');
+        // Placeholder for subscription creation logic
+        this.showSuccessNotification('Subscription creation not yet implemented');
+    } catch (error) {
+        console.error('Subscription creation error:', error);
+        this.showErrorNotification(`Failed to create subscription: ${error.message}`);
+    }
+}
+
+// Show Subscription Edit Modal
+showSubscriptionEditModal(subscriptionId) {
+    try {
+        console.log(`Attempting to edit subscription: ${subscriptionId}`);
+        // Placeholder for edit modal logic
+        this.showErrorNotification('Subscription edit not yet implemented');
+    } catch (error) {
+        console.error('Error showing subscription edit modal:', error);
+        this.showErrorNotification(`Failed to show edit modal: ${error.message}`);
+    }
+}
+
+// Update Subscription Method
+async updateSubscription() {
+    try {
+        console.log('Updating subscription...');
+        // Placeholder for subscription update logic
+        this.showSuccessNotification('Subscription update not yet implemented');
+    } catch (error) {
+        console.error('Subscription update error:', error);
+        this.showErrorNotification(`Failed to update subscription: ${error.message}`);
+    }
+}
+
+// Setup subscription card listeners
+setupSubscriptionCardListeners() {
+    const editButtons = document.querySelectorAll('.edit-subscription');
+    const cancelButtons = document.querySelectorAll('.cancel-subscription');
+
+    // Edit subscription listeners
+    editButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const subscriptionId = button.getAttribute('data-id');
+            this.showSubscriptionEditModal(subscriptionId);
+        });
+    });
+
+    // Cancel subscription listeners
+    cancelButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const subscriptionId = button.getAttribute('data-id');
+            // Placeholder for cancellation logic
+            console.log(`Cancelling subscription: ${subscriptionId}`);
+            this.showErrorNotification('Subscription cancellation not yet implemented');
+        });
+    });
+}
+
+    
 
      // Currency conversion method with markup
     async convertCurrency(amount, fromCurrency, toCurrency) {
