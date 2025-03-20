@@ -4919,17 +4919,6 @@ app.get('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
             });
         }
 
-        // Ensure convertedPrices exists
-        if (!plan.convertedPrices) {
-            plan.convertedPrices = {
-                USD: { monthlyPrice: plan.monthlyPrice, annualPrice: plan.annualPrice },
-                INR: { monthlyPrice: 0, annualPrice: 0 },
-                AED: { monthlyPrice: 0, annualPrice: 0 },
-                QAR: { monthlyPrice: 0, annualPrice: 0 },
-                GBP: { monthlyPrice: 0, annualPrice: 0 }
-            };
-        }
-
         // Create audit log
         await createAuditLog(
             'PLAN_DETAILS_VIEWED',
@@ -4938,25 +4927,24 @@ app.get('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
             {
                 planId: plan._id,
                 planName: plan.name,
-                currency: plan.currency
+                baseCurrency: plan.baseCurrency
             }
         );
 
-        // Return plan details with comprehensive information
+        // Return plan details with supported currencies
         res.json({
             success: true,
             data: {
                 ...plan,
                 supportedCurrencies: [
-                    { code: 'USD', symbol: '$', name: 'US Dollar', country: 'USA' },
                     { code: 'INR', symbol: '₹', name: 'Indian Rupee', country: 'India' },
+                    { code: 'USD', symbol: '$', name: 'US Dollar', country: 'USA' },
+                    { code: 'GBP', symbol: '£', name: 'British Pound', country: 'UK' },
                     { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham', country: 'UAE' },
-                    { code: 'QAR', symbol: 'ر.ق', name: 'Qatari Riyal', country: 'Qatar' },
-                    { code: 'GBP', symbol: '£', name: 'British Pound', country: 'UK' }
+                    { code: 'QAR', symbol: 'ر.ق', name: 'Qatari Riyal', country: 'Qatar' }
                 ]
             }
         });
-
     } catch (error) {
         console.error('Error fetching plan details:', error);
         res.status(500).json({
@@ -4979,19 +4967,19 @@ app.post('/api/plans', verifyToken, verifyAdmin, async (req, res) => {
                 annualPrice,
                 trialPeriod = 0,
                 isActive = true,
-                currency = 'USD',
+                baseCurrency = 'USD', // Renamed from 'currency' to 'baseCurrency'
                 features = []
             } = req.body;
 
             // Validate required fields
-            if (!name || !description || !monthlyPrice || !annualPrice) {
+            if (!name || !description || !monthlyPrice || !annualPrice || !baseCurrency) {
                 throw new Error('Missing required fields');
             }
 
-            // Validate currency
-            const validCurrencies = ['USD', 'INR', 'AED', 'QAR', 'GBP'];
-            if (!validCurrencies.includes(currency)) {
-                throw new Error('Invalid currency');
+            // Validate baseCurrency
+            const validCurrencies = ['INR', 'USD', 'GBP', 'AED', 'QAR'];
+            if (!validCurrencies.includes(baseCurrency)) {
+                throw new Error('Invalid base currency');
             }
 
             // Check if plan exists
@@ -5003,66 +4991,49 @@ app.post('/api/plans', verifyToken, verifyAdmin, async (req, res) => {
                 throw new Error('Plan with this name already exists');
             }
 
-            // Prepare converted prices
-            const convertedPrices = {
-                USD: { monthlyPrice: 0, annualPrice: 0 },
-                INR: { monthlyPrice: 0, annualPrice: 0 },
-                AED: { monthlyPrice: 0, annualPrice: 0 },
-                QAR: { monthlyPrice: 0, annualPrice: 0 },
-                GBP: { monthlyPrice: 0, annualPrice: 0 }
-            };
+            // Prepare prices object based on new conversion rules
+            const prices = {};
+            const monthly = parseFloat(monthlyPrice);
+            const annual = parseFloat(annualPrice);
 
-            // Conversion rates (you might want to fetch these dynamically)
-            const conversionRates = {
-                USD: { INR: 83.50, AED: 3.67, QAR: 3.64, GBP: 0.79 },
-                INR: { USD: 0.012, AED: 0.044, QAR: 0.044, GBP: 0.015 },
-                AED: { USD: 0.27, INR: 22.70, QAR: 1.0, GBP: 0.34 },
-                QAR: { USD: 0.27, INR: 22.70, AED: 1.0, GBP: 0.34 },
-                GBP: { USD: 1.26, INR: 66.50, AED: 2.93, QAR: 2.90 }
-            };
-
-            // Markup rules
-            const markupRules = {
-                INR: { USD: 1.3, AED: 1.3, QAR: 1.3, GBP: 1.4 },
-                USD: { GBP: 1.2 },
-                AED: { GBP: 1.3 },
-                QAR: { GBP: 1.3 }
-            };
-
-            // Calculate converted prices
-            validCurrencies.forEach(targetCurrency => {
-                if (targetCurrency === currency) {
-                    // Set base currency prices
-                    convertedPrices[targetCurrency] = {
-                        monthlyPrice: parseFloat(monthlyPrice),
-                        annualPrice: parseFloat(annualPrice)
-                    };
-                } else {
-                    // Convert prices
-                    const monthlyRate = parseFloat(monthlyPrice) * conversionRates[currency][targetCurrency];
-                    const annualRate = parseFloat(annualPrice) * conversionRates[currency][targetCurrency];
-
-                    // Apply markup if exists
-                    const markup = markupRules[currency]?.[targetCurrency] || 1;
-                    
-                    convertedPrices[targetCurrency] = {
-                        monthlyPrice: Math.round(monthlyRate * markup * 100) / 100,
-                        annualPrice: Math.round(annualRate * markup * 100) / 100
-                    };
-                }
-            });
+            switch (baseCurrency) {
+                case 'INR':
+                    prices.INR = { monthly, annual };
+                    prices.USD = { monthly: monthly * 1.4, annual: annual * 1.4 }; // +40%
+                    prices.GBP = { monthly: monthly * 1.5, annual: annual * 1.5 }; // +50%
+                    prices.AED = { monthly: monthly * 1.3, annual: annual * 1.3 }; // +30%
+                    prices.QAR = { monthly: monthly * 1.3, annual: annual * 1.3 }; // +30%
+                    break;
+                case 'USD':
+                    prices.USD = { monthly, annual };
+                    prices.INR = { monthly, annual }; // Same rate
+                    prices.GBP = { monthly: monthly * 1.25, annual: annual * 1.25 }; // +25%
+                    prices.AED = { monthly, annual }; // Same rate
+                    prices.QAR = { monthly, annual }; // Same rate
+                    break;
+                case 'AED':
+                case 'QAR':
+                    prices[baseCurrency] = { monthly, annual };
+                    prices.USD = { monthly: monthly * 1.3, annual: annual * 1.3 }; // +30%
+                    prices.GBP = { monthly: monthly * 1.4, annual: annual * 1.4 }; // +40%
+                    prices.INR = { monthly, annual }; // Same rate
+                    prices[baseCurrency === 'AED' ? 'QAR' : 'AED'] = { monthly, annual }; // Same rate
+                    break;
+                default:
+                    throw new Error('Unsupported base currency');
+            }
 
             // Create plan object
             const plan = {
                 name,
                 description,
-                monthlyPrice: parseFloat(monthlyPrice),
-                annualPrice: parseFloat(annualPrice),
+                monthlyPrice: monthly, // Base currency price
+                annualPrice: annual,   // Base currency price
                 trialPeriod: parseInt(trialPeriod),
                 isActive,
-                currency,
+                baseCurrency,
                 features: features.map(f => ({ name: f })),
-                convertedPrices, // Add converted prices
+                prices, // New structure replacing convertedPrices
                 createdAt: new Date(),
                 createdBy: new ObjectId(req.user.userId),
                 updatedAt: new Date()
@@ -5070,7 +5041,7 @@ app.post('/api/plans', verifyToken, verifyAdmin, async (req, res) => {
 
             const result = await database.collection('plans').insertOne(plan, { session });
 
-            // Create comprehensive audit log
+            // Create audit log
             await createAuditLog(
                 'PLAN_CREATED',
                 req.user.userId,
@@ -5080,7 +5051,7 @@ app.post('/api/plans', verifyToken, verifyAdmin, async (req, res) => {
                     planName: name,
                     planDetails: {
                         ...plan,
-                        convertedPrices
+                        prices
                     },
                     createdBy: req.user.userId
                 },
@@ -5106,7 +5077,6 @@ app.post('/api/plans', verifyToken, verifyAdmin, async (req, res) => {
         await session.endSession();
     }
 });
-
 // Update existing plan
 app.put('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
     const session = client.startSession();
@@ -5137,68 +5107,50 @@ app.put('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
                 throw new Error('Plan not found');
             }
 
-            // Conversion rates
-            const conversionRates = {
-                USD: { INR: 83.50, AED: 3.67, QAR: 3.64, GBP: 0.79 },
-                INR: { USD: 0.012, AED: 0.044, QAR: 0.044, GBP: 0.015 },
-                AED: { USD: 0.27, INR: 22.70, QAR: 1.0, GBP: 0.34 },
-                QAR: { USD: 0.27, INR: 22.70, AED: 1.0, GBP: 0.34 },
-                GBP: { USD: 1.26, INR: 66.50, AED: 2.93, QAR: 2.90 }
-            };
+            // Use existing baseCurrency unless explicitly changed (not supported in this update)
+            const baseCurrency = existingPlan.baseCurrency;
+            const monthly = parseFloat(monthlyPrice || existingPlan.monthlyPrice);
+            const annual = parseFloat(annualPrice || existingPlan.annualPrice);
 
-            // Markup rules
-            const markupRules = {
-                INR: { USD: 1.3, AED: 1.3, QAR: 1.3, GBP: 1.4 },
-                USD: { GBP: 1.2 },
-                AED: { GBP: 1.3 },
-                QAR: { GBP: 1.3 }
-            };
-
-            // Prepare converted prices
-            const convertedPrices = existingPlan.convertedPrices || {
-                USD: { monthlyPrice: 0, annualPrice: 0 },
-                INR: { monthlyPrice: 0, annualPrice: 0 },
-                AED: { monthlyPrice: 0, annualPrice: 0 },
-                QAR: { monthlyPrice: 0, annualPrice: 0 },
-                GBP: { monthlyPrice: 0, annualPrice: 0 }
-            };
-
-            // Recalculate converted prices
-            const validCurrencies = ['USD', 'INR', 'AED', 'QAR', 'GBP'];
-            validCurrencies.forEach(targetCurrency => {
-                if (targetCurrency === existingPlan.currency) {
-                    // Update base currency prices
-                    convertedPrices[targetCurrency] = {
-                        monthlyPrice: parseFloat(monthlyPrice || existingPlan.monthlyPrice),
-                        annualPrice: parseFloat(annualPrice || existingPlan.annualPrice)
-                    };
-                } else {
-                    // Convert prices
-                    const monthlyRate = parseFloat(monthlyPrice || existingPlan.monthlyPrice) * 
-                        conversionRates[existingPlan.currency][targetCurrency];
-                    const annualRate = parseFloat(annualPrice || existingPlan.annualPrice) * 
-                        conversionRates[existingPlan.currency][targetCurrency];
-
-                    // Apply markup if exists
-                    const markup = markupRules[existingPlan.currency]?.[targetCurrency] || 1;
-                    
-                    convertedPrices[targetCurrency] = {
-                        monthlyPrice: Math.round(monthlyRate * markup * 100) / 100,
-                        annualPrice: Math.round(annualRate * markup * 100) / 100
-                    };
-                }
-            });
+            // Recalculate prices based on new monthly/annual values
+            const prices = {};
+            switch (baseCurrency) {
+                case 'INR':
+                    prices.INR = { monthly, annual };
+                    prices.USD = { monthly: monthly * 1.4, annual: annual * 1.4 }; // +40%
+                    prices.GBP = { monthly: monthly * 1.5, annual: annual * 1.5 }; // +50%
+                    prices.AED = { monthly: monthly * 1.3, annual: annual * 1.3 }; // +30%
+                    prices.QAR = { monthly: monthly * 1.3, annual: annual * 1.3 }; // +30%
+                    break;
+                case 'USD':
+                    prices.USD = { monthly, annual };
+                    prices.INR = { monthly, annual }; // Same rate
+                    prices.GBP = { monthly: monthly * 1.25, annual: annual * 1.25 }; // +25%
+                    prices.AED = { monthly, annual }; // Same rate
+                    prices.QAR = { monthly, annual }; // Same rate
+                    break;
+                case 'AED':
+                case 'QAR':
+                    prices[baseCurrency] = { monthly, annual };
+                    prices.USD = { monthly: monthly * 1.3, annual: annual * 1.3 }; // +30%
+                    prices.GBP = { monthly: monthly * 1.4, annual: annual * 1.4 }; // +40%
+                    prices.INR = { monthly, annual }; // Same rate
+                    prices[baseCurrency === 'AED' ? 'QAR' : 'AED'] = { monthly, annual }; // Same rate
+                    break;
+                default:
+                    throw new Error('Unsupported base currency');
+            }
 
             // Prepare update data
             const updateData = {
                 ...(name && { name }),
                 ...(description && { description }),
-                ...(monthlyPrice && { monthlyPrice: parseFloat(monthlyPrice) }),
-                ...(annualPrice && { annualPrice: parseFloat(annualPrice) }),
+                ...(monthlyPrice && { monthlyPrice: monthly }),
+                ...(annualPrice && { annualPrice: annual }),
                 ...(trialPeriod !== undefined && { trialPeriod: parseInt(trialPeriod) }),
                 ...(isActive !== undefined && { isActive }),
-                ...(features && { features }),
-                convertedPrices,
+                ...(features && { features: features.map(f => ({ name: f })) }),
+                prices, // Replace convertedPrices
                 updatedAt: new Date(),
                 updatedBy: new ObjectId(req.user.userId)
             };
@@ -5230,7 +5182,7 @@ app.put('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
                     planName: updatedPlan.name,
                     changes: {
                         ...getChanges(existingPlan, updatedPlan),
-                        convertedPrices: updatedPlan.convertedPrices
+                        prices: updatedPlan.prices
                     }
                 },
                 session
@@ -5338,7 +5290,6 @@ app.delete('/api/plans/:planId', verifyToken, verifyAdmin, async (req, res) => {
         await session.endSession();
     }
 });
-
 // Add this to your server.js file
 app.get('/api/plan-activity-logs', verifyToken, verifyAdmin, async (req, res) => {
     try {
@@ -6633,6 +6584,23 @@ app.post('/api/subscriptions', verifyToken, verifyAdmin, async (req, res) => {
         });
     } finally {
         await session.endSession();
+    }
+});
+
+app.get('/api/subscriptions/:subscriptionId', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const { subscriptionId } = req.params;
+        if (!ObjectId.isValid(subscriptionId)) {
+            return res.status(400).json({ success: false, message: 'Invalid subscription ID' });
+        }
+        const subscription = await database.collection('subscriptions').findOne({ _id: new ObjectId(subscriptionId) });
+        if (!subscription) {
+            return res.status(404).json({ success: false, message: 'Subscription not found' });
+        }
+        res.json({ success: true, data: subscription });
+    } catch (error) {
+        console.error('Error fetching subscription:', error);
+        res.status(500).json({ success: false, message: 'Error fetching subscription' });
     }
 });
 
