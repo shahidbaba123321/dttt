@@ -3,146 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pricing & Plans - WorkWise Pro</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Pricing Management Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        /* Inheriting root variables from index.html */
+        :root {
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --border-medium: #ccc;
+            --border-radius-md: 4px;
+            --bg-tertiary: #f9f9f9;
+            --text-primary: #333;
+            --bg-primary: #fff;
+            --bg-secondary: #e9ecef;
+            --button-primary: #007bff;
+            --button-hover: #0056b3;
+            --success: #28a745;
+            --danger: #dc3545;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: var(--spacing-md);
+            background-color: var(--bg-secondary);
+        }
+
         .pricing-container {
-            padding: var(--spacing-xl);
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
+            background: var(--bg-primary);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius-md);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        .pricing-header {
+        .pricing-tabs {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--spacing-lg);
-        }
-
-        .pricing-header h1 {
-            font-size: 1.75rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .pricing-tab-nav {
-            display: flex;
-            gap: var(--spacing-md);
-            border-bottom: 2px solid var(--border-light);
-            margin-bottom: var(--spacing-lg);
+            border-bottom: 2px solid var(--border-medium);
+            margin-bottom: var(--spacing-md);
         }
 
         .pricing-tab {
             padding: var(--spacing-sm) var(--spacing-md);
-            font-weight: 500;
-            color: var(--text-secondary);
             cursor: pointer;
-            transition: all var(--transition-speed) ease;
+            flex: 1;
+            text-align: center;
+            background: var(--bg-tertiary);
         }
 
         .pricing-tab.active {
-            color: var(--primary-color);
-            border-bottom: 2px solid var(--primary-color);
+            background: var(--bg-primary);
+            border-bottom: 2px solid var(--button-primary);
         }
 
-        /* Plan Management Section */
-        .plan-management {
-            background-color: var(--bg-primary);
-            border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow-md);
-            padding: var(--spacing-lg);
-            margin-bottom: var(--spacing-xl);
+        .tab-content {
+            display: none;
         }
 
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--spacing-lg);
-        }
-
-        .section-header h2 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: var(--spacing-sm) var(--spacing-lg);
-            border-radius: var(--border-radius-md);
-            cursor: pointer;
-            transition: background-color var(--transition-speed) ease;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
-        }
-
-        .plans-table {
+        .data-table {
             width: 100%;
             border-collapse: collapse;
-            background-color: var(--bg-primary);
+            margin-top: var(--spacing-md);
         }
 
-        .plans-table th, .plans-table td {
-            padding: var(--spacing-md);
+        .data-table th, .data-table td {
+            padding: var(--spacing-sm);
+            border: 1px solid var(--border-medium);
             text-align: left;
-            border-bottom: 1px solid var(--border-light);
         }
 
-        .plans-table th {
-            font-weight: 600;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            text-transform: uppercase;
+        .data-table th {
+            background: var(--bg-tertiary);
         }
 
-        .plans-table td {
-            color: var(--text-primary);
-        }
-
-        .plan-status {
-            padding: var(--spacing-xs) var(--spacing-sm);
-            border-radius: var(--border-radius-sm);
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-
-        .plan-status.active {
-            background-color: #DEF7EC;
-            color: #03543F;
-        }
-
-        .plan-status.inactive {
-            background-color: #FEE2E2;
-            color: #981B1B;
-        }
-
-        .plan-actions {
-            display: flex;
-            gap: var(--spacing-sm);
-        }
+        .plan-status.active { color: var(--success); }
+        .plan-status.inactive { color: var(--danger); }
+        .subscription-status.active { color: var(--success); }
+        .subscription-status:not(.active) { color: var(--danger); }
 
         .action-btn {
             background: none;
             border: none;
-            color: var(--text-secondary);
             cursor: pointer;
-            padding: var(--spacing-sm);
-            border-radius: var(--border-radius-sm);
-            transition: all var(--transition-speed) ease;
+            color: var(--button-primary);
+            padding: var(--spacing-xs);
         }
 
-        .action-btn:hover {
+        .action-btn:hover { color: var(--button-hover); }
+        .plan-actions, .feature-actions, .subscription-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .currency-select {
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border: 1px solid var(--border-medium);
+            border-radius: var(--border-radius-md);
             background-color: var(--bg-tertiary);
-            color: var(--primary-color);
+            color: var(--text-primary);
+            font-size: 0.875rem;
         }
 
-        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -150,512 +112,77 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 2000;
-            align-items: center;
+            background: rgba(0,0,0,0.5);
             justify-content: center;
+            align-items: center;
         }
 
         .modal-content {
-            background-color: var(--bg-primary);
-            border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow-lg);
-            padding: var(--spacing-xl);
+            background: var(--bg-primary);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius-md);
             width: 90%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
+            max-width: 500px;
+            position: relative;
         }
 
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--spacing-lg);
-        }
-
-        .modal-header h2 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.25rem;
-            color: var(--text-secondary);
+        .close-modal {
+            position: absolute;
+            top: var(--spacing-sm);
+            right: var(--spacing-sm);
+            font-size: 24px;
             cursor: pointer;
         }
 
-        .modal-close:hover {
-            color: var(--danger-color);
-        }
-
         .form-group {
-            margin-bottom: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
         }
 
         .form-group label {
             display: block;
-            font-weight: 500;
-            color: var(--text-primary);
-            margin-bottom: var(--spacing-sm);
+            margin-bottom: var(--spacing-xs);
         }
 
-        .form-group input, .form-group select, .form-group textarea {
+        .form-group input, .form-group textarea, .form-group select {
             width: 100%;
-            padding: var(--spacing-sm) var(--spacing-md);
+            padding: var(--spacing-sm);
             border: 1px solid var(--border-medium);
             border-radius: var(--border-radius-md);
-            font-size: 0.875rem;
-            color: var(--text-primary);
-            background-color: var(--bg-tertiary);
+            box-sizing: border-box;
         }
 
         .form-group textarea {
-            min-height: 100px;
+            height: 100px;
             resize: vertical;
         }
 
-        /* Feature Management Section */
-        .feature-management {
-            background-color: var(--bg-primary);
-            border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow-md);
-            padding: var(--spacing-lg);
-            margin-bottom: var(--spacing-xl);
-            display: none;
-        }
-
-        .feature-table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: var(--bg-primary);
-        }
-
-        .feature-table th, .feature-table td {
-            padding: var(--spacing-md);
-            text-align: left;
-            border-bottom: 1px solid var(--border-light);
-        }
-
-        .feature-table th {
-            font-weight: 600;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            text-transform: uppercase;
-        }
-
-        .feature-table td {
-            color: var(--text-primary);
-        }
-
-        .feature-type {
-            padding: var(--spacing-xs) var(--spacing-sm);
-            border-radius: var(--border-radius-sm);
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-
-        .feature-type.limited {
-            background-color: #FEF3C7;
-            color: #92400E;
-        }
-
-        .feature-type.unlimited {
-            background-color: #DEF7EC;
-            color: #03543F;
-        }
-
-        .feature-type.custom {
-            background-color: #E1EFFE;
-            color: #1E429F;
-        }
-
-        .feature-plan-list {
-            max-width: 300px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .feature-actions {
-            display: flex;
-            gap: var(--spacing-sm);
-        }
-
-        .feature-form-group {
-            display: flex;
-            gap: var(--spacing-md);
-            align-items: center;
-        }
-
-        .feature-form-group input[type="checkbox"] {
-            width: auto;
-        }
-
-        /* Subscription Management Section */
-        .subscription-management {
-            background-color: var(--bg-primary);
-            border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow-md);
-            padding: var(--spacing-lg);
-            margin-bottom: var(--spacing-xl);
-            display: none;
-        }
-
-        .subscription-table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: var(--bg-primary);
-        }
-
-        .subscription-table th, .subscription-table td {
-            padding: var(--spacing-md);
-            text-align: left;
-            border-bottom: 1px solid var(--border-light);
-        }
-
-        .subscription-table th {
-            font-weight: 600;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            text-transform: uppercase;
-        }
-
-        .subscription-table td {
-            color: var(--text-primary);
-        }
-
-        .subscription-status {
-            padding: var(--spacing-xs) var(--spacing-sm);
-            border-radius: var(--border-radius-sm);
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-
-        .subscription-status.active {
-            background-color: #DEF7EC;
-            color: #03543F;
-        }
-
-        .subscription-status.cancelled {
-            background-color: #FEE2E2;
-            color: #981B1B;
-        }
-
-        .subscription-status.expired {
-            background-color: #FEF3C7;
-            color: #92400E;
-        }
-
-        .subscription-actions {
-            display: flex;
-            gap: var(--spacing-sm);
-        }
-
-        /* Payment & Billing Section */
-        .billing-management {
-            background-color: var(--bg-primary);
-            border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow-md);
-            padding: var(--spacing-lg);
-            margin-bottom: var(--spacing-xl);
-            display: none;
-        }
-
-        .billing-table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: var(--bg-primary);
-        }
-
-        .billing-table th, .billing-table td {
-            padding: var(--spacing-md);
-            text-align: left;
-            border-bottom: 1px solid var(--border-light);
-        }
-
-        .billing-table th {
-            font-weight: 600;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            text-transform: uppercase;
-        }
-
-        .billing-table td {
-            color: var(--text-primary);
-        }
-
-        .payment-status {
-            padding: var(--spacing-xs) var(--spacing-sm);
-            border-radius: var(--border-radius-sm);
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-
-        .payment-status.paid {
-            background-color: #DEF7EC;
-            color: #03543F;
-        }
-
-        .payment-status.pending {
-            background-color: #FEF3C7;
-            color: #92400E;
-        }
-
-        .payment-status.failed {
-            background-color: #FEE2E2;
-            color: #981B1B;
-        }
-
-        .billing-actions {
-            display: flex;
-            gap: var(--spacing-sm);
-        }
-
-        .payment-details {
-            display: flex;
-            flex-direction: column;
-            gap: var(--spacing-sm);
-        }
-
-        /* Discount & Coupon Management Section */
-        .discount-management {
-            background-color: var(--bg-primary);
-            border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow-md);
-            padding: var(--spacing-lg);
-            margin-bottom: var(--spacing-xl);
-            display: none;
-        }
-
-        .discount-table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: var(--bg-primary);
-        }
-
-        .discount-table th, .discount-table td {
-            padding: var(--spacing-md);
-            text-align: left;
-            border-bottom: 1px solid var(--border-light);
-        }
-
-        .discount-table th {
-            font-weight: 600;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            text-transform: uppercase;
-        }
-
-        .discount-table td {
-            color: var(--text-primary);
-        }
-
-        .discount-type {
-            padding: var(--spacing-xs) var(--spacing-sm);
-            border-radius: var(--border-radius-sm);
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-
-        .discount-type.percentage {
-            background-color: #E1EFFE;
-            color: #1E429F;
-        }
-
-        .discount-type.fixed {
-            background-color: #DEF7EC;
-            color: #03543F;
-        }
-
-        .discount-status {
-            padding: var(--spacing-xs) var(--spacing-sm);
-            border-radius: var(--border-radius-sm);
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-
-        .discount-status.active {
-            background-color: #DEF7EC;
-            color: #03543F;
-        }
-
-        .discount-status.expired {
-            background-color: #FEE2E2;
-            color: #981B1B;
-        }
-
-        .discount-actions {
-            display: flex;
-            gap: var(--spacing-sm);
-        }
-
-        /* Reports & Analytics Section */
-        .reports-management {
-            background-color: var(--bg-primary);
-            border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow-md);
-            padding: var(--spacing-lg);
-            margin-bottom: var(--spacing-xl);
-            display: none;
-        }
-
-        .report-controls {
-            display: flex;
-            gap: var(--spacing-md);
-            margin-bottom: var(--spacing-lg);
-            flex-wrap: wrap;
-        }
-
-        .report-controls .form-group {
-            flex: 1;
-            min-width: 200px;
-        }
-
-        .report-canvas-container {
-            position: relative;
-            height: 400px;
-            margin-bottom: var(--spacing-lg);
-        }
-
-        .report-table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: var(--bg-primary);
-        }
-
-        .report-table th, .report-table td {
-            padding: var(--spacing-md);
-            text-align: left;
-            border-bottom: 1px solid var(--border-light);
-        }
-
-        .report-table th {
-            font-weight: 600;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            text-transform: uppercase;
-        }
-
-        .report-table td {
-            color: var(--text-primary);
-        }
-
-        .export-btn {
-            background-color: var(--secondary-color);
+        button[type="submit"], #createPlanBtn, #createFeatureBtn, #createSubscriptionBtn, #refreshAllBtn {
+            background: var(--button-primary);
             color: white;
             border: none;
-            padding: var(--spacing-sm) var(--spacing-lg);
+            padding: var(--spacing-sm) var(--spacing-md);
             border-radius: var(--border-radius-md);
             cursor: pointer;
-            transition: background-color var(--transition-speed) ease;
         }
 
-        .export-btn:hover {
-            background-color: #2563EB;
-        }
-
-        /* Security & Compliance Section */
-        .security-management {
-            background-color: var(--bg-primary);
-            border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow-md);
-            padding: var(--spacing-lg);
-            margin-bottom: var(--spacing-xl);
-            display: none;
-        }
-
-        .security-settings {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: var(--spacing-lg);
-            margin-bottom: var(--spacing-lg);
-        }
-
-        .setting-item {
-            background-color: var(--bg-tertiary);
-            padding: var(--spacing-md);
-            border-radius: var(--border-radius-md);
-        }
-
-        .setting-item label {
-            font-weight: 500;
-            color: var(--text-primary);
-            display: block;
-            margin-bottom: var(--spacing-sm);
-        }
-
-        .setting-item input[type="checkbox"] {
-            margin-right: var(--spacing-sm);
-        }
-
-        .compliance-table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: var(--bg-primary);
-        }
-
-        .compliance-table th, .compliance-table td {
-            padding: var(--spacing-md);
-            text-align: left;
-            border-bottom: 1px solid var(--border-light);
-        }
-
-        .compliance-table th {
-            font-weight: 600;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            text-transform: uppercase;
-        }
-
-        .compliance-table td {
-            color: var(--text-primary);
-        }
-
-        .compliance-status {
-            padding: var(--spacing-xs) var(--spacing-sm);
-            border-radius: var(--border-radius-sm);
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-
-        .compliance-status.active {
-            background-color: #DEF7EC;
-            color: #03543F;
-        }
-
-        .compliance-status.inactive {
-            background-color: #FEE2E2;
-            color: #981B1B;
+        button[type="submit"]:hover, #createPlanBtn:hover, #createFeatureBtn:hover, #createSubscriptionBtn:hover, #refreshAllBtn:hover {
+            background: var(--button-hover);
         }
     </style>
 </head>
 <body>
     <div class="pricing-container">
-        <header class="pricing-header">
-            <h1>Pricing & Plans</h1>
-            <button class="btn-primary" id="createPlanBtn">Create New Plan</button>
-        </header>
-
-        <nav class="pricing-tab-nav">
+        <div class="pricing-tabs">
             <div class="pricing-tab active" data-tab="plans">Plans</div>
             <div class="pricing-tab" data-tab="features">Features</div>
             <div class="pricing-tab" data-tab="subscriptions">Subscriptions</div>
-            <div class="pricing-tab" data-tab="billing">Billing</div>
-            <div class="pricing-tab" data-tab="discounts">Discounts</div>
-            <div class="pricing-tab" data-tab="reports">Reports</div>
-            <div class="pricing-tab" data-tab="security">Security</div>
-        </nav>
+        </div>
 
-        <!-- Plan Management Section -->
-        <section class="plan-management tab-content" data-tab-content="plans">
-            <div class="section-header">
-                <h2>Plan Management</h2>
-            </div>
-            <table class="plans-table">
+        <!-- Plans Tab -->
+        <div class="tab-content" data-tab-content="plans" style="display: block;">
+            <button id="createPlanBtn">Add New Plan</button>
+            <button id="refreshAllBtn">Refresh All</button>
+            <table class="data-table">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -665,116 +192,35 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody id="plansTableBody">
-                    <!-- Plans will be populated dynamically -->
-                </tbody>
+                <tbody id="plansTableBody"></tbody>
             </table>
-        </section>
-
-        <!-- Create/Edit Plan Modal -->
-        <div class="modal" id="planModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 id="planModalTitle">Create New Plan</h2>
-                    <button class="modal-close" id="closePlanModal">×</button>
-                </div>
-                <form id="planForm">
-                    <div class="form-group">
-                        <label for="planName">Plan Name</label>
-                        <input type="text" id="planName" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="monthlyPrice">Monthly Price (USD)</label>
-                        <input type="number" id="monthlyPrice" name="monthlyPrice" step="0.01" min="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="annualPrice">Annual Price (USD)</label>
-                        <input type="number" id="annualPrice" name="annualPrice" step="0.01" min="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="planDescription">Description</label>
-                        <textarea id="planDescription" name="description"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="planStatus">Status</label>
-                        <select id="planStatus" name="status">
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn-primary">Save Plan</button>
-                </form>
-            </div>
         </div>
 
-        <!-- Feature Management Section -->
-        <section class="feature-management tab-content" data-tab-content="features">
-            <div class="section-header">
-                <h2>Feature Management</h2>
-                <button class="btn-primary" id="createFeatureBtn">Add New Feature</button>
-            </div>
-            <table class="feature-table">
+        <!-- Features Tab -->
+        <div class="tab-content" data-tab-content="features">
+            <button id="createFeatureBtn">Add New Feature</button>
+            <table class="data-table">
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th>Type</th>
-                        <th>Limit</th>
-                        <th>Associated Plans</th>
+                        <th>Description</th>
+                        <th>Category</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody id="featuresTableBody">
-                    <!-- Features will be populated dynamically -->
-                </tbody>
+                <tbody id="featuresTableBody"></tbody>
             </table>
-        </section>
-
-        <!-- Create/Edit Feature Modal -->
-        <div class="modal" id="featureModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 id="featureModalTitle">Add New Feature</h2>
-                    <button class="modal-close" id="closeFeatureModal">×</button>
-                </div>
-                <form id="featureForm">
-                    <div class="form-group">
-                        <label for="featureName">Feature Name</label>
-                        <input type="text" id="featureName" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="featureType">Type</label>
-                        <select id="featureType" name="type" required>
-                            <option value="limited">Limited</option>
-                            <option value="unlimited">Unlimited</option>
-                            <option value="custom">Custom</option>
-                        </select>
-                    </div>
-                    <div class="form-group" id="featureLimitGroup">
-                        <label for="featureLimit">Limit (if applicable)</label>
-                        <input type="number" id="featureLimit" name="limit" min="0" step="1">
-                    </div>
-                    <div class="form-group">
-                        <label>Associated Plans</label>
-                        <div id="featurePlansList">
-                            <!-- Plans checkboxes will be populated dynamically -->
-                        </div>
-                    </div>
-                    <button type="submit" class="btn-primary">Save Feature</button>
-                </form>
-            </div>
         </div>
 
-        <!-- Subscription Management Section -->
-        <section class="subscription-management tab-content" data-tab-content="subscriptions">
-            <div class="section-header">
-                <h2>Subscription Management</h2>
-                <button class="btn-primary" id="createSubscriptionBtn">Create Subscription</button>
-            </div>
-            <table class="subscription-table">
+        <!-- Subscriptions Tab -->
+        <div class="tab-content" data-tab-content="subscriptions">
+            <button id="createSubscriptionBtn">Add New Subscription</button>
+            <table class="data-table">
                 <thead>
                     <tr>
                         <th>Company</th>
                         <th>Plan</th>
+                        <th>Billing Cycle</th>
                         <th>Start Date</th>
                         <th>End Date</th>
                         <th>Price</th>
@@ -782,30 +228,68 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody id="subscriptionsTableBody">
-                    <!-- Subscriptions will be populated dynamically -->
-                </tbody>
+                <tbody id="subscriptionsTableBody"></tbody>
             </table>
-        </section>
+        </div>
 
-        <!-- Create/Edit Subscription Modal -->
-        <div class="modal" id="subscriptionModal">
+        <!-- Plan Modal -->
+        <div id="planModal" class="modal">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h2 id="subscriptionModalTitle">Create New Subscription</h2>
-                    <button class="modal-close" id="closeSubscriptionModal">×</button>
-                </div>
-                <form id="subscriptionForm">
+                <h2 id="planModalTitle">Create New Plan</h2>
+                <span id="closePlanModal" class="close-modal">×</span>
+                <form id="planForm">
                     <div class="form-group">
-                        <label for="subscriptionCompany">Company</label>
-                        <select id="subscriptionCompany" name="companyId" required>
-                            <!-- Companies will be populated dynamically -->
-                        </select>
+                        <label for="name">Plan Name</label>
+                        <input type="text" id="name" name="name" required>
                     </div>
                     <div class="form-group">
-                        <label for="subscriptionPlan">Plan</label>
-                        <select id="subscriptionPlan" name="planId" required>
-                            <!-- Plans will be populated dynamically -->
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="monthlyPrice">Monthly Price</label>
+                        <input type="number" id="monthlyPrice" name="monthlyPrice" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="annualPrice">Annual Price</label>
+                        <input type="number" id="annualPrice" name="annualPrice" step="0.01" required>
+                    </div>
+                    <!-- Dynamic fields added by JS: baseCurrency, trialPeriod, isActive -->
+                    <button type="submit">Save Plan</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Feature Modal -->
+        <div id="featureModal" class="modal">
+            <div class="modal-content">
+                <h2 id="featureModalTitle">Create New Feature</h2>
+                <span id="closeFeatureModal" class="close-modal">×</span>
+                <form id="featureForm">
+                    <!-- Form fields added dynamically by JS -->
+                </form>
+            </div>
+        </div>
+
+        <!-- Subscription Modal -->
+        <div id="subscriptionModal" class="modal">
+            <div class="modal-content">
+                <h2 id="subscriptionModalTitle">Create New Subscription</h2>
+                <span id="closeSubscriptionModal" class="close-modal">×</span>
+                <form id="subscriptionForm">
+                    <div class="form-group">
+                        <label for="companyId">Company</label>
+                        <select id="companyId" name="companyId" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="planId">Plan</label>
+                        <select id="planId" name="planId" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="billingCycle">Billing Cycle</label>
+                        <select id="billingCycle" name="billingCycle" required>
+                            <option value="monthly">Monthly</option>
+                            <option value="annual">Annual</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -817,257 +301,15 @@
                         <input type="date" id="endDate" name="endDate" required>
                     </div>
                     <div class="form-group">
-                        <label for="billingCycle">Billing Cycle</label>
-                        <select id="billingCycle" name="billingCycle" required>
-                            <option value="monthly">Monthly</option>
-                            <option value="annual">Annual</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="discountCode">Discount Code (Optional)</label>
+                        <label for="discountCode">Discount Code (optional)</label>
                         <input type="text" id="discountCode" name="discountCode">
                     </div>
-                    <button type="submit" class="btn-primary">Save Subscription</button>
+                    <button type="submit">Save Subscription</button>
                 </form>
             </div>
         </div>
-
-        <!-- Payment & Billing Section -->
-        <section class="billing-management tab-content" data-tab-content="billing">
-            <div class="section-header">
-                <h2>Payment & Billing</h2>
-                <button class="btn-primary" id="createPaymentBtn">Add Payment Method</button>
-            </div>
-            <table class="billing-table">
-                <thead>
-                    <tr>
-                        <th>Company</th>
-                        <th>Subscription</th>
-                        <th>Amount</th>
-                        <th>Payment Method</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="billingTableBody">
-                    <!-- Payments will be populated dynamically -->
-                </tbody>
-            </table>
-        </section>
-
-        <!-- Create/Edit Payment Modal -->
-        <div class="modal" id="paymentModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 id="paymentModalTitle">Add Payment Method</h2>
-                    <button class="modal-close" id="closePaymentModal">×</button>
-                </div>
-                <form id="paymentForm">
-                    <div class="form-group">
-                        <label for="paymentCompany">Company</label>
-                        <select id="paymentCompany" name="companyId" required>
-                            <!-- Companies will be populated dynamically -->
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="paymentSubscription">Subscription</label>
-                        <select id="paymentSubscription" name="subscriptionId" required>
-                            <!-- Subscriptions will be populated dynamically -->
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="paymentAmount">Amount (USD)</label>
-                        <input type="number" id="paymentAmount" name="amount" step="0.01" min="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="paymentType">Payment Type</label>
-                        <select id="paymentType" name="type" required>
-                            <option value="creditCard">Credit Card</option>
-                            <option value="bankTransfer">Bank Transfer</option>
-                            <option value="paypal">PayPal</option>
-                            <option value="razorpay">Razorpay</option>
-                        </select>
-                    </div>
-                    <div class="form-group payment-details-group" id="creditCardDetails">
-                        <label for="cardNumber">Card Number</label>
-                        <input type="text" id="cardNumber" name="cardNumber" placeholder="1234 5678 9012 3456">
-                        <label for="expiryDate">Expiry Date</label>
-                        <input type="text" id="expiryDate" name="expiryDate" placeholder="MM/YY">
-                        <label for="cvv">CVV</label>
-                        <input type="text" id="cvv" name="cvv" placeholder="123">
-                    </div>
-                    <div class="form-group payment-details-group" id="bankTransferDetails" style="display: none;">
-                        <label for="accountNumber">Account Number</label>
-                        <input type="text" id="accountNumber" name="accountNumber">
-                        <label for="routingNumber">Routing Number</label>
-                        <input type="text" id="routingNumber" name="routingNumber">
-                    </div>
-                    <div class="form-group payment-details-group" id="paypalDetails" style="display: none;">
-                        <label for="paypalEmail">PayPal Email</label>
-                        <input type="email" id="paypalEmail" name="paypalEmail">
-                    </div>
-                    <div class="form-group payment-details-group" id="razorpayDetails" style="display: none;">
-                        <label for="razorpayId">Razorpay ID</label>
-                        <input type="text" id="razorpayId" name="razorpayId">
-                    </div>
-                    <button type="submit" class="btn-primary">Save Payment</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Discount & Coupon Management Section -->
-        <section class="discount-management tab-content" data-tab-content="discounts">
-            <div class="section-header">
-                <h2>Discount & Coupon Management</h2>
-                <button class="btn-primary" id="createDiscountBtn">Create Discount</button>
-            </div>
-            <table class="discount-table">
-                <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th>Type</th>
-                        <th>Value</th>
-                        <th>Usage Limit</th>
-                        <th>Used</th>
-                        <th>Expiry Date</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="discountsTableBody">
-                    <!-- Discounts will be populated dynamically -->
-                </tbody>
-            </table>
-        </section>
-
-        <!-- Create/Edit Discount Modal -->
-        <div class="modal" id="discountModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 id="discountModalTitle">Create New Discount</h2>
-                    <button class="modal-close" id="closeDiscountModal">×</button>
-                </div>
-                <form id="discountForm">
-                    <div class="form-group">
-                        <label for="discountCode">Discount Code</label>
-                        <input type="text" id="discountCode" name="code" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="discountType">Type</label>
-                        <select id="discountType" name="type" required>
-                            <option value="percentage">Percentage</option>
-                            <option value="fixed">Fixed</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="discountValue">Value</label>
-                        <input type="number" id="discountValue" name="value" step="0.01" min="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="usageLimit">Usage Limit</label>
-                        <input type="number" id="usageLimit" name="usageLimit" min="0" step="1">
-                    </div>
-                    <div class="form-group">
-                        <label for="expiryDate">Expiry Date</label>
-                        <input type="date" id="expiryDate" name="expiryDate">
-                    </div>
-                    <div class="form-group">
-                        <label for="discountStatus">Status</label>
-                        <select id="discountStatus" name="status">
-                            <option value="active">Active</option>
-                            <option value="expired">Expired</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn-primary">Save Discount</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Reports & Analytics Section -->
-        <section class="reports-management tab-content" data-tab-content="reports">
-            <div class="section-header">
-                <h2>Reports & Analytics</h2>
-                <button class="export-btn" id="exportReportBtn">Export Report</button>
-            </div>
-            <div class="report-controls">
-                <div class="form-group">
-                    <label for="reportType">Report Type</label>
-                    <select id="reportType" name="reportType">
-                        <option value="activeSubscribers">Active Subscribers</option>
-                        <option value="revenueBreakdown">Revenue Breakdown</option>
-                        <option value="featureUsage">Feature Usage</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="reportStartDate">Start Date</label>
-                    <input type="date" id="reportStartDate" name="startDate" required>
-                </div>
-                <div class="form-group">
-                    <label for="reportEndDate">End Date</label>
-                    <input type="date" id="reportEndDate" name="endDate" required>
-                </div>
-                <button class="btn-primary" id="generateReportBtn">Generate Report</button>
-            </div>
-            <div class="report-canvas-container">
-                <canvas id="reportChart"></canvas>
-            </div>
-            <table class="report-table">
-                <thead id="reportTableHead">
-                    <!-- Headers will be populated dynamically based on report type -->
-                </thead>
-                <tbody id="reportTableBody">
-                    <!-- Report data will be populated dynamically -->
-                </tbody>
-            </table>
-        </section>
-
-        <!-- Security & Compliance Section -->
-        <section class="security-management tab-content" data-tab-content="security">
-            <div class="section-header">
-                <h2>Security & Compliance</h2>
-                <button class="btn-primary" id="saveSecuritySettingsBtn">Save Settings</button>
-            </div>
-            <div class="security-settings">
-                <div class="setting-item">
-                    <label>
-                        <input type="checkbox" id="encryptPaymentData" name="encryptPaymentData">
-                        Encrypt Payment Data
-                    </label>
-                </div>
-                <div class="setting-item">
-                    <label>
-                        <input type="checkbox" id="pciCompliance" name="pciCompliance">
-                        PCI DSS Compliance
-                    </label>
-                </div>
-                <div class="setting-item">
-                    <label>
-                        <input type="checkbox" id="twoFactorBilling" name="twoFactorBilling">
-                        Two-Factor Authentication for Billing
-                    </label>
-                </div>
-                <div class="setting-item">
-                    <label>
-                        <input type="checkbox" id="auditTrail" name="auditTrail">
-                        Enable Audit Trail
-                    </label>
-                </div>
-            </div>
-            <table class="compliance-table">
-                <thead>
-                    <tr>
-                        <th>Policy</th>
-                        <th>Description</th>
-                        <th>Retention Period</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="complianceTableBody">
-                    <!-- Compliance policies will be populated dynamically -->
-                </tbody>
-            </table>
-        </section>
     </div>
+
+ 
 </body>
 </html>
